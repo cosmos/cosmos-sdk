@@ -352,6 +352,19 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+	res, snapshotHeight := app.CommitWithoutSnapshot()
+
+	if snapshotHeight > 0 {
+		go app.Snapshot(snapshotHeight)
+	}
+
+	return res
+}
+
+// CommitWithoutSnapshot is like Commit but returns the snapshot information instead
+// of starting the snapshot goroutine
+// It can be used by apps to synchronize snapshots according to their requirements.
+func (app *BaseApp) CommitWithoutSnapshot() (res abci.ResponseCommit, snapshotHeight int64) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 
 	header := app.deliverState.ctx.BlockHeader()
@@ -392,13 +405,15 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	}
 
 	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
-		go app.snapshot(header.Height)
+		snapshotHeight = header.Height
 	}
 
-	return abci.ResponseCommit{
+	res = abci.ResponseCommit{
 		Data:         commitID.Hash,
 		RetainHeight: retainHeight,
 	}
+
+	return res, snapshotHeight
 }
 
 // halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
@@ -423,8 +438,9 @@ func (app *BaseApp) halt() {
 	os.Exit(0)
 }
 
-// snapshot takes a snapshot of the current state and prunes any old snapshottypes.
-func (app *BaseApp) snapshot(height int64) {
+// Snapshot takes a snapshot of the current state and prunes any old snapshottypes.
+// It should be started as a goroutine
+func (app *BaseApp) Snapshot(height int64) {
 	if app.snapshotManager == nil {
 		app.logger.Info("snapshot manager not configured")
 		return

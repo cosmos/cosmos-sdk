@@ -10,6 +10,18 @@ import (
 	"io"
 )
 
+func cosmosDecEncoder(aj AminoJSON, v protoreflect.Value, w io.Writer) error {
+	switch s := v.Interface().(type) {
+	case string:
+		if s == "" {
+			return jsonMarshal(w, "0")
+		}
+		return jsonMarshal(w, s)
+	default:
+		return fmt.Errorf("unsupported type %T", s)
+	}
+}
+
 // nullSliceAsEmptyEncoder replicates the behavior at:
 // https://github.com/cosmos/cosmos-sdk/blob/be9bd7a8c1b41b115d58f4e76ee358e18a52c0af/types/coin.go#L199-L205
 func nullSliceAsEmptyEncoder(aj AminoJSON, v protoreflect.Value, w io.Writer) error {
@@ -57,6 +69,15 @@ func keyFieldEncoder(msg protoreflect.Message, w io.Writer) error {
 
 }
 
+type moduleAccountPretty struct {
+	Address       string   `json:"address"`
+	PubKey        string   `json:"public_key"`
+	AccountNumber uint64   `json:"account_number"`
+	Sequence      uint64   `json:"sequence"`
+	Name          string   `json:"name"`
+	Permissions   []string `json:"permissions"`
+}
+
 // moduleAccountEncoder replicates the behavior in
 // https://github.com/cosmos/cosmos-sdk/blob/41a3dfeced2953beba3a7d11ec798d17ee19f506/x/auth/types/account.go#L230-L254
 func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
@@ -77,7 +98,6 @@ func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 	}
 
 	bz, err := json.Marshal(pretty)
-	//bz, err := json.Marshal(pretty)
 	if err != nil {
 		return err
 	}

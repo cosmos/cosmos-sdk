@@ -5,14 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
-	"math"
-	"time"
-
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"io"
 
 	"cosmossdk.io/api/amino"
 )
@@ -22,6 +19,7 @@ type FieldEncoder func(AminoJSON, protoreflect.Value, io.Writer) error
 
 type AminoJSON struct {
 	// maps cosmos_proto.scalar -> zero value factory
+	scalarEncoders  map[string]FieldEncoder
 	zeroValues      map[string]func() protoreflect.Value
 	messageEncoders map[string]MessageEncoder
 	fieldEncoders   map[string]FieldEncoder
@@ -33,6 +31,9 @@ func NewAminoJSON() AminoJSON {
 			"cosmos.Dec": func() protoreflect.Value {
 				return protoreflect.ValueOfString("0")
 			},
+		},
+		scalarEncoders: map[string]FieldEncoder{
+			"cosmos.Dec": cosmosDecEncoder,
 		},
 		messageEncoders: map[string]MessageEncoder{
 			"key_field":      keyFieldEncoder,
@@ -218,16 +219,21 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 			if omitEmpty(f) {
 				continue
 			} else {
-				zv, found := aj.getZeroValue(f)
-				if found {
-					v = zv
-				} else if f.Cardinality() == protoreflect.Repeated {
-					//fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
-					//writeNil = true
-				} else if f.Kind() == protoreflect.MessageKind && !v.Message().IsValid() {
+				if f.Kind() == protoreflect.MessageKind &&
+					f.Cardinality() != protoreflect.Repeated &&
+					!v.Message().IsValid() {
 					return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
-					//fmt.Printf("WARN: not supported: dont_omit_empty=true on invalid (nil?) message field: %s\n", name)
 				}
+				//zv, found := aj.getZeroValue(f)
+				//if found {
+				//	v = zv
+				//} else if f.Cardinality() == protoreflect.Repeated {
+				//	//fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
+				//	//writeNil = true
+				//} else if f.Kind() == protoreflect.MessageKind && !v.Message().IsValid() {
+				//	return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
+				//	//fmt.Printf("WARN: not supported: dont_omit_empty=true on invalid (nil?) message field: %s\n", name)
+				//}
 			}
 		}
 
@@ -398,21 +404,13 @@ func (aj AminoJSON) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEn
 			return fn
 		}
 	}
+	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
+		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
+		if fn, ok := aj.scalarEncoders[scalar]; ok {
+			return fn
+		}
+	}
 	return nil
-}
-
-type moduleAccountPretty struct {
-	Address       string   `json:"address"`
-	PubKey        string   `json:"public_key"`
-	AccountNumber uint64   `json:"account_number"`
-	Sequence      uint64   `json:"sequence"`
-	Name          string   `json:"name"`
-	Permissions   []string `json:"permissions"`
-}
-
-type typeWrapper struct {
-	Type  string `json:"type"`
-	Value any    `json:"value"`
 }
 
 const (
@@ -420,71 +418,3 @@ const (
 	durationFullName  protoreflect.FullName = "google.protobuf.Duration"
 	anyFullName       protoreflect.FullName = "google.protobuf.Any"
 )
-
-const (
-	secondsName protoreflect.Name = "seconds"
-	nanosName   protoreflect.Name = "nanos"
-)
-
-func marshalTimestamp(message protoreflect.Message, writer io.Writer) error {
-	// PROTO3 SPEC:
-	// Uses RFC 3339, where generated output will always be Z-normalized and uses 0, 3, 6 or 9 fractional digits.
-	// Offsets other than "Z" are also accepted.
-
-	fields := message.Descriptor().Fields()
-	secondsField := fields.ByName(secondsName)
-	if secondsField == nil {
-		return fmt.Errorf("expected seconds field")
-	}
-
-	nanosField := fields.ByName(nanosName)
-	if nanosField == nil {
-		return fmt.Errorf("expected nanos field")
-	}
-
-	seconds := message.Get(secondsField).Int()
-	nanos := message.Get(nanosField).Int()
-	if nanos < 0 {
-		return fmt.Errorf("nanos must be non-negative on timestamp %v", message)
-	}
-
-	t := time.Unix(seconds, nanos).UTC()
-	var str string
-	if nanos == 0 {
-		str = t.Format(time.RFC3339)
-	} else {
-		str = t.Format(time.RFC3339Nano)
-	}
-
-	_, err := fmt.Fprintf(writer, `"%s"`, str)
-	return err
-}
-
-// MaxDurationSeconds the maximum number of seconds (when expressed as nanoseconds) which can fit in an int64.
-// gogoproto encodes google.protobuf.Duration as a time.Duration, which is 64-bit signed integer.
-const MaxDurationSeconds = int64(math.MaxInt64/int(1e9)) - 1
-
-func marshalDuration(message protoreflect.Message, writer io.Writer) error {
-	fields := message.Descriptor().Fields()
-	secondsField := fields.ByName(secondsName)
-	if secondsField == nil {
-		return fmt.Errorf("expected seconds field")
-	}
-
-	// todo
-	// check signs are consistent
-	seconds := message.Get(secondsField).Int()
-	if seconds > MaxDurationSeconds {
-		return fmt.Errorf("%d seconds would overflow an int64 when represented as nanoseconds", seconds)
-	}
-
-	nanosField := fields.ByName(nanosName)
-	if nanosField == nil {
-		return fmt.Errorf("expected nanos field")
-	}
-
-	nanos := message.Get(nanosField).Int()
-	totalNanos := nanos + (seconds * 1e9)
-	_, err := writer.Write([]byte(fmt.Sprintf(`"%d"`, totalNanos)))
-	return err
-}

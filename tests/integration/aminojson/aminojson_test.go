@@ -172,6 +172,14 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		gogo               gogoproto.Message
 		pulsar             proto.Message
 		pulsarMarshalFails bool
+
+		// this will fail in cases where a lossy encoding of an empty array to protobuf occurs. the unmarshalled bytes
+		// represent the array as nil, and a subsequent marshal to JSON represent the array as null instead of empty.
+		roundTripUnequal bool
+
+		// pulsar does not support marshalling a math.Dec as anything except a string.  Therefore, we cannot unmarshal
+		// a pulsar encoded Math.dec (the string representation of a Decimal) into a gogo Math.dec (expecting an int64).
+		protoUnmarshalFails bool
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
 		"auth/module_account": {
@@ -179,6 +187,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: []string{}},
 			pulsar: &authapi.ModuleAccount{
 				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}},
+			roundTripUnequal: true,
 		},
 		"authz/msg_grant": {
 			gogo: &authztypes.MsgGrant{
@@ -194,22 +203,19 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{}},
 			pulsar: &authzapi.MsgExec{Msgs: []*anypb.Any{}},
 		},
-		//"authz/msg_exec/null_msg": {
-		//	gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{(*codectypes.Any)(nil)}},
-		//	pulsar: &authzapi.MsgExec{Msgs: []*anypb.Any{(*anypb.Any)(nil)}},
-		//},
 		"distribution/delegator_starting_info": {
 			gogo:   &disttypes.DelegatorStartingInfo{},
 			pulsar: &distapi.DelegatorStartingInfo{},
 		},
 		"distribution/delegator_starting_info/non_zero_dec": {
-			gogo:   &disttypes.DelegatorStartingInfo{Stake: types.NewDec(10)},
-			pulsar: &distapi.DelegatorStartingInfo{Stake: "10.000000000000000000"},
+			gogo:                &disttypes.DelegatorStartingInfo{Stake: types.NewDec(10)},
+			pulsar:              &distapi.DelegatorStartingInfo{Stake: "10.000000000000000000"},
+			protoUnmarshalFails: true,
 		},
-		//"distribution/delegation_delegator_reward": {
-		//	gogo:   &disttypes.DelegationDelegatorReward{},
-		//	pulsar: &distapi.DelegationDelegatorReward{},
-		//},
+		"distribution/delegation_delegator_reward": {
+			gogo:   &disttypes.DelegationDelegatorReward{},
+			pulsar: &distapi.DelegationDelegatorReward{},
+		},
 		"distribution/community_pool_spend_proposal_with_deposit": {
 			gogo:   &disttypes.CommunityPoolSpendProposalWithDeposit{},
 			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{},
@@ -272,6 +278,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			}
 			require.NoError(t, err)
 
+			fmt.Printf("pulsar: %s\n", string(pulsarBytes))
+			fmt.Printf("  gogo: %s\n", string(gogoBytes))
+			require.Equal(t, string(gogoBytes), string(pulsarBytes))
+
 			pulsarProtoBytes, err := proto.Marshal(tc.pulsar)
 			require.NoError(t, err)
 
@@ -279,12 +289,17 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			newGogo := reflect.New(gogoType).Interface().(gogoproto.Message)
 
 			err = encCfg.Codec.Unmarshal(pulsarProtoBytes, newGogo)
+			if tc.protoUnmarshalFails {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			newGogoBytes, err := encCfg.Amino.MarshalJSON(newGogo)
-
-			fmt.Printf("pulsar: %s\n", string(pulsarBytes))
-			require.Equal(t, string(gogoBytes), string(pulsarBytes))
+			if tc.roundTripUnequal {
+				require.NotEqual(t, string(gogoBytes), string(newGogoBytes))
+				return
+			}
 			require.Equal(t, string(gogoBytes), string(newGogoBytes))
 		})
 	}

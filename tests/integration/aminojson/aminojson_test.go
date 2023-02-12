@@ -1,11 +1,13 @@
 package aminojson
 
 import (
+	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"reflect"
 	"testing"
 	"time"
@@ -156,6 +158,22 @@ var (
 		genType(&gov_v1beta1_types.MsgVote{}, &gov_v1beta1_api.MsgVote{}, genOpts),
 		genType(&gov_v1beta1_types.MsgVoteWeighted{}, &gov_v1beta1_api.MsgVoteWeighted{}, genOpts),
 		genType(&gov_v1beta1_types.TextProposal{}, &gov_v1beta1_api.TextProposal{}, genOpts),
+
+		// gov v1
+		genType(&gov_v1_types.MsgSubmitProposal{}, &gov_v1_api.MsgSubmitProposal{},
+			genOpts.WithAnyTypes(&gov_v1_api.MsgVote{}, &gov_v1_api.MsgVoteWeighted{}, &gov_v1_api.MsgDeposit{},
+				&gov_v1_api.MsgExecLegacyContent{}, &gov_v1_api.MsgUpdateParams{}).
+				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{}).
+				WithDisallowNil(),
+		),
+		genType(&gov_v1_types.MsgDeposit{}, &gov_v1_api.MsgDeposit{}, genOpts),
+		genType(&gov_v1_types.MsgVote{}, &gov_v1_api.MsgVote{}, genOpts),
+		genType(&gov_v1_types.MsgVoteWeighted{}, &gov_v1_api.MsgVoteWeighted{}, genOpts),
+		genType(&gov_v1_types.MsgExecLegacyContent{}, &gov_v1_api.MsgExecLegacyContent{},
+			genOpts.WithAnyTypes(&gov_v1beta1_api.TextProposal{}).
+				WithDisallowNil().
+				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{})),
+		genType(&gov_v1_types.MsgUpdateParams{}, &gov_v1_api.MsgUpdateParams{}, genOpts.WithDisallowNil()),
 	}
 )
 

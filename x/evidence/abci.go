@@ -13,7 +13,7 @@ import (
 )
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
-// misbehavior submitted by Tendermint. Currently, only equivocation is handled.
+// misbehavior submitted by CometBFT. Currently, only equivocation is handled.
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 

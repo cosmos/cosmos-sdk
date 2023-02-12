@@ -119,7 +119,7 @@ type APIConfig struct {
 	// RPCWriteTimeout defines the CometBFT RPC write timeout (in seconds)
 	RPCWriteTimeout uint `mapstructure:"rpc-write-timeout"`
 
-	// RPCMaxBodyBytes defines the CometBFT maximum response body (in bytes)
+	// RPCMaxBodyBytes defines the CometBFT maximum request body (in bytes)
 	RPCMaxBodyBytes uint `mapstructure:"rpc-max-body-bytes"`
 
 	// TODO: TLS/Proxy configuration.

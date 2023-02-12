@@ -59,7 +59,10 @@ func genType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.Gener
 }
 
 var (
-	genOpts  = rapidproto.GeneratorOptions{Resolver: protoregistry.GlobalTypes}
+	genOpts = rapidproto.GeneratorOptions{
+		Resolver:                       protoregistry.GlobalTypes,
+		GogoUnmarshalCompatibleDecimal: true,
+	}
 	genTypes = []generatedType{
 		// auth
 		genType(&authtypes.Params{}, &authapi.Params{}, genOpts),
@@ -97,12 +100,23 @@ var (
 
 		// consensus
 		genType(&consensustypes.MsgUpdateParams{}, &consensusapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
+
+		// distribution
+		genType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, genOpts),
+		genType(&disttypes.MsgWithdrawValidatorCommission{}, &distapi.MsgWithdrawValidatorCommission{}, genOpts),
+		genType(&disttypes.MsgSetWithdrawAddress{}, &distapi.MsgSetWithdrawAddress{}, genOpts),
+		genType(&disttypes.MsgFundCommunityPool{}, &distapi.MsgFundCommunityPool{}, genOpts),
+		genType(&disttypes.MsgUpdateParams{}, &distapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
+		genType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, genOpts),
+		genType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, genOpts),
+		genType(&disttypes.Params{}, &distapi.Params{}, genOpts),
 	}
 )
 
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{})
+		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
+		distribution.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {

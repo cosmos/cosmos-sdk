@@ -16,6 +16,7 @@ message Params {
   string community_tax = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (amino.dont_omitempty) = true,
     (gogoproto.nullable)   = false
   ];
 
@@ -25,6 +26,7 @@ message Params {
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
     deprecated             = true
   ];
 
@@ -34,6 +36,7 @@ message Params {
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
     deprecated             = true
   ];
 
@@ -140,6 +143,7 @@ message CommunityPoolSpendProposal {
   repeated cosmos.base.v1beta1.Coin amount = 4 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

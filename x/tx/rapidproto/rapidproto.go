@@ -30,8 +30,9 @@ type GeneratorOptions struct {
 	// NoEmptyLists will cause the generator to not generate empty lists
 	// Recall that an empty list will marshal (and unmarshal) to null.   Some encodings may treat these states
 	// differently.  For example, in JSON, an empty list is encoded as [], while null is encoded as null.
-	NoEmptyLists        bool
-	DisallowNilMessages bool
+	NoEmptyLists                   bool
+	DisallowNilMessages            bool
+	GogoUnmarshalCompatibleDecimal bool
 }
 
 const depthLimit = 10
@@ -167,8 +168,13 @@ func (opts GeneratorOptions) genScalarFieldValue(t *rapid.T, field protoreflect.
 		case "cosmos.Int":
 			i32 := rapid.Int32().Draw(t, name)
 			return protoreflect.ValueOfString(fmt.Sprintf("%d", i32))
-			//default:
-			//	t.Fatalf("unknown cosmos_proto.scalar type %s", scalar)
+		case "cosmos.Dec":
+			if opts.GogoUnmarshalCompatibleDecimal {
+				return protoreflect.ValueOfString("")
+			}
+			x := rapid.Int16().Draw(t, name)
+			y := rapid.Uint8().Draw(t, name)
+			return protoreflect.ValueOfString(fmt.Sprintf("%d.%d", x, y))
 		}
 	}
 

@@ -157,6 +157,7 @@ message QueryAllBalancesResponse {
   repeated cosmos.base.v1beta1.Coin balances = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -188,6 +189,7 @@ message QuerySpendableBalancesResponse {
   repeated cosmos.base.v1beta1.Coin balances = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -239,6 +241,7 @@ message QueryTotalSupplyResponse {
   repeated cosmos.base.v1beta1.Coin supply = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 

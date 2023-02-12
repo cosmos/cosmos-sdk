@@ -51,8 +51,6 @@ func (app SimApp) RegisterUpgradeHandlers() {
 			keyTable = govv1.ParamKeyTable()
 		case crisistypes.ModuleName:
 			keyTable = crisistypes.ParamKeyTable()
-		case baseapp.Paramspace:
-			keyTable = paramstypes.ConsensusParamsKeyTable()
 		}
 
 		if !subspace.HasKeyTable() {
@@ -63,12 +61,8 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			// Migrate CometBFT consensus parameters from x/params module to a  dedicated x/consensus module.
-			baseAppLegacySS, ok := app.ParamsKeeper.GetSubspace(baseapp.Paramspace)
-			if !ok {
-				panic("baseapp subspace does not exist")
-			}
-
+			// Migrate CometBFT consensus parameters from x/params module to a dedicated x/consensus module.
+			baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 			baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
 
 			// Note: this migration is optional,
@@ -85,7 +79,10 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{consensustypes.ModuleName},
+			Added: []string{
+				consensustypes.ModuleName,
+				crisistypes.ModuleName,
+			},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

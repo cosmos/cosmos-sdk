@@ -3,10 +3,12 @@ package autocli
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"strings"
 	"testing"
+
+	"gotest.tools/v3/golden"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
@@ -36,6 +38,10 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 				{
 					ProtoField: "positional2",
 				},
+				{
+					ProtoField: "positional3_varargs",
+					Varargs:    true,
+				},
 			},
 			FlagOptions: map[string]*autocliv1.FlagOptions{
 				"u32": {
@@ -48,8 +54,8 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 					DefaultValue: "3",
 				},
 				"u64": {
-					Usage:             "some random uint64",
-					NoOptDefaultValue: "5",
+					Usage:        "some random uint64",
+					DefaultValue: "5",
 				},
 				"deprecated_field": {
 					Deprecated: "don't use this",
@@ -72,6 +78,15 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 				{
 					RpcMethod:  "Send",
 					Deprecated: "dont use this",
+				},
+			},
+		},
+		"skipmsg": {
+			Service: testpb.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Send",
+					Skip:      true,
 				},
 			},
 		},
@@ -121,14 +136,13 @@ func TestMsgOptions(t *testing.T) {
 	conn := testMsgExec(t,
 		"send", "5", "6",
 		"--uint32", "7",
-		"--u64",
+		"--u64", "8",
 	)
 	response := conn.out.String()
 	var output testpb.MsgRequest
 	err := json.Unmarshal([]byte(response), &output)
 	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(7))
-	assert.Equal(t, output.GetU64(), uint64(0))
 	assert.Equal(t, output.GetPositional1(), int32(5))
 	assert.Equal(t, output.GetPositional2(), "6")
 }
@@ -149,17 +163,17 @@ func TestEverythingMsg(t *testing.T) {
 	conn := testMsgExec(t,
 		"send",
 		"1",
-		//"abc",
-		//`{"denom":"foo","amount":"1234"}`,
-		//`{"denom":"bar","amount":"4321"}`,
+		"abc",
+		`{"denom":"foo","amount":"1234"}`,
+		`{"denom":"bar","amount":"4321"}`,
 		"--a-bool",
-		"--an-enum", "one",
+		"--an-enum", "two",
 		"--a-message", `{"bar":"abc", "baz":-3}`,
 		"--duration", "4h3s",
 		"--uint32", "27",
 		"--u64", "3267246890",
 		"--i32", "-253",
-		"--i64", "-234602347",
+		"--i64", "234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
 		"--a-coin", `{"denom":"foo","amount":"100000"}`,
@@ -188,15 +202,26 @@ func TestEverythingMsg(t *testing.T) {
 		"--uints", "4",
 	)
 	response := conn.out.String()
-	fmt.Println(response)
 	var output testpb.MsgRequest
-	fmt.Println(output.U64)
-	err := json.Unmarshal([]byte(response), &output)
+	err := protojson.Unmarshal([]byte(response), &output)
 	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(27))
-	//assert.Equal(t, output.GetU64(), uint64(5))
+	assert.Equal(t, output.GetU64(), uint64(3267246890))
 	assert.Equal(t, output.GetPositional1(), int32(1))
 	assert.Equal(t, output.GetPositional2(), "abc")
+	assert.Equal(t, output.GetABool(), true)
+	assert.Equal(t, output.GetAnEnum(), testpb.Enum_ENUM_TWO)
+}
+
+func TestHelpMsg(t *testing.T) {
+	conn := testMsgExec(t, "-h")
+	golden.Assert(t, conn.out.String(), "help-toplevel-msg.golden")
+
+	conn = testMsgExec(t, "send", "-h")
+	golden.Assert(t, conn.out.String(), "help-echo-msg.golden")
+
+	conn = testMsgExec(t, "deprecatedmsg", "send", "-h")
+	golden.Assert(t, conn.out.String(), "help-deprecated-msg.golden")
 }
 
 func TestBuildCustomMsgCommand(t *testing.T) {

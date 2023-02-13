@@ -36,7 +36,7 @@ message ModuleAccount {
   option (gogoproto.goproto_getters)         = false;
   option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.ModuleAccountI";
 
-  BaseAccount     base_account = 1 [(gogoproto.embed) = true, (amino.embed) = true];
+  BaseAccount     base_account = 1 [(gogoproto.embed) = true];
   string          name         = 2 [(amino.dont_omitempty) = true];
   repeated string permissions  = 3 [(amino.dont_omitempty) = true];
 }

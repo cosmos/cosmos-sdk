@@ -1,14 +1,15 @@
 package indexes
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestUniqueIndex(t *testing.T) {
 	sk, ctx := deps()
-	schema := collections.NewSchemaBuilderFromKVService(sk)
+	schema := collections.NewSchemaBuilder(sk)
 	ui := NewUnique(schema, collections.NewPrefix("unique_index"), "unique_index", collections.Uint64Key, collections.Uint64Key, func(_ uint64, v company) (uint64, error) {
 		return v.Vat, nil
 	})

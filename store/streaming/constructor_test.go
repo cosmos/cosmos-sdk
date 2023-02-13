@@ -3,8 +3,8 @@ package streaming_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/store/streaming"
 	"cosmossdk.io/store/streaming/file"

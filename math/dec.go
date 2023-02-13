@@ -69,6 +69,10 @@ func LegacySmallestDec() LegacyDec { return LegacyDec{new(big.Int).Set(oneInt)} 
 
 // calculate the precision multiplier
 func calcPrecisionMultiplier(prec int64) *big.Int {
+	if prec < 0 {
+		panic(fmt.Sprintf("negative precision %v", prec))
+	}
+
 	if prec > LegacyPrecision {
 		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", LegacyPrecision, prec))
 	}
@@ -79,6 +83,10 @@ func calcPrecisionMultiplier(prec int64) *big.Int {
 
 // get the precision multiplier, do not mutate result
 func precisionMultiplier(prec int64) *big.Int {
+	if prec < 0 {
+		panic(fmt.Sprintf("negative precision %v", prec))
+	}
+
 	if prec > LegacyPrecision {
 		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", LegacyPrecision, prec))
 	}

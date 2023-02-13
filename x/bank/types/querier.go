@@ -23,8 +23,8 @@ func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequ
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
 //
 //nolint:interfacer
-func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QueryAllBalancesRequest {
-	return &QueryAllBalancesRequest{Address: addr.String(), Pagination: req}
+func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest, resolveDenom bool) *QueryAllBalancesRequest {
+	return &QueryAllBalancesRequest{Address: addr.String(), Pagination: req, ResolveDenom: resolveDenom}
 }
 
 // NewQuerySpendableBalancesRequest creates a new instance of a

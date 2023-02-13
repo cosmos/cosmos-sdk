@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections/codec"
 )
 
 // Indexes represents a type which groups multiple Index
@@ -46,8 +48,8 @@ func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	pkCodec KeyCodec[PrimaryKey],
-	valueCodec ValueCodec[Value],
+	pkCodec codec.KeyCodec[PrimaryKey],
+	valueCodec codec.ValueCodec[Value],
 	indexes Idx,
 ) *IndexedMap[PrimaryKey, Value, Idx] {
 	return &IndexedMap[PrimaryKey, Value, Idx]{

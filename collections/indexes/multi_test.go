@@ -1,14 +1,15 @@
 package indexes
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestMultiIndex(t *testing.T) {
 	sk, ctx := deps()
-	schema := collections.NewSchemaBuilderFromKVService(sk)
+	schema := collections.NewSchemaBuilder(sk)
 
 	mi := NewMulti(schema, collections.NewPrefix(1), "multi_index", collections.StringKey, collections.Uint64Key, func(_ uint64, value company) (string, error) {
 		return value.City, nil

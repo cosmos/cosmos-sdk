@@ -6,9 +6,10 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/x/tx/textual"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/x/tx/textual"
 )
 
 func TestBytesJsonTestCases(t *testing.T) {
@@ -20,7 +21,7 @@ func TestBytesJsonTestCases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := textual.NewTextual(nil)
+	textual := textual.NewSignModeHandler(nil)
 
 	for _, tc := range testcases {
 		t.Run(tc.hex, func(t *testing.T) {

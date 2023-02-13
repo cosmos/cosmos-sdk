@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
+	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	storetypes "cosmossdk.io/store/types"
 

@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
@@ -53,7 +53,7 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -117,7 +117,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 
 	// begin new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},

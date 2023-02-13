@@ -2,7 +2,9 @@ package indexes
 
 import (
 	"context"
+
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/codec"
 )
 
 // Multi defines the most common index. It can be used to create a reference between
@@ -18,8 +20,8 @@ func NewMulti[ReferenceKey, PrimaryKey, Value any](
 	schema *collections.SchemaBuilder,
 	prefix collections.Prefix,
 	name string,
-	refCodec collections.KeyCodec[ReferenceKey],
-	pkCodec collections.KeyCodec[PrimaryKey],
+	refCodec codec.KeyCodec[ReferenceKey],
+	pkCodec codec.KeyCodec[PrimaryKey],
 	getRefKeyFunc func(pk PrimaryKey, value Value) (ReferenceKey, error),
 ) *Multi[ReferenceKey, PrimaryKey, Value] {
 	i := collections.NewGenericMultiIndex(

@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"math"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 
 	"google.golang.org/protobuf/reflect/protodesc"
 
@@ -31,18 +30,19 @@ import (
 type ModuleDB interface {
 	ormtable.Schema
 
-	// DefaultJSON writes default JSON for each table in the module to the target.
-	DefaultJSON(ormjson.WriteTarget) error
+	// GenesisHandler returns an implementation of appmodule.HasGenesis
+	// to be embedded in or called from app module implementations.
+	// Ex:
+	//   type Keeper struct {
+	//     appmodule.HasGenesis
+	//   }
+	//
+	//   func NewKeeper(db ModuleDB) *Keeper {
+	//     return &Keeper{HasGenesis: db.GenesisHandler()}
+	//   }
+	GenesisHandler() appmodule.HasGenesis
 
-	// ValidateJSON validates JSON for each table in the module.
-	ValidateJSON(ormjson.ReadSource) error
-
-	// ImportJSON imports JSON for each table in the module which has JSON
-	// defined in the read source.
-	ImportJSON(context.Context, ormjson.ReadSource) error
-
-	// ExportJSON exports JSON for each table in the module.
-	ExportJSON(context.Context, ormjson.WriteTarget) error
+	private()
 }
 
 type moduleDB struct {
@@ -212,3 +212,8 @@ func (m moduleDB) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 func (m moduleDB) GetTable(message proto.Message) ormtable.Table {
 	return m.tablesByName[message.ProtoReflect().Descriptor().FullName()]
 }
+func (m moduleDB) GenesisHandler() appmodule.HasGenesis {
+	return appModuleGenesisWrapper{m}
+}
+
+func (moduleDB) private() {}

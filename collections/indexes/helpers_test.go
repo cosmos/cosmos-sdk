@@ -1,9 +1,10 @@
 package indexes
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestHelpers(t *testing.T) {
@@ -12,7 +13,7 @@ func TestHelpers(t *testing.T) {
 	// Key: Pair[Address=string, Denom=string] => Value: Amount=uint64
 
 	sk, ctx := deps()
-	sb := collections.NewSchemaBuilderFromKVService(sk)
+	sb := collections.NewSchemaBuilder(sk)
 
 	keyCodec := collections.PairKeyCodec(collections.StringKey, collections.StringKey)
 	indexedMap := collections.NewIndexedMap(

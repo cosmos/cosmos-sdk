@@ -32,7 +32,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 		//
 		// NOTE: We used to panic with:
 		// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
-		// but this couples the expectations of the app to both Tendermint and
+		// but this couples the expectations of the app to both CometBFT and
 		// the simulator.  Both are expected to provide the full range of
 		// allowable but none of the disallowed evidence types.  Instead of
 		// getting this coordination right, it is easier to relax the
@@ -67,7 +67,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 	validator := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
 	if validator == nil || validator.IsUnbonded() {
 		// Defensive: Simulation doesn't take unbonding periods into account, and
-		// Tendermint might break this assumption at some point.
+		// CometBFT might break this assumption at some point.
 		return
 	}
 
@@ -77,7 +77,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 			//
 			// NOTE: We used to panic with:
 			// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
-			// but this couples the expectations of the app to both Tendermint and
+			// but this couples the expectations of the app to both CometBFT and
 			// the simulator.  Both are expected to provide the full range of
 			// allowable but none of the disallowed evidence types.  Instead of
 			// getting this coordination right, it is easier to relax the
@@ -117,7 +117,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
 
 	// Slash validator. The `power` is the int64 power of the validator as provided
-	// to/by Tendermint. This value is validator.Tokens as sent to Tendermint via
+	// to/by CometBFT. This value is validator.Tokens as sent to CometBFT via
 	// ABCI, and now received as evidence. The fraction is passed in to separately
 	// to slash unbonding and rebonding delegations.
 	k.slashingKeeper.SlashWithInfractionReason(

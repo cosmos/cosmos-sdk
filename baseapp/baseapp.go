@@ -6,12 +6,12 @@ import (
 	"sort"
 	"strings"
 
+	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/store"
@@ -114,11 +114,11 @@ type BaseApp struct { //nolint: maligned
 
 	// minRetainBlocks defines the minimum block height offset from the current
 	// block being committed, such that all blocks past this offset are pruned
-	// from Tendermint. It is used as part of the process of determining the
+	// from CometBFT. It is used as part of the process of determining the
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// Note: Tendermint block pruning is dependant on this parameter in conunction
+	// Note: CometBFT block pruning is dependant on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -138,7 +138,7 @@ type BaseApp struct { //nolint: maligned
 	trace bool
 
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
-	// which informs Tendermint what to index. If empty, all events will be indexed.
+	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
@@ -349,7 +349,7 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
-	emptyHeader := tmproto.Header{}
+	emptyHeader := cmtproto.Header{}
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(runTxModeCheck, emptyHeader)
@@ -407,7 +407,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // setState sets the BaseApp's state for the corresponding mode with a branched
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
 // multi-store branch, and provided header.
-func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
+func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
 		ms:  ms,
@@ -435,7 +435,7 @@ func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *cmtproto.ConsensusParams {
 	if app.paramStore == nil {
 		return nil
 	}
@@ -449,7 +449,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams) {
+func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *cmtproto.ConsensusParams) {
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
@@ -459,7 +459,7 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusP
 	}
 
 	app.paramStore.Set(ctx, cp)
-	// We're explicitly not storing the Tendermint app_version in the param store. It's
+	// We're explicitly not storing the CometBFT app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
 }
 
@@ -862,12 +862,12 @@ func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 // non-default handlers.
 //
 // - If no mempool is set or if the mempool is a no-op mempool, the transactions
-// requested from Tendermint will simply be returned, which, by default, are in
+// requested from CometBFT will simply be returned, which, by default, are in
 // FIFO order.
 func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		// If the mempool is nil or a no-op mempool, we simply return the transactions
-		// requested from Tendermint, which, by default, should be in FIFO order.
+		// requested from CometBFT, which, by default, should be in FIFO order.
 		_, isNoOp := app.mempool.(mempool.NoOpMempool)
 		if app.mempool == nil || isNoOp {
 			return abci.ResponsePrepareProposal{Txs: req.Txs}

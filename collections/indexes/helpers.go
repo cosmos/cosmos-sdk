@@ -2,6 +2,7 @@ package indexes
 
 import (
 	"context"
+
 	"cosmossdk.io/collections"
 )
 
@@ -23,7 +24,8 @@ type Iterator[K any] interface {
 func CollectKeyValues[K, V any, I Iterator[K], Idx collections.Indexes[K, V]](
 	ctx context.Context,
 	indexedMap *collections.IndexedMap[K, V, Idx],
-	iter I) (kvs []collections.KeyValue[K, V], err error) {
+	iter I,
+) (kvs []collections.KeyValue[K, V], err error) {
 	err = ScanKeyValues(ctx, indexedMap, iter, func(kv collections.KeyValue[K, V]) bool {
 		kvs = append(kvs, kv)
 		return false
@@ -38,8 +40,8 @@ func ScanKeyValues[K, V any, I Iterator[K], Idx collections.Indexes[K, V]](
 	ctx context.Context,
 	indexedMap *collections.IndexedMap[K, V, Idx],
 	iter I,
-	do func(kv collections.KeyValue[K, V]) (stop bool)) (err error) {
-
+	do func(kv collections.KeyValue[K, V]) (stop bool),
+) (err error) {
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
@@ -71,7 +73,8 @@ func ScanKeyValues[K, V any, I Iterator[K], Idx collections.Indexes[K, V]](
 func CollectValues[K, V any, I Iterator[K], Idx collections.Indexes[K, V]](
 	ctx context.Context,
 	indexedMap *collections.IndexedMap[K, V, Idx],
-	iter I) (values []V, err error) {
+	iter I,
+) (values []V, err error) {
 	err = ScanValues(ctx, indexedMap, iter, func(value V) (stop bool) {
 		values = append(values, value)
 		return false

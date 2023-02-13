@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/types/errors"

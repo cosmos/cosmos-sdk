@@ -2,7 +2,9 @@ package indexes
 
 import (
 	"context"
+
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/codec"
 )
 
 // Unique identifies an index that imposes uniqueness constraints on the reference key.
@@ -14,8 +16,8 @@ func NewUnique[ReferenceKey, PrimaryKey, Value any](
 	schema *collections.SchemaBuilder,
 	prefix collections.Prefix,
 	name string,
-	refCodec collections.KeyCodec[ReferenceKey],
-	pkCodec collections.KeyCodec[PrimaryKey],
+	refCodec codec.KeyCodec[ReferenceKey],
+	pkCodec codec.KeyCodec[PrimaryKey],
 	getRefKeyFunc func(pk PrimaryKey, v Value) (ReferenceKey, error),
 ) *Unique[ReferenceKey, PrimaryKey, Value] {
 	i := collections.NewGenericUniqueIndex(schema, prefix, name, refCodec, pkCodec, func(pk PrimaryKey, value Value) ([]collections.IndexReference[ReferenceKey, PrimaryKey], error) {
@@ -84,9 +86,11 @@ func (i UniqueIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]collections.Pair
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Next() {
 	(collections.Iterator[ReferenceKey, PrimaryKey])(i).Next()
 }
+
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Valid() bool {
 	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Valid()
 }
+
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Close() error {
 	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Close()
 }

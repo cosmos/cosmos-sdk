@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections/codec"
+
 	"cosmossdk.io/core/store"
 )
 
@@ -11,8 +13,8 @@ import (
 // It is used to map arbitrary keys to arbitrary
 // objects.
 type Map[K, V any] struct {
-	kc KeyCodec[K]
-	vc ValueCodec[V]
+	kc codec.KeyCodec[K]
+	vc codec.ValueCodec[V]
 
 	// store accessor
 	sa     func(context.Context) store.KVStore
@@ -27,8 +29,8 @@ func NewMap[K, V any](
 	schemaBuilder *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	keyCodec KeyCodec[K],
-	valueCodec ValueCodec[V],
+	keyCodec codec.KeyCodec[K],
+	valueCodec codec.ValueCodec[V],
 ) Map[K, V] {
 	m := Map[K, V]{
 		kc:     keyCodec,
@@ -165,12 +167,12 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 }
 
 // KeyCodec returns the Map's KeyCodec.
-func (m Map[K, V]) KeyCodec() KeyCodec[K] { return m.kc }
+func (m Map[K, V]) KeyCodec() codec.KeyCodec[K] { return m.kc }
 
 // ValueCodec returns the Map's ValueCodec.
-func (m Map[K, V]) ValueCodec() ValueCodec[V] { return m.vc }
+func (m Map[K, V]) ValueCodec() codec.ValueCodec[V] { return m.vc }
 
-func encodeKeyWithPrefix[K any](prefix []byte, kc KeyCodec[K], key K) ([]byte, error) {
+func encodeKeyWithPrefix[K any](prefix []byte, kc codec.KeyCodec[K], key K) ([]byte, error) {
 	prefixLen := len(prefix)
 	// preallocate buffer
 	keyBytes := make([]byte, prefixLen+kc.Size(key))

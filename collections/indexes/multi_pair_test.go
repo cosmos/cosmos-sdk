@@ -1,14 +1,17 @@
 package indexes
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
-type Address = string
-type Denom = string
-type Amount = uint64
+type (
+	Address = string
+	Denom   = string
+	Amount  = uint64
+)
 
 // our balance index, allows us to efficiently create an index between the key that maps
 // balances which is a collections.Pair[Address, Denom] and the Denom.
@@ -22,7 +25,7 @@ func (b balanceIndex) IndexesList() []collections.Index[collections.Pair[Address
 
 func TestMultiPair(t *testing.T) {
 	sk, ctx := deps()
-	sb := collections.NewSchemaBuilderFromKVService(sk)
+	sb := collections.NewSchemaBuilder(sk)
 	// we create an indexed map that maps balances, which are saved as
 	// key: Pair[Address, Denom]
 	// value: Amount

@@ -189,3 +189,8 @@ updates:
       - "A:automerge"
       - dependencies
       - "testing-required"
+    allow:
+      - dependency-name: "github.com/cosmos/cosmos-sdk/*"
+        dependency-type: "all"
+      - dependency-name: "cosmossdk.io/*"
+        dependency-type: "all"

@@ -125,65 +125,6 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	}
 }
 
-// TODO
-// merge with marshalMessage or if embed ends up not being needed delete it.
-func (aj AminoJSON) marshalEmbedded(msg protoreflect.Message, writer io.Writer) (bool, error) {
-	fields := msg.Descriptor().Fields()
-	first := true
-	wrote := false
-	for i := 0; i < fields.Len(); i++ {
-		f := fields.Get(i)
-		v := msg.Get(f)
-		name := getFieldName(f)
-
-		if !msg.Has(f) {
-			if omitEmpty(f) {
-				continue
-			} else {
-				zv, found := aj.getZeroValue(f)
-				if found {
-					v = zv
-				}
-			}
-		}
-
-		if !first {
-			_, err := writer.Write([]byte(","))
-			if err != nil {
-				return wrote, err
-			}
-		}
-
-		err := jsonMarshal(writer, name)
-		wrote = true
-		if err != nil {
-			return wrote, err
-		}
-
-		_, err = writer.Write([]byte(":"))
-		if err != nil {
-			return wrote, err
-		}
-
-		// encode value
-		if encoder := aj.getFieldEncoding(f); encoder != nil {
-			err = encoder(aj, v, writer)
-			if err != nil {
-				return wrote, err
-			}
-		} else {
-			err = aj.marshal(v, writer)
-			if err != nil {
-				return wrote, err
-			}
-		}
-
-		first = false
-	}
-
-	return wrote, nil
-}
-
 func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
 	if msg == nil {
 		return errors.New("nil message")
@@ -238,17 +179,6 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 				!v.Message().IsValid() {
 				return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
 			}
-		}
-
-		if isFieldEmbedded(v, f) {
-			wrote, err := aj.marshalEmbedded(v.Message(), writer)
-			if err != nil {
-				return err
-			}
-			if wrote {
-				first = false
-			}
-			continue
 		}
 
 		if !first {
@@ -425,21 +355,6 @@ func (aj AminoJSON) getMessageEncoder(message protoreflect.Message) MessageEncod
 		}
 	}
 	return nil
-}
-
-func isFieldEmbedded(fieldValue protoreflect.Value, field protoreflect.FieldDescriptor) bool {
-	opts := field.Options()
-	if proto.HasExtension(opts, amino.E_Embed) {
-		embedded := proto.GetExtension(opts, amino.E_Embed).(bool)
-		switch fieldValue.Interface().(type) {
-		case protoreflect.Message:
-			return embedded
-		default:
-			fmt.Printf("WARN: field %s is not a message, but has the embedded option set to true. Ignoring option.\n", field.Name())
-			return false
-		}
-	}
-	return false
 }
 
 func (aj AminoJSON) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEncoder {

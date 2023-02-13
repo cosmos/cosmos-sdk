@@ -6,8 +6,8 @@ package secp256k1
 import (
 	"errors"
 
-	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 
 	"github.com/cometbft/cometbft/crypto"
 )
@@ -16,10 +16,8 @@ import (
 // The returned signature will be of the form R || S (in lower-S form).
 func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	priv := secp256k1.PrivKeyFromBytes(privKey.Key)
-	sig, err := ecdsa.SignCompact(priv, crypto.Sha256(msg), false)
-	if err != nil {
-		return nil, err
-	}
+	sig := ecdsa.SignCompact(priv, crypto.Sha256(msg), false)
+
 	// remove the first byte which is compactSigRecoveryCode
 	return sig[1:], nil
 }

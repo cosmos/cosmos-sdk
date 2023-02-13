@@ -6,8 +6,8 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

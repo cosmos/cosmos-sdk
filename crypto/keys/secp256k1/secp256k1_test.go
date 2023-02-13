@@ -7,11 +7,11 @@ import (
 	"math/big"
 	"testing"
 
-	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/cometbft/cometbft/crypto"
 	tmsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/btcutil/base58"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	btcecdsa "github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -204,7 +204,7 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	ok := ecdsa.Verify(btcPubKey.ToECDSA(), msgHash, r, s)
 	require.True(t, ok)
 
-	sig2, err := btcecdsa.SignCompact(btcPrivKey, msgHash, false)
+	sig2 := btcecdsa.SignCompact(btcPrivKey, msgHash, false)
 	// Chop off compactSigRecoveryCode.
 	sig2 = sig2[1:]
 	require.NoError(t, err)

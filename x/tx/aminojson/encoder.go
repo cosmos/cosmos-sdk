@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
+	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -9,6 +10,23 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 )
+
+func cosmosDecBytesEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
+	switch bz := v.Interface().(type) {
+	case []byte:
+		if len(bz) == 0 {
+			return jsonMarshal(w, "0")
+		}
+		var dec math.LegacyDec
+		err := dec.Unmarshal(bz)
+		if err != nil {
+			return err
+		}
+		return jsonMarshal(w, dec.String())
+	default:
+		return fmt.Errorf("unsupported type %T", bz)
+	}
+}
 
 func cosmosDecEncoder(aj AminoJSON, v protoreflect.Value, w io.Writer) error {
 	switch s := v.Interface().(type) {

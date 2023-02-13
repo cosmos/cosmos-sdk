@@ -43,6 +43,7 @@ func NewAminoJSON() AminoJSON {
 			"empty_string":        emptyStringEncoder,
 			"json_default":        jsonDefaultEncoder,
 			"null_slice_as_empty": nullSliceAsEmptyEncoder,
+			"cosmos_dec_bytes":    cosmosDecBytesEncoder,
 		},
 	}
 	return aj

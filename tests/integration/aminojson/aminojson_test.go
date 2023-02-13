@@ -5,6 +5,7 @@ import (
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"reflect"
 	"testing"
 	"time"
@@ -32,6 +33,7 @@ import (
 	groupapi "cosmossdk.io/api/cosmos/group/v1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
 	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
+	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
@@ -60,6 +62,7 @@ import (
 	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 type generatedType struct {
@@ -223,6 +226,11 @@ var (
 
 		// params
 		genType(&proposal.ParameterChangeProposal{}, &paramsapi.ParameterChangeProposal{}, genOpts),
+
+		// slashing
+		genType(&slashingtypes.Params{}, &slashingapi.Params{}, genOpts.WithDisallowNil()),
+		genType(&slashingtypes.MsgUnjail{}, &slashingapi.MsgUnjail{}, genOpts),
+		genType(&slashingtypes.MsgUpdateParams{}, &slashingapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
 	}
 )
 
@@ -230,7 +238,8 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
-		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{})
+		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
+		slashing.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {
@@ -286,7 +295,7 @@ func newAny(t *testing.T, msg proto.Message) *anypb.Any {
 
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
-		bank.AppModuleBasic{}, distribution.AppModuleBasic{})
+		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{})
 
 	aj := aminojson.NewAminoJSON()
 	addr1 := types.AccAddress([]byte("addr1"))
@@ -294,6 +303,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 
 	genericAuth, _ := codectypes.NewAnyWithValue(&authztypes.GenericAuthorization{Msg: "foo"})
 	genericAuthPulsar := newAny(t, &authzapi.GenericAuthorization{Msg: "foo"})
+	dec10bz, _ := types.NewDec(10).Marshal()
 
 	cases := map[string]struct {
 		gogo               gogoproto.Message
@@ -391,6 +401,23 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"bank/msg_multi_send/nil_everything": {
 			gogo:   &banktypes.MsgMultiSend{},
 			pulsar: &bankapi.MsgMultiSend{},
+		},
+		"slashing/params/empty_dec": {
+			gogo:   &slashingtypes.Params{DowntimeJailDuration: 1e9 + 7},
+			pulsar: &slashingapi.Params{DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7}},
+		},
+		// !! Important !!
+		// This test cases demonstrates the expected contract and proper way to set a cosmos.Dec field represented
+		// as bytes in protobuf message, namely:
+		// dec10bz, _ := types.NewDec(10).Marshal()
+		"slashing/params/dec": {
+			gogo: &slashingtypes.Params{
+				DowntimeJailDuration: 1e9 + 7,
+				MinSignedPerWindow:   types.NewDec(10)},
+			pulsar: &slashingapi.Params{
+				DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7},
+				MinSignedPerWindow:   dec10bz,
+			},
 		},
 	}
 	for name, tc := range cases {

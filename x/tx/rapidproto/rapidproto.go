@@ -1,6 +1,7 @@
 package rapidproto
 
 import (
+	"cosmossdk.io/api/amino"
 	"fmt"
 	"math"
 
@@ -190,6 +191,12 @@ func (opts GeneratorOptions) genScalarFieldValue(t *rapid.T, field protoreflect.
 	case protoreflect.BoolKind:
 		return protoreflect.ValueOfBool(rapid.Bool().Draw(t, name))
 	case protoreflect.BytesKind:
+		if proto.HasExtension(fopts, amino.E_Encoding) {
+			encoding := proto.GetExtension(fopts, amino.E_Encoding).(string)
+			if encoding == "cosmos_dec_bytes" && opts.GogoUnmarshalCompatibleDecimal {
+				return protoreflect.ValueOfBytes([]byte{})
+			}
+		}
 		return protoreflect.ValueOfBytes(rapid.SliceOf(rapid.Byte()).Draw(t, name))
 	case protoreflect.FloatKind:
 		return protoreflect.ValueOfFloat32(rapid.Float32().Draw(t, name))

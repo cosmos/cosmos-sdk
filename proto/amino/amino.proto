@@ -78,4 +78,10 @@ extend google.protobuf.FieldOptions {
   bool dont_omitempty = 11110005;
 
   bool embed = 11110006;
+
+  string oneof_type_name = 11110007;
+}
+
+extend google.protobuf.OneofOptions {
+  string oneof_field_name = 11110008;
 }

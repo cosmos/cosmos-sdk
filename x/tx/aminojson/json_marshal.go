@@ -211,31 +211,32 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 
 	fields := msg.Descriptor().Fields()
 	first := true
+	emptyOneOfWritten := map[string]bool{}
 	for i := 0; i < fields.Len(); i++ {
 		f := fields.Get(i)
 		v := msg.Get(f)
 		name := getFieldName(f)
+		oneof := f.ContainingOneof()
+		isOneOf := oneof != nil
+		oneofFieldName, oneofTypeName, err := getOneOfNames(f)
+		if err != nil && isOneOf {
+			return err
+		}
 		writeNil := false
 
 		if !msg.Has(f) {
-			if omitEmpty(f) {
+			// msg.WhichOneof(oneof) == nil: no field of the oneof has been set
+			// !emptyOneOfWritten: we haven't written a null for this oneof yet (only write one null per empty oneof)
+			if isOneOf && msg.WhichOneof(oneof) == nil && emptyOneOfWritten[oneofFieldName] != true {
+				name = oneofFieldName
+				writeNil = true
+				emptyOneOfWritten[oneofFieldName] = true
+			} else if omitEmpty(f) {
 				continue
-			} else {
-				if f.Kind() == protoreflect.MessageKind &&
-					f.Cardinality() != protoreflect.Repeated &&
-					!v.Message().IsValid() {
-					return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
-				}
-				//zv, found := aj.getZeroValue(f)
-				//if found {
-				//	v = zv
-				//} else if f.Cardinality() == protoreflect.Repeated {
-				//	//fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
-				//	//writeNil = true
-				//} else if f.Kind() == protoreflect.MessageKind && !v.Message().IsValid() {
-				//	return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
-				//	//fmt.Printf("WARN: not supported: dont_omit_empty=true on invalid (nil?) message field: %s\n", name)
-				//}
+			} else if f.Kind() == protoreflect.MessageKind &&
+				f.Cardinality() != protoreflect.Repeated &&
+				!v.Message().IsValid() {
+				return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
 			}
 		}
 
@@ -252,6 +253,14 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 
 		if !first {
 			_, err = writer.Write([]byte(","))
+			if err != nil {
+				return err
+			}
+		}
+
+		if isOneOf && !writeNil {
+			_, err = writer.Write([]byte(fmt.Sprintf(`"%s":{"type":"%s","value":{`,
+				oneofFieldName, oneofTypeName)))
 			if err != nil {
 				return err
 			}
@@ -280,6 +289,13 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 			}
 		} else {
 			err = aj.marshal(v, writer)
+			if err != nil {
+				return err
+			}
+		}
+
+		if isOneOf && !writeNil {
+			_, err = writer.Write([]byte("}}"))
 			if err != nil {
 				return err
 			}
@@ -348,6 +364,7 @@ func omitEmpty(field protoreflect.FieldDescriptor) bool {
 	//if field.ContainingOneof() != nil {
 	//	return false
 	//}
+
 	// legacy support for gogoproto would need to look something like below.
 	//
 	// if gproto.GetBoolExtension(opts, gogoproto.E_Nullable, true) {
@@ -362,6 +379,30 @@ func getFieldName(field protoreflect.FieldDescriptor) string {
 		return proto.GetExtension(opts, amino.E_FieldName).(string)
 	}
 	return string(field.Name())
+}
+
+func getOneOfNames(field protoreflect.FieldDescriptor) (string, string, error) {
+	opts := field.Options()
+	oneOf := field.ContainingOneof()
+	if oneOf == nil {
+		return "", "", errors.Errorf("field %s must be within a oneof", field.Name())
+	}
+	oneOfOpts := oneOf.Options()
+
+	var fieldName, typeName string
+	if proto.HasExtension(oneOfOpts, amino.E_OneofFieldName) {
+		fieldName = proto.GetExtension(oneOfOpts, amino.E_OneofFieldName).(string)
+	} else {
+		return "", "", errors.Errorf("oneof %s must have the amino.oneof_field_name option set", oneOf.Name())
+	}
+	if proto.HasExtension(opts, amino.E_OneofTypeName) {
+		typeName = proto.GetExtension(opts, amino.E_OneofTypeName).(string)
+	} else {
+		return "", "", errors.Errorf("field %s within a oneof must have the amino.oneof_type_name option set",
+			field.Name())
+	}
+
+	return fieldName, typeName, nil
 }
 
 func (aj AminoJSON) getZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {

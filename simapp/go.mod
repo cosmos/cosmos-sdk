@@ -20,6 +20,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.48.0
+	github.com/cosmos/gogoproto v1.4.5-0.20230208224001-0964dc660171
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
@@ -28,8 +29,6 @@ require (
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/protobuf v1.28.2-0.20230208135220-49eaa78c6c9c
 )
-
-require github.com/cosmos/gogoproto v1.4.4
 
 require (
 	cloud.google.com/go v0.107.0 // indirect
@@ -201,8 +200,6 @@ replace (
 	cosmossdk.io/x/upgrade => ../x/upgrade
 	// TODO update/remove after v0.37.x tag of CometBFT
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-	// TODO update after gogoproto tag
-	github.com/cosmos/gogoproto => ../../gogoproto
 )
 
 // Below are the long-lived replace of the SimApp

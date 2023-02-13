@@ -10,7 +10,7 @@ import (
 // ParamStoreKeyConstantFee is the constant fee parameter
 var ParamStoreKeyConstantFee = []byte("ConstantFee")
 
-// type declaration for parameters
+// Deprecated: Type declaration for parameters
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable(
 		paramtypes.NewParamSetPair(ParamStoreKeyConstantFee, sdk.Coin{}, validateConstantFee),

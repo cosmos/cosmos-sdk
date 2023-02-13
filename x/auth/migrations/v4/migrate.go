@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var ParamsKey = []byte{0x01}
+var ParamsKey = []byte{0x00}
 
 // Migrate migrates the x/auth module state from the consensus version 3 to
 // version 4. Specifically, it takes the parameters that are currently stored

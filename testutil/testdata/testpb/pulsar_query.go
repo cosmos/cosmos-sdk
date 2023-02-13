@@ -1,5 +1,4 @@
-//nolint:revive
-package testdata_pulsar
+package testpb
 
 import (
 	"context"

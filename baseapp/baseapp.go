@@ -936,6 +936,7 @@ func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
 		}
+
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
 }

@@ -14,12 +14,12 @@ import (
 )
 
 type messageValueRenderer struct {
-	tr      *Textual
+	tr      *SignModeHandler
 	msgDesc protoreflect.MessageDescriptor
 	fds     []protoreflect.FieldDescriptor
 }
 
-func NewMessageValueRenderer(t *Textual, msgDesc protoreflect.MessageDescriptor) ValueRenderer {
+func NewMessageValueRenderer(t *SignModeHandler, msgDesc protoreflect.MessageDescriptor) ValueRenderer {
 	fields := msgDesc.Fields()
 	fds := make([]protoreflect.FieldDescriptor, 0, fields.Len())
 	for i := 0; i < fields.Len(); i++ {

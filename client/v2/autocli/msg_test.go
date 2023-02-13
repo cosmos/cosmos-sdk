@@ -2,7 +2,6 @@ package autocli
 
 import (
 	"bytes"
-	"fmt"
 	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"strings"
@@ -217,7 +216,6 @@ func TestEverythingMsg(t *testing.T) {
 
 func TestHelpMsg(t *testing.T) {
 	conn := testMsgExec(t, "-h")
-	fmt.Println(conn.out.String())
 	golden.Assert(t, conn.out.String(), "help-toplevel-msg.golden")
 
 	conn = testMsgExec(t, "send", "-h")

@@ -543,13 +543,24 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 	switch mode {
 	case runTxModeDeliver:
 		return app.deliverState
+
 	case runTxPrepareProposal:
 		return app.prepareProposalState
+
 	case runTxProcessProposal:
 		return app.processProposalState
+
 	default:
 		return app.checkState
 	}
+}
+
+func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
+	if maxGas := app.GetMaximumBlockGas(ctx); maxGas > 0 {
+		return storetypes.NewGasMeter(maxGas)
+	}
+
+	return storetypes.NewInfiniteGasMeter()
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.

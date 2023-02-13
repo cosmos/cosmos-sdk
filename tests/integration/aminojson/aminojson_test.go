@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"reflect"
 	"testing"
 	"time"
@@ -34,6 +35,7 @@ import (
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
 	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
+	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
@@ -41,7 +43,7 @@ import (
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -63,6 +65,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type generatedType struct {
@@ -231,6 +234,21 @@ var (
 		genType(&slashingtypes.Params{}, &slashingapi.Params{}, genOpts.WithDisallowNil()),
 		genType(&slashingtypes.MsgUnjail{}, &slashingapi.MsgUnjail{}, genOpts),
 		genType(&slashingtypes.MsgUpdateParams{}, &slashingapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
+
+		// staking
+		genType(&stakingtypes.MsgCreateValidator{}, &stakingapi.MsgCreateValidator{},
+			genOpts.WithDisallowNil().
+				WithAnyTypes(&ed25519.PubKey{}).
+				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{}),
+		),
+		genType(&stakingtypes.MsgEditValidator{}, &stakingapi.MsgEditValidator{}, genOpts),
+		genType(&stakingtypes.MsgDelegate{}, &stakingapi.MsgDelegate{}, genOpts),
+		genType(&stakingtypes.MsgUndelegate{}, &stakingapi.MsgUndelegate{}, genOpts),
+		genType(&stakingtypes.MsgBeginRedelegate{}, &stakingapi.MsgBeginRedelegate{}, genOpts),
+		genType(&stakingtypes.MsgCancelUnbondingDelegationResponse{},
+			&stakingapi.MsgCancelUnbondingDelegationResponse{}, genOpts),
+		genType(&stakingtypes.MsgUpdateParams{}, &stakingapi.MsgUpdateParams{}, genOpts),
+		genType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, genOpts),
 	}
 )
 
@@ -239,7 +257,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
-		slashing.AppModuleBasic{})
+		slashing.AppModuleBasic{}, staking.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {
@@ -295,7 +313,7 @@ func newAny(t *testing.T, msg proto.Message) *anypb.Any {
 
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
-		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{})
+		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{})
 
 	aj := aminojson.NewAminoJSON()
 	addr1 := types.AccAddress([]byte("addr1"))
@@ -303,6 +321,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 
 	genericAuth, _ := codectypes.NewAnyWithValue(&authztypes.GenericAuthorization{Msg: "foo"})
 	genericAuthPulsar := newAny(t, &authzapi.GenericAuthorization{Msg: "foo"})
+	pubkeyAny, _ := codectypes.NewAnyWithValue(&ed25519.PubKey{Key: []byte("foo")})
+	pubkeyAnyPulsar := newAny(t, &ed25519.PubKey{Key: []byte("foo")})
 	dec10bz, _ := types.NewDec(10).Marshal()
 
 	cases := map[string]struct {
@@ -325,6 +345,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &authapi.ModuleAccount{
 				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}},
 			roundTripUnequal: true,
+		},
+		"auth/base_account": {
+			gogo:   &authtypes.BaseAccount{Address: addr1.String(), PubKey: pubkeyAny},
+			pulsar: &authapi.BaseAccount{Address: addr1.String(), PubKey: pubkeyAnyPulsar},
 		},
 		"authz/msg_grant": {
 			gogo: &authztypes.MsgGrant{
@@ -362,7 +386,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &distapi.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
 		},
 		"crypto/pubkey": {
-			gogo: &cryptotypes.PubKey{Key: []byte("key")}, pulsar: &ed25519.PubKey{Key: []byte("key")},
+			gogo: &ed25519types.PubKey{Key: []byte("key")}, pulsar: &ed25519.PubKey{Key: []byte("key")},
 		},
 		"consensus/evidence_params/duration": {
 			gogo:   &gov_v1beta1_types.VotingParams{VotingPeriod: 1e9 + 7},
@@ -417,6 +441,15 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &slashingapi.Params{
 				DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7},
 				MinSignedPerWindow:   dec10bz,
+			},
+		},
+		"staking/create_validator": {
+			gogo: &stakingtypes.MsgCreateValidator{Pubkey: pubkeyAny},
+			pulsar: &stakingapi.MsgCreateValidator{
+				Pubkey:      pubkeyAnyPulsar,
+				Description: &stakingapi.Description{},
+				Commission:  &stakingapi.CommissionRates{},
+				Value:       &v1beta1.Coin{},
 			},
 		},
 	}

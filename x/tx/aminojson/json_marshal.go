@@ -34,6 +34,7 @@ func NewAminoJSON() AminoJSON {
 		},
 		scalarEncoders: map[string]FieldEncoder{
 			"cosmos.Dec": cosmosDecEncoder,
+			"cosmos.Int": cosmosDecEncoder,
 		},
 		messageEncoders: map[string]MessageEncoder{
 			"key_field":      keyFieldEncoder,

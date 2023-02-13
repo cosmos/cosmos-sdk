@@ -18,12 +18,14 @@ var (
 // KEYS
 
 var (
-	// Uint64Key can be used to encode uint64 keys. Encoding is big endian to retain ordering.
-	Uint64Key = codec.NewUint64Key[uint64]()
-	// Uint32Key can be used to encode uint32 keys. Encoding is big endian to retain ordering.
-	Uint32Key = codec.NewUint32Key[uint32]()
 	// Uint16Key can be used to encode uint16 keys. Encoding is big endian to retain ordering.
 	Uint16Key = codec.NewUint16Key[uint16]()
+	// Uint32Key can be used to encode uint32 keys. Encoding is big endian to retain ordering.
+	Uint32Key = codec.NewUint32Key[uint32]()
+	// Uint64Key can be used to encode uint64 keys. Encoding is big endian to retain ordering.
+	Uint64Key = codec.NewUint64Key[uint64]()
+	// Int32Key can be used to encode int32 keys. Encoding retains ordering by toggling the MSB.
+	Int32Key = codec.NewInt32Key[int32]()
 	// Int64Key can be used to encode int64. Encoding retains ordering by toggling the MSB.
 	Int64Key = codec.NewInt64Key[int64]()
 	// StringKey can be used to encode string keys. The encoding just converts the string
@@ -51,11 +53,22 @@ var (
 // VALUES
 
 var (
-	// Uint64Value implements a ValueCodec for uint64. It converts the uint64 to big endian bytes.
-	// The JSON representation is the string format of uint64.
+	// BoolValue implements a ValueCodec for bool.
+	BoolValue = codec.KeyToValueCodec(BoolKey)
+	// Uint16Value implements a ValueCodec for uint16.
+	Uint16Value = codec.KeyToValueCodec(Uint16Key)
+	// Uint32Value implements a ValueCodec for uint32.
+	Uint32Value = codec.KeyToValueCodec(Uint32Key)
+	// Uint64Value implements a ValueCodec for uint64.
 	Uint64Value = codec.KeyToValueCodec(Uint64Key)
+	// Int32Value implements a ValueCodec for int32.
+	Int32Value = codec.KeyToValueCodec(Int32Key)
+	// Int64Value implements a ValueCodec for int64.
+	Int64Value = codec.KeyToValueCodec(Int64Key)
 	// StringValue implements a ValueCodec for string.
 	StringValue = codec.KeyToValueCodec(StringKey)
+	// BytesValue implements a ValueCodec for bytes.
+	BytesValue = codec.KeyToValueCodec(BytesKey)
 )
 
 // collection is the interface that all collections support. It will eventually
@@ -72,14 +85,11 @@ type collection interface {
 	genesisHandler
 }
 
-// Prefix defines a segregation namespace
-// for specific collections objects.
-type Prefix struct {
-	raw []byte // TODO(testinginprod): maybe add a humanized prefix field?
-}
+// Prefix defines a segregation bytes namespace for specific collections objects.
+type Prefix []byte
 
 // Bytes returns the raw Prefix bytes.
-func (n Prefix) Bytes() []byte { return n.raw }
+func (n Prefix) Bytes() []byte { return n }
 
 // NewPrefix returns a Prefix given the provided namespace identifier.
 // In the same module, no prefixes should share the same starting bytes
@@ -109,5 +119,5 @@ func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 		copy(identifierCopy, c)
 		prefix = identifierCopy
 	}
-	return Prefix{raw: prefix}
+	return prefix
 }

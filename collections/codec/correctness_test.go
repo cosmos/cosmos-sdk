@@ -32,6 +32,10 @@ func TestKeyCorrectness(t *testing.T) {
 		colltest.TestKeyCodec(t, collections.BoolKey, false)
 	})
 
+	t.Run("int32", func(t *testing.T) {
+		colltest.TestKeyCodec(t, collections.Int32Key, -500)
+	})
+
 	t.Run("int64", func(t *testing.T) {
 		colltest.TestKeyCodec(t, collections.Int64Key, -100)
 	})

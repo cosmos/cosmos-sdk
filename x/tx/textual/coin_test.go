@@ -48,7 +48,7 @@ func addMetadataToContext(ctx context.Context, metadata *bankv1beta1.Metadata) c
 
 func TestMetadataQuerier(t *testing.T) {
 	// Errors on nil metadata querier
-	txt := textual.SignModeHandler{}
+	txt := textual.NewSignModeHandler(nil)
 	vr, err := txt.GetFieldValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))

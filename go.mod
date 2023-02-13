@@ -26,7 +26,7 @@ require (
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
-	github.com/cosmos/gogoproto v1.4.4
+	github.com/cosmos/gogoproto v1.4.5-0.20230208224001-0964dc660171
 	github.com/cosmos/ledger-cosmos-go v0.13.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
@@ -156,12 +156,11 @@ require (
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
 replace (
+	cosmossdk.io/api => ./api
 	// TODO update after cosmos-sdk/log tagged
 	cosmossdk.io/log => ./log
 	// TODO update/remove after v0.37.x tag of CometBFT
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-	// TODO update after gogoproto tag
-	github.com/cosmos/gogoproto => ../gogoproto
 )
 
 // Below are the long-lived replace of the Cosmos SDK

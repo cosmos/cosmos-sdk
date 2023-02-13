@@ -2,7 +2,7 @@ package autocli
 
 import (
 	"bytes"
-	"encoding/json"
+	"fmt"
 	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"strings"
@@ -78,6 +78,7 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 				{
 					RpcMethod:  "Send",
 					Deprecated: "dont use this",
+					Short:      "deprecated subcommand",
 				},
 			},
 		},
@@ -87,6 +88,7 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 				{
 					RpcMethod: "Send",
 					Skip:      true,
+					Short:     "skip subcommand",
 				},
 			},
 		},
@@ -134,13 +136,13 @@ func testMsgExec(t *testing.T, args ...string) *testClientConn {
 
 func TestMsgOptions(t *testing.T) {
 	conn := testMsgExec(t,
-		"send", "5", "6",
+		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--uint32", "7",
 		"--u64", "8",
 	)
 	response := conn.out.String()
 	var output testpb.MsgRequest
-	err := json.Unmarshal([]byte(response), &output)
+	err := protojson.Unmarshal([]byte(response), &output)
 	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(7))
 	assert.Equal(t, output.GetPositional1(), int32(5))
@@ -149,12 +151,12 @@ func TestMsgOptions(t *testing.T) {
 
 func TestDeprecatedMsg(t *testing.T) {
 	conn := testMsgExec(t, "send",
-		"1", "abc",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"--deprecated-field", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--deprecated-field has been deprecated"))
 
 	conn = testMsgExec(t, "send",
-		"1", "abc",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"-d", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--shorthand-deprecated-field has been deprecated"))
 }
@@ -215,6 +217,7 @@ func TestEverythingMsg(t *testing.T) {
 
 func TestHelpMsg(t *testing.T) {
 	conn := testMsgExec(t, "-h")
+	fmt.Println(conn.out.String())
 	golden.Assert(t, conn.out.String(), "help-toplevel-msg.golden")
 
 	conn = testMsgExec(t, "send", "-h")

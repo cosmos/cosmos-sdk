@@ -29,7 +29,6 @@ Flags:
       --page-limit uint                                                      
       --page-offset uint                                                     
       --page-reverse                                                         
-      --positional3-varargs cosmos.base.v1beta1.Coin (json) (repeated)       
   -d, --shorthand-deprecated-field string                                     (DEPRECATED: bad idea)
       --some-messages testpb.AMessage (json) (repeated)                      
       --str string                                                           

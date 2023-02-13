@@ -1,4 +1,6 @@
 Command "send" is deprecated, dont use this
+deprecated subcommand
+
 Usage:
   test deprecatedmsg send [flags]
 

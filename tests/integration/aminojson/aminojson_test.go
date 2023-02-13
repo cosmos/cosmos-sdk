@@ -4,6 +4,7 @@ import (
 	"fmt"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"reflect"
 	"testing"
 	"time"
@@ -30,6 +31,7 @@ import (
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
 	groupapi "cosmossdk.io/api/cosmos/group/v1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
+	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
@@ -57,6 +59,7 @@ import (
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 type generatedType struct {
@@ -217,6 +220,9 @@ var (
 		// mint
 		genType(&minttypes.Params{}, &mintapi.Params{}, genOpts),
 		genType(&minttypes.MsgUpdateParams{}, &mintapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
+
+		// params
+		genType(&proposal.ParameterChangeProposal{}, &paramsapi.ParameterChangeProposal{}, genOpts),
 	}
 )
 
@@ -224,7 +230,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
-		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{})
+		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {

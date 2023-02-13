@@ -32,19 +32,22 @@ message CommissionRates {
   string rate = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
   // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
   string max_rate = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
   // max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
   string max_change_rate = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
 }
 
@@ -313,7 +316,9 @@ message Params {
   string min_commission_rate = 6 [
     (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
+    (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
 }
 

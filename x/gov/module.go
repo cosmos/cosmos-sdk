@@ -216,7 +216,7 @@ func ProvideModule(in GovInputs) GovOutputs {
 }
 
 func ProvideKeyTable() paramtypes.KeyTable {
-	return v1.ParamKeyTable() // nolint:staticcheck
+	return v1.ParamKeyTable() //nolint:staticcheck
 }
 
 func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {

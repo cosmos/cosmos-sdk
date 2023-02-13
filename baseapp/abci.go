@@ -271,19 +271,13 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal called with invalid height")
 	}
 
-	gasMeter := storetypes.NewInfiniteGasMeter()
-	if maxGas := app.GetMaximumBlockGas(app.prepareProposalState.ctx); maxGas > 0 {
-		gasMeter = storetypes.NewGasMeter(maxGas)
-	}
-
 	ctx := app.getContextForProposal(app.prepareProposalState.ctx, req.Height)
 
 	ctx = ctx.WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx)).
-		WithBlockGasMeter(gasMeter)
+		WithConsensusParams(app.GetConsensusParams(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -293,7 +287,6 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 				"time", req.Time,
 				"panic", err,
 			)
-
 			resp = abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 	}()
@@ -322,11 +315,6 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	gasMeter := storetypes.NewInfiniteGasMeter()
-	if maxGas := app.GetMaximumBlockGas(app.processProposalState.ctx); maxGas > 0 {
-		gasMeter = storetypes.NewGasMeter(maxGas)
-	}
-
 	ctx := app.getContextForProposal(app.processProposalState.ctx, req.Height)
 
 	ctx = ctx.
@@ -335,8 +323,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx)).
-		WithBlockGasMeter(gasMeter)
+		WithConsensusParams(app.GetConsensusParams(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {

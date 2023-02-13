@@ -37,8 +37,8 @@ message ModuleAccount {
   option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.ModuleAccountI";
 
   BaseAccount     base_account = 1 [(gogoproto.embed) = true];
-  string          name         = 2 [(amino.dont_omitempty) = true];
-  repeated string permissions  = 3 [(amino.dont_omitempty) = true];
+  string          name         = 2;
+  repeated string permissions  = 3;
 }
 
 // ModuleCredential represents a unclaimable pubkey for base accounts controlled by modules.

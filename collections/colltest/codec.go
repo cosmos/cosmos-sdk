@@ -1,11 +1,12 @@
 package colltest
 
 import (
-	"cosmossdk.io/collections/codec"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
+
+	"cosmossdk.io/collections/codec"
 
 	"cosmossdk.io/collections"
 

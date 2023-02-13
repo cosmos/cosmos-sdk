@@ -1,9 +1,10 @@
 package collections
 
 import (
-	"cosmossdk.io/collections/codec"
 	"errors"
 	"math"
+
+	"cosmossdk.io/collections/codec"
 )
 
 var (

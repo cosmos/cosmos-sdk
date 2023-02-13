@@ -2,6 +2,7 @@ package indexes
 
 import (
 	"context"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
 )

@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+
 	"cosmossdk.io/collections/codec"
 )
 

@@ -2,10 +2,11 @@ package codec
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/require"
-	"pgregory.net/rapid"
 	"sort"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"pgregory.net/rapid"
 )
 
 // TestInt64Keys creates a random slice of int64. They're sorted, and then

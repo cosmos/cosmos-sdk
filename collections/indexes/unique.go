@@ -2,6 +2,7 @@ package indexes
 
 import (
 	"context"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
 )
@@ -85,9 +86,11 @@ func (i UniqueIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]collections.Pair
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Next() {
 	(collections.Iterator[ReferenceKey, PrimaryKey])(i).Next()
 }
+
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Valid() bool {
 	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Valid()
 }
+
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Close() error {
 	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Close()
 }

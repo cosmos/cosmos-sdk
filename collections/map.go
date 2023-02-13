@@ -2,8 +2,9 @@ package collections
 
 import (
 	"context"
-	"cosmossdk.io/collections/codec"
 	"fmt"
+
+	"cosmossdk.io/collections/codec"
 
 	"cosmossdk.io/core/store"
 )

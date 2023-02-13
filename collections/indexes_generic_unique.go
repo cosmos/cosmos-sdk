@@ -2,8 +2,9 @@ package collections
 
 import (
 	"context"
-	"cosmossdk.io/collections/codec"
 	"fmt"
+
+	"cosmossdk.io/collections/codec"
 )
 
 // GenericUniqueIndex defines a generic index which enforces uniqueness constraints

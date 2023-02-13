@@ -2,9 +2,10 @@ package collections
 
 import (
 	"context"
-	"cosmossdk.io/collections/codec"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections/codec"
 )
 
 // Indexes represents a type which groups multiple Index

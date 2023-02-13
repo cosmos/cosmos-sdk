@@ -1,9 +1,10 @@
 package codec_test
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
-	"testing"
 )
 
 func TestKeyCorrectness(t *testing.T) {

@@ -1,10 +1,11 @@
 package collections
 
 import (
-	"cosmossdk.io/collections/codec"
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"cosmossdk.io/collections/codec"
 )
 
 // Pair defines a key composed of two keys.

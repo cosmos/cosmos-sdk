@@ -3,8 +3,9 @@ package collections
 import (
 	"bytes"
 	"context"
-	"cosmossdk.io/collections/codec"
 	"fmt"
+
+	"cosmossdk.io/collections/codec"
 )
 
 // KeySet builds on top of a Map and represents a collection

@@ -272,7 +272,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 	}
 
 	gasMeter := storetypes.NewInfiniteGasMeter()
-	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
+	if maxGas := app.GetMaximumBlockGas(app.prepareProposalState.ctx); maxGas > 0 {
 		gasMeter = storetypes.NewGasMeter(maxGas)
 	}
 
@@ -323,7 +323,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 	}
 
 	gasMeter := storetypes.NewInfiniteGasMeter()
-	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
+	if maxGas := app.GetMaximumBlockGas(app.processProposalState.ctx); maxGas > 0 {
 		gasMeter = storetypes.NewGasMeter(maxGas)
 	}
 

@@ -182,7 +182,7 @@ updates:
   # Dependencies should be up to date on release branch
   - package-ecosystem: gomod
     directory: "/"
-    target-branch: release/v0.47.x
+    target-branch: "release/v0.47.x"
     schedule:
       interval: weekly
     labels:

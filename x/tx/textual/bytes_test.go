@@ -21,7 +21,7 @@ func TestBytesJsonTestCases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := textual.SignModeHandler{}
+	textual := textual.NewSignModeHandler(nil)
 
 	for _, tc := range testcases {
 		t.Run(tc.hex, func(t *testing.T) {

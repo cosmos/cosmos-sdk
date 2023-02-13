@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -436,7 +437,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 
 	// try import the key - wrong password
 	err = kb.ImportPrivKey("john2", keystr, "bad pass")
-	require.Equal(t, "failed to decrypt private key: ciphertext decryption failed", err.Error())
+	require.True(t, errors.Is(err, sdkerrors.ErrWrongPassword))
 
 	// try import the key with the correct password
 	require.NoError(t, kb.ImportPrivKey("john2", keystr, "somepassword"))
@@ -1248,7 +1249,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	newUID := otherID
 	// Should fail importing with wrong password
 	err = kr.ImportPrivKey(newUID, armor, "wrongPass")
-	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
+	require.True(t, errors.Is(err, sdkerrors.ErrWrongPassword))
 
 	err = kr.ImportPrivKey(newUID, armor, passphrase)
 	require.NoError(t, err)
@@ -1278,7 +1279,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	newUID := otherID
 	// Should fail importing with wrong password
 	err = kr.ImportPrivKey(newUID, armor, "wrongPass")
-	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
+	require.True(t, errors.Is(err, sdkerrors.ErrWrongPassword))
 
 	err = kr.ImportPrivKey(newUID, armor, passphrase)
 	require.NoError(t, err)

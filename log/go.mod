@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-	github.com/rs/zerolog v1.28.0
+	github.com/rs/zerolog v1.29.0
 )
 
 require (

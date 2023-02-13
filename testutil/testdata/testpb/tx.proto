@@ -1,8 +1,8 @@
 syntax = "proto3";
-package testdata;
+package testpb;
 
 import "gogoproto/gogo.proto";
-import "testdata.proto";
+import "testpb/testdata.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/testutil/testdata";
 
@@ -13,7 +13,7 @@ service Msg {
 }
 
 message MsgCreateDog {
-  testdata.Dog dog = 1;
+  testpb.Dog dog = 1;
 }
 
 message MsgCreateDogResponse {

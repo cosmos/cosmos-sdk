@@ -1028,9 +1028,10 @@ func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo
 
 	flushLatestVersion(batch, version)
 
-	if err := batch.WriteSync(); err != nil {
+	if err := batch.Write(); err != nil {
 		panic(fmt.Errorf("error on batch write %w", err))
 	}
+
 	rs.logger.Debug("flushing metadata finished", "height", version)
 }
 

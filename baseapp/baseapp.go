@@ -625,8 +625,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	}()
 
 	blockGasConsumed := false
-	// consumeBlockGas makes sure block gas is consumed at most once. It must happen after
-	// tx processing, and must be executed even if tx processing fails. Hence, we use trick with `defer`
+
+	// consumeBlockGas makes sure block gas is consumed at most once. It must
+	// happen after tx processing, and must be executed even if tx processing
+	// fails. Hence, it's execution is deferred.
 	consumeBlockGas := func() {
 		if !blockGasConsumed {
 			blockGasConsumed = true
@@ -639,8 +641,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// If BlockGasMeter() panics it will be caught by the above recover and will
 	// return an error - in any case BlockGasMeter will consume gas past the limit.
 	//
-	// NOTE: This must exist in a separate defer function for the above recovery
-	// to recover from this one.
+	// NOTE: consumeBlockGas must exist in a separate defer function from the
+	// general deferred recovery function to recover from consumeBlockGas as it'll
+	// be executed first (deferred statements are executed as stack).
 	if mode == runTxModeDeliver {
 		defer consumeBlockGas()
 	}
@@ -696,17 +699,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteEvents = events.ToABCIEvents()
 	}
 
-	if mode == runTxModeCheck {
+	switch mode {
+	case runTxModeCheck:
 		err = app.mempool.Insert(ctx, tx)
-		if err != nil {
-			return gInfo, nil, anteEvents, priority, err
+	case runTxModeDeliver:
+		if err = app.mempool.Remove(tx); err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+			err = fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
-	} else if mode == runTxModeDeliver {
-		err = app.mempool.Remove(tx)
-		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			return gInfo, nil, anteEvents, priority,
-				fmt.Errorf("failed to remove tx from mempool: %w", err)
-		}
+	}
+	if err != nil {
+		return gInfo, nil, anteEvents, priority, err
 	}
 
 	// Create a new Context based off of the existing Context with a MultiStore branch
@@ -718,9 +720,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
-
 	if err == nil {
-
 		// Run optional postHandlers.
 		//
 		// Note: If the postHandler fails, we also revert the runMsgs state.
@@ -766,7 +766,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
-
 		if mode != runTxModeDeliver && mode != runTxModeSimulate {
 			break
 		}

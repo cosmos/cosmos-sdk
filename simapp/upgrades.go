@@ -14,12 +14,9 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-<<<<<<< HEAD
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-=======
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
->>>>>>> 0f99829fa (fix: add params migration (#14992))
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
@@ -65,19 +62,12 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-<<<<<<< HEAD
-			// Migrate Tendermint consensus parameters from x/params module to a
-			// dedicated x/consensus module.
-			baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
-
-=======
-			// Migrate CometBFT consensus parameters from x/params module to a dedicated x/consensus module.
+			// Migrate Tendermint consensus parameters from x/params module to a dedicated x/consensus module.
 			baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
 
 			// Note: this migration is optional,
 			// You can include x/gov proposal migration documented in [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md)
 
->>>>>>> 0f99829fa (fix: add params migration (#14992))
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)

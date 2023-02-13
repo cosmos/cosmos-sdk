@@ -345,6 +345,9 @@ func omitEmpty(field protoreflect.FieldDescriptor) bool {
 		dontOmitEmpty := proto.GetExtension(opts, amino.E_DontOmitempty).(bool)
 		return !dontOmitEmpty
 	}
+	//if field.ContainingOneof() != nil {
+	//	return false
+	//}
 	// legacy support for gogoproto would need to look something like below.
 	//
 	// if gproto.GetBoolExtension(opts, gogoproto.E_Nullable, true) {

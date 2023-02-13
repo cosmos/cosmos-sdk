@@ -243,13 +243,11 @@ var (
 				WithAnyTypes(&ed25519.PubKey{}).
 				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{}),
 		),
-		genType(&stakingtypes.MsgEditValidator{}, &stakingapi.MsgEditValidator{}, genOpts),
-		genType(&stakingtypes.MsgDelegate{}, &stakingapi.MsgDelegate{}, genOpts),
-		genType(&stakingtypes.MsgUndelegate{}, &stakingapi.MsgUndelegate{}, genOpts),
-		genType(&stakingtypes.MsgBeginRedelegate{}, &stakingapi.MsgBeginRedelegate{}, genOpts),
-		genType(&stakingtypes.MsgCancelUnbondingDelegationResponse{},
-			&stakingapi.MsgCancelUnbondingDelegationResponse{}, genOpts),
-		genType(&stakingtypes.MsgUpdateParams{}, &stakingapi.MsgUpdateParams{}, genOpts),
+		genType(&stakingtypes.MsgEditValidator{}, &stakingapi.MsgEditValidator{}, genOpts.WithDisallowNil()),
+		genType(&stakingtypes.MsgDelegate{}, &stakingapi.MsgDelegate{}, genOpts.WithDisallowNil()),
+		genType(&stakingtypes.MsgUndelegate{}, &stakingapi.MsgUndelegate{}, genOpts.WithDisallowNil()),
+		genType(&stakingtypes.MsgBeginRedelegate{}, &stakingapi.MsgBeginRedelegate{}, genOpts.WithDisallowNil()),
+		genType(&stakingtypes.MsgUpdateParams{}, &stakingapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
 		genType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, genOpts),
 	}
 )
@@ -460,6 +458,24 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				Commission:  &stakingapi.CommissionRates{},
 				Value:       &v1beta1.Coin{},
 			},
+		},
+		"staking/msg_cancel_unbonding_delegation_response": {
+			gogo:   &stakingtypes.MsgCancelUnbondingDelegationResponse{},
+			pulsar: &stakingapi.MsgCancelUnbondingDelegationResponse{},
+		},
+		"staking/stake_authorization_empty": {
+			gogo:   &stakingtypes.StakeAuthorization{},
+			pulsar: &stakingapi.StakeAuthorization{},
+		},
+		"staking/stake_authorization_allow": {
+			gogo: &stakingtypes.StakeAuthorization{
+				Validators: &stakingtypes.StakeAuthorization_AllowList{
+					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{"foo"}},
+				}},
+			pulsar: &stakingapi.StakeAuthorization{
+				Validators: &stakingapi.StakeAuthorization_AllowList{
+					AllowList: &stakingapi.StakeAuthorization_Validators{Address: []string{"foo"}},
+				}},
 		},
 	}
 	for name, tc := range cases {

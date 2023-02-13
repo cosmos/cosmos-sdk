@@ -29,6 +29,7 @@ import (
 	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
 	groupapi "cosmossdk.io/api/cosmos/group/v1"
+	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
@@ -55,6 +56,7 @@ import (
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type generatedType struct {
@@ -211,6 +213,10 @@ var (
 		genType(&grouptypes.MsgVote{}, &groupapi.MsgVote{}, genOpts),
 		genType(&grouptypes.MsgExec{}, &groupapi.MsgExec{}, genOpts),
 		genType(&grouptypes.MsgLeaveGroup{}, &groupapi.MsgLeaveGroup{}, genOpts),
+
+		// mint
+		genType(&minttypes.Params{}, &mintapi.Params{}, genOpts),
+		genType(&minttypes.MsgUpdateParams{}, &mintapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
 	}
 )
 

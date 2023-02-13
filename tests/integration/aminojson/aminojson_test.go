@@ -1,6 +1,7 @@
 package aminojson
 
 import (
+	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"fmt"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -44,6 +45,7 @@ import (
 	"cosmossdk.io/x/tx/rapidproto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -321,8 +323,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 
 	genericAuth, _ := codectypes.NewAnyWithValue(&authztypes.GenericAuthorization{Msg: "foo"})
 	genericAuthPulsar := newAny(t, &authzapi.GenericAuthorization{Msg: "foo"})
-	pubkeyAny, _ := codectypes.NewAnyWithValue(&ed25519.PubKey{Key: []byte("foo")})
-	pubkeyAnyPulsar := newAny(t, &ed25519.PubKey{Key: []byte("foo")})
+	//pubkeyAny, _ := codectypes.NewAnyWithValue(&ed25519.PubKey{Key: []byte("foo")})
+	//pubkeyAnyPulsar := newAny(t, &ed25519.PubKey{Key: []byte("foo")})
+	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
+	pubkeyAnyPulsar := newAny(t, &secp256k1.PubKey{Key: []byte("foo")})
 	dec10bz, _ := types.NewDec(10).Marshal()
 
 	cases := map[string]struct {
@@ -385,8 +389,13 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &disttypes.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
 			pulsar: &distapi.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
 		},
-		"crypto/pubkey": {
-			gogo: &ed25519types.PubKey{Key: []byte("key")}, pulsar: &ed25519.PubKey{Key: []byte("key")},
+		"crypto/ed25519": {
+			gogo:   &ed25519types.PubKey{Key: []byte("key")},
+			pulsar: &ed25519.PubKey{Key: []byte("key")},
+		},
+		"crypto/secp256k1": {
+			gogo:   &secp256k1types.PubKey{Key: []byte("key")},
+			pulsar: &secp256k1.PubKey{Key: []byte("key")},
 		},
 		"consensus/evidence_params/duration": {
 			gogo:   &gov_v1beta1_types.VotingParams{VotingPeriod: 1e9 + 7},

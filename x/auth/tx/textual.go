@@ -54,9 +54,6 @@ func (h signModeTextualHandler) GetSignBytesWithContext(ctx context.Context, mod
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
-	// bodyBz := protoTx.getBodyBytes()
-	// authInfoBz := protoTx.getAuthInfoBytes()
-
 	pbAny, err := codectypes.NewAnyWithValue(data.PubKey)
 	if err != nil {
 		return nil, err

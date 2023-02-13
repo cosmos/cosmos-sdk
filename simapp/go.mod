@@ -198,13 +198,13 @@ replace (
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/upgrade => ../x/upgrade
+	cosmossdk.io/x/tx => ../x/tx
 	// TODO update/remove after v0.37.x tag of CometBFT
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 )
 
 // Below are the long-lived replace of the SimApp
 replace (
-	cosmossdk.io/x/tx => ../x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

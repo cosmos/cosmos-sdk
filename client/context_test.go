@@ -50,7 +50,7 @@ func TestContext_PrintProto(t *testing.T) {
 	err = ctx.PrintProto(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
-		`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}
+		`{"animal":{"@type":"/testpb.Dog","size":"big","name":"Spot"},"x":"10"}
 `, buf.String())
 
 	// yaml
@@ -61,7 +61,7 @@ func TestContext_PrintProto(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t,
 		`animal:
-  '@type': /testdata.Dog
+  '@type': /testpb.Dog
   name: Spot
   size: big
 x: "10"
@@ -93,7 +93,7 @@ func TestContext_PrintObjectLegacy(t *testing.T) {
 	err = ctx.PrintObjectLegacy(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
-		`{"type":"testdata/HasAnimal","value":{"animal":{"type":"testdata/Dog","value":{"size":"big","name":"Spot"}},"x":"10"}}
+		`{"type":"testpb/HasAnimal","value":{"animal":{"type":"testpb/Dog","value":{"size":"big","name":"Spot"}},"x":"10"}}
 `, buf.String())
 
 	// yaml
@@ -103,10 +103,10 @@ func TestContext_PrintObjectLegacy(t *testing.T) {
 	err = ctx.PrintObjectLegacy(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
-		`type: testdata/HasAnimal
+		`type: testpb/HasAnimal
 value:
   animal:
-    type: testdata/Dog
+    type: testpb/Dog
     value:
       name: Spot
       size: big
@@ -116,7 +116,7 @@ value:
 
 func TestContext_PrintRaw(t *testing.T) {
 	ctx := client.Context{}
-	hasAnimal := json.RawMessage(`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}`)
+	hasAnimal := json.RawMessage(`{"animal":{"@type":"/testpb.Dog","size":"big","name":"Spot"},"x":"10"}`)
 
 	// json
 	buf := &bytes.Buffer{}
@@ -125,7 +125,7 @@ func TestContext_PrintRaw(t *testing.T) {
 	err := ctx.PrintRaw(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
-		`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}
+		`{"animal":{"@type":"/testpb.Dog","size":"big","name":"Spot"},"x":"10"}
 `, buf.String())
 
 	// yaml
@@ -136,7 +136,7 @@ func TestContext_PrintRaw(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t,
 		`animal:
-  '@type': /testdata.Dog
+  '@type': /testpb.Dog
   name: Spot
   size: big
 x: "10"

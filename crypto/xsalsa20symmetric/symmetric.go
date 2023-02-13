@@ -15,9 +15,7 @@ const (
 	secretLen = 32
 )
 
-var (
-	ErrCiphertextDecrypt = errors.New("ciphertext decryption failed")
-)
+var ErrCiphertextDecrypt = errors.New("ciphertext decryption failed")
 
 // secret must be 32 bytes long. Use something like Sha256(Bcrypt(passphrase))
 // The ciphertext is (secretbox.Overhead + 24) bytes longer than the plaintext.

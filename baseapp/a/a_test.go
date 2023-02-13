@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
-	_ "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	_ "github.com/cosmos/gogoproto/types" // Import gogo types
+	_ "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func TestA(t *testing.T) {

@@ -34,7 +34,7 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 		}
 	}
 
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual.SignModeHandler{}))
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, &textual.SignModeHandler{}))
 }
 
 // NewTxConfigWithTextual is like NewTxConfig with the ability to add

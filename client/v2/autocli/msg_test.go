@@ -197,7 +197,7 @@ func TestMsgOptionsError(t *testing.T) {
 	err = testMsgBuildError(t,
 		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--uint32", "7",
-		"--u64", "abc",
+		"--u64", "abcdgitt ",
 	)
 	assert.ErrorContains(t, err, "invalid argument ")
 }

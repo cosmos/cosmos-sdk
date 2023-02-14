@@ -51,6 +51,14 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, r
 	return (UniqueIterator[ReferenceKey, PrimaryKey])(iter), err
 }
 
+func (i *Unique[ReferenceKey, PrimaryKey, Value]) IterateRaw(ctx context.Context, start, end []byte, order collections.Order) (u UniqueIterator[ReferenceKey, PrimaryKey], err error) {
+	iter, err := (*collections.GenericUniqueIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(i).IterateRaw(ctx, start, end, order)
+	if err != nil {
+		return
+	}
+	return (UniqueIterator[ReferenceKey, PrimaryKey])(iter), nil
+}
+
 // UniqueIterator is an Iterator wrapper, that exposes only the functionality needed to work with Unique keys.
 type UniqueIterator[ReferenceKey, PrimaryKey any] collections.Iterator[ReferenceKey, PrimaryKey]
 

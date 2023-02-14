@@ -104,3 +104,11 @@ func (i *GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) U
 
 	return nil
 }
+
+func (i *GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) IterateRaw(
+	ctx context.Context,
+	start, end []byte,
+	order Order,
+) (Iterator[ReferencingKey, ReferencedKey], error) {
+	return i.refs.IterateRaw(ctx, start, end, order)
+}

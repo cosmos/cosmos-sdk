@@ -131,3 +131,11 @@ func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Un
 
 	return nil
 }
+
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) IterateRaw(
+	ctx context.Context,
+	start, end []byte,
+	order Order,
+) (Iterator[Pair[ReferencingKey, ReferencedKey], NoValue], error) {
+	return i.refs.IterateRaw(ctx, start, end, order)
+}

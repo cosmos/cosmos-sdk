@@ -58,6 +58,12 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context,
 	return m.Iterate(ctx, collections.NewPrefixedPairRange[ReferenceKey, PrimaryKey](refKey))
 }
 
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) IterateRaw(
+	ctx context.Context, start, end []byte, order collections.Order,
+) (collections.Iterator[collections.Pair[ReferenceKey, PrimaryKey], collections.NoValue], error) {
+	return (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).IterateRaw(ctx, start, end, order)
+}
+
 // MultiIterator is just a KeySetIterator with key as Pair[ReferenceKey, PrimaryKey].
 type MultiIterator[ReferenceKey, PrimaryKey any] collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]]
 

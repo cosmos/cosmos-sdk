@@ -78,7 +78,7 @@ type MultiPairIterator[K2, K1 any] collections.KeySetIterator[collections.Pair[K
 // PrimaryKey returns the primary key from the index. The index is composed like a reverse
 // pair key. So we just fetch the pair key from the index and return the reverse.
 func (m MultiPairIterator[K2, K1]) PrimaryKey() (pair collections.Pair[K1, K2], err error) {
-	reversePair, err := (collections.KeySetIterator[collections.Pair[K2, K1]])(m).Key()
+	reversePair, err := m.FullKey()
 	if err != nil {
 		return pair, err
 	}
@@ -97,6 +97,10 @@ func (m MultiPairIterator[K2, K1]) PrimaryKeys() (pairs []collections.Pair[K1, K
 		pairs = append(pairs, pair)
 	}
 	return pairs, err
+}
+
+func (m MultiPairIterator[K2, K1]) FullKey() (p collections.Pair[K2, K1], err error) {
+	return (collections.KeySetIterator[collections.Pair[K2, K1]])(m).Key()
 }
 
 func (m MultiPairIterator[K2, K1]) Next() {

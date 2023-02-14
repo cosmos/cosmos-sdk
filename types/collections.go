@@ -4,6 +4,7 @@ import (
 	"context"
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/math"
 )
 
 var (
@@ -25,6 +26,9 @@ var (
 		stringDecoder: ConsAddressFromBech32,
 		keyType:       "sdk.ConsAddress",
 	}
+
+	// IntValue represents a collections.ValueCodec to work with Int.
+	IntValue collcodec.ValueCodec[math.Int] = intValueCodec{}
 )
 
 type coll[K, V any] interface {
@@ -131,4 +135,42 @@ func (a genericAddressKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 
 func (a genericAddressKey[T]) SizeNonTerminal(key T) int {
 	return collections.BytesKey.SizeNonTerminal(key)
+}
+
+// Collection Codecs
+
+type intValueCodec struct{}
+
+func (i intValueCodec) Encode(value math.Int) ([]byte, error) {
+	return value.Marshal()
+}
+
+func (i intValueCodec) Decode(b []byte) (math.Int, error) {
+	v := new(Int)
+	err := v.Unmarshal(b)
+	if err != nil {
+		return Int{}, err
+	}
+	return *v, nil
+}
+
+func (i intValueCodec) EncodeJSON(value math.Int) ([]byte, error) {
+	return value.MarshalJSON()
+}
+
+func (i intValueCodec) DecodeJSON(b []byte) (Int, error) {
+	v := new(Int)
+	err := v.UnmarshalJSON(b)
+	if err != nil {
+		return Int{}, err
+	}
+	return *v, nil
+}
+
+func (i intValueCodec) Stringify(value Int) string {
+	return value.String()
+}
+
+func (i intValueCodec) ValueType() string {
+	return "math.Int"
 }

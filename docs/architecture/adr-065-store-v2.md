@@ -54,8 +54,8 @@ design of storage in the Cosmos SDK:
 * Since IAVL is responsible for both state storage and commitment, running an 
   archive node becomes increasingly expensive as disk space grows exponentially.
 * As the size of a network increases, various performance bottlenecks start to
-  emerge in many areas such as query performance, network upgrades, and state
-  migrations.
+  emerge in many areas such as query performance, network upgrades, state
+  migrations, and general application performance.
 
 See the [Storage Discussion](https://github.com/cosmos/cosmos-sdk/discussions/13545) for more information.
 

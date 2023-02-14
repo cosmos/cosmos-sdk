@@ -121,6 +121,13 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) IterateRaw(ctx context.Context, sta
 	return m.m.IterateRaw(ctx, start, end, order)
 }
 
+func (m *IndexedMap[PrimaryKey, Value, Idx]) KeyCodec() codec.KeyCodec[PrimaryKey] {
+	return m.m.KeyCodec()
+}
+func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value] {
+	return m.m.ValueCodec()
+}
+
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value, oldValue *Value) error {
 	for _, index := range m.Indexes.IndexesList() {
 		err := index.Reference(ctx, pk, value, oldValue)

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package testpb;
+
+import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+
+message streng {
+  string value = 1;
+}
+
+message TestRepeatedFields {
+  repeated streng nullable_omitempty = 1;
+
+  // not supported for empty sets
+  repeated streng nullable_dont_omitempty = 2 [(amino.dont_omitempty) = true];
+
+  // not supported for empty sets
+  repeated streng non_nullable_omitempty = 3 [(gogoproto.nullable) = false];
+
+  repeated streng non_nullable_dont_omitempty = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}

@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.3.2
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/math v1.0.0-beta.4
+	cosmossdk.io/math v1.0.0-beta.6
 	cosmossdk.io/tools/rosetta v0.2.0
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
@@ -54,7 +54,7 @@ require (
 	github.com/tendermint/tm-db v0.6.7
 	github.com/tidwall/btree v1.5.2
 	golang.org/x/crypto v0.4.0
-	golang.org/x/exp v0.0.0-20221019170559-20944726eadf
+	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
 	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6
 	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1

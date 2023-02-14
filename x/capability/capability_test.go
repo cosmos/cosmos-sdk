@@ -70,12 +70,15 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 
 	// Mock app beginblock and ensure that no gas has been consumed and memstore is initialized
 	ctx = suite.app.BaseApp.NewContext(false, cmtproto.Header{}).WithBlockGasMeter(storetypes.NewGasMeter(50))
-	prevGas := ctx.BlockGasMeter().GasConsumed()
+	prevBlockGas := ctx.BlockGasMeter().GasConsumed()
+	prevGas := ctx.GasMeter().GasConsumed()
 	restartedModule := capability.NewAppModule(suite.cdc, *newKeeper, true)
 	restartedModule.BeginBlock(ctx, abci.RequestBeginBlock{})
 	suite.Require().True(newKeeper.IsInitialized(ctx), "memstore initialized flag not set")
-	gasUsed := ctx.BlockGasMeter().GasConsumed()
+	blockGasUsed := ctx.BlockGasMeter().GasConsumed()
+	gasUsed := ctx.GasMeter().GasConsumed()
 
+	suite.Require().Equal(prevBlockGas, blockGasUsed, "beginblocker consumed block gas during execution")
 	suite.Require().Equal(prevGas, gasUsed, "beginblocker consumed gas during execution")
 
 	// Mock the first transaction getting capability and subsequently failing

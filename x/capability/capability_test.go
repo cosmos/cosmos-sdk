@@ -74,9 +74,9 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	prevGas := ctx.GasMeter().GasConsumed()
 	restartedModule := capability.NewAppModule(suite.cdc, *newKeeper, true)
 	restartedModule.BeginBlock(ctx, abci.RequestBeginBlock{})
+	gasUsed := ctx.GasMeter().GasConsumed()
 	suite.Require().True(newKeeper.IsInitialized(ctx), "memstore initialized flag not set")
 	blockGasUsed := ctx.BlockGasMeter().GasConsumed()
-	gasUsed := ctx.GasMeter().GasConsumed()
 
 	suite.Require().Equal(prevBlockGas, blockGasUsed, "beginblocker consumed block gas during execution")
 	suite.Require().Equal(prevGas, gasUsed, "beginblocker consumed gas during execution")

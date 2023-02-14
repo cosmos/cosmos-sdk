@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 
-	btcec "github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/go-bip39"
+	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	csecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -58,7 +58,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, err
 	}
 
-	_, pubkeyObject := btcec.PrivKeyFromBytes(derivedPriv)
+	pubkeyObject := secp.PrivKeyFromBytes(derivedPriv).PubKey()
 
 	return pubkeyObject.SerializeUncompressed(), nil
 }
@@ -72,7 +72,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(pk)
+	cmp, err := secp.ParsePubKey(pk)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
@@ -99,7 +99,7 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 		return nil, err
 	}
 
-	priv, _ := btcec.PrivKeyFromBytes(derivedPriv)
+	priv := secp.PrivKeyFromBytes(derivedPriv)
 	sig := ecdsa.Sign(priv, crypto.Sha256(message))
 
 	return sig.Serialize(), nil

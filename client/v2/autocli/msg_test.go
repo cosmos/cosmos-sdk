@@ -340,6 +340,37 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 
 }
 
+func TestEnhanceMessageCommand(t *testing.T) {
+	b := &Builder{}
+
+	// Test that the command has a subcommand
+	cmd := &cobra.Command{Use: "test"}
+	cmd.AddCommand(&cobra.Command{Use: "test"})
+	options := map[string]*autocliv1.ModuleOptions{
+		"test": {},
+	}
+	err := b.EnhanceMsgCommand(cmd, options, map[string]*cobra.Command{})
+	assert.NilError(t, err)
+
+	cmd = &cobra.Command{Use: "test"}
+	options = map[string]*autocliv1.ModuleOptions{}
+	customCommands := map[string]*cobra.Command{
+		"test2": {Use: "test"},
+	}
+	err = b.EnhanceMsgCommand(cmd, options, customCommands)
+	assert.NilError(t, err)
+
+	txDescriptior := &autocliv1.ServiceCommandDescriptor{}
+	cmd = &cobra.Command{Use: "test"}
+	options = map[string]*autocliv1.ModuleOptions{
+		"test": {Tx: txDescriptior},
+	}
+	customCommands = map[string]*cobra.Command{}
+	err = b.EnhanceMsgCommand(cmd, options, customCommands)
+	assert.NilError(t, err)
+
+}
+
 type testMessageServer struct {
 	testpb.UnimplementedMsgServer
 }

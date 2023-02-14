@@ -54,7 +54,7 @@ require (
 	github.com/tendermint/tm-db v0.6.7
 	github.com/tidwall/btree v1.5.2
 	golang.org/x/crypto v0.4.0
-	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
+	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
 	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6
 	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1

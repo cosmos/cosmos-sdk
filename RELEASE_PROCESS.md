@@ -28,8 +28,8 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * Additionally verify that the `UPGRADING.md` file is up to date and contains all the necessary information for upgrading to the new version.
 * Remove GitHub workflows that should not be in the release branch
     * `deploy-docs.yml`: must be removed to avoid duplicate documentation deployment.
-    * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests`).
-        * These packages are tracked and tested directly on main. All tests on the SDK should remain.
+    * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests` and SDK tests).
+        * These packages are tracked and tested directly on main.
     * `build.yml`: Only the SDK and SimApp needs to be built on release branches.
         * Tooling is tracked and tested directly on main.
 * Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.

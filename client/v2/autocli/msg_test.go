@@ -94,6 +94,44 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
+func testMsgBuildError(t *testing.T, args ...string) error {
+	server := grpc.NewServer()
+	testpb.RegisterMsgServer(server, &testMessageServer{})
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	assert.NilError(t, err)
+	go func() {
+		err := server.Serve(listener)
+		if err != nil {
+			panic(err)
+		}
+	}()
+	defer server.GracefulStop()
+	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	assert.NilError(t, err)
+	defer func() {
+		err := clientConn.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	conn := &testClientConn{
+		ClientConn: clientConn,
+		t:          t,
+		out:        &bytes.Buffer{},
+	}
+	b := &Builder{
+		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
+			return conn, nil
+		},
+	}
+	cmd, err := b.BuildModuleMsgCommand("test", testCmdMsgDesc)
+	assert.NilError(t, err)
+	cmd.SetArgs(args)
+	cmd.SetOut(conn.out)
+	return cmd.Execute()
+}
+
 func testMsgExec(t *testing.T, args ...string) *testClientConn {
 	server := grpc.NewServer()
 	testpb.RegisterMsgServer(server, &testMessageServer{})
@@ -148,6 +186,22 @@ func TestMsgOptions(t *testing.T) {
 	assert.Equal(t, output.GetPositional2(), "6")
 }
 
+func TestMsgOptionsError(t *testing.T) {
+	err := testMsgBuildError(t,
+		"send", "5",
+		"--uint32", "7",
+		"--u64", "8",
+	)
+	assert.ErrorContains(t, err, "requires at least 3 arg(s)")
+
+	err = testMsgBuildError(t,
+		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"--uint32", "7",
+		"--u64", "abc",
+	)
+	assert.ErrorContains(t, err, "invalid argument \"abc\" for \"--u64\" flag")
+}
+
 func TestDeprecatedMsg(t *testing.T) {
 	conn := testMsgExec(t, "send",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
@@ -174,7 +228,7 @@ func TestEverythingMsg(t *testing.T) {
 		"--uint32", "27",
 		"--u64", "3267246890",
 		"--i32", "-253",
-		"--i64", "234602347",
+		"--i64", "-234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
 		"--a-coin", `{"denom":"foo","amount":"100000"}`,
@@ -243,7 +297,46 @@ func TestBuildCustomMsgCommand(t *testing.T) {
 	assert.Assert(t, customCommandCalled)
 }
 
-func TestBuilder_BuildMsgMethodCommand(t *testing.T) {
+func TestNotFoundErrorsMsg(t *testing.T) {
+	b := &Builder{}
+
+	// Query non existent service
+	_, err := b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"})
+	assert.ErrorContains(t, err, "can't find service un-existent-service")
+
+	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service:           testpb.Query_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "un-existent-method"}},
+	})
+	assert.ErrorContains(t, err, "rpc method \"un-existent-method\" not found")
+
+	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Send",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{
+						ProtoField: "un-existent-proto-field",
+					},
+				},
+			},
+		},
+	})
+	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
+
+	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Send",
+				FlagOptions: map[string]*autocliv1.FlagOptions{
+					"un-existent-flag": {},
+				},
+			},
+		},
+	})
+	assert.ErrorContains(t, err, "can't find field un-existent-flag")
 
 }
 

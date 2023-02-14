@@ -52,6 +52,9 @@ func (k KeySet[K]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 	return (Map[K, NoValue])(k).IterateRaw(ctx, start, end, order)
 }
 
+func (k KeySet[K]) KeyCodec() codec.KeyCodec[K]           { return (Map[K, NoValue])(k).KeyCodec() }
+func (k KeySet[K]) ValueCodec() codec.ValueCodec[NoValue] { return (Map[K, NoValue])(k).ValueCodec() }
+
 // KeySetIterator works like an Iterator, but it does not expose any API to deal with values.
 type KeySetIterator[K any] Iterator[K, NoValue]
 

@@ -139,3 +139,11 @@ func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) It
 ) (Iterator[Pair[ReferencingKey, ReferencedKey], NoValue], error) {
 	return i.refs.IterateRaw(ctx, start, end, order)
 }
+
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) KeyCodec() codec.KeyCodec[Pair[ReferencingKey, ReferencedKey]] {
+	return i.refs.KeyCodec()
+}
+
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) ValueCodec() codec.ValueCodec[NoValue] {
+	return i.refs.ValueCodec()
+}

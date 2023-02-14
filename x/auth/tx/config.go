@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/x/tx/textual"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,13 +34,13 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 		}
 	}
 
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual.NewTextual(nil)))
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, &textual.SignModeHandler{}))
 }
 
 // NewTxConfigWithTextual is like NewTxConfig with the ability to add
 // a SIGN_MODE_TEXTUAL renderer. It is currently still EXPERIMENTAL, for should
 // be used for TESTING purposes only, until Textual is fully released.
-func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, textual textual.Textual) client.TxConfig {
+func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, textual *textual.SignModeHandler) client.TxConfig {
 	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual))
 }
 

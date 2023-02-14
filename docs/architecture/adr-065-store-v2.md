@@ -47,7 +47,17 @@ atomic, e.g. transaction execution or governance proposal execution.
 There are a few critical drawbacks to these layers of abstraction and the overall
 design of storage in the Cosmos SDK:
 
-* 
+* Since each module has its own IAVL `KVStore`, commitments are not atomic ([ref](https://github.com/cosmos/cosmos-sdk/issues/14625))
+    * Note, we can still allow modules to have their own IAVL `KVStore`, but the
+      IAVL library will need to support the ability to pass a DB instance as an
+      argument to various IAVL APIs.
+* Since IAVL is responsible for both state storage and commitment, running an 
+  archive node becomes increasingly expensive as disk space grows exponentially.
+* As the size of a network increases, various performance bottlenecks start to
+  emerge in many areas such as query performance, network upgrades, and state
+  migrations.
+
+See the [Storage Discussion](https://github.com/cosmos/cosmos-sdk/discussions/13545) for more information.
 
 ## Alternatives
 

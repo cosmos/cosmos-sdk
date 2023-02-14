@@ -38,7 +38,6 @@ func TestSimulateGasCost(t *testing.T) {
 			"tx with 150atom fee",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(3)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, feeAmount).Return(nil)
 
 				msgs := []sdk.Msg{
@@ -64,7 +63,6 @@ func TestSimulateGasCost(t *testing.T) {
 			"with previously estimated gas",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(3)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, feeAmount).Return(nil)
 
 				msgs := []sdk.Msg{
@@ -159,7 +157,6 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 			"unrecognized account",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 
 				return TestCaseArgs{
 					accNums: accNums,
@@ -176,7 +173,6 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 			"save the first account, but second is still unrecognized",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0))
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
@@ -198,7 +194,6 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0))
 				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1))
 				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr2))
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{1, 2, 3}, []uint64{0, 0, 0}
@@ -238,7 +233,6 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -257,7 +251,6 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -277,7 +270,6 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 				accs := suite.CreateTestAccounts(2)
 				msg1 := testdata.NewTestMsg(accs[0].acc.GetAddress(), accs[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -297,7 +289,6 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 				accs := suite.CreateTestAccounts(2)
 				msg1 := testdata.NewTestMsg(accs[0].acc.GetAddress(), accs[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -334,7 +325,6 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -353,7 +343,6 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -373,8 +362,6 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 				accs := suite.CreateTestAccounts(2)
 				msg1 := testdata.NewTestMsg(accs[0].acc.GetAddress(), accs[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[0].acc.GetAddress())
-
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -394,8 +381,6 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 				accs := suite.CreateTestAccounts(2)
 				msg1 := testdata.NewTestMsg(accs[0].acc.GetAddress(), accs[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[0].acc.GetAddress())
-
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -438,8 +423,6 @@ func TestAnteHandlerSequences(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
-
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -460,8 +443,6 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
 				msgs := []sdk.Msg{msg}
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				// This will be called only once given that the second tx will fail
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
@@ -489,7 +470,6 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msgs := []sdk.Msg{msg}
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				// Send the same tx before running the test case, then change the sequence to a valid one.
@@ -517,8 +497,6 @@ func TestAnteHandlerSequences(t *testing.T) {
 				accs := suite.CreateTestAccounts(3)
 				msg1 := testdata.NewTestMsg(accs[0].acc.GetAddress(), accs[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accs[2].acc.GetAddress(), accs[0].acc.GetAddress())
-
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -541,7 +519,6 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msgs := []sdk.Msg{msg1, msg2}
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				// Send the same tx before running the test case, to trigger replay protection.
@@ -569,7 +546,6 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msgs := []sdk.Msg{msg1, msg2}
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				// Send the same tx before running the test case, to trigger replay protection.
@@ -603,7 +579,6 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msgs := []sdk.Msg{msg1, msg2}
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				// Send the same tx before running the test case, to trigger replay protection.
@@ -654,7 +629,6 @@ func TestAnteHandlerFees(t *testing.T) {
 			"signer has no funds",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), feeAmount).Return(sdkerrors.ErrInsufficientFunds)
 
 				return TestCaseArgs{
@@ -672,7 +646,6 @@ func TestAnteHandlerFees(t *testing.T) {
 			"signer has enough funds, should pass",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), feeAmount).Return(nil)
 
 				return TestCaseArgs{
@@ -763,7 +736,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 			"tx with memo has enough gas",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
+
 				suite.txBuilder.SetMemo(strings.Repeat("0123456789", 10))
 				return TestCaseArgs{
 					accNums:   []uint64{0},
@@ -804,7 +777,6 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				msg2 := testdata.NewTestMsg(accs[2].acc.GetAddress(), accs[0].acc.GetAddress())
 				msg3 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[2].acc.GetAddress())
 				suite.txBuilder.SetMemo("Check signers are in expected order and different account numbers works")
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -827,8 +799,6 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				msg3 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[2].acc.GetAddress())
 				msgs := []sdk.Msg{msg1, msg2, msg3}
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				var err error
@@ -858,8 +828,6 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				msg3 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[2].acc.GetAddress())
 				msgs := []sdk.Msg{msg1, msg2, msg3}
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 				var err error
 				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
@@ -889,8 +857,6 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				msgs := []sdk.Msg{msg1, msg2, msg3}
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 				var err error
 				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
@@ -935,7 +901,6 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg0 := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -957,7 +922,6 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg0 := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -979,7 +943,6 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg0 := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -1001,7 +964,6 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg0 := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -1022,7 +984,6 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 			"test wrong msg",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(2)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -1044,7 +1005,6 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(2)
 				msg0 := testdata.NewTestMsg(accs[0].acc.GetAddress())
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -1065,7 +1025,6 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 			"test wrong signer if public doesn't exist",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(2)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -1104,7 +1063,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 			"test good tx",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -1122,7 +1080,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 			"make sure public key has been set (tx itself should fail because of replay protection)",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
@@ -1150,7 +1107,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 			"test public key not found",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(2)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				return TestCaseArgs{
 					accNums: []uint64{0},
@@ -1167,7 +1123,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 			"make sure public key is not set, when tx has no pubkey or signature",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(2)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				// Make sure public key has not been set from previous test.
@@ -1214,7 +1169,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 			"make sure previous public key has been set after wrong signature",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(2)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				// Make sure public key has not been set from previous test.
@@ -1368,7 +1322,6 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 					privs = append(privs, accs[i].priv)
 				}
 
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -1407,11 +1360,10 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 				// setup an ante handler that only accepts PubKeyEd25519
 				anteHandler, err := ante.NewAnteHandler(
 					ante.HandlerOptions{
-						AccountKeeper:        suite.accountKeeper,
-						BankKeeper:           suite.bankKeeper,
-						FeegrantKeeper:       suite.feeGrantKeeper,
-						CircuitBreakerKeeper: suite.circuitBreakerKeeper,
-						SignModeHandler:      suite.clientCtx.TxConfig.SignModeHandler(),
+						AccountKeeper:   suite.accountKeeper,
+						BankKeeper:      suite.bankKeeper,
+						FeegrantKeeper:  suite.feeGrantKeeper,
+						SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
 						SigGasConsumer: func(meter storetypes.GasMeter, sig signing.SignatureV2, params authtypes.Params) error {
 							switch pubkey := sig.PubKey.(type) {
 							case *ed25519.PubKey:
@@ -1427,7 +1379,6 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 				suite.anteHandler = anteHandler
 
 				accs := suite.CreateTestAccounts(1)
-				suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -1487,7 +1438,6 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 	require.NoError(t, err)
 
-	suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false).Times(3)
 	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 	require.Nil(t, err, "AnteHandler errored on recheck unexpectedly: %v", err)
@@ -1523,7 +1473,6 @@ func TestAnteHandlerReCheck(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	suite.circuitBreakerKeeper.EXPECT().IsCircuitOpen(gomock.Any()).Return(false)
 	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(sdkerrors.ErrInsufficientFee)
 	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck
 	// create new minimum gas price so antehandler fails on recheck

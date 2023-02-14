@@ -43,16 +43,15 @@ type TestAccount struct {
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
 type AnteTestSuite struct {
-	anteHandler          sdk.AnteHandler
-	ctx                  sdk.Context
-	clientCtx            client.Context
-	txBuilder            client.TxBuilder
-	accountKeeper        keeper.AccountKeeper
-	bankKeeper           *authtestutil.MockBankKeeper
-	txBankKeeper         *txtestutil.MockBankKeeper
-	feeGrantKeeper       *antetestutil.MockFeegrantKeeper
-	encCfg               moduletestutil.TestEncodingConfig
-	circuitBreakerKeeper *antetestutil.MockCircuitBreakerKeeper
+	anteHandler    sdk.AnteHandler
+	ctx            sdk.Context
+	clientCtx      client.Context
+	txBuilder      client.TxBuilder
+	accountKeeper  keeper.AccountKeeper
+	bankKeeper     *authtestutil.MockBankKeeper
+	txBankKeeper   *txtestutil.MockBankKeeper
+	feeGrantKeeper *antetestutil.MockFeegrantKeeper
+	encCfg         moduletestutil.TestEncodingConfig
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
@@ -62,7 +61,6 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
 	suite.txBankKeeper = txtestutil.NewMockBankKeeper(ctrl)
 	suite.feeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
-	suite.circuitBreakerKeeper = antetestutil.NewMockCircuitBreakerKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
@@ -95,12 +93,11 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:        suite.accountKeeper,
-			BankKeeper:           suite.bankKeeper,
-			CircuitBreakerKeeper: suite.circuitBreakerKeeper,
-			FeegrantKeeper:       suite.feeGrantKeeper,
-			SignModeHandler:      suite.encCfg.TxConfig.SignModeHandler(),
-			SigGasConsumer:       ante.DefaultSigVerificationGasConsumer,
+			AccountKeeper:   suite.accountKeeper,
+			BankKeeper:      suite.bankKeeper,
+			FeegrantKeeper:  suite.feeGrantKeeper,
+			SignModeHandler: suite.encCfg.TxConfig.SignModeHandler(),
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 	)
 

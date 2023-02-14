@@ -18,14 +18,15 @@ func TestRepeatedFields(t *testing.T) {
 	aj := aminojson.NewAminoJSON()
 
 	cases := map[string]struct {
-		gogo   gogoproto.Message
-		pulsar proto.Message
-		fails  bool
+		gogo    gogoproto.Message
+		pulsar  proto.Message
+		unequal bool
+		errs    bool
 	}{
 		"unsupported_empty_sets": {
-			gogo:   &gogopb.TestRepeatedFields{},
-			pulsar: &pulsarpb.TestRepeatedFields{},
-			fails:  true,
+			gogo:    &gogopb.TestRepeatedFields{},
+			pulsar:  &pulsarpb.TestRepeatedFields{},
+			unequal: true,
 		},
 		"unsupported_empty_sets_are_set": {
 			gogo: &gogopb.TestRepeatedFields{
@@ -40,17 +41,18 @@ func TestRepeatedFields(t *testing.T) {
 		"unsupported_nullable": {
 			gogo:   &gogopb.TestNullableFields{},
 			pulsar: &pulsarpb.TestNullableFields{},
-			fails:  true,
+			errs:   true,
 		},
 		"unsupported_nullable_set": {
 			gogo: &gogopb.TestNullableFields{
-				NullableDontOmitempty: &gogopb.Streng{Value: "foo"},
-				NonNullableOmitempty:  gogopb.Streng{Value: "foo"},
+				NullableDontOmitempty:    &gogopb.Streng{Value: "foo"},
+				NonNullableDontOmitempty: gogopb.Streng{Value: "foo"},
 			},
 			pulsar: &pulsarpb.TestNullableFields{
-				NullableDontOmitempty: &pulsarpb.Streng{Value: "foo"},
-				NonNullableOmitempty:  &pulsarpb.Streng{Value: "foo"},
+				NullableDontOmitempty:    &pulsarpb.Streng{Value: "foo"},
+				NonNullableDontOmitempty: &pulsarpb.Streng{Value: "foo"},
 			},
+			unequal: true,
 		},
 	}
 
@@ -59,11 +61,15 @@ func TestRepeatedFields(t *testing.T) {
 			gogoBz, err := cdc.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
 			pulsarBz, err := aj.MarshalAmino(tc.pulsar)
+			if tc.errs {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			fmt.Printf("  gogo: %s\npulsar: %s\n", string(gogoBz), string(pulsarBz))
 
-			if tc.fails {
+			if tc.unequal {
 				require.NotEqual(t, string(gogoBz), string(pulsarBz))
 			} else {
 				require.Equal(t, string(gogoBz), string(pulsarBz))

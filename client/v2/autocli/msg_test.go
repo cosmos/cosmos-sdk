@@ -322,6 +322,14 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 	_, err := b.BuildMsgCommand(opts, nil)
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
+	nonExistentService := &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
+	opts = map[string]*autocliv1.ModuleOptions{
+		"test": {
+			Tx: nonExistentService,
+		},
+	}
+	_, err = b.BuildMsgCommand(opts, nil)
+	assert.ErrorContains(t, err, "can't find service un-existent-service")
 }
 
 func TestNotFoundErrorsMsg(t *testing.T) {

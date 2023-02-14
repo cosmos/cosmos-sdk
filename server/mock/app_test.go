@@ -7,10 +7,10 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 func TestInitApp(t *testing.T) {
@@ -21,7 +21,7 @@ func TestInitApp(t *testing.T) {
 	}
 	require.NoError(t, err)
 
-	appState, err := AppGenState(nil, types.GenesisDoc{}, nil)
+	appState, err := AppGenState(nil, genutiltypes.AppGenesis{}, nil)
 	require.NoError(t, err)
 
 	req := abci.RequestInitChain{

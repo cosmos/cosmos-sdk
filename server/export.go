@@ -1,16 +1,17 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
-	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (
@@ -73,15 +74,15 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return fmt.Errorf("error exporting state: %v", err)
 			}
 
-			doc, err := cmttypes.GenesisDocFromFile(serverCtx.Config.GenesisFile())
+			genDoc, err := cmttypes.GenesisDocFromFile(serverCtx.Config.GenesisFile())
 			if err != nil {
 				return err
 			}
 
-			doc.AppState = exported.AppState
-			doc.Validators = exported.Validators
-			doc.InitialHeight = exported.Height
-			doc.ConsensusParams = &cmttypes.ConsensusParams{
+			genDoc.AppState = exported.AppState
+			genDoc.Validators = exported.Validators
+			genDoc.InitialHeight = exported.Height
+			genDoc.ConsensusParams = &cmttypes.ConsensusParams{
 				Block: cmttypes.BlockParams{
 					MaxBytes: exported.ConsensusParams.Block.MaxBytes,
 					MaxGas:   exported.ConsensusParams.Block.MaxGas,
@@ -96,10 +97,8 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				},
 			}
 
-			// NOTE: CometBFT uses a custom JSON decoder for GenesisDoc
-			// (except for stuff inside AppState). Inside AppState, we're free
-			// to encode as protobuf or amino.
-			encoded, err := cmtjson.Marshal(doc)
+			appGenesis := genutiltypes.NewAppGenesis(*genDoc)
+			encoded, err := json.Marshal(appGenesis)
 			if err != nil {
 				return err
 			}
@@ -113,11 +112,11 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return nil
 			}
 
-			var exportedGenDoc cmttypes.GenesisDoc
-			if err = cmtjson.Unmarshal(out, &exportedGenDoc); err != nil {
+			var exportedAppGenesis genutiltypes.AppGenesis
+			if err = json.Unmarshal(out, &exportedAppGenesis); err != nil {
 				return err
 			}
-			if err = exportedGenDoc.SaveAs(outputDocument); err != nil {
+			if err = exportedAppGenesis.SaveAs(outputDocument); err != nil {
 				return err
 			}
 

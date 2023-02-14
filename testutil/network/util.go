@@ -13,7 +13,7 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
-	"github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -123,7 +123,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].NodeID, vals[i].PubKey)
 
 		genFile := cmtCfg.GenesisFile()
-		genDoc, err := types.GenesisDocFromFile(genFile)
+		genDoc, err := cmttypes.GenesisDocFromFile(genFile)
 		if err != nil {
 			return err
 		}
@@ -168,15 +168,15 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 		return err
 	}
 
-	genDoc := types.GenesisDoc{
+	appGenesis := genutiltypes.NewAppGenesis(cmttypes.GenesisDoc{
 		ChainID:    cfg.ChainID,
 		AppState:   appGenStateJSON,
 		Validators: nil,
-	}
+	})
 
 	// generate empty genesis files for each validator and save
 	for i := 0; i < cfg.NumValidators; i++ {
-		if err := genDoc.SaveAs(genFiles[i]); err != nil {
+		if err := appGenesis.SaveAs(genFiles[i]); err != nil {
 			return err
 		}
 	}

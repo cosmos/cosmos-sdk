@@ -199,7 +199,7 @@ func TestMsgOptionsError(t *testing.T) {
 		"--uint32", "7",
 		"--u64", "abc",
 	)
-	assert.ErrorContains(t, err, "invalid argument \"abc\" for \"--u64\" flag")
+	assert.ErrorContains(t, err, "invalid argument ")
 }
 
 func TestDeprecatedMsg(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"math/big"
 	"os"
 
-	btcec "github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -238,11 +238,11 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	r.SetBytes(sigStr[4 : 4+sigStr[3]])
 	s.SetBytes(sigStr[4+sigStr[3]+2:])
 
-	sModNScalar := new(btcec.ModNScalar)
+	sModNScalar := new(secp.ModNScalar)
 	sModNScalar.SetByteSlice(s.Bytes())
 	// based on https://github.com/tendermint/btcd/blob/ec996c5/btcec/signature.go#L33-L50
 	if sModNScalar.IsOverHalfOrder() {
-		s = new(big.Int).Sub(btcec.S256().N, s)
+		s = new(big.Int).Sub(secp.S256().N, s)
 	}
 
 	sigBytes := make([]byte, 64)
@@ -320,7 +320,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(publicKey)
+	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
@@ -344,7 +344,7 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(publicKey)
+	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}

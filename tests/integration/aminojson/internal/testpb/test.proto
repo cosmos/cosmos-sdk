@@ -22,3 +22,17 @@ message TestRepeatedFields {
 
   repeated streng non_nullable_dont_omitempty = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
+
+message TestNullableFields {
+  streng nullable_omitempty = 1;
+
+  // not supported for empty sets
+  // go-amino emits nothing but the protoreflect library emits a null
+  streng nullable_dont_omitempty = 2 [(amino.dont_omitempty) = true];
+
+  // not supported for empty sets
+  // go-amino emits a null but the protoreflect library emits nothing
+  streng non_nullable_omitempty = 3 [(gogoproto.nullable) = false];
+
+  streng non_nullable_dont_omitempty = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}

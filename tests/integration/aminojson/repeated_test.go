@@ -1,6 +1,9 @@
 package aminojson
 
 import (
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
+
 	"cosmossdk.io/x/tx/aminojson"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,32 +18,47 @@ func TestRepeatedFields(t *testing.T) {
 	aj := aminojson.NewAminoJSON()
 
 	cases := map[string]struct {
-		gogo   gogopb.TestRepeatedFields
-		pulsar pulsarpb.TestRepeatedFields
+		gogo   gogoproto.Message
+		pulsar proto.Message
 		fails  bool
 	}{
 		"unsupported_empty_sets": {
-			gogo:   gogopb.TestRepeatedFields{},
-			pulsar: pulsarpb.TestRepeatedFields{},
+			gogo:   &gogopb.TestRepeatedFields{},
+			pulsar: &pulsarpb.TestRepeatedFields{},
 			fails:  true,
 		},
 		"unsupported_empty_sets_are_set": {
-			gogo: gogopb.TestRepeatedFields{
+			gogo: &gogopb.TestRepeatedFields{
 				NullableDontOmitempty: []*gogopb.Streng{{Value: "foo"}},
 				NonNullableOmitempty:  []gogopb.Streng{{Value: "foo"}},
 			},
-			pulsar: pulsarpb.TestRepeatedFields{
+			pulsar: &pulsarpb.TestRepeatedFields{
 				NullableDontOmitempty: []*pulsarpb.Streng{{Value: "foo"}},
 				NonNullableOmitempty:  []*pulsarpb.Streng{{Value: "foo"}},
+			},
+		},
+		"unsupported_nullable": {
+			gogo:   &gogopb.TestNullableFields{},
+			pulsar: &pulsarpb.TestNullableFields{},
+			fails:  true,
+		},
+		"unsupported_nullable_set": {
+			gogo: &gogopb.TestNullableFields{
+				NullableDontOmitempty: &gogopb.Streng{Value: "foo"},
+				NonNullableOmitempty:  gogopb.Streng{Value: "foo"},
+			},
+			pulsar: &pulsarpb.TestNullableFields{
+				NullableDontOmitempty: &pulsarpb.Streng{Value: "foo"},
+				NonNullableOmitempty:  &pulsarpb.Streng{Value: "foo"},
 			},
 		},
 	}
 
 	for n, tc := range cases {
 		t.Run(n, func(t *testing.T) {
-			gogoBz, err := cdc.MarshalJSON(&tc.gogo)
+			gogoBz, err := cdc.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
-			pulsarBz, err := aj.MarshalAmino(&tc.pulsar)
+			pulsarBz, err := aj.MarshalAmino(tc.pulsar)
 			require.NoError(t, err)
 
 			fmt.Printf("  gogo: %s\npulsar: %s\n", string(gogoBz), string(pulsarBz))

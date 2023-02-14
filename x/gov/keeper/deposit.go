@@ -174,22 +174,22 @@ func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 	rate := sdk.MustNewDecFromStr(proposalCancelRate)
 	var cancellationCharges sdk.Coins
 
-	for _, deposits := range keeper.GetDeposits(ctx, proposalID) {
-		depositerAddress := sdk.MustAccAddressFromBech32(deposits.Depositor)
+	for _, deposit := range keeper.GetDeposits(ctx, proposalID) {
+		depositerAddress := sdk.MustAccAddressFromBech32(deposit.Depositor)
 		var remainingAmount sdk.Coins
 
-		for _, deposit := range deposits.Amount {
-			burnAmount := sdk.NewDecFromInt(deposit.Amount).Mul(rate).TruncateInt()
+		for _, coins := range deposit.Amount {
+			burnAmount := sdk.NewDecFromInt(coins.Amount).Mul(rate).TruncateInt()
 			// remaining amount = deposits amount - burn amount
 			remainingAmount = remainingAmount.Add(
 				sdk.NewCoin(
-					deposit.Denom,
-					deposit.Amount.Sub(burnAmount),
+					coins.Denom,
+					coins.Amount.Sub(burnAmount),
 				),
 			)
 			cancellationCharges = cancellationCharges.Add(
 				sdk.NewCoin(
-					deposit.Denom,
+					coins.Denom,
 					burnAmount,
 				),
 			)
@@ -203,6 +203,8 @@ func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 				return err
 			}
 		}
+
+		store.Delete(types.DepositKey(deposit.ProposalId, depositerAddress))
 	}
 
 	// burn the cancellation fee or sent the cancellation charges to destination address.
@@ -231,8 +233,6 @@ func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 			}
 		}
 	}
-
-	store.Delete(types.DepositsKey(proposalID))
 
 	return nil
 }

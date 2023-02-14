@@ -297,6 +297,33 @@ func TestBuildCustomMsgCommand(t *testing.T) {
 	assert.Assert(t, customCommandCalled)
 }
 
+func TestErrorBuildMsgCommand(t *testing.T) {
+	b := &Builder{}
+
+	commandDescriptor := &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Send",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{
+						ProtoField: "un-existent-proto-field",
+					},
+				},
+			},
+		},
+	}
+
+	opts := map[string]*autocliv1.ModuleOptions{
+		"test": {
+			Tx: commandDescriptor,
+		},
+	}
+	_, err := b.BuildMsgCommand(opts, nil)
+	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
+
+}
+
 func TestNotFoundErrorsMsg(t *testing.T) {
 	b := &Builder{}
 
@@ -310,7 +337,7 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 	})
 	assert.ErrorContains(t, err, "rpc method \"un-existent-method\" not found")
 
-	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Msg_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
@@ -325,7 +352,7 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 	})
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
-	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Msg_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
@@ -360,10 +387,9 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	err = b.EnhanceMsgCommand(cmd, options, customCommands)
 	assert.NilError(t, err)
 
-	txDescriptior := &autocliv1.ServiceCommandDescriptor{}
 	cmd = &cobra.Command{Use: "test"}
 	options = map[string]*autocliv1.ModuleOptions{
-		"test": {Tx: txDescriptior},
+		"test": {Tx: nil},
 	}
 	customCommands = map[string]*cobra.Command{}
 	err = b.EnhanceMsgCommand(cmd, options, customCommands)

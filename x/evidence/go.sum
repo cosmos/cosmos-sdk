@@ -47,8 +47,8 @@ cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
 cosmossdk.io/math v1.0.0-beta.6 h1:WF29SiFYNde5eYvqO2kdOM9nYbDb44j3YW5B8M1m9KE=
 cosmossdk.io/math v1.0.0-beta.6/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
-cosmossdk.io/x/tx v0.1.0 h1:uyyYVjG22B+jf54N803Z99Y1uPvfuNP3K1YShoCHYL8=
-cosmossdk.io/x/tx v0.1.0/go.mod h1:qsDv7e1fSftkF16kpSAk+7ROOojyj+SC0Mz3ukI52EQ=
+cosmossdk.io/x/tx v0.2.0 h1:53f5TIXhpPYJGMm47SUslcV2i8JNBEN3eE08BmxE/Zg=
+cosmossdk.io/x/tx v0.2.0/go.mod h1:CTko7wgt7aBdbxOesZ+Wo1uO/03ueKzIQ0iI323Rqgk=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0-rc.1 h1:m0VOOB23frXZvAOK44usCgLWvtsxIoMCTBGJZlpmGfU=
 filippo.io/edwards25519 v1.0.0-rc.1/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
@@ -568,8 +568,6 @@ github.com/mattn/go-colorable v0.1.8/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope
 github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-colorable v0.1.11/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-colorable v0.1.12/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
-github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
-github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=

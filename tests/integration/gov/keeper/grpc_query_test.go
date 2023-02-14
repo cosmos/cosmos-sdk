@@ -140,6 +140,7 @@ func TestGRPCQueryTallyConcurrency(t *testing.T) {
 	app, ctx, queryClient := f.app, f.ctx, f.queryClient
 
 	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
+	t.Setenv("IS_TEST_ENV", "true")
 
 	var (
 		proposal    v1.Proposal
@@ -159,7 +160,18 @@ func TestGRPCQueryTallyConcurrency(t *testing.T) {
 			}()
 		}
 		wg.Wait()
-		// TODO assert that TallyResult was called in parallel
+		events := ctx.EventManager().Events()
+		lowestEnd := 1000000
+		highestStart := -1
+		for i, e := range events {
+			if e.Type == "tally_result_start" && highestStart < i {
+				highestStart = i
+			} else if e.Type == "tally_result_end" && lowestEnd > i {
+				lowestEnd = i
+			}
+		}
+		// check if all events have "tally result start" BEFORE "tally result end"
+		assert.Assert(t, highestStart < lowestEnd, "All queries must start before the first one finishes")
 	})
 }
 

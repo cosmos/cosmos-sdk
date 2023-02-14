@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+	"os"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -252,7 +252,6 @@ func (q Keeper) Deposits(c context.Context, req *v1.QueryDepositsRequest) (*v1.Q
 
 // TallyResult queries the tally of a proposal vote
 func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) (*v1.QueryTallyResultResponse, error) {
-	fmt.Println("TallyResult START")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -262,14 +261,20 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	if os.Getenv("IS_TEST_ENV") == "true" {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent("tally_result_start"),
+		)
+	}
 
 	proposal, ok := q.GetProposal(ctx, req.ProposalId)
 	if !ok {
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 
-	// TODO debug - Sleep for 2 seconds
-	time.Sleep(2 * time.Second)
+	if os.Getenv("IS_TEST_ENV") == "true" {
+		time.Sleep(1000 * time.Millisecond)
+	}
 	var tallyResult v1.TallyResult
 
 	switch {
@@ -284,7 +289,11 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 		_, _, tallyResult = q.Tally(ctx, proposal)
 	}
 
-	fmt.Println("TallyResult END")
+	if os.Getenv("IS_TEST_ENV") == "true" {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent("tally_result_end"),
+		)
+	}
 	return &v1.QueryTallyResultResponse{Tally: &tallyResult}, nil
 }
 

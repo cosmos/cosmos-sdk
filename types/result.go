@@ -9,7 +9,7 @@ import (
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	cmt "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -84,7 +84,7 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 }
 
 // NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
-func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmt.Block {
+func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmtproto.Block {
 	if res == nil {
 		return nil
 	}
@@ -94,7 +94,7 @@ func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmt.B
 		return nil
 	}
 
-	return &cmt.Block{
+	return &cmtproto.Block{
 		Header:     blk.Header,
 		Data:       blk.Data,
 		Evidence:   blk.Evidence,
@@ -143,7 +143,7 @@ func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse
 	}
 }
 
-func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*cmt.Block) *SearchBlocksResult {
+func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*cmtproto.Block) *SearchBlocksResult {
 	totalPages := calcTotalPages(totalCount, limit)
 
 	return &SearchBlocksResult{

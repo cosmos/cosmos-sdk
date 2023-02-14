@@ -105,10 +105,10 @@ When querying a block by its height, use the `--type=height` flag:
 simd query block --type=height 1357
 ```
 
-When querying a block by its events, use the `--type=events` flag:
+When querying a block by its events, use the `--query` flag:
 
 ```shell
-simd query blocks --events 'message.sender=cosmos...' --page 1 --limit 30
+simd query blocks --query 'message.sender=cosmos...' --page 1 --limit 30
 ```
 
 #### Transactions

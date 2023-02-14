@@ -119,7 +119,7 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	}, nil
 }
 
-// ParseTypedEvent converts abci.Event back to typed event
+// ParseTypedEvent converts abci.Event back to a typed event.
 func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 	concreteGoType := proto.MessageType(event.Type)
 	if concreteGoType == nil {
@@ -148,8 +148,8 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 		return nil, err
 	}
 
-	err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
-	if err != nil {
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err := unmarshaler.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg); err != nil {
 		return nil, err
 	}
 

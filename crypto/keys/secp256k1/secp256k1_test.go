@@ -7,11 +7,11 @@ import (
 	"math/big"
 	"testing"
 
-	btcSecp256k1 "github.com/btcsuite/btcd/btcec/v2"
-	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/cometbft/cometbft/crypto"
 	tmsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/btcutil/base58"
+	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	btcecdsa "github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -190,7 +190,8 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	// ----
 	// Test cross packages verification
 	msgHash := crypto.Sha256(msg)
-	btcPrivKey, btcPubKey := btcSecp256k1.PrivKeyFromBytes(privKey.Key)
+	btcPrivKey := secp.PrivKeyFromBytes(privKey.Key)
+	btcPubKey := btcPrivKey.PubKey()
 	// This fails: malformed signature: no header magic
 	//   btcSig, err := secp256k1.ParseSignature(sig, secp256k1.S256())
 	//   require.NoError(t, err)
@@ -203,7 +204,7 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	ok := ecdsa.Verify(btcPubKey.ToECDSA(), msgHash, r, s)
 	require.True(t, ok)
 
-	sig2, err := btcecdsa.SignCompact(btcPrivKey, msgHash, false)
+	sig2 := btcecdsa.SignCompact(btcPrivKey, msgHash, false)
 	// Chop off compactSigRecoveryCode.
 	sig2 = sig2[1:]
 	require.NoError(t, err)
@@ -226,7 +227,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 		// This function creates a private and public key in the underlying libraries format.
 		// The private key is basically calling new(big.Int).SetBytes(pk), which removes leading zero bytes
-		priv, _ := btcSecp256k1.PrivKeyFromBytes(privKeyBytes[:])
+		priv := secp.PrivKeyFromBytes(privKeyBytes[:])
 		// this takes the bytes returned by `(big int).Bytes()`, and if the length is less than 32 bytes,
 		// pads the bytes from the left with zero bytes. Therefore these two functions composed
 		// result in the identity function on privKeyBytes, hence the following equality check
@@ -238,7 +239,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 func TestGenPrivKeyFromSecret(t *testing.T) {
 	// curve oder N
-	N := btcSecp256k1.S256().N
+	N := secp.S256().N
 	tests := []struct {
 		name   string
 		secret []byte

@@ -162,6 +162,80 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return activatedVotingPeriod, nil
 }
 
+<<<<<<< HEAD
+=======
+// ChargeDeposit will charge proposal cancellation fee (deposits * proposal_cancel_burn_rate)  and
+// send to a destAddress if defined or burn otherwise.
+// Remaining funds are send back to the depositor.
+func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddress, proposalCancelRate string) error {
+	store := ctx.KVStore(keeper.storeKey)
+	rate := sdk.MustNewDecFromStr(proposalCancelRate)
+	var cancellationCharges sdk.Coins
+
+	for _, deposit := range keeper.GetDeposits(ctx, proposalID) {
+		depositerAddress := sdk.MustAccAddressFromBech32(deposit.Depositor)
+		var remainingAmount sdk.Coins
+
+		for _, coins := range deposit.Amount {
+			burnAmount := sdk.NewDecFromInt(coins.Amount).Mul(rate).TruncateInt()
+			// remaining amount = deposits amount - burn amount
+			remainingAmount = remainingAmount.Add(
+				sdk.NewCoin(
+					coins.Denom,
+					coins.Amount.Sub(burnAmount),
+				),
+			)
+			cancellationCharges = cancellationCharges.Add(
+				sdk.NewCoin(
+					coins.Denom,
+					burnAmount,
+				),
+			)
+		}
+
+		if !remainingAmount.IsZero() {
+			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(
+				ctx, types.ModuleName, depositerAddress, remainingAmount,
+			)
+			if err != nil {
+				return err
+			}
+		}
+
+		store.Delete(types.DepositKey(deposit.ProposalId, depositerAddress))
+	}
+
+	// burn the cancellation fee or sent the cancellation charges to destination address.
+	if !cancellationCharges.IsZero() {
+		// get the distribution module account address
+		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
+		switch {
+		case len(destAddress) == 0:
+			// burn the cancellation charges from deposits
+			err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, cancellationCharges)
+			if err != nil {
+				return err
+			}
+		case distributionAddress.String() == destAddress:
+			err := keeper.distrkeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
+			if err != nil {
+				return err
+			}
+		default:
+			destAccAddress := sdk.MustAccAddressFromBech32(destAddress)
+			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(
+				ctx, types.ModuleName, destAccAddress, cancellationCharges,
+			)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+>>>>>>> dfb3271cd (fix: x/gov ChargeDeposit delete deposits (#15033))
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
 func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)

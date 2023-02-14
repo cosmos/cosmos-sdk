@@ -186,6 +186,12 @@ github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/cosmos/gogoproto v1.4.5-0.20230208224001-0964dc660171 h1:FH1p4jkMK68Up9NBKFcLISuC5hv8ATvzidkJd3C7QWc=
 github.com/cosmos/gogoproto v1.4.5-0.20230208224001-0964dc660171/go.mod h1:HG7xz2bpOwJgS6HFzjgSf/hXA+t1A7Nm1Thlt0rDnLA=
+github.com/cosmos/gogoproto v1.4.5-0.20230213151702-265671973186 h1:uSOv2Imsyr0+0GgB5dLPdjlcCvsBcFH5NAly9O/jCJg=
+github.com/cosmos/gogoproto v1.4.5-0.20230213151702-265671973186/go.mod h1:HG7xz2bpOwJgS6HFzjgSf/hXA+t1A7Nm1Thlt0rDnLA=
+github.com/cosmos/gogoproto v1.4.5-0.20230213161742-6e84fedae37e h1:ED/QeRZszB728rbt24PKJlyj9eZu5M8rEQwzLXr6L4E=
+github.com/cosmos/gogoproto v1.4.5-0.20230213161742-6e84fedae37e/go.mod h1:HG7xz2bpOwJgS6HFzjgSf/hXA+t1A7Nm1Thlt0rDnLA=
+github.com/cosmos/gogoproto v1.4.5-0.20230213172703-83dec24dea1d h1:uNiEMVYvM6eg0mOfD5Uz+PFxizvofJliU2R5oiAQd4c=
+github.com/cosmos/gogoproto v1.4.5-0.20230213172703-83dec24dea1d/go.mod h1:HG7xz2bpOwJgS6HFzjgSf/hXA+t1A7Nm1Thlt0rDnLA=
 github.com/cosmos/iavl v0.20.0-alpha3 h1:hbUyr0dkiGDlmmbrArvte0lXv6VkMrGQNr3b29xvmVk=
 github.com/cosmos/iavl v0.20.0-alpha3/go.mod h1:25YJYzilTErJ2mKfNB3xyWL9IsCwEQdNzdIutg2mh3U=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=

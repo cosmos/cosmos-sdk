@@ -15,7 +15,8 @@ import (
 
 func newCacheKVStore() types.CacheKVStore {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	return cachekv.NewStore(mem)
+	meter := types.NewGasMeter(10000)
+	return cachekv.NewStore(mem, meter, types.KVGasConfig())
 }
 
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
@@ -23,7 +24,8 @@ func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	st := cachekv.NewStore(mem)
+	meter := types.NewGasMeter(10000)
+	st := cachekv.NewStore(mem, meter, types.KVGasConfig())
 
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 
@@ -49,11 +51,11 @@ func TestCacheKVStore(t *testing.T) {
 	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
 	// make a new one, check it
-	st = cachekv.NewStore(mem)
+	st = cachekv.NewStore(mem, meter, types.KVGasConfig())
 	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
 	// make a new one and delete - should not be removed from mem
-	st = cachekv.NewStore(mem)
+	st = cachekv.NewStore(mem, meter, types.KVGasConfig())
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)))
 	require.Equal(t, mem.Get(keyFmt(1)), valFmt(2))
@@ -66,7 +68,8 @@ func TestCacheKVStore(t *testing.T) {
 
 func TestCacheKVStoreNoNilSet(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	st := cachekv.NewStore(mem)
+	meter := types.NewGasMeter(10000)
+	st := cachekv.NewStore(mem, meter, types.KVGasConfig())
 	require.Panics(t, func() { st.Set([]byte("key"), nil) }, "setting a nil value should panic")
 	require.Panics(t, func() { st.Set(nil, []byte("value")) }, "setting a nil key should panic")
 	require.Panics(t, func() { st.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
@@ -74,7 +77,8 @@ func TestCacheKVStoreNoNilSet(t *testing.T) {
 
 func TestCacheKVStoreNested(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	st := cachekv.NewStore(mem)
+	meter := types.NewGasMeter(10000)
+	st := cachekv.NewStore(mem, meter, types.KVGasConfig())
 
 	// set. check its there on st and not on mem.
 	st.Set(keyFmt(1), valFmt(1))
@@ -82,7 +86,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 
 	// make a new from st and check
-	st2 := cachekv.NewStore(st)
+	st2 := cachekv.NewStore(st, meter, types.KVGasConfig())
 	require.Equal(t, valFmt(1), st2.Get(keyFmt(1)))
 
 	// update the value on st2, check it only effects st2
@@ -434,7 +438,8 @@ func TestNilEndIterator(t *testing.T) {
 // TestIteratorDeadlock demonstrate the deadlock issue in cache store.
 func TestIteratorDeadlock(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	store := cachekv.NewStore(mem)
+	meter := types.NewGasMeter(10000)
+	store := cachekv.NewStore(mem, meter, types.KVGasConfig())
 	// the channel buffer is 64 and received once, so put at least 66 elements.
 	for i := 0; i < 66; i++ {
 		store.Set([]byte(fmt.Sprintf("key%d", i)), []byte{1})

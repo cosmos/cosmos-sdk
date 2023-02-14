@@ -29,17 +29,21 @@ type Store struct {
 	cache         map[string]*cValue
 	unsortedCache map[string]struct{}
 	sortedCache   internal.BTree // always ascending sorted
+	gasMeter      types.GasMeter
+	gasConfig     types.GasConfig
 	parent        types.KVStore
 }
 
 var _ types.CacheKVStore = (*Store)(nil)
 
 // NewStore creates a new Store object
-func NewStore(parent types.KVStore) *Store {
+func NewStore(parent types.KVStore, gasMeter types.GasMeter, gasConfig types.GasConfig) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
 		unsortedCache: make(map[string]struct{}),
 		sortedCache:   internal.NewBTree(),
+		gasMeter:      gasMeter,
+		gasConfig:     gasConfig,
 		parent:        parent,
 	}
 }
@@ -145,12 +149,12 @@ func (store *Store) Write() {
 
 // CacheWrap implements CacheWrapper.
 func (store *Store) CacheWrap() types.CacheWrap {
-	return NewStore(store)
+	return NewStore(store, store.gasMeter, store.gasConfig)
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
 func (store *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return NewStore(tracekv.NewStore(store, w, tc))
+	return NewStore(tracekv.NewStore(store, w, tc), store.gasMeter, store.gasConfig)
 }
 
 //----------------------------------------
@@ -312,6 +316,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 	// Now find the values within the domain
 	//  [start, end)
+	store.gasMeter.ConsumeGas(store.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	startIndex := findStartIndex(strL, startStr)
 	if startIndex < 0 {
 		startIndex = 0

@@ -42,7 +42,6 @@ message MsgCreateVestingAccount {
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -68,7 +67,6 @@ message MsgCreatePermanentLockedAccount {
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

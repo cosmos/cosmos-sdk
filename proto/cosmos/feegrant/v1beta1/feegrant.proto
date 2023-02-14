@@ -24,7 +24,6 @@ message BasicAllowance {
   repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -51,7 +50,6 @@ message PeriodicAllowance {
   repeated cosmos.base.v1beta1.Coin period_spend_limit = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -59,7 +57,6 @@ message PeriodicAllowance {
   repeated cosmos.base.v1beta1.Coin period_can_spend = 4 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 

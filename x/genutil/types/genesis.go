@@ -52,22 +52,16 @@ func (ag *AppGenesis) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	appGenesis, err := json.Marshal(ag.AppGenesisOnly)
-	if err != nil {
-		return nil, err
-	}
-
-	out := map[string]interface{}{}
-	if err = json.Unmarshal(appGenesis, &out); err != nil {
-		return nil, err
-	}
-
-	if err = cmtjson.Unmarshal(genDoc, &out); err != nil {
-		return nil, err
-	}
+	type ConsensusGenesis []byte
 
 	// unmarshal the genesis doc with stdlib
-	return cmtjson.Marshal(out)
+	return json.Marshal(&struct {
+		AppGenesisOnly
+		ConsensusGenesis
+	}{
+		AppGenesisOnly:   ag.AppGenesisOnly,
+		ConsensusGenesis: genDoc,
+	})
 }
 
 // MarshalIndent marshals the AppGenesis with the provided prefix and indent.
@@ -77,5 +71,13 @@ func (ag *AppGenesis) MarshalIndent(prefix, indent string) ([]byte, error) {
 
 // Unmarshal an AppGenesis from JSON.
 func (ag *AppGenesis) UnmarshalJSON(bz []byte) error {
-	return cmtjson.Unmarshal(bz, &ag)
+	type Alias AppGenesis // we alias for avoiding recursion in UnmarshalJSON
+	var result Alias
+
+	if err := cmtjson.Unmarshal(bz, &result); err != nil {
+		return err
+	}
+
+	ag = (*AppGenesis)(&result)
+	return nil
 }

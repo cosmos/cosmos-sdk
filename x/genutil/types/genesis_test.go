@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -8,6 +9,8 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
+
+var expectedAppGenesisJSON = `{"app_name":"simapp","app_version":"0.1.0","genesis_time":"0001-01-01T00:00:00Z","chain_id":"test","initial_height":"0","app_hash":""}`
 
 func TestAppGenesis_Marshal(t *testing.T) {
 	genesis := types.AppGenesis{
@@ -20,19 +23,18 @@ func TestAppGenesis_Marshal(t *testing.T) {
 		},
 	}
 
-	out, err := genesis.MarshalJSON()
+	out, err := json.Marshal(&genesis)
 	assert.NilError(t, err)
 
-	assert.Equal(t, string(out), `{"app_name":"simapp","app_version":"0.1.0","chain_id":"test"}`)
+	assert.Equal(t, string(out), expectedAppGenesisJSON)
 }
 
 func TestAppGenesis_Unmarshal(t *testing.T) {
 	var genesis types.AppGenesis
-
-	err := genesis.UnmarshalJSON([]byte(`{"app_name":"simapp","app_version":"0.1.0","chain_id":"test"}`))
+	err := json.Unmarshal([]byte(expectedAppGenesisJSON), &genesis)
 	assert.NilError(t, err)
 
-	assert.Equal(t, genesis.AppName, "simapp")
-	assert.Equal(t, genesis.AppVersion, "0.1.0")
-	assert.Equal(t, genesis.ChainID, "test")
+	assert.DeepEqual(t, genesis.AppName, "simapp")
+	assert.DeepEqual(t, genesis.AppVersion, "0.1.0")
+	assert.DeepEqual(t, genesis.ChainID, "test")
 }

@@ -116,6 +116,11 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Remove(ctx context.Context, pk Prim
 	return m.m.Remove(ctx, pk)
 }
 
+// IterateRaw iterates the IndexedMap using raw bytes keys. Follows the same semantics as Map.IterateRaw
+func (m *IndexedMap[PrimaryKey, Value, Idx]) IterateRaw(ctx context.Context, start, end []byte, order Order) (Iterator[PrimaryKey, Value], error) {
+	return m.m.IterateRaw(ctx, start, end, order)
+}
+
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value, oldValue *Value) error {
 	for _, index := range m.Indexes.IndexesList() {
 		err := index.Reference(ctx, pk, value, oldValue)

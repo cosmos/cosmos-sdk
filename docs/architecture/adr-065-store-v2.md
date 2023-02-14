@@ -66,9 +66,6 @@ See the [Storage Discussion](https://github.com/cosmos/cosmos-sdk/discussions/13
 
 ## Decision
 
-> This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."
-> {decision body}
-
 ## Consequences
 
 > This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
@@ -79,20 +76,24 @@ See the [Storage Discussion](https://github.com/cosmos/cosmos-sdk/discussions/13
 
 ### Positive
 
-{positive consequences}
+> {positive consequences}
 
 ### Negative
 
-{negative consequences}
+> {negative consequences}
 
 ### Neutral
 
-{neutral consequences}
+> {neutral consequences}
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
+> While an ADR is in the DRAFT or PROPOSED stage, this section should contain a
+> summary of issues to be solved in future iterations (usually referencing comments
+> from a pull-request discussion).
+> 
+> Later, this section can optionally list ideas or improvements the author or
+> reviewers found during the analysis of this ADR.
 
 ## References
 

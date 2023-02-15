@@ -38,12 +38,12 @@ func (s Store) GetStoreType() types.StoreType {
 
 // CacheWrap branches the underlying store.
 func (s Store) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(s, types.NewInfiniteGasMeter(), types.KVGasConfig())
+	return cachekv.NewStore(s, types.KVGasConfig())
 }
 
 // CacheWrapWithTrace implements KVStore.
 func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(s, w, tc), types.NewInfiniteGasMeter(), types.KVGasConfig())
+	return cachekv.NewStore(tracekv.NewStore(s, w, tc), types.KVGasConfig())
 }
 
 // Commit performs a no-op as entries are persistent between commitments.

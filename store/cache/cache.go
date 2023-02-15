@@ -91,7 +91,7 @@ func (cmgr *CommitKVStoreCacheManager) Reset() {
 
 // CacheWrap implements the CacheWrapper interface
 func (ckv *CommitKVStoreCache) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(ckv, types.NewInfiniteGasMeter(), types.KVGasConfig())
+	return cachekv.NewStore(ckv, types.KVGasConfig())
 }
 
 // Get retrieves a value by key. It will first look in the write-through cache.

@@ -77,12 +77,12 @@ func (Store) GetStoreType() types.StoreType {
 
 // CacheWrap branches the underlying store.
 func (dsa Store) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(dsa, types.NewInfiniteGasMeter(), types.KVGasConfig())
+	return cachekv.NewStore(dsa, types.KVGasConfig())
 }
 
 // CacheWrapWithTrace implements KVStore.
 func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(dsa, w, tc), types.NewInfiniteGasMeter(), types.KVGasConfig())
+	return cachekv.NewStore(tracekv.NewStore(dsa, w, tc), types.KVGasConfig())
 }
 
 // dbm.DB implements KVStore so we can CacheKVStore it.

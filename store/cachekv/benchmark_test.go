@@ -13,8 +13,7 @@ import (
 
 func DoBenchmarkDeepCacheStack(b *testing.B, depth int) {
 	db := dbm.NewMemDB()
-	meter := types.NewGasMeter(10000)
-	initialStore := cachekv.NewStore(dbadapter.Store{DB: db}, meter, types.KVGasConfig())
+	initialStore := cachekv.NewStore(dbadapter.Store{DB: db}, types.KVGasConfig())
 
 	nItems := 20
 	for i := 0; i < nItems; i++ {
@@ -120,8 +119,7 @@ func (cs *CacheStack) CommitToRevision(target int) error {
 // Snapshot pushes a new cached context to the stack,
 // and returns the index of it.
 func (cs *CacheStack) Snapshot() int {
-	meter := types.NewGasMeter(10000)
-	cs.cacheStores = append(cs.cacheStores, cachekv.NewStore(cs.CurrentStore(), meter, types.KVGasConfig()))
+	cs.cacheStores = append(cs.cacheStores, cachekv.NewStore(cs.CurrentStore(), types.KVGasConfig()))
 	return len(cs.cacheStores) - 1
 }
 

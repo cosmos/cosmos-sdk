@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 
 	"cosmossdk.io/core/store"
 	dbm "github.com/cosmos/cosmos-db"
@@ -76,7 +77,7 @@ func (store coreKVStore) Delete(key []byte) error {
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 // Exceptionally allowed for cachekv.Store, safe to write in the modules.
 func (store coreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
-	return store.kvStore.Iterator(start, end), nil
+	return &coreIterator{store.kvStore.Iterator(start, end)}, nil
 }
 
 // ReverseIterator iterates over a domain of keys in descending order. End is exclusive.
@@ -85,7 +86,7 @@ func (store coreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 // Exceptionally allowed for cachekv.Store, safe to write in the modules.
 func (store coreKVStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
-	return store.kvStore.ReverseIterator(start, end), nil
+	return &coreIterator{store.kvStore.ReverseIterator(start, end)}, nil
 }
 
 var _ store.Iterator = coreIterator{}
@@ -104,45 +105,44 @@ func (itr *coreIterator) Valid() bool {
 	return itr.iterator.Valid()
 }
 
-// // Key implements Iterator.
-// func (itr *coreIterator) Key() ([]byte, error) {
-// 	// Key returns a copy of the current key.
-// 	// See https://github.com/syndtr/goleveldb/blob/52c212e6c196a1404ea59592d3f1c227c9f034b2/leveldb/iterator/iter.go#L88
-// 	itr.assertIsValid()
-// 	return cp(itr.source.Key())
-// }
+// Key implements Iterator.
+func (itr *coreIterator) Key() ([]byte, error) {
+	// Key returns a copy of the current key.
+	// See https://github.com/syndtr/goleveldb/blob/52c212e6c196a1404ea59592d3f1c227c9f034b2/leveldb/iterator/iter.go#L88
+	if !itr.Valid() {
+		return []byte{}, errors.New("iterator is invalid")
+	}
 
-// // Value implements Iterator.
-// func (itr *coreIterator) Value() []byte {
-// 	// Value returns a copy of the current value.
-// 	// See https://github.com/syndtr/goleveldb/blob/52c212e6c196a1404ea59592d3f1c227c9f034b2/leveldb/iterator/iter.go#L88
-// 	itr.assertIsValid()
-// 	return cp(itr.source.Value())
-// }
+	return itr.iterator.Key(), nil
+}
 
-// // Next implements Iterator.
-// func (itr *coreIterator) Next() error{
-// 	itr.assertIsValid()
-// 	if itr.isReverse {
-// 		itr.source.Prev()
-// 	} else {
-// 		itr.source.Next()
-// 	}
-// }
+// Value implements Iterator.
+func (itr *coreIterator) Value() ([]byte, error) {
+	// Value returns a copy of the current value.
+	// See https://github.com/syndtr/goleveldb/blob/52c212e6c196a1404ea59592d3f1c227c9f034b2/leveldb/iterator/iter.go#L88
+	if !itr.Valid() {
+		return []byte{}, errors.New("iterator is invalid")
+	}
 
-// // Error implements Iterator.
-// func (itr *coreIterator) Error() error {
-// 	return itr.source.Error()
-// }
+	return itr.iterator.Value(), nil
+}
 
-// // Close implements Iterator.
-// func (itr *coreIterator) Close() error {
-// 	itr.source.Release()
-// 	return nil
-// }
+// Next implements Iterator.
+func (itr *coreIterator) Next() error {
+	if !itr.Valid() {
+		return errors.New("iterator is invalid")
+	}
+	itr.iterator.Next()
 
-// func (itr goLevelDBIterator) assertIsValid() {
-// 	if !itr.Valid() {
-// 		panic("iterator is invalid")
-// 	}
-// }
+	return nil
+}
+
+// Error implements Iterator.
+func (itr *coreIterator) Error() error {
+	return itr.iterator.Error()
+}
+
+// Close implements Iterator.
+func (itr *coreIterator) Close() error {
+	return itr.iterator.Close()
+}

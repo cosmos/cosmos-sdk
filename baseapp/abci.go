@@ -171,19 +171,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			WithBlockHeight(req.Header.Height)
 	}
 
-<<<<<<< HEAD
-	// add block gas meter
-	var gasMeter sdk.GasMeter
-	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
-		gasMeter = sdk.NewGasMeter(maxGas)
-	} else {
-		gasMeter = sdk.NewInfiniteGasMeter()
-	}
-
-	// NOTE: header hash is not set in NewContext, so we manually set it here
-=======
 	gasMeter := app.getBlockGasMeter(app.deliverState.ctx)
->>>>>>> b3f95061f (fix: set block gas meter on prepare/process proposal (#15012))
 
 	app.deliverState.ctx = app.deliverState.ctx.
 		WithBlockGasMeter(gasMeter).

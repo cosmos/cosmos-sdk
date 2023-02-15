@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	_ "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	_ "github.com/cosmos/gogoproto/protoc-gen-gogo/descriptor"
 	_ "github.com/cosmos/gogoproto/types" // Import gogo types
 	_ "google.golang.org/protobuf/types/descriptorpb"

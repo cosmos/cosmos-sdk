@@ -156,6 +156,7 @@ require (
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
 replace (
+	github.com/cosmos/gogoproto => ../gogoproto
 	cosmossdk.io/api => ./api
 	// TODO update after cosmos-sdk/log tagged
 	cosmossdk.io/log => ./log

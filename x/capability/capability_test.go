@@ -78,8 +78,8 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	suite.Require().True(newKeeper.IsInitialized(ctx), "memstore initialized flag not set")
 	blockGasUsed := ctx.BlockGasMeter().GasConsumed()
 
-	suite.Require().Equal(prevBlockGas, blockGasUsed, "beginblocker consumed block gas during execution")
-	suite.Require().Equal(prevGas, gasUsed, "beginblocker consumed gas during execution")
+	suite.Require().Equal(prevBlockGas, blockGasUsed, "ensure beginblocker consumed no block gas during execution")
+	suite.Require().Equal(prevGas, gasUsed, "ensure beginblocker consumed no gas during execution")
 
 	// Mock the first transaction getting capability and subsequently failing
 	// by using a cached context and discarding all cached writes.

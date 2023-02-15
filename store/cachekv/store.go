@@ -2,18 +2,19 @@ package cachekv
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	m "math"
 	"sort"
 	"sync"
 
 	"cosmossdk.io/math"
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/store/cachekv/internal"
 	"cosmossdk.io/store/internal/conv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 )
 
 // cValue represents a cached value.
@@ -37,12 +38,12 @@ type Store struct {
 var _ types.CacheKVStore = (*Store)(nil)
 
 // NewStore creates a new Store object
-func NewStore(parent types.KVStore, gasMeter types.GasMeter, gasConfig types.GasConfig) *Store {
+func NewStore(parent types.KVStore, gasConfig types.GasConfig) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
 		unsortedCache: make(map[string]struct{}),
 		sortedCache:   internal.NewBTree(),
-		gasMeter:      gasMeter,
+		gasMeter:      NewCacheKVGasMeter(1000),
 		gasConfig:     gasConfig,
 		parent:        parent,
 	}
@@ -147,14 +148,89 @@ func (store *Store) Write() {
 	store.sortedCache = internal.NewBTree()
 }
 
+type cacheKVGasMeter struct {
+	limit    types.Gas
+	consumed types.Gas
+}
+
+func NewCacheKVGasMeter(limit types.Gas) types.GasMeter {
+	return &cacheKVGasMeter{
+		limit:    limit,
+		consumed: 0,
+	}
+}
+
+func (g *cacheKVGasMeter) GasConsumed() types.Gas {
+	return g.consumed
+}
+
+func (g *cacheKVGasMeter) GasRemaining() types.Gas {
+	if g.IsPastLimit() {
+		return 0
+	}
+	return g.limit - g.consumed
+}
+
+func (g *cacheKVGasMeter) Limit() types.Gas {
+	return g.limit
+}
+
+func (g *cacheKVGasMeter) GasConsumedToLimit() types.Gas {
+	if g.IsPastLimit() {
+		return g.limit
+	}
+	return g.consumed
+}
+
+func addUint64Overflow(a, b uint64) (uint64, bool) {
+	if m.MaxUint64-a < b {
+		return 0, true
+	}
+
+	return a + b, false
+}
+
+func (g *cacheKVGasMeter) ConsumeGas(amount types.Gas, descriptor string) {
+	var overflow bool
+	g.consumed, overflow = addUint64Overflow(g.consumed, amount)
+	if overflow {
+		g.consumed = m.MaxUint64
+		panic(types.ErrorGasOverflow{descriptor})
+	}
+
+	if g.consumed > g.limit {
+		panic(types.ErrorOutOfGas{descriptor})
+	}
+}
+
+func (g *cacheKVGasMeter) RefundGas(amount types.Gas, descriptor string) {
+	if g.consumed < amount {
+		panic(types.ErrorNegativeGasConsumed{Descriptor: descriptor})
+	}
+
+	g.consumed -= amount
+}
+
+func (g *cacheKVGasMeter) IsPastLimit() bool {
+	return g.consumed > g.limit
+}
+
+func (g *cacheKVGasMeter) IsOutOfGas() bool {
+	return g.consumed >= g.limit
+}
+
+func (g *cacheKVGasMeter) String() string {
+	return fmt.Sprintf("BasicGasMeter:\n  limit: %d\n  consumed: %d", g.limit, g.consumed)
+}
+
 // CacheWrap implements CacheWrapper.
 func (store *Store) CacheWrap() types.CacheWrap {
-	return NewStore(store, types.NewInfiniteGasMeter(), types.KVGasConfig())
+	return NewStore(store, types.KVGasConfig())
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
 func (store *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return NewStore(tracekv.NewStore(store, w, tc), types.NewInfiniteGasMeter(), types.KVGasConfig())
+	return NewStore(tracekv.NewStore(store, w, tc), types.KVGasConfig())
 }
 
 //----------------------------------------

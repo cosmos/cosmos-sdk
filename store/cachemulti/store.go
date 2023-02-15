@@ -42,7 +42,7 @@ func NewFromKVStore(
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	cms := Store{
-		db:           cachekv.NewStore(store),
+		db:           cachekv.NewStore(store, types.NewInfiniteGasMeter(), types.KVGasConfig()),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
 		keys:         keys,
 		traceWriter:  traceWriter,
@@ -57,7 +57,7 @@ func NewFromKVStore(
 
 			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, tctx)
 		}
-		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
+		cms.stores[key] = cachekv.NewStore(store.(types.KVStore), types.NewGasMeter(10000), types.KVGasConfig())
 	}
 
 	return cms

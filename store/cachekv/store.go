@@ -149,12 +149,12 @@ func (store *Store) Write() {
 
 // CacheWrap implements CacheWrapper.
 func (store *Store) CacheWrap() types.CacheWrap {
-	return NewStore(store, store.gasMeter, store.gasConfig)
+	return NewStore(store, types.NewInfiniteGasMeter(), types.KVGasConfig())
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
 func (store *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return NewStore(tracekv.NewStore(store, w, tc), store.gasMeter, store.gasConfig)
+	return NewStore(tracekv.NewStore(store, w, tc), types.NewInfiniteGasMeter(), types.KVGasConfig())
 }
 
 //----------------------------------------

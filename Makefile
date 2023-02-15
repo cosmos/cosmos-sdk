@@ -159,7 +159,8 @@ clean:
 	rm -rf \
 	$(BUILDDIR)/ \
 	artifacts/ \
-	tmp-swagger-gen/
+	tmp-swagger-gen/ \
+	.testnets
 
 .PHONY: distclean clean
 

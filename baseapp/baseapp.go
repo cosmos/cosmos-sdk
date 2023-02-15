@@ -710,16 +710,17 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteEvents = events.ToABCIEvents()
 	}
 
-	switch mode {
-	case runTxModeCheck:
+	if mode == runTxModeCheck {
 		err = app.mempool.Insert(ctx, tx)
-	case runTxModeDeliver:
-		if err = app.mempool.Remove(tx); err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			err = fmt.Errorf("failed to remove tx from mempool: %w", err)
+		if err != nil {
+			return gInfo, nil, anteEvents, priority, err
 		}
-	}
-	if err != nil {
-		return gInfo, nil, anteEvents, priority, err
+	} else if mode == runTxModeDeliver {
+		err = app.mempool.Remove(tx)
+		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+			return gInfo, nil, anteEvents, priority,
+				fmt.Errorf("failed to remove tx from mempool: %w", err)
+		}
 	}
 
 	// Create a new Context based off of the existing Context with a MultiStore branch

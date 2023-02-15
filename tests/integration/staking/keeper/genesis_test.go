@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -20,7 +20,7 @@ import (
 
 func bootstrapGenesisTest(t *testing.T, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	addrDels, _ := generateAddresses(app, ctx, numAddrs)
 	return app, ctx, addrDels
@@ -116,7 +116,7 @@ func TestInitGenesis(t *testing.T) {
 
 func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 	app := simapp.Setup(t, false)
-	ctx := app.NewContext(false, tmproto.Header{})
+	ctx := app.NewContext(false, cmtproto.Header{})
 
 	consPub, err := codectypes.NewAnyWithValue(PKs[0])
 	assert.NilError(t, err)

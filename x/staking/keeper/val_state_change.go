@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sort"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/math"
 
@@ -106,7 +106,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 //
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
-// are returned to Tendermint.
+// are returned to CometBFT.
 func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate, err error) {
 	params := k.GetParams(ctx)
 	maxValidators := params.MaxValidators

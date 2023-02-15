@@ -167,7 +167,8 @@ clean:
 	rm -rf \
 	$(BUILDDIR)/ \
 	artifacts/ \
-	tmp-swagger-gen/
+	tmp-swagger-gen/ \
+	.testnets
 
 .PHONY: distclean clean
 
@@ -349,7 +350,7 @@ benchmark:
 ###############################################################################
 
 golangci_lint_cmd=golangci-lint
-golangci_version=v1.50.1
+golangci_version=v1.51.1
 
 lint:
 	@echo "--> Running linter"
@@ -369,36 +370,10 @@ format:
 .PHONY: format
 
 ###############################################################################
-###                                 Devdoc                                  ###
-###############################################################################
-
-DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
-
-devdoc-init:
-	$(DOCKER) run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" tendermint/devdoc echo
-	# TODO make this safer
-	$(call DEVDOC_SAVE)
-
-devdoc:
-	$(DOCKER) run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" devdoc:local bash
-
-devdoc-save:
-	# TODO make this safer
-	$(call DEVDOC_SAVE)
-
-devdoc-clean:
-	docker rmi -f $$(docker images -f "dangling=true" -q)
-
-devdoc-update:
-	docker pull tendermint/devdoc
-
-.PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update
-
-###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.6
+protoVer=0.12.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

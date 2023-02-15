@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -73,7 +73,7 @@ func initFixture(t assert.TestingT) *fixture {
 		&f.accountKeeper, &f.bankKeeper, &f.stakingKeeper)
 	assert.NilError(t, err)
 
-	f.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	f.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 	f.encodingConfig = encCfg
 	f.baseApp = app.BaseApp
 

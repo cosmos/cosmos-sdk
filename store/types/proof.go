@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cometbft/cometbft/crypto/merkle"
-	tmmerkle "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/confio/ics23/go"
 
 	sdkerrors "cosmossdk.io/errors"
@@ -63,7 +63,7 @@ func NewSmtCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 // CommitmentOpDecoder takes a merkle.ProofOp and attempts to decode it into a CommitmentOp ProofOperator
 // The proofOp.Data is just a marshalled CommitmentProof. The Key of the CommitmentOp is extracted
 // from the unmarshalled proof.
-func CommitmentOpDecoder(pop tmmerkle.ProofOp) (merkle.ProofOperator, error) {
+func CommitmentOpDecoder(pop cmtprotocrypto.ProofOp) (merkle.ProofOperator, error) {
 	var spec *ics23.ProofSpec
 	switch pop.Type {
 	case ProofOpIAVLCommitment:
@@ -134,12 +134,12 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 // ProofOp implements ProofOperator interface and converts a CommitmentOp
 // into a merkle.ProofOp format that can later be decoded by CommitmentOpDecoder
 // back into a CommitmentOp for proof verification
-func (op CommitmentOp) ProofOp() tmmerkle.ProofOp {
+func (op CommitmentOp) ProofOp() cmtprotocrypto.ProofOp {
 	bz, err := op.Proof.Marshal()
 	if err != nil {
 		panic(err.Error())
 	}
-	return tmmerkle.ProofOp{
+	return cmtprotocrypto.ProofOp{
 		Type: op.Type,
 		Key:  op.Key,
 		Data: bz,
@@ -147,7 +147,7 @@ func (op CommitmentOp) ProofOp() tmmerkle.ProofOp {
 }
 
 // ProofOpFromMap generates a single proof from a map and converts it to a ProofOp.
-func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret tmmerkle.ProofOp, err error) {
+func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret cmtprotocrypto.ProofOp, err error) {
 	_, proofs, _ := sdkmaps.ProofsFromMap(cmap)
 
 	proof := proofs[storeName]

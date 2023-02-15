@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"cosmossdk.io/x/upgrade/types"
 
@@ -147,7 +147,7 @@ func TestShouldExecute(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
-			ctx := sdk.NewContext(nil, tmproto.Header{Height: tc.ctxHeight, Time: tc.ctxTime}, false, log.NewNopLogger())
+			ctx := sdk.NewContext(nil, cmtproto.Header{Height: tc.ctxHeight, Time: tc.ctxTime}, false, log.NewNopLogger())
 			should := tc.p.ShouldExecute(ctx)
 			assert.Equal(t, tc.expected, should)
 		})

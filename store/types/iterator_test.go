@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 

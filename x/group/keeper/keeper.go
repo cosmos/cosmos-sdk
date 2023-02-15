@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -76,13 +76,13 @@ type Keeper struct {
 	voteByProposalIndex orm.Index
 	voteByVoterIndex    orm.Index
 
-	router *baseapp.MsgServiceRouter
+	router baseapp.MessageRouter
 
 	config group.Config
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *baseapp.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,

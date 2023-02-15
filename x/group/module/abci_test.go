@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -18,8 +20,6 @@ import (
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 type IntegrationTestSuite struct {
@@ -48,9 +48,9 @@ func (s *IntegrationTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 
 	s.ctx = ctx
 	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))

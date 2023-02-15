@@ -12,15 +12,15 @@ import (
 	"path"
 	"testing"
 
+	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-
-	dbm "github.com/cosmos/cosmos-db"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -42,8 +42,8 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
-	var exportedGenDoc tmtypes.GenesisDoc
-	err := tmjson.Unmarshal(output.Bytes(), &exportedGenDoc)
+	var exportedGenDoc cmttypes.GenesisDoc
+	err := cmtjson.Unmarshal(output.Bytes(), &exportedGenDoc)
 	if err != nil {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
@@ -101,7 +101,7 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
+				app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
 				app.Commit()
 			}
 
@@ -111,8 +111,8 @@ func TestExportCmd_Height(t *testing.T) {
 			cmd.SetArgs(args)
 			require.NoError(t, cmd.ExecuteContext(ctx))
 
-			var exportedGenDoc tmtypes.GenesisDoc
-			err := tmjson.Unmarshal(output.Bytes(), &exportedGenDoc)
+			var exportedGenDoc cmttypes.GenesisDoc
+			err := cmtjson.Unmarshal(output.Bytes(), &exportedGenDoc)
 			if err != nil {
 				t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 			}
@@ -148,12 +148,12 @@ func TestExportCmd_Output(t *testing.T) {
 			cmd.SetArgs(args)
 			require.NoError(t, cmd.ExecuteContext(ctx))
 
-			var exportedGenDoc tmtypes.GenesisDoc
+			var exportedGenDoc cmttypes.GenesisDoc
 			f, err := os.ReadFile(tc.outputDocument)
 			if err != nil {
 				t.Fatalf("error reading exported genesis doc: %s", err)
 			}
-			require.NoError(t, tmjson.Unmarshal(f, &exportedGenDoc))
+			require.NoError(t, cmtjson.Unmarshal(f, &exportedGenDoc))
 
 			// Cleanup
 			if err = os.Remove(tc.outputDocument); err != nil {
@@ -163,26 +163,26 @@ func TestExportCmd_Output(t *testing.T) {
 	}
 }
 
-func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
+func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *cmttypes.GenesisDoc, *cobra.Command) {
 	t.Helper()
 
 	if err := createConfigFolder(tempDir); err != nil {
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger := cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
 	serverCtx := server.NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
-	genDoc := &tmtypes.GenesisDoc{}
+	genDoc := &cmttypes.GenesisDoc{}
 	genDoc.ChainID = "theChainId"
 	genDoc.Validators = nil
 	genDoc.AppState = stateBytes
@@ -224,7 +224,7 @@ func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0o700)
 }
 
-func saveGenesisFile(genDoc *tmtypes.GenesisDoc, dir string) error {
+func saveGenesisFile(genDoc *cmttypes.GenesisDoc, dir string) error {
 	err := genutil.ExportGenesisFile(genDoc, dir)
 	if err != nil {
 		return errors.Wrap(err, "error creating file")

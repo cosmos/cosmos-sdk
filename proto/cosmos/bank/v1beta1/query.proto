@@ -143,6 +143,11 @@ message QueryAllBalancesRequest {
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
+
+  // resolve_denom is the flag to resolve the denom into a human-readable form from the metadata.
+  //
+  // Since: cosmos-sdk 0.48
+  bool resolve_denom = 3;
 }
 
 // QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
@@ -213,7 +218,6 @@ message QuerySpendableBalanceByDenomResponse {
   // balance is the balance of the coin.
   cosmos.base.v1beta1.Coin balance = 1;
 }
-
 
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 // method.

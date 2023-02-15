@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/libs/log"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -109,7 +109,7 @@ func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
-func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
+func (k Keeper) GetEvidence(ctx sdk.Context, hash cmtbytes.HexBytes) (exported.Evidence, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
 	bz := store.Get(hash)

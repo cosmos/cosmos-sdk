@@ -3,8 +3,8 @@ package auth_test
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -17,7 +17,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	app, err := simtestutil.SetupAtGenesis(testutil.AppConfig, &accountKeeper)
 	require.NoError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	acc := accountKeeper.GetAccount(ctx, types.NewModuleAddress(types.FeeCollectorName))
 	require.NotNil(t, acc)
 }

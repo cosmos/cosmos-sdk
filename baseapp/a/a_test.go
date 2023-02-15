@@ -8,16 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	_ "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	_ "github.com/cosmos/gogoproto/protoc-gen-gogo/descriptor"
-	_ "github.com/cosmos/gogoproto/types" // Import gogo types
-	_ "google.golang.org/protobuf/types/descriptorpb"
-	_ "google.golang.org/protobuf/types/known/anypb"
-	_ "google.golang.org/protobuf/types/known/durationpb"
-	_ "google.golang.org/protobuf/types/known/structpb"
-	_ "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
+// TestA is a temporary test to test file descriptors mismatch by importing
+// them 1 by 1.
 func TestA(t *testing.T) {
 	r, err := proto.MergedRegistry()
 

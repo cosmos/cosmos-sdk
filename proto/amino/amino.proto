@@ -77,14 +77,8 @@ extend google.protobuf.FieldOptions {
   // out == {"baz":""}
   bool dont_omitempty = 11110005;
 
-  // oneof_type_name sets the type name for the given field oneof field.  This is used
-  // by the Amino JSON encoder to encode the type of the oneof field, and must be the same string as
-  // The RegisterConcrete() method usage used to register the concrete type.
-  string oneof_type_name = 11110006;
-}
-
-extend google.protobuf.OneofOptions {
-  // oneof_field_name sets the field name for the given oneof field.  This is used by the Amino JSON
-  // encoder to set the field name encapsulating the oneof field.
-  string oneof_field_name = 11110007;
+  // oneof_name sets the type name for the given field oneof field.  This is used
+  // by the Amino JSON encoder to encode the type of the oneof field, and must be the same string in
+  // the RegisterConcrete() method usage used to register the concrete type.
+  string oneof_name = 11110006;
 }

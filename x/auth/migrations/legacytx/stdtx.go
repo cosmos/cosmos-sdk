@@ -106,6 +106,11 @@ func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdT
 // GetMsgs returns the all the transaction's messages.
 func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 
+// GetMsgs returns the all the transaction's messages.
+func (tx StdTx) IsNonAtomic() bool {
+	return tx.NonAtomic
+}
+
 // ValidateBasic does a simple and lightweight validation check that doesn't
 // require access to any other information.
 //

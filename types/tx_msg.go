@@ -45,6 +45,9 @@ type (
 		// GetMsgs gets the all the transaction's messages.
 		GetMsgs() []Msg
 
+		// IsNonAtomic returns true if the transaction is non-atomic.
+		IsNonAtomic() bool
+
 		// ValidateBasic does a simple and lightweight validation check that doesn't
 		// require access to any other information.
 		ValidateBasic() error

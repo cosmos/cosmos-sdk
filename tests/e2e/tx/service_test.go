@@ -510,9 +510,17 @@ func (s E2ETestSuite) TestGetTx_GRPCGateway() {
 
 func (s E2ETestSuite) TestBroadcastTx_GRPC() {
 	val := s.network.Validators[0]
+
 	txBuilder := s.mkTxBuilder(Atomic)
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
+
+	nonAtomicTx := func(s *E2ETestSuite, failedMsgs ...bool) []byte {
+		secondTxBuilder := s.mkTxBuilder(NonAtomic, failedMsgs...)
+		txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(secondTxBuilder.GetTx())
+		s.Require().NoError(err)
+		return txBytes
+	}
 
 	testCases := []struct {
 		name      string
@@ -528,16 +536,20 @@ func (s E2ETestSuite) TestBroadcastTx_GRPC() {
 			TxBytes: txBytes,
 		}, false, ""},
 		{"non-atomic request", &tx.BroadcastTxRequest{
-			Mode: tx.BroadcastMode_BROADCAST_MODE_SYNC,
-			TxBytes: func(s *E2ETestSuite) []byte {
-				secondTxBuilder := s.mkTxBuilder(NonAtomic)
-				secondTxBuilder.SetNonAtomic(true)
-				txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(secondTxBuilder.GetTx())
-				s.Require().NoError(err)
-				return txBytes
-			}(&s),
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: nonAtomicTx(&s),
 		}, false, ""},
+		{"non-atomic request one failure", &tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: nonAtomicTx(&s, true),
+		}, false, ""},
+		{"non-atomic request two failures", &tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: nonAtomicTx(&s, true, true),
+		}, true, "failed to execute all messages in a non-atomic multi-message: all messages failed"},
 	}
+
+	// TODO: Why account sequence mismatch? is it my changes or am I doing something wrong in the test?
 
 	for _, tc := range testCases {
 		tc := tc
@@ -1124,9 +1136,18 @@ const (
 	NonAtomic
 )
 
-func (s E2ETestSuite) mkTxBuilder(atomicity Atomicity) client.TxBuilder {
+func (s E2ETestSuite) mkTxBuilder(atomicity Atomicity, failMsgs ...bool) client.TxBuilder {
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
+
+	amount0 := int64(10)
+	amount1 := int64(10)
+	if len(failMsgs) > 0 && failMsgs[0] {
+		amount0 = 5000000000000000000
+	}
+	if len(failMsgs) > 1 && failMsgs[1] {
+		amount1 = 5000000000000000000
+	}
 
 	// prepare txBuilder with msg
 	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
@@ -1136,7 +1157,7 @@ func (s E2ETestSuite) mkTxBuilder(atomicity Atomicity) client.TxBuilder {
 		txBuilder.SetMsgs(&banktypes.MsgSend{
 			FromAddress: val.Address.String(),
 			ToAddress:   val.Address.String(),
-			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, amount0)},
 		}),
 		// Adding a second message to be able to test non-atomic txs. This should also
 		// give us robustness by e2e testing multiple messages in a single tx in
@@ -1144,7 +1165,7 @@ func (s E2ETestSuite) mkTxBuilder(atomicity Atomicity) client.TxBuilder {
 		txBuilder.SetMsgs(&banktypes.MsgSend{
 			FromAddress: val.Address.String(),
 			ToAddress:   val.Address.String(),
-			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, amount1)},
 		}),
 	)
 	txBuilder.SetFeeAmount(feeAmount)

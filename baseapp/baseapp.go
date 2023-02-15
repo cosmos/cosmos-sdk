@@ -34,11 +34,19 @@ const (
 	runTxProcessProposal                  // Process a TM block proposal
 )
 
+const (
+	Atomic MsgExecutionGuaranteeMode = iota
+	NonAtomic
+)
+
 var _ abci.Application = (*BaseApp)(nil)
 
 type (
 	// Enum mode for app.runTx
 	runTxMode uint8
+
+	// Enum mode for app.runTx and app.runMsgs
+	MsgExecutionGuaranteeMode uint8
 
 	// StoreLoader defines a customizable function to control how we load the CommitMultiStore
 	// from disk. This is useful for state migration, when loading a datastore written with
@@ -714,10 +722,17 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// is a branch of a branch.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 
+	var msgExecutionGuaranteeMode MsgExecutionGuaranteeMode
+	if tx.IsNonAtomic() {
+		msgExecutionGuaranteeMode = NonAtomic
+	} else {
+		msgExecutionGuaranteeMode = Atomic
+	}
+
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
-	result, err = app.runMsgs(runMsgCtx, msgs, mode)
+	result, err = app.runMsgs(runMsgCtx, msgs, mode, msgExecutionGuaranteeMode)
 
 	if err == nil {
 
@@ -759,11 +774,14 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 // and DeliverTx. An error is returned if any single message fails or if a
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, execGuarantee MsgExecutionGuaranteeMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 
+	// TODO: we probably need a context cache for each message
+
+	txSuccess := false
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
 
@@ -779,8 +797,15 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// ADR 031 request type routing
 		msgResult, err := handler(ctx, msg)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
+			if execGuarantee == Atomic {
+				return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
+			} else {
+				// ToDo: add events for failed messages
+				continue
+			}
 		}
+		// at least one message was executed successfully
+		txSuccess = true
 
 		// create message events
 		msgEvents := createEvents(msgResult.GetEvents(), msg)
@@ -805,6 +830,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
+	}
+
+	if (mode == runTxModeDeliver || mode == runTxModeSimulate) && !txSuccess {
+		return nil, sdkerrors.ErrMultiMsgFailure.Wrapf("failed to execute all messages in a non-atomic multi-message")
 	}
 
 	data, err := makeABCIData(msgResponses)

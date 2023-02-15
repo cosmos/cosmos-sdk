@@ -793,7 +793,9 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 	}{
 		{"all messages succeed", []bool{true, true}, 5, false},
 		{"all messages succeed2", []bool{true, true}, 7, false},
-		{"all messages fail", []bool{false, false}, 7, true},
+		{"first succeed", []bool{true, false}, 8, false},
+		{"second succeed", []bool{false, true}, 9, false},
+		{"all messages fail", []bool{false, false}, 9, true},
 	}
 
 	for testNum, tc := range testCases {
@@ -803,8 +805,13 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 
 			builder := suite.txConfig.NewTxBuilder()
 			msgs := make([]sdk.Msg, 0, len(tc.succeed))
-			for i, success := range tc.succeed {
-				msgs = append(msgs, &baseapptestutil.MsgCounter{Counter: msgCounter + int64(i), FailOnHandler: !success})
+
+			extra := 0
+			for _, success := range tc.succeed {
+				msgs = append(msgs, &baseapptestutil.MsgCounter{Counter: msgCounter + int64(extra), FailOnHandler: !success})
+				if success {
+					extra += 1
+				}
 			}
 			builder.SetMsgs(msgs...)
 			builder.SetMemo(tx.GetMemo())

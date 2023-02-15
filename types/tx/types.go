@@ -32,6 +32,10 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	return res
 }
 
+func (t *Tx) IsNonAtomic() bool {
+	return t.Body.NonAtomic
+}
+
 // ValidateBasic implements the ValidateBasic method on sdk.Tx.
 func (t *Tx) ValidateBasic() error {
 	if t == nil {

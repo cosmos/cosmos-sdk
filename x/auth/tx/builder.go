@@ -66,6 +66,10 @@ func (w *wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
 }
 
+func (w *wrapper) IsNonAtomic() bool {
+	return w.tx.IsNonAtomic()
+}
+
 func (w *wrapper) ValidateBasic() error {
 	return w.tx.ValidateBasic()
 }

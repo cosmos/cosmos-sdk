@@ -79,7 +79,7 @@ func TestDerive(t *testing.T) {
 			derivedPriv, err := tt.algo.Derive()(tt.mnemonic, tt.bip39Passphrase, tt.hdPath)
 			encoded := make([]byte, len(derivedPriv)*2)
 			hex.Encode(encoded, derivedPriv)
-			require.Nil(t, err)
+			require.NoError(t, err)
 
 			decodedPriv, _ := hex.DecodeString(tt.derivedPriv)
 			require.Equal(t, derivedPriv, decodedPriv)

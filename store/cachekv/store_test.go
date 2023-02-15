@@ -15,7 +15,6 @@ import (
 
 func newCacheKVStore() types.CacheKVStore {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-
 	return cachekv.NewStore(mem, types.KVGasConfig())
 }
 
@@ -24,7 +23,6 @@ func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-
 	st := cachekv.NewStore(mem, types.KVGasConfig())
 
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
@@ -68,7 +66,6 @@ func TestCacheKVStore(t *testing.T) {
 
 func TestCacheKVStoreNoNilSet(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-
 	st := cachekv.NewStore(mem, types.KVGasConfig())
 	require.Panics(t, func() { st.Set([]byte("key"), nil) }, "setting a nil value should panic")
 	require.Panics(t, func() { st.Set(nil, []byte("value")) }, "setting a nil key should panic")
@@ -77,7 +74,6 @@ func TestCacheKVStoreNoNilSet(t *testing.T) {
 
 func TestCacheKVStoreNested(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-
 	st := cachekv.NewStore(mem, types.KVGasConfig())
 
 	// set. check its there on st and not on mem.
@@ -438,7 +434,6 @@ func TestNilEndIterator(t *testing.T) {
 // TestIteratorDeadlock demonstrate the deadlock issue in cache store.
 func TestIteratorDeadlock(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-
 	store := cachekv.NewStore(mem, types.KVGasConfig())
 	// the channel buffer is 64 and received once, so put at least 66 elements.
 	for i := 0; i < 66; i++ {

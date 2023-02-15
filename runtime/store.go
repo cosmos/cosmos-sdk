@@ -96,17 +96,17 @@ type coreIterator struct {
 }
 
 // Domain implements Iterator.
-func (itr *coreIterator) Domain() ([]byte, []byte) {
+func (itr coreIterator) Domain() ([]byte, []byte) {
 	return itr.iterator.Domain()
 }
 
 // Valid implements Iterator.
-func (itr *coreIterator) Valid() bool {
+func (itr coreIterator) Valid() bool {
 	return itr.iterator.Valid()
 }
 
 // Key implements Iterator.
-func (itr *coreIterator) Key() ([]byte, error) {
+func (itr coreIterator) Key() ([]byte, error) {
 	// Key returns a copy of the current key.
 	// See https://github.com/syndtr/goleveldb/blob/52c212e6c196a1404ea59592d3f1c227c9f034b2/leveldb/iterator/iter.go#L88
 	if !itr.Valid() {
@@ -117,7 +117,7 @@ func (itr *coreIterator) Key() ([]byte, error) {
 }
 
 // Value implements Iterator.
-func (itr *coreIterator) Value() ([]byte, error) {
+func (itr coreIterator) Value() ([]byte, error) {
 	// Value returns a copy of the current value.
 	// See https://github.com/syndtr/goleveldb/blob/52c212e6c196a1404ea59592d3f1c227c9f034b2/leveldb/iterator/iter.go#L88
 	if !itr.Valid() {
@@ -128,7 +128,7 @@ func (itr *coreIterator) Value() ([]byte, error) {
 }
 
 // Next implements Iterator.
-func (itr *coreIterator) Next() error {
+func (itr coreIterator) Next() error {
 	if !itr.Valid() {
 		return errors.New("iterator is invalid")
 	}
@@ -138,11 +138,11 @@ func (itr *coreIterator) Next() error {
 }
 
 // Error implements Iterator.
-func (itr *coreIterator) Error() error {
+func (itr coreIterator) Error() error {
 	return itr.iterator.Error()
 }
 
 // Close implements Iterator.
-func (itr *coreIterator) Close() error {
+func (itr coreIterator) Close() error {
 	return itr.iterator.Close()
 }

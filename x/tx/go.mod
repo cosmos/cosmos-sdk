@@ -8,6 +8,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/google/go-cmp v0.5.9
+	github.com/iancoleman/strcase v0.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/go-amino v0.16.0

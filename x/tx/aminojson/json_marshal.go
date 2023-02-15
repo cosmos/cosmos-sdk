@@ -5,13 +5,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	cosmos_proto "github.com/cosmos/cosmos-proto"
+	"io"
+
+	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"io"
 
 	"cosmossdk.io/api/amino"
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
 type MessageEncoder func(protoreflect.Message, io.Writer) error
@@ -317,16 +319,12 @@ func getOneOfNames(field protoreflect.FieldDescriptor) (string, string, error) {
 	if oneOf == nil {
 		return "", "", errors.Errorf("field %s must be within a oneof", field.Name())
 	}
-	oneOfOpts := oneOf.Options()
 
-	var fieldName, typeName string
-	if proto.HasExtension(oneOfOpts, amino.E_OneofFieldName) {
-		fieldName = proto.GetExtension(oneOfOpts, amino.E_OneofFieldName).(string)
-	} else {
-		return "", "", errors.Errorf("oneof %s must have the amino.oneof_field_name option set", oneOf.Name())
-	}
-	if proto.HasExtension(opts, amino.E_OneofTypeName) {
-		typeName = proto.GetExtension(opts, amino.E_OneofTypeName).(string)
+	fieldName := strcase.ToCamel(string(oneOf.Name()))
+	var typeName string
+
+	if proto.HasExtension(opts, amino.E_OneofName) {
+		typeName = proto.GetExtension(opts, amino.E_OneofName).(string)
 	} else {
 		return "", "", errors.Errorf("field %s within a oneof must have the amino.oneof_type_name option set",
 			field.Name())

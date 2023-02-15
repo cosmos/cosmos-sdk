@@ -143,7 +143,7 @@ message CommunityPoolSpendProposal {
   repeated cosmos.base.v1beta1.Coin amount = 4 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

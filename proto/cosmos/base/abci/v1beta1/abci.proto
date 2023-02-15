@@ -3,6 +3,7 @@ package cosmos.base.abci.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "tendermint/abci/types.proto";
+import "tendermint/types/block.proto";
 import "google/protobuf/any.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
@@ -155,4 +156,22 @@ message SearchTxsResult {
   uint64 limit = 5;
   // List of txs in current page
   repeated TxResponse txs = 6;
+}
+
+// SearchBlocksResult defines a structure for querying blocks pageable
+message SearchBlocksResult {
+  option (gogoproto.stringer) = true;
+
+  // Count of all blocks
+  int64 total_count = 1;
+  // Count of blocks in current page
+  int64 count = 2;
+  // Index of current page, start from 1
+  int64 page_number = 3;
+  // Count of total pages
+  int64 page_total = 4;
+  // Max count blocks per page
+  int64 limit = 5;
+  // List of blocks in current page
+  repeated tendermint.types.Block blocks = 6;
 }

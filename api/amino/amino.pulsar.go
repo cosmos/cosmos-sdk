@@ -157,12 +157,19 @@ var (
 	//
 	// optional bool dont_omitempty = 11110005;
 	E_DontOmitempty = &file_amino_amino_proto_extTypes[4]
+	// oneof_type_name sets the type name for the given field oneof field.  This is used
+	// by the Amino JSON encoder to encode the type of the oneof field, and must be the same string as
+	// The RegisterConcrete() method usage used to register the concrete type.
+	//
 	// optional string oneof_type_name = 11110006;
 	E_OneofTypeName = &file_amino_amino_proto_extTypes[5]
 )
 
 // Extension fields to descriptorpb.OneofOptions.
 var (
+	// oneof_field_name sets the field name for the given oneof field.  This is used by the Amino JSON
+	// encoder to set the field name encapsulating the oneof field.
+	//
 	// optional string oneof_field_name = 11110007;
 	E_OneofFieldName = &file_amino_amino_proto_extTypes[6]
 )

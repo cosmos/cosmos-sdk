@@ -146,6 +146,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#14590](https://github.com/cosmos/cosmos-sdk/pull/14590) Return undelegate amount in MsgUndelegateResponse
 * (tools) [#14793](https://github.com/cosmos/cosmos-sdk/pull/14793) Dockerfile optimization.
 * (cli) [#14953](https://github.com/cosmos/cosmos-sdk/pull/14953) Enable profiling block replay during abci handshake with `--cpu-profile`.
+* (baseapp) [#15023](https://github.com/cosmos/cosmos-sdk/pull/15023) Add `MessageRouter` interface to baseapp and pass it to authz instead of concrete type. 
 
 ### State Machine Breaking
 
@@ -270,6 +271,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 
 ### Bug Fixes
 
+* (x/capability) [#15030](https://github.com/cosmos/cosmos-sdk/pull/15030) Fixed bug where `x/capability` consumed `GasMeter` gas during `InitMemStore`.
 * [#14995](https://github.com/cosmos/cosmos-sdk/pull/14995) Allow unknown fields in `ParseTypedEvent`.
 * [#14952](https://github.com/cosmos/cosmos-sdk/pull/14952) Pin version of github.com/syndtr/goleveldb `v1.0.1-0.20210819022825-2ae1ddf74ef7` to avoid issues in the store.
 * (store) [#14931](https://github.com/cosmos/cosmos-sdk/pull/14931) Exclude in-memory KVStores, i.e. `StoreTypeMemory`, from CommitInfo commitments.

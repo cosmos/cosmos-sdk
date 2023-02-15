@@ -119,8 +119,9 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, storetypes.StoreTypeMemory))
 	}
 
-	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
-	noGasCtx := ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	// Create a context with no `BlockGasMeter`, and no `GasMeter`. This ensures we do not consume gas during local
+	// initialization logic.
+	noGasCtx := ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).WithGasMeter(storetypes.NewInfiniteGasMeter())
 
 	// check if memory store has not been initialized yet by checking if initialized flag is nil.
 	if !k.IsInitialized(noGasCtx) {

@@ -610,7 +610,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	})
 
 	for i := int64(0); i < nTxs; i++ {
-		tx := newTxCounter(t, suite.txConfig, i, 0) // no messages
+		tx := newTxCounter(t, suite.txConfig, Atomic, i, 0) // no messages
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
@@ -662,7 +662,7 @@ func TestABCI_DeliverTx(t *testing.T) {
 
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)
-			tx := newTxCounter(t, suite.txConfig, counter, counter)
+			tx := newTxCounter(t, suite.txConfig, Atomic, counter, counter)
 
 			txBytes, err := suite.txConfig.TxEncoder()(tx)
 			require.NoError(t, err)
@@ -701,7 +701,7 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 	header := cmtproto.Header{Height: 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0, 1, 2)
+	tx := newTxCounter(t, suite.txConfig, Atomic, 0, 0, 1, 2)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -719,7 +719,7 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 	require.Equal(t, int64(3), msgCounter)
 
 	// replace the second message with a Counter2
-	tx = newTxCounter(t, suite.txConfig, 1, 3)
+	tx = newTxCounter(t, suite.txConfig, Atomic, 1, 3)
 
 	builder := suite.txConfig.NewTxBuilder()
 	msgs := tx.GetMsgs()
@@ -751,6 +751,89 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 	require.Equal(t, int64(2), msgCounter2)
 }
 
+func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+
+	deliverKey := []byte("deliver-key")
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+	// run a multi-msg tx
+	// with all msgs the same route
+	header := cmtproto.Header{Height: 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	tx := newTxCounter(t, suite.txConfig, NonAtomic, 0, 0, 1, 2)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	store := getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+
+	// tx counter only incremented once
+	txCounter := getIntFromStore(t, store, anteKey)
+	require.Equal(t, int64(1), txCounter)
+
+	// msg counter incremented three times
+	msgCounter := getIntFromStore(t, store, deliverKey)
+	require.Equal(t, int64(3), msgCounter)
+
+	testCases := []struct {
+		name         string
+		succeed      []bool
+		finalCounter int64
+		expErr       bool
+	}{
+		{"all messages succeed", []bool{true, true}, 5, false},
+		{"all messages succeed2", []bool{true, true}, 7, false},
+		{"all messages fail", []bool{false, false}, 7, true},
+	}
+
+	for testNum, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// replace the second message with a Counter2
+			tx = newTxCounter(t, suite.txConfig, NonAtomic, int64(testNum+1), 3)
+
+			builder := suite.txConfig.NewTxBuilder()
+			msgs := make([]sdk.Msg, 0, len(tc.succeed))
+			for i, success := range tc.succeed {
+				msgs = append(msgs, &baseapptestutil.MsgCounter{Counter: msgCounter + int64(i), FailOnHandler: !success})
+			}
+			builder.SetMsgs(msgs...)
+			builder.SetMemo(tx.GetMemo())
+			builder.SetNonAtomic(true)
+			setTxSignature(t, builder, 0)
+
+			txBytes, err = suite.txConfig.TxEncoder()(builder.GetTx())
+			require.NoError(t, err)
+
+			res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			if tc.expErr {
+				require.True(t, res.IsErr(), fmt.Sprintf("%v", res))
+			} else {
+				require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+			}
+			// ToDo check the errors for each message
+
+			store = getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+
+			// original counter increments by one
+			// new counter increments by two
+			internalCounter := getIntFromStore(t, store, deliverKey)
+			require.Equal(t, tc.finalCounter, internalCounter)
+			// Update msg counter
+			msgCounter = internalCounter
+		})
+	}
+}
+
 func TestABCI_Query_SimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
@@ -773,7 +856,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		header := cmtproto.Header{Height: count}
 		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-		tx := newTxCounter(t, suite.txConfig, count, count)
+		tx := newTxCounter(t, suite.txConfig, Atomic, count, count)
 
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.Nil(t, err)
@@ -846,14 +929,14 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 			tx   signing.Tx
 			fail bool
 		}{
-			{newTxCounter(t, suite.txConfig, 0, 0), false},
-			{newTxCounter(t, suite.txConfig, -1, 0), false},
-			{newTxCounter(t, suite.txConfig, 100, 100), false},
-			{newTxCounter(t, suite.txConfig, 100, 5, 4, 3, 2, 1), false},
+			{newTxCounter(t, suite.txConfig, Atomic, 0, 0), false},
+			{newTxCounter(t, suite.txConfig, Atomic, -1, 0), false},
+			{newTxCounter(t, suite.txConfig, Atomic, 100, 100), false},
+			{newTxCounter(t, suite.txConfig, Atomic, 100, 5, 4, 3, 2, 1), false},
 
-			{newTxCounter(t, suite.txConfig, 0, -1), true},
-			{newTxCounter(t, suite.txConfig, 0, 1, -2), true},
-			{newTxCounter(t, suite.txConfig, 0, 1, 2, -10, 5), true},
+			{newTxCounter(t, suite.txConfig, Atomic, 0, -1), true},
+			{newTxCounter(t, suite.txConfig, 1, 0, -2), true},
+			{newTxCounter(t, suite.txConfig, Atomic, 0, 1, 2, -10, 5), true},
 		}
 
 		for _, testCase := range testCases {
@@ -959,23 +1042,23 @@ func TestABCI_TxGasLimits(t *testing.T) {
 		gasUsed uint64
 		fail    bool
 	}{
-		{newTxCounter(t, suite.txConfig, 0, 0), 0, false},
-		{newTxCounter(t, suite.txConfig, 1, 1), 2, false},
-		{newTxCounter(t, suite.txConfig, 9, 1), 10, false},
-		{newTxCounter(t, suite.txConfig, 1, 9), 10, false},
-		{newTxCounter(t, suite.txConfig, 10, 0), 10, false},
-		{newTxCounter(t, suite.txConfig, 0, 10), 10, false},
-		{newTxCounter(t, suite.txConfig, 0, 8, 2), 10, false},
-		{newTxCounter(t, suite.txConfig, 0, 5, 1, 1, 1, 1, 1), 10, false},
-		{newTxCounter(t, suite.txConfig, 0, 5, 1, 1, 1, 1), 9, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 0, 0), 0, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 1, 1), 2, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 9, 1), 10, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 1, 9), 10, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 10, 0), 10, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 0, 10), 10, false},
+		{newTxCounter(t, suite.txConfig, 8, 0, 2), 10, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 0, 5, 1, 1, 1, 1, 1), 10, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 0, 5, 1, 1, 1, 1), 9, false},
 
-		{newTxCounter(t, suite.txConfig, 9, 2), 11, true},
-		{newTxCounter(t, suite.txConfig, 2, 9), 11, true},
-		{newTxCounter(t, suite.txConfig, 9, 1, 1), 11, true},
-		{newTxCounter(t, suite.txConfig, 1, 8, 1, 1), 11, true},
-		{newTxCounter(t, suite.txConfig, 11, 0), 11, true},
-		{newTxCounter(t, suite.txConfig, 0, 11), 11, true},
-		{newTxCounter(t, suite.txConfig, 0, 5, 11), 16, true},
+		{newTxCounter(t, suite.txConfig, Atomic, 9, 2), 11, true},
+		{newTxCounter(t, suite.txConfig, Atomic, 2, 9), 11, true},
+		{newTxCounter(t, suite.txConfig, 1, 9, 1), 11, true},
+		{newTxCounter(t, suite.txConfig, Atomic, 1, 8, 1, 1), 11, true},
+		{newTxCounter(t, suite.txConfig, Atomic, 11, 0), 11, true},
+		{newTxCounter(t, suite.txConfig, Atomic, 0, 11), 11, true},
+		{newTxCounter(t, suite.txConfig, 5, 0, 11), 16, true},
 	}
 
 	for i, tc := range testCases {
@@ -1044,16 +1127,16 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		fail              bool
 		failAfterDeliver  int
 	}{
-		{newTxCounter(t, suite.txConfig, 0, 0), 0, 0, false, 0},
-		{newTxCounter(t, suite.txConfig, 9, 1), 2, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 10, 0), 3, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 10, 0), 10, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 2, 7), 11, 9, false, 0},
-		{newTxCounter(t, suite.txConfig, 10, 0), 10, 10, false, 0}, // hit the limit but pass
+		{newTxCounter(t, suite.txConfig, Atomic, 0, 0), 0, 0, false, 0},
+		{newTxCounter(t, suite.txConfig, Atomic, 9, 1), 2, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, Atomic, 10, 0), 3, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, Atomic, 10, 0), 10, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, Atomic, 2, 7), 11, 9, false, 0},
+		{newTxCounter(t, suite.txConfig, Atomic, 10, 0), 10, 10, false, 0}, // hit the limit but pass
 
-		{newTxCounter(t, suite.txConfig, 10, 0), 11, 10, true, 10},
-		{newTxCounter(t, suite.txConfig, 10, 0), 15, 10, true, 10},
-		{newTxCounter(t, suite.txConfig, 9, 0), 12, 9, true, 11}, // fly past the limit
+		{newTxCounter(t, suite.txConfig, Atomic, 10, 0), 11, 10, true, 10},
+		{newTxCounter(t, suite.txConfig, Atomic, 10, 0), 15, 10, true, 10},
+		{newTxCounter(t, suite.txConfig, Atomic, 9, 0), 12, 9, true, 11}, // fly past the limit
 	}
 
 	for i, tc := range testCases {
@@ -1136,7 +1219,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	header := cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	tx := newTxCounter(t, suite.txConfig, 5, 0)
+	tx := newTxCounter(t, suite.txConfig, Atomic, 5, 0)
 	tx = setFailOnAnte(t, suite.txConfig, tx, true)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -1145,7 +1228,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	// require next tx to fail due to black gas limit
-	tx = newTxCounter(t, suite.txConfig, 5, 0)
+	tx = newTxCounter(t, suite.txConfig, Atomic, 5, 0)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1177,7 +1260,7 @@ func TestABCI_Query(t *testing.T) {
 		Path: "/store/key1/key",
 		Data: key,
 	}
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, Atomic, 0, 0)
 
 	// query is empty before we do anything
 	res := suite.baseApp.Query(query)
@@ -1333,7 +1416,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	tx := newTxCounter(t, suite.txConfig, 0, 1)
+	tx := newTxCounter(t, suite.txConfig, Atomic, 0, 1)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1343,7 +1426,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	}
 	suite.baseApp.CheckTx(reqCheckTx)
 
-	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
+	tx2 := newTxCounter(t, suite.txConfig, Atomic, 1, 1)
 
 	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
 	require.NoError(t, err)
@@ -1438,7 +1521,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	})
 
 	for i := 0; i < 100; i++ {
-		tx2 := newTxCounter(t, suite.txConfig, int64(i), int64(i))
+		tx2 := newTxCounter(t, suite.txConfig, Atomic, int64(i), int64(i))
 		err := pool.Insert(sdk.Context{}, tx2)
 		require.NoError(t, err)
 	}
@@ -1463,7 +1546,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, Atomic, 0, 0)
 	err := pool.Insert(sdk.Context{}, tx)
 	require.NoError(t, err)
 
@@ -1487,7 +1570,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, Atomic, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1498,7 +1581,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	checkTxRes := suite.baseApp.CheckTx(reqCheckTx)
 	require.True(t, checkTxRes.IsOK())
 
-	failTx := newTxCounter(t, suite.txConfig, 1, 1)
+	failTx := newTxCounter(t, suite.txConfig, Atomic, 1, 1)
 	failTx = setFailOnAnte(t, suite.txConfig, failTx, true)
 
 	err = pool.Insert(sdk.Context{}, failTx)

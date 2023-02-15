@@ -412,7 +412,7 @@ func TestTxDecoder(t *testing.T) {
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 
-	tx := newTxCounter(t, txConfig, 1, 0)
+	tx := newTxCounter(t, txConfig, Atomic, 1, 0)
 	txBytes, err := txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -456,7 +456,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 
 	// transaction should panic with custom handler above
 	{
-		tx := newTxCounter(t, suite.txConfig, 0, 0)
+		tx := newTxCounter(t, suite.txConfig, Atomic, 0, 0)
 
 		require.PanicsWithValue(t, customPanicMsg, func() {
 			suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
@@ -485,7 +485,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	//
 	// NOTE: State should not be mutated here. This will be implicitly checked by
 	// the next txs ante handler execution (anteHandlerTxTest).
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, Atomic, 0, 0)
 	tx = setFailOnAnte(t, suite.txConfig, tx, true)
 
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
@@ -501,7 +501,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// execute at tx that will pass the ante handler (the checkTx state should
 	// mutate) but will fail the message handler
-	tx = newTxCounter(t, suite.txConfig, 0, 0)
+	tx = newTxCounter(t, suite.txConfig, Atomic, 0, 0)
 	tx = setFailOnHandler(suite.txConfig, tx, true)
 
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
@@ -518,7 +518,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// Execute a successful ante handler and message execution where state is
 	// implicitly checked by previous tx executions.
-	tx = newTxCounter(t, suite.txConfig, 1, 0)
+	tx = newTxCounter(t, suite.txConfig, Atomic, 1, 0)
 
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)

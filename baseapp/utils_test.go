@@ -334,7 +334,14 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 	return counter, failOnAnte
 }
 
-func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+type Atomicity uint8
+
+const (
+	Atomic Atomicity = iota
+	NonAtomic
+)
+
+func newTxCounter(t *testing.T, cfg client.TxConfig, atomicity Atomicity, counter int64, msgCounters ...int64) signing.Tx {
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
 		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false}
@@ -344,6 +351,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	builder := cfg.NewTxBuilder()
 	builder.SetMsgs(msgs...)
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
+	builder.SetNonAtomic(atomicity == NonAtomic)
 	setTxSignature(t, builder, uint64(counter))
 
 	return builder.GetTx()

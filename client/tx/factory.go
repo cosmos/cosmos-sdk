@@ -36,6 +36,7 @@ type Factory struct {
 	offline            bool
 	generateOnly       bool
 	memo               string
+	nonAtomic          bool
 	fees               sdk.Coins
 	tip                *tx.Tip
 	feeGranter         sdk.AccAddress
@@ -68,6 +69,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	accSeq, _ := flagSet.GetUint64(flags.FlagSequence)
 	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
 	memo, _ := flagSet.GetString(flags.FlagNote)
+	nonAtomic, _ := flagSet.GetBool(flags.FlagNonAtomic)
 	timeoutHeight, _ := flagSet.GetUint64(flags.FlagTimeoutHeight)
 
 	gasStr, _ := flagSet.GetString(flags.FlagGas)
@@ -87,6 +89,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		timeoutHeight:      timeoutHeight,
 		gasAdjustment:      gasAdj,
 		memo:               memo,
+		nonAtomic:          nonAtomic,
 		signMode:           signMode,
 		feeGranter:         clientCtx.FeeGranter,
 		feePayer:           clientCtx.FeePayer,

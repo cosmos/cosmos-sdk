@@ -66,6 +66,10 @@ func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo
 }
 
+func (s *StdTxBuilder) SetNonAtomic(nonAtomic bool) {
+	s.NonAtomic = nonAtomic
+}
+
 // SetTimeoutHeight sets the transaction's height timeout.
 func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 	s.TimeoutHeight = height

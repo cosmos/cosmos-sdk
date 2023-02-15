@@ -59,6 +59,7 @@ const (
 	FlagAccountNumber    = "account-number"
 	FlagSequence         = "sequence"
 	FlagNote             = "note"
+	FlagNonAtomic        = "non-atomic"
 	FlagFees             = "fees"
 	FlagGas              = "gas"
 	FlagGasPrices        = "gas-prices"
@@ -117,6 +118,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f.Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 	f.Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")
 	f.String(FlagNote, "", "Note to add a description to the transaction (previously --memo)")
+	f.Bool(FlagNonAtomic, false, "Execute the transaction non-atomically. The transaction will succeed if at least one of the supplied messages succeeds. The success information of each message will be included in the events")
 	f.String(FlagFees, "", "Fees to pay along with transaction; eg: 10uatom")
 	f.String(FlagGasPrices, "", "Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)")
 	f.String(FlagNode, "tcp://localhost:26657", "<host>:<port> to CometBFT rpc interface for this chain")

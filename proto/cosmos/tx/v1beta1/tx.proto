@@ -116,6 +116,14 @@ message TxBody {
   // be processed by the chain
   uint64 timeout_height = 3;
 
+  // non_atomic is an atomicity flag. If false, the transaction will be atomic
+  // and be rejected if any of the messages fail. This is the default and
+  // compatible with previous versions of the SDK and TxBody.
+  //
+  // If set to true, the transaction will be executed as long as at least one
+  // of the messages succeeds.
+  bool non_atomic = 4;
+
   // extension_options are arbitrary options that can be added by chains
   // when the default options are not sufficient. If any of these are present
   // and can't be handled, the transaction will be rejected

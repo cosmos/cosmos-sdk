@@ -40,6 +40,7 @@ type (
 		SetMsgs(msgs ...sdk.Msg) error
 		SetSignatures(signatures ...signingtypes.SignatureV2) error
 		SetMemo(memo string)
+		SetNonAtomic(nonAtomic bool)
 		SetFeeAmount(amount sdk.Coins)
 		SetFeePayer(feePayer sdk.AccAddress)
 		SetGasLimit(limit uint64)

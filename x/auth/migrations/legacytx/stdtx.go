@@ -90,6 +90,7 @@ type StdTx struct {
 	Signatures    []StdSignature `json:"signatures" yaml:"signatures"`
 	Memo          string         `json:"memo" yaml:"memo"`
 	TimeoutHeight uint64         `json:"timeout_height" yaml:"timeout_height"`
+	NonAtomic     bool           `json:"non_atomic" yaml:"non_atomic"`
 }
 
 // Deprecated

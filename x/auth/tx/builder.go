@@ -232,6 +232,13 @@ func (w *wrapper) SetMemo(memo string) {
 	w.bodyBz = nil
 }
 
+func (w *wrapper) SetNonAtomic(nonAtomic bool) {
+	w.tx.Body.NonAtomic = nonAtomic
+
+	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
+	w.bodyBz = nil
+}
+
 func (w *wrapper) SetGasLimit(limit uint64) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}

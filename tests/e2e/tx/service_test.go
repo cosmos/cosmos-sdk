@@ -113,7 +113,7 @@ func (s *E2ETestSuite) TearDownSuite() {
 
 func (s *E2ETestSuite) TestQueryBySig() {
 	// broadcast tx
-	txb := s.mkTxBuilder()
+	txb := s.mkTxBuilder(Atomic)
 	txbz, err := s.cfg.TxConfig.TxEncoder()(txb.GetTx())
 	s.Require().NoError(err)
 	resp, err := s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_SYNC})
@@ -193,7 +193,7 @@ func TestEventRegex(t *testing.T) {
 
 func (s E2ETestSuite) TestSimulateTx_GRPC() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
@@ -240,7 +240,7 @@ func (s E2ETestSuite) TestSimulateTx_GRPC() {
 
 func (s E2ETestSuite) TestSimulateTx_GRPCGateway() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
@@ -510,7 +510,7 @@ func (s E2ETestSuite) TestGetTx_GRPCGateway() {
 
 func (s E2ETestSuite) TestBroadcastTx_GRPC() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
@@ -526,6 +526,16 @@ func (s E2ETestSuite) TestBroadcastTx_GRPC() {
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
+		}, false, ""},
+		{"non-atomic request", &tx.BroadcastTxRequest{
+			Mode: tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: func(s *E2ETestSuite) []byte {
+				secondTxBuilder := s.mkTxBuilder(NonAtomic)
+				secondTxBuilder.SetNonAtomic(true)
+				txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(secondTxBuilder.GetTx())
+				s.Require().NoError(err)
+				return txBytes
+			}(&s),
 		}, false, ""},
 	}
 
@@ -548,7 +558,7 @@ func (s E2ETestSuite) TestBroadcastTx_GRPC() {
 
 func (s E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
@@ -772,7 +782,7 @@ func (s E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 
 func (s E2ETestSuite) TestTxEncode_GRPC() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
 
@@ -809,7 +819,7 @@ func (s E2ETestSuite) TestTxEncode_GRPC() {
 
 func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
 
@@ -847,7 +857,7 @@ func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
 
 func (s E2ETestSuite) TestTxDecode_GRPC() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 
 	encodedTx, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
@@ -889,7 +899,7 @@ func (s E2ETestSuite) TestTxDecode_GRPC() {
 
 func (s E2ETestSuite) TestTxDecode_GRPCGateway() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 
 	encodedTxBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
@@ -932,7 +942,7 @@ func (s E2ETestSuite) TestTxDecode_GRPCGateway() {
 
 func (s E2ETestSuite) TestTxEncodeAmino_GRPC() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
 	s.Require().NoError(err)
 	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
@@ -973,7 +983,7 @@ func (s E2ETestSuite) TestTxEncodeAmino_GRPC() {
 
 func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
 	s.Require().NoError(err)
 	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
@@ -1015,7 +1025,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 
 func (s E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 
 	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
 	s.Require().NoError(err)
@@ -1060,7 +1070,7 @@ func (s E2ETestSuite) TestTxDecodeAmino_GRPC() {
 
 func (s E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
+	txBuilder := s.mkTxBuilder(Atomic)
 
 	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
 	s.Require().NoError(err)
@@ -1107,7 +1117,14 @@ func TestE2ETestSuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))
 }
 
-func (s E2ETestSuite) mkTxBuilder() client.TxBuilder {
+type Atomicity uint8
+
+const (
+	Atomic Atomicity = iota
+	NonAtomic
+)
+
+func (s E2ETestSuite) mkTxBuilder(atomicity Atomicity) client.TxBuilder {
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -1121,10 +1138,19 @@ func (s E2ETestSuite) mkTxBuilder() client.TxBuilder {
 			ToAddress:   val.Address.String(),
 			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
 		}),
+		// Adding a second message to be able to test non-atomic txs. This should also
+		// give us robustness by e2e testing multiple messages in a single tx in
+		//all cases.
+		txBuilder.SetMsgs(&banktypes.MsgSend{
+			FromAddress: val.Address.String(),
+			ToAddress:   val.Address.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+		}),
 	)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
+	txBuilder.SetNonAtomic(atomicity == NonAtomic)
 	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
 
 	// setup txFactory

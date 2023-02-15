@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -14,6 +15,7 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	"github.com/neilotoole/errgroup"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -260,33 +262,34 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	return WaitForQuitSignals()
 }
 
-func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
-	cfg := ctx.Config
+func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
+	cfg := svrCtx.Config
 	home := cfg.RootDir
 
-	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return err
 	}
 
-	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
+	traceWriterFile := svrCtx.Viper.GetString(flagTraceStore)
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err
 	}
 
-	// Clean up the traceWriter when the server is shutting down.
+	// clean up the traceWriter when the server is shutting down
 	var traceWriterCleanup func()
+
 	// if flagTraceStore is not used then traceWriter is nil
 	if traceWriter != nil {
 		traceWriterCleanup = func() {
 			if err = traceWriter.Close(); err != nil {
-				ctx.Logger.Error("failed to close trace writer", "err", err)
+				svrCtx.Logger.Error("failed to close trace writer", "err", err)
 			}
 		}
 	}
 
-	config, err := serverconfig.GetConfig(ctx.Viper)
+	config, err := serverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
 		return err
 	}
@@ -295,24 +298,25 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
+	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
 		return err
 	}
+
 	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
 
 	var (
 		tmNode   *node.Node
-		gRPCOnly = ctx.Viper.GetBool(flagGRPCOnly)
+		gRPCOnly = svrCtx.Viper.GetBool(flagGRPCOnly)
 	)
 
 	if gRPCOnly {
-		ctx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
+		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
 		config.GRPC.Enable = true
 	} else {
-		ctx.Logger.Info("starting node with ABCI CometBFT in-process")
+		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
 
 		tmNode, err = node.NewNode(
 			cfg,
@@ -322,7 +326,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			genDocProvider,
 			node.DefaultDBProvider,
 			node.DefaultMetricsProvider(cfg.Instrumentation),
-			ctx.Logger,
+			svrCtx.Logger,
 		)
 		if err != nil {
 			return err
@@ -356,6 +360,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		grpcSrv *grpc.Server
 	)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
+
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -382,7 +389,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
 
-			// If grpc is enabled, configure grpc client for grpc gateway.
+			// if gRPC is enabled, configure gRPC client for gRPC gateway
 			grpcClient, err := grpc.Dial(
 				grpcAddress,
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -397,18 +404,19 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			}
 
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+			svrCtx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
 
 			// start grpc server
 			grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
 			if err != nil {
 				return err
 			}
+
 			defer grpcSrv.Stop()
 		}
 
 		// configure api server
-		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"), grpcSrv)
+		apiSrv = api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 		app.RegisterAPIRoutes(apiSrv, config.API)
 		if config.Telemetry.Enabled {
 			apiSrv.SetTelemetry(metrics)
@@ -460,7 +468,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			_ = apiSrv.Close()
 		}
 
-		ctx.Logger.Info("exiting...")
+		svrCtx.Logger.Info("exiting...")
 	}()
 
 	// wait for signal capture and gracefully return
@@ -471,6 +479,7 @@ func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
 	if !cfg.Telemetry.Enabled {
 		return nil, nil
 	}
+
 	return telemetry.New(cfg.Telemetry)
 }
 

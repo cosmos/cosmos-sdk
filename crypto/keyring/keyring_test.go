@@ -437,8 +437,6 @@ func TestImportKey(t *testing.T) {
 				require.Error(t, err)
 				require.True(t, errors.Is(err, tt.expectedErr))
 			}
-			require.NoError(t, err)
-
 		})
 	}
 }
@@ -769,7 +767,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 
 	// try import the key - wrong password
 	err = kb.ImportPrivKey("john2", keystr, "bad pass")
-	require.Equal(t, "failed to decrypt private key: ciphertext decryption failed", err.Error())
+	require.True(t, errors.Is(err, sdkerrors.ErrWrongPassword))
 
 	// try import the key with the correct password
 	require.NoError(t, kb.ImportPrivKey("john2", keystr, "somepassword"))
@@ -1858,49 +1856,15 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 
 // TODO: review it
 func TestBackendConfigConstructors(t *testing.T) {
-	tests := []struct {
-		name        string
-		getConfig   func() keyring.Config
-		backendType keyring.BackendType
-		serviceName string
-		kwalletId   string
-	}{
-		{
-			name: "Kdewallet config",
-			getConfig: func() keyring.Config {
-				return newKWalletBackendKeyringConfig("test", "", nil)
-			},
-			backendType: keyring.KWalletBackend,
-			serviceName: "kdewallet",
-			kwalletId:   "test",
-		},
-		{
-			name: "PassBackend config",
-			getConfig: func() keyring.Config {
-				return newPassBackendKeyringConfig("test", "directory", nil)
-			},
-			backendType: keyring.PassBackend,
-			serviceName: "test",
-			kwalletId:   "keyring-test",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			backend := tt.getConfig()
-			require.Equal(t, []keyring.BackendType{tt.backendType}, backend.AllowedBackends)
-			require.Equal(t, tt.serviceName, backend.ServiceName)
-			require.Equal(t, tt.kwalletId, backend.KWalletAppID)
-		})
-	}
-	//backend := newKWalletBackendKeyringConfig("test", "", nil)
-	//require.Equal(t, []keyring.BackendType{keyring.KWalletBackend}, backend.AllowedBackends)
-	//require.Equal(t, "kdewallet", backend.ServiceName)
-	//require.Equal(t, "test", backend.KWalletAppID)
-	//
-	//backend = newPassBackendKeyringConfig("test", "directory", nil)
-	//require.Equal(t, []keyring.BackendType{keyring.PassBackend}, backend.AllowedBackends)
-	//require.Equal(t, "test", backend.ServiceName)
-	//require.Equal(t, "keyring-test", backxend.PassPrefix)
+	backend := newKWalletBackendKeyringConfig("test", "", nil)
+	require.Equal(t, []keyring.BackendType{keyring.KWalletBackend}, backend.AllowedBackends)
+	require.Equal(t, "kdewallet", backend.ServiceName)
+	require.Equal(t, "test", backend.KWalletAppID)
+
+	backend = newPassBackendKeyringConfig("test", "directory", nil)
+	require.Equal(t, []keyring.BackendType{keyring.PassBackend}, backend.AllowedBackends)
+	require.Equal(t, "test", backend.ServiceName)
+	require.Equal(t, "keyring-test", backend.PassPrefix)
 }
 
 func TestRenameKey(t *testing.T) {

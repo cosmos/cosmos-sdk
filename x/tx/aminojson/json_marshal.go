@@ -41,10 +41,10 @@ func NewAminoJSON() AminoJSON {
 			"module_account": moduleAccountEncoder,
 		},
 		fieldEncoders: map[string]FieldEncoder{
-			"empty_string":        emptyStringEncoder,
-			"json_default":        jsonDefaultEncoder,
-			"null_slice_as_empty": nullSliceAsEmptyEncoder,
-			"cosmos_dec_bytes":    cosmosDecBytesEncoder,
+			"empty_string":     emptyStringEncoder,
+			"json_default":     jsonDefaultEncoder,
+			"legacy_coins":     nullSliceAsEmptyEncoder,
+			"cosmos_dec_bytes": cosmosDecBytesEncoder,
 		},
 	}
 	return aj

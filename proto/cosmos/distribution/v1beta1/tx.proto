@@ -89,7 +89,7 @@ message MsgWithdrawDelegatorRewardResponse {
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -113,7 +113,7 @@ message MsgWithdrawValidatorCommissionResponse {
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -130,7 +130,7 @@ message MsgFundCommunityPool {
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -176,7 +176,7 @@ message MsgCommunityPoolSpend {
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -202,7 +202,7 @@ message MsgDepositValidatorRewardsPool {
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (amino.dont_omitempty)   = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];

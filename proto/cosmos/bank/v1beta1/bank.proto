@@ -40,7 +40,7 @@ message Input {
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -54,7 +54,7 @@ message Output {
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -73,7 +73,7 @@ message Supply {
   repeated cosmos.base.v1beta1.Coin total = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "null_slice_as_empty",
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

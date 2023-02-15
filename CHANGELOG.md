@@ -288,7 +288,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19. ##TODO check if this is in a previous release
 * (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints.
 * (x/auth) [#13877](https://github.com/cosmos/cosmos-sdk/pull/13877) Handle missing account numbers during `InitGenesis`.
-* (x/gov) [#13918](https://github.com/cosmos/cosmos-sdk/pull/13918) Propagate of message errors when executing a proposal.
+* (x/gov) [#13918](https://github.com/cosmos/cosmos-sdk/pull/13918) Propagate message errors when executing a proposal.
 
 ### Deprecated
 

@@ -337,7 +337,7 @@ func newAny(t *testing.T, msg proto.Message) *anypb.Any {
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
-		vesting.AppModuleBasic{}, gov.AppModuleBasic{})
+		vesting.AppModuleBasic{})
 
 	aj := aminojson.NewAminoJSON()
 	addr1 := types.AccAddress([]byte("addr1"))
@@ -441,10 +441,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &banktypes.SendAuthorization{SpendLimit: []types.Coin{}},
 			pulsar: &bankapi.SendAuthorization{SpendLimit: []*v1beta1.Coin{}},
 		},
-		"bank/send_authorization/some_coins": {
-			gogo:   &banktypes.SendAuthorization{SpendLimit: []types.Coin{types.NewInt64Coin("foo", 10)}},
-			pulsar: &bankapi.SendAuthorization{SpendLimit: []*v1beta1.Coin{{Denom: "foo", Amount: "10"}}},
-		},
 		"bank/send_authorization/nil_coins": {
 			gogo:   &banktypes.SendAuthorization{SpendLimit: nil},
 			pulsar: &bankapi.SendAuthorization{SpendLimit: nil},
@@ -460,10 +456,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"bank/msg_multi_send/nil_everything": {
 			gogo:   &banktypes.MsgMultiSend{},
 			pulsar: &bankapi.MsgMultiSend{},
-		},
-		"gov/v1_msg_submit_proposal": {
-			gogo:   &gov_v1_types.MsgSubmitProposal{},
-			pulsar: &gov_v1_api.MsgSubmitProposal{},
 		},
 		"slashing/params/empty_dec": {
 			gogo:   &slashingtypes.Params{DowntimeJailDuration: 1e9 + 7},

@@ -358,12 +358,6 @@ func (aj AminoJSON) getMessageEncoder(message protoreflect.Message) MessageEncod
 }
 
 func (aj AminoJSON) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEncoder {
-	// hardcoded special case for Coins, see https://github.com/cosmos/cosmos-sdk/pull/15019#discussion_r1106112024
-	msg := field.Message()
-	if field.IsList() && msg != nil && msg.FullName() == coinFullName {
-		return nullSliceAsEmptyEncoder
-	}
-
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_Encoding) {
 		enc := proto.GetExtension(opts, amino.E_Encoding).(string)
@@ -384,5 +378,4 @@ const (
 	timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
 	durationFullName  protoreflect.FullName = "google.protobuf.Duration"
 	anyFullName       protoreflect.FullName = "google.protobuf.Any"
-	coinFullName      protoreflect.FullName = "cosmos.base.v1beta1.Coin"
 )

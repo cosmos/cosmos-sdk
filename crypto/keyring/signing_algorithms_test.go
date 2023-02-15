@@ -77,11 +77,10 @@ func TestDerive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			derivedPriv, err := tt.algo.Derive()(tt.mnemonic, tt.bip39Passphrase, tt.hdPath)
-			encoded := make([]byte, len(derivedPriv)*2)
-			hex.Encode(encoded, derivedPriv)
 			require.NoError(t, err)
 
-			decodedPriv, _ := hex.DecodeString(tt.derivedPriv)
+			decodedPriv, err := hex.DecodeString(tt.derivedPriv)
+			require.NoError(t, err)
 			require.Equal(t, derivedPriv, decodedPriv)
 
 		})

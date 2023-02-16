@@ -37,7 +37,7 @@ type Keeper struct {
 	legacyRouter v1beta1.Router
 
 	// Msg server router
-	router *baseapp.MsgServiceRouter
+	router baseapp.MessageRouter
 
 	config types.Config
 
@@ -126,7 +126,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Router returns the gov keeper's router
-func (k Keeper) Router() *baseapp.MsgServiceRouter {
+func (k Keeper) Router() baseapp.MessageRouter {
 	return k.router
 }
 

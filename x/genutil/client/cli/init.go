@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/math"
+	"cosmossdk.io/math/unsafe"
 	cfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/types"
@@ -86,7 +86,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			case clientCtx.ChainID != "":
 				chainID = clientCtx.ChainID
 			default:
-				chainID = fmt.Sprintf("test-chain-%v", math.Str(6))
+				chainID = fmt.Sprintf("test-chain-%v", unsafe.Str(6))
 			}
 
 			// Get bip39 mnemonic

@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/math/unsafe"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"golang.org/x/exp/maps"
 
@@ -94,7 +95,7 @@ func BuildMap(size int) map[string][]byte {
 	data := make(map[string][]byte)
 	// insert lots of info and store the bytes
 	for i := 0; i < size; i++ {
-		key := math.Str(20)
+		key := unsafe.Str(20)
 		data[key] = toValue(key)
 	}
 	return data

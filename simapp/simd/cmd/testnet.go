@@ -9,13 +9,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/math"
+	"cosmossdk.io/math/unsafe"
 	cmtconfig "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	"cosmossdk.io/math"
 
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -208,7 +208,7 @@ func initTestnetFiles(
 	args initArgs,
 ) error {
 	if args.chainID == "" {
-		args.chainID = "chain-" + math.Str(6)
+		args.chainID = "chain-" + unsafe.Str(6)
 	}
 	nodeIDs := make([]string, args.numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, args.numValidators)

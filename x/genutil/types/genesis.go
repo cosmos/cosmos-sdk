@@ -27,12 +27,9 @@ type AppGenesis struct {
 
 // ToCometBFTGenesisDoc converts the AppGenesis to a CometBFT GenesisDoc.
 func (ag AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
-	return &cmttypes.GenesisDoc{
-		ChainID:       ag.ChainID,
-		InitialHeight: ag.InitialHeight,
-		AppHash:       ag.AppHash,
-		AppState:      ag.AppState,
-		ConsensusParams: &cmttypes.ConsensusParams{
+	var consensusParams *cmttypes.ConsensusParams
+	if ag.ConsensusParams != nil {
+		consensusParams = &cmttypes.ConsensusParams{
 			Block: cmttypes.BlockParams{
 				MaxBytes: ag.ConsensusParams.Block.MaxBytes,
 				MaxGas:   ag.ConsensusParams.Block.MaxGas,
@@ -45,8 +42,16 @@ func (ag AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
 			Validator: cmttypes.ValidatorParams{
 				PubKeyTypes: ag.ConsensusParams.Validator.PubKeyTypes,
 			},
-		},
-		Validators: ag.Validators,
+		}
+	}
+
+	return &cmttypes.GenesisDoc{
+		ChainID:         ag.ChainID,
+		InitialHeight:   ag.InitialHeight,
+		AppHash:         ag.AppHash,
+		AppState:        ag.AppState,
+		ConsensusParams: consensusParams,
+		Validators:      ag.Validators,
 	}, nil
 }
 

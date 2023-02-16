@@ -8,7 +8,7 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-var expectedAppGenesisJSON = `{"app_name":"simapp","app_version":"0.1.0","genesis_time":"0001-01-01T00:00:00Z","chain_id":"test","initial_height":"0","app_hash":""}`
+var expectedAppGenesisJSON = `{"app_name":"simapp","app_version":"0.1.0","genesis_time":"0001-01-01T00:00:00Z","chain_id":"test","initial_height":0,"app_hash":null}`
 
 func TestAppGenesis_Marshal(t *testing.T) {
 	genesis := types.AppGenesis{

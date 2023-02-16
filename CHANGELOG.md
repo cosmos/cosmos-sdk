@@ -39,18 +39,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### Features
-
-* [#510](https://github.com/provenance-io/cosmos-sdk/pull/510) Add Sanction Tx commands.
+* nothing
 
 ---
 
-## [v0.46.8-pio-3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.8-pio-3) - 2023-02-06
+## [v0.46.10-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.10-pio-1) - 2023-02-16
 
 ### Improvements
 
 * [#505](https://github.com/provenance-io/cosmos-sdk/pull/505) Revert [#444](https://github.com/provenance-io/cosmos-sdk/pull/505): Revert [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) "Optimize iteration on nested cached KV stores and other operations in general".
-* [#505](https://github.com/provenance-io/cosmos-sdk/pull/505) Bring in Cosmos-SDK [v0.46.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.9) changes.
+* [#505](https://github.com/provenance-io/cosmos-sdk/pull/505) [#517](https://github.com/provenance-io/cosmos-sdk/pull/517) Bring in Cosmos-SDK [v0.46.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.9) and [v0.46.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.10) changes.
+
+### Features
+
+* [#510](https://github.com/provenance-io/cosmos-sdk/pull/510) Add Sanction Tx commands.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.8-pio-3...v0.46.10-pio-1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.10..v0.46.10-pio-1
 
 ---
 

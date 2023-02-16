@@ -100,11 +100,16 @@ func TestPaginationLimitCountTotal(t *testing.T) {
 	assert.Equal(t, uint64(3), pr.Total)
 }
 
-func TestImportedMessageIterator(t *testing.T) {
+func TestTimestampIndex(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleTimestamp{}).ProtoReflect().Type(),
 	})
-	backend := testkv.NewSplitMemBackend()
+	backend := testkv.NewDebugBackend(testkv.NewSplitMemBackend(), &testkv.EntryCodecDebugger{
+		EntryCodec: table,
+		Print: func(s string) {
+			t.Log(s)
+		},
+	})
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleTimestampTable(table)
 	assert.NilError(t, err)
@@ -117,7 +122,7 @@ func TestImportedMessageIterator(t *testing.T) {
 	assert.NilError(t, err)
 
 	pastPb, middlePb, futurePb := timestamppb.New(past), timestamppb.New(middle), timestamppb.New(future)
-	timeOrder := [3]*timestamppb.Timestamp{pastPb, middlePb, futurePb}
+	timeOrder := []*timestamppb.Timestamp{pastPb, middlePb, futurePb}
 
 	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTimestamp{
 		Name: "foo",
@@ -143,6 +148,46 @@ func TestImportedMessageIterator(t *testing.T) {
 		assert.Equal(t, timeOrder[i].String(), v.Ts.String())
 		i++
 	}
+
+	// insert a nil entry
+	id, err := store.InsertReturningId(ctx, &testpb.ExampleTimestamp{
+		Name: "nil",
+		Ts:   nil,
+	})
+	assert.NilError(t, err)
+
+	res, err := store.Get(ctx, id)
+	assert.Assert(t, res.Ts == nil)
+
+	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{})
+	assert.NilError(t, err)
+
+	// make sure nils are ordered last
+	timeOrder = append(timeOrder, nil)
+	i = 0
+	for it.Next() {
+		v, err := it.Value()
+		assert.NilError(t, err)
+		assert.Assert(t, v != nil)
+		x := timeOrder[i]
+		if x == nil {
+			assert.Assert(t, v.Ts == nil)
+		} else {
+			assert.Equal(t, x.String(), v.Ts.String())
+		}
+		i++
+	}
+	it.Close()
+
+	// try iterating over just nil timestamps
+	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{}.WithTs(nil))
+	assert.NilError(t, err)
+	assert.Assert(t, it.Next())
+	res, err = it.Value()
+	assert.NilError(t, err)
+	assert.Assert(t, res.Ts == nil)
+	assert.Assert(t, !it.Next())
+	it.Close()
 }
 
 // check that the ormkv.Entry's decode and encode to the same bytes

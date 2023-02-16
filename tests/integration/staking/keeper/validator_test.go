@@ -694,7 +694,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 		app.StakingKeeper.SetValidatorByPowerIndex(ctx, validators[i])
 	}
 
-	// verify initial Tendermint updates are correct
+	// verify initial CometBFT updates are correct
 	updates := applyValidatorSetUpdates(t, ctx, app.StakingKeeper, len(validators))
 	validators[0], _ = app.StakingKeeper.GetValidator(ctx, validators[0].GetOperator())
 	validators[1], _ = app.StakingKeeper.GetValidator(ctx, validators[1].GetOperator())
@@ -739,7 +739,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, validator)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, validator)
 
-	// verify initial Tendermint updates are correct
+	// verify initial CometBFT updates are correct
 	updates = applyValidatorSetUpdates(t, ctx, app.StakingKeeper, len(validators)+1)
 	validator, _ = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	validators[0], _ = app.StakingKeeper.GetValidator(ctx, validators[0].GetOperator())
@@ -772,7 +772,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 		app.StakingKeeper.SetValidatorByPowerIndex(ctx, validators[i])
 	}
 
-	// verify initial Tendermint updates are correct
+	// verify initial CometBFT updates are correct
 	updates := applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 2)
 	validators[2], _ = app.StakingKeeper.GetValidator(ctx, validators[2].GetOperator())
 	validators[1], _ = app.StakingKeeper.GetValidator(ctx, validators[1].GetOperator())
@@ -794,7 +794,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, validators[0])
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, validators[0])
 
-	// verify initial Tendermint updates are correct
+	// verify initial CometBFT updates are correct
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 0)
 
 	// create a series of events that will bond and unbond the validator with
@@ -816,7 +816,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, validators[1])
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, validators[1])
 
-	// verify initial Tendermint updates are correct
+	// verify initial CometBFT updates are correct
 	updates = applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 	assert.DeepEqual(t, validators[1].ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx)), updates[0])
 

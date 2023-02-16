@@ -90,7 +90,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 		return "", nil, err
 	}
 
-	valPubKey, err = cryptocodec.FromTmPubKeyInterface(tmValPubKey)
+	valPubKey, err = cryptocodec.FromCmtPubKeyInterface(tmValPubKey)
 	if err != nil {
 		return "", nil, err
 	}

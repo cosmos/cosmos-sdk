@@ -142,7 +142,6 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
-
   - package-ecosystem: gomod
     directory: "x/feegrant"
     schedule:
@@ -179,3 +178,19 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
+
+  # Dependencies should be up to date on release branch
+  - package-ecosystem: gomod
+    directory: "/"
+    target-branch: "release/v0.47.x"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+      - "testing-required"
+    allow:
+      - dependency-name: "github.com/cosmos/cosmos-sdk/*"
+        dependency-type: "all"
+      - dependency-name: "cosmossdk.io/*"
+        dependency-type: "all"

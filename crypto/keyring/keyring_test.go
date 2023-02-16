@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -52,7 +54,7 @@ func TestNewKeyring(t *testing.T) {
 	nilKr, err := New("cosmos", "fuzzy", dir, mockIn, cdc)
 	require.Error(t, err)
 	require.Nil(t, nilKr)
-	require.Equal(t, "unknown keyring backend fuzzy", err.Error())
+	require.True(t, errors.Is(err, ErrUnknownBacked))
 
 	mockIn.Reset("password\npassword\n")
 	k, _, err := kr.NewMnemonic("foo", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
@@ -435,14 +437,14 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 
 	// try import the key - wrong password
 	err = kb.ImportPrivKey("john2", keystr, "bad pass")
-	require.Equal(t, "failed to decrypt private key: ciphertext decryption failed", err.Error())
+	require.True(t, errors.Is(err, sdkerrors.ErrWrongPassword))
 
 	// try import the key with the correct password
 	require.NoError(t, kb.ImportPrivKey("john2", keystr, "somepassword"))
 
 	// overwrite is not allowed
 	err = kb.ImportPrivKey("john2", keystr, "password")
-	require.Equal(t, "cannot overwrite key: john2", err.Error())
+	require.True(t, errors.Is(err, ErrOverwriteKey))
 
 	// try export non existing key
 	_, err = kb.ExportPrivKeyArmor("john3", "wrongpassword")
@@ -1247,14 +1249,14 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	newUID := otherID
 	// Should fail importing with wrong password
 	err = kr.ImportPrivKey(newUID, armor, "wrongPass")
-	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
+	require.True(t, errors.Is(err, sdkerrors.ErrWrongPassword))
 
 	err = kr.ImportPrivKey(newUID, armor, passphrase)
 	require.NoError(t, err)
 
 	// Should fail importing private key on existing key.
 	err = kr.ImportPrivKey(newUID, armor, passphrase)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
+	require.True(t, errors.Is(err, ErrOverwriteKey))
 }
 
 func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
@@ -1277,14 +1279,14 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	newUID := otherID
 	// Should fail importing with wrong password
 	err = kr.ImportPrivKey(newUID, armor, "wrongPass")
-	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
+	require.True(t, errors.Is(err, sdkerrors.ErrWrongPassword))
 
 	err = kr.ImportPrivKey(newUID, armor, passphrase)
 	require.NoError(t, err)
 
 	// Should fail importing private key on existing key.
 	err = kr.ImportPrivKey(newUID, armor, passphrase)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
+	require.True(t, errors.Is(err, ErrOverwriteKey))
 }
 
 func TestAltKeyring_ImportExportPubKey(t *testing.T) {
@@ -1307,7 +1309,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 
 	// Should fail importing private key on existing key.
 	err = kr.ImportPubKey(newUID, armor)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
+	require.True(t, errors.Is(err, ErrOverwriteKey))
 }
 
 func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
@@ -1332,7 +1334,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 
 	// Should fail importing private key on existing key.
 	err = kr.ImportPubKey(newUID, armor)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
+	require.True(t, errors.Is(err, ErrOverwriteKey))
 }
 
 func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
@@ -1426,7 +1428,7 @@ func TestRenameKey(t *testing.T) {
 				newKeyRecord(t, kr, key1)
 				newKeyRecord(t, kr, key2)
 				err := kr.Rename(key2, key1)
-				require.Equal(t, fmt.Errorf("rename failed: %s already exists in the keyring", key1), err)
+				require.True(t, errors.Is(err, ErrKeyAlreadyExists))
 				assertKeysExist(t, kr, key1, key2) // keys should still exist after failed rename
 			},
 		},
@@ -1436,7 +1438,7 @@ func TestRenameKey(t *testing.T) {
 				keyName := "keyName"
 				newKeyRecord(t, kr, keyName)
 				err := kr.Rename(keyName, keyName)
-				require.Equal(t, fmt.Errorf("rename failed: %s already exists in the keyring", keyName), err)
+				require.True(t, errors.Is(err, ErrKeyAlreadyExists))
 				assertKeysExist(t, kr, keyName)
 			},
 		},

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: tx.proto
+// source: testpb/tx.proto
 
-package testdata_pulsar
+package testpb
 
 import (
 	context "context"
@@ -35,7 +35,7 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 
 func (c *msgClient) CreateDog(ctx context.Context, in *MsgCreateDog, opts ...grpc.CallOption) (*MsgCreateDogResponse, error) {
 	out := new(MsgCreateDogResponse)
-	err := c.cc.Invoke(ctx, "/testdata.Msg/CreateDog", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/testpb.Msg/CreateDog", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func _Msg_CreateDog_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testdata.Msg/CreateDog",
+		FullMethod: "/testpb.Msg/CreateDog",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateDog(ctx, req.(*MsgCreateDog))
@@ -92,7 +92,7 @@ func _Msg_CreateDog_Handler(srv interface{}, ctx context.Context, dec func(inter
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "testdata.Msg",
+	ServiceName: "testpb.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -101,5 +101,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "tx.proto",
+	Metadata: "testpb/tx.proto",
 }

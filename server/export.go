@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -74,30 +73,16 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return fmt.Errorf("error exporting state: %v", err)
 			}
 
-			genDoc, err := cmttypes.GenesisDocFromFile(serverCtx.Config.GenesisFile())
+			appGenesis, err := genutiltypes.AppGenesisFromFile(serverCtx.Config.GenesisFile())
 			if err != nil {
 				return err
 			}
 
-			genDoc.AppState = exported.AppState
-			genDoc.Validators = exported.Validators
-			genDoc.InitialHeight = exported.Height
-			genDoc.ConsensusParams = &cmttypes.ConsensusParams{
-				Block: cmttypes.BlockParams{
-					MaxBytes: exported.ConsensusParams.Block.MaxBytes,
-					MaxGas:   exported.ConsensusParams.Block.MaxGas,
-				},
-				Evidence: cmttypes.EvidenceParams{
-					MaxAgeNumBlocks: exported.ConsensusParams.Evidence.MaxAgeNumBlocks,
-					MaxAgeDuration:  exported.ConsensusParams.Evidence.MaxAgeDuration,
-					MaxBytes:        exported.ConsensusParams.Evidence.MaxBytes,
-				},
-				Validator: cmttypes.ValidatorParams{
-					PubKeyTypes: exported.ConsensusParams.Validator.PubKeyTypes,
-				},
-			}
+			appGenesis.AppState = exported.AppState
+			appGenesis.Validators = exported.Validators
+			appGenesis.InitialHeight = exported.Height
+			appGenesis.ConsensusParams = appGenesis.ConsensusParams
 
-			appGenesis := genutiltypes.NewAppGenesis(*genDoc)
 			encoded, err := json.Marshal(appGenesis)
 			if err != nil {
 				return err

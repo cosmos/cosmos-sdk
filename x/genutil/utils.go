@@ -11,41 +11,38 @@ import (
 	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
-func ExportGenesisFile(genDoc *cmttypes.GenesisDoc, genFile string) error {
-	if err := genDoc.ValidateAndComplete(); err != nil {
-		return err
-	}
+func ExportGenesisFile(genesis types.AppGenesis, genFile string) error {
+	// if err := genDoc.ValidateAndComplete(); err != nil {
+	// 	return err
+	// }
 
-	return genDoc.SaveAs(genFile)
+	return genesis.SaveAs(genFile)
 }
 
 // ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
 // An error is returned if building or writing the configuration to file fails.
-func ExportGenesisFileWithTime(
-	genFile, chainID string, validators []cmttypes.GenesisValidator,
-	appState json.RawMessage, genTime time.Time,
-) error {
-	genDoc := cmttypes.GenesisDoc{
+func ExportGenesisFileWithTime(genFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage, genTime time.Time) error {
+	appGenesis := types.AppGenesis{
 		GenesisTime: genTime,
 		ChainID:     chainID,
 		Validators:  validators,
 		AppState:    appState,
 	}
 
-	if err := genDoc.ValidateAndComplete(); err != nil {
-		return err
-	}
+	// if err := genDoc.ValidateAndComplete(); err != nil {
+	// 	return err
+	// }
 
-	return genDoc.SaveAs(genFile)
+	return appGenesis.SaveAs(genFile)
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.

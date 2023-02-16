@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -81,13 +80,13 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				}
 			}
 
-			genDoc, err := cmttypes.GenesisDocFromFile(config.GenesisFile())
+			appGenesis, err := types.AppGenesisFromFile(config.GenesisFile())
 			if err != nil {
 				return errors.Wrapf(err, "failed to read genesis doc file %s", config.GenesisFile())
 			}
 
 			var genesisState map[string]json.RawMessage
-			if err = json.Unmarshal(genDoc.AppState, &genesisState); err != nil {
+			if err = json.Unmarshal(appGenesis.AppState, &genesisState); err != nil {
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 
@@ -109,7 +108,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			}
 
 			// set flags for creating a gentx
-			createValCfg, err := cli.PrepareConfigForTxCreateValidator(cmd.Flags(), moniker, nodeID, genDoc.ChainID, valPubKey)
+			createValCfg, err := cli.PrepareConfigForTxCreateValidator(cmd.Flags(), moniker, nodeID, appGenesis.ChainID, valPubKey)
 			if err != nil {
 				return errors.Wrap(err, "error creating configuration to create validator msg")
 			}

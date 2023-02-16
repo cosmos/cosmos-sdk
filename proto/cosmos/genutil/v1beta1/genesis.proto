@@ -1,8 +1,10 @@
 syntax = "proto3";
 package cosmos.genutil.v1beta1;
 
+import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/genutil/types";
 
@@ -15,4 +17,19 @@ message GenesisState {
     (amino.field_name)     = "gentxs",
     (amino.dont_omitempty) = true
   ];
+}
+
+// GenesisValidator defines an initial validator.
+message GenesisValidator {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address defines the validator address.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // pub_key defines the validator public key.
+  google.protobuf.Any consensus_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  // power defines the validator voting power.
+  int64 voting_power = 3;
+  // name defines the validator name.
+  string name = 4;
 }

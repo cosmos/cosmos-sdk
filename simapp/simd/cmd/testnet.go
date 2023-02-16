@@ -11,7 +11,6 @@ import (
 
 	cmtconfig "github.com/cometbft/cometbft/config"
 	cmtrand "github.com/cometbft/cometbft/libs/rand"
-	cmttypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -392,11 +391,11 @@ func initGenFiles(
 		return err
 	}
 
-	appGenesis := genutiltypes.NewAppGenesis(cmttypes.GenesisDoc{
+	appGenesis := genutiltypes.AppGenesis{
 		ChainID:    chainID,
 		AppState:   appGenStateJSON,
 		Validators: nil,
-	})
+	}
 
 	// generate empty genesis files for each validator and save
 	for i := 0; i < numValidators; i++ {
@@ -426,12 +425,12 @@ func collectGenFiles(
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
-		genDoc, err := cmttypes.GenesisDocFromFile(nodeConfig.GenesisFile())
+		appGenesis, err := genutiltypes.AppGenesisFromFile(nodeConfig.GenesisFile())
 		if err != nil {
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator, genutiltypes.DefaultMessageValidator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, appGenesis, genBalIterator, genutiltypes.DefaultMessageValidator)
 		if err != nil {
 			return err
 		}

@@ -14,10 +14,6 @@ const (
 )
 
 func marshalTimestamp(message protoreflect.Message, writer io.Writer) error {
-	// PROTO3 SPEC:
-	// Uses RFC 3339, where generated output will always be Z-normalized and uses 0, 3, 6 or 9 fractional digits.
-	// Offsets other than "Z" are also accepted.
-
 	fields := message.Descriptor().Fields()
 	secondsField := fields.ByName(secondsName)
 	if secondsField == nil {

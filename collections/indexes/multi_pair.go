@@ -71,6 +71,21 @@ func (i *MultiPair[K1, K2, Value]) Unreference(ctx context.Context, pk collectio
 	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).Unreference(ctx, pk, value)
 }
 
+func (i *MultiPair[K1, K2, Value]) Walk(
+	ctx context.Context,
+	ranger collections.Ranger[collections.Pair[K2, K1]],
+	walkFunc func(indexingKey K2, indexedKey K1) bool) error {
+	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).Walk(ctx, ranger, walkFunc)
+}
+
+func (i *MultiPair[K1, K2, Value]) IterateRaw(
+	ctx context.Context, start, end []byte, order collections.Order,
+) (
+	iter collections.Iterator[collections.Pair[K2, K1], collections.NoValue], err error,
+) {
+	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).IterateRaw(ctx, start, end, order)
+}
+
 // MultiPairIterator is a helper type around a collections.KeySetIterator when used to work
 // with MultiPair indexes iterations.
 type MultiPairIterator[K2, K1 any] collections.KeySetIterator[collections.Pair[K2, K1]]

@@ -116,6 +116,11 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Remove(ctx context.Context, pk Prim
 	return m.m.Remove(ctx, pk)
 }
 
+// Walk applies the same semantics as Map.Walk.
+func (m *IndexedMap[PrimaryKey, Value, Idx]) Walk(ctx context.Context, ranger Ranger[PrimaryKey], walkFunc func(key PrimaryKey, value Value) bool) error {
+	return m.m.Walk(ctx, ranger, walkFunc)
+}
+
 // IterateRaw iterates the IndexedMap using raw bytes keys. Follows the same semantics as Map.IterateRaw
 func (m *IndexedMap[PrimaryKey, Value, Idx]) IterateRaw(ctx context.Context, start, end []byte, order Order) (Iterator[PrimaryKey, Value], error) {
 	return m.m.IterateRaw(ctx, start, end, order)

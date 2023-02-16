@@ -8,12 +8,12 @@ import (
 	"cosmossdk.io/collections/codec"
 )
 
-// KeySet builds on top of a Map and represents a collection
-// retaining only a set of keys and no value.
-// It can be used, for example, in an allow list.
+// KeySet builds on top of a Map and represents a collection retaining only a set
+// of keys and no value. It can be used, for example, in an allow list.
 type KeySet[K any] Map[K, NoValue]
 
-// NewKeySet returns a KeySet given a Schema, Prefix a human name for the collection and a KeyCodec for the key K.
+// NewKeySet returns a KeySet given a Schema, Prefix a human name for the collection
+// and a KeyCodec for the key K.
 func NewKeySet[K any](schema *SchemaBuilder, prefix Prefix, name string, keyCodec codec.KeyCodec[K]) KeySet[K] {
 	return (KeySet[K])(NewMap(schema, prefix, name, keyCodec, noValueCodec))
 }
@@ -29,16 +29,15 @@ func (k KeySet[K]) Has(ctx context.Context, key K) (bool, error) {
 	return (Map[K, NoValue])(k).Has(ctx, key)
 }
 
-// Remove removes the key for the KeySet. An error is
-// returned in case of encoding error, it won't report
-// through the error if the key was removed or not.
+// Remove removes the key for the KeySet. An error is returned in case of
+// encoding error, it won't report through the error if the key was
+// removed or not.
 func (k KeySet[K]) Remove(ctx context.Context, key K) error {
 	return (Map[K, NoValue])(k).Remove(ctx, key)
 }
 
-// Iterate iterates over the keys given the provided Ranger.
-// If ranger is nil, the KeySetIterator will include all the
-// existing keys within the KeySet.
+// Iterate iterates over the keys given the provided Ranger. If ranger is nil,
+// the KeySetIterator will include all the existing keys within the KeySet.
 func (k KeySet[K]) Iterate(ctx context.Context, ranger Ranger[K]) (KeySetIterator[K], error) {
 	iter, err := (Map[K, NoValue])(k).Iterate(ctx, ranger)
 	if err != nil {
@@ -50,6 +49,12 @@ func (k KeySet[K]) Iterate(ctx context.Context, ranger Ranger[K]) (KeySetIterato
 
 func (k KeySet[K]) IterateRaw(ctx context.Context, start, end []byte, order Order) (Iterator[K, NoValue], error) {
 	return (Map[K, NoValue])(k).IterateRaw(ctx, start, end, order)
+}
+
+// Walk provides the same functionality as Map.Walk, but callbacks the walk
+// function only with the key.
+func (k KeySet[K]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key K) bool) error {
+	return (Map[K, NoValue])(k).Walk(ctx, ranger, func(key K, value NoValue) bool { return walkFunc(key) })
 }
 
 func (k KeySet[K]) KeyCodec() codec.KeyCodec[K]           { return (Map[K, NoValue])(k).KeyCodec() }

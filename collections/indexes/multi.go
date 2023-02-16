@@ -53,17 +53,16 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ra
 	return (MultiIterator[ReferenceKey, PrimaryKey])(iter), err
 }
 
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) Walk(
+	ctx context.Context,
+	ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]],
+	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool) error {
+	return (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Walk(ctx, ranger, walkFunc)
+}
+
 // MatchExact returns a MultiIterator containing all the primary keys referenced by the provided reference key.
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context, refKey ReferenceKey) (MultiIterator[ReferenceKey, PrimaryKey], error) {
 	return m.Iterate(ctx, collections.NewPrefixedPairRange[ReferenceKey, PrimaryKey](refKey))
-}
-
-func (i *MultiPair[K1, K2, Value]) IterateRaw(
-	ctx context.Context, start, end []byte, order collections.Order,
-) (
-	iter collections.Iterator[collections.Pair[K2, K1], collections.NoValue], err error,
-) {
-	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).IterateRaw(ctx, start, end, order)
 }
 
 func (i *MultiPair[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K2, K1]] {

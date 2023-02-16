@@ -123,6 +123,29 @@ func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V
 	return iteratorFromRanger(ctx, m, ranger)
 }
 
+// Walk iterates over the Map with the provided range, calls the provided
+// walk function with the decoded key and value. If the callback function
+// returns true then the walking is stopped.
+// A nil ranger equals to walking over the entire key and value set.
+func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(K, V) bool) error {
+	iter, err := m.Iterate(ctx, ranger)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		kv, err := iter.KeyValue()
+		if err != nil {
+			return err
+		}
+		if walkFunc(kv.Key, kv.Value) {
+			return nil
+		}
+	}
+	return nil
+}
+
 // IterateRaw iterates over the collection. The iteration range is untyped, it uses raw
 // bytes. The resulting Iterator is typed.
 // A nil start iterates from the first key contained in the collection.

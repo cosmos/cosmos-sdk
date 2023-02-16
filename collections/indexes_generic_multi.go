@@ -140,6 +140,14 @@ func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) It
 	return i.refs.IterateRaw(ctx, start, end, order)
 }
 
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Walk(
+	ctx context.Context,
+	ranger Ranger[Pair[ReferencingKey, ReferencedKey]],
+	walkFunc func(referencingKey ReferencingKey, referencedKey ReferencedKey) bool,
+) error {
+	return i.refs.Walk(ctx, ranger, func(key Pair[ReferencingKey, ReferencedKey]) bool { return walkFunc(key.K1(), key.K2()) })
+}
+
 func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) KeyCodec() codec.KeyCodec[Pair[ReferencingKey, ReferencedKey]] {
 	return i.refs.KeyCodec()
 }

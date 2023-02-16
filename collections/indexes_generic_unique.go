@@ -112,3 +112,11 @@ func (i *GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) I
 ) (Iterator[ReferencingKey, ReferencedKey], error) {
 	return i.refs.IterateRaw(ctx, start, end, order)
 }
+
+func (i *GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Walk(
+	ctx context.Context,
+	ranger Ranger[ReferencingKey],
+	walkFunc func(referencingKey ReferencingKey, referencedKey ReferencedKey) bool,
+) error {
+	return i.refs.Walk(ctx, ranger, func(k ReferencingKey, v ReferencedKey) bool { return walkFunc(k, v) })
+}

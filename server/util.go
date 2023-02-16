@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	tmcmd "github.com/tendermint/tendermint/cmd/cometbft/commands"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"

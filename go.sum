@@ -196,8 +196,8 @@ github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE
 github.com/coinbase/kryptology v1.8.0/go.mod h1:RYXOAPdzOGUe3qlSFkMGn58i3xUA8hmxYHksuq+8ciI=
 github.com/coinbase/rosetta-sdk-go v0.7.9 h1:lqllBjMnazTjIqYrOGv8h8jxjg9+hJazIGZr9ZvoCcA=
 github.com/coinbase/rosetta-sdk-go v0.7.9/go.mod h1:0/knutI7XGVqXmmH4OQD8OckFrbQ8yMsUZTG7FXCR2M=
-github.com/cometbft/cometbft v0.34.27-alpha.1.0.20230215174454-7e9aedbff7c4 h1:f0PzHX0T4pEdr5ZqkuL9r5oktard+OXCWubaWQxdI/g=
-github.com/cometbft/cometbft v0.34.27-alpha.1.0.20230215174454-7e9aedbff7c4/go.mod h1:XXEI4wqXYml3WI7zxfFDtRAZg4m3FEKvYri5985ElBQ=
+github.com/cometbft/cometbft v0.34.27-alpha.1.0.20230216102830-0f3ad2cfe7f9 h1:yJHBoBYbFYjqhDiXIIGUVTB/8h733DJe7nBZ+zBIUyc=
+github.com/cometbft/cometbft v0.34.27-alpha.1.0.20230216102830-0f3ad2cfe7f9/go.mod h1:XXEI4wqXYml3WI7zxfFDtRAZg4m3FEKvYri5985ElBQ=
 github.com/cometbft/cometbft-db v0.7.0 h1:uBjbrBx4QzU0zOEnU8KxoDl18dMNgDh+zZRUE0ucsbo=
 github.com/cometbft/cometbft-db v0.7.0/go.mod h1:yiKJIm2WKrt6x8Cyxtq9YTEcIMPcEe4XPxhgX59Fzf0=
 github.com/confio/ics23/go v0.9.0 h1:cWs+wdbS2KRPZezoaaj+qBleXgUk5WOQFMP3CQFGTr4=

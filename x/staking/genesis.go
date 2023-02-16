@@ -5,10 +5,9 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // WriteValidators returns a slice of bonded genesis validators.

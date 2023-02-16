@@ -81,7 +81,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			appGenesis.AppState = exported.AppState
 			appGenesis.Validators = exported.Validators
 			appGenesis.InitialHeight = exported.Height
-			appGenesis.ConsensusParams = appGenesis.ConsensusParams
+			appGenesis.ConsensusParams = exported.ConsensusParams
 
 			encoded, err := json.Marshal(appGenesis)
 			if err != nil {

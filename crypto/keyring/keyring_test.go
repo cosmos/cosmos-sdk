@@ -477,7 +477,7 @@ func TestExportPrivKey(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name:              "not created key",
+			name:              "key is not created",
 			uid:               "noKeyTest",
 			backend:           BackendTest,
 			encryptPassphrase: "myPassphrase",
@@ -570,7 +570,7 @@ func TestExportImportPrivKey(t *testing.T) {
 		backend           string
 		userInput         io.Reader
 		encryptPassphrase string
-		importUid         string
+		importUID         string
 		importPassphrase  string
 	}{
 		{
@@ -710,7 +710,7 @@ func TestExportPubkey(t *testing.T) {
 		name        string
 		uid         string
 		backend     string
-		exportUid   string
+		exportUID   string
 		getPubkey   func(r *Record) (types.PubKey, error)
 		codec       codec.Codec
 		expectedErr error
@@ -728,9 +728,9 @@ func TestExportPubkey(t *testing.T) {
 		},
 		{
 			name:      "wrong uid at export",
-			uid:       "wrongUid",
+			uid:       "wrongUID",
 			backend:   BackendTest,
-			exportUid: "notAValidUid",
+			exportUID: "notAValidUID",
 			getPubkey: func(r *Record) (types.PubKey, error) {
 				return r.GetPubKey()
 			},
@@ -882,7 +882,7 @@ func TestExportImportPubKeyKey(t *testing.T) {
 		name      string
 		uid       string
 		backend   string
-		importUid string
+		importUID string
 	}{
 		{
 			name:      "complete export import",
@@ -1235,7 +1235,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 	tests := []struct {
 		name      string
 		uid       string
-		importUid string
+		importUID string
 	}{
 		{
 			name:      "correct in memory seed",

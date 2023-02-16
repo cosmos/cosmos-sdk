@@ -39,6 +39,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.8-pio-3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.8-pio-3) - 2023-02-06
+
 ### Improvements
 
 * [#505](https://github.com/provenance-io/cosmos-sdk/pull/505) Revert [#444](https://github.com/provenance-io/cosmos-sdk/pull/505): Revert [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) "Optimize iteration on nested cached KV stores and other operations in general".

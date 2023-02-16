@@ -44,7 +44,7 @@ halt-time = 0
 # It has no bearing on application state pruning which is determined by the
 # "pruning-*" configurations.
 #
-# Note: Tendermint block pruning is dependant on this parameter in conunction
+# Note: Tendermint block pruning is dependant on this parameter in conjunction
 # with the unbonding (safety threshold) period, state pruning and state sync
 # snapshot parameters to determine the correct minimum value of
 # ResponseCommit.RetainHeight.
@@ -126,7 +126,7 @@ rpc-read-timeout = 10
 # RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds).
 rpc-write-timeout = 0
 
-# RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes).
+# RPCMaxBodyBytes defines the Tendermint maximum request body (in bytes).
 rpc-max-body-bytes = 1000000
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).

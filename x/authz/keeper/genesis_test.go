@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/golang/mock/gomock"
@@ -35,7 +35,7 @@ type GenesisTestSuite struct {
 func (suite *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(keeper.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
+	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
 	// gomock initializations

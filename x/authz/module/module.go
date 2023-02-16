@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -181,7 +181,7 @@ type AuthzInputs struct {
 	AccountKeeper    authz.AccountKeeper
 	BankKeeper       authz.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter baseapp.MessageRouter
 }
 
 //nolint:revive

@@ -5,11 +5,11 @@ import (
 	"io"
 	"os"
 
+	"cosmossdk.io/log"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tmcfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
@@ -97,9 +97,9 @@ func NewRootCmd() *cobra.Command {
 			}
 
 			customAppTemplate, customAppConfig := initAppConfig()
-			customTMConfig := initTendermintConfig()
+			customCMTConfig := initCometBFTConfig()
 
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customTMConfig)
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
 		},
 	}
 
@@ -112,10 +112,10 @@ func NewRootCmd() *cobra.Command {
 	return rootCmd
 }
 
-// initTendermintConfig helps to override default Tendermint Config values.
-// return tmcfg.DefaultConfig if no custom configuration is required for the application.
-func initTendermintConfig() *tmcfg.Config {
-	cfg := tmcfg.DefaultConfig()
+// initCometBFTConfig helps to override default CometBFT Config values.
+// return cmtcfg.DefaultConfig if no custom configuration is required for the application.
+func initCometBFTConfig() *cmtcfg.Config {
+	cfg := cmtcfg.DefaultConfig()
 
 	// these values put a higher strain on node memory
 	// cfg.P2P.MaxNumInboundPeers = 100
@@ -235,8 +235,9 @@ func queryCommand() *cobra.Command {
 	cmd.AddCommand(
 		authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
+		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
 	)
 

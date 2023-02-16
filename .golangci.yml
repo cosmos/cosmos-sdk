@@ -3,7 +3,7 @@ run:
   timeout: 10m
   sort-results: true
   allow-parallel-runners: true
-  exclude-dir: testutil/testdata_pulsar
+  exclude-dir: testutil/testdata
   concurrency: 4
 
 linters:

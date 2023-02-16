@@ -46,15 +46,15 @@ halt-time = {{ .BaseConfig.HaltTime }}
 
 # MinRetainBlocks defines the minimum block height offset from the current
 # block being committed, such that all blocks past this offset are pruned
-# from Tendermint. It is used as part of the process of determining the
+# from CometBFT. It is used as part of the process of determining the
 # ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 # that no blocks should be pruned.
 #
-# This configuration value is only responsible for pruning Tendermint blocks.
+# This configuration value is only responsible for pruning CometBFT blocks.
 # It has no bearing on application state pruning which is determined by the
 # "pruning-*" configurations.
 #
-# Note: Tendermint block pruning is dependant on this parameter in conunction
+# Note: CometBFT block pruning is dependant on this parameter in conjunction
 # with the unbonding (safety threshold) period, state pruning and state sync
 # snapshot parameters to determine the correct minimum value of
 # ResponseCommit.RetainHeight.
@@ -64,7 +64,7 @@ min-retain-blocks = {{ .BaseConfig.MinRetainBlocks }}
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
 # IndexEvents defines the set of events in the form {eventType}.{attributeKey},
-# which informs Tendermint what to index. If empty, all events will be indexed.
+# which informs CometBFT what to index. If empty, all events will be indexed.
 #
 # Example:
 # ["message.sender", "message.recipient"]
@@ -84,7 +84,7 @@ iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
 # First fallback is the deprecated compile-time types.DBBackend value.
-# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in Tendermint's config.toml.
+# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in CometBFT's config.toml.
 app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################
@@ -140,13 +140,13 @@ address = "{{ .API.Address }}"
 # MaxOpenConnections defines the number of maximum open connections.
 max-open-connections = {{ .API.MaxOpenConnections }}
 
-# RPCReadTimeout defines the Tendermint RPC read timeout (in seconds).
+# RPCReadTimeout defines the CometBFT RPC read timeout (in seconds).
 rpc-read-timeout = {{ .API.RPCReadTimeout }}
 
-# RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds).
+# RPCWriteTimeout defines the CometBFT RPC write timeout (in seconds).
 rpc-write-timeout = {{ .API.RPCWriteTimeout }}
 
-# RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes).
+# RPCMaxBodyBytes defines the CometBFT maximum request body (in bytes).
 rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).

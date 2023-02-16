@@ -10,10 +10,10 @@ import (
 	"sync"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"cosmossdk.io/store/types"
 )
@@ -27,7 +27,7 @@ var (
 	// test abci message types
 	mockHash          = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	testBeginBlockReq = abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height: 1,
 		},
 		ByzantineValidators: []abci.Misbehavior{},
@@ -52,7 +52,7 @@ var (
 	}
 	testEndBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
-		ConsensusParamUpdates: &tmproto.ConsensusParams{},
+		ConsensusParamUpdates: &cmtproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
 	}
 	testCommitRes = abci.ResponseCommit{

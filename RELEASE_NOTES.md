@@ -1,6 +1,6 @@
 # Cosmos SDK v0.45.14 Release Notes
 
-This release fixes possible way to DoS a node.
+This release fixes a possible way to DoS a node.
 
 **NOTE**: Add or update the following replace in the `go.mod` of your application:
 

@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
-	"runtime/pprof"
-	"time"
 
 	"github.com/cometbft/cometbft/abci/server"
 	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
@@ -137,22 +134,20 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
 			if !withCMT {
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
-				return wrapCPUProfile(serverCtx, func() error {
-					return startStandAlone(serverCtx, appCreator)
-				})
+				return startStandAlone(serverCtx, appCreator)
+
+				// TODO: ...
+				// return wrapCPUProfile(serverCtx, func() error {
+				// 	return startStandAlone(serverCtx, appCreator)
+				// })
 			}
 
-			// amino is needed here for backwards compatibility of REST routes
-			err = wrapCPUProfile(serverCtx, func() error {
-				return startInProcess(serverCtx, clientCtx, appCreator)
-			})
-			errCode, ok := err.(ErrorCode)
-			if !ok {
-				return err
-			}
+			// TODO: ...
+			// err = wrapCPUProfile(serverCtx, func() error {
+			// 	return startInProcess(serverCtx, clientCtx, appCreator)
+			// })
 
-			serverCtx.Logger.Debug(fmt.Sprintf("received quit signal: %d", errCode.Code))
-			return nil
+			return startInProcess(serverCtx, clientCtx, appCreator)
 		},
 	}
 
@@ -210,31 +205,30 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	return cmd
 }
 
-func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
-	addr := ctx.Viper.GetString(flagAddress)
-	transport := ctx.Viper.GetString(flagTransport)
-	home := ctx.Viper.GetString(flags.FlagHome)
+func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
+	addr := svrCtx.Viper.GetString(flagAddress)
+	transport := svrCtx.Viper.GetString(flagTransport)
+	home := svrCtx.Viper.GetString(flags.FlagHome)
 
-	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return err
 	}
 
-	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
+	traceWriterFile := svrCtx.Viper.GetString(flagTraceStore)
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
+	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 
-	config, err := serverconfig.GetConfig(ctx.Viper)
+	config, err := serverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
 		return err
 	}
 
-	_, err = startTelemetry(config)
-	if err != nil {
+	if _, err := startTelemetry(config); err != nil {
 		return err
 	}
 
@@ -243,23 +237,33 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
 
-	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
+	svr.SetLogger(svrCtx.Logger.With("module", "abci-server"))
 
-	err = svr.Start()
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
+	ctx, cancelFn := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
 
-	defer func() {
-		if err = svr.Stop(); err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
+	// listen for quit signals so the calling parent process can gracefully exit
+	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+
+	g.Go(func() error {
+		if err := svr.Start(); err != nil {
+			svrCtx.Logger.Error("failed to start out-of-process ABCI server", "err", err)
+			return err
 		}
-	}()
 
-	// Wait for SIGINT or SIGTERM signal
-	return WaitForQuitSignals()
+		// start a blocking loop to wait for an indication to stop the server
+		for {
+			select {
+			case <-ctx.Done():
+				// The calling process cancelled or closed the provided context, so we
+				// must gracefully stop the ABCI server.
+				svrCtx.Logger.Info("stopping the ABCI server...")
+				return svr.Stop()
+			}
+		}
+	})
+
+	return g.Wait()
 }
 
 func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
@@ -360,8 +364,11 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		grpcSrv *grpc.Server
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
+
+	// listen for quit signals so the calling parent process can gracefully exit
+	ListenForQuitSignals(cancelFn, svrCtx.Logger)
 
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
@@ -404,57 +411,56 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 			}
 
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			svrCtx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+			svrCtx.Logger.Debug("gRPC client assigned to client context", "target", grpcAddress)
 
-			// start grpc server
-			grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
+			grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config.GRPC)
 			if err != nil {
 				return err
 			}
 
-			defer grpcSrv.Stop()
+			// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
+			// that the server is gracefully shut down.
+			g.Go(func() error {
+				return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config.GRPC, grpcSrv)
+			})
 		}
 
-		// configure api server
 		apiSrv = api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 		app.RegisterAPIRoutes(apiSrv, config.API)
+
 		if config.Telemetry.Enabled {
 			apiSrv.SetTelemetry(metrics)
 		}
-		errCh := make(chan error)
 
-		go func() {
-			if err := apiSrv.Start(config); err != nil {
-				errCh <- err
-			}
-		}()
-
-		select {
-		case err := <-errCh:
-			return err
-
-		case <-time.After(types.ServerStartTime): // assume server started successfully
-		}
+		g.Go(func() error {
+			return apiSrv.Start(ctx, config)
+		})
 	}
 
-	// If gRPC is enabled but API is not, we need to start the gRPC server
+	// If gRPC is enabled but the API is not, we need to start the gRPC server
 	// without the API server. If the API server is enabled, we've already
 	// started the grpc server.
 	if config.GRPC.Enable && !config.API.Enable {
-		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
+		grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config.GRPC)
 		if err != nil {
 			return err
 		}
-		defer grpcSrv.Stop()
+
+		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
+		// that the server is gracefully shut down.
+		g.Go(func() error {
+			return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config.GRPC, grpcSrv)
+		})
 	}
 
 	// At this point it is safe to block the process if we're in gRPC only mode as
 	// we do not need to handle any CometBFT related processes.
 	if gRPCOnly {
 		// wait for signal capture and gracefully return
-		return WaitForQuitSignals()
+		return g.Wait()
 	}
 
+	// deferred cleanup function
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
@@ -463,16 +469,10 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		if traceWriterCleanup != nil {
 			traceWriterCleanup()
 		}
-
-		if apiSrv != nil {
-			_ = apiSrv.Close()
-		}
-
-		svrCtx.Logger.Info("exiting...")
 	}()
 
 	// wait for signal capture and gracefully return
-	return WaitForQuitSignals()
+	return g.Wait()
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
@@ -483,39 +483,52 @@ func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
 	return telemetry.New(cfg.Telemetry)
 }
 
-// wrapCPUProfile runs callback in a goroutine, then wait for quit signals.
-func wrapCPUProfile(ctx *Context, callback func() error) error {
-	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-		f, err := os.Create(cpuProfile)
-		if err != nil {
-			return err
-		}
+// // wrapCPUProfile runs callback in a goroutine, then wait for quit signals.
+// func wrapCPUProfile(svrCtx *Context, callback func() error) error {
+// 	if cpuProfile := svrCtx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
+// 		f, err := os.Create(cpuProfile)
+// 		if err != nil {
+// 			return err
+// 		}
 
-		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
-		if err := pprof.StartCPUProfile(f); err != nil {
-			return err
-		}
+// 		svrCtx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
 
-		defer func() {
-			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
-			pprof.StopCPUProfile()
-			if err := f.Close(); err != nil {
-				ctx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
-			}
-		}()
-	}
+// 		if err := pprof.StartCPUProfile(f); err != nil {
+// 			return err
+// 		}
 
-	errCh := make(chan error)
-	go func() {
-		errCh <- callback()
-	}()
+// 		defer func() {
+// 			svrCtx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+// 			pprof.StopCPUProfile()
 
-	select {
-	case err := <-errCh:
-		return err
+// 			if err := f.Close(); err != nil {
+// 				svrCtx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
+// 			}
+// 		}()
+// 	}
 
-	case <-time.After(types.ServerStartTime):
-	}
+// 	ctx, cancelFn := context.WithCancel(context.Background())
+// 	g, ctx := errgroup.WithContext(ctx)
 
-	return WaitForQuitSignals()
-}
+// 	// Wait for the parent process to capture any termination signals in a
+// 	// non-block manner, where the error code will be sent on a channel.
+// 	errCh := WatchForQuitSignals(cancelFn)
+
+// 	g.Go(func() error {
+// 		return callback()
+// 	})
+
+// 	// errCh := make(chan error)
+// 	// go func() {
+// 	// 	errCh <- callback()
+// 	// }()
+
+// 	// select {
+// 	// case err := <-errCh:
+// 	// 	return err
+
+// 	// case <-time.After(types.ServerStartTime):
+// 	// }
+
+// 	// return WaitForQuitSignals()
+// }

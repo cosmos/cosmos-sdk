@@ -56,7 +56,7 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 		InterfaceRegistry: clientCtx.InterfaceRegistry,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to register reflection service: %w", err)
 	}
 
 	// Reflection allows external clients to see what services and methods
@@ -67,6 +67,7 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 }
 
 // StartGRPCServer starts the provided gRPC server on the address specified in cfg.
+//
 // Note, this creates a blocking process if the server is started successfully.
 // Otherwise, an error is returned. The caller is expected to provide a Context
 // that is properly canceled or closed to indicate the server should be stopped.
@@ -86,14 +87,13 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 		errCh <- grpcSrv.Serve(listener)
 	}()
 
-	// Start a block loop to wait for an indication to stop the server or that
+	// Start a blocking loop to wait for an indication to stop the server or that
 	// the server failed to start properly.
 	for {
 		select {
 		case <-ctx.Done():
 			// The calling process cancelled or closed the provided context, so we must
 			// gracefully stop the gRPC server.
-
 			logger.Info("stopping gRPC server...", "address", cfg.Address)
 			grpcSrv.GracefulStop()
 

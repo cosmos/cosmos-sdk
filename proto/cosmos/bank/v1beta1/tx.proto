@@ -48,6 +48,7 @@ message MsgSend {
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

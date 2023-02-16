@@ -434,6 +434,14 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return g.Wait()
 	}
 
+	// In case the operator has both gRPC and API servers disabled, there is
+	// nothing blocking this root process, so we need to block manually, so we'll
+	// create an empty blocking loop.
+	g.Go(func() error {
+		<-ctx.Done()
+		return nil
+	})
+
 	// deferred cleanup function
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {

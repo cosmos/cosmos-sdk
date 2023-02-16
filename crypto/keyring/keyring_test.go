@@ -579,7 +579,7 @@ func TestExportImportPrivKey(t *testing.T) {
 			backend:           BackendTest,
 			userInput:         nil,
 			encryptPassphrase: "apassphrase",
-			importUid:         "importedKey",
+			importUID:         "importedKey",
 			importPassphrase:  "apassphrase",
 		},
 		{
@@ -588,7 +588,7 @@ func TestExportImportPrivKey(t *testing.T) {
 			backend:           BackendMemory,
 			userInput:         nil,
 			encryptPassphrase: "apassphrase",
-			importUid:         "importedKey",
+			importUID:         "importedKey",
 			importPassphrase:  "apassphrase",
 		},
 	}
@@ -618,12 +618,12 @@ func TestExportImportPrivKey(t *testing.T) {
 			err = kb.Delete(tt.uid)
 			require.NoError(t, err)
 
-			err = kb.ImportPrivKey(tt.importUid, armor, tt.importPassphrase)
+			err = kb.ImportPrivKey(tt.importUID, armor, tt.importPassphrase)
 			require.NoError(t, err)
 
-			importedRecord, err := kb.Key(tt.importUid)
+			importedRecord, err := kb.Key(tt.importUID)
 			require.NoError(t, err)
-			require.Equal(t, importedRecord.Name, tt.importUid)
+			require.Equal(t, importedRecord.Name, tt.importUID)
 			importedKey, err := importedRecord.GetPubKey()
 			require.NoError(t, err)
 
@@ -719,7 +719,7 @@ func TestExportPubkey(t *testing.T) {
 			name:      "correct export",
 			uid:       "correctExport",
 			backend:   BackendTest,
-			exportUid: "correctExport",
+			exportUID: "correctExport",
 			getPubkey: func(r *Record) (types.PubKey, error) {
 				return r.GetPubKey()
 			},
@@ -741,7 +741,7 @@ func TestExportPubkey(t *testing.T) {
 			name:      "previous space on export uid",
 			uid:       "prefixSpace",
 			backend:   BackendTest,
-			exportUid: " prefixSpace",
+			exportUID: " prefixSpace",
 			getPubkey: func(r *Record) (types.PubKey, error) {
 				return r.GetPubKey()
 			},
@@ -752,7 +752,7 @@ func TestExportPubkey(t *testing.T) {
 			name:      "export uid with suffix space",
 			uid:       "suffixSpace",
 			backend:   BackendTest,
-			exportUid: "suffixSpace ",
+			exportUID: "suffixSpace ",
 			getPubkey: func(r *Record) (types.PubKey, error) {
 				return r.GetPubKey()
 			},
@@ -763,7 +763,7 @@ func TestExportPubkey(t *testing.T) {
 			name:      "correct in memory export",
 			uid:       "inMemory",
 			backend:   BackendMemory,
-			exportUid: "inMemory",
+			exportUID: "inMemory",
 			getPubkey: func(r *Record) (types.PubKey, error) {
 				return r.GetPubKey()
 			},
@@ -774,7 +774,7 @@ func TestExportPubkey(t *testing.T) {
 			name:      "in memory wrong uid at export",
 			uid:       "wrongUid",
 			backend:   BackendMemory,
-			exportUid: "notAValidUid",
+			exportUID: "notAValidUid",
 			getPubkey: func(r *Record) (types.PubKey, error) {
 				return r.GetPubKey()
 			},
@@ -785,7 +785,7 @@ func TestExportPubkey(t *testing.T) {
 			name:      "in memory previous space on export uid",
 			uid:       "prefixSpace",
 			backend:   BackendMemory,
-			exportUid: " prefixSpace",
+			exportUID: " prefixSpace",
 			getPubkey: func(r *Record) (types.PubKey, error) {
 				return r.GetPubKey()
 			},
@@ -796,7 +796,7 @@ func TestExportPubkey(t *testing.T) {
 			name:      "in memory export uid with suffix space",
 			uid:       "suffixSpace",
 			backend:   BackendMemory,
-			exportUid: "suffixSpace ",
+			exportUID: "suffixSpace ",
 			getPubkey: func(r *Record) (types.PubKey, error) {
 				return r.GetPubKey()
 			},
@@ -813,7 +813,7 @@ func TestExportPubkey(t *testing.T) {
 			require.NotNil(t, k)
 			_, err = tt.getPubkey(k)
 			require.NoError(t, err)
-			_, err = kb.ExportPubKeyArmor(tt.exportUid)
+			_, err = kb.ExportPubKeyArmor(tt.exportUID)
 			if tt.expectedErr == nil {
 				require.NoError(t, err)
 			} else {
@@ -888,13 +888,13 @@ func TestExportImportPubKeyKey(t *testing.T) {
 			name:      "complete export import",
 			uid:       "testOne",
 			backend:   BackendTest,
-			importUid: "importedKey",
+			importUID: "importedKey",
 		},
 		{
 			name:      "in memory export import",
 			uid:       "inMemory",
 			backend:   BackendMemory,
-			importUid: "importedKey",
+			importUID: "importedKey",
 		},
 	}
 	for _, tt := range tests {
@@ -925,11 +925,11 @@ func TestExportImportPubKeyKey(t *testing.T) {
 			require.NoError(t, err)
 
 			// Import it under a different name
-			err = kb.ImportPubKey(tt.importUid, armor)
+			err = kb.ImportPubKey(tt.importUID, armor)
 			require.NoError(t, err)
 
 			// Ensure consistency
-			record2, err := kb.Key(tt.importUid)
+			record2, err := kb.Key(tt.importUID)
 			require.NoError(t, err)
 			key2, err := record2.GetPubKey()
 			require.NoError(t, err)
@@ -938,7 +938,7 @@ func TestExportImportPubKeyKey(t *testing.T) {
 			require.True(t, key.Equals(key2))
 
 			// Ensure keys cannot be overwritten
-			err = kb.ImportPubKey(tt.importUid, armor)
+			err = kb.ImportPubKey(tt.importUID, armor)
 			require.NotNil(t, err)
 		})
 	}
@@ -1240,7 +1240,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 		{
 			name:      "correct in memory seed",
 			uid:       "okTest",
-			importUid: "imported",
+			importUID: "imported",
 		},
 	}
 	for _, tt := range tests {
@@ -1261,9 +1261,9 @@ func TestInMemorySeedPhrase(t *testing.T) {
 
 			// let us re-create it from the mnemonic-phrase
 			hdPath := hd.NewFundraiserParams(0, sdk.CoinType, 0).String()
-			k1, err := cstore.NewAccount(tt.importUid, mnemonic, DefaultBIP39Passphrase, hdPath, hd.Secp256k1)
+			k1, err := cstore.NewAccount(tt.importUID, mnemonic, DefaultBIP39Passphrase, hdPath, hd.Secp256k1)
 			require.NoError(t, err)
-			require.Equal(t, tt.importUid, k1.Name)
+			require.Equal(t, tt.importUID, k1.Name)
 			key, err := k.GetPubKey()
 			require.NoError(t, err)
 			key1, err := k1.GetPubKey()

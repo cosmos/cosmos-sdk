@@ -503,6 +503,10 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 	telemetry.IncrCounter(1, "query", req.Path)
 	defer telemetry.MeasureSince(time.Now(), req.Path)
 
+	if req.Path == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
+		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace)
+	}
+
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {

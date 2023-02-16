@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
+	"runtime/pprof"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	"github.com/cometbft/cometbft/abci/server"
 	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/cometbft/cometbft/node"
@@ -17,8 +20,6 @@ import (
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -134,20 +135,15 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
 			if !withCMT {
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
-				return startStandAlone(serverCtx, appCreator)
 
-				// TODO: ...
-				// return wrapCPUProfile(serverCtx, func() error {
-				// 	return startStandAlone(serverCtx, appCreator)
-				// })
+				return wrapCPUProfile(serverCtx, func() error {
+					return startStandAlone(serverCtx, appCreator)
+				})
 			}
 
-			// TODO: ...
-			// err = wrapCPUProfile(serverCtx, func() error {
-			// 	return startInProcess(serverCtx, clientCtx, appCreator)
-			// })
-
-			return startInProcess(serverCtx, clientCtx, appCreator)
+			return wrapCPUProfile(serverCtx, func() error {
+				return startInProcess(serverCtx, clientCtx, appCreator)
+			})
 		},
 	}
 
@@ -483,52 +479,38 @@ func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
 	return telemetry.New(cfg.Telemetry)
 }
 
-// // wrapCPUProfile runs callback in a goroutine, then wait for quit signals.
-// func wrapCPUProfile(svrCtx *Context, callback func() error) error {
-// 	if cpuProfile := svrCtx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-// 		f, err := os.Create(cpuProfile)
-// 		if err != nil {
-// 			return err
-// 		}
+// wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
+// callbackFn in a separate goroutine, then will wait for that callback to
+// return.
+//
+// NOTE: We expect the caller to handle graceful shutdown and signal handling.
+func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
+	if cpuProfile := svrCtx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
+		f, err := os.Create(cpuProfile)
+		if err != nil {
+			return err
+		}
 
-// 		svrCtx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		svrCtx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
 
-// 		if err := pprof.StartCPUProfile(f); err != nil {
-// 			return err
-// 		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return err
+		}
 
-// 		defer func() {
-// 			svrCtx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
-// 			pprof.StopCPUProfile()
+		defer func() {
+			svrCtx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			pprof.StopCPUProfile()
 
-// 			if err := f.Close(); err != nil {
-// 				svrCtx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
-// 			}
-// 		}()
-// 	}
+			if err := f.Close(); err != nil {
+				svrCtx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
+			}
+		}()
+	}
 
-// 	ctx, cancelFn := context.WithCancel(context.Background())
-// 	g, ctx := errgroup.WithContext(ctx)
+	errCh := make(chan error)
+	go func() {
+		errCh <- callbackFn()
+	}()
 
-// 	// Wait for the parent process to capture any termination signals in a
-// 	// non-block manner, where the error code will be sent on a channel.
-// 	errCh := WatchForQuitSignals(cancelFn)
-
-// 	g.Go(func() error {
-// 		return callback()
-// 	})
-
-// 	// errCh := make(chan error)
-// 	// go func() {
-// 	// 	errCh <- callback()
-// 	// }()
-
-// 	// select {
-// 	// case err := <-errCh:
-// 	// 	return err
-
-// 	// case <-time.After(types.ServerStartTime):
-// 	// }
-
-// 	// return WaitForQuitSignals()
-// }
+	return <-errCh
+}

@@ -304,7 +304,7 @@ func TestValidatorsSortCometBFT(t *testing.T) {
 	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in CometBFT")
 }
 
-func TestValidatorToTm(t *testing.T) {
+func TestValidatorToCmt(t *testing.T) {
 	vals := make(types.Validators, 10)
 	expected := make([]*cmttypes.Validator, 10)
 
@@ -314,9 +314,9 @@ func TestValidatorToTm(t *testing.T) {
 		val.Status = types.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
-		tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
 		require.NoError(t, err)
-		expected[i] = cmttypes.NewValidator(tmPk, val.ConsensusPower(sdk.DefaultPowerReduction))
+		expected[i] = cmttypes.NewValidator(cmtPk, val.ConsensusPower(sdk.DefaultPowerReduction))
 	}
 	vs, err := testutil.ToCmtValidators(vals, sdk.DefaultPowerReduction)
 	require.NoError(t, err)

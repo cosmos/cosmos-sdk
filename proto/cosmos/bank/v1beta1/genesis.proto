@@ -20,6 +20,7 @@ message GenesisState {
   // supply represents the total supply. If it is left empty, then supply will be calculated based on the provided
   // balances. Otherwise, it will be used to validate that the sum of the balances equals this amount.
   repeated cosmos.base.v1beta1.Coin supply = 3 [
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
@@ -45,6 +46,7 @@ message Balance {
 
   // coins defines the different coins this balance holds.
   repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true

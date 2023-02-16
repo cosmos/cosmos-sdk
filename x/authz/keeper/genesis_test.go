@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/stretchr/testify/suite"
 
 	storetypes "cosmossdk.io/store/types"

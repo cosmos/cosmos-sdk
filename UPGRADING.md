@@ -7,11 +7,19 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 ### Consensus Engine
 
 The Cosmos SDK has migrated to CometBFT as its default consensus engine.
-This is a breaking changes that needs chains to re-generate their protos.
-Some functions has been renamed to reflect the naming change, following an exhaustive list:
+CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
+Due to the import changes, this is a breaking change that needs chains to re-generate their protos.
+Some functions have been renamed to reflect the naming change, following an exhaustive list:
 
 * `client.TendermintRPC` -> `client.CometRPC`
 * `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+* `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
+* Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
+
+Additionally, the commands and flags mentionning `tendermint` have been renamed to `comet`.
+However, these commands and flags is still supported for backward compatibility.
+
+For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
 ### Configuration
 
@@ -34,6 +42,14 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 
 <!-- TODO: write database migration tool -->
+
+#### GoLevelDB
+
+GoLevelDB version has been pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7`, following versions might cause unexpected behavior.
+See related issues:
+
+* [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
+* [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
 
 ### Protobuf
 
@@ -251,6 +267,15 @@ The module name is assumed by `baseapp` to be the second element of the message 
 In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
 `Baseapp` only emits that event if the module have not already done so.
 
+### `x/params`
+
+The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
+Cosmos SDK modules now store their parameters directly in its repective modules.
+The `params` module will be removed in `v0.48`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.48`.
+
+When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
+Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
+
 #### `x/gov`
 
 ##### Minimum Proposal Deposit At Time of Submission
@@ -321,20 +346,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 The old params module is required to still be imported in your app.go in order to handle this migration. 
 
-##### App.go Changes
+##### `app.go` changes
 
-Previous:
+When using an `app.go` without App Wiring, the following changes are required:
 
-```go
-bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+```diff
+- bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
++ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamstypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
++ bApp.SetParamStore(&app.ConsensusParamsKeeper)
 ```
 
-After:
-
-```go
-app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
-bApp.SetParamStore(&app.ConsensusParamsKeeper)
-```
+When using App Wiring, the paramater store is automatically set for you.
 
 #### `x/nft`
 
@@ -427,7 +449,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
+* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`

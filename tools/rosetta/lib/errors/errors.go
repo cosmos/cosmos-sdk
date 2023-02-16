@@ -74,15 +74,15 @@ func ToRosetta(err error) *types.Error {
 	if rosErr == nil || !ok {
 		tmErr, ok := err.(*cmttypes.RPCError)
 		if tmErr != nil && ok {
-			return fromTendermintToRosettaError(tmErr).rosErr
+			return fromCometToRosettaError(tmErr).rosErr
 		}
 		return ToRosetta(WrapError(ErrUnknown, ErrUnknown.Error()))
 	}
 	return rosErr.rosErr
 }
 
-// fromTendermintToRosettaError converts a tendermint jsonrpc error to rosetta error
-func fromTendermintToRosettaError(err *cmttypes.RPCError) *Error {
+// fromCometToRosettaError converts a CometBFT jsonrpc error to rosetta error
+func fromCometToRosettaError(err *cmttypes.RPCError) *Error {
 	return &Error{rosErr: &types.Error{
 		Code:    http.StatusInternalServerError,
 		Message: err.Message,

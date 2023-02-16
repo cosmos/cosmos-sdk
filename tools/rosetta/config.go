@@ -24,8 +24,8 @@ const (
 	DefaultAddr = ":8080"
 	// DefaultRetries is the default number of retries
 	DefaultRetries = 5
-	// DefaultTendermintEndpoint is the default value for the tendermint endpoint
-	DefaultTendermintEndpoint = "localhost:26657"
+	// DefaultCometEndpoint is the default value for the CometBFT endpoint
+	DefaultCometEndpoint = "localhost:26657"
 	// DefaultGRPCEndpoint is the default value for the gRPC endpoint
 	DefaultGRPCEndpoint = "localhost:9090"
 	// DefaultNetwork defines the default network name
@@ -257,7 +257,7 @@ func ServerFromConfig(conf *Config) (crg.Server, error) {
 func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagBlockchain, DefaultBlockchain, "the blockchain type")
 	flags.String(FlagNetwork, DefaultNetwork, "the network name")
-	flags.String(FlagTendermintEndpoint, DefaultTendermintEndpoint, "the cometbft rpc endpoint, without tcp://")
+	flags.String(FlagTendermintEndpoint, DefaultCometEndpoint, "the CometBFT rpc endpoint, without tcp://")
 	flags.String(FlagGRPCEndpoint, DefaultGRPCEndpoint, "the app gRPC endpoint")
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")

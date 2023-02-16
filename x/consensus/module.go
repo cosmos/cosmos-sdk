@@ -119,9 +119,9 @@ func (am AppModule) InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) [
 	return nil
 }
 
-// ExportGenesis is handled by tendermint export of genesis
+// ExportGenesis is handled by CometBFT export of genesis
 func (am AppModule) ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage {
-	// nil is returned since ExportGenesis of consensus params is handled by tendermint and baseapp
+	// nil is returned since ExportGenesis of consensus params is handled by CometBFT and baseapp
 	return nil
 }
 

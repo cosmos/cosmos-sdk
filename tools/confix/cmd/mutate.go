@@ -50,7 +50,7 @@ func SetCommand() *cobra.Command {
 
 						if ok := transform.InsertMapping(results[0].Section, &parser.KeyValue{
 							Block: results[0].Block,
-							Name:  key,
+							Name:  results[0].Name,
 							Value: value,
 						}, true); !ok {
 							return errors.New("failed to set value")

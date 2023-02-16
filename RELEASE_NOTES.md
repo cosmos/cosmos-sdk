@@ -1,6 +1,6 @@
 # Cosmos SDK v0.46.10 Release Notes
 
-This release improves CPU profiling when using the `--cpu-profile` flag, and fixes a bug when making queries.
+This release improves CPU profiling when using the `--cpu-profile` flag, and fixes a possible way to DoS a node.
 
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md) for an exhaustive list of changes.
 

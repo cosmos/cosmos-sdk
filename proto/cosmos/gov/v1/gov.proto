@@ -224,7 +224,7 @@ message Params {
   //
   // Since: cosmos-sdk 0.48
   string proposal_cancel_ratio = 8 [(cosmos_proto.scalar) = "cosmos.Dec"];
-  
+
   // The address which will receive (proposal_cancel_ratio * deposit) proposal deposits.
   // If empty, the (proposal_cancel_ratio * deposit) proposal deposits will be burned.
   //

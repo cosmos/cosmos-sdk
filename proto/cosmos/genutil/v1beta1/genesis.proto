@@ -1,10 +1,8 @@
 syntax = "proto3";
 package cosmos.genutil.v1beta1;
 
-import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/genutil/types";
 

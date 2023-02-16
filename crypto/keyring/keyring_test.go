@@ -1663,6 +1663,7 @@ func TestAltKeyring_SaveOfflineKey(t *testing.T) {
 			pub := priv.PubKey()
 			pub.Bytes()
 			k, err := kr.SaveOfflineKey(tt.uid, pub)
+			require.NoError(t, err)
 			pubKey, err := k.GetPubKey()
 			require.NoError(t, err)
 			require.Equal(t, pub, pubKey)

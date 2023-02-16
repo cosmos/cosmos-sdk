@@ -13,6 +13,13 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// MessageRouter ADR 031 request type routing
+// https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-031-msg-service.md
+type MessageRouter interface {
+	Handler(msg sdk.Msg) MsgServiceHandler
+	HandlerByTypeURL(typeURL string) MsgServiceHandler
+}
+
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry

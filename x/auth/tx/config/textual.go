@@ -9,6 +9,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/x/tx/textual"
+
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -20,8 +21,8 @@ import (
 //
 //	clientCtx := client.GetClientContextFromCmd(cmd)
 //	txt := tx.NewTextualWithGRPCConn(clientCtxx)
-func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) textual.Textual {
-	return textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) *textual.SignModeHandler {
+	return textual.NewSignModeHandler(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		bankQueryClient := bankv1beta1.NewQueryClient(grpcConn)
 		res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
 			Denom: denom,
@@ -40,8 +41,8 @@ func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) textual.Textual {
 // Note: Once we switch to ADR-033, and keepers become ADR-033 clients to each
 // other, this function could probably be deprecated in favor of
 // `NewTextualWithGRPCConn`.
-func NewTextualWithBankKeeper(bk BankKeeper) textual.Textual {
-	textual := textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+func NewTextualWithBankKeeper(bk BankKeeper) *textual.SignModeHandler {
+	textual := textual.NewSignModeHandler(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
 		if err != nil {
 			return nil, metadataExists(err)

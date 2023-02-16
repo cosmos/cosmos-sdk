@@ -181,7 +181,7 @@ type AuthzInputs struct {
 	AccountKeeper    authz.AccountKeeper
 	BankKeeper       authz.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter baseapp.MessageRouter
 }
 
 //nolint:revive

@@ -41,6 +41,7 @@ message Params {
   bytes min_signed_per_window = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
+    (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
   google.protobuf.Duration downtime_jail_duration = 3
@@ -48,11 +49,13 @@ message Params {
   bytes slash_fraction_double_sign = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
+    (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
   bytes slash_fraction_downtime = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
+    (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
 }

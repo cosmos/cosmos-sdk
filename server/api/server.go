@@ -138,7 +138,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	// register grpc-gateway routes (after grpc-web server as the first match is used)
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error)
 
 	// Start the API in an external goroutine as Serve is blocking and will return
 	// an error upon failure, which we'll send on the error channel that will be
@@ -154,20 +154,18 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 		}
 	}(cfg.API.EnableUnsafeCORS)
 
-	// Start a blocking loop to wait for an indication to stop the server or that
+	// Start a blocking select to wait for an indication to stop the server or that
 	// the server failed to start properly.
-	for {
-		select {
-		case <-ctx.Done():
-			// The calling process cancelled or closed the provided context, so we must
-			// gracefully stop the API server.
-			s.logger.Info("stopping API server...", "address", cfg.API.Address)
-			return s.Close()
+	select {
+	case <-ctx.Done():
+		// The calling process cancelled or closed the provided context, so we must
+		// gracefully stop the API server.
+		s.logger.Info("stopping API server...", "address", cfg.API.Address)
+		return s.Close()
 
-		case err := <-errCh:
-			s.logger.Error("failed to start API server", "err", err)
-			return err
-		}
+	case err := <-errCh:
+		s.logger.Error("failed to start API server", "err", err)
+		return err
 	}
 }
 

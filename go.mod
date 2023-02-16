@@ -43,7 +43,6 @@ require (
 	github.com/magiconair/properties v1.8.7
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-isatty v0.0.17
-	github.com/neilotoole/errgroup v0.1.6
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common v0.39.0
@@ -56,6 +55,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.6.0
 	golang.org/x/exp v0.0.0-20230203172020-98cc5a0785f9
+	golang.org/x/sync v0.1.0
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.2-0.20230208135220-49eaa78c6c9c

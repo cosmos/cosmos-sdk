@@ -77,7 +77,7 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 		return fmt.Errorf("failed to listen on address %s: %w", cfg.Address, err)
 	}
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error)
 
 	// Start the gRPC in an external goroutine as Serve is blocking and will return
 	// an error upon failure, which we'll send on the error channel that will be
@@ -87,21 +87,19 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 		errCh <- grpcSrv.Serve(listener)
 	}()
 
-	// Start a blocking loop to wait for an indication to stop the server or that
+	// Start a blocking select to wait for an indication to stop the server or that
 	// the server failed to start properly.
-	for {
-		select {
-		case <-ctx.Done():
-			// The calling process cancelled or closed the provided context, so we must
-			// gracefully stop the gRPC server.
-			logger.Info("stopping gRPC server...", "address", cfg.Address)
-			grpcSrv.GracefulStop()
+	select {
+	case <-ctx.Done():
+		// The calling process cancelled or closed the provided context, so we must
+		// gracefully stop the gRPC server.
+		logger.Info("stopping gRPC server...", "address", cfg.Address)
+		grpcSrv.GracefulStop()
 
-			return nil
+		return nil
 
-		case err := <-errCh:
-			logger.Error("failed to start gRPC server", "err", err)
-			return err
-		}
+	case err := <-errCh:
+		logger.Error("failed to start gRPC server", "err", err)
+		return err
 	}
 }

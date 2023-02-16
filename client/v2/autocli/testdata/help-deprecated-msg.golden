@@ -1,13 +1,8 @@
-echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments
+Command "send" is deprecated, dont use this
+deprecated subcommand
 
 Usage:
-  test echo [pos1] [pos2] [pos3...] [flags]
-
-Aliases:
-  echo, e
-
-Examples:
-echo 1 abc {}
+  test deprecatedmsg send [flags]
 
 Flags:
       --a-bool                                                               
@@ -17,24 +12,27 @@ Flags:
       --an-enum Enum (unspecified | one | two | five | neg-three)             (default unspecified)
       --bools bools                                                           (default [])
       --bz bytesBase64                                                       
-      --deprecated-field string                                               (DEPRECATED: don't use this)
+      --deprecated-field string                                              
       --duration duration                                                    
       --durations duration (repeated)                                        
       --enums Enum (unspecified | one | two | five | neg-three) (repeated)   
-  -h, --help                                                                 help for echo
-      --i32 int32                                                            some random int32
+  -h, --help                                                                 help for send
+      --hidden-bool                                                          
+      --i32 int32                                                            
       --i64 int                                                              
       --page-count-total                                                     
       --page-key bytesBase64                                                 
       --page-limit uint                                                      
       --page-offset uint                                                     
       --page-reverse                                                         
-  -s, --shorthand-deprecated-field string                                     (DEPRECATED: bad idea)
+      --positional1 int32                                                    
+      --positional2 string                                                   
+      --positional3-varargs cosmos.base.v1beta1.Coin (json) (repeated)       
+      --shorthand-deprecated-field string                                    
       --some-messages testpb.AMessage (json) (repeated)                      
       --str string                                                           
       --strings strings                                                      
       --timestamp timestamp (RFC 3339)                                       
-      --u64 uint                                                             some random uint64
-  -u, --uint32 uint32                                                        some random uint32
+      --u32 uint32                                                           
+      --u64 uint                                                             
       --uints uints                                                           (default [])
-  -v, --version                                                              version for echo

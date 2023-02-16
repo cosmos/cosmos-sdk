@@ -2,11 +2,12 @@ package autocli
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"strings"
 	"testing"
+
+	"gotest.tools/v3/golden"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
@@ -36,6 +37,10 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 				{
 					ProtoField: "positional2",
 				},
+				{
+					ProtoField: "positional3_varargs",
+					Varargs:    true,
+				},
 			},
 			FlagOptions: map[string]*autocliv1.FlagOptions{
 				"u32": {
@@ -48,8 +53,8 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 					DefaultValue: "3",
 				},
 				"u64": {
-					Usage:             "some random uint64",
-					NoOptDefaultValue: "5",
+					Usage:        "some random uint64",
+					DefaultValue: "5",
 				},
 				"deprecated_field": {
 					Deprecated: "don't use this",
@@ -72,10 +77,59 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 				{
 					RpcMethod:  "Send",
 					Deprecated: "dont use this",
+					Short:      "deprecated subcommand",
+				},
+			},
+		},
+		"skipmsg": {
+			Service: testpb.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Send",
+					Skip:      true,
+					Short:     "skip subcommand",
 				},
 			},
 		},
 	},
+}
+
+func testMsgBuildError(t *testing.T, args ...string) error {
+	server := grpc.NewServer()
+	testpb.RegisterMsgServer(server, &testMessageServer{})
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	assert.NilError(t, err)
+	go func() {
+		err := server.Serve(listener)
+		if err != nil {
+			panic(err)
+		}
+	}()
+	defer server.GracefulStop()
+	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	assert.NilError(t, err)
+	defer func() {
+		err := clientConn.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	conn := &testClientConn{
+		ClientConn: clientConn,
+		t:          t,
+		out:        &bytes.Buffer{},
+	}
+	b := &Builder{
+		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
+			return conn, nil
+		},
+	}
+	cmd, err := b.BuildModuleMsgCommand("test", testCmdMsgDesc)
+	assert.NilError(t, err)
+	cmd.SetArgs(args)
+	cmd.SetOut(conn.out)
+	return cmd.Execute()
 }
 
 func testMsgExec(t *testing.T, args ...string) *testClientConn {
@@ -119,28 +173,43 @@ func testMsgExec(t *testing.T, args ...string) *testClientConn {
 
 func TestMsgOptions(t *testing.T) {
 	conn := testMsgExec(t,
-		"send", "5", "6",
+		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--uint32", "7",
-		"--u64",
+		"--u64", "8",
 	)
 	response := conn.out.String()
 	var output testpb.MsgRequest
-	err := json.Unmarshal([]byte(response), &output)
+	err := protojson.Unmarshal([]byte(response), &output)
 	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(7))
-	assert.Equal(t, output.GetU64(), uint64(0))
 	assert.Equal(t, output.GetPositional1(), int32(5))
 	assert.Equal(t, output.GetPositional2(), "6")
 }
 
+func TestMsgOptionsError(t *testing.T) {
+	err := testMsgBuildError(t,
+		"send", "5",
+		"--uint32", "7",
+		"--u64", "8",
+	)
+	assert.ErrorContains(t, err, "requires at least 3 arg(s)")
+
+	err = testMsgBuildError(t,
+		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"--uint32", "7",
+		"--u64", "abc",
+	)
+	assert.ErrorContains(t, err, "invalid argument ")
+}
+
 func TestDeprecatedMsg(t *testing.T) {
 	conn := testMsgExec(t, "send",
-		"1", "abc",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"--deprecated-field", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--deprecated-field has been deprecated"))
 
 	conn = testMsgExec(t, "send",
-		"1", "abc",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"-d", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--shorthand-deprecated-field has been deprecated"))
 }
@@ -149,11 +218,11 @@ func TestEverythingMsg(t *testing.T) {
 	conn := testMsgExec(t,
 		"send",
 		"1",
-		//"abc",
-		//`{"denom":"foo","amount":"1234"}`,
-		//`{"denom":"bar","amount":"4321"}`,
+		"abc",
+		`{"denom":"foo","amount":"1234"}`,
+		`{"denom":"bar","amount":"4321"}`,
 		"--a-bool",
-		"--an-enum", "one",
+		"--an-enum", "two",
 		"--a-message", `{"bar":"abc", "baz":-3}`,
 		"--duration", "4h3s",
 		"--uint32", "27",
@@ -188,15 +257,26 @@ func TestEverythingMsg(t *testing.T) {
 		"--uints", "4",
 	)
 	response := conn.out.String()
-	fmt.Println(response)
 	var output testpb.MsgRequest
-	fmt.Println(output.U64)
-	err := json.Unmarshal([]byte(response), &output)
+	err := protojson.Unmarshal([]byte(response), &output)
 	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(27))
-	//assert.Equal(t, output.GetU64(), uint64(5))
+	assert.Equal(t, output.GetU64(), uint64(3267246890))
 	assert.Equal(t, output.GetPositional1(), int32(1))
 	assert.Equal(t, output.GetPositional2(), "abc")
+	assert.Equal(t, output.GetABool(), true)
+	assert.Equal(t, output.GetAnEnum(), testpb.Enum_ENUM_TWO)
+}
+
+func TestHelpMsg(t *testing.T) {
+	conn := testMsgExec(t, "-h")
+	golden.Assert(t, conn.out.String(), "help-toplevel-msg.golden")
+
+	conn = testMsgExec(t, "send", "-h")
+	golden.Assert(t, conn.out.String(), "help-echo-msg.golden")
+
+	conn = testMsgExec(t, "deprecatedmsg", "send", "-h")
+	golden.Assert(t, conn.out.String(), "help-deprecated-msg.golden")
 }
 
 func TestBuildCustomMsgCommand(t *testing.T) {
@@ -217,7 +297,111 @@ func TestBuildCustomMsgCommand(t *testing.T) {
 	assert.Assert(t, customCommandCalled)
 }
 
-func TestBuilder_BuildMsgMethodCommand(t *testing.T) {
+func TestErrorBuildMsgCommand(t *testing.T) {
+	b := &Builder{}
+
+	commandDescriptor := &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Send",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{
+						ProtoField: "un-existent-proto-field",
+					},
+				},
+			},
+		},
+	}
+
+	opts := map[string]*autocliv1.ModuleOptions{
+		"test": {
+			Tx: commandDescriptor,
+		},
+	}
+	_, err := b.BuildMsgCommand(opts, nil)
+	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
+
+	nonExistentService := &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
+	opts = map[string]*autocliv1.ModuleOptions{
+		"test": {
+			Tx: nonExistentService,
+		},
+	}
+	_, err = b.BuildMsgCommand(opts, nil)
+	assert.ErrorContains(t, err, "can't find service un-existent-service")
+}
+
+func TestNotFoundErrorsMsg(t *testing.T) {
+	b := &Builder{}
+
+	// Query non existent service
+	_, err := b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"})
+	assert.ErrorContains(t, err, "can't find service un-existent-service")
+
+	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service:           testpb.Query_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "un-existent-method"}},
+	})
+	assert.ErrorContains(t, err, "rpc method \"un-existent-method\" not found")
+
+	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Send",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{
+						ProtoField: "un-existent-proto-field",
+					},
+				},
+			},
+		},
+	})
+	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
+
+	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Send",
+				FlagOptions: map[string]*autocliv1.FlagOptions{
+					"un-existent-flag": {},
+				},
+			},
+		},
+	})
+	assert.ErrorContains(t, err, "can't find field un-existent-flag")
+
+}
+
+func TestEnhanceMessageCommand(t *testing.T) {
+	b := &Builder{}
+
+	// Test that the command has a subcommand
+	cmd := &cobra.Command{Use: "test"}
+	cmd.AddCommand(&cobra.Command{Use: "test"})
+	options := map[string]*autocliv1.ModuleOptions{
+		"test": {},
+	}
+	err := b.EnhanceMsgCommand(cmd, options, map[string]*cobra.Command{})
+	assert.NilError(t, err)
+
+	cmd = &cobra.Command{Use: "test"}
+	options = map[string]*autocliv1.ModuleOptions{}
+	customCommands := map[string]*cobra.Command{
+		"test2": {Use: "test"},
+	}
+	err = b.EnhanceMsgCommand(cmd, options, customCommands)
+	assert.NilError(t, err)
+
+	cmd = &cobra.Command{Use: "test"}
+	options = map[string]*autocliv1.ModuleOptions{
+		"test": {Tx: nil},
+	}
+	customCommands = map[string]*cobra.Command{}
+	err = b.EnhanceMsgCommand(cmd, options, customCommands)
+	assert.NilError(t, err)
 
 }
 

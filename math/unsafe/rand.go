@@ -64,6 +64,10 @@ func Int63() int64 {
 	return grand.Int63()
 }
 
+func Int() int {
+	return grand.Int()
+}
+
 func Bytes(n int) []byte {
 	return grand.Bytes(n)
 }
@@ -110,6 +114,13 @@ func (r *Rand) Int63() int64 {
 	i63 := r.rand.Int63()
 	r.Unlock()
 	return i63
+}
+
+func (r *Rand) Int() int {
+	r.Lock()
+	i := r.rand.Int()
+	r.Unlock()
+	return i
 }
 
 // Bytes returns n random bytes generated from the internal

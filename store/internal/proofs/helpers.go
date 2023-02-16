@@ -3,7 +3,6 @@ package proofs
 import (
 	"sort"
 
-	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"golang.org/x/exp/maps"
@@ -67,7 +66,7 @@ func GetKey(allkeys []string, loc Where) string {
 		return allkeys[len(allkeys)-1]
 	}
 	// select a random index between 1 and allkeys-2
-	idx := math.NewRand().Int()%(len(allkeys)-2) + 1
+	idx := unsafe.NewRand().Int()%(len(allkeys)-2) + 1
 	return allkeys[idx]
 }
 

@@ -335,8 +335,8 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local CometBFT RPC client.
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
-		// re-assign for making the client available below
-		// do not use := to avoid shadowing clientCtx
+		// Re-assign for making the client available below do not use := to avoid
+		// shadowing the clientCtx variable.
 		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
@@ -360,6 +360,53 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	// listen for quit signals so the calling parent process can gracefully exit
 	ListenForQuitSignals(cancelFn, svrCtx.Logger)
 
+	if config.GRPC.Enable {
+		_, port, err := net.SplitHostPort(config.GRPC.Address)
+		if err != nil {
+			return err
+		}
+
+		maxSendMsgSize := config.GRPC.MaxSendMsgSize
+		if maxSendMsgSize == 0 {
+			maxSendMsgSize = serverconfig.DefaultGRPCMaxSendMsgSize
+		}
+
+		maxRecvMsgSize := config.GRPC.MaxRecvMsgSize
+		if maxRecvMsgSize == 0 {
+			maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
+		}
+
+		grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
+
+		// if gRPC is enabled, configure gRPC client for gRPC gateway
+		grpcClient, err := grpc.Dial(
+			grpcAddress,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithDefaultCallOptions(
+				grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+				grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
+				grpc.MaxCallSendMsgSize(maxSendMsgSize),
+			),
+		)
+		if err != nil {
+			return err
+		}
+
+		clientCtx = clientCtx.WithGRPCClient(grpcClient)
+		svrCtx.Logger.Debug("gRPC client assigned to client context", "target", grpcAddress)
+
+		grpcSrv, err = servergrpc.NewGRPCServer(clientCtx, app, config.GRPC)
+		if err != nil {
+			return err
+		}
+
+		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
+		// that the server is gracefully shut down.
+		g.Go(func() error {
+			return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config.GRPC, grpcSrv)
+		})
+	}
+
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -367,53 +414,6 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		}
 
 		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
-
-		if config.GRPC.Enable {
-			_, port, err := net.SplitHostPort(config.GRPC.Address)
-			if err != nil {
-				return err
-			}
-
-			maxSendMsgSize := config.GRPC.MaxSendMsgSize
-			if maxSendMsgSize == 0 {
-				maxSendMsgSize = serverconfig.DefaultGRPCMaxSendMsgSize
-			}
-
-			maxRecvMsgSize := config.GRPC.MaxRecvMsgSize
-			if maxRecvMsgSize == 0 {
-				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
-			}
-
-			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
-			// if gRPC is enabled, configure gRPC client for gRPC gateway
-			grpcClient, err := grpc.Dial(
-				grpcAddress,
-				grpc.WithTransportCredentials(insecure.NewCredentials()),
-				grpc.WithDefaultCallOptions(
-					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
-					grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
-					grpc.MaxCallSendMsgSize(maxSendMsgSize),
-				),
-			)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			svrCtx.Logger.Debug("gRPC client assigned to client context", "target", grpcAddress)
-
-			grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config.GRPC)
-			if err != nil {
-				return err
-			}
-
-			// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
-			// that the server is gracefully shut down.
-			g.Go(func() error {
-				return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config.GRPC, grpcSrv)
-			})
-		}
 
 		apiSrv = api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 		app.RegisterAPIRoutes(apiSrv, config.API)
@@ -427,23 +427,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		})
 	}
 
-	// If gRPC is enabled but the API is not, we need to start the gRPC server
-	// without the API server. If the API server is enabled, we've already
-	// started the grpc server.
-	if config.GRPC.Enable && !config.API.Enable {
-		grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config.GRPC)
-		if err != nil {
-			return err
-		}
-
-		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
-		// that the server is gracefully shut down.
-		g.Go(func() error {
-			return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config.GRPC, grpcSrv)
-		})
-	}
-
-	// At this point it is safe to block the process if we're in gRPC only mode as
+	// At this point it is safe to block the process if we're in gRPC-only mode as
 	// we do not need to handle any CometBFT related processes.
 	if gRPCOnly {
 		// wait for signal capture and gracefully return

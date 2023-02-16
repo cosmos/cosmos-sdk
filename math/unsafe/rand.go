@@ -1,4 +1,4 @@
-package math
+package unsafe
 
 import (
 	crand "crypto/rand"

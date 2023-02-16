@@ -52,30 +52,12 @@ func (ag AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
 
 // SaveAs is a utility method for saving AppGenesis as a JSON file.
 func (ag *AppGenesis) SaveAs(file string) error {
-	appGenesisBytes, err := ag.MarshalIndent("", "  ")
+	appGenesisBytes, err := json.MarshalIndent(ag, "", "  ")
 	if err != nil {
 		return err
 	}
 
 	return os.WriteFile(file, appGenesisBytes, 0600)
-}
-
-// Marshal the AppGenesis.
-func (ag *AppGenesis) MarshalJSON() ([]byte, error) {
-	// TODO to fix
-	return json.Marshal(&struct{}{})
-}
-
-// MarshalIndent marshals the AppGenesis with the provided prefix and indent.
-func (ag *AppGenesis) MarshalIndent(prefix, indent string) ([]byte, error) {
-	// TODO to fix
-	return json.Marshal(&struct{}{})
-}
-
-// Unmarshal an AppGenesis from JSON.
-func (ag *AppGenesis) UnmarshalJSON(bz []byte) error {
-	// TODO to fix
-	return nil
 }
 
 // AppGenesisFromFile reads the AppGenesis from the provided file.

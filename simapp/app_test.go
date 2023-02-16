@@ -271,7 +271,11 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
 }
 
+// TestMergedRegistry tests that fetching the gogo/protov2 merged registry
+// doesn't fail after loading all file descriptors.
 func TestMergedRegistry(t *testing.T) {
-	_, err := proto.MergedRegistry()
+	r, err := proto.MergedRegistry()
 	require.NoError(t, err)
+	require.Greater(t, r.NumFiles(), 0)
+
 }

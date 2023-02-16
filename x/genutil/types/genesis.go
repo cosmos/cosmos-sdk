@@ -8,9 +8,6 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AppGenesisOnly defines the app's genesis.
@@ -23,33 +20,13 @@ type AppGenesis struct {
 	AppHash       []byte          `json:"app_hash"`
 	AppState      json.RawMessage `json:"app_state,omitempty"`
 
-	Validators      []GenesisValidator        `json:"validators,omitempty"`
-	ConsensusParams *cmtproto.ConsensusParams `json:"consensus_params,omitempty"`
+	// TODO eventually abstract from CometBFT types
+	Validators      []cmttypes.GenesisValidator `json:"validators,omitempty"`
+	ConsensusParams *cmtproto.ConsensusParams   `json:"consensus_params,omitempty"`
 }
 
 // ToCometBFTGenesisDoc converts the AppGenesis to a CometBFT GenesisDoc.
 func (ag AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
-	cmtValidators := make([]cmttypes.GenesisValidator, len(ag.Validators))
-	for i, v := range ag.Validators {
-
-		var pubKey cryptotypes.PubKey
-		if err := json.Unmarshal(v.ConsensusPubkey.Value, pubKey); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal validator consensus pubkey: %v: %w", v.ConsensusPubkey, err)
-		}
-
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pubKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert validator consensus pubkey to cmt proto: %v: %w", v.ConsensusPubkey, err)
-		}
-
-		cmtValidators[i] = cmttypes.GenesisValidator{
-			Address: sdk.ConsAddress(v.Address).Bytes(),
-			PubKey:  cmtPk,
-			Power:   v.VotingPower,
-			Name:    v.Name,
-		}
-	}
-
 	return &cmttypes.GenesisDoc{
 		ChainID:       ag.ChainID,
 		InitialHeight: ag.InitialHeight,
@@ -69,7 +46,7 @@ func (ag AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
 				PubKeyTypes: ag.ConsensusParams.Validator.PubKeyTypes,
 			},
 		},
-		Validators: cmtValidators,
+		Validators: ag.Validators,
 	}, nil
 }
 

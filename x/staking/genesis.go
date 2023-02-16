@@ -3,33 +3,33 @@ package staking
 import (
 	"fmt"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // WriteValidators returns a slice of bonded genesis validators.
-func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []genutiltypes.GenesisValidator, returnErr error) {
+func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.GenesisValidator, returnErr error) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
 		pk, err := validator.ConsPubKey()
 		if err != nil {
 			returnErr = err
 			return true
 		}
-
-		pkAny, err := codectypes.NewAnyWithValue(pk)
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
 		if err != nil {
 			returnErr = err
 			return true
 		}
 
-		vals = append(vals, genutiltypes.GenesisValidator{
-			Address:         pk.Address().String(),
-			ConsensusPubkey: pkAny,
-			VotingPower:     validator.GetConsensusPower(keeper.PowerReduction(ctx)),
-			Name:            validator.GetMoniker(),
+		vals = append(vals, cmttypes.GenesisValidator{
+			Address: sdk.ConsAddress(cmtPk.Address()).Bytes(),
+			PubKey:  cmtPk,
+			Power:   validator.GetConsensusPower(keeper.PowerReduction(ctx)),
+			Name:    validator.GetMoniker(),
 		})
 
 		return false

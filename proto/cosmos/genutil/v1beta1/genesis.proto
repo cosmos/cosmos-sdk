@@ -18,18 +18,3 @@ message GenesisState {
     (amino.dont_omitempty) = true
   ];
 }
-
-// GenesisValidator defines an initial validator.
-message GenesisValidator {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // address defines the validator address.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // pub_key defines the validator public key.
-  google.protobuf.Any consensus_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
-  // power defines the validator voting power.
-  int64 voting_power = 3;
-  // name defines the validator name.
-  string name = 4;
-}

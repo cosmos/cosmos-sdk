@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Features
+
+* [#510](https://github.com/provenance-io/cosmos-sdk/pull/510) Add Sanction Tx commands.
 
 ---
 

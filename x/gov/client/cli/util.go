@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -147,4 +149,32 @@ func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.
 	rv.Proposer = clientCtx.GetFromAddress().String()
 
 	return rv, nil
+}
+
+// GenerateOrBroadcastTxCLIAsGovProp wraps the provided msgs in a governance proposal
+// and calls GenerateOrBroadcastTxCLI for that proposal.
+// At least one msg is required.
+// This uses flags added by AddGovPropFlagsToCmd to fill in the rest of the proposal.
+func GenerateOrBroadcastTxCLIAsGovProp(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
+	if len(msgs) == 0 {
+		return fmt.Errorf("no messages to submit")
+	}
+
+	prop, err := ReadGovPropFlags(clientCtx, flagSet)
+	if err != nil {
+		return err
+	}
+
+	prop.Messages = make([]*codectypes.Any, len(msgs))
+	for i, msg := range msgs {
+		prop.Messages[i], err = codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			if len(msgs) == 1 {
+				return fmt.Errorf("could not wrap %T message as Any: %w", msg, err)
+			}
+			return fmt.Errorf("could not wrap message %d (%T) as Any: %w", i, msg, err)
+		}
+	}
+
+	return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, prop)
 }

@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -84,7 +83,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, NewIntegrationTestSuite(cfg, &sanctionGen))
 }
 
-func (s *IntegrationTestSuite) TestSanctionValidatorImmediate() {
+func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	// Wait 2 blocks to start this. That way, hopefully the query tests are done.
 	// In between the two, create all the stuff to send.
 	s.Require().NoError(s.network.WaitForNextBlock(), "wait for next block 1")
@@ -284,38 +283,4 @@ func (s *IntegrationTestSuite) logHeight() int64 {
 	s.Require().NoError(err, "LatestHeight()")
 	s.T().Logf("Current height: %d", height)
 	return height
-}
-
-func (s *IntegrationTestSuite) getAuthority() string {
-	args := []string{"gov", "--" + tmcli.OutputFlag, "json"}
-	outBW, err := cli.ExecTestCLICmd(s.clientCtx, authcli.QueryModuleAccountByNameCmd(), args)
-	s.Require().NoError(err, "ExecTestCLICmd q auth module-account gov")
-	outBz := outBW.Bytes()
-	s.T().Logf("q auth module-account gov output:\n%s", string(outBz))
-	// example output:
-	// {
-	//   "account": {
-	//     "@type": "/cosmos.auth.v1beta1.ModuleAccount",
-	//     "base_account": {
-	//       "address": "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-	//       "pub_key": null,
-	//       "account_number": "9",
-	//       "sequence": "0"
-	//     },
-	//     "name": "gov",
-	//     "permissions": ["burner"]
-	//   }
-	// }
-	var output map[string]json.RawMessage
-	err = json.Unmarshal(outBz, &output)
-	s.Require().NoError(err, "Unmarshal output json")
-	var account map[string]json.RawMessage
-	err = json.Unmarshal(output["account"], &account)
-	s.Require().NoError(err, "Unmarshal account")
-	var baseAccount map[string]string
-	err = json.Unmarshal(account["base_account"], &baseAccount)
-	s.Require().NoError(err, "Unmarshal base_account")
-	rv := string(baseAccount["address"])
-	s.T().Logf("authority: %q", rv)
-	return rv
 }

@@ -2,10 +2,12 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 	"testing"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -24,6 +27,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+// convertPanicToErrorWithStack runs the provided runner.
+// If it neither panics nor returns an error, nil is returned.
+// If it returns an error, that error is returned.
+// If it panics, an error with the panic message and stack trace is returned.
+func convertPanicToErrorWithStack(runner func() error) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if e, ok := r.(error); ok {
+				err = fmt.Errorf("%w\n%s", e, string(debug.Stack()))
+			} else {
+				err = fmt.Errorf("%#v%s", r, string(debug.Stack()))
+			}
+		}
+	}()
+	return runner()
+}
 
 func TestParseSubmitLegacyProposalFlags(t *testing.T) {
 	okJSON := testutil.WriteToNewTempFile(t, `
@@ -458,6 +478,139 @@ func TestReadGovPropFlags(t *testing.T) {
 				require.NoError(t, err, "ReadGovPropFlags error")
 			}
 			assert.Equal(t, tc.exp, msg, "ReadGovPropFlags msg")
+		})
+	}
+}
+
+func TestGenerateOrBroadcastTxCLIAsGovProp(t *testing.T) {
+	fromAddr := sdk.AccAddress("another_from_address")
+	argDeposit := "--" + FlagDeposit
+
+	tests := []struct {
+		name   string
+		args   []string
+		msgs   []sdk.Msg
+		expErr []string
+	}{
+		{
+			name: "control",
+			args: []string{argDeposit, "30goodcoin"},
+			msgs: []sdk.Msg{
+				&stakingtypes.MsgDelegate{
+					DelegatorAddress: fromAddr.String(),
+					ValidatorAddress: sdk.ValAddress("1_validator_address_").String(),
+					Amount:           sdk.NewInt64Coin("blargh", 42),
+				},
+				&stakingtypes.MsgDelegate{
+					DelegatorAddress: fromAddr.String(),
+					ValidatorAddress: sdk.ValAddress("2_validator_address_").String(),
+					Amount:           sdk.NewInt64Coin("hgralb", 24),
+				},
+			},
+			// I don't care to test what happens in GenerateOrBroadcastTxCLI,
+			// which is the last thing called in GenerateOrBroadcastTxCLIAsGovProp.
+			// And setting it up so that GenerateOrBroadcastTxCLI has everything needed
+			// to not give an error is a major pain.
+			// But, I can test that execution got to that point by checking for
+			// a standard thing in the panic/error/stack.
+			expErr: []string{
+				".GenerateOrBroadcastTxCLI(",
+				".GenerateOrBroadcastTxWithFactory(",
+				".Factory.Prepare(",
+				"runtime error: invalid memory address or nil pointer dereference",
+			},
+		},
+		{
+			name:   "no messages",
+			args:   []string{argDeposit, "30emptycoin"},
+			msgs:   nil,
+			expErr: []string{"no messages to submit"},
+		},
+		{
+			name: "read gov prop flags fails",
+			args: []string{argDeposit, "notcoins"},
+			msgs: []sdk.Msg{
+				&stakingtypes.MsgDelegate{
+					DelegatorAddress: fromAddr.String(),
+					ValidatorAddress: sdk.ValAddress("3_validator_address_").String(),
+					Amount:           sdk.NewInt64Coin("gogogo", 99),
+				},
+			},
+			expErr: []string{"invalid deposit", "invalid decimal coin expression", "notcoins"},
+		},
+		{
+			name:   "one message nil",
+			args:   []string{argDeposit, "30nilcoin"},
+			msgs:   []sdk.Msg{nil},
+			expErr: []string{"could not wrap <nil> message as Any", "Expecting non nil value to create a new Any"},
+		},
+		{
+			name: "two messages first nil",
+			args: []string{argDeposit, "32onecoin"},
+			msgs: []sdk.Msg{
+				nil,
+				&stakingtypes.MsgDelegate{
+					DelegatorAddress: fromAddr.String(),
+					ValidatorAddress: sdk.ValAddress("4_validator_address_").String(),
+					Amount:           sdk.NewInt64Coin("foundcoin", 200),
+				},
+			},
+			expErr: []string{"could not wrap message 0 (<nil>) as Any", "Expecting non nil value to create a new Any"},
+		},
+		{
+			name: "two messages second nil",
+			args: []string{argDeposit, "31twocoin"},
+			msgs: []sdk.Msg{
+				&stakingtypes.MsgDelegate{
+					DelegatorAddress: fromAddr.String(),
+					ValidatorAddress: sdk.ValAddress("5_validator_address_").String(),
+					Amount:           sdk.NewInt64Coin("inccoin", 123),
+				},
+				nil,
+			},
+			expErr: []string{"could not wrap message 1 (<nil>) as Any", "Expecting non nil value to create a new Any"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a dummy command to get stuff from.
+			cmd := &cobra.Command{
+				Short: tc.name,
+				Run: func(cmd *cobra.Command, args []string) {
+					t.Errorf("The cmd for %q has run with the args %q, but Run shouldn't have been called.", tc.name, args)
+				},
+			}
+			AddGovPropFlagsToCmd(cmd)
+			flags.AddTxFlagsToCmd(cmd)
+
+			// Use it to parse the provided flags and get the resulting flagSet.
+			err := cmd.ParseFlags(tc.args)
+			require.NoError(t, err, "parsing test case args using cmd: %q", tc.args)
+			flagSet := cmd.Flags()
+
+			// Give it a context and then retrieve it.
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
+			clientCtx, err := client.GetClientTxContext(cmd)
+			require.NoError(t, err, "GetClientTxContext")
+			// Set the From Address so that the resulting proposal will have a proposer.
+			clientCtx.FromAddress = fromAddr
+
+			// Run the function being tested.
+			testFunc := func() error {
+				return GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, tc.msgs...)
+			}
+			err = convertPanicToErrorWithStack(testFunc)
+
+			// Make sure the error has what's expected.
+			if len(tc.expErr) > 0 {
+				require.Error(t, err, "GenerateOrBroadcastTxCLIAsGovProp error")
+				for _, exp := range tc.expErr {
+					assert.ErrorContains(t, err, exp, "GenerateOrBroadcastTxCLIAsGovProp error")
+				}
+			} else {
+				require.NoError(t, err, "GenerateOrBroadcastTxCLIAsGovProp error")
+			}
 		})
 	}
 }

@@ -34,7 +34,7 @@ func CollectKeyValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 }
 
 // ScanKeyValues calls the do function on every record found, in the indexed map
-// from the index iterator. Returning false stops the iteration.
+// from the index iterator. Returning true stops the iteration.
 // The Iterator is closed when this function exits.
 func ScanKeyValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 	ctx context.Context,

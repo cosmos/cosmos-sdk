@@ -28,11 +28,18 @@ type GeneratorOptions struct {
 	AnyTypeURLs    []string
 	InterfaceHints map[string]string
 	Resolver       protoregistry.MessageTypeResolver
+
 	// NoEmptyLists will cause the generator to not generate empty lists
 	// Recall that an empty list will marshal (and unmarshal) to null.   Some encodings may treat these states
 	// differently.  For example, in JSON, an empty list is encoded as [], while null is encoded as null.
-	NoEmptyLists                   bool
-	DisallowNilMessages            bool
+	NoEmptyLists bool
+
+	// DisallowNilMessages will cause the generator to not generate nil messages to protoreflect.MessageKind fields
+	DisallowNilMessages bool
+
+	// GogoUnmarshalCompatibleDecimal will cause the generator to generate decimal values which, when serialized as
+	// either bytes or a string, are compatible with gogo's unmarshaler.  These fields are identified by the presence
+	// of (amino.encoding = "cosmos_dec_bytes") or (cosmos_proto.scalar = "cosmos.Dec") annotations.
 	GogoUnmarshalCompatibleDecimal bool
 }
 

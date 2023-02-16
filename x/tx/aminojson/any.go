@@ -23,8 +23,6 @@ func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) e
 	}
 
 	typeUrl := message.Get(typeUrlField).String()
-	// TODO
-	// need an override for this?
 	resolver := protoregistry.GlobalTypes
 
 	typ, err := resolver.FindMessageByURL(typeUrl)

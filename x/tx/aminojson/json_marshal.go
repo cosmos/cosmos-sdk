@@ -16,24 +16,23 @@ import (
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
+// MessageEncoder is a function that can encode a protobuf protoreflect.Message to JSON.
 type MessageEncoder func(protoreflect.Message, io.Writer) error
+
+// FieldEncoder is a function that can encode a protobuf protoreflect.Value to JSON.
 type FieldEncoder func(AminoJSON, protoreflect.Value, io.Writer) error
 
+// AminoJSON is a JSON encoder that uses the Amino JSON encoding rules.
 type AminoJSON struct {
 	// maps cosmos_proto.scalar -> zero value factory
 	scalarEncoders  map[string]FieldEncoder
-	zeroValues      map[string]func() protoreflect.Value
 	messageEncoders map[string]MessageEncoder
 	fieldEncoders   map[string]FieldEncoder
 }
 
+// NewAminoJSON returns a new AminoJSON encoder.
 func NewAminoJSON() AminoJSON {
 	aj := AminoJSON{
-		zeroValues: map[string]func() protoreflect.Value{
-			"cosmos.Dec": func() protoreflect.Value {
-				return protoreflect.ValueOfString("0")
-			},
-		},
 		scalarEncoders: map[string]FieldEncoder{
 			"cosmos.Dec": cosmosDecEncoder,
 			"cosmos.Int": cosmosDecEncoder,
@@ -52,22 +51,23 @@ func NewAminoJSON() AminoJSON {
 	return aj
 }
 
+// DefineMessageEncoding defines a custom encoding for a protobuf message.
 func (aj AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) {
 	aj.messageEncoders[name] = encoder
 }
 
+// DefineFieldEncoding defines a custom encoding for a protobuf field.
 func (aj AminoJSON) DefineFieldEncoding(name string, encoder FieldEncoder) {
 	aj.fieldEncoders[name] = encoder
 }
 
+// MarshalAmino serializes a protobuf message to JSON.
 func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := aj.beginMarshal(message.ProtoReflect(), buf)
 	return buf.Bytes(), err
 }
 
-// TODO
-// move into marshalMessage
 func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
 	name, named := getMessageName(msg)
 	if named {
@@ -93,9 +93,6 @@ func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) err
 }
 
 func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
-	// TODO timestamp
-	// this is what is breaking MsgGrant
-
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
 		err := aj.marshalMessage(val, writer)
@@ -293,15 +290,6 @@ func omitEmpty(field protoreflect.FieldDescriptor) bool {
 		dontOmitEmpty := proto.GetExtension(opts, amino.E_DontOmitempty).(bool)
 		return !dontOmitEmpty
 	}
-	//if field.ContainingOneof() != nil {
-	//	return false
-	//}
-
-	// legacy support for gogoproto would need to look something like below.
-	//
-	// if gproto.GetBoolExtension(opts, gogoproto.E_Nullable, true) {
-	//
-	// }
 	return true
 }
 
@@ -331,17 +319,6 @@ func getOneOfNames(field protoreflect.FieldDescriptor) (string, string, error) {
 	}
 
 	return fieldName, typeName, nil
-}
-
-func (aj AminoJSON) getZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {
-	opts := field.Options()
-	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
-		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
-		if fn, ok := aj.zeroValues[scalar]; ok {
-			return fn(), true
-		}
-	}
-	return field.Default(), false
 }
 
 func (aj AminoJSON) getMessageEncoder(message protoreflect.Message) MessageEncoder {

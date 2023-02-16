@@ -111,7 +111,7 @@ var (
 		genType(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, genOpts.WithAnyTypes(&ed25519.PubKey{})),
 		genType(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, genOpts.WithAnyTypes(&ed25519.PubKey{})),
 		genType(&authtypes.ModuleCredential{}, &authapi.ModuleCredential{}, genOpts),
-		genType(&authtypes.MsgUpdateParams{}, &authapi.MsgUpdateParams{}, genOpts),
+		genType(&authtypes.MsgUpdateParams{}, &authapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
 
 		// authz
 		genType(&authztypes.GenericAuthorization{}, &authzapi.GenericAuthorization{}, genOpts),
@@ -289,12 +289,14 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.pulsar, tt.opts)
 			fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
 			rapid.Check(t, func(t *rapid.T) {
-				defer func() {
-					if r := recover(); r != nil {
-						//fmt.Printf("Panic: %+v\n", r)
-						t.FailNow()
-					}
-				}()
+				// uncomment to debug; catch a panic and inspect application state
+				//defer func() {
+				//	if r := recover(); r != nil {
+				//		//fmt.Printf("Panic: %+v\n", r)
+				//		t.FailNow()
+				//	}
+				//}()
+
 				msg := gen.Draw(t, "msg")
 				postFixPulsarMessage(msg)
 
@@ -314,11 +316,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				require.NoError(t, err)
 				aminoJson, err := aj.MarshalAmino(msg)
 				require.NoError(t, err)
-				//if !bytes.Equal(legacyAminoJson, aminoJson) {
-				//	println("UNMATCHED")
-				//}
 				require.Equal(t, string(legacyAminoJson), string(aminoJson))
-				//fmt.Printf("MATCHED %s\n", aminoJson)
 			})
 		})
 	}
@@ -340,13 +338,11 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		vesting.AppModuleBasic{})
 
 	aj := aminojson.NewAminoJSON()
-	addr1 := types.AccAddress([]byte("addr1"))
+	addr1 := types.AccAddress("addr1")
 	now := time.Now()
 
 	genericAuth, _ := codectypes.NewAnyWithValue(&authztypes.GenericAuthorization{Msg: "foo"})
 	genericAuthPulsar := newAny(t, &authzapi.GenericAuthorization{Msg: "foo"})
-	//pubkeyAny, _ := codectypes.NewAnyWithValue(&ed25519.PubKey{Key: []byte("foo")})
-	//pubkeyAnyPulsar := newAny(t, &ed25519.PubKey{Key: []byte("foo")})
 	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
 	pubkeyAnyPulsar := newAny(t, &secp256k1.PubKey{Key: []byte("foo")})
 	dec10bz, _ := types.NewDec(10).Marshal()
@@ -435,8 +431,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsarMarshalFails: true,
 		},
 		// amino.dont_omitempty + empty/nil lists produce some surprising results
-		// TODO
-		// custom renderer for coins
 		"bank/send_authorization/empty_coins": {
 			gogo:   &banktypes.SendAuthorization{SpendLimit: []types.Coin{}},
 			pulsar: &bankapi.SendAuthorization{SpendLimit: []*v1beta1.Coin{}},
@@ -461,7 +455,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &slashingtypes.Params{DowntimeJailDuration: 1e9 + 7},
 			pulsar: &slashingapi.Params{DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7}},
 		},
-		// !! Important !!
 		// This test cases demonstrates the expected contract and proper way to set a cosmos.Dec field represented
 		// as bytes in protobuf message, namely:
 		// dec10bz, _ := types.NewDec(10).Marshal()
@@ -549,9 +542,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	}
 }
 
-func TestScratch(t *testing.T) {
-}
-
 func TestSendAuthorization(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		distribution.AppModuleBasic{}, bank.AppModuleBasic{})
@@ -606,22 +596,13 @@ func postFixPulsarMessage(msg proto.Message) {
 			m.BaseAccount = &authapi.BaseAccount{}
 		}
 		_, _, bz := testdata.KeyTestPubAddr()
+		// always set address to a valid bech32 address
 		text, _ := bech32.ConvertAndEncode("cosmos", bz)
 		m.BaseAccount.Address = text
 
 		// see negative test
 		if len(m.Permissions) == 0 {
 			m.Permissions = nil
-		}
-	case *authapi.MsgUpdateParams:
-		// params is required in the gogo message
-		if m.Params == nil {
-			m.Params = &authapi.Params{}
-		}
-	case *authzapi.MsgGrant:
-		// grant is required in the gogo message
-		if m.Grant == nil {
-			m.Grant = &authzapi.Grant{}
 		}
 	}
 }

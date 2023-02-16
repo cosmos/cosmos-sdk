@@ -170,9 +170,6 @@ type AminoJSONPacker struct {
 var _ AnyUnpacker = AminoJSONPacker{}
 
 func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
-	if any == nil {
-		println("any is nil, what a problem!")
-	}
 	err := UnpackInterfaces(any.cachedValue, a)
 	if err != nil {
 		return err

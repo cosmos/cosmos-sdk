@@ -1,12 +1,13 @@
 package rosetta_test
 
 import (
-	"cosmossdk.io/tools/rosetta"
 	"encoding/hex"
 	"encoding/json"
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	"cosmossdk.io/tools/rosetta"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 

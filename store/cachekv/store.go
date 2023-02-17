@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	m "math"
+	sdkmath "math"
 	"sort"
 	"sync"
 
@@ -183,7 +183,7 @@ func (g *cacheKVGasMeter) GasConsumedToLimit() types.Gas {
 }
 
 func addUint64Overflow(a, b uint64) (uint64, bool) {
-	if m.MaxUint64-a < b {
+	if sdkmath.MaxUint64-a < b {
 		return 0, true
 	}
 
@@ -194,12 +194,12 @@ func (g *cacheKVGasMeter) ConsumeGas(amount types.Gas, descriptor string) {
 	var overflow bool
 	g.consumed, overflow = addUint64Overflow(g.consumed, amount)
 	if overflow {
-		g.consumed = m.MaxUint64
-		panic(types.ErrorGasOverflow{descriptor})
+		g.consumed = sdkmath.MaxUint64
+		panic(types.ErrorGasOverflow{Descriptor: descriptor})
 	}
 
 	if g.consumed > g.limit {
-		panic(types.ErrorOutOfGas{descriptor})
+		panic(types.ErrorOutOfGas{Descriptor: descriptor})
 	}
 }
 

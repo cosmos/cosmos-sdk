@@ -22,7 +22,7 @@ func TestReadAll(t *testing.T) {
 	specs := map[string]struct {
 		srcIT     Iterator
 		destSlice func() ModelSlicePtr
-		expErr    *errorsmod.Error //nolint:staticcheck // SA1019: errorsmod.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr    *errorsmod.Error 
 		expIDs    []RowID
 		expResult ModelSlicePtr
 	}{

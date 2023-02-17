@@ -86,7 +86,7 @@ func (c *container) call(provider *providerDescriptor, moduleKey *moduleKey) ([]
 
 	out, err := provider.Fn(inVals)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "error calling provider %s", loc)
+		return nil, errors.Wrapf(err, "error calling provider %s", loc)
 	}
 
 	markGraphNodeAsUsed(graphNode)

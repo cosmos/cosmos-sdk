@@ -130,7 +130,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		start, end interface{}
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *errorsmod.Error //nolint:staticcheck // SA1019: errorsmod.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package
+		expError   *errorsmod.Error 
 		method     func(store storetypes.KVStore, start, end interface{}) (Iterator, error)
 	}{
 		"exact match with a single result": {

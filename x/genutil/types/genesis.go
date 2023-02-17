@@ -109,6 +109,7 @@ func (ag *AppGenesis) ValidateAndComplete() error {
 	}
 
 	// verify that consesus and validators parameters are valid for CometBFT
+	// TODO eventually generalize this for every consensus engine
 	cmtGenesis, err := ag.ToCometBFTGenesisDoc()
 	if err != nil {
 		return err

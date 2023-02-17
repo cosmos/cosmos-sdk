@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
@@ -133,8 +134,30 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 
 	var appGenesis AppGenesis
 	if err := json.Unmarshal(jsonBlob, &appGenesis); err != nil {
-		return nil, fmt.Errorf("error unmarshalling AppGenesis at %s: %w", genFile, err)
+		// fallback to tendermint genesis
+		var tmGenesis cmttypes.GenesisDoc
+		if err2 := cmtjson.Unmarshal(jsonBlob, &tmGenesis); err2 != nil {
+			// here we ignore the error from the fallback
+			return nil, fmt.Errorf("error unmarshalling AppGenesis at %s: %w and failed fallback to CometBFT GenDoc: %w", genFile, err, err2)
+		}
+
+		return AppGenesisFromCometBFTGenesisDoc(&tmGenesis), nil
 	}
 
 	return &appGenesis, nil
+}
+
+func AppGenesisFromCometBFTGenesisDoc(genDoc *cmttypes.GenesisDoc) *AppGenesis {
+	consensusParams := genDoc.ConsensusParams.ToProto()
+	return &AppGenesis{
+		AppName:         version.AppName,
+		AppVersion:      version.Version,
+		GenesisTime:     genDoc.GenesisTime,
+		ChainID:         genDoc.ChainID,
+		InitialHeight:   genDoc.InitialHeight,
+		AppHash:         genDoc.AppHash,
+		AppState:        genDoc.AppState,
+		Validators:      genDoc.Validators,
+		ConsensusParams: &consensusParams,
+	}
 }

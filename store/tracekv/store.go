@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"cosmossdk.io/store/types"
 )
 

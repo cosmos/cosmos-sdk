@@ -836,7 +836,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ := sdkerrors.ABCIInfo(err, false)
+		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrInvalidRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrInvalidRequest.ABCICode(), code, err)
 	}
@@ -864,7 +864,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 			if testCase.fail {
 				require.Error(t, err)
 
-				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				space, code, _ := errorsmod.ABCIInfo(err, false)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.ABCICode(), code, err)
 			} else {
@@ -884,7 +884,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ := sdkerrors.ABCIInfo(err, false)
+		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
@@ -897,7 +897,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ = sdkerrors.ABCIInfo(err, false)
+		space, code, _ = errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 	}
@@ -993,7 +993,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 			require.Error(t, err)
 			require.Nil(t, result)
 
-			space, code, _ := sdkerrors.ABCIInfo(err, false)
+			space, code, _ := errorsmod.ABCIInfo(err, false)
 			require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
 			require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
 		}
@@ -1075,7 +1075,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 				require.Error(t, err, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
 				require.Nil(t, result, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
 
-				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				space, code, _ := errorsmod.ABCIInfo(err, false)
 				require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
 				require.True(t, ctx.BlockGasMeter().IsOutOfGas())

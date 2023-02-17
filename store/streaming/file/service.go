@@ -10,6 +10,7 @@ import (
 	"sort"
 	"sync"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 

@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
@@ -52,7 +52,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 	}
 	addr := sdk.AccAddress(pubKey.Address())
 	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
-		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
 	}
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
@@ -80,7 +80,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
-		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {

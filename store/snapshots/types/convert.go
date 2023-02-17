@@ -3,8 +3,6 @@ package types
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	proto "github.com/cosmos/gogoproto/proto"
-
-	"cosmossdk.io/errors"
 )
 
 // Converts an ABCI snapshot to a snapshot. Mainly to decode the SDK metadata.
@@ -17,7 +15,7 @@ func SnapshotFromABCI(in *abci.Snapshot) (Snapshot, error) {
 	}
 	err := proto.Unmarshal(in.Metadata, &snapshot.Metadata)
 	if err != nil {
-		return Snapshot{}, errors.Wrap(err, "failed to unmarshal snapshot metadata")
+		return Snapshot{}, errorsmod.Wrap(err, "failed to unmarshal snapshot metadata")
 	}
 	return snapshot, nil
 }
@@ -33,7 +31,7 @@ func (s Snapshot) ToABCI() (abci.Snapshot, error) {
 	var err error
 	out.Metadata, err = proto.Marshal(&s.Metadata)
 	if err != nil {
-		return abci.Snapshot{}, errors.Wrap(err, "failed to marshal snapshot metadata")
+		return abci.Snapshot{}, errorsmod.Wrap(err, "failed to marshal snapshot metadata")
 	}
 	return out, nil
 }

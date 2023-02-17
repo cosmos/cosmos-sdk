@@ -48,8 +48,8 @@ func trimInternal(st errors.StackTrace) errors.StackTrace {
 	// manual error creation, or runtime for caught panics
 	for matchesFunc(st[0],
 		// where we create errors
-		"cosmossdk.io/errors.Wrap",
-		"cosmossdk.io/errors.Wrapf",
+		"cosmossdk.io/errorsmod.Wrap",
+		"cosmossdk.io/errorsmod.Wrapf",
 		"cosmossdk.io/errors.WithType",
 		// runtime are added on panics
 		"runtime.",

@@ -227,7 +227,7 @@ func createConfigFolder(dir string) error {
 func saveGenesisFile(genDoc *cmttypes.GenesisDoc, dir string) error {
 	err := genutil.ExportGenesisFile(genDoc, dir)
 	if err != nil {
-		return errors.Wrap(err, "error creating file")
+		return errorsmod.Wrap(err, "error creating file")
 	}
 
 	return nil

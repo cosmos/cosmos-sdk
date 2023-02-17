@@ -108,7 +108,7 @@ func (ag *AppGenesis) ValidateAndComplete() error {
 		ag.GenesisTime = cmttime.Now()
 	}
 
-	// verify that genesis parameters are valid for ABCI
+	// verify that consesus and validators parameters are valid for CometBFT
 	cmtGenesis, err := ag.ToCometBFTGenesisDoc()
 	if err != nil {
 		return err
@@ -127,37 +127,30 @@ func (ag *AppGenesis) ValidateAndComplete() error {
 
 // AppGenesisFromFile reads the AppGenesis from the provided file.
 func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
-	jsonBlob, err := os.ReadFile(genFile)
+	jsonBlob, err := os.ReadFile(genFile) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("couldn't read AppGenesis file (%s): %w", genFile, err)
 	}
 
 	var appGenesis AppGenesis
 	if err := json.Unmarshal(jsonBlob, &appGenesis); err != nil {
-		// fallback to tendermint genesis
-		var tmGenesis cmttypes.GenesisDoc
-		if err2 := cmtjson.Unmarshal(jsonBlob, &tmGenesis); err2 != nil {
-			// here we ignore the error from the fallback
+		// fallback to CometBFT genesis
+		var ctmGenesis cmttypes.GenesisDoc
+		if err2 := cmtjson.Unmarshal(jsonBlob, &ctmGenesis); err2 != nil {
 			return nil, fmt.Errorf("error unmarshalling AppGenesis at %s: %w and failed fallback to CometBFT GenDoc: %w", genFile, err, err2)
 		}
 
-		return AppGenesisFromCometBFTGenesisDoc(&tmGenesis), nil
+		consensusParams := ctmGenesis.ConsensusParams.ToProto()
+		appGenesis = AppGenesis{
+			GenesisTime:     ctmGenesis.GenesisTime,
+			ChainID:         ctmGenesis.ChainID,
+			InitialHeight:   ctmGenesis.InitialHeight,
+			AppHash:         ctmGenesis.AppHash,
+			AppState:        ctmGenesis.AppState,
+			Validators:      ctmGenesis.Validators,
+			ConsensusParams: &consensusParams,
+		}
 	}
 
 	return &appGenesis, nil
-}
-
-func AppGenesisFromCometBFTGenesisDoc(genDoc *cmttypes.GenesisDoc) *AppGenesis {
-	consensusParams := genDoc.ConsensusParams.ToProto()
-	return &AppGenesis{
-		AppName:         version.AppName,
-		AppVersion:      version.Version,
-		GenesisTime:     genDoc.GenesisTime,
-		ChainID:         genDoc.ChainID,
-		InitialHeight:   genDoc.InitialHeight,
-		AppHash:         genDoc.AppHash,
-		AppState:        genDoc.AppState,
-		Validators:      genDoc.Validators,
-		ConsensusParams: &consensusParams,
-	}
 }

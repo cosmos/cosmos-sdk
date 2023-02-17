@@ -24,12 +24,10 @@ message MsgSend {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string   from_address = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  string   to_address   = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
-  repeated cosmos.base.v1beta1.Coin amount = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // MsgSendResponse defines the Msg/Send response type.

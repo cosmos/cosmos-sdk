@@ -101,10 +101,9 @@ message Customer3 {
 }
 
 message TestVersion1 {
-  int64        x = 1;
-  TestVersion1 a = 2;
-  TestVersion1 b =
-      3;  // [(gogoproto.nullable) = false] generates invalid recursive structs;
+  int64                 x = 1;
+  TestVersion1          a = 2;
+  TestVersion1          b = 3; // [(gogoproto.nullable) = false] generates invalid recursive structs;
   repeated TestVersion1 c = 4;
   repeated TestVersion1 d = 5 [(gogoproto.nullable) = false];
   oneof                 sum {
@@ -112,7 +111,7 @@ message TestVersion1 {
     TestVersion1 f = 7;
   }
   google.protobuf.Any   g = 8;
-  repeated TestVersion1 h = 9;  // [(gogoproto.castrepeated) = "TestVersion1"];
+  repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
   Customer1 k = 12 [(gogoproto.embed) = true];
@@ -120,15 +119,15 @@ message TestVersion1 {
 message TestVersion2 {
   int64                 x = 1;
   TestVersion2          a = 2;
-  TestVersion2          b = 3;  // [(gogoproto.nullable) = false];
+  TestVersion2          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion2 c = 4;
-  repeated TestVersion2 d = 5;  // [(gogoproto.nullable) = false];
+  repeated TestVersion2 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     int32        e = 6;
     TestVersion2 f = 7;
   }
   google.protobuf.Any   g = 8;
-  repeated TestVersion1 h = 9;  // [(gogoproto.castrepeated) = "TestVersion1"];
+  repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
   Customer1 k         = 12 [(gogoproto.embed) = true];
@@ -137,15 +136,15 @@ message TestVersion2 {
 message TestVersion3 {
   int64                 x = 1;
   TestVersion3          a = 2;
-  TestVersion3          b = 3;  // [(gogoproto.nullable) = false];
+  TestVersion3          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion3 c = 4;
-  repeated TestVersion3 d = 5;  // [(gogoproto.nullable) = false];
+  repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     int32        e = 6;
     TestVersion3 f = 7;
   }
   google.protobuf.Any   g = 8;
-  repeated TestVersion1 h = 9;  //[(gogoproto.castrepeated) = "TestVersion1"];
+  repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
   Customer1 k                  = 12 [(gogoproto.embed) = true];
@@ -155,14 +154,14 @@ message TestVersion3 {
 message TestVersion3LoneOneOfValue {
   int64                 x = 1;
   TestVersion3          a = 2;
-  TestVersion3          b = 3;  // [(gogoproto.nullable) = false];
+  TestVersion3          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion3 c = 4;
-  repeated TestVersion3 d = 5;  // [(gogoproto.nullable) = false];
+  repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     int32 e = 6;
   }
   google.protobuf.Any   g = 8;
-  repeated TestVersion1 h = 9;  //[(gogoproto.castrepeated) = "TestVersion1"];
+  repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
   Customer1 k                  = 12 [(gogoproto.embed) = true];
@@ -172,14 +171,14 @@ message TestVersion3LoneOneOfValue {
 message TestVersion3LoneNesting {
   int64                 x = 1;
   TestVersion3          a = 2;
-  TestVersion3          b = 3;  // [(gogoproto.nullable) = false];
+  TestVersion3          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion3 c = 4;
-  repeated TestVersion3 d = 5;  // [(gogoproto.nullable) = false];
+  repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     TestVersion3LoneNesting f = 7;
   }
   google.protobuf.Any   g = 8;
-  repeated TestVersion1 h = 9;  //[(gogoproto.castrepeated) = "TestVersion1"];
+  repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
   Customer1 k                  = 12 [(gogoproto.embed) = true];
@@ -213,14 +212,14 @@ message TestVersion3LoneNesting {
 message TestVersion4LoneNesting {
   int64                 x = 1;
   TestVersion3          a = 2;
-  TestVersion3          b = 3;  // [(gogoproto.nullable) = false];
+  TestVersion3          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion3 c = 4;
-  repeated TestVersion3 d = 5;  // [(gogoproto.nullable) = false];
+  repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     TestVersion3LoneNesting f = 7;
   }
   google.protobuf.Any   g = 8;
-  repeated TestVersion1 h = 9;  //[(gogoproto.castrepeated) = "TestVersion1"];
+  repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
   Customer1 k                  = 12 [(gogoproto.embed) = true];
@@ -259,7 +258,7 @@ message TestVersionFD1 {
     TestVersion1 f = 7;
   }
   google.protobuf.Any   g = 8;
-  repeated TestVersion1 h = 9;  // [(gogoproto.castrepeated) = "TestVersion1"];
+  repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
 }
 
 message TestVersionFD1WithExtraAny {
@@ -270,7 +269,7 @@ message TestVersionFD1WithExtraAny {
     TestVersion1 f = 7;
   }
   AnyWithExtra          g = 8;
-  repeated TestVersion1 h = 9;  // [(gogoproto.castrepeated) = "TestVersion1"];
+  repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
 }
 
 message AnyWithExtra {

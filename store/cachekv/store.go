@@ -6,7 +6,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/tendermint/tendermint/libs/math"
+	"github.com/cometbft/cometbft/libs/math"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"

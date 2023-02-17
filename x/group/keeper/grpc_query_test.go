@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -15,7 +16,6 @@ import (
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/golang/mock/gomock"
-	"github.com/tendermint/tendermint/libs/log"
 
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 

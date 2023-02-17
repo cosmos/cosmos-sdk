@@ -8,15 +8,15 @@ import (
 	json "encoding/json"
 	reflect "reflect"
 
+	types "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types0 "github.com/cosmos/cosmos-sdk/codec/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	cobra "github.com/spf13/cobra"
-	types1 "github.com/tendermint/tendermint/abci/types"
 )
 
 // MockAppModuleBasic is a mock of AppModuleBasic interface.
@@ -97,7 +97,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 i
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleBasic) RegisterInterfaces(arg0 types.InterfaceRegistry) {
+func (m *MockAppModuleBasic) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -246,7 +246,7 @@ func (mr *MockAppModuleGenesisMockRecorder) DefaultGenesis(arg0 interface{}) *go
 }
 
 // ExportGenesis mocks base method.
-func (m *MockAppModuleGenesis) ExportGenesis(arg0 types0.Context, arg1 codec.JSONCodec) json.RawMessage {
+func (m *MockAppModuleGenesis) ExportGenesis(arg0 types1.Context, arg1 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -288,10 +288,10 @@ func (mr *MockAppModuleGenesisMockRecorder) GetTxCmd() *gomock.Call {
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModuleGenesis) InitGenesis(arg0 types0.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types1.ValidatorUpdate {
+func (m *MockAppModuleGenesis) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types.ValidatorUpdate {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]types1.ValidatorUpdate)
+	ret0, _ := ret[0].([]types.ValidatorUpdate)
 	return ret0
 }
 
@@ -328,7 +328,7 @@ func (mr *MockAppModuleGenesisMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleGenesis) RegisterInterfaces(arg0 types.InterfaceRegistry) {
+func (m *MockAppModuleGenesis) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -403,7 +403,7 @@ func (mr *MockHasGenesisMockRecorder) DefaultGenesis(arg0 interface{}) *gomock.C
 }
 
 // ExportGenesis mocks base method.
-func (m *MockHasGenesis) ExportGenesis(arg0 types0.Context, arg1 codec.JSONCodec) json.RawMessage {
+func (m *MockHasGenesis) ExportGenesis(arg0 types1.Context, arg1 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -417,10 +417,10 @@ func (mr *MockHasGenesisMockRecorder) ExportGenesis(arg0, arg1 interface{}) *gom
 }
 
 // InitGenesis mocks base method.
-func (m *MockHasGenesis) InitGenesis(arg0 types0.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types1.ValidatorUpdate {
+func (m *MockHasGenesis) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types.ValidatorUpdate {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]types1.ValidatorUpdate)
+	ret0, _ := ret[0].([]types.ValidatorUpdate)
 	return ret0
 }
 
@@ -522,7 +522,7 @@ func (mr *MockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interf
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModule) RegisterInterfaces(arg0 types.InterfaceRegistry) {
+func (m *MockAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -569,7 +569,7 @@ func (m *MockHasInvariants) EXPECT() *MockHasInvariantsMockRecorder {
 }
 
 // RegisterInvariants mocks base method.
-func (m *MockHasInvariants) RegisterInvariants(arg0 types0.InvariantRegistry) {
+func (m *MockHasInvariants) RegisterInvariants(arg0 types1.InvariantRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInvariants", arg0)
 }
@@ -676,7 +676,7 @@ func (m *MockBeginBlockAppModule) EXPECT() *MockBeginBlockAppModuleMockRecorder 
 }
 
 // BeginBlock mocks base method.
-func (m *MockBeginBlockAppModule) BeginBlock(arg0 types0.Context, arg1 types1.RequestBeginBlock) {
+func (m *MockBeginBlockAppModule) BeginBlock(arg0 types1.Context, arg1 types.RequestBeginBlock) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "BeginBlock", arg0, arg1)
 }
@@ -742,7 +742,7 @@ func (mr *MockBeginBlockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, a
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockBeginBlockAppModule) RegisterInterfaces(arg0 types.InterfaceRegistry) {
+func (m *MockBeginBlockAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -789,10 +789,10 @@ func (m *MockEndBlockAppModule) EXPECT() *MockEndBlockAppModuleMockRecorder {
 }
 
 // EndBlock mocks base method.
-func (m *MockEndBlockAppModule) EndBlock(arg0 types0.Context, arg1 types1.RequestEndBlock) []types1.ValidatorUpdate {
+func (m *MockEndBlockAppModule) EndBlock(arg0 types1.Context, arg1 types.RequestEndBlock) []types.ValidatorUpdate {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0, arg1)
-	ret0, _ := ret[0].([]types1.ValidatorUpdate)
+	ret0, _ := ret[0].([]types.ValidatorUpdate)
 	return ret0
 }
 
@@ -857,7 +857,7 @@ func (mr *MockEndBlockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockEndBlockAppModule) RegisterInterfaces(arg0 types.InterfaceRegistry) {
+func (m *MockEndBlockAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }

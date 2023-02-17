@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"

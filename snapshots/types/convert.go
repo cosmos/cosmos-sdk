@@ -1,8 +1,8 @@
 package types
 
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	proto "github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

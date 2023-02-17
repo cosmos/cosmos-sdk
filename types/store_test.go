@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"

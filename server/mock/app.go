@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/types"
 	db "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 

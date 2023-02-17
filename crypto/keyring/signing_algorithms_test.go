@@ -82,7 +82,6 @@ func TestDerive(t *testing.T) {
 			decodedPriv, err := hex.DecodeString(tt.derivedPriv)
 			require.NoError(t, err)
 			require.Equal(t, derivedPriv, decodedPriv)
-
 		})
 	}
 }

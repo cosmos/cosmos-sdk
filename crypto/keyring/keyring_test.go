@@ -269,7 +269,6 @@ func TestGetPub(t *testing.T) {
 			keyS, err := kb.List()
 			require.NoError(t, err)
 			require.Equal(t, 1, len(keyS))
-
 		})
 	}
 }

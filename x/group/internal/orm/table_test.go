@@ -59,7 +59,7 @@ func TestCreate(t *testing.T) {
 	specs := map[string]struct {
 		rowID  RowID
 		src    proto.Message
-		expErr *errorsmod.Error 
+		expErr *errorsmod.Error
 	}{
 		"empty rowID": {
 			rowID: []byte{},
@@ -127,7 +127,7 @@ func TestCreate(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	specs := map[string]struct {
 		src    proto.Message
-		expErr *errorsmod.Error 
+		expErr *errorsmod.Error
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
@@ -189,7 +189,7 @@ func TestUpdate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	specs := map[string]struct {
 		rowID  []byte
-		expErr *errorsmod.Error 
+		expErr *errorsmod.Error
 	}{
 		"happy path": {
 			rowID: EncodeSequence(1),

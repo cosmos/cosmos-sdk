@@ -51,7 +51,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		start, end uint64
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *errorsmod.Error 
+		expError   *errorsmod.Error
 		method     func(store storetypes.KVStore, start uint64, end uint64) (Iterator, error)
 	}{
 		"first element": {

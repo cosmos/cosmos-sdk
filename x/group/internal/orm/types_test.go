@@ -34,7 +34,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 		srcRowID     RowID
 		srcModelType reflect.Type
 		expObj       interface{}
-		expErr       *errorsmod.Error 
+		expErr       *errorsmod.Error
 	}{
 		"happy path": {
 			srcRowID:     EncodeSequence(1),

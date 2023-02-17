@@ -22,7 +22,7 @@ func TestReadAll(t *testing.T) {
 	specs := map[string]struct {
 		srcIT     Iterator
 		destSlice func() ModelSlicePtr
-		expErr    *errorsmod.Error 
+		expErr    *errorsmod.Error
 		expIDs    []RowID
 		expResult ModelSlicePtr
 	}{

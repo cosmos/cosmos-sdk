@@ -130,7 +130,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		start, end interface{}
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *errorsmod.Error 
+		expError   *errorsmod.Error
 		method     func(store storetypes.KVStore, start, end interface{}) (Iterator, error)
 	}{
 		"exact match with a single result": {

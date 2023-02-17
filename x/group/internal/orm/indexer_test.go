@@ -377,7 +377,7 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 
 	specs := map[string]struct {
 		srcKey           []byte
-		expErr           *errorsmod.Error 
+		expErr           *errorsmod.Error
 		expExistingEntry []byte
 	}{
 		"create when not exists": {
@@ -420,7 +420,7 @@ func TestMultiKeyAddFunc(t *testing.T) {
 
 	specs := map[string]struct {
 		srcKey           []byte
-		expErr           *errorsmod.Error 
+		expErr           *errorsmod.Error
 		expExistingEntry []byte
 	}{
 		"create when not exists": {

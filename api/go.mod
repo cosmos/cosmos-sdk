@@ -12,13 +12,7 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
-<<<<<<< HEAD
-	golang.org/x/net v0.4.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
-=======
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
->>>>>>> 77d347b48 (build(deps): Bump github.com/hashicorp/go-getter from 1.6.2 to 1.7.0 and go version to 1.20.1 (#15051))
 )

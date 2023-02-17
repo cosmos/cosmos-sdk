@@ -52,7 +52,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tm-db v0.6.7
-	github.com/tidwall/btree v1.5.2
+	github.com/tidwall/btree v1.6.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
 	google.golang.org/genproto v0.0.0-20230125152338-dcaf20b6aeaa

@@ -2,11 +2,12 @@ package query
 
 import (
 	"context"
+	"errors"
+	"fmt"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	storetypes "cosmossdk.io/store/types"
-	"errors"
-	"fmt"
 )
 
 // CollectionsPaginateOptions provides extra options for pagination in collections.

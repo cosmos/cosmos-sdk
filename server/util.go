@@ -444,6 +444,10 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	}
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
+	err = os.MkdirAll(snapshotDir, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
 	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
 	if err != nil {
 		panic(err)

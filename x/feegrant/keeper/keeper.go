@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
@@ -42,7 +43,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
 	// Checking for duplicate entry
 	if f, _ := k.GetAllowance(ctx, granter, grantee); f != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
 	// create the account if it is not in account state
@@ -62,7 +63,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	// expiration shouldn't be in the past.
 	if exp != nil && exp.Before(ctx.BlockTime()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 	}
 
 	// if expiry is not nil, add the new key to pruning queue.

@@ -7,8 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
@@ -97,7 +98,7 @@ func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 	}
 	return IteratorFunc(func(dest proto.Message) (RowID, error) {
 		if dest == nil {
-			return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
+			return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
 		}
 
 		if index == len(tms) {

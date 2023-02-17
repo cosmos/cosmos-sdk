@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -25,7 +26,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -426,10 +426,10 @@ func TestTxDecoder(t *testing.T) {
 
 func TestCustomRunTxPanicHandler(t *testing.T) {
 	customPanicMsg := "test panic"
-	anteErr := sdkerrors.Register("fakeModule", 100500, "fakeError")
+	anteErr := errorsmod.Register("fakeModule", 100500, "fakeError")
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
+			panic(errorsmod.Wrap(anteErr, "anteHandler"))
 		})
 	}
 	suite := NewBaseAppSuite(t, anteOpt)

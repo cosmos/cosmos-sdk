@@ -4,18 +4,19 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/nft"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // SaveClass defines a method for creating a new nft class
 func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
 	if k.HasClass(ctx, class.Id) {
-		return sdkerrors.Wrap(nft.ErrClassExists, class.Id)
+		return errorsmod.Wrap(nft.ErrClassExists, class.Id)
 	}
 	bz, err := k.cdc.Marshal(&class)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
+		return errorsmod.Wrap(err, "Marshal nft.Class failed")
 	}
 	store := ctx.KVStore(k.storeKey)
 	store.Set(classStoreKey(class.Id), bz)
@@ -25,11 +26,11 @@ func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
 // UpdateClass defines a method for updating an exist nft class
 func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
 	if !k.HasClass(ctx, class.Id) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, class.Id)
+		return errorsmod.Wrap(nft.ErrClassNotExists, class.Id)
 	}
 	bz, err := k.cdc.Marshal(&class)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
+		return errorsmod.Wrap(err, "Marshal nft.Class failed")
 	}
 	store := ctx.KVStore(k.storeKey)
 	store.Set(classStoreKey(class.Id), bz)

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 
+	errorsmod "cosmossdk.io/errors"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -930,7 +931,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case storetypes.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -1009,7 +1010,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case storetypes.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -1105,7 +1106,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 					switch rType := r.(type) {
 					case storetypes.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+						err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 					default:
 						panic(r)
 					}
@@ -1115,7 +1116,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 			counter, failOnAnte := parseTxMemo(t, tx)
 			newCtx.GasMeter().ConsumeGas(uint64(counter), "counter-ante")
 			if failOnAnte {
-				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+				return newCtx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
 			return

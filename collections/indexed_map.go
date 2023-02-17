@@ -129,6 +129,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) IterateRaw(ctx context.Context, sta
 func (m *IndexedMap[PrimaryKey, Value, Idx]) KeyCodec() codec.KeyCodec[PrimaryKey] {
 	return m.m.KeyCodec()
 }
+
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value] {
 	return m.m.ValueCodec()
 }

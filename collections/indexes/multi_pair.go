@@ -74,7 +74,8 @@ func (i *MultiPair[K1, K2, Value]) Unreference(ctx context.Context, pk collectio
 func (i *MultiPair[K1, K2, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[collections.Pair[K2, K1]],
-	walkFunc func(indexingKey K2, indexedKey K1) bool) error {
+	walkFunc func(indexingKey K2, indexedKey K1) bool,
+) error {
 	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).Walk(ctx, ranger, walkFunc)
 }
 

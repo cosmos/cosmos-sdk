@@ -56,7 +56,8 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ra
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]],
-	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool) error {
+	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool,
+) error {
 	return (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Walk(ctx, ranger, walkFunc)
 }
 

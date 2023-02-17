@@ -54,7 +54,8 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, r
 func (i *Unique[ReferenceKey, PrimaryKey, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[ReferenceKey],
-	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool) error {
+	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool,
+) error {
 	return (*collections.GenericUniqueIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(i).Walk(ctx, ranger, walkFunc)
 }
 

@@ -2,12 +2,21 @@ package types
 
 import (
 	"encoding/json"
-	fmt "fmt"
+	"errors"
+	"fmt"
 	"os"
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
+
+	"github.com/cosmos/cosmos-sdk/version"
+)
+
+const (
+	// MaxChainIDLen is the maximum length of a chain ID.
+	MaxChainIDLen = cmttypes.MaxChainIDLen
 )
 
 // AppGenesisOnly defines the app's genesis.
@@ -25,8 +34,19 @@ type AppGenesis struct {
 	ConsensusParams *cmtproto.ConsensusParams   `json:"consensus_params,omitempty"`
 }
 
+// NewAppGenesisWithVersion returns a new AppGenesis with the app name and app version already.
+func NewAppGenesisWithVersion(chainID string, appState json.RawMessage) *AppGenesis {
+	return &AppGenesis{
+		AppName:    version.AppName,
+		AppVersion: version.Version,
+		ChainID:    chainID,
+		AppState:   appState,
+		Validators: nil,
+	}
+}
+
 // ToCometBFTGenesisDoc converts the AppGenesis to a CometBFT GenesisDoc.
-func (ag AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
+func (ag *AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
 	var consensusParams *cmttypes.ConsensusParams
 	if ag.ConsensusParams != nil {
 		consensusParams = &cmttypes.ConsensusParams{
@@ -65,17 +85,56 @@ func (ag *AppGenesis) SaveAs(file string) error {
 	return os.WriteFile(file, appGenesisBytes, 0600)
 }
 
+// ValidateAndComplete performs validation and completes the AppGenesis.
+func (ag *AppGenesis) ValidateAndComplete() error {
+	if ag.ChainID == "" {
+		return errors.New("genesis doc must include non-empty chain_id")
+	}
+
+	if len(ag.ChainID) > MaxChainIDLen {
+		return fmt.Errorf("chain_id in genesis doc is too long (max: %d)", MaxChainIDLen)
+	}
+
+	if ag.InitialHeight < 0 {
+		return fmt.Errorf("initial_height cannot be negative (got %v)", ag.InitialHeight)
+	}
+
+	if ag.InitialHeight == 0 {
+		ag.InitialHeight = 1
+	}
+
+	if ag.GenesisTime.IsZero() {
+		ag.GenesisTime = cmttime.Now()
+	}
+
+	// verify that genesis parameters are valid for ABCI
+	cmtGenesis, err := ag.ToCometBFTGenesisDoc()
+	if err != nil {
+		return err
+	}
+
+	if err := cmtGenesis.ValidateAndComplete(); err != nil {
+		return err
+	}
+
+	ag.Validators = cmtGenesis.Validators
+	consensusParams := cmtGenesis.ConsensusParams.ToProto()
+	ag.ConsensusParams = &consensusParams
+
+	return nil
+}
+
 // AppGenesisFromFile reads the AppGenesis from the provided file.
-func AppGenesisFromFile(genFile string) (AppGenesis, error) {
+func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 	jsonBlob, err := os.ReadFile(genFile)
 	if err != nil {
-		return AppGenesis{}, fmt.Errorf("couldn't read AppGenesis file (%s): %w", genFile, err)
+		return nil, fmt.Errorf("couldn't read AppGenesis file (%s): %w", genFile, err)
 	}
 
 	var appGenesis AppGenesis
 	if err := json.Unmarshal(jsonBlob, &appGenesis); err != nil {
-		return AppGenesis{}, fmt.Errorf("error unmarshalling AppGenesis at %s: %w", genFile, err)
+		return nil, fmt.Errorf("error unmarshalling AppGenesis at %s: %w", genFile, err)
 	}
 
-	return appGenesis, nil
+	return &appGenesis, nil
 }

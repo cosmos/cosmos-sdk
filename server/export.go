@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -18,7 +17,6 @@ const (
 	FlagForZeroHeight    = "for-zero-height"
 	FlagJailAllowedAddrs = "jail-allowed-addrs"
 	FlagModulesToExport  = "modules-to-export"
-	FlagOutputDocument   = "output-document"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -66,7 +64,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			forZeroHeight, _ := cmd.Flags().GetBool(FlagForZeroHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(FlagJailAllowedAddrs)
 			modulesToExport, _ := cmd.Flags().GetStringSlice(FlagModulesToExport)
-			outputDocument, _ := cmd.Flags().GetString(FlagOutputDocument)
+			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
 			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper, modulesToExport)
 			if err != nil {
@@ -83,14 +81,13 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			appGenesis.InitialHeight = exported.Height
 			appGenesis.ConsensusParams = exported.ConsensusParams
 
-			encoded, err := json.Marshal(appGenesis)
+			out, err := json.Marshal(appGenesis)
 			if err != nil {
 				return err
 			}
 
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.OutOrStderr())
-			out := sdk.MustSortJSON(encoded)
 
 			if outputDocument == "" {
 				cmd.Println(string(out))
@@ -114,7 +111,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(FlagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
 	cmd.Flags().StringSlice(FlagModulesToExport, []string{}, "Comma-separated list of modules to export. If empty, will export all modules")
-	cmd.Flags().String(FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
+	cmd.Flags().String(flags.FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
 
 	return cmd
 }

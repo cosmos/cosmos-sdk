@@ -16,7 +16,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -391,12 +390,7 @@ func initGenFiles(
 		return err
 	}
 
-	appGenesis := genutiltypes.AppGenesis{
-		ChainID:    chainID,
-		AppState:   appGenStateJSON,
-		Validators: nil,
-	}
-
+	appGenesis := genutiltypes.NewAppGenesisWithVersion(chainID, appGenStateJSON)
 	// generate empty genesis files for each validator and save
 	for i := 0; i < numValidators; i++ {
 		if err := appGenesis.SaveAs(genFiles[i]); err != nil {

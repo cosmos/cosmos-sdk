@@ -64,7 +64,7 @@ func SetGenesisStateInAppState(
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromAppGenesis(gesnsis AppGenesis) (genesisState map[string]json.RawMessage, err error) {
+func GenesisStateFromAppGenesis(gesnsis *AppGenesis) (genesisState map[string]json.RawMessage, err error) {
 	if err = json.Unmarshal(gesnsis.AppState, &genesisState); err != nil {
 		return genesisState, err
 	}
@@ -75,7 +75,7 @@ func GenesisStateFromAppGenesis(gesnsis AppGenesis) (genesisState map[string]jso
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromGenFile(genFile string) (genesisState map[string]json.RawMessage, genesis AppGenesis, err error) {
+func GenesisStateFromGenFile(genFile string) (genesisState map[string]json.RawMessage, genesis *AppGenesis, err error) {
 	if _, err := os.Stat(genFile); os.IsNotExist(err) {
 		return genesisState, genesis, fmt.Errorf("%s does not exist, run `init` first", genFile)
 	}

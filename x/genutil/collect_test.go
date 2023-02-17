@@ -55,7 +55,7 @@ func TestCollectTxsHandlesDirectories(t *testing.T) {
 	srvCtx := server.NewDefaultContext()
 	_ = srvCtx
 	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
-	genesis := types.AppGenesis{AppState: []byte("{}")}
+	genesis := &types.AppGenesis{AppState: []byte("{}")}
 	balItr := new(doNothingIterator)
 
 	dnc := &doNothingUnmarshalJSON{cdc}

@@ -21,10 +21,10 @@ import (
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
-func ExportGenesisFile(genesis types.AppGenesis, genFile string) error {
-	// if err := genDoc.ValidateAndComplete(); err != nil {
-	// 	return err
-	// }
+func ExportGenesisFile(genesis *types.AppGenesis, genFile string) error {
+	if err := genesis.ValidateAndComplete(); err != nil {
+		return err
+	}
 
 	return genesis.SaveAs(genFile)
 }
@@ -32,16 +32,13 @@ func ExportGenesisFile(genesis types.AppGenesis, genFile string) error {
 // ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
 // An error is returned if building or writing the configuration to file fails.
 func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.GenesisValidator, appState json.RawMessage, genTime time.Time) error {
-	appGenesis := types.AppGenesis{
-		GenesisTime: genTime,
-		ChainID:     chainID,
-		Validators:  validators,
-		AppState:    appState,
-	}
+	appGenesis := types.NewAppGenesisWithVersion(chainID, appState)
+	appGenesis.GenesisTime = genTime
+	appGenesis.Validators = validators
 
-	// if err := genDoc.ValidateAndComplete(); err != nil {
-	// 	return err
-	// }
+	if err := appGenesis.ValidateAndComplete(); err != nil {
+		return err
+	}
 
 	return appGenesis.SaveAs(genFile)
 }

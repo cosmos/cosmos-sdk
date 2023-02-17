@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -133,7 +134,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				return errors.Wrap(err, "Failed to marshal default genesis state")
 			}
 
-			appGenesis := types.AppGenesis{}
+			appGenesis := &types.AppGenesis{}
 			if _, err := os.Stat(genFile); err != nil {
 				if !os.IsNotExist(err) {
 					return err
@@ -145,9 +146,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				}
 			}
 
+			appGenesis.AppName = version.AppName
+			appGenesis.AppVersion = version.Version
 			appGenesis.ChainID = chainID
-			appGenesis.Validators = nil
 			appGenesis.AppState = appState
+			appGenesis.Validators = nil
 
 			if err = genutil.ExportGenesisFile(appGenesis, genFile); err != nil {
 				return errors.Wrap(err, "Failed to export genesis file")

@@ -9,6 +9,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -182,5 +183,5 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 		return c.client, nil
 	}
 
-	return nil, errorsmod.Wrapf(res, "error loading gRPC client")
+	return nil, errors.Wrapf(res, "error loading gRPC client")
 }

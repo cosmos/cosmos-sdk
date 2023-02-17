@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/pkg/errors"
 )
 
 type Config struct {
@@ -30,12 +31,12 @@ func LoadConfig(configDir string) (*Config, error) {
 
 	bz, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "can't read config file: %s", configPath)
+		return nil, errors.Wrapf(err, "can't read config file: %s", configPath)
 	}
 
 	config := &Config{}
 	if err = toml.Unmarshal(bz, config); err != nil {
-		return nil, errorsmod.Wrapf(err, "can't load config file: %s", configPath)
+		return nil, errors.Wrapf(err, "can't load config file: %s", configPath)
 	}
 
 	return config, err

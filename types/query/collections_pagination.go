@@ -9,33 +9,6 @@ import (
 	"fmt"
 )
 
-type pairIdx[K1, K2 any] interface {
-	IterateRaw(ctx context.Context, start, end []byte, order collections.Order) (collections.Iterator[collections.Pair[K2, K1], collections.NoValue], error)
-	KeyCodec() collcodec.KeyCodec[collections.Pair[K2, K1]]
-}
-
-func PaginatePairIndexWithPrefix[K1, K2 any, Idx pairIdx[K1, K2]](
-	ctx context.Context, index Idx, pageReq *PageRequest, prefix K2, predicateFunc func(indexingKey K2, indexedKey K1) bool,
-) (
-	*PageResponse, error) {
-	_, pageRes, err := CollectionFilteredPaginate(ctx, index, pageReq, func(key collections.Pair[K2, K1], _ collections.NoValue) (include bool) {
-		return predicateFunc(key.K1(), key.K2())
-	}, func(o *CollectionsPaginateOptions[collections.Pair[K2, K1]]) {
-		p := collections.PairPrefix[K2, K1](prefix)
-		o.Prefix = &p
-	})
-	return pageRes, err
-}
-
-func PaginatePairIndex[K1, K2 any, Idx pairIdx[K1, K2]](
-	ctx context.Context, index Idx, pageReq *PageRequest, predicateFunc func(indexingKey K2, indexedKey K1) bool,
-) (*PageResponse, error) {
-	_, pageRes, err := CollectionFilteredPaginate(ctx, index, pageReq, func(key collections.Pair[K2, K1], _ collections.NoValue) (include bool) {
-		return predicateFunc(key.K1(), key.K2())
-	})
-	return pageRes, err
-}
-
 // CollectionsPaginateOptions provides extra options for pagination in collections.
 type CollectionsPaginateOptions[K any] struct {
 	// Prefix allows to optionally set a prefix for the pagination.
@@ -59,24 +32,6 @@ func CollectionPaginate[K, V any, C Collection[K, V]](
 	pageReq *PageRequest,
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	return CollectionFilteredPaginate[K, V](ctx, coll, pageReq, nil)
-}
-
-// PairCollectionFilteredPaginate is a helper method to iterate over collections whose primary key
-// is a collections.Pair, it allows to define a prefix for the iteration, with a predicate
-// function that includes results only if true is returned.
-func PairCollectionFilteredPaginate[K1, K2, V any, C Collection[collections.Pair[K1, K2], V]](
-	ctx context.Context,
-	coll C,
-	pageReq *PageRequest,
-	prefix K1,
-	predicateFunc func(keyPart2 K2, value V) bool,
-) ([]collections.KeyValue[collections.Pair[K1, K2], V], *PageResponse, error) {
-	return CollectionFilteredPaginate(ctx, coll, pageReq, func(key collections.Pair[K1, K2], value V) (include bool) {
-		return predicateFunc(key.K2(), value)
-	}, func(opt *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
-		p := collections.PairPrefix[K1, K2](prefix)
-		opt.Prefix = &p
-	})
 }
 
 // CollectionFilteredPaginate works in the same way as FilteredPaginate but for collection types.

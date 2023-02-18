@@ -91,6 +91,9 @@ type BaseConfig struct {
 	// IAVLDisableFastNode enables or disables the fast sync node.
 	IAVLDisableFastNode bool `mapstructure:"iavl-disable-fastnode"`
 
+	// IAVLLazyLoading enable/disable the lazy loading of iavl store.
+	IAVLLazyLoading bool `mapstructure:"iavl-lazy-loading"`
+
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
 	// An empty string indicates that the Tendermint config's DBBackend value should be used.
 	AppDBBackend string `mapstructure:"app-db-backend"`
@@ -119,7 +122,7 @@ type APIConfig struct {
 	// RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds)
 	RPCWriteTimeout uint `mapstructure:"rpc-write-timeout"`
 
-	// RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes)
+	// RPCMaxBodyBytes defines the Tendermint maximum request body (in bytes)
 	RPCMaxBodyBytes uint `mapstructure:"rpc-max-body-bytes"`
 
 	// TODO: TLS/Proxy configuration.
@@ -296,6 +299,7 @@ func DefaultConfig() *Config {
 			IndexEvents:         make([]string, 0),
 			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
+			IAVLLazyLoading:     false,
 			AppDBBackend:        "",
 		},
 		Telemetry: telemetry.Config{

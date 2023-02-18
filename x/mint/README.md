@@ -17,9 +17,9 @@ sidebar_position: 1
 * [Events](#events)
     * [BeginBlocker](#beginblocker)
 * [Client](#client)
-        * [CLI](#cli)
-        * [gRPC](#grpc)
-        * [REST](#rest)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
 ## Concepts
 

@@ -80,6 +80,16 @@ Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for ge
 
 See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md).
 
+#### Gogoproto Import Paths
+
+The SDK made a [patch fix](https://github.com/cosmos/gogoproto/pull/32) on its gogoproto repository to require that each proto file's package name matches its OS import path (relatively to a protobuf root import path, usually the root `proto/` folder, set by the `protoc -I` flag).
+
+For example, assuming you put all your proto files in subfolders inside your root `proto/` folder, then a proto file with package name `myapp.mymodule.v1` should be found in the `proto/myapp/mymodule/v1/` folder. If it is in another folder, the proto generation command will throw an error.
+
+If you are using a custom folder structure for your proto files, please reorganize them so that their OS path matches their proto package name.
+
+This is to allow the proto FileDescriptSets to be correctly registered, and this standardized OS import paths allows [Hubl](https://github.com/cosmos/cosmos-sdk/tree/main/tools/hubl) to reflectively talk to any chain.
+
 #### `{accepts,implements}_interface` proto annotations
 
 The SDK is normalizing the strings inside the Protobuf `accepts_interface` and `implements_interface` annotations. We require them to be fully-scoped names. They will soon be used by code generators like Pulsar and Telescope to match which messages can or cannot be packed inside `Any`s.
@@ -134,6 +144,15 @@ ctx.EventManager().EmitEvent(
 The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
 In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
 `Baseapp` only emits that event if the module have not already done so.
+
+### `x/params`
+
+The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
+Cosmos SDK modules now store their parameters directly in its repective modules.
+The `params` module will be removed in `v0.48`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.48`.
+
+When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
+Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
 
 #### `x/gov`
 
@@ -205,20 +224,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 The old params module is required to still be imported in your app.go in order to handle this migration. 
 
-##### App.go Changes
+##### `app.go` changes
 
-Previous:
+When using an `app.go` without App Wiring, the following changes are required:
 
-```go
-bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+```diff
+- bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
++ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamstypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
++ bApp.SetParamStore(&app.ConsensusParamsKeeper)
 ```
 
-After:
-
-```go
-app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
-bApp.SetParamStore(&app.ConsensusParamsKeeper)
-```
+When using App Wiring, the paramater store is automatically set for you.
 
 #### `x/nft`
 
@@ -311,7 +327,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
+* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`

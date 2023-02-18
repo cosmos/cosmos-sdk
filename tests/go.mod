@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.3.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v0.0.0
-	cosmossdk.io/math v1.0.0-beta.6
+	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
 	cosmossdk.io/x/evidence v0.1.0

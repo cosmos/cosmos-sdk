@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v0.0.0-00010101000000-000000000000
 	cosmossdk.io/math v1.0.0-beta.6
-	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
+	cosmossdk.io/store v0.0.0-20230215235214-f142553c2163
 	cosmossdk.io/x/tx v0.2.0
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1

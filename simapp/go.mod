@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v0.0.0
 	cosmossdk.io/math v1.0.0-beta.6
-	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
+	cosmossdk.io/store v0.0.0-20230215235214-f142553c2163
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
 	cosmossdk.io/tools/rosetta v0.2.0
 	cosmossdk.io/x/evidence v0.1.0

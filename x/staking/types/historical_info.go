@@ -8,7 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -47,11 +47,11 @@ func UnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) (hi Historical
 // ValidateBasic will ensure HistoricalInfo is not nil and sorted
 func ValidateBasic(hi HistoricalInfo) error {
 	if len(hi.Valset) == 0 {
-		return errorsmod.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
+		return errors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
 	}
 
 	if !sort.IsSorted(Validators(hi.Valset)) {
-		return errorsmod.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
+		return errors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}
 
 	return nil

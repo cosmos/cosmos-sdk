@@ -3,7 +3,7 @@ package keyring
 import (
 	"strings"
 
-	"cosmossdk.io/errors"
+	"github.com/cockroachdb/errors"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )

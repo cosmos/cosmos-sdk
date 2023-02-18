@@ -1,10 +1,9 @@
 package keeper
 
 import (
+	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/nft"
-
-	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -12,11 +11,11 @@ import (
 // Mint defines a method for minting a new nft
 func (k Keeper) Mint(ctx sdk.Context, token nft.NFT, receiver sdk.AccAddress) error {
 	if !k.HasClass(ctx, token.ClassId) {
-		return errorsmod.Wrap(nft.ErrClassNotExists, token.ClassId)
+		return errors.Wrap(nft.ErrClassNotExists, token.ClassId)
 	}
 
 	if k.HasNFT(ctx, token.ClassId, token.Id) {
-		return errorsmod.Wrap(nft.ErrNFTExists, token.Id)
+		return errors.Wrap(nft.ErrNFTExists, token.Id)
 	}
 
 	k.mintWithNoCheck(ctx, token, receiver)
@@ -42,11 +41,11 @@ func (k Keeper) mintWithNoCheck(ctx sdk.Context, token nft.NFT, receiver sdk.Acc
 // Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 	if !k.HasClass(ctx, classID) {
-		return errorsmod.Wrap(nft.ErrClassNotExists, classID)
+		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}
 
 	if !k.HasNFT(ctx, classID, nftID) {
-		return errorsmod.Wrap(nft.ErrNFTNotExists, nftID)
+		return errors.Wrap(nft.ErrNFTNotExists, nftID)
 	}
 
 	k.burnWithNoCheck(ctx, classID, nftID)
@@ -75,11 +74,11 @@ func (k Keeper) burnWithNoCheck(ctx sdk.Context, classID string, nftID string) e
 // Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) Update(ctx sdk.Context, token nft.NFT) error {
 	if !k.HasClass(ctx, token.ClassId) {
-		return errorsmod.Wrap(nft.ErrClassNotExists, token.ClassId)
+		return errors.Wrap(nft.ErrClassNotExists, token.ClassId)
 	}
 
 	if !k.HasNFT(ctx, token.ClassId, token.Id) {
-		return errorsmod.Wrap(nft.ErrNFTNotExists, token.Id)
+		return errors.Wrap(nft.ErrNFTNotExists, token.Id)
 	}
 	k.updateWithNoCheck(ctx, token)
 	return nil
@@ -100,11 +99,11 @@ func (k Keeper) Transfer(ctx sdk.Context,
 	receiver sdk.AccAddress,
 ) error {
 	if !k.HasClass(ctx, classID) {
-		return errorsmod.Wrap(nft.ErrClassNotExists, classID)
+		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}
 
 	if !k.HasNFT(ctx, classID, nftID) {
-		return errorsmod.Wrap(nft.ErrNFTNotExists, nftID)
+		return errors.Wrap(nft.ErrNFTNotExists, nftID)
 	}
 
 	k.transferWithNoCheck(ctx, classID, nftID, receiver)

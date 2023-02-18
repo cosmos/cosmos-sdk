@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,11 +15,11 @@ func (k Keeper) BatchMint(ctx sdk.Context,
 	checked := make(map[string]bool, len(tokens))
 	for _, token := range tokens {
 		if !checked[token.ClassId] && !k.HasClass(ctx, token.ClassId) {
-			return errorsmod.Wrap(nft.ErrClassNotExists, token.ClassId)
+			return errors.Wrap(nft.ErrClassNotExists, token.ClassId)
 		}
 
 		if k.HasNFT(ctx, token.ClassId, token.Id) {
-			return errorsmod.Wrap(nft.ErrNFTExists, token.Id)
+			return errors.Wrap(nft.ErrNFTExists, token.Id)
 		}
 
 		checked[token.ClassId] = true
@@ -32,11 +32,11 @@ func (k Keeper) BatchMint(ctx sdk.Context,
 // Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) BatchBurn(ctx sdk.Context, classID string, nftIDs []string) error {
 	if !k.HasClass(ctx, classID) {
-		return errorsmod.Wrap(nft.ErrClassNotExists, classID)
+		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}
 	for _, nftID := range nftIDs {
 		if !k.HasNFT(ctx, classID, nftID) {
-			return errorsmod.Wrap(nft.ErrNFTNotExists, nftID)
+			return errors.Wrap(nft.ErrNFTNotExists, nftID)
 		}
 		if err := k.burnWithNoCheck(ctx, classID, nftID); err != nil {
 			return err
@@ -51,11 +51,11 @@ func (k Keeper) BatchUpdate(ctx sdk.Context, tokens []nft.NFT) error {
 	checked := make(map[string]bool, len(tokens))
 	for _, token := range tokens {
 		if !checked[token.ClassId] && !k.HasClass(ctx, token.ClassId) {
-			return errorsmod.Wrap(nft.ErrClassNotExists, token.ClassId)
+			return errors.Wrap(nft.ErrClassNotExists, token.ClassId)
 		}
 
 		if !k.HasNFT(ctx, token.ClassId, token.Id) {
-			return errorsmod.Wrap(nft.ErrNFTNotExists, token.Id)
+			return errors.Wrap(nft.ErrNFTNotExists, token.Id)
 		}
 		checked[token.ClassId] = true
 		k.updateWithNoCheck(ctx, token)
@@ -71,14 +71,14 @@ func (k Keeper) BatchTransfer(ctx sdk.Context,
 	receiver sdk.AccAddress,
 ) error {
 	if !k.HasClass(ctx, classID) {
-		return errorsmod.Wrap(nft.ErrClassNotExists, classID)
+		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}
 	for _, nftID := range nftIDs {
 		if !k.HasNFT(ctx, classID, nftID) {
-			return errorsmod.Wrap(nft.ErrNFTNotExists, nftID)
+			return errors.Wrap(nft.ErrNFTNotExists, nftID)
 		}
 		if err := k.transferWithNoCheck(ctx, classID, nftID, receiver); err != nil {
-			return errorsmod.Wrap(nft.ErrNFTNotExists, nftID)
+			return errors.Wrap(nft.ErrNFTNotExists, nftID)
 		}
 	}
 	return nil

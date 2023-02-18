@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 	store "cosmossdk.io/store/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -69,7 +69,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data nft.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return errorsmod.Wrapf(err, "failed to unmarshal %s genesis state", nft.ModuleName)
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", nft.ModuleName)
 	}
 
 	return nft.ValidateGenesis(data)

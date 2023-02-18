@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"path/filepath"
 
+	db "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/types"
-	db "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"

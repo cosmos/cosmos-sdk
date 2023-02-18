@@ -9,6 +9,8 @@ import (
 	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
@@ -100,7 +102,7 @@ func (m appModuleGenesisWrapper) InitGenesis(ctx context.Context, source appmodu
 
 		r, err := source(string(fullName))
 		if err != nil {
-			return errorsmod.Wrapf(err, "table %s", fullName)
+			return errors.Wrapf(err, "table %s", fullName)
 		}
 
 		if r == nil {
@@ -109,12 +111,12 @@ func (m appModuleGenesisWrapper) InitGenesis(ctx context.Context, source appmodu
 
 		err = table.ImportJSON(ctx, r)
 		if err != nil {
-			return errorsmod.Wrapf(err, "table %s", fullName)
+			return errors.Wrapf(err, "table %s", fullName)
 		}
 
 		err = r.Close()
 		if err != nil {
-			return errorsmod.Wrapf(err, "table %s", fullName)
+			return errors.Wrapf(err, "table %s", fullName)
 		}
 	}
 

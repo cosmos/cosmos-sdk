@@ -7,10 +7,9 @@ import (
 	"time"
 
 	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
-
-	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -80,7 +79,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 			var initialState types.AppMap
 			if err := json.Unmarshal(genDoc.AppState, &initialState); err != nil {
-				return errorsmod.Wrap(err, "failed to JSON unmarshal initial genesis state")
+				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
 
 			migrationFunc := GetMigrationCallback(target)
@@ -93,7 +92,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 			genDoc.AppState, err = json.Marshal(newGenState)
 			if err != nil {
-				return errorsmod.Wrap(err, "failed to JSON marshal migrated genesis state")
+				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 			}
 
 			genesisTime, _ := cmd.Flags().GetString(flagGenesisTime)
@@ -102,7 +101,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 				err := t.UnmarshalText([]byte(genesisTime))
 				if err != nil {
-					return errorsmod.Wrap(err, "failed to unmarshal genesis time")
+					return errors.Wrap(err, "failed to unmarshal genesis time")
 				}
 
 				genDoc.GenesisTime = t
@@ -115,12 +114,12 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 			bz, err := cmtjson.Marshal(genDoc)
 			if err != nil {
-				return errorsmod.Wrap(err, "failed to marshal genesis doc")
+				return errors.Wrap(err, "failed to marshal genesis doc")
 			}
 
 			sortedBz, err := sdk.SortJSON(bz)
 			if err != nil {
-				return errorsmod.Wrap(err, "failed to sort JSON genesis doc")
+				return errors.Wrap(err, "failed to sort JSON genesis doc")
 			}
 
 			cmd.Println(string(sortedBz))

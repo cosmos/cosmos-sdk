@@ -8,7 +8,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
@@ -28,14 +28,14 @@ func Hash(typ string, key []byte) []byte {
 	hasher := sha256.New()
 	_, err := hasher.Write(conv.UnsafeStrToBytes(typ))
 	// the error always nil, it's here only to satisfy the io.Writer interface
-	errorsmod.AssertNil(err)
+	errors.AssertNil(err)
 	th := hasher.Sum(nil)
 
 	hasher.Reset()
 	_, err = hasher.Write(th)
-	errorsmod.AssertNil(err)
+	errors.AssertNil(err)
 	_, err = hasher.Write(key)
-	errorsmod.AssertNil(err)
+	errors.AssertNil(err)
 	return hasher.Sum(nil)
 }
 

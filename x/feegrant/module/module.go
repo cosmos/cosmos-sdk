@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/appmodule"
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
@@ -82,7 +82,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data feegrant.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return errorsmod.Wrapf(err, "failed to unmarshal %s genesis state", feegrant.ModuleName)
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", feegrant.ModuleName)
 	}
 
 	return feegrant.ValidateGenesis(data)

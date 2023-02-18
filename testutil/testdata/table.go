@@ -1,8 +1,8 @@
 package testdata
 
-import errorsmod "cosmossdk.io/errors"
+import "cosmossdk.io/errors"
 
-var ErrTest = errorsmod.Register("table_testdata", 2, "test")
+var ErrTest = errors.Register("table_testdata", 2, "test")
 
 func (g TableModel) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.Id}
@@ -10,7 +10,7 @@ func (g TableModel) PrimaryKeyFields() []interface{} {
 
 func (g TableModel) ValidateBasic() error {
 	if g.Name == "" {
-		return errorsmod.Wrap(ErrTest, "name")
+		return errors.Wrap(ErrTest, "name")
 	}
 	return nil
 }

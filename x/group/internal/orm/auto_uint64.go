@@ -5,7 +5,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -135,7 +135,7 @@ func (a AutoUInt64Table) Export(store storetypes.KVStore, dest ModelSlicePtr) (u
 // data should be a slice of structs that implement PrimaryKeyed.
 func (a AutoUInt64Table) Import(store storetypes.KVStore, data interface{}, seqValue uint64) error {
 	if err := a.seq.InitVal(store, seqValue); err != nil {
-		return errorsmod.Wrap(err, "sequence")
+		return errors.Wrap(err, "sequence")
 	}
 	return a.table.Import(store, data, seqValue)
 }

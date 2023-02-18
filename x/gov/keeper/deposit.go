@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -113,12 +113,12 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Checks to see if proposal exists
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return false, errorsmod.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
+		return false, errors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
 
 	// Check if proposal is still depositable
 	if (proposal.Status != v1.StatusDepositPeriod) && (proposal.Status != v1.StatusVotingPeriod) {
-		return false, errorsmod.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		return false, errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
 	// update the governance module's account coins pool
@@ -278,7 +278,7 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
 	}
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
-		return errorsmod.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
+		return errors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
 	}
 	return nil
 }

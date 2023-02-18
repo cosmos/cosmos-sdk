@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/store/prefix"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -54,7 +54,7 @@ func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryVa
 	// self-delegation rewards
 	val := k.stakingKeeper.Validator(ctx, valAdr)
 	if val == nil {
-		return nil, errorsmod.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	delAdr := sdk.AccAddress(valAdr)
@@ -185,7 +185,7 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 
 	val := k.stakingKeeper.Validator(ctx, valAdr)
 	if val == nil {
-		return nil, errorsmod.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)

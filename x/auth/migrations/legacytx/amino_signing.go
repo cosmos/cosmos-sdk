@@ -3,7 +3,7 @@ package legacytx
 import (
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -81,7 +81,7 @@ func MultiSignatureDataToAminoMultisignature(cdc *codec.LegacyAmino, mSig *signi
 		var err error
 		sigs[i], err = SignatureDataToAminoSignature(cdc, mSig.Signatures[i])
 		if err != nil {
-			return multisig.AminoMultisignature{}, errorsmod.Wrapf(err, "Unable to convert Signature Data to signature %d", i)
+			return multisig.AminoMultisignature{}, errors.Wrapf(err, "Unable to convert Signature Data to signature %d", i)
 		}
 	}
 

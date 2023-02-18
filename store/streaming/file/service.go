@@ -10,7 +10,7 @@ import (
 	"sort"
 	"sync"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -214,29 +214,29 @@ func writeLengthPrefixedFile(path string, data []byte, fsync bool) (err error) {
 	var f *os.File
 	f, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
-		return errorsmod.Wrapf(err, "open file failed: %s", path)
+		return errors.Wrapf(err, "open file failed: %s", path)
 	}
 
 	defer func() {
 		// avoid overriding the real error with file close error
 		if err1 := f.Close(); err1 != nil && err == nil {
-			err = errorsmod.Wrapf(err, "close file failed: %s", path)
+			err = errors.Wrapf(err, "close file failed: %s", path)
 		}
 	}()
 	_, err = f.Write(types.Uint64ToBigEndian(uint64(len(data))))
 	if err != nil {
-		return errorsmod.Wrapf(err, "write length prefix failed: %s", path)
+		return errors.Wrapf(err, "write length prefix failed: %s", path)
 	}
 
 	_, err = f.Write(data)
 	if err != nil {
-		return errorsmod.Wrapf(err, "write block data failed: %s", path)
+		return errors.Wrapf(err, "write block data failed: %s", path)
 	}
 
 	if fsync {
 		err = f.Sync()
 		if err != nil {
-			return errorsmod.Wrapf(err, "fsync failed: %s", path)
+			return errors.Wrapf(err, "fsync failed: %s", path)
 		}
 	}
 

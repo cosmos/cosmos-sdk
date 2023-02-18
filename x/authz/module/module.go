@@ -14,7 +14,7 @@ import (
 
 	"cosmossdk.io/depinject"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -78,7 +78,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data authz.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return errorsmod.Wrapf(err, "failed to unmarshal %s genesis state", authz.ModuleName)
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", authz.ModuleName)
 	}
 
 	return authz.ValidateGenesis(data)

@@ -1,15 +1,15 @@
 package types
 
-import errorsmod "cosmossdk.io/errors"
+import "cosmossdk.io/errors"
 
 // x/bank module sentinel errors
 var (
-	ErrNoInputs              = errorsmod.Register(ModuleName, 2, "no inputs to send transaction")
-	ErrNoOutputs             = errorsmod.Register(ModuleName, 3, "no outputs to send transaction")
-	ErrInputOutputMismatch   = errorsmod.Register(ModuleName, 4, "sum inputs != sum outputs")
-	ErrSendDisabled          = errorsmod.Register(ModuleName, 5, "send transactions are disabled")
-	ErrDenomMetadataNotFound = errorsmod.Register(ModuleName, 6, "client denom metadata not found")
-	ErrInvalidKey            = errorsmod.Register(ModuleName, 7, "invalid key")
-	ErrDuplicateEntry        = errorsmod.Register(ModuleName, 8, "duplicate entry")
-	ErrMultipleSenders       = errorsmod.Register(ModuleName, 9, "multiple senders not allowed")
+	ErrNoInputs              = errors.Register(ModuleName, 2, "no inputs to send transaction")
+	ErrNoOutputs             = errors.Register(ModuleName, 3, "no outputs to send transaction")
+	ErrInputOutputMismatch   = errors.Register(ModuleName, 4, "sum inputs != sum outputs")
+	ErrSendDisabled          = errors.Register(ModuleName, 5, "send transactions are disabled")
+	ErrDenomMetadataNotFound = errors.Register(ModuleName, 6, "client denom metadata not found")
+	ErrInvalidKey            = errors.Register(ModuleName, 7, "invalid key")
+	ErrDuplicateEntry        = errors.Register(ModuleName, 8, "duplicate entry")
+	ErrMultipleSenders       = errors.Register(ModuleName, 9, "multiple senders not allowed")
 )

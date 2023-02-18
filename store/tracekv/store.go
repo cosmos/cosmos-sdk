@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	"cosmossdk.io/store/types"
 )
@@ -189,11 +189,11 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 
 	raw, err := json.Marshal(traceOp)
 	if err != nil {
-		panic(errorsmod.Wrap(err, "failed to serialize trace operation"))
+		panic(errors.Wrap(err, "failed to serialize trace operation"))
 	}
 
 	if _, err := w.Write(raw); err != nil {
-		panic(errorsmod.Wrap(err, "failed to write trace operation"))
+		panic(errors.Wrap(err, "failed to write trace operation"))
 	}
 
 	io.WriteString(w, "\n")

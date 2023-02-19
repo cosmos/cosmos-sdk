@@ -10,7 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
@@ -376,7 +377,7 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 
 	specs := map[string]struct {
 		srcKey           []byte
-		expErr           *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr           *errorsmod.Error
 		expExistingEntry []byte
 	}{
 		"create when not exists": {
@@ -419,7 +420,7 @@ func TestMultiKeyAddFunc(t *testing.T) {
 
 	specs := map[string]struct {
 		srcKey           []byte
-		expErr           *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr           *errorsmod.Error
 		expExistingEntry []byte
 	}{
 		"create when not exists": {

@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -16,7 +18,6 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -420,7 +421,7 @@ func getMultisigRecord(clientCtx client.Context, name string) (*keyring.Record, 
 	kb := clientCtx.Keyring
 	multisigRecord, err := kb.Key(name)
 	if err != nil {
-		return nil, errors.Wrap(err, "error getting keybase multisig account")
+		return nil, errorsmod.Wrap(err, "error getting keybase multisig account")
 	}
 
 	return multisigRecord, nil

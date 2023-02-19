@@ -14,6 +14,10 @@ import (
 	"github.com/cockroachdb/errors"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 
+	"github.com/cosmos/go-bip39"
+
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -24,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/go-bip39"
 )
 
 // Backend options for Keyring
@@ -194,7 +197,7 @@ func New(
 	case BackendPass:
 		db, err = keyring.Open(newPassBackendKeyringConfig(appName, rootDir, userInput))
 	default:
-		return nil, errors.Wrap(ErrUnknownBacked, backend)
+		return nil, errorsmod.Wrap(ErrUnknownBacked, backend)
 	}
 
 	if err != nil {
@@ -317,13 +320,13 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	if k, err := ks.Key(uid); err == nil {
 		if uid == k.Name {
-			return errors.Wrap(ErrOverwriteKey, uid)
+			return errorsmod.Wrap(ErrOverwriteKey, uid)
 		}
 	}
 
 	privKey, _, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
-		return errors.Wrap(err, "failed to decrypt private key")
+		return errorsmod.Wrap(err, "failed to decrypt private key")
 	}
 
 	_, err = ks.writeLocalKey(uid, privKey)
@@ -336,7 +339,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 
 func (ks keystore) ImportPubKey(uid, armor string) error {
 	if _, err := ks.Key(uid); err == nil {
-		return errors.Wrap(ErrOverwriteKey, uid)
+		return errorsmod.Wrap(ErrOverwriteKey, uid)
 	}
 
 	pubBytes, _, err := crypto.UnarmorPubKeyBytes(armor)
@@ -401,7 +404,7 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte, signMode signi
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
-		return nil, errors.Wrap(ErrUnsupportedSigningAlgo, fmt.Sprintf("signature algo %s is not defined in the keyring options", algo.Name()))
+		return nil, errorsmod.Wrap(ErrUnsupportedSigningAlgo, fmt.Sprintf("signature algo %s is not defined in the keyring options", algo.Name()))
 	}
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
@@ -448,7 +451,7 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 func (ks keystore) Rename(oldName, newName string) error {
 	_, err := ks.Key(newName)
 	if err == nil {
-		return errors.Wrap(ErrKeyAlreadyExists, fmt.Sprintf("rename failed, %s", newName))
+		return errorsmod.Wrap(ErrKeyAlreadyExists, fmt.Sprintf("rename failed, %s", newName))
 	}
 
 	armor, err := ks.ExportPrivKeyArmor(oldName, passPhrase)
@@ -508,7 +511,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 
 func wrapKeyNotFound(err error, msg string) error {
 	if err == keyring.ErrKeyNotFound {
-		return errors.Wrap(sdkerrors.ErrKeyNotFound, msg)
+		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, msg)
 	}
 	return err
 }
@@ -620,7 +623,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 			return nil, nil, err
 		}
 	default:
-		return nil, nil, errors.Wrap(ErrInvalidSignMode, fmt.Sprintf("%v", signMode))
+		return nil, nil, errorsmod.Wrap(ErrInvalidSignMode, fmt.Sprintf("%v", signMode))
 	}
 
 	if !priv.PubKey().VerifySignature(msg, sig) {
@@ -693,7 +696,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 		case err == nil:
 			keyhash, err = os.ReadFile(keyhashFilePath)
 			if err != nil {
-				return "", errors.Wrap(err, fmt.Sprintf("failed to read %s", keyhashFilePath))
+				return "", errorsmod.Wrap(err, fmt.Sprintf("failed to read %s", keyhashFilePath))
 			}
 
 			keyhashStored = true
@@ -702,7 +705,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			keyhashStored = false
 
 		default:
-			return "", errors.Wrap(err, fmt.Sprintf("failed to open %s", keyhashFilePath))
+			return "", errorsmod.Wrap(err, fmt.Sprintf("failed to open %s", keyhashFilePath))
 		}
 
 		failureCounter := 0
@@ -791,7 +794,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 	if exists {
-		return errors.Wrap(ErrKeyAlreadyExists, key)
+		return errorsmod.Wrap(ErrKeyAlreadyExists, key)
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)
@@ -923,7 +926,7 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	}
 
 	if len(item.Data) == 0 {
-		return nil, errors.Wrap(sdkerrors.ErrKeyNotFound, key)
+		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, key)
 	}
 
 	// 2. Try to deserialize using proto
@@ -936,13 +939,13 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	// 4. Try to decode with amino
 	legacyInfo, err := unMarshalLegacyInfo(item.Data)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal item.Data")
+		return nil, errorsmod.Wrap(err, "unable to unmarshal item.Data")
 	}
 
 	// 5. Convert and serialize info using proto
 	k, err = ks.convertFromLegacyInfo(legacyInfo)
 	if err != nil {
-		return nil, errors.Wrap(err, "convertFromLegacyInfo")
+		return nil, errorsmod.Wrap(err, "convertFromLegacyInfo")
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)
@@ -957,7 +960,7 @@ func (ks keystore) migrate(key string) (*Record, error) {
 
 	// 6. Overwrite the keyring entry with the new proto-encoded key.
 	if err := ks.SetItem(item); err != nil {
-		return nil, errors.Wrap(err, "unable to set keyring.Item")
+		return nil, errorsmod.Wrap(err, "unable to set keyring.Item")
 	}
 
 	fmt.Printf("Successfully migrated key %s.\n", key)
@@ -980,7 +983,7 @@ func (ks keystore) SetItem(item keyring.Item) error {
 
 func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	if info == nil {
-		return nil, errors.Wrap(ErrLegacyToRecord, "info is nil")
+		return nil, errorsmod.Wrap(ErrLegacyToRecord, "info is nil")
 	}
 
 	name := info.GetName()

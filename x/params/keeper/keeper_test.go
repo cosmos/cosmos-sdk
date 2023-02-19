@@ -192,9 +192,9 @@ func TestSubspace(t *testing.T) {
 		{"uint16", uint16(1), uint16(0), new(uint16)},
 		{"uint32", uint32(1), uint32(0), new(uint32)},
 		{"uint64", uint64(1), uint64(0), new(uint64)},
-		{"int", sdk.NewInt(1), math.Int{}, new(math.Int)},
-		{"uint", sdk.NewUint(1), sdk.Uint{}, new(sdk.Uint)},
-		{"dec", math.LegacyNewDec(1), sdk.Dec{}, new(sdk.Dec)},
+		{"int", math.NewInt(1), math.Int{}, new(math.Int)},
+		{"uint", math.NewUint(1), math.Uint{}, new(math.Uint)},
+		{"dec", math.LegacyNewDec(1), math.LegacyDec{}, new(math.LegacyDec)},
 		{"struct", s{1}, s{0}, new(s)},
 	}
 
@@ -208,7 +208,7 @@ func TestSubspace(t *testing.T) {
 		types.NewParamSetPair([]byte("uint32"), uint32(0), validateNoOp),
 		types.NewParamSetPair([]byte("uint64"), uint64(0), validateNoOp),
 		types.NewParamSetPair([]byte("int"), math.Int{}, validateNoOp),
-		types.NewParamSetPair([]byte("uint"), sdk.Uint{}, validateNoOp),
+		types.NewParamSetPair([]byte("uint"), math.Uint{}, validateNoOp),
 		types.NewParamSetPair([]byte("dec"), sdk.Dec{}, validateNoOp),
 		types.NewParamSetPair([]byte("struct"), s{}, validateNoOp),
 	)

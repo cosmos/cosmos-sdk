@@ -1,6 +1,10 @@
 package collections
 
-import "context"
+import (
+	"context"
+
+	"cosmossdk.io/collections/codec"
+)
 
 func NewIndexReference[ReferencingKey, ReferencedKey any](referencing ReferencingKey, referenced ReferencedKey) IndexReference[ReferencingKey, ReferencedKey] {
 	return IndexReference[ReferencingKey, ReferencedKey]{
@@ -50,8 +54,8 @@ func NewGenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value any](
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	referencingKeyCodec KeyCodec[ReferencingKey],
-	referencedKeyCodec KeyCodec[ReferencedKey],
+	referencingKeyCodec codec.KeyCodec[ReferencingKey],
+	referencedKeyCodec codec.KeyCodec[ReferencedKey],
 	getRefsFunc func(pk PrimaryKey, value Value) ([]IndexReference[ReferencingKey, ReferencedKey], error),
 ) *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value] {
 	return &GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]{
@@ -126,4 +130,28 @@ func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Un
 	}
 
 	return nil
+}
+
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) IterateRaw(
+	ctx context.Context,
+	start, end []byte,
+	order Order,
+) (Iterator[Pair[ReferencingKey, ReferencedKey], NoValue], error) {
+	return i.refs.IterateRaw(ctx, start, end, order)
+}
+
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Walk(
+	ctx context.Context,
+	ranger Ranger[Pair[ReferencingKey, ReferencedKey]],
+	walkFunc func(referencingKey ReferencingKey, referencedKey ReferencedKey) bool,
+) error {
+	return i.refs.Walk(ctx, ranger, func(key Pair[ReferencingKey, ReferencedKey]) bool { return walkFunc(key.K1(), key.K2()) })
+}
+
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) KeyCodec() codec.KeyCodec[Pair[ReferencingKey, ReferencedKey]] {
+	return i.refs.KeyCodec()
+}
+
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) ValueCodec() codec.ValueCodec[NoValue] {
+	return i.refs.ValueCodec()
 }

@@ -48,7 +48,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		case slashingtypes.ModuleName:
 			keyTable = slashingtypes.ParamKeyTable()
 		case govtypes.ModuleName:
-			keyTable = govv1.ParamKeyTable()
+			keyTable = govv1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		case crisistypes.ModuleName:
 			keyTable = crisistypes.ParamKeyTable()
 		}

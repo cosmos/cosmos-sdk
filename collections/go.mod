@@ -9,6 +9,8 @@ require (
 	github.com/stretchr/testify v1.8.1
 )
 
+require pgregory.net/rapid v0.5.3
+
 require (
 	cosmossdk.io/api v0.2.6 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect

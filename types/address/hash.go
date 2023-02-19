@@ -8,8 +8,9 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 
+	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Len is the length of base addresses

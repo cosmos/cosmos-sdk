@@ -1,17 +1,18 @@
 package baseapp
 
 import (
-	"cosmossdk.io/log"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
+
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
-	"sort"
-	"strings"
 
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
@@ -144,7 +145,7 @@ type BaseApp struct { //nolint: maligned
 	// and exposing the requests and responses to external consumers
 	abciListeners []storetypes.ABCIListener
 
-	circuitBreaker *CircuitBreaker
+	circuitBreaker CircuitBreaker
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -165,7 +166,6 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
-		circuitBreaker:   NewCircuitBreaker([]sdk.Msg{}),
 	}
 
 	for _, option := range options {
@@ -435,7 +435,7 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 	}
 }
 
-func (app *BaseApp) SetCircuitBreaker(circuitBreaker *CircuitBreaker) {
+func (app *BaseApp) SetCircuitBreaker(circuitBreaker CircuitBreaker) {
 	app.circuitBreaker = circuitBreaker
 }
 
@@ -775,6 +775,12 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 
 		if mode != runTxModeDeliver && mode != runTxModeSimulate {
 			break
+		}
+
+		if app.circuitBreaker != nil {
+			if allowed := app.circuitBreaker.IsAllowed(ctx, sdk.MsgTypeURL(msg)); allowed == false {
+				break
+			}
 		}
 
 		handler := app.msgServiceRouter.Handler(msg)

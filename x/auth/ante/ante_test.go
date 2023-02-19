@@ -1307,6 +1307,7 @@ func TestCountSubkeys(t *testing.T) {
 		{"single key", args{singleKey}, 1},
 		{"single level multikey", args{singleLevelMultiKey}, 5},
 		{"multi level multikey", args{multiLevelMultiKey}, 11},
+		{"nil key", args{nil}, 0},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(T *testing.T) {

@@ -6,17 +6,19 @@ import (
 	"reflect"
 	"testing"
 
+	"cosmossdk.io/collections/codec"
+
 	"cosmossdk.io/collections"
 
 	"github.com/stretchr/testify/require"
 )
 
 // TestKeyCodec asserts the correct behaviour of a KeyCodec over the type T.
-func TestKeyCodec[T any](t *testing.T, keyCodec collections.KeyCodec[T], key T) {
+func TestKeyCodec[T any](t *testing.T, keyCodec codec.KeyCodec[T], key T) {
 	buffer := make([]byte, keyCodec.Size(key))
 	written, err := keyCodec.Encode(buffer, key)
 	require.NoError(t, err)
-	require.Equal(t, len(buffer), written)
+	require.Equal(t, len(buffer), written, "the length of the buffer and the written bytes do not match")
 	read, decodedKey, err := keyCodec.Decode(buffer)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded key and read bytes must have same size")
@@ -42,7 +44,7 @@ func TestKeyCodec[T any](t *testing.T, keyCodec collections.KeyCodec[T], key T) 
 }
 
 // TestValueCodec asserts the correct behaviour of a ValueCodec over the type T.
-func TestValueCodec[T any](t *testing.T, encoder collections.ValueCodec[T], value T) {
+func TestValueCodec[T any](t *testing.T, encoder codec.ValueCodec[T], value T) {
 	encodedValue, err := encoder.Encode(value)
 	require.NoError(t, err)
 	decodedValue, err := encoder.Decode(encodedValue)
@@ -68,7 +70,7 @@ func TestValueCodec[T any](t *testing.T, encoder collections.ValueCodec[T], valu
 // Let's say the value is interface Animal
 // if I want to decode Dog which implements Animal, then I need to first encode
 // it in order to make the type known by the MockValueCodec.
-func MockValueCodec[T any]() collections.ValueCodec[T] {
+func MockValueCodec[T any]() codec.ValueCodec[T] {
 	typ := reflect.ValueOf(new(T)).Elem().Type()
 	isInterface := false
 	if typ.Kind() == reflect.Interface {

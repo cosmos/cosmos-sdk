@@ -72,7 +72,6 @@ func TestE2EJsonTestcases(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.Equal(t, tc.Cbor, hex.EncodeToString(signDoc))
-
 		})
 	}
 }

@@ -1,14 +1,17 @@
 package indexes
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
-type Address = string
-type Denom = string
-type Amount = uint64
+type (
+	Address = string
+	Denom   = string
+	Amount  = uint64
+)
 
 // our balance index, allows us to efficiently create an index between the key that maps
 // balances which is a collections.Pair[Address, Denom] and the Denom.

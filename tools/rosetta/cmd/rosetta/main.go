@@ -3,15 +3,15 @@ package main
 import (
 	"os"
 
+	"cosmossdk.io/log"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-	"cosmossdk.io/tools/rosetta/lib/logger"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func main() {
 	var (
-		logger            = logger.NewLogger()
+		logger            = log.NewZeroLogger(log.ModuleKey, "rosetta")
 		interfaceRegistry = codectypes.NewInterfaceRegistry()
 		cdc               = codec.NewProtoCodec(interfaceRegistry)
 	)

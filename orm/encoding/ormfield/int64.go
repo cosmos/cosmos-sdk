@@ -29,7 +29,10 @@ func (i Int64Codec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (i Int64Codec) Encode(value protoreflect.Value, w io.Writer) error {
-	x := value.Int()
+	var x int64
+	if value.IsValid() {
+		x = value.Int()
+	}
 	if x >= -1 {
 		y := uint64(x) + int64Max + 1
 		return binary.Write(w, binary.BigEndian, y)
@@ -57,8 +60,13 @@ func (i Int64Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 }
 
 func compareInt(v1, v2 protoreflect.Value) int {
-	x := v1.Int()
-	y := v2.Int()
+	var x, y int64
+	if v1.IsValid() {
+		x = v1.Int()
+	}
+	if v2.IsValid() {
+		y = v2.Int()
+	}
 	if x == y {
 		return 0
 	} else if x < y {

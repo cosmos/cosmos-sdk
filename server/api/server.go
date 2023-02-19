@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
 	"github.com/gorilla/handlers"
@@ -86,20 +86,20 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 	}
 }
 
-// Start starts the API server. Internally, the API server leverages Tendermint's
+// Start starts the API server. Internally, the API server leverages CometBFT's
 // JSON RPC server. Configuration options are provided via config.APIConfig
-// and are delegated to the Tendermint JSON RPC server. The process is
+// and are delegated to the CometBFT JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
 	s.mtx.Lock()
 
-	tmCfg := tmrpcserver.DefaultConfig()
-	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
-	tmCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
-	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
-	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
+	cmtCfg := tmrpcserver.DefaultConfig()
+	cmtCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
+	cmtCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
+	cmtCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
+	cmtCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
+	listener, err := tmrpcserver.Listen(cfg.API.Address, cmtCfg)
 	if err != nil {
 		s.mtx.Unlock()
 		return err
@@ -137,10 +137,10 @@ func (s *Server) Start(cfg config.Config) error {
 	s.logger.Info("starting API server...")
 	if cfg.API.EnableUnsafeCORS {
 		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-		return tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), s.logger, tmCfg)
+		return tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), s.logger, cmtCfg)
 	}
 
-	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
+	return tmrpcserver.Serve(s.listener, s.Router, s.logger, cmtCfg)
 }
 
 // Close closes the API server.

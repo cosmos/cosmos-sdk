@@ -9,20 +9,19 @@ import (
 
 	"cosmossdk.io/depinject"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
-
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -105,14 +104,14 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
 
 	for height := int64(1); height <= int64(cfg.blocks); height++ {
-		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
+		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height}})
 
 		for txNum := 0; txNum < cfg.blockTxs; txNum++ {
 			msgs := []sdk.Msg{}
@@ -184,13 +183,13 @@ func TestLoadVersion(t *testing.T) {
 	require.Equal(t, emptyCommitID, lastID)
 
 	// execute a block, collect commit ID
-	header := tmproto.Header{Height: 1}
+	header := cmtproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.Data}
 
 	// execute a block, collect commit ID
-	header = tmproto.Header{Height: 2}
+	header = cmtproto.Header{Height: 2}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res = app.Commit()
 	commitID2 := storetypes.CommitID{Version: 2, Hash: res.Data}
@@ -296,7 +295,7 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			// "execute" one block
-			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+			app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2}})
 			res := app.Commit()
 			require.NotNil(t, res.Data)
 
@@ -342,7 +341,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	err = app.LoadVersion(-1)
 	require.Error(t, err)
 
-	header := tmproto.Header{Height: 1}
+	header := cmtproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.Data}
@@ -441,10 +440,10 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	header := tmproto.Header{Height: 1}
+	header := cmtproto.Header{Height: 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
@@ -481,10 +480,10 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// execute a tx that will fail ante handler execution
@@ -554,10 +553,10 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
 	app.Commit()
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2}})
 	app.Commit()
 
 	testCases := []struct {
@@ -595,18 +594,18 @@ func TestSetMinGasPrices(t *testing.T) {
 func TestGetMaximumBlockGas(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 	suite.baseApp.InitChain(abci.RequestInitChain{})
-	ctx := suite.baseApp.NewContext(true, tmproto.Header{})
+	ctx := suite.baseApp.NewContext(true, cmtproto.Header{})
 
-	suite.baseApp.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 0}})
+	suite.baseApp.StoreConsensusParams(ctx, &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -1}})
+	suite.baseApp.StoreConsensusParams(ctx, &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -1}})
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 5000000}})
+	suite.baseApp.StoreConsensusParams(ctx, &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}})
 	require.Equal(t, uint64(5000000), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -5000000}})
+	suite.baseApp.StoreConsensusParams(ctx, &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -5000000}})
 	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
 }
 
@@ -638,7 +637,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
 	// (keep recent) and 3 (keep every).
 	for i := int64(1); i <= 7; i++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
 		res := app.Commit()
 		lastCommitID = storetypes.CommitID{Version: i, Hash: res.Data}
 	}
@@ -680,7 +679,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 
 				testCtx := testutil.DefaultContextWithDB(t, capKey1, storetypes.NewTransientStoreKey("transient_test"))
 
-				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app := appBuilder.Build(cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
 				app.SetCMS(testCtx.CMS)
 				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
@@ -694,7 +693,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 				deliverKey := []byte("deliver-key")
 				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
-				header := tmproto.Header{Height: int64(1)}
+				header := cmtproto.Header{Height: int64(1)}
 				app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 				tx := newTxCounter(t, txConfig, 1, 0)
@@ -730,7 +729,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 
 				testCtx := testutil.DefaultContextWithDB(t, capKey1, storetypes.NewTransientStoreKey("transient_test"))
 
-				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app := appBuilder.Build(cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
 				app.SetCMS(testCtx.CMS)
 				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
@@ -746,7 +745,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 
 				app.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 				app.SetPostHandler(testTxPostHandler(t, capKey1, postKey))
-				header := tmproto.Header{Height: int64(1)}
+				header := cmtproto.Header{Height: int64(1)}
 				app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 				tx := newTxCounter(t, txConfig, 0, 0)
@@ -781,7 +780,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 
 				testCtx := testutil.DefaultContextWithDB(t, capKey1, storetypes.NewTransientStoreKey("transient_test"))
 
-				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app := appBuilder.Build(cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
 				app.SetCMS(testCtx.CMS)
 				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
@@ -796,7 +795,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
 				app.SetPostHandler(testTxPostHandler(t, capKey1, postKey))
-				header := tmproto.Header{Height: int64(1)}
+				header := cmtproto.Header{Height: int64(1)}
 				app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 				tx := newTxCounter(t, txConfig, 0, 0)
@@ -820,7 +819,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(_ *testing.T) {
 			tc.testFunc()
 		})
 	}

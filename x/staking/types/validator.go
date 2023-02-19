@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -461,22 +462,27 @@ func (v Validator) GetOperator() sdk.ValAddress {
 func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
 	}
 
 	return pk, nil
 }
 
-// TmConsPublicKey casts Validator.ConsensusPubkey to tmprotocrypto.PubKey.
-func (v Validator) TmConsPublicKey() (tmprotocrypto.PublicKey, error) {
+// Deprecated: use CmtConsPublicKey instead
+func (v Validator) TmConsPublicKey() (cmtprotocrypto.PublicKey, error) {
+	return v.CmtConsPublicKey()
+}
+
+// CmtConsPublicKey casts Validator.ConsensusPubkey to cmtprotocrypto.PubKey.
+func (v Validator) CmtConsPublicKey() (cmtprotocrypto.PublicKey, error) {
 	pk, err := v.ConsPubKey()
 	if err != nil {
-		return tmprotocrypto.PublicKey{}, err
+		return cmtprotocrypto.PublicKey{}, err
 	}
 
-	tmPk, err := cryptocodec.ToTmProtoPublicKey(pk)
+	tmPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
 	if err != nil {
-		return tmprotocrypto.PublicKey{}, err
+		return cmtprotocrypto.PublicKey{}, err
 	}
 
 	return tmPk, nil

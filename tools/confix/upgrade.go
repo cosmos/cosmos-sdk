@@ -94,8 +94,8 @@ func CheckValid(fileName string, data []byte) error {
 		if cfg.ChainID == "" {
 			return errors.New("client config invalid: chain-id is empty")
 		}
-	case strings.HasSuffix(fileName, TMConfig):
-		return errors.New("tendermint config is not supported")
+	case strings.HasSuffix(fileName, CMTConfig):
+		return errors.New("cometbft config is not supported")
 
 	default:
 		return fmt.Errorf("unknown config: %s", fileName)

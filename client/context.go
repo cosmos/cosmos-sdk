@@ -25,7 +25,7 @@ type PreprocessTxFn func(chainID string, key keyring.KeyType, tx TxBuilder) erro
 // handling and queries.
 type Context struct {
 	FromAddress       sdk.AccAddress
-	Client            TendermintRPC
+	Client            CometRPC
 	GRPCClient        *grpc.ClientConn
 	ChainID           string
 	Codec             codec.Codec
@@ -129,7 +129,7 @@ func (ctx Context) WithHeight(height int64) Context {
 
 // WithClient returns a copy of the context with an updated RPC client
 // instance.
-func (ctx Context) WithClient(client TendermintRPC) Context {
+func (ctx Context) WithClient(client CometRPC) Context {
 	ctx.Client = client
 	return ctx
 }

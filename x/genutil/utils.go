@@ -11,7 +11,7 @@ import (
 	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -20,7 +20,7 @@ import (
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
-func ExportGenesisFile(genDoc *tmtypes.GenesisDoc, genFile string) error {
+func ExportGenesisFile(genDoc *cmttypes.GenesisDoc, genFile string) error {
 	if err := genDoc.ValidateAndComplete(); err != nil {
 		return err
 	}
@@ -31,10 +31,10 @@ func ExportGenesisFile(genDoc *tmtypes.GenesisDoc, genFile string) error {
 // ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
 // An error is returned if building or writing the configuration to file fails.
 func ExportGenesisFileWithTime(
-	genFile, chainID string, validators []tmtypes.GenesisValidator,
+	genFile, chainID string, validators []cmttypes.GenesisValidator,
 	appState json.RawMessage, genTime time.Time,
 ) error {
-	genDoc := tmtypes.GenesisDoc{
+	genDoc := cmttypes.GenesisDoc{
 		GenesisTime: genTime,
 		ChainID:     chainID,
 		Validators:  validators,
@@ -90,7 +90,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 		return "", nil, err
 	}
 
-	valPubKey, err = cryptocodec.FromTmPubKeyInterface(tmValPubKey)
+	valPubKey, err = cryptocodec.FromCmtPubKeyInterface(tmValPubKey)
 	if err != nil {
 		return "", nil, err
 	}

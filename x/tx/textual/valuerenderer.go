@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -13,21 +14,22 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	cosmos_proto "github.com/cosmos/cosmos-proto"
+
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/textual/internal/textualpb"
-	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
 // CoinMetadataQueryFn defines a function that queries state for the coin denom
-// metadata. It is meant to be passed as an argument into `NewTextual`.
+// metadata. It is meant to be passed as an argument into `NewSignModeHandler`.
 type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error)
 
 // ValueRendererCreator is a function returning a textual.
 type ValueRendererCreator func(protoreflect.FieldDescriptor) ValueRenderer
 
-// Textual holds the configuration for dispatching
+// SignModeHandler holds the configuration for dispatching
 // to specific value renderers for SIGN_MODE_TEXTUAL.
-type Textual struct {
+type SignModeHandler struct {
 	// coinMetadataQuerier defines a function to query the coin metadata from
 	// state. It should use bank module's `DenomsMetadata` gRPC query to fetch
 	// each denom's associated metadata, either using the bank keeper (for
@@ -44,16 +46,15 @@ type Textual struct {
 	messages map[protoreflect.FullName]ValueRenderer
 }
 
-// NewTextual returns a new Textual which provides
-// value renderers.
-func NewTextual(q CoinMetadataQueryFn) Textual {
-	t := Textual{coinMetadataQuerier: q}
+// NewSignModeHandler returns a new SignModeHandler which generates sign bytes and provides  value renderers.
+func NewSignModeHandler(q CoinMetadataQueryFn) *SignModeHandler {
+	t := &SignModeHandler{coinMetadataQuerier: q}
 	t.init()
 	return t
 }
 
 // GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.
-func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
+func (r *SignModeHandler) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
 	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
 	case fd.Kind() == protoreflect.StringKind:
@@ -106,7 +107,7 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 // GetMessageValueRenderer is a specialization of GetValueRenderer for messages.
 // It is useful when the message type is discovered outside the context of a field,
 // e.g. when handling a google.protobuf.Any.
-func (r *Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {
+func (r *SignModeHandler) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {
 	fullName := md.FullName()
 	vr, found := r.messages[fullName]
 	if found {
@@ -119,7 +120,7 @@ func (r *Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (Va
 // custom scalar and message renderers.
 //
 // It is an idempotent method.
-func (r *Textual) init() {
+func (r *SignModeHandler) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRendererCreator{}
 		r.scalars["cosmos.Int"] = func(fd protoreflect.FieldDescriptor) ValueRenderer { return NewIntValueRenderer(fd) }
@@ -136,22 +137,22 @@ func (r *Textual) init() {
 }
 
 // DefineScalar adds a value renderer to the given Cosmos scalar.
-func (r *Textual) DefineScalar(scalar string, vr ValueRendererCreator) {
+func (r *SignModeHandler) DefineScalar(scalar string, vr ValueRendererCreator) {
 	r.init()
 	r.scalars[scalar] = vr
 }
 
 // DefineMessageRenderer adds a new custom message renderer.
-func (r *Textual) DefineMessageRenderer(name protoreflect.FullName, vr ValueRenderer) {
+func (r *SignModeHandler) DefineMessageRenderer(name protoreflect.FullName, vr ValueRenderer) {
 	r.init()
 	r.messages[name] = vr
 }
 
 // GetSignBytes returns the transaction sign bytes.
-func (r *Textual) GetSignBytes(ctx context.Context, bodyBz, authInfoBz []byte, signerData signing.SignerData) ([]byte, error) {
+func (r *SignModeHandler) GetSignBytes(ctx context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	data := &textualpb.TextualData{
-		BodyBytes:     bodyBz,
-		AuthInfoBytes: authInfoBz,
+		BodyBytes:     txData.BodyBytes,
+		AuthInfoBytes: txData.AuthInfoBytes,
 		SignerData: &textualpb.SignerData{
 			Address:       signerData.Address,
 			ChainId:       signerData.ChainId,
@@ -179,3 +180,9 @@ func (r *Textual) GetSignBytes(ctx context.Context, bodyBz, authInfoBz []byte, s
 
 	return buf.Bytes(), nil
 }
+
+func (r *SignModeHandler) Mode() signingv1beta1.SignMode {
+	return signingv1beta1.SignMode_SIGN_MODE_TEXTUAL
+}
+
+var _ signing.SignModeHandler = &SignModeHandler{}

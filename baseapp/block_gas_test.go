@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -112,7 +112,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			})
 
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
-			stateBytes, err := tmjson.MarshalIndent(genState, "", " ")
+			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
 			bapp.InitChain(abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
@@ -120,7 +120,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				AppStateBytes:   stateBytes,
 			})
 
-			ctx := bapp.NewContext(false, tmproto.Header{})
+			ctx := bapp.NewContext(false, cmtproto.Header{})
 
 			// tx fee
 			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
@@ -154,7 +154,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
-			bapp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+			bapp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
 			rsp := bapp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
 			// check result
@@ -173,13 +173,13 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(51822) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(51732) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > txtypes.MaxGasWanted {
 				// capped by gasLimit
 				expGasConsumed = txtypes.MaxGasWanted
 			}
-			require.Equal(t, expGasConsumed, ctx.BlockGasMeter().GasConsumed())
+			require.Equal(t, int(expGasConsumed), int(ctx.BlockGasMeter().GasConsumed()))
 			// tx fee is always deducted
 			require.Equal(t, int64(0), bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
 			// sender's sequence is always increased

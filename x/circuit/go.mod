@@ -3,11 +3,11 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.19
 
 require (
-	cosmossdk.io/store v0.0.0-20230206083820-8cf814fb8c4c
-	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
+	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230207163452-bd8e9f2d1206
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/regen-network/gocuke v0.6.2
-	google.golang.org/grpc v1.52.3
+	google.golang.org/grpc v1.53.0
 	gotest.tools/v3 v3.4.0
 )
 
@@ -17,6 +17,7 @@ require (
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
+	cosmossdk.io/log v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/math v1.0.0-beta.6 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
@@ -63,6 +64,8 @@ require (
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.14 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -74,6 +77,7 @@ require (
 	github.com/prometheus/common v0.39.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
@@ -84,13 +88,13 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	golang.org/x/crypto v0.5.0 // indirect
+	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/exp v0.0.0-20230203172020-98cc5a0785f9 // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
-	google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a // indirect
+	google.golang.org/protobuf v1.28.2-0.20230208135220-49eaa78c6c9c // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -98,5 +102,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// This can be deleted after the CometBFT PR is merged
-replace github.com/cosmos/cosmos-sdk => ../..
+// Here are the short-lived replace of Rosetta
+// Replace here are pending PRs, or version to be tagged
+replace (
+	cosmossdk.io/log => ../../log
+	// TODO use instead a tagged version of the SDK (with CometBFT) when available
+	github.com/cosmos/cosmos-sdk => ../..
+)

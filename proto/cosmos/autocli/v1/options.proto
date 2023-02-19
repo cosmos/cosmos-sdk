@@ -101,9 +101,6 @@ message FlagOptions {
   // default_value is the default value as text.
   string default_value = 4;
 
-  // default value is the default value as text if the flag is used without any value.
-  string no_opt_default_value = 5;
-
   // deprecated is the usage text to show if this flag is deprecated.
   string deprecated = 6;
 

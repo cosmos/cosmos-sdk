@@ -15,7 +15,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// ValidatorInfo is info about the node's validator, same as Tendermint,
+// ValidatorInfo is info about the node's validator, same as CometBFT,
 // except that we use our own PubKey.
 type validatorInfo struct {
 	Address     bytes.HexBytes
@@ -23,7 +23,7 @@ type validatorInfo struct {
 	VotingPower int64
 }
 
-// ResultStatus is node's info, same as Tendermint, except that we use our own
+// ResultStatus is node's info, same as CometBFT, except that we use our own
 // PubKey.
 type resultStatus struct {
 	NodeInfo      p2p.DefaultNodeInfo
@@ -50,7 +50,7 @@ func StatusCommand() *cobra.Command {
 			var pk cryptotypes.PubKey
 			// `status` has TM pubkeys, we need to convert them to our pubkeys.
 			if status.ValidatorInfo.PubKey != nil {
-				pk, err = cryptocodec.FromTmPubKeyInterface(status.ValidatorInfo.PubKey)
+				pk, err = cryptocodec.FromCmtPubKeyInterface(status.ValidatorInfo.PubKey)
 				if err != nil {
 					return err
 				}

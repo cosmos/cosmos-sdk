@@ -1,7 +1,7 @@
 package types
 
 import (
-	tmcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
@@ -50,5 +50,5 @@ type PrivKey interface {
 }
 
 type (
-	Address = tmcrypto.Address
+	Address = cmtcrypto.Address
 )

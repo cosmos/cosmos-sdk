@@ -6,7 +6,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
@@ -58,7 +58,7 @@ func TestDeliverTx(t *testing.T) {
 	tx := NewTx(key, value, randomAccounts[0].Address)
 	txBytes := tx.GetSignBytes()
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 		AppHash: []byte("apphash"),
 		Height:  1,
 	}})

@@ -728,7 +728,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	// Case 1: the msg errors and the post handler is not set.
 	if err != nil && app.postHandler == nil {
-		return gInfo, nil, anteEvents, priority, err
+		return gInfo, result, anteEvents, priority, err
 	}
 
 	// Case 2: tx errors and the post handler is set. Run PostHandler and revert state from runMsgs

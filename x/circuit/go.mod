@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/log v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/math v1.0.0-beta.6 // indirect
+	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect

@@ -18,14 +18,14 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -178,12 +178,12 @@ func incrementCounter(ctx context.Context,
 	switch m := msg.(type) {
 	case *baseapptestutil.MsgCounter:
 		if m.FailOnHandler {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
 		}
 		msgCount = m.Counter
 	case *baseapptestutil.MsgCounter2:
 		if m.FailOnHandler {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
 		}
 		msgCount = m.Counter
 	}
@@ -215,7 +215,7 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 		counter, failOnAnte := parseTxMemo(t, tx)
 
 		if failOnAnte {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
 		_, err := incrementingCounter(t, store, storeKey, counter)

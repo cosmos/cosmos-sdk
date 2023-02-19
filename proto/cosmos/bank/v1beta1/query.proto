@@ -157,6 +157,7 @@ message QueryAllBalancesResponse {
   repeated cosmos.base.v1beta1.Coin balances = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -188,6 +189,7 @@ message QuerySpendableBalancesResponse {
   repeated cosmos.base.v1beta1.Coin balances = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -219,7 +221,6 @@ message QuerySpendableBalanceByDenomResponse {
   cosmos.base.v1beta1.Coin balance = 1;
 }
 
-
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 // method.
 message QueryTotalSupplyRequest {
@@ -239,6 +240,7 @@ message QueryTotalSupplyResponse {
   repeated cosmos.base.v1beta1.Coin supply = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 

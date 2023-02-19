@@ -23,7 +23,7 @@ func NewKeeper(storeKey storetypes.StoreKey, authority string) Keeper {
 	}
 }
 
-func (k *Keeper) GetAuthority() string /* string */ {
+func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
 

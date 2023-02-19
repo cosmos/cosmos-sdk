@@ -163,7 +163,6 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 	// ante handlers, but here we sometimes also test the tx creation
 	// process.
 	tx, txErr := suite.CreateTestTx(suite.ctx, args.privs, args.accNums, args.accSeqs, args.chainID, signing.SignMode_SIGN_MODE_DIRECT)
-
 	newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 	if tc.expPass {

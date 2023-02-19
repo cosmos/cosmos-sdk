@@ -362,6 +362,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 				accs := suite.CreateTestAccounts(2)
 				msg1 := testdata.NewTestMsg(accs[0].acc.GetAddress(), accs[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[0].acc.GetAddress())
+
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -381,6 +382,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 				accs := suite.CreateTestAccounts(2)
 				msg1 := testdata.NewTestMsg(accs[0].acc.GetAddress(), accs[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[0].acc.GetAddress())
+
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -443,6 +445,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
 				msgs := []sdk.Msg{msg}
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
+
 				// This will be called only once given that the second tx will fail
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
@@ -497,6 +500,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 				accs := suite.CreateTestAccounts(3)
 				msg1 := testdata.NewTestMsg(accs[0].acc.GetAddress(), accs[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accs[2].acc.GetAddress(), accs[0].acc.GetAddress())
+
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
@@ -736,7 +740,6 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 			"tx with memo has enough gas",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
-
 				suite.txBuilder.SetMemo(strings.Repeat("0123456789", 10))
 				return TestCaseArgs{
 					accNums:   []uint64{0},
@@ -799,6 +802,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				msg3 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[2].acc.GetAddress())
 				msgs := []sdk.Msg{msg1, msg2, msg3}
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				var err error
@@ -828,6 +832,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				msg3 := testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[2].acc.GetAddress())
 				msgs := []sdk.Msg{msg1, msg2, msg3}
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 				var err error
 				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
@@ -857,6 +862,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				msgs := []sdk.Msg{msg1, msg2, msg3}
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+				
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 				var err error
 				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)

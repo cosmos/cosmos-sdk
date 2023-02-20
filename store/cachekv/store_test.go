@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	cmtrand "github.com/cometbft/cometbft/libs/rand"
+	"cosmossdk.io/math/unsafe"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -461,7 +461,7 @@ const (
 )
 
 func randInt(n int) int {
-	return cmtrand.NewRand().Int() % n
+	return unsafe.NewRand().Int() % n
 }
 
 // useful for replaying a error case if we find one

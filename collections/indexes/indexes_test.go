@@ -2,6 +2,7 @@ package indexes
 
 import (
 	"context"
+
 	"cosmossdk.io/core/store"
 	db "github.com/cosmos/cosmos-db"
 )

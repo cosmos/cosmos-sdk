@@ -4,6 +4,20 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
+### Migration to CometBFT (Part 1)
+
+The Cosmos SDK has migrated to CometBFT, as its default consensus engine.
+CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
+Due to the import changes, this is a breaking change. Chains need to remove **entierely** their imports of Tendermint Core in their codebase, from direct and indirects imports in their `go.mod`.
+
+* Replace `github.com/tendermint/tendermint` by `github.com/cometbft/cometbft`
+* Replace `github.com/tendermint/tm-db` by `github.com/cometbft/cometbft-db`
+* Verify `github.com/tendermint/tendermint` is not an indirect or direct dependency
+* Run `make proto-gen`
+
+Other than that, the migration should be seamless.
+On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.48 (part 2).
+
 ### Simulation
 
 Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.

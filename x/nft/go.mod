@@ -24,7 +24,7 @@ require (
 
 require (
 	cosmossdk.io/collections v0.0.0-20230214153846-b6c6e4e99177 // indirect
-	cosmossdk.io/log v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78 // indirect
 	cosmossdk.io/x/tx v0.2.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -150,11 +150,8 @@ require (
 
 // Here are the short-lived replace from the module.
 // Replace here are pending PRs, or version to be tagged.
-replace (
-	cosmossdk.io/log => ../../log
-	// TODO use instead a tagged version of the SDK (with CometBFT) when available
-	github.com/cosmos/cosmos-sdk => ../..
-)
+// TODO use instead a tagged version of the SDK (with CometBFT) when available
+replace github.com/cosmos/cosmos-sdk => ../..
 
 // Below are the long-lived replace of the Cosmos SDK
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

@@ -7,8 +7,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 
-	"github.com/pkg/errors"
-
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"

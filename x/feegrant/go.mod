@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/log v0.0.0-20230207163452-bd8e9f2d1206
+	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
@@ -152,11 +152,8 @@ require (
 
 // Here are the short-lived replace from the module.
 // Replace here are pending PRs, or version to be tagged.
-replace (
-	cosmossdk.io/log => ../../log
-	// TODO use instead a tagged version of the SDK (with CometBFT) when available
-	github.com/cosmos/cosmos-sdk => ../..
-)
+// TODO use instead a tagged version of the SDK (with CometBFT) when available
+replace github.com/cosmos/cosmos-sdk => ../..
 
 // Below are the long-lived replace of the Cosmos SDK
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

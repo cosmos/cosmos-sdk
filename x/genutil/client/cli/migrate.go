@@ -6,8 +6,8 @@ import (
 	"sort"
 	"time"
 
+	"cosmossdk.io/errors"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 

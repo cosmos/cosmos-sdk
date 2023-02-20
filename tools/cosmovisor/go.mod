@@ -3,8 +3,8 @@ module cosmossdk.io/tools/cosmovisor
 go 1.20
 
 require (
-	cosmossdk.io/log v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/upgrade v0.0.0-20230205135133-41a3dfeced29
+	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
+	cosmossdk.io/x/upgrade v0.0.0-20230220001434-2f1a283f6897
 	github.com/otiai10/copy v1.9.0
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cobra v1.6.1
@@ -159,8 +159,5 @@ require (
 
 // Here are the short-lived replace of Comosivosr
 // Replace here are pending PRs, or version to be tagged
-replace (
-	cosmossdk.io/log => ../../log
-	// This can be removed when x/upgrade is bumped
-	github.com/cosmos/cosmos-sdk => ../..
-)
+// This can be removed when x/upgrade is bumped
+replace github.com/cosmos/cosmos-sdk => ../..

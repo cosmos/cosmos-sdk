@@ -2,11 +2,11 @@ package client
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/cometbft/cometbft/libs/cli"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"

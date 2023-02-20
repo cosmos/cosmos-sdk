@@ -3,7 +3,7 @@ module cosmossdk.io/tools/rosetta
 go 1.19
 
 require (
-	cosmossdk.io/log v0.0.0
+	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
@@ -136,8 +136,5 @@ require (
 
 // Here are the short-lived replace of Rosetta
 // Replace here are pending PRs, or version to be tagged
-replace (
-	cosmossdk.io/log => ../../log
-	// TODO use instead a tagged version of the SDK (with CometBFT) when available
-	github.com/cosmos/cosmos-sdk => ../..
-)
+// TODO use instead a tagged version of the SDK (with CometBFT) when available
+replace github.com/cosmos/cosmos-sdk => ../..

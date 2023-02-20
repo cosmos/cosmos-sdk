@@ -64,3 +64,43 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 
 	return cmd, nil
 }
+
+func (b *Builder) EnhanceCommandCommon(cmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command, buildModuleCommand func(*cobra.Command, *autocliv1.ModuleOptions, string) error) error {
+	allModuleNames := map[string]bool{}
+	for moduleName := range moduleOptions {
+		allModuleNames[moduleName] = true
+	}
+	for moduleName := range customCmds {
+		allModuleNames[moduleName] = true
+	}
+
+	for moduleName := range allModuleNames {
+		// if we have an existing command skip adding one here
+		if cmd.HasSubCommands() {
+			if _, _, err := cmd.Find([]string{moduleName}); err == nil {
+				// command already exists, skip
+				continue
+			}
+		}
+
+		// if we have a custom command use that instead of generating one
+		if custom := customCmds[moduleName]; custom != nil {
+			// custom commands get added lower down
+			cmd.AddCommand(custom)
+			continue
+		}
+
+		// check for autocli options
+		modOpts := moduleOptions[moduleName]
+		if modOpts == nil {
+			continue
+		}
+
+		err := buildModuleCommand(cmd, modOpts, moduleName)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

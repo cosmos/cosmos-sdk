@@ -16,7 +16,19 @@ import (
 // with a more customized experience if a binary with custom commands is downloaded.
 func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	msgCmd := topLevelCmd("tx", "Transaction subcommands")
-	if err := b.EnhanceMsgCommand(msgCmd, moduleOptions, customCmds); err != nil {
+	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
+		txCmdDesc := modOpts.Tx
+		if txCmdDesc != nil {
+			subCmd, err := b.BuildModuleMsgCommand(moduleName, txCmdDesc)
+			if err != nil {
+				return err
+			}
+
+			cmd.AddCommand(subCmd)
+		}
+		return nil
+	}
+	if err := b.EnhanceCommandCommon(msgCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
 		return nil, err
 	}
 
@@ -61,7 +73,7 @@ func (b *Builder) EnhanceMsgCommand(msgCmd *cobra.Command, moduleOptions map[str
 			continue
 		}
 
-		cmd, err := b.BuildModuleMsgCommand(moduleName, moduleOpt.Tx)
+		cmd, err := b.BuildModuleMsgCommand(moduleName, txCmdDesc)
 		if err != nil {
 			return err
 		}

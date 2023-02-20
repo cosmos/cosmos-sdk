@@ -19,7 +19,20 @@ import (
 func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
-	if err := b.EnhanceQueryCommand(queryCmd, moduleOptions, customCmds); err != nil {
+
+	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
+		txCmdDesc := modOpts.Tx
+		if txCmdDesc != nil {
+			subCmd, err := b.BuildModuleQueryCommand(moduleName, txCmdDesc)
+			if err != nil {
+				return err
+			}
+
+			cmd.AddCommand(subCmd)
+		}
+		return nil
+	}
+	if err := b.EnhanceCommandCommon(queryCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
 		return nil, err
 	}
 

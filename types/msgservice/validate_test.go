@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
-	_ "github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 

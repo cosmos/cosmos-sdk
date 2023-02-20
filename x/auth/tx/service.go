@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -159,7 +159,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			"or greater than the current height %d", req.Height, currentHeight)
 	}
 
-	blockID, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
+	blockID, block, err := cmtservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -330,6 +330,6 @@ func parseOrderBy(orderBy txtypes.OrderBy) string {
 	case txtypes.OrderBy_ORDER_BY_DESC:
 		return "desc"
 	default:
-		return "" // Defaults to Tendermint's default, which is `asc` now.
+		return "" // Defaults to CometBFT's default, which is `asc` now.
 	}
 }

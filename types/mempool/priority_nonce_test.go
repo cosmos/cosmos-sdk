@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -61,7 +61,7 @@ func TestOutOfOrder(t *testing.T) {
 
 func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -258,7 +258,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 }
 
 func (s *MempoolTestSuite) TestPriorityTies() {
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -375,7 +375,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 		s.iterations++
 	}))
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
 
 	t.Logf("running with seed: %d", seed)
@@ -411,7 +411,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	s.mempool = mempool.NewPriorityMempool()
 
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 
 	seed := time.Now().UnixNano()
 	// interesting failing seeds:
@@ -584,7 +584,7 @@ func TestTxOrderN(t *testing.T) {
 
 func TestTxLimit(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	sa := accounts[0].Address
 	sb := accounts[1].Address
 
@@ -641,7 +641,7 @@ func TestTxLimit(t *testing.T) {
 
 func TestTxReplacement(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	sa := accounts[0].Address
 
 	txs := []testTx{

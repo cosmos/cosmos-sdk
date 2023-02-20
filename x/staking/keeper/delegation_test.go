@@ -301,7 +301,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(delTokens, issuedShares.RoundInt())
 
-	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 	delegation := stakingtypes.NewDelegation(addrDels[1], addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, delegation)
 
@@ -690,7 +690,7 @@ func (s *KeeperTestSuite) TestRedelegateSelfDelegation() {
 	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(delTokens, issuedShares.RoundInt())
-	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 
 	delegation := stakingtypes.NewDelegation(addrDels[0], addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, delegation)
@@ -732,7 +732,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(delTokens, issuedShares.RoundInt())
-	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 	delegation := stakingtypes.NewDelegation(addrDels[1], addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, delegation)
 
@@ -812,7 +812,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(delTokens, issuedShares.RoundInt())
-	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 	delegation := stakingtypes.NewDelegation(addrDels[1], addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, delegation)
 

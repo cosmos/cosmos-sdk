@@ -4,13 +4,13 @@ import (
 	"context"
 	"os"
 
-	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/log"
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 )
 
 func main() {
-	logger := cosmovisor.NewLogger()
-	ctx := context.WithValue(context.Background(), cosmovisor.LoggerKey, logger)
+	logger := log.NewZeroLogger(log.ModuleKey, "cosmovisor")
+	ctx := context.WithValue(context.Background(), log.ContextKey, logger)
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		cverrors.LogErrors(logger, "", err)

@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/upgrade/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type storedUpgrade struct {

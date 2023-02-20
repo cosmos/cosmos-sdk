@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -28,7 +28,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -73,7 +73,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -171,7 +171,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)

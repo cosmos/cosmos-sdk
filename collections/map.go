@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections/codec"
+
 	"cosmossdk.io/core/store"
 )
 
@@ -11,8 +13,8 @@ import (
 // It is used to map arbitrary keys to arbitrary
 // objects.
 type Map[K, V any] struct {
-	kc KeyCodec[K]
-	vc ValueCodec[V]
+	kc codec.KeyCodec[K]
+	vc codec.ValueCodec[V]
 
 	// store accessor
 	sa     func(context.Context) store.KVStore
@@ -27,8 +29,8 @@ func NewMap[K, V any](
 	schemaBuilder *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	keyCodec KeyCodec[K],
-	valueCodec ValueCodec[V],
+	keyCodec codec.KeyCodec[K],
+	valueCodec codec.ValueCodec[V],
 ) Map[K, V] {
 	m := Map[K, V]{
 		kc:     keyCodec,
@@ -70,9 +72,7 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 // Get returns the value associated with the provided key,
 // errors with ErrNotFound if the key does not exist, or
 // with ErrEncoding if the key or value decoding fails.
-func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
-	var v V
-
+func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
 	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return v, err
@@ -80,12 +80,11 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
 
 	kvStore := m.sa(ctx)
 	valueBytes, err := kvStore.Get(bytesKey)
-	if valueBytes == nil {
-		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
-	}
-
 	if err != nil {
 		return v, err
+	}
+	if valueBytes == nil {
+		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
 	}
 
 	v, err = m.vc.Decode(valueBytes)
@@ -115,14 +114,36 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 		return err
 	}
 	kvStore := m.sa(ctx)
-	kvStore.Delete(bytesKey)
-	return nil
+	return kvStore.Delete(bytesKey)
 }
 
 // Iterate provides an Iterator over K and V. It accepts a Ranger interface.
 // A nil ranger equals to iterate over all the keys in ascending order.
 func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V], error) {
 	return iteratorFromRanger(ctx, m, ranger)
+}
+
+// Walk iterates over the Map with the provided range, calls the provided
+// walk function with the decoded key and value. If the callback function
+// returns true then the walking is stopped.
+// A nil ranger equals to walking over the entire key and value set.
+func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(K, V) bool) error {
+	iter, err := m.Iterate(ctx, ranger)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		kv, err := iter.KeyValue()
+		if err != nil {
+			return err
+		}
+		if walkFunc(kv.Key, kv.Value) {
+			return nil
+		}
+	}
+	return nil
 }
 
 // IterateRaw iterates over the collection. The iteration range is untyped, it uses raw
@@ -169,12 +190,12 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 }
 
 // KeyCodec returns the Map's KeyCodec.
-func (m Map[K, V]) KeyCodec() KeyCodec[K] { return m.kc }
+func (m Map[K, V]) KeyCodec() codec.KeyCodec[K] { return m.kc }
 
 // ValueCodec returns the Map's ValueCodec.
-func (m Map[K, V]) ValueCodec() ValueCodec[V] { return m.vc }
+func (m Map[K, V]) ValueCodec() codec.ValueCodec[V] { return m.vc }
 
-func encodeKeyWithPrefix[K any](prefix []byte, kc KeyCodec[K], key K) ([]byte, error) {
+func encodeKeyWithPrefix[K any](prefix []byte, kc codec.KeyCodec[K], key K) ([]byte, error) {
 	prefixLen := len(prefix)
 	// preallocate buffer
 	keyBytes := make([]byte, prefixLen+kc.Size(key))

@@ -92,7 +92,7 @@ func (s *E2ETestSuite) TestValidateGenesis() {
 			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
 			_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
 			if tc.expErr {
-				s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all Tendermint consensus params")
+				s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all CometBFT consensus params")
 			} else {
 				s.Require().NoError(err)
 			}

@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +23,7 @@ func TestParams(t *testing.T) {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)

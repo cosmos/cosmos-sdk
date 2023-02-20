@@ -7,13 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/x/tx/textual"
-	"cosmossdk.io/x/tx/textual/internal/testpb"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
+
+	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/textual/internal/testpb"
 )
 
 type enumTest struct {
@@ -28,7 +29,7 @@ func TestEnumJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := textual.NewTextual(nil)
+	textual := textual.NewSignModeHandler(nil)
 
 	for _, tc := range testcases {
 		t.Run(tc.Text, func(t *testing.T) {
@@ -44,7 +45,7 @@ func TestEnumJsonTestcases(t *testing.T) {
 			screens, err := valrend.Format(context.Background(), val)
 			require.NoError(t, err)
 			require.Equal(t, 1, len(screens))
-			require.Equal(t, tc.Text, screens[0].Text)
+			require.Equal(t, tc.Text, screens[0].Content)
 
 			// Round trip
 			parsedVal, err := valrend.Parse(context.Background(), screens)

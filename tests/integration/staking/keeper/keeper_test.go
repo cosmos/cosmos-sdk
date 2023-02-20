@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/simapp"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +30,7 @@ func initFixture(t *testing.T) *fixture {
 	f := &fixture{}
 
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	querier := keeper.Querier{Keeper: app.StakingKeeper}
 
@@ -41,7 +41,7 @@ func initFixture(t *testing.T) *fixture {
 	f.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	addrs, _, validators := createValidators(t, ctx, app, []int64{9, 8, 7})
-	header := tmproto.Header{
+	header := cmtproto.Header{
 		ChainID: "HelloChain",
 		Height:  5,
 	}

@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/simulation"
 	"cosmossdk.io/x/feegrant/testutil"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -19,8 +21,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type SimTestSuite struct {
@@ -48,7 +48,7 @@ func (suite *SimTestSuite) SetupTest() {
 	)
 	suite.Require().NoError(err)
 
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	suite.ctx = suite.app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
@@ -121,7 +121,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
@@ -146,7 +146,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	feeAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	feeCoins := sdk.NewCoins(sdk.NewCoin("foo", feeAmt))

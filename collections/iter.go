@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections/codec"
+
 	"cosmossdk.io/core/store"
 )
 
@@ -121,7 +123,6 @@ func (r *Range[K]) Descending() *Range[K] {
 
 // test sentinel error
 var (
-	errRange = errors.New("collections: range error")
 	errOrder = errors.New("collections: invalid order")
 )
 
@@ -161,6 +162,7 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 	} else {
 		endBytes = nextBytesPrefixKey(m.prefix)
 	}
+
 	return newIterator(ctx, startBytes, endBytes, order, m)
 }
 
@@ -198,8 +200,8 @@ func newIterator[K, V any](ctx context.Context, start, end []byte, order Order, 
 // it assumes all the keys and values contained within the storetypes.Iterator
 // range are the same.
 type Iterator[K, V any] struct {
-	kc KeyCodec[K]
-	vc ValueCodec[V]
+	kc codec.KeyCodec[K]
+	vc codec.ValueCodec[V]
 
 	iter store.Iterator
 
@@ -299,7 +301,7 @@ type KeyValue[K, V any] struct {
 }
 
 // encodeRangeBound encodes a range bound, modifying the key bytes to adhere to bound semantics.
-func encodeRangeBound[T any](prefix []byte, keyCodec KeyCodec[T], bound *RangeKey[T]) ([]byte, error) {
+func encodeRangeBound[T any](prefix []byte, keyCodec codec.KeyCodec[T], bound *RangeKey[T]) ([]byte, error) {
 	key, err := encodeKeyWithPrefix(prefix, keyCodec, bound.key)
 	if err != nil {
 		return nil, err

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -66,7 +66,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
 	require.NoError(t, v4.Migrate(ctx, store, legacySubspace, cdc))
 
-	ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	ctx = app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
 	stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
 
 	testCases := []struct {

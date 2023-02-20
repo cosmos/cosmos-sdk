@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -68,7 +68,8 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 		}
 	}
 
-	simState.Contents = app.SimulationManager().GetProposalContents(simState)
+	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck
+	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }
 

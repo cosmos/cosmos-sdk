@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
+	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
@@ -25,8 +25,8 @@ and standard additions here would be better just to add to the Context struct
 type Context struct {
 	baseCtx              context.Context
 	ms                   storetypes.MultiStore
-	header               tmproto.Header
-	headerHash           tmbytes.HexBytes
+	header               cmtproto.Header
+	headerHash           cmtbytes.HexBytes
 	chainID              string
 	txBytes              []byte
 	logger               log.Logger
@@ -36,7 +36,7 @@ type Context struct {
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice          DecCoins
-	consParams           *tmproto.ConsensusParams
+	consParams           *cmtproto.ConsensusParams
 	eventManager         EventManagerI
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
@@ -66,20 +66,20 @@ func (c Context) KVGasConfig() storetypes.GasConfig          { return c.kvGasCon
 func (c Context) TransientKVGasConfig() storetypes.GasConfig { return c.transientKVGasConfig }
 
 // clone the header before returning
-func (c Context) BlockHeader() tmproto.Header {
-	msg := proto.Clone(&c.header).(*tmproto.Header)
+func (c Context) BlockHeader() cmtproto.Header {
+	msg := proto.Clone(&c.header).(*cmtproto.Header)
 	return *msg
 }
 
 // HeaderHash returns a copy of the header hash obtained during abci.RequestBeginBlock
-func (c Context) HeaderHash() tmbytes.HexBytes {
+func (c Context) HeaderHash() cmtbytes.HexBytes {
 	hash := make([]byte, len(c.headerHash))
 	copy(hash, c.headerHash)
 	return hash
 }
 
-func (c Context) ConsensusParams() *tmproto.ConsensusParams {
-	return proto.Clone(c.consParams).(*tmproto.ConsensusParams)
+func (c Context) ConsensusParams() *cmtproto.ConsensusParams {
+	return proto.Clone(c.consParams).(*cmtproto.ConsensusParams)
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -95,7 +95,7 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
+func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
@@ -125,15 +125,15 @@ func (c Context) WithMultiStore(ms storetypes.MultiStore) Context {
 	return c
 }
 
-// WithBlockHeader returns a Context with an updated tendermint block header in UTC time.
-func (c Context) WithBlockHeader(header tmproto.Header) Context {
+// WithBlockHeader returns a Context with an updated CometBFT block header in UTC time.
+func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	c.header = header
 	return c
 }
 
-// WithHeaderHash returns a Context with an updated tendermint block header hash.
+// WithHeaderHash returns a Context with an updated CometBFT block header hash.
 func (c Context) WithHeaderHash(hash []byte) Context {
 	temp := make([]byte, len(hash))
 	copy(temp, hash)
@@ -142,7 +142,7 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 	return c
 }
 
-// WithBlockTime returns a Context with an updated tendermint block header time in UTC time
+// WithBlockTime returns a Context with an updated CometBFT block header time in UTC time
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
@@ -237,7 +237,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *tmproto.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params *cmtproto.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }

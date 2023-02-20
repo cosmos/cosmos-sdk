@@ -3,6 +3,8 @@ package group
 import (
 	"github.com/cosmos/gogoproto/proto"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -34,7 +36,7 @@ func (m MsgCreateGroup) GetSigners() []sdk.AccAddress {
 func (m MsgCreateGroup) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	return strictValidateMembers(m.Members)
@@ -48,11 +50,11 @@ func (m MsgCreateGroup) ValidateBasic() error {
 func (m MemberRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "address")
+		return errorsmod.Wrap(err, "address")
 	}
 
 	if _, err := math.NewNonNegativeDecFromString(m.Weight); err != nil {
-		return sdkerrors.Wrap(err, "weight")
+		return errorsmod.Wrap(err, "weight")
 	}
 
 	return nil
@@ -78,21 +80,21 @@ func (m MsgUpdateGroupAdmin) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data.
 func (m MsgUpdateGroupAdmin) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+		return errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
 
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	newAdmin, err := sdk.AccAddressFromBech32(m.NewAdmin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "new admin")
+		return errorsmod.Wrap(err, "new admin")
 	}
 
 	if admin.Equals(newAdmin) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "new and old admin are the same")
+		return errorsmod.Wrap(errors.ErrInvalid, "new and old admin are the same")
 	}
 	return nil
 }
@@ -122,11 +124,11 @@ func (m MsgUpdateGroupMetadata) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupMetadata) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+		return errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	return nil
@@ -159,19 +161,19 @@ func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupMembers) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+		return errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	if len(m.MemberUpdates) == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "member updates")
+		return errorsmod.Wrap(errors.ErrEmpty, "member updates")
 	}
 	members := MemberRequests{Members: m.MemberUpdates}
 	if err := members.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "members")
+		return errorsmod.Wrap(err, "members")
 	}
 	return nil
 }
@@ -244,14 +246,14 @@ func (m MsgCreateGroupWithPolicy) GetSigners() []sdk.AccAddress {
 func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 	policy, err := m.GetDecisionPolicy()
 	if err != nil {
-		return sdkerrors.Wrap(err, "decision policy")
+		return errorsmod.Wrap(err, "decision policy")
 	}
 	if err := policy.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "decision policy")
+		return errorsmod.Wrap(err, "decision policy")
 	}
 
 	return strictValidateMembers(m.Members)
@@ -277,19 +279,19 @@ func (m MsgCreateGroupPolicy) GetSigners() []sdk.AccAddress {
 func (m MsgCreateGroupPolicy) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+		return errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
 
 	policy, err := m.GetDecisionPolicy()
 	if err != nil {
-		return sdkerrors.Wrap(err, "decision policy")
+		return errorsmod.Wrap(err, "decision policy")
 	}
 
 	if err := policy.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "decision policy")
+		return errorsmod.Wrap(err, "decision policy")
 	}
 	return nil
 }
@@ -315,21 +317,21 @@ func (m MsgUpdateGroupPolicyAdmin) GetSigners() []sdk.AccAddress {
 func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	newAdmin, err := sdk.AccAddressFromBech32(m.NewAdmin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "new admin")
+		return errorsmod.Wrap(err, "new admin")
 	}
 
 	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group policy")
+		return errorsmod.Wrap(err, "group policy")
 	}
 
 	if admin.Equals(newAdmin) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "new and old admin are same")
+		return errorsmod.Wrap(errors.ErrInvalid, "new and old admin are same")
 	}
 	return nil
 }
@@ -384,21 +386,21 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) GetSigners() []sdk.AccAddress {
 func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group policy")
+		return errorsmod.Wrap(err, "group policy")
 	}
 
 	policy, err := m.GetDecisionPolicy()
 	if err != nil {
-		return sdkerrors.Wrap(err, "decision policy")
+		return errorsmod.Wrap(err, "decision policy")
 	}
 
 	if err := policy.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "decision policy")
+		return errorsmod.Wrap(err, "decision policy")
 	}
 
 	return nil
@@ -441,12 +443,12 @@ func (m MsgUpdateGroupPolicyMetadata) GetSigners() []sdk.AccAddress {
 func (m MsgUpdateGroupPolicyMetadata) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group policy")
+		return errorsmod.Wrap(err, "group policy")
 	}
 
 	return nil
@@ -556,28 +558,28 @@ func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 func (m MsgSubmitProposal) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group policy")
+		return errorsmod.Wrap(err, "group policy")
 	}
 
 	if m.Title == "" {
-		return sdkerrors.Wrap(errors.ErrEmpty, "title")
+		return errorsmod.Wrap(errors.ErrEmpty, "title")
 	}
 
 	if m.Summary == "" {
-		return sdkerrors.Wrap(errors.ErrEmpty, "summary")
+		return errorsmod.Wrap(errors.ErrEmpty, "summary")
 	}
 
 	if len(m.Proposers) == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposers")
+		return errorsmod.Wrap(errors.ErrEmpty, "proposers")
 	}
 
 	addrs, err := m.getProposerAccAddresses()
 	if err != nil {
-		return sdkerrors.Wrap(err, "group proposers")
+		return errorsmod.Wrap(err, "group proposers")
 	}
 
 	if err := accAddresses(addrs).ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proposers")
+		return errorsmod.Wrap(err, "proposers")
 	}
 
 	msgs, err := m.GetMsgs()
@@ -587,7 +589,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 	for i, msg := range msgs {
 		if err := msg.ValidateBasic(); err != nil {
-			return sdkerrors.Wrapf(err, "msg %d", i)
+			return errorsmod.Wrapf(err, "msg %d", i)
 		}
 	}
 	return nil
@@ -599,7 +601,7 @@ func (m *MsgSubmitProposal) getProposerAccAddresses() ([]sdk.AccAddress, error) 
 	for i, proposer := range m.Proposers {
 		addr, err := sdk.AccAddressFromBech32(proposer)
 		if err != nil {
-			return nil, sdkerrors.Wrap(err, "proposers")
+			return nil, errorsmod.Wrap(err, "proposers")
 		}
 		addrs[i] = addr
 	}
@@ -648,11 +650,11 @@ func (m MsgWithdrawProposal) GetSigners() []sdk.AccAddress {
 func (m MsgWithdrawProposal) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+		return errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 
 	return nil
@@ -679,16 +681,16 @@ func (m MsgVote) GetSigners() []sdk.AccAddress {
 func (m MsgVote) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Voter)
 	if err != nil {
-		return sdkerrors.Wrap(err, "voter")
+		return errorsmod.Wrap(err, "voter")
 	}
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+		return errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 	if m.Option == VOTE_OPTION_UNSPECIFIED {
-		return sdkerrors.Wrap(errors.ErrEmpty, "vote option")
+		return errorsmod.Wrap(errors.ErrEmpty, "vote option")
 	}
 	if _, ok := VoteOption_name[int32(m.Option)]; !ok {
-		return sdkerrors.Wrap(errors.ErrInvalid, "vote option")
+		return errorsmod.Wrap(errors.ErrInvalid, "vote option")
 	}
 	return nil
 }
@@ -714,10 +716,10 @@ func (m MsgExec) GetSigners() []sdk.AccAddress {
 func (m MsgExec) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Executor)
 	if err != nil {
-		return sdkerrors.Wrap(err, "signer")
+		return errorsmod.Wrap(err, "signer")
 	}
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+		return errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 	return nil
 }
@@ -743,11 +745,11 @@ func (m MsgLeaveGroup) GetSigners() []sdk.AccAddress {
 func (m MsgLeaveGroup) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group member")
+		return errorsmod.Wrap(err, "group member")
 	}
 
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group-id")
+		return errorsmod.Wrap(errors.ErrEmpty, "group-id")
 	}
 	return nil
 }
@@ -763,7 +765,7 @@ func strictValidateMembers(members []MemberRequest) error {
 
 	for _, m := range members {
 		if _, err := math.NewPositiveDecFromString(m.Weight); err != nil {
-			return sdkerrors.Wrap(err, "weight")
+			return errorsmod.Wrap(err, "weight")
 		}
 	}
 

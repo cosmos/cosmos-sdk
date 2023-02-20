@@ -3,18 +3,19 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // SubmitProposal creates a new proposal given an array of messages
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress) (v1.Proposal, error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
 		return v1.Proposal{}, err
@@ -42,7 +43,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 
 		// perform a basic validation of the message
 		if err := msg.ValidateBasic(); err != nil {
-			return v1.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalMsg, err.Error())
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, err.Error())
 		}
 
 		signers := msg.GetSigners()
@@ -52,13 +53,13 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 
 		// assert that the governance module account is the only signer of the messages
 		if !signers[0].Equals(keeper.GetGovernanceAccount(ctx).GetAddress()) {
-			return v1.Proposal{}, sdkerrors.Wrapf(types.ErrInvalidSigner, signers[0].String())
+			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, signers[0].String())
 		}
 
 		// use the msg service router to see that there is a valid route for that message.
 		handler := keeper.router.Handler(msg)
 		if handler == nil {
-			return v1.Proposal{}, sdkerrors.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
 		}
 
 		// Only if it's a MsgExecLegacyContent do we try to execute the
@@ -72,7 +73,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 				if errors.Is(types.ErrNoProposalHandlerExists, err) {
 					return v1.Proposal{}, err
 				}
-				return v1.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalContent, err.Error())
 			}
 		}
 
@@ -86,7 +87,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer)
+	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer, expedited)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -113,7 +114,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer string) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal_id %d", proposalID)
+		return errorsmod.Wrapf(types.ErrProposalNotFound, "proposal_id %d", proposalID)
 	}
 
 	// Checking proposal have proposer or not because old proposal doesn't have proposer field,
@@ -297,7 +298,7 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err erro
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.ProposalIDKey)
 	if bz == nil {
-		return 0, sdkerrors.Wrap(types.ErrInvalidGenesis, "initial proposal ID hasn't been set")
+		return 0, errorsmod.Wrap(types.ErrInvalidGenesis, "initial proposal ID hasn't been set")
 	}
 
 	proposalID = types.GetProposalIDFromBytes(bz)
@@ -314,7 +315,12 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal) {
 	startTime := ctx.BlockHeader().Time
 	proposal.VotingStartTime = &startTime
-	votingPeriod := keeper.GetParams(ctx).VotingPeriod
+	var votingPeriod *time.Duration
+	if proposal.Expedited {
+		votingPeriod = keeper.GetParams(ctx).ExpeditedVotingPeriod
+	} else {
+		votingPeriod = keeper.GetParams(ctx).VotingPeriod
+	}
 	endTime := proposal.VotingStartTime.Add(*votingPeriod)
 	proposal.VotingEndTime = &endTime
 	proposal.Status = v1.StatusVotingPeriod

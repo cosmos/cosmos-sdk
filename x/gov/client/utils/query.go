@@ -15,7 +15,7 @@ import (
 
 const (
 	defaultPage  = 1
-	defaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+	defaultLimit = 30 // should be consistent with https://github.com/cometbft/cometbft/tree/v0.37.x/rpc/core#pagination
 )
 
 // Proposer contains metadata of a governance proposal used for querying a
@@ -438,7 +438,7 @@ func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute s
 // combineEvents queries txs by events with all events from each event group,
 // and combines all those events together.
 //
-// Tx are indexed in tendermint via their Msgs `Type()`, which can be:
+// Tx are indexed in CometBFT via their Msgs `Type()`, which can be:
 // - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 // - via ADR-031 proto msgs, their `Type()` is the protobuf FQ method name.
 // In searching for events, we search for both `Type()`s, and we use the

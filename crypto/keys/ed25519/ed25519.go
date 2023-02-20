@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/hdevalence/ed25519consensus"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/tmhash"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -209,7 +211,7 @@ func (pubKey PubKey) MarshalAmino() ([]byte, error) {
 // UnmarshalAmino overrides Amino binary marshalling.
 func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PubKeySize {
-		return errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
+		return errorsmod.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
 	}
 	pubKey.Key = bz
 

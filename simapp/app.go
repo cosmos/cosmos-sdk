@@ -68,6 +68,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit"
 	circuitkeeper "github.com/cosmos/cosmos-sdk/x/circuit/keeper"
 	circuittypes "github.com/cosmos/cosmos-sdk/x/circuit/types"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
@@ -324,7 +325,7 @@ func NewSimApp(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.CircuitKeeper = circuitkeeper.NewKeeper(appCodec, keys[circuittypes.StoreKey], app.CircuitKeeper)
+	app.CircuitKeeper = circuitkeeper.NewKeeper(appCodec, keys[circuittypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper)
 
@@ -411,7 +412,7 @@ func NewSimApp(
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
-		circuit.NewAppModule(app.Codec, app.CircuitKeeper),
+		circuit.NewAppModule(appCodec, app.CircuitKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -530,27 +531,22 @@ func NewSimApp(
 }
 
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
+	anteHandler, err := NewAnteHandler(
+		HandlerOptions{
 			AccountKeeper:   app.AccountKeeper,
 			BankKeeper:      app.BankKeeper,
 			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  app.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			CircuitKeeper:   &app.CircuitKeeper,
 		},
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	// Create the CircuitBreakerAnteHandler with the CircuitKeeper
-	cbAnteHandler := ante.NewCircuitBreakerAnteHandler(cbKeeper, defaultAnteHandler)
-
-	// Chain the default AnteHandlers with the CircuitBreakerAnteHandler
-	allAnteHandlers := app.chainAnteDecorators(cbAnteHandler)
-
 	// Set the AnteHandler for the app
-	app.SetAnteHandler(allAnteHandlers)
+	app.SetAnteHandler(anteHandler)
 }
 
 func (app *SimApp) setPostHandler() {

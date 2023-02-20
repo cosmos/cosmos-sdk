@@ -55,7 +55,7 @@ func (k *Keeper) SetPermissions(ctx sdk.Context, address string, perms *types.Pe
 	return nil
 }
 
-func (k *Keeper) IsMsgDisabled(ctx sdk.Context, msgURL string) bool {
+func (k *Keeper) IsAllowed(ctx sdk.Context, msgURL string) bool {
 	store := ctx.KVStore(k.key)
 	return store.Has(types.CreateDisableMsgPrefix(msgURL))
 }

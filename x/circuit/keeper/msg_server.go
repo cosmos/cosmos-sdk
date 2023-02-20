@@ -129,7 +129,7 @@ func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgRe
 		}
 	} else if accountPerms.Level == types.Permissions_LEVEL_ALL_MSGS {
 		for _, msgTypeURL := range msg.MsgTypeUrls {
-			if !keeper.IsMsgDisabled(ctx, msgTypeURL) {
+			if !keeper.IsAllowed(ctx, msgTypeURL) {
 				return nil, fmt.Errorf("msgTypeURL %s is not disabled", msgTypeURL)
 			}
 			// Remove the type URL from the disable list

@@ -192,5 +192,7 @@ updates:
     allow:
       - dependency-name: "github.com/cosmos/cosmos-sdk/*"
         dependency-type: "all"
+      - dependency-name: "github.com/cosmos/*"
+        dependency-type: "all"
       - dependency-name: "cosmossdk.io/*"
         dependency-type: "all"

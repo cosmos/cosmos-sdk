@@ -11,7 +11,7 @@ require (
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/gogoproto v1.4.4
-	github.com/cosmos/iavl v0.20.0-alpha3
+	github.com/cosmos/iavl v0.21.0-alpha.1
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
@@ -55,7 +55,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

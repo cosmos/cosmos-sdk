@@ -85,7 +85,7 @@ message GetTxsEventRequest {
   // events is the list of transaction event type.
   // Deprecated post v0.47.x: use query instead, which should contain a valid
   // events query.
-  repeated string events = 1;
+  repeated string events = 1 [deprecated = true];
 
   // pagination defines a pagination for the request.
   // Deprecated post v0.46.x: use page and limit instead.
@@ -103,6 +103,8 @@ message GetTxsEventRequest {
 
   // query defines the transaction event query that is proxied to Tendermint's
   // TxSearch RPC method. The query must be valid.
+  //
+  // Since Cosmos SDK 0.48
   string query = 6;
 }
 

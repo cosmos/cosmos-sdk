@@ -67,6 +67,7 @@ func (ag *AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
 	}
 
 	return &cmttypes.GenesisDoc{
+		GenesisTime:     ag.GenesisTime,
 		ChainID:         ag.ChainID,
 		InitialHeight:   ag.InitialHeight,
 		AppHash:         ag.AppHash,

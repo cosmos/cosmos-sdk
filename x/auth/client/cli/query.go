@@ -20,15 +20,15 @@ import (
 )
 
 const (
-	flagEvents  = "events" // TODO: Remove when #14758 is merged
-	flagQuery   = "query"
-	flagType    = "type"
-	flagOrderBy = "order_by"
+	FlagEvents  = "events" // TODO: Remove when #14758 is merged
+	FlagQuery   = "query"
+	FlagType    = "type"
+	FlagOrderBy = "order_by"
 
-	typeHash   = "hash"
-	typeAccSeq = "acc_seq"
-	typeSig    = "signature"
-	typeHeight = "height"
+	TypeHash   = "hash"
+	TypeAccSeq = "acc_seq"
+	TypeSig    = "signature"
+	TypeHeight = "height"
 
 	EventFormat = "{eventType}.{eventAttribute}={value}"
 )
@@ -281,10 +281,10 @@ for. Each module documents its respective events under 'xx_events.md'.
 				return err
 			}
 
-			query, _ := cmd.Flags().GetString(flagQuery)
+			query, _ := cmd.Flags().GetString(FlagQuery)
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
-			orderBy, _ := cmd.Flags().GetString(flagOrderBy)
+			orderBy, _ := cmd.Flags().GetString(FlagOrderBy)
 
 			txs, err := authtx.QueryTxsByEvents(clientCtx, page, limit, query, orderBy)
 			if err != nil {
@@ -298,9 +298,9 @@ for. Each module documents its respective events under 'xx_events.md'.
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().Int(flags.FlagPage, querytypes.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, querytypes.DefaultLimit, "Query number of transactions results per page returned")
-	cmd.Flags().String(flagQuery, "", "The transactions events query per Tendermint's query semantics")
-	cmd.Flags().String(flagOrderBy, "", "The ordering semantics (asc|dsc)")
-	_ = cmd.MarkFlagRequired(flagQuery)
+	cmd.Flags().String(FlagQuery, "", "The transactions events query per Tendermint's query semantics")
+	cmd.Flags().String(FlagOrderBy, "", "The ordering semantics (asc|dsc)")
+	_ = cmd.MarkFlagRequired(FlagQuery)
 
 	return cmd
 }
@@ -317,8 +317,8 @@ $ %s query tx --%s=%s <addr>/<sequence>
 $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 `,
 			version.AppName,
-			version.AppName, flagType, typeAccSeq,
-			version.AppName, flagType, typeSig)),
+			version.AppName, FlagType, TypeAccSeq,
+			version.AppName, FlagType, TypeSig)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -326,10 +326,10 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 				return err
 			}
 
-			typ, _ := cmd.Flags().GetString(flagType)
+			typ, _ := cmd.Flags().GetString(FlagType)
 
 			switch typ {
-			case typeHash:
+			case TypeHash:
 				if args[0] == "" {
 					return fmt.Errorf("argument should be a tx hash")
 				}
@@ -346,7 +346,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 
 				return clientCtx.PrintProto(output)
 
-			case typeSig:
+			case TypeSig:
 				sigParts, err := ParseSigArgs(args)
 				if err != nil {
 					return err
@@ -375,7 +375,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 
 				return clientCtx.PrintProto(txs.Txs[0])
 
-			case typeAccSeq:
+			case TypeAccSeq:
 				if args[0] == "" {
 					return fmt.Errorf("`acc_seq` type takes an argument '<addr>/<seq>'")
 				}
@@ -399,13 +399,13 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 				return clientCtx.PrintProto(txs.Txs[0])
 
 			default:
-				return fmt.Errorf("unknown --%s value %s", flagType, typ)
+				return fmt.Errorf("unknown --%s value %s", FlagType, typ)
 			}
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeAccSeq, typeSig))
+	cmd.Flags().String(FlagType, TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", TypeHash, TypeAccSeq, TypeSig))
 
 	return cmd
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -58,7 +59,7 @@ func TestCreate(t *testing.T) {
 	specs := map[string]struct {
 		rowID  RowID
 		src    proto.Message
-		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr *errorsmod.Error
 	}{
 		"empty rowID": {
 			rowID: []byte{},
@@ -126,7 +127,7 @@ func TestCreate(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	specs := map[string]struct {
 		src    proto.Message
-		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr *errorsmod.Error
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
@@ -188,7 +189,7 @@ func TestUpdate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	specs := map[string]struct {
 		rowID  []byte
-		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr *errorsmod.Error
 	}{
 		"happy path": {
 			rowID: EncodeSequence(1),

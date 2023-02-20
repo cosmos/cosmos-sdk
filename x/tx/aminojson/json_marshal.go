@@ -12,8 +12,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/api/amino"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
+
+	"cosmossdk.io/api/amino"
 )
 
 // MessageEncoder is a function that can encode a protobuf protoreflect.Message to JSON.

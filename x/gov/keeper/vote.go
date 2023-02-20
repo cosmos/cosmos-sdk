@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -16,7 +16,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	// Check if proposal is in voting period.
 	store := ctx.KVStore(keeper.storeKey)
 	if !store.Has(types.VotingPeriodProposalKey(proposalID)) {
-		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
 	err := keeper.assertMetadataLength(metadata)
@@ -26,7 +26,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 
 	for _, option := range options {
 		if !v1.ValidWeightedVoteOption(*option) {
-			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+			return errors.Wrap(types.ErrInvalidVote, option.String())
 		}
 	}
 

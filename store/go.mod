@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/log v0.0.0-00010101000000-000000000000
+	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	github.com/armon/go-metrics v0.4.1
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
@@ -76,11 +76,8 @@ require (
 
 // Here are the short-lived replace from the module.
 // Replace here are pending PRs, or version to be tagged.
-replace (
-	cosmossdk.io/log => ../log
-	// TODO update/remove after v0.37.x tag of CometBFT
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-)
+// TODO update/remove after v0.37.x tag of CometBFT
+replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 
 // Below are the long-lived replace for store.
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

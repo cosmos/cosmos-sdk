@@ -9,7 +9,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 )
 
-require pgregory.net/rapid v0.5.3
+require pgregory.net/rapid v0.5.5
 
 require (
 	cosmossdk.io/api v0.2.6 // indirect

@@ -6,8 +6,10 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ### Migration to CometBFT (Part 2)
 
-The Cosmos SDK has migrated to CometBFT since v0.47, as its default consensus engine.
-Some functions have been renamed to reflect the naming change, following an exhaustive list:
+The Cosmos SDK has migrated in, its previous versions, to CometBFT.
+Some functions have been renamed to reflect the naming change.
+
+Following an exhaustive list:
 
 * `client.TendermintRPC` -> `client.CometRPC`
 * `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`

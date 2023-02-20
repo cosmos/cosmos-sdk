@@ -31,3 +31,16 @@ func (k *Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		DisabledTypeUrls:   disabledMsgs,
 	}
 }
+
+// InitGenesis initializes the bank module's state from a given genesis state.
+func (k *Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
+
+	for _, accounts := range genState.AccountPermissions {
+		// Set the permissions for the account
+		k.SetPermissions(ctx, accounts.Address, accounts.Permissions)
+	}
+	for _, url := range genState.DisabledTypeUrls {
+		// Set the disabled type urls
+		k.DisableMsg(ctx, url)
+	}
+}

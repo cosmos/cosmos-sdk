@@ -2,11 +2,15 @@ package circuit
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"cosmossdk.io/core/appmodule"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -20,8 +24,8 @@ import (
 const ConsensusVersion = 4
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleGenesis = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
@@ -45,13 +49,12 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for the bank module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
-	// var data types.GenesisState
-	// if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-	// 	return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	// }
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
 
-	// return data.Validate()
-	return nil
+	return data.Validate()
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
@@ -116,24 +119,19 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// AppModuleSimulation functions
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	start := time.Now()
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
 
-// // GenerateGenesisState creates a randomized GenState of the circuit module.
-// func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-// 	simulation.RandomizedGenState(simState)
-// }
+	am.keeper.InitGenesis(ctx, &genesisState)
+	return []abci.ValidatorUpdate{}
+}
 
-// // ProposalContents doesn't return any content functions for governance proposals.
-// func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-// 	return nil
-// }
-
-// // RegisterStoreDecoder registers a decoder for supply module's types
-// func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
-
-// // WeightedOperations returns the all the gov module operations with their respective weights.
-// func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-// 	return simulation.WeightedOperations(
-// 		simState.AppParams, simState.Cdc, am.keeper,
-// 	)
-// }
+// ExportGenesis returns the exported genesis state as raw bytes for the bank
+// module.
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	gs := am.keeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(gs)
+}

@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
+	"testing"
+
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,15 +19,15 @@ type fixture struct {
 	cdc        codec.Codec
 	ctx        sdk.Context
 	keeper     keeper.Keeper
-	mockAddr   sdk.AccAddress
+	mockAddr   string
 	mockPerms  types.Permissions
 	mockMsgURL string
 }
 
 func initFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	mockAddr := sdk.AccAddress([]byte("mock_address"))
-	keeperX := keeper.NewKeeper(mockStoreKey, string(mockAddr))
+	mockAddr := "mock_address"
+	keeperX := keeper.NewKeeper(mockStoreKey, mockAddr)
 	mockMsgURL := "mock_url"
 	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})
@@ -78,10 +79,10 @@ func TestIteratePermissions(t *testing.T) {
 	}
 
 	// Set the permissions for a set of mock addresses
-	mockAddrs := []sdk.AccAddress{
-		sdk.AccAddress("mock_address_1"),
-		sdk.AccAddress("mock_address_2"),
-		sdk.AccAddress("mock_address_3"),
+	mockAddrs := []string{
+		"mock_address_1",
+		"mock_address_2",
+		"mock_address_3",
 	}
 	for i, addr := range mockAddrs {
 		f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])

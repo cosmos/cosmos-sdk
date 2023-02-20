@@ -277,5 +277,4 @@ func TestMergedRegistry(t *testing.T) {
 	r, err := proto.MergedRegistry()
 	require.NoError(t, err)
 	require.Greater(t, r.NumFiles(), 0)
-
 }

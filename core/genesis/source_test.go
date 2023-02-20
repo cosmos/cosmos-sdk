@@ -29,7 +29,6 @@ func expectJSON(t *testing.T, source appmodule.GenesisSource, field, contents st
 	bz, err := io.ReadAll(r)
 	require.NoError(t, err)
 	require.Equal(t, contents, string(bz))
-
 }
 
 const (

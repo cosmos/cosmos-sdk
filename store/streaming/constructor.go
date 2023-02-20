@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/cast"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"

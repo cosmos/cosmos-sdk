@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
+	tmcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/pkg/errors"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"

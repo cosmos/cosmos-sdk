@@ -1,22 +1,11 @@
 package aminojson
 
 import (
-	"cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/x/upgrade"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"reflect"
 	"testing"
 	"time"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -25,12 +14,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
 
+	"github.com/cosmos/cosmos-proto/rapidproto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/api/amino"
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	authzapi "cosmossdk.io/api/cosmos/authz/v1beta1"
 	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	consensusapi "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
+	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
 	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
 	feegrantapi "cosmossdk.io/api/cosmos/feegrant/v1beta1"
@@ -48,7 +42,8 @@ import (
 	feegranttypes "cosmossdk.io/x/feegrant"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/aminojson"
-	"cosmossdk.io/x/tx/rapidproto"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -58,6 +53,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -70,9 +67,14 @@ import (
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -102,9 +104,8 @@ func withDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOp
 
 var (
 	genOpts = rapidproto.GeneratorOptions{
-		Resolver:                       protoregistry.GlobalTypes,
-		GogoUnmarshalCompatibleDecimal: true,
-	}
+		Resolver: protoregistry.GlobalTypes,
+	}.WithGogoUnmarshalCompatibleDecimals(amino.E_Encoding)
 	genTypes = []generatedType{
 		// auth
 		genType(&authtypes.Params{}, &authapi.Params{}, genOpts),

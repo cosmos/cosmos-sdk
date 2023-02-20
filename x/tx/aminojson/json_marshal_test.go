@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/cosmos/cosmos-proto/rapidproto"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -13,7 +14,6 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/x/tx/aminojson"
-	"cosmossdk.io/x/tx/rapidproto"
 
 	"cosmossdk.io/x/tx/aminojson/internal/testpb"
 )

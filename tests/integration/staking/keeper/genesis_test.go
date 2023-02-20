@@ -92,7 +92,7 @@ func TestInitGenesis(t *testing.T) {
 	assert.NilError(t, err)
 
 	for _, val := range vals2 {
-		assert.Assert(t, val.Address != "")
+		assert.Assert(t, val.Address.String() != "")
 	}
 
 	// now make sure the validators are bonded and intra-tx counters are correct

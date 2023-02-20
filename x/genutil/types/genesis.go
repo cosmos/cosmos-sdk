@@ -83,7 +83,7 @@ func (ag *AppGenesis) SaveAs(file string) error {
 		return err
 	}
 
-	return os.WriteFile(file, appGenesisBytes, 0600)
+	return os.WriteFile(file, appGenesisBytes, 0o600)
 }
 
 // ValidateAndComplete performs validation and completes the AppGenesis.

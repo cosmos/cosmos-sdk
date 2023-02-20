@@ -49,8 +49,8 @@ cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78 h1:Scox9JfANgkuAO0F9LMH0e0W5
 cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78/go.mod h1:MyvZ6k9eL0azI/yf8m5gqsM8PgbtFmqjire1OxUMkmc=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 h1:/jnzJ9zFsL7qkV8LCQ1JH3dYHh2EsKZ3k8Mr6AqqiOA=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
-cosmossdk.io/store v0.0.0-20230219145338-9553bf1eec78 h1:KCtuGFJJrHc27q/jEPqnneh1JtWJU+WXBhViJ2z7F5c=
-cosmossdk.io/store v0.0.0-20230219145338-9553bf1eec78/go.mod h1:bUc2HAT7aYgzO1sA5+FNpbkc83kyCVTaUt/AHnVGAQY=
+cosmossdk.io/store v0.0.0-20230220120340-067ee92d4d1f h1:35sAQtwPdzvQhTGz6SwGQO0LPcJjkJWcbc2Olpnpprc=
+cosmossdk.io/store v0.0.0-20230220120340-067ee92d4d1f/go.mod h1:MrrSzGa9eNZAHePmW4h5pPdnsmtQQCgJEztq9hVUKFI=
 cosmossdk.io/x/tx v0.2.0 h1:53f5TIXhpPYJGMm47SUslcV2i8JNBEN3eE08BmxE/Zg=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0-rc.1 h1:m0VOOB23frXZvAOK44usCgLWvtsxIoMCTBGJZlpmGfU=
@@ -136,8 +136,8 @@ github.com/cosmos/cosmos-proto v1.0.0-beta.1 h1:iDL5qh++NoXxG8hSy93FdYJut4XfgbSh
 github.com/cosmos/cosmos-proto v1.0.0-beta.1/go.mod h1:8k2GNZghi5sDRFw/scPL8gMSowT1vDA+5ouxL8GjaUE=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=
-github.com/cosmos/gogoproto v1.4.4 h1:nVAsgLlAf5jeN0fV7hRlkZvf768zU+dy4pG+hxc2P34=
-github.com/cosmos/gogoproto v1.4.4/go.mod h1:/yl6/nLwsZcZ2JY3OrqjRqvqCG9InUMcXRfRjQiF9DU=
+github.com/cosmos/gogoproto v1.4.5 h1:7B2UrCbDCpMdQIwU8vSXzEdK7ciCTdWUyGjVTEe0j74=
+github.com/cosmos/gogoproto v1.4.5/go.mod h1:VS/ASYmPgv6zkPKLjR9EB91lwbLHOzaGCirmKKhncfI=
 github.com/cosmos/iavl v0.20.0-alpha3 h1:hbUyr0dkiGDlmmbrArvte0lXv6VkMrGQNr3b29xvmVk=
 github.com/cosmos/ledger-cosmos-go v0.13.0 h1:ex0CvCxToSR7j5WjrghPu2Bu9sSXKikjnVvUryNnx4s=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=

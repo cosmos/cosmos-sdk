@@ -63,8 +63,6 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/tx_msg.go#L14-L26
 
 It extends `proto.Message` and contains the following methods:
 
-* `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
-* `Type() string`: Type of the message, used primarily in [events](../core/08-events.md). This should return a message-specific `string`, typically the denomination of the message itself.
 * [`ValidateBasic() error`](../basics/01-tx-lifecycle.md#ValidateBasic).
 * `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
 * `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.

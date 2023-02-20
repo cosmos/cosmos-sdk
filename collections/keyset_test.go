@@ -54,15 +54,15 @@ func TestKeySet(t *testing.T) {
 
 func Test_noValue(t *testing.T) {
 	require.Equal(t, noValueValueType, noValueCodec.ValueType())
-	require.Equal(t, noValueValueType, noValueCodec.Stringify(noValue{}))
+	require.Equal(t, noValueValueType, noValueCodec.Stringify(NoValue{}))
 
-	b, err := noValueCodec.Encode(noValue{})
+	b, err := noValueCodec.Encode(NoValue{})
 	require.NoError(t, err)
 	require.Equal(t, []byte{}, b)
 
 	nv, err := noValueCodec.Decode(b)
 	require.NoError(t, err)
-	require.Equal(t, noValue{}, nv)
+	require.Equal(t, NoValue{}, nv)
 
 	_, err = noValueCodec.Decode([]byte("bad"))
 	require.ErrorIs(t, err, ErrEncoding)

@@ -10,8 +10,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
+	"cosmossdk.io/x/upgrade/plan"
 )
 
 func init() {
@@ -23,7 +25,7 @@ var initCmd = &cobra.Command{
 	Short: "Initializes a cosmovisor daemon home directory.",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(cosmovisor.LoggerKey).(*zerolog.Logger)
+		logger := cmd.Context().Value(log.ContextKey).(*zerolog.Logger)
 
 		return InitializeCosmovisor(logger, args)
 	},
@@ -77,10 +79,7 @@ func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
 		logger.Info().Msgf("the %q file already exists", genBinExe)
 	}
 	logger.Info().Msgf("making sure %q is executable", genBinExe)
-	if err = cosmovisor.MarkExecutable(genBinExe); err != nil {
-		return err
-	}
-	if err = cosmovisor.EnsureBinary(genBinExe); err != nil {
+	if err = plan.EnsureBinary(genBinExe); err != nil {
 		return err
 	}
 

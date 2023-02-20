@@ -3,21 +3,19 @@ package types
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/evidence/exported"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-)
-
-// Message types for the evidence module
-const (
-	TypeMsgSubmitEvidence = "submit_evidence"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
 	_ sdk.Msg                       = &MsgSubmitEvidence{}
+	_ legacytx.LegacyMsg            = &MsgSubmitEvidence{}
 	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}
 	_ exported.MsgSubmitEvidenceI   = &MsgSubmitEvidence{}
 )
@@ -37,12 +35,6 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEv
 	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
 }
 
-// Route returns the MsgSubmitEvidence's route.
-func (m MsgSubmitEvidence) Route() string { return RouterKey }
-
-// Type returns the MsgSubmitEvidence's type.
-func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
-
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidence.
 func (m MsgSubmitEvidence) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Submitter); err != nil {
@@ -51,7 +43,7 @@ func (m MsgSubmitEvidence) ValidateBasic() error {
 
 	evi := m.GetEvidence()
 	if evi == nil {
-		return sdkerrors.Wrap(ErrInvalidEvidence, "missing evidence")
+		return errorsmod.Wrap(ErrInvalidEvidence, "missing evidence")
 	}
 	if err := evi.ValidateBasic(); err != nil {
 		return err

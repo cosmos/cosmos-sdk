@@ -6,7 +6,8 @@ import (
 	"io"
 
 	"cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/types"
+
+	"cosmossdk.io/store/types"
 )
 
 const (

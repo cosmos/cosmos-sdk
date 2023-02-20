@@ -9,9 +9,10 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/tx/textual"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/x/tx/textual"
 )
 
 func TestCoinsJsonTestcases(t *testing.T) {
@@ -21,7 +22,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	txt := textual.NewTextual(mockCoinMetadataQuerier)
+	txt := textual.NewSignModeHandler(mockCoinMetadataQuerier)
 	vr, err := txt.GetFieldValueRenderer(fieldDescriptorFromName("COINS"))
 	vrr := vr.(textual.RepeatedValueRenderer)
 	require.NoError(t, err)
@@ -41,7 +42,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))
-				require.Equal(t, tc.Text, screens[0].Text)
+				require.Equal(t, tc.Text, screens[0].Content)
 
 				// Round trip.
 				parsedValue := NewGenericList([]*basev1beta1.Coin{})
@@ -65,7 +66,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 // set equality using a map.
 func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 	require.Equal(t, l1.Len(), l2.Len())
-	var coinsMap = make(map[string]*basev1beta1.Coin, l1.Len())
+	coinsMap := make(map[string]*basev1beta1.Coin, l1.Len())
 
 	for i := 0; i < l1.Len(); i++ {
 		coin, ok := l1.Get(i).Message().Interface().(*basev1beta1.Coin)

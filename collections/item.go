@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
+	"cosmossdk.io/collections/codec"
 )
 
 // Item is a type declaration based on Map
@@ -17,18 +19,10 @@ func NewItem[V any](
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	valueCodec ValueCodec[V],
+	valueCodec codec.ValueCodec[V],
 ) Item[V] {
 	item := (Item[V])(NewMap[noKey](schema, prefix, name, noKey{}, valueCodec))
 	return item
-}
-
-func (i Item[V]) getName() string {
-	return i.name
-}
-
-func (i Item[V]) getPrefix() []byte {
-	return i.prefix
 }
 
 // Get gets the item, if it is not set it returns an ErrNotFound error.

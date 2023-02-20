@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
@@ -223,7 +223,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 
 	for _, tc := range cases {
 		cmd := authcli.GetSignCommand()
-		tmcli.PrepareBaseCmd(cmd, "", "")
+		cmtcli.PrepareBaseCmd(cmd, "", "")
 		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
 		if tc.expErr {
 			s.Require().Error(err)
@@ -1164,11 +1164,12 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
-	s.Require().NoError(err)
-
 	var balRes banktypes.QueryAllBalancesResponse
 	err = s.network.RetryForBlocks(func() error {
+		resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
+		if err != nil {
+			return err
+		}
 		return val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	}, 3)
 	s.Require().NoError(err)

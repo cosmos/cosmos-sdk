@@ -1,4 +1,4 @@
-package tx
+package testutil
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 )
 
 // TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct.
-type TxConfigTestSuite struct { //nolint:revive
+type TxConfigTestSuite struct {
 	suite.Suite
 	TxConfig client.TxConfig
 }

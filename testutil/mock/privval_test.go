@@ -3,8 +3,8 @@ package mock
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestGetPubKey(t *testing.T) {
@@ -16,7 +16,7 @@ func TestGetPubKey(t *testing.T) {
 
 func TestSignVote(t *testing.T) {
 	pv := NewPV()
-	v := tmproto.Vote{}
+	v := cmtproto.Vote{}
 	err := pv.SignVote("chain-id", &v)
 	require.NoError(t, err)
 	require.NotNil(t, v.Signature)
@@ -24,7 +24,7 @@ func TestSignVote(t *testing.T) {
 
 func TestSignProposal(t *testing.T) {
 	pv := NewPV()
-	p := tmproto.Proposal{}
+	p := cmtproto.Proposal{}
 	err := pv.SignProposal("chain-id", &p)
 	require.NoError(t, err)
 	require.NotNil(t, p.Signature)

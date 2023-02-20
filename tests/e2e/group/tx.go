@@ -2173,14 +2173,27 @@ func (s *E2ETestSuite) TestTxLeaveGroup() {
 		),
 	)
 	s.Require().NoError(err, out.String())
-	s.Require().NoError(s.network.WaitForNextBlock())
 
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+	err = s.network.RetryForBlocks(func() error {
+		out, err = clitestutil.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		if err != nil {
+			return err
+		}
+
+		var resp group.QueryGroupPoliciesByGroupResponse
+		err = clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp)
+		if err != nil {
+			return err
+		}
+
+		if len(resp.GroupPolicies) != 1 {
+			return fmt.Errorf("expected 1 group policy, got %d", len(resp.GroupPolicies))
+		}
+
+		return nil
+	}, 3)
+
 	s.Require().NoError(err, out.String())
-	s.Require().NotNil(out)
-	var resp group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp))
-	s.Require().Len(resp.GroupPolicies, 1)
 
 	testCases := []struct {
 		name         string

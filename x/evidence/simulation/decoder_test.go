@@ -5,16 +5,16 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/x/evidence/keeper"
+	"cosmossdk.io/x/evidence/simulation"
+	"cosmossdk.io/x/evidence/testutil"
+	"cosmossdk.io/x/evidence/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func TestDecodeStore(t *testing.T) {

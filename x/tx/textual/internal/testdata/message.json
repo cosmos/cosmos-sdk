@@ -2,7 +2,7 @@
     {
         "proto": {},
         "screens": [
-            {"text": "Foo object"}
+            {"content": "Foo object"}
         ]
     },
     {
@@ -10,8 +10,8 @@
             "full_name": "nonempty"
         },
         "screens": [
-            {"text": "Foo object"},
-            {"text": "Full name: nonempty", "indent": 1}
+            {"content": "Foo object"},
+            {"title": "Full name", "content": "nonempty", "indent": 1}
         ]
     },
     {
@@ -20,9 +20,9 @@
             "nickname": ":thing two"
         },
         "screens": [
-            {"text": "Foo object"},
-            {"text": "Full name: thing one", "indent": 1},
-            {"text": "Nickname: :thing two", "indent": 1}
+            {"content": "Foo object"},
+            {"title": "Full name", "content": "thing one", "indent": 1},
+            {"title": "Nickname", "content": ":thing two", "indent": 1}
         ]
     },
     {
@@ -33,9 +33,9 @@
             }
         },
         "screens": [
-            {"text": "Foo object"},
-            {"text": "Full name: special child message", "indent": 1},
-            {"text": "Mtime: 2006-01-02T15:04:05Z", "indent": 1}
+            {"content": "Foo object"},
+            {"title": "Full name", "content": "special child message", "indent": 1},
+            {"title": "Mtime", "content": "2006-01-02T15:04:05Z", "indent": 1}
         ]
     },
     {
@@ -44,9 +44,9 @@
             "left": {}
         },
         "screens": [
-            {"text": "Foo object"},
-            {"text": "Nickname: empty child", "indent": 1},
-            {"text": "Left: Foo object", "indent": 1}
+            {"content": "Foo object"},
+            {"title": "Nickname", "content": "empty child", "indent": 1},
+            {"title": "Left", "content": "Foo object", "indent": 1}
         ]
     },
     {
@@ -57,11 +57,11 @@
             "bar": {}
         },
         "screens": [
-            {"text": "Foo object"},
-            {"text": "Nickname: empty children", "indent": 1},
-            {"text": "Left: Foo object", "indent": 1},
-            {"text": "Right: Foo object", "indent": 1},
-            {"text": "Bar: Bar object", "indent": 1}
+            {"content": "Foo object"},
+            {"title": "Nickname", "content": "empty children", "indent": 1},
+            {"title": "Left", "content": "Foo object", "indent": 1},
+            {"title": "Right", "content": "Foo object", "indent": 1},
+            {"title": "Bar", "content": "Bar object", "indent": 1}
         ]
     },
     {
@@ -74,12 +74,12 @@
             "bar": {}
         },
         "screens": [
-            {"text": "Foo object"},
-            {"text": "Full name: subfield", "indent": 1},
-            {"text": "Left: Foo object", "indent": 1},
-            {"text": "Right: Foo object", "indent": 1},
-            {"text": "Nickname: junior", "indent": 2},
-            {"text": "Bar: Bar object", "indent": 1}
+            {"content": "Foo object"},
+            {"title": "Full name", "content": "subfield", "indent": 1},
+            {"title": "Left", "content": "Foo object", "indent": 1},
+            {"title": "Right", "content": "Foo object", "indent": 1},
+            {"title": "Nickname", "content": "junior", "indent": 2},
+            {"title": "Bar", "content": "Bar object", "indent": 1}
         ]
     },
     {
@@ -95,18 +95,18 @@
             }
         },
         "screens": [
-            {"text": "Foo object"},
-            {"text": "Full name: deep", "indent": 1},
-            {"text": "Left: Foo object", "indent": 1},
-            {"text": "Left: Foo object", "indent": 2},
-            {"text": "Nickname: LL", "indent": 3},
-            {"text": "Right: Foo object", "indent": 2},
-            {"text": "Nickname: LR", "indent": 3},
-            {"text": "Right: Foo object", "indent": 1},
-            {"text": "Left: Foo object", "indent": 2},
-            {"text": "Nickname: RL", "indent": 3},
-            {"text": "Right: Foo object", "indent": 2},
-            {"text": "Nickname: RR", "indent": 3}
+            {"content": "Foo object"},
+            {"title": "Full name", "content": "deep", "indent": 1},
+            {"title": "Left", "content": "Foo object", "indent": 1},
+            {"title": "Left", "content": "Foo object", "indent": 2},
+            {"title": "Nickname", "content": "LL", "indent": 3},
+            {"title": "Right", "content": "Foo object", "indent": 2},
+            {"title": "Nickname", "content": "LR", "indent": 3},
+            {"title": "Right", "content": "Foo object", "indent": 1},
+            {"title": "Left", "content": "Foo object", "indent": 2},
+            {"title": "Nickname", "content": "RL", "indent": 3},
+            {"title": "Right", "content": "Foo object", "indent": 2},
+            {"title": "Nickname", "content": "RR", "indent": 3}
         ]
     },
     {
@@ -124,16 +124,16 @@
             }
         },
         "screens": [
-            {"text": "Foo object"},
-            {"text": "Full name:  the kitchen sink ", "indent": 1},
-            {"text": "Mtime: 1970-01-01T00:00:00Z", "indent": 1},
-            {"text": "Left: Foo object", "indent": 1},
-            {"text": "Right: Foo object", "indent": 1},
-            {"text": "Nickname: blub", "indent": 2},
-            {"text": "Right: Foo object", "indent": 2},
-            {"text": "Bar: Bar object", "indent": 2},
-            {"text": "Bar id: quux", "indent": 3},
-            {"text": "Data: FFFE", "indent": 3}
+            {"content": "Foo object"},
+            {"title": "Full name", "content": " the kitchen sink ", "indent": 1},
+            {"title": "Mtime", "content": "1970-01-01T00:00:00Z", "indent": 1},
+            {"title": "Left", "content": "Foo object", "indent": 1},
+            {"title": "Right", "content": "Foo object", "indent": 1},
+            {"title": "Nickname", "content": "blub", "indent": 2},
+            {"title": "Right", "content": "Foo object", "indent": 2},
+            {"title": "Bar", "content": "Bar object", "indent": 2},
+            {"title": "Bar id", "content": "quux", "indent": 3},
+            {"title": "Data", "content": "FFFE", "indent": 3}
         ]
     }
 ]

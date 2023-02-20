@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	proto "github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -120,7 +119,7 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	}, nil
 }
 
-// ParseTypedEvent converts abci.Event back to typed event
+// ParseTypedEvent converts abci.Event back to a typed event.
 func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 	concreteGoType := proto.MessageType(event.Type)
 	if concreteGoType == nil {
@@ -149,8 +148,8 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 		return nil, err
 	}
 
-	err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
-	if err != nil {
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err := unmarshaler.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg); err != nil {
 		return nil, err
 	}
 
@@ -195,7 +194,7 @@ func (a Attribute) String() string {
 	return fmt.Sprintf("%s: %s", a.Key, a.Value)
 }
 
-// ToKVPair converts an Attribute object into a Tendermint key/value pair.
+// ToKVPair converts an Attribute object into a CometBFT key/value pair.
 func (a Attribute) ToKVPair() abci.EventAttribute {
 	return abci.EventAttribute{Key: a.Key, Value: a.Value}
 }
@@ -289,29 +288,6 @@ func (se StringEvents) String() string {
 	return strings.TrimRight(sb.String(), "\n")
 }
 
-// Flatten returns a flattened version of StringEvents by grouping all attributes
-// per unique event type.
-func (se StringEvents) Flatten() StringEvents {
-	flatEvents := make(map[string][]Attribute)
-
-	for _, e := range se {
-		flatEvents[e.Type] = append(flatEvents[e.Type], e.Attributes...)
-	}
-	keys := make([]string, 0, len(flatEvents))
-	res := make(StringEvents, 0, len(flatEvents)) // appeneded to keys, same length of what is allocated to keys
-
-	for ty := range flatEvents {
-		keys = append(keys, ty)
-	}
-
-	sort.Strings(keys)
-	for _, ty := range keys {
-		res = append(res, StringEvent{Type: ty, Attributes: flatEvents[ty]})
-	}
-
-	return res
-}
-
 // StringifyEvent converts an Event object to a StringEvent object.
 func StringifyEvent(e abci.Event) StringEvent {
 	res := StringEvent{Type: e.Type}
@@ -335,7 +311,7 @@ func StringifyEvents(events []abci.Event) StringEvents {
 		res = append(res, StringifyEvent(e))
 	}
 
-	return res.Flatten()
+	return res
 }
 
 // MarkEventsToIndex returns the set of ABCI events, where each event's attribute

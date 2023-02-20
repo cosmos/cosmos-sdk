@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections/codec"
+
 	"cosmossdk.io/core/store"
 )
 
@@ -121,7 +123,6 @@ func (r *Range[K]) Descending() *Range[K] {
 
 // test sentinel error
 var (
-	errRange = errors.New("collections: range error")
 	errOrder = errors.New("collections: invalid order")
 )
 
@@ -162,25 +163,34 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 		endBytes = nextBytesPrefixKey(m.prefix)
 	}
 
-	kv := m.sa(ctx)
-	switch order {
-	case OrderAscending:
-		return newIterator(kv.Iterator(startBytes, endBytes), m)
-	case OrderDescending:
-		return newIterator(kv.ReverseIterator(startBytes, endBytes), m)
-	default:
-		return iter, errOrder
-	}
+	return newIterator(ctx, startBytes, endBytes, order, m)
 }
 
-func newIterator[K, V any](iterator store.Iterator, m Map[K, V]) (Iterator[K, V], error) {
-	if iterator.Valid() == false {
+func newIterator[K, V any](ctx context.Context, start, end []byte, order Order, m Map[K, V]) (Iterator[K, V], error) {
+	kv := m.sa(ctx)
+	var (
+		iter store.Iterator
+		err  error
+	)
+	switch order {
+	case OrderAscending:
+		iter, err = kv.Iterator(start, end)
+	case OrderDescending:
+		iter, err = kv.ReverseIterator(start, end)
+	default:
+		return Iterator[K, V]{}, errOrder
+	}
+	if err != nil {
+		return Iterator[K, V]{}, err
+	}
+	if !iter.Valid() {
 		return Iterator[K, V]{}, ErrInvalidIterator
 	}
+
 	return Iterator[K, V]{
 		kc:           m.kc,
 		vc:           m.vc,
-		iter:         iterator,
+		iter:         iter,
 		prefixLength: len(m.prefix),
 	}, nil
 }
@@ -190,8 +200,8 @@ func newIterator[K, V any](iterator store.Iterator, m Map[K, V]) (Iterator[K, V]
 // it assumes all the keys and values contained within the storetypes.Iterator
 // range are the same.
 type Iterator[K, V any] struct {
-	kc KeyCodec[K]
-	vc ValueCodec[V]
+	kc codec.KeyCodec[K]
+	vc codec.ValueCodec[V]
 
 	iter store.Iterator
 
@@ -291,7 +301,7 @@ type KeyValue[K, V any] struct {
 }
 
 // encodeRangeBound encodes a range bound, modifying the key bytes to adhere to bound semantics.
-func encodeRangeBound[T any](prefix []byte, keyCodec KeyCodec[T], bound *RangeKey[T]) ([]byte, error) {
+func encodeRangeBound[T any](prefix []byte, keyCodec codec.KeyCodec[T], bound *RangeKey[T]) ([]byte, error) {
 	key, err := encodeKeyWithPrefix(prefix, keyCodec, bound.key)
 	if err != nil {
 		return nil, err

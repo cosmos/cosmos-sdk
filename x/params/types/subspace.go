@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -50,10 +51,10 @@ func (s Subspace) HasKeyTable() bool {
 // WithKeyTable initializes KeyTable and returns modified Subspace
 func (s Subspace) WithKeyTable(table KeyTable) Subspace {
 	if table.m == nil {
-		panic("SetKeyTable() called with nil KeyTable")
+		panic("WithKeyTable() called with nil KeyTable")
 	}
 	if len(s.table.m) != 0 {
-		panic("SetKeyTable() called on already initialized Subspace")
+		panic("WithKeyTable() called on already initialized Subspace")
 	}
 
 	for k, v := range table.m {

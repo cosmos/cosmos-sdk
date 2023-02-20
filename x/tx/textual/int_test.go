@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/math"
+
 	"cosmossdk.io/x/tx/textual"
 )
 
@@ -22,7 +23,7 @@ func TestIntJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := textual.NewTextual(nil)
+	textual := textual.NewSignModeHandler(nil)
 
 	for _, tc := range testcases {
 		t.Run(tc[0], func(t *testing.T) {
@@ -65,7 +66,7 @@ func checkNumberTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Valu
 	require.Equal(t, 0, screens[0].Indent)
 	require.Equal(t, false, screens[0].Expert)
 
-	require.Equal(t, expected, screens[0].Text)
+	require.Equal(t, expected, screens[0].Content)
 
 	// Round trip.
 	value, err := r.Parse(context.Background(), screens)

@@ -151,26 +151,6 @@ func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema 
 	}
 }
 
-func (s Schema) addCollection(collection collection) {
-	prefix := collection.getPrefix()
-	name := collection.getName()
-
-	if _, ok := s.collectionsByPrefix[string(prefix)]; ok {
-		panic(fmt.Errorf("prefix %v already taken within schema", prefix))
-	}
-
-	if _, ok := s.collectionsByName[name]; ok {
-		panic(fmt.Errorf("name %s already taken within schema", name))
-	}
-
-	if !nameRegex.MatchString(name) {
-		panic(fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
-	}
-
-	s.collectionsByPrefix[string(prefix)] = collection
-	s.collectionsByName[name] = collection
-}
-
 // DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
 func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
 	for _, name := range s.collectionsOrdered {

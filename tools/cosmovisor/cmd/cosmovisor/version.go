@@ -6,7 +6,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/log"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +24,7 @@ var versionCmd = &cobra.Command{
 	Short:        "Prints the version of Cosmovisor.",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(cosmovisor.LoggerKey).(*zerolog.Logger)
+		logger := cmd.Context().Value(log.ContextKey).(*zerolog.Logger)
 
 		if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
 			return printVersionJSON(logger, args)

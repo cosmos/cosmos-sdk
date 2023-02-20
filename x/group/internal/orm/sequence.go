@@ -3,9 +3,10 @@ package orm
 import (
 	"encoding/binary"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
@@ -56,7 +57,7 @@ func (s Sequence) PeekNextVal(store storetypes.KVStore) uint64 {
 func (s Sequence) InitVal(store storetypes.KVStore, seq uint64) error {
 	pStore := prefix.NewStore(store, []byte{s.prefix})
 	if pStore.Has(sequenceStorageKey) {
-		return sdkerrors.Wrap(errors.ErrORMUniqueConstraint, "already initialized")
+		return errorsmod.Wrap(errors.ErrORMUniqueConstraint, "already initialized")
 	}
 	pStore.Set(sequenceStorageKey, EncodeSequence(seq))
 	return nil

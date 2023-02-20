@@ -59,6 +59,14 @@ func TestMigrateJSON(t *testing.T) {
 	"deposit_params": null,
 	"deposits": [],
 	"params": {
+		"expedited_min_deposit": [
+			{
+				"amount": "50000000",
+				"denom": "stake"
+			}
+		],
+		"expedited_threshold": "0.667000000000000000",
+		"expedited_voting_period": "86400s",
 		"max_deposit_period": "172800s",
 		"min_deposit": [
 			{
@@ -67,6 +75,8 @@ func TestMigrateJSON(t *testing.T) {
 			}
 		],
 		"min_initial_deposit_ratio": "0.000000000000000000",
+		"proposal_cancel_dest": "",
+		"proposal_cancel_ratio": "0.500000000000000000",
 		"quorum": "0.334000000000000000",
 		"threshold": "0.500000000000000000",
 		"veto_threshold": "0.334000000000000000",

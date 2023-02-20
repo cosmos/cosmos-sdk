@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -59,7 +59,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	)
 	assert.NilError(t, err)
 
-	f.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	f.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(f.ctx, interfaceRegistry)
 	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: f.stakingKeeper})
@@ -338,7 +338,7 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 			shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 			assert.NilError(t, err)
 
-			_, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+			_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
 			assert.NilError(t, err)
 		}
 
@@ -356,13 +356,13 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
-	_, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
+	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
 	assert.NilError(t, err)
 
 	shares2, err := fundAccountAndDelegate(f, t, delegatorAddr2, validator, f.amt2)
 	assert.NilError(t, err)
 
-	_, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr2, validatorAddr1, shares2)
+	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr2, validatorAddr1, shares2)
 	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryValidatorUnbondingDelegationsRequest{
@@ -414,7 +414,7 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 		shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 		assert.NilError(t, err)
 
-		_, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+		_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
 		assert.NilError(t, err)
 
 		req := &stakingtypes.QueryUnbondingDelegationRequest{
@@ -431,7 +431,7 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
-	_, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
+	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
 	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryUnbondingDelegationRequest{
@@ -524,7 +524,7 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 			shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 			assert.NilError(t, err)
 
-			_, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+			_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
 			assert.NilError(t, err)
 		}
 
@@ -542,7 +542,7 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
-	_, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
+	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
 	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorUnbondingDelegationsRequest{
@@ -565,7 +565,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		}
 
 		historicalInfo := stakingtypes.HistoricalInfo{
-			Header: tmproto.Header{},
+			Header: cmtproto.Header{},
 			Valset: vals,
 		}
 
@@ -589,7 +589,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 	validator := getStaticValidator(f, t)
 
 	historicalInfo := stakingtypes.HistoricalInfo{
-		Header: tmproto.Header{},
+		Header: cmtproto.Header{},
 		Valset: []stakingtypes.Validator{validator},
 	}
 

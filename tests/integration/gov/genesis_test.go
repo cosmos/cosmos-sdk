@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,7 +22,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -66,19 +66,19 @@ func TestImportExportQueues(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := s1.app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := s1.app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
-	header := tmproto.Header{Height: s1.app.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: s1.app.LastBlockHeight() + 1}
 	s1.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx = s1.app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = s1.app.BaseApp.NewContext(false, cmtproto.Header{})
 	// Create two proposals, put the second into the voting period
-	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0])
+	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
 	assert.NilError(t, err)
 	proposalID1 := proposal1.Id
 
-	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0])
+	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
 	assert.NilError(t, err)
 	proposalID2 := proposal2.Id
 
@@ -106,7 +106,7 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[banktypes.ModuleName] = s1.cdc.MustMarshalJSON(bankGenState)
 	genesisState[types.ModuleName] = s1.cdc.MustMarshalJSON(govGenState)
 	genesisState[stakingtypes.ModuleName] = s1.cdc.MustMarshalJSON(stakingGenState)
-	genesisState[distributiontypes.ModuleName] = s1.cdc.MustMarshalJSON(distributionGenState)
+	genesisState[disttypes.ModuleName] = s1.cdc.MustMarshalJSON(distributionGenState)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)
@@ -128,12 +128,12 @@ func TestImportExportQueues(t *testing.T) {
 	)
 
 	s2.app.Commit()
-	s2.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s2.app.LastBlockHeight() + 1}})
+	s2.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s2.app.LastBlockHeight() + 1}})
 
-	header = tmproto.Header{Height: s2.app.LastBlockHeight() + 1}
+	header = cmtproto.Header{Height: s2.app.LastBlockHeight() + 1}
 	s2.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx2 := s2.app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx2 := s2.app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	// Jump the time forward past the DepositPeriod and VotingPeriod
 	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*s2.GovKeeper.GetParams(ctx2).MaxDepositPeriod).Add(*s2.GovKeeper.GetParams(ctx2).VotingPeriod))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -85,13 +86,28 @@ func (b *Builder) BuildModuleQueryCommand(moduleName string, cmdDescriptor *auto
 // method in the specified service and returns the command. This can be used in
 // order to add auto-generated commands to an existing command.
 func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
+	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
+		subCmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
+		err := b.AddQueryServiceCommands(subCmd, subCmdDesc)
+		if err != nil {
+			return err
+		}
+
+		cmd.AddCommand(subCmd)
+	}
+
+	// skip empty command descriptors
+	if cmdDescriptor.Service == "" {
+		return nil
+	}
+
 	resolver := b.FileResolver
 	if resolver == nil {
 		resolver = protoregistry.GlobalFiles
 	}
 	descriptor, err := resolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
-		return fmt.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
+		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
 	}
 
 	service := descriptor.(protoreflect.ServiceDescriptor)
@@ -119,16 +135,6 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		if methodCmd != nil {
 			cmd.AddCommand(methodCmd)
 		}
-	}
-
-	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
-		subCmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
-		err = b.AddQueryServiceCommands(subCmd, subCmdDesc)
-		if err != nil {
-			return err
-		}
-
-		cmd.AddCommand(subCmd)
 	}
 
 	return nil

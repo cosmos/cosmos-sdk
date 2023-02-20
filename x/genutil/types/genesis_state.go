@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	tmtypes "github.com/tendermint/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,7 +66,7 @@ func SetGenesisStateInAppState(
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromGenDoc(genDoc tmtypes.GenesisDoc) (genesisState map[string]json.RawMessage, err error) {
+func GenesisStateFromGenDoc(genDoc cmttypes.GenesisDoc) (genesisState map[string]json.RawMessage, err error) {
 	if err = json.Unmarshal(genDoc.AppState, &genesisState); err != nil {
 		return genesisState, err
 	}
@@ -77,13 +77,13 @@ func GenesisStateFromGenDoc(genDoc tmtypes.GenesisDoc) (genesisState map[string]
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromGenFile(genFile string) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
+func GenesisStateFromGenFile(genFile string) (genesisState map[string]json.RawMessage, genDoc *cmttypes.GenesisDoc, err error) {
 	if _, err := os.Stat(genFile); os.IsNotExist(err) {
 		return genesisState, genDoc,
 			fmt.Errorf("%s does not exist, run `init` first", genFile)
 	}
 
-	genDoc, err = tmtypes.GenesisDocFromFile(genFile)
+	genDoc, err = cmttypes.GenesisDocFromFile(genFile)
 	if err != nil {
 		return genesisState, genDoc, err
 	}

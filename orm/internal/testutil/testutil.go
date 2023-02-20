@@ -80,6 +80,10 @@ var TestFieldSpecs = []TestFieldSpec{
 	{
 		"ts",
 		rapid.Custom(func(t *rapid.T) protoreflect.Message {
+			isNil := rapid.Float32().Draw(t, "isNil")
+			if isNil >= 0.95 { // draw a nil 5% of the time
+				return nil
+			}
 			seconds := rapid.Int64Range(-9999999999, 9999999999).Draw(t, "seconds")
 			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
 			return (&timestamppb.Timestamp{
@@ -101,7 +105,7 @@ var TestFieldSpecs = []TestFieldSpec{
 	},
 	{
 		"e",
-		rapid.Transform(rapid.Int32(), func(x int32) protoreflect.EnumNumber {
+		rapid.Map(rapid.Int32(), func(x int32) protoreflect.EnumNumber {
 			return protoreflect.EnumNumber(x)
 		}).AsAny(),
 	},
@@ -180,7 +184,9 @@ var GenA = rapid.Custom(func(t *rapid.T) *testpb.ExampleTable {
 	for _, spec := range TestFieldSpecs {
 		field := GetTestField(spec.FieldName)
 		value := spec.Gen.Draw(t, string(spec.FieldName))
-		ref.Set(field, protoreflect.ValueOf(value))
+		if value != nil {
+			ref.Set(field, protoreflect.ValueOf(value))
+		}
 	}
 	return a
 })

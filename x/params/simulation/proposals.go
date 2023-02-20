@@ -12,7 +12,9 @@ const (
 )
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents(paramChanges []simtypes.ParamChange) []simtypes.WeightedProposalContent {
+//
+//nolint:staticcheck
+func ProposalContents(paramChanges []simtypes.LegacyParamChange) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
 			OpWeightSubmitParamChangeProposal,

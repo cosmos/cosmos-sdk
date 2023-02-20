@@ -20,7 +20,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.48.0
-	github.com/cosmos/gogoproto v1.4.5-0.20230216163914-ebefb9168455
+	github.com/cosmos/gogoproto v1.4.5-0.20230220092840-bdc8ba8e370e
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1

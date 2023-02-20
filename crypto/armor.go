@@ -42,7 +42,7 @@ const (
 // than what they see, which is a significantly cheaper attack then breaking
 // a bcrypt hash. (Recall that the nonce still exists to break rainbow tables)
 // For further notes on security parameter choice, see README.md
-var BcryptSecurityParameter = 12
+var BcryptSecurityParameter uint32 = 12
 
 //-----------------------------------------------------------------
 // add armor

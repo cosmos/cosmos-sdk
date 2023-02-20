@@ -20,8 +20,6 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -329,7 +327,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 				grpcAddress,
 				grpc.WithInsecure(),
 				grpc.WithDefaultCallOptions(
-					grpc.ForceCodec(encoding.GetCodec(proto.Name)),
+					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
 					grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
 					grpc.MaxCallSendMsgSize(maxSendMsgSize),
 				),

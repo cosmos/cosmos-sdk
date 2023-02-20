@@ -17,6 +17,7 @@ require (
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
+	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.48.0
 	github.com/cosmos/gogoproto v1.4.5
@@ -28,8 +29,6 @@ require (
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
 )
-
-require github.com/cosmos/cosmos-proto v1.0.0-beta.1
 
 require (
 	cloud.google.com/go v0.110.0 // indirect
@@ -199,6 +198,7 @@ replace (
 	cosmossdk.io/x/upgrade => ../x/upgrade
 	// This can be deleted after the CometBFT PR is merged
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
+	github.com/cosmos/cosmos-proto => ../../cosmos-proto
 )
 
 // Below are the long-lived replace for tests.

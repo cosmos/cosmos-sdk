@@ -2,6 +2,7 @@ package autocli
 
 import (
 	"bytes"
+	"fmt"
 	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"strings"
@@ -125,7 +126,13 @@ func testMsgBuildError(t *testing.T, args ...string) error {
 			return conn, nil
 		},
 	}
-	cmd, err := b.BuildModuleMsgCommand("test", testCmdMsgDesc)
+	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+
+		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
+		return cmd, err
+	}
+	cmd, err := buildModuleMsgCommand("test", testCmdMsgDesc)
 	assert.NilError(t, err)
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
@@ -163,7 +170,13 @@ func testMsgExec(t *testing.T, args ...string) *testClientConn {
 			return conn, nil
 		},
 	}
-	cmd, err := b.BuildModuleMsgCommand("test", testCmdMsgDesc)
+	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+
+		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
+		return cmd, err
+	}
+	cmd, err := buildModuleMsgCommand("test", testCmdMsgDesc)
 	assert.NilError(t, err)
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
@@ -334,18 +347,24 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 
 func TestNotFoundErrorsMsg(t *testing.T) {
 	b := &Builder{}
+	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+
+		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
+		return cmd, err
+	}
 
 	// Query non existent service
-	_, err := b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"})
+	_, err := buildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"})
 	assert.ErrorContains(t, err, "can't find service un-existent-service")
 
-	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service:           testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "un-existent-method"}},
 	})
 	assert.ErrorContains(t, err, "rpc method \"un-existent-method\" not found")
 
-	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Msg_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
@@ -360,7 +379,7 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 	})
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
-	_, err = b.BuildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Msg_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
@@ -377,6 +396,19 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 
 func TestEnhanceMessageCommand(t *testing.T) {
 	b := &Builder{}
+	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
+		txCmdDesc := modOpts.Tx
+		if txCmdDesc != nil {
+			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+			err := b.AddMsgServiceCommands(cmd, txCmdDesc)
+			if err != nil {
+				return err
+			}
+
+			cmd.AddCommand(subCmd)
+		}
+		return nil
+	}
 
 	// Test that the command has a subcommand
 	cmd := &cobra.Command{Use: "test"}
@@ -384,7 +416,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	options := map[string]*autocliv1.ModuleOptions{
 		"test": {},
 	}
-	err := b.EnhanceMsgCommand(cmd, options, map[string]*cobra.Command{})
+	err := b.EnhanceCommandCommon(cmd, options, map[string]*cobra.Command{}, enhanceMsg)
 	assert.NilError(t, err)
 
 	cmd = &cobra.Command{Use: "test"}
@@ -392,7 +424,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	customCommands := map[string]*cobra.Command{
 		"test2": {Use: "test"},
 	}
-	err = b.EnhanceMsgCommand(cmd, options, customCommands)
+	err = b.EnhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
 	assert.NilError(t, err)
 
 	cmd = &cobra.Command{Use: "test"}
@@ -400,7 +432,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 		"test": {Tx: nil},
 	}
 	customCommands = map[string]*cobra.Command{}
-	err = b.EnhanceMsgCommand(cmd, options, customCommands)
+	err = b.EnhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
 	assert.NilError(t, err)
 
 }

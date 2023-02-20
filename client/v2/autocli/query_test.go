@@ -3,6 +3,7 @@ package autocli
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net"
 	"strings"
 	"testing"
@@ -123,7 +124,13 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 			return conn, nil
 		},
 	}
-	cmd, err := b.BuildModuleQueryCommand("test", testCmdDesc)
+	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+		cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+
+		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
+		return cmd, err
+	}
+	cmd, err := buildModuleQueryCommand("test", testCmdDesc)
 	assert.NilError(t, err)
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
@@ -236,19 +243,26 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 func TestNotFoundErrors(t *testing.T) {
 	b := &Builder{}
 
+	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+		cmd := topLevelCmd("query", "Querying subcommands")
+
+		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
+		return cmd, err
+	}
+
 	// bad service
-	_, err := b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "foo"})
+	_, err := buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "foo"})
 	assert.ErrorContains(t, err, "can't find service foo")
 
 	// bad method
-	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service:           testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "bar"}},
 	})
 	assert.ErrorContains(t, err, "rpc method \"bar\" not found")
 
 	// bad positional field
-	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
@@ -264,7 +278,7 @@ func TestNotFoundErrors(t *testing.T) {
 	assert.ErrorContains(t, err, "can't find field foo")
 
 	// bad flag field
-	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{

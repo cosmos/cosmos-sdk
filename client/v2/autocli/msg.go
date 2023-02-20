@@ -19,7 +19,8 @@ func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOpti
 	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
 		txCmdDesc := modOpts.Tx
 		if txCmdDesc != nil {
-			subCmd, err := b.BuildModuleMsgCommand(moduleName, txCmdDesc)
+			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+			err := b.AddMsgServiceCommands(cmd, txCmdDesc)
 			if err != nil {
 				return err
 			}
@@ -33,62 +34,6 @@ func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOpti
 	}
 
 	return msgCmd, nil
-}
-
-// EnhanceMsgCommand enhances the provided msg command with either generated commands based on the provided module
-// options or the provided custom commands for each module. If the provided msg command already contains a command
-// for a module, that command is not over-written by this method. This allows a graceful addition of autocli to
-// automatically fill in missing commands.
-func (b *Builder) EnhanceMsgCommand(msgCmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) error {
-	allModuleNames := map[string]bool{}
-	for moduleName := range moduleOptions {
-		allModuleNames[moduleName] = true
-	}
-	for moduleName := range customCmds {
-		allModuleNames[moduleName] = true
-	}
-
-	for moduleName := range allModuleNames {
-
-		if msgCmd.HasSubCommands() {
-			if _, _, err := msgCmd.Find([]string{moduleName}); err == nil {
-				// command already exists, skip
-				continue
-			}
-		}
-
-		if customCmd, ok := customCmds[moduleName]; ok {
-			msgCmd.AddCommand(customCmd)
-			continue
-		}
-
-		moduleOpt, ok := moduleOptions[moduleName]
-		if !ok {
-			continue
-		}
-		txCmdDesc := moduleOpt.Tx
-
-		// if descriptor is nil, then there are no commands to add
-		if txCmdDesc == nil {
-			continue
-		}
-
-		cmd, err := b.BuildModuleMsgCommand(moduleName, txCmdDesc)
-		if err != nil {
-			return err
-		}
-		msgCmd.AddCommand(cmd)
-	}
-	return nil
-}
-
-// BuildModuleMsgCommand builds the msg command for a single module.
-func (b *Builder) BuildModuleMsgCommand(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
-
-	err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
-
-	return cmd, err
 }
 
 // AddMsgServiceCommands adds a sub-command to the provided command for each

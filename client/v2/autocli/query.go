@@ -23,7 +23,8 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
 		txCmdDesc := modOpts.Tx
 		if txCmdDesc != nil {
-			subCmd, err := b.BuildModuleQueryCommand(moduleName, txCmdDesc)
+			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+			err := b.AddQueryServiceCommands(cmd, txCmdDesc)
 			if err != nil {
 				return err
 			}
@@ -37,61 +38,6 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 	}
 
 	return queryCmd, nil
-}
-
-// EnhanceQueryCommand enhances the provided query command with either generated commands based on the provided module
-// options or the provided custom commands for each module. If the provided query command already contains a command
-// for a module, that command is not over-written by this method. This allows a graceful addition of autocli to
-// automatically fill in missing commands.
-func (b *Builder) EnhanceQueryCommand(queryCmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) error {
-	allModuleNames := map[string]bool{}
-	for moduleName := range moduleOptions {
-		allModuleNames[moduleName] = true
-	}
-	for moduleName := range customCmds {
-		allModuleNames[moduleName] = true
-	}
-
-	for moduleName := range allModuleNames {
-		// if we have an existing command skip adding one here
-		if existing := findSubCommand(queryCmd, moduleName); existing != nil {
-			continue
-		}
-
-		// if we have a custom command use that instead of generating one
-		if custom := customCmds[moduleName]; custom != nil {
-			// custom commands get added lower down
-			queryCmd.AddCommand(custom)
-			continue
-		}
-
-		// check for autocli options
-		modOpts := moduleOptions[moduleName]
-		if modOpts == nil {
-			continue
-		}
-
-		queryCmdDesc := modOpts.Query
-		if queryCmdDesc != nil {
-			cmd, err := b.BuildModuleQueryCommand(moduleName, queryCmdDesc)
-			if err != nil {
-				return err
-			}
-
-			queryCmd.AddCommand(cmd)
-		}
-	}
-
-	return nil
-}
-
-// BuildModuleQueryCommand builds the query command for a single module.
-func (b *Builder) BuildModuleQueryCommand(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
-
-	err := b.AddQueryServiceCommands(cmd, cmdDescriptor)
-
-	return cmd, err
 }
 
 // AddQueryServiceCommands adds a sub-command to the provided command for each

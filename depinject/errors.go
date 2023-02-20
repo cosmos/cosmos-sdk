@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 )
 
 // ErrMultipleImplicitInterfaceBindings defines an error condition where an attempt was made to implicitly bind

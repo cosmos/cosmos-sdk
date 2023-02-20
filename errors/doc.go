@@ -18,7 +18,7 @@ information by using Wrap function, for example:
 
 	   func safeDiv(val, div int) (int, err) {
 		   if div == 0 {
-			   return 0, errorsmod.Wrapf(ErrZeroDivision, "cannot divide %d", val)
+			   return 0, errors.Wrapf(ErrZeroDivision, "cannot divide %d", val)
 		   }
 		   return val / div, nil
 	   }

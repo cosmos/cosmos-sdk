@@ -59,7 +59,7 @@ func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath st
 	if outputPath == "" {
 		_, err = os.Stdout.Write(buf.Bytes())
 	} else {
-		err = atomicfile.WriteData(outputPath, buf.Bytes(), 0600)
+		err = atomicfile.WriteData(outputPath, buf.Bytes(), 0o600)
 	}
 
 	return err

@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v0.34.27-alpha.1
 	github.com/cometbft/cometbft-db v0.7.0
-	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230217125305-681efb24ec93
+	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0

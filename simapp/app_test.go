@@ -12,6 +12,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -268,4 +269,12 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	}
 
 	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
+}
+
+// TestMergedRegistry tests that fetching the gogo/protov2 merged registry
+// doesn't fail after loading all file descriptors.
+func TestMergedRegistry(t *testing.T) {
+	r, err := proto.MergedRegistry()
+	require.NoError(t, err)
+	require.Greater(t, r.NumFiles(), 0)
 }

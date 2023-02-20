@@ -5,11 +5,11 @@ go 1.20
 require (
 	cosmossdk.io/api v0.3.0
 	cosmossdk.io/client/v2 v2.0.0-20230205135133-41a3dfeced29
+	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cockroachdb/errors v1.9.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.6
-	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.6.1
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.2-0.20230208135220-49eaa78c6c9c
@@ -19,8 +19,7 @@ require (
 	cosmossdk.io/collections v0.0.0-20230214153846-b6c6e4e99177 // indirect
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
-	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/log v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78 // indirect
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 // indirect
 	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
@@ -89,6 +88,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.40.0 // indirect
@@ -125,8 +125,5 @@ require (
 
 // Here are the short-lived replace of Hubl
 // Replace here are pending PRs, or version to be tagged
-replace (
-	cosmossdk.io/log => ../../log
-	// TODO this can be removed when client/v2 is released with CometBFT changes in the SDK
-	github.com/cosmos/cosmos-sdk => ../..
-)
+// TODO this can be removed when client/v2 is released with CometBFT changes in the SDK
+replace github.com/cosmos/cosmos-sdk => ../..

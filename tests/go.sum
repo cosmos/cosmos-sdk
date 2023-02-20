@@ -200,6 +200,8 @@ cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
+cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78 h1:Scox9JfANgkuAO0F9LMH0e0W5ijmp2BQbsok/U+jDUo=
+cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78/go.mod h1:MyvZ6k9eL0azI/yf8m5gqsM8PgbtFmqjire1OxUMkmc=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 h1:/jnzJ9zFsL7qkV8LCQ1JH3dYHh2EsKZ3k8Mr6AqqiOA=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
 cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7 h1:IwyDN/YaQmF+Pmuv8d7vRWMM/k2RjSmPBycMcmd3ICE=

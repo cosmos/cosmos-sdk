@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"os"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
@@ -69,7 +70,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 	err = msgservice.ValidateServiceAnnotations(protoFiles, sd.ServiceName)
 	if err != nil {
 		// We might panic here in the future, instead of simply logging.
-		fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %s\n", err)
+		fmt.Fprintf(os.Stderr, "The SDK is requiring protobuf annotation on Msgs; %s\n", err)
 	}
 
 	// Adds a top-level query handler based on the gRPC service name.
@@ -95,7 +96,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			err := msgservice.ValidateMsgAnnotations(protoFiles, proto.MessageName(msg))
 			if err != nil {
 				// We might panic here in the future, instead of logging.
-				fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %s\n", err)
+				fmt.Fprintf(os.Stderr, "The SDK is requiring protobuf annotation on Msgs; %s\n", err)
 			}
 
 			requestTypeName = sdk.MsgTypeURL(msg)

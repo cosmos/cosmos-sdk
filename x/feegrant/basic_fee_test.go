@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
@@ -19,7 +19,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
 
 	badTime := ctx.BlockTime().AddDate(0, 0, -1)
 	allowace := &feegrant.BasicAllowance{
@@ -27,7 +27,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	}
 	require.Error(t, allowace.ValidateBasic())
 
-	ctx = ctx.WithBlockHeader(tmproto.Header{
+	ctx = ctx.WithBlockHeader(cmtproto.Header{
 		Time: time.Now(),
 	})
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))

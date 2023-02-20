@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math/unsafe"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
@@ -461,7 +461,7 @@ const (
 )
 
 func randInt(n int) int {
-	return tmrand.NewRand().Int() % n
+	return unsafe.NewRand().Int() % n
 }
 
 // useful for replaying a error case if we find one

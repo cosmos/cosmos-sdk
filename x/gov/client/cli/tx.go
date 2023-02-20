@@ -20,19 +20,19 @@ import (
 
 // Proposal flags
 const (
-	FlagTitle = "title"
+	FlagTitle     = "title"
+	FlagDeposit   = "deposit"
+	flagVoter     = "voter"
+	flagDepositor = "depositor"
+	flagStatus    = "status"
+	FlagMetadata  = "metadata"
+	FlagSummary   = "summary"
+	// Deprecated: only used for v1beta1 legacy proposals.
+	FlagProposal = "proposal"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagDescription = "description"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
-	FlagDeposit      = "deposit"
-	flagVoter        = "voter"
-	flagDepositor    = "depositor"
-	flagStatus       = "status"
-	FlagMetadata     = "metadata"
-	FlagSummary      = "summary"
-	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagProposal = "proposal"
 )
 
 // ProposalFlags defines the core required fields of a legacy proposal. It is used to
@@ -105,10 +105,23 @@ Where proposal.json contains:
       "amount":[{"denom": "stake","amount": "10"}]
     }
   ],
-  "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
+  // metadata can be any of base64 encoded, raw text, stringified json, IPFS link to json
+  // see below for example metadata
+  "metadata: "4pIMOgIGx1vZGU=",
   "deposit": "10stake"
   "title: "My proposal"
-  "summary": "A short summary of my proposal"
+  "summary": "A short summary of my proposal",
+  "expedited": false
+}
+
+metadata example: 
+{
+	"title": "",
+	"authors": [""],
+	"summary": "",
+	"details": "", 
+	"proposal_forum_url": "",
+	"vote_option_context": "",
 }
 `,
 				version.AppName,
@@ -120,12 +133,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			msgs, metadata, title, summary, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			proposal, msgs, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, title, summary)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.Expedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}

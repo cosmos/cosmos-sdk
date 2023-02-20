@@ -7,9 +7,9 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	store "cosmossdk.io/store/types"
 
@@ -119,9 +119,9 @@ func (am AppModule) InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) [
 	return nil
 }
 
-// ExportGenesis is handled by tendermint export of genesis
+// ExportGenesis is handled by CometBFT export of genesis
 func (am AppModule) ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage {
-	// nil is returned since ExportGenesis of consensus params is handled by tendermint and baseapp
+	// nil is returned since ExportGenesis of consensus params is handled by CometBFT and baseapp
 	return nil
 }
 

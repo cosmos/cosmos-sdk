@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,7 +23,7 @@ func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, ex
 	}
 
 	cmd := cli.GetSignCommand()
-	tmcli.PrepareBaseCmd(cmd, "", "")
+	cmtcli.PrepareBaseCmd(cmd, "", "")
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, append(args, extraArgs...))
 }
@@ -92,7 +92,7 @@ func TxAuxToFeeExec(clientCtx client.Context, filename string, extraArgs ...stri
 }
 
 func QueryAccountExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args := []string{address.String(), fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAccountCmd(), append(args, extraArgs...))
 }

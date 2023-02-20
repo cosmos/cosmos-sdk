@@ -3,9 +3,9 @@ package types_test
 import (
 	"testing"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/metrics"

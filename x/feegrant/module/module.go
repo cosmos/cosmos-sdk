@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/errors"
 
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
@@ -25,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -82,7 +82,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data feegrant.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", feegrant.ModuleName)
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", feegrant.ModuleName)
 	}
 
 	return feegrant.ValidateGenesis(data)

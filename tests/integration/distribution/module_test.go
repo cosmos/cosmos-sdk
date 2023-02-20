@@ -3,7 +3,7 @@ package distribution_test
 import (
 	"testing"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -19,7 +19,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	app, err := simtestutil.SetupAtGenesis(testutil.AppConfig, &accountKeeper)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	assert.Assert(t, acc != nil)
 }

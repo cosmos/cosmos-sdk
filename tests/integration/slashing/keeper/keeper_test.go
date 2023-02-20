@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -51,7 +51,7 @@ func initFixture(t assert.TestingT) *fixture {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
 	f.slashingKeeper.SetParams(ctx, testutil.TestParams())

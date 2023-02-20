@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
@@ -67,7 +67,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	assert.Assert(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Unix(10, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
 	assert.Assert(t, slashAmount.Equal(sdk.NewInt(0)))
@@ -75,7 +75,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// test valid slash, before expiration timestamp and to which stake contributed
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldUnbondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Unix(0, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
 	assert.Assert(t, slashAmount.Equal(sdk.NewInt(5)))
@@ -124,7 +124,7 @@ func TestSlashRedelegation(t *testing.T) {
 	assert.Assert(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Unix(10, 0)})
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	assert.Assert(t, found)
@@ -134,7 +134,7 @@ func TestSlashRedelegation(t *testing.T) {
 	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Unix(0, 0)})
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	assert.Assert(t, found)

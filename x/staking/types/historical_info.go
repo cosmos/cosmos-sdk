@@ -5,18 +5,19 @@ import (
 
 	"cosmossdk.io/math"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewHistoricalInfo will create a historical information struct from header and valset
 // it will first sort valset before inclusion into historical info
-func NewHistoricalInfo(header tmproto.Header, valSet Validators, powerReduction math.Int) HistoricalInfo {
-	// Must sort in the same way that tendermint does
+func NewHistoricalInfo(header cmtproto.Header, valSet Validators, powerReduction math.Int) HistoricalInfo {
+	// Must sort in the same way that CometBFT does
 	sort.SliceStable(valSet, func(i, j int) bool {
 		return ValidatorsByVotingPower(valSet).Less(i, j, powerReduction)
 	})
@@ -46,11 +47,11 @@ func UnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) (hi Historical
 // ValidateBasic will ensure HistoricalInfo is not nil and sorted
 func ValidateBasic(hi HistoricalInfo) error {
 	if len(hi.Valset) == 0 {
-		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
+		return errors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
 	}
 
 	if !sort.IsSorted(Validators(hi.Valset)) {
-		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
+		return errors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}
 
 	return nil

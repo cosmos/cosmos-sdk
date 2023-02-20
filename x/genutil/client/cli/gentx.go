@@ -9,9 +9,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
+	"cosmossdk.io/errors"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -81,7 +81,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				}
 			}
 
-			genDoc, err := tmtypes.GenesisDocFromFile(config.GenesisFile())
+			genDoc, err := cmttypes.GenesisDocFromFile(config.GenesisFile())
 			if err != nil {
 				return errors.Wrapf(err, "failed to read genesis doc file %s", config.GenesisFile())
 			}

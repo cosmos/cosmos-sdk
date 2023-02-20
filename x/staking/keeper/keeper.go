@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	storetypes "cosmossdk.io/store/types"
 

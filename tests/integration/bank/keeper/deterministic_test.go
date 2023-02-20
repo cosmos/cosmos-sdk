@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -75,7 +75,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	f.ctx = ctx
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
@@ -134,7 +134,7 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 
 		fundAccount(f, addr, coins...)
 
-		req := banktypes.NewQueryAllBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"))
+		req := banktypes.NewQueryAllBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"), false)
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.AllBalances, 0, true)
 	})
 
@@ -144,7 +144,7 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 	)
 
 	fundAccount(f, addr1, coins...)
-	req := banktypes.NewQueryAllBalancesRequest(addr1, nil)
+	req := banktypes.NewQueryAllBalancesRequest(addr1, nil, false)
 
 	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.AllBalances, 357, false)
 }

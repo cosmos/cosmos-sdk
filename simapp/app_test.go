@@ -8,12 +8,13 @@ import (
 
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/upgrade"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -174,7 +175,7 @@ func TestRunMigrations(t *testing.T) {
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
 			_, err = app.ModuleManager.RunMigrations(
-				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), configurator,
+				app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
 				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -210,7 +211,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	ctx := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
 	// adding during a migration.
@@ -259,7 +260,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	})
 
 	// make sure the upgrade keeper has version map in state
-	ctx := app.NewContext(false, tmproto.Header{})
+	ctx := app.NewContext(false, cmtproto.Header{})
 	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	for v, i := range app.ModuleManager.Modules {
 		if i, ok := i.(module.HasConsensusVersion); ok {
@@ -268,4 +269,12 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	}
 
 	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
+}
+
+// TestMergedRegistry tests that fetching the gogo/protov2 merged registry
+// doesn't fail after loading all file descriptors.
+func TestMergedRegistry(t *testing.T) {
+	r, err := proto.MergedRegistry()
+	require.NoError(t, err)
+	require.Greater(t, r.NumFiles(), 0)
 }

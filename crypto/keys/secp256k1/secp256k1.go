@@ -8,8 +8,9 @@ import (
 	"io"
 	"math/big"
 
-	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
-	"github.com/tendermint/tendermint/crypto"
+	errorsmod "cosmossdk.io/errors"
+	"github.com/cometbft/cometbft/crypto"
+	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -37,7 +38,7 @@ func (privKey *PrivKey) Bytes() []byte {
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	_, pubkeyObject := secp256k1.PrivKeyFromBytes(privKey.Key)
+	pubkeyObject := secp256k1.PrivKeyFromBytes(privKey.Key).PubKey()
 	pk := pubkeyObject.SerializeCompressed()
 	return &PubKey{Key: pk}
 }
@@ -186,7 +187,7 @@ func (pubKey PubKey) MarshalAmino() ([]byte, error) {
 // UnmarshalAmino overrides Amino binary marshalling.
 func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PubKeySize {
-		return errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
+		return errorsmod.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
 	}
 	pubKey.Key = bz
 

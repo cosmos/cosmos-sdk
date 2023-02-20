@@ -570,9 +570,22 @@ Parameters:
 		"summary": "This is a proposal to send 10 stake to cosmos1...",
 	}
 	],
+	// metadata can be any of base64 encoded, raw text, stringified json, IPFS link to json
+	// see below for example metadata
 	"metadata": "4pIMOgIGx1vZGU=", // base64-encoded metadata
 	"proposers": ["cosmos1...", "cosmos1..."],
-}`, version.AppName),
+}
+
+metadata example: 
+{
+	"title": "",
+	"authors": [""],
+	"summary": "",
+	"details": "", 
+	"proposal_forum_url": "",
+	"vote_option_context": "",
+} 
+`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			prop, err := getCLIProposal(args[0])

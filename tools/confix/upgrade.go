@@ -59,7 +59,7 @@ func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath st
 	if outputPath == "" {
 		_, err = os.Stdout.Write(buf.Bytes())
 	} else {
-		err = atomicfile.WriteData(outputPath, buf.Bytes(), 0600)
+		err = atomicfile.WriteData(outputPath, buf.Bytes(), 0o600)
 	}
 
 	return err
@@ -94,8 +94,8 @@ func CheckValid(fileName string, data []byte) error {
 		if cfg.ChainID == "" {
 			return errors.New("client config invalid: chain-id is empty")
 		}
-	case strings.HasSuffix(fileName, TMConfig):
-		return errors.New("tendermint config is not supported")
+	case strings.HasSuffix(fileName, CMTConfig):
+		return errors.New("cometbft config is not supported")
 
 	default:
 		return fmt.Errorf("unknown config: %s", fileName)

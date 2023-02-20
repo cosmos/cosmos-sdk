@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.6
-	cosmossdk.io/tools/rosetta v0.2.0
+	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -165,10 +165,7 @@ require (
 )
 
 // TODO update/remove after v0.37.x tag of CometBFT
-replace (
-	cosmossdk.io/tools/rosetta => ./tools/rosetta
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-)
+replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 
 replace (
 	// use cosmos fork of keyring

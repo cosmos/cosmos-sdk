@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.6
-	cosmossdk.io/tools/rosetta v0.2.0
+	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/cometbft/cometbft v0.34.27-alpha.1
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
@@ -160,10 +160,7 @@ require (
 )
 
 // TODO update/remove after v0.37.x tag of CometBFT
-replace (
-	cosmossdk.io/tools/rosetta => ../tools/rosetta
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-)
+replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 
 replace (
 	// use cosmos fork of keyring

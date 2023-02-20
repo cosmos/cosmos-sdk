@@ -1743,7 +1743,7 @@ type Permissions struct {
 	// level is the level of permissions granted to this account.
 	Level Permissions_Level `protobuf:"varint,1,opt,name=level,proto3,enum=cosmos.circuit.v1.Permissions_Level" json:"level,omitempty"`
 	// limit_type_urls is used with LEVEL_SOME_MSGS to limit the lists of Msg type
-	// URLs that the account can pause. It is an error to use limit_type_urls with
+	// URLs that the account can trip. It is an error to use limit_type_urls with
 	// a level other than LEVEL_SOME_MSGS.
 	LimitTypeUrls []string `protobuf:"bytes,2,rep,name=limit_type_urls,json=limitTypeUrls,proto3" json:"limit_type_urls,omitempty"`
 }

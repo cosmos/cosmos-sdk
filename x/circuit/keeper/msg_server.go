@@ -61,7 +61,7 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 		return nil, err
 	}
 
-	store := ctx.KVStore(srv.key)
+	store := ctx.KVStore(srv.storekey)
 
 	switch perms.Level {
 	case types.Permissions_LEVEL_SUPER_ADMIN:

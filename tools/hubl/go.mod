@@ -3,8 +3,8 @@ module cosmossdk.io/tools/hubl
 go 1.20
 
 require (
-	cosmossdk.io/api v0.3.0
-	cosmossdk.io/client/v2 v2.0.0-20230205135133-41a3dfeced29
+	cosmossdk.io/api v0.3.1
+	cosmossdk.io/client/v2 v2.0.0-20230220152935-67f04e629623
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cockroachdb/errors v1.9.1
 	github.com/hashicorp/go-multierror v1.1.1
@@ -43,7 +43,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogoproto v1.4.4 // indirect
+	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/iavl v0.21.0-alpha.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect

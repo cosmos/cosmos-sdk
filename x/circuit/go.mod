@@ -8,7 +8,7 @@ require (
 	github.com/cockroachdb/errors v1.9.1
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230207163452-bd8e9f2d1206
-	github.com/cosmos/gogoproto v1.4.4
+	github.com/cosmos/gogoproto v1.4.6
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/regen-network/gocuke v0.6.2
@@ -20,7 +20,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.3.0 // indirect
+	cosmossdk.io/api v0.3.1 // indirect
 	cosmossdk.io/collections v0.0.0-20230214153846-b6c6e4e99177 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect

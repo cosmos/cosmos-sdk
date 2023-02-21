@@ -4,12 +4,12 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
-### Consensus Engine
+### Migration to CometBFT (Part 2)
 
-The Cosmos SDK has migrated to CometBFT as its default consensus engine.
-CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
-Due to the import changes, this is a breaking change that needs chains to re-generate their protos.
-Some functions have been renamed to reflect the naming change, following an exhaustive list:
+The Cosmos SDK has migrated in, its previous versions, to CometBFT.
+Some functions have been renamed to reflect the naming change.
+
+Following an exhaustive list:
 
 * `client.TendermintRPC` -> `client.CometRPC`
 * `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
@@ -40,8 +40,6 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 #### Database
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
-
-<!-- TODO: write database migration tool -->
 
 #### GoLevelDB
 
@@ -125,6 +123,20 @@ The `x/upgrade` module is extracted to have a separate go.mod file which allows 
 All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
+
+### Migration to CometBFT (Part 1)
+
+The Cosmos SDK has migrated to CometBFT, as its default consensus engine.
+CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
+Due to the import changes, this is a breaking change. Chains need to remove **entierely** their imports of Tendermint Core in their codebase, from direct and indirects imports in their `go.mod`.
+
+* Replace `github.com/tendermint/tendermint` by `github.com/cometbft/cometbft`
+* Replace `github.com/tendermint/tm-db` by `github.com/cometbft/cometbft-db`
+* Verify `github.com/tendermint/tendermint` is not an indirect or direct dependency
+* Run `make proto-gen`
+
+Other than that, the migration should be seamless.
+On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.48 (part 2).
 
 ### Simulation
 
@@ -267,7 +279,7 @@ The module name is assumed by `baseapp` to be the second element of the message 
 In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
 `Baseapp` only emits that event if the module have not already done so.
 
-### `x/params`
+#### `x/params`
 
 The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
 Cosmos SDK modules now store their parameters directly in its repective modules.

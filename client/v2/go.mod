@@ -3,7 +3,7 @@ module cosmossdk.io/client/v2
 go 1.19
 
 require (
-	cosmossdk.io/api v0.3.0
+	cosmossdk.io/api v0.3.1
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.9.1
@@ -40,7 +40,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogoproto v1.4.4 // indirect
+	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/iavl v0.21.0-alpha.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect

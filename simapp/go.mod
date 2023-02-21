@@ -3,8 +3,8 @@ module cosmossdk.io/simapp
 go 1.20
 
 require (
-	cosmossdk.io/api v0.3.0
-	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58
+	cosmossdk.io/api v0.3.1
+	cosmossdk.io/client/v2 v2.0.0-20230220152935-67f04e629623
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
@@ -20,6 +20,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.48.0
+	github.com/cosmos/gogoproto v1.4.6
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
@@ -67,7 +68,6 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.4.4 // indirect
 	github.com/cosmos/iavl v0.21.0-alpha.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect

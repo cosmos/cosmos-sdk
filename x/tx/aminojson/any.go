@@ -26,21 +26,10 @@ func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) e
 		return err
 	}
 
-	aminoName, named := getMessageAminoName(valueMsg)
+	_, named := getMessageAminoName(valueMsg)
 	if !named {
 		return fmt.Errorf("message %s is packed into an any field, so requires an amino.name annotation")
 	}
 
-	_, err = writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, aminoName)))
-	if err != nil {
-		return err
-	}
-
-	err = aj.marshalMessage(valueMsg, writer)
-	if err != nil {
-		return err
-	}
-
-	_, err = writer.Write([]byte("}"))
-	return err
+	return aj.beginMarshal(valueMsg, writer)
 }

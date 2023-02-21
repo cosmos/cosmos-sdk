@@ -740,48 +740,50 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 
-	// Case 1: the msg errors and the post handler is not set.
-	if err != nil && app.postHandler == nil {
-		return gInfo, result, anteEvents, priority, err
-	}
+	if err != nil {
+		// Case 1: the msg errors and the post handler is not set.
+		if app.postHandler == nil {
+			return gInfo, result, anteEvents, priority, err
+		}
 
-	// Case 2: tx errors and the post handler is set. Run PostHandler and revert state from runMsgs
-	if err != nil && app.postHandler != nil {
-		// Run optional postHandlers with a context branched off the ante handler ctx
-		postCtx, postCache := app.cacheTxContext(ctx, txBytes)
+		// Case 2: tx errors and the post handler is set. Run PostHandler and revert state from runMsgs
+		if app.postHandler != nil {
+			// Run optional postHandlers with a context branched off the ante handler ctx
+			postCtx, postCache := app.cacheTxContext(ctx, txBytes)
 
-		// The runMsgCtx context currently contains events emitted by the ante handler.
-		// We clear this to correctly order events without duplicates.
-		// Note that the state is still preserved.
-		postCtx = runMsgCtx.WithEventManager(sdk.NewEventManager())
+			// The runMsgCtx context currently contains events emitted by the ante handler.
+			// We clear this to correctly order events without duplicates.
+			// Note that the state is still preserved.
+			postCtx = runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-		newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate, err == nil)
-		if err != nil {
-			// return result in case the pointer has been modified by the post decorators
+			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate, err == nil)
+			if err != nil {
+				// return result in case the pointer has been modified by the post decorators
+				return gInfo, result, events, priority, err
+			}
+
+			if mode == runTxModeDeliver {
+				// When block gas exceeds, it'll panic and won't commit the cached store.
+				consumeBlockGas()
+
+				postCache.Write()
+			}
+
+			if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
+				// append the events in the order of occurrence
+				postEvents = newCtx.EventManager().ABCIEvents()
+				events = make([]abci.Event, len(anteEvents)+len(postEvents))
+				copy(events[:len(anteEvents)], anteEvents)
+				copy(events[len(anteEvents):], postEvents)
+				result.Events = append(result.Events, events...)
+			} else {
+				events = make([]abci.Event, len(postEvents))
+				copy(events, postEvents)
+				result.Events = append(result.Events, postEvents...)
+			}
+
 			return gInfo, result, events, priority, err
 		}
-
-		if mode == runTxModeDeliver {
-			// When block gas exceeds, it'll panic and won't commit the cached store.
-			consumeBlockGas()
-
-			postCache.Write()
-		}
-
-		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
-			// append the events in the order of occurrence
-			postEvents = newCtx.EventManager().ABCIEvents()
-			events = make([]abci.Event, len(anteEvents)+len(postEvents))
-			copy(events[:len(anteEvents)], anteEvents)
-			copy(events[len(anteEvents):], postEvents)
-			result.Events = append(result.Events, events...)
-		} else {
-			events = make([]abci.Event, len(postEvents))
-			copy(events, postEvents)
-			result.Events = append(result.Events, postEvents...)
-		}
-
-		return gInfo, result, events, priority, err
 	}
 
 	// Case 3: tx successful and post handler is set. Run Post Handler with runMsgCtx so that the state from runMsgs is persisted

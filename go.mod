@@ -21,7 +21,7 @@ require (
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
-	github.com/cosmos/cosmos-proto v1.0.0-beta.1
+	github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0

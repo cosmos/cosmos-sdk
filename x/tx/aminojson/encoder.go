@@ -1,42 +1,57 @@
 package aminojson
 
 import (
-	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
-	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
+	"cosmossdk.io/math"
 )
 
-func cosmosDecBytesEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
-	switch bz := v.Interface().(type) {
+// cosmosIntEncoder provides legacy compatible encoding for cosmos.Int types. In gogo messages these are sometimes
+// represented by a `cosmos-sdk/types.Int` through the usage of the option:
+//
+//	(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"
+//
+// In pulsar message they represented as strings, which is the only format this encoder supports.
+func cosmosIntEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
+	switch val := v.Interface().(type) {
+	case string:
+		if val == "" {
+			return jsonMarshal(w, "0")
+		}
+		return jsonMarshal(w, val)
+	default:
+		return fmt.Errorf("unsupported type %T", val)
+	}
+}
+
+// cosmosDecEncoder provides legacy compatible encoding for cosmos.Dec and cosmos.Int types. These are sometimes
+// represented as strings in pulsar messages and sometimes as bytes.  This encoder handles both cases.
+func cosmosDecEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
+	switch val := v.Interface().(type) {
+	case string:
+		if val == "" {
+			return jsonMarshal(w, "0")
+		}
+		return jsonMarshal(w, val)
 	case []byte:
-		if len(bz) == 0 {
+		if len(val) == 0 {
 			return jsonMarshal(w, "0")
 		}
 		var dec math.LegacyDec
-		err := dec.Unmarshal(bz)
+		err := dec.Unmarshal(val)
 		if err != nil {
 			return err
 		}
 		return jsonMarshal(w, dec.String())
 	default:
-		return fmt.Errorf("unsupported type %T", bz)
-	}
-}
-
-func cosmosDecEncoder(aj AminoJSON, v protoreflect.Value, w io.Writer) error {
-	switch s := v.Interface().(type) {
-	case string:
-		if s == "" {
-			return jsonMarshal(w, "0")
-		}
-		return jsonMarshal(w, s)
-	default:
-		return fmt.Errorf("unsupported type %T", s)
+		return fmt.Errorf("unsupported type %T", val)
 	}
 }
 
@@ -55,20 +70,9 @@ func nullSliceAsEmptyEncoder(aj AminoJSON, v protoreflect.Value, w io.Writer) er
 	}
 }
 
-func emptyStringEncoder(_ AminoJSON, _ protoreflect.Value, w io.Writer) error {
-	_, err := w.Write([]byte(`""`))
-	return err
-}
-
-func jsonDefaultEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
-	switch val := v.Interface().(type) {
-	case string, bool, int32, uint32, uint64, int64, protoreflect.EnumNumber:
-		return jsonMarshal(w, val)
-	default:
-		return fmt.Errorf("unsupported type %T", val)
-	}
-}
-
+// keyFieldEncoder replicates the behavior at described at:
+// https://github.com/cosmos/cosmos-sdk/blob/b49f948b36bc991db5be431607b475633aed697e/proto/cosmos/crypto/secp256k1/keys.proto#L16
+// The message is treated if it were bytes directly without the key field specified.
 func keyFieldEncoder(msg protoreflect.Message, w io.Writer) error {
 	keyField := msg.Descriptor().Fields().ByName("key")
 	if keyField == nil {

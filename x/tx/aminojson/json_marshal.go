@@ -36,28 +36,46 @@ func NewAminoJSON() AminoJSON {
 	aj := AminoJSON{
 		scalarEncoders: map[string]FieldEncoder{
 			"cosmos.Dec": cosmosDecEncoder,
-			"cosmos.Int": cosmosDecEncoder,
+			"cosmos.Int": cosmosIntEncoder,
 		},
 		messageEncoders: map[string]MessageEncoder{
 			"key_field":      keyFieldEncoder,
 			"module_account": moduleAccountEncoder,
 		},
 		fieldEncoders: map[string]FieldEncoder{
-			"empty_string":     emptyStringEncoder,
-			"json_default":     jsonDefaultEncoder,
 			"legacy_coins":     nullSliceAsEmptyEncoder,
-			"cosmos_dec_bytes": cosmosDecBytesEncoder,
+			"cosmos_dec_bytes": cosmosDecEncoder,
 		},
 	}
 	return aj
 }
 
-// DefineMessageEncoding defines a custom encoding for a protobuf message.
+// DefineMessageEncoding defines a custom encoding for a protobuf message.  The `name` field must match a usage of
+// an (amino.message_encoding) option in the protobuf message as in the following example.  This encoding will be
+// used instead of the default encoding for all usages of the tagged message.
+//
+//	message ModuleAccount {
+//	  option (amino.name)                        = "cosmos-sdk/ModuleAccount";
+//	  option (amino.message_encoding)            = "module_account";
+//	  ...
+//	}
 func (aj AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) {
 	aj.messageEncoders[name] = encoder
 }
 
-// DefineFieldEncoding defines a custom encoding for a protobuf field.
+// DefineFieldEncoding defines a custom encoding for a protobuf field.  The `name` field must match a usage of
+// an (amino.encoding) option in the protobuf message as in the following example. This encoding will be used
+// instead of the default encoding for all usages of the tagged field.
+//
+//	message Balance {
+//	  repeated cosmos.base.v1beta1.Coin coins = 2 [
+//	    (amino.encoding)         = "legacy_coins",
+//	    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+//	    (gogoproto.nullable)     = false,
+//	    (amino.dont_omitempty)   = true
+//	  ];
+//	  ...
+//	}
 func (aj AminoJSON) DefineFieldEncoding(name string, encoder FieldEncoder) {
 	aj.fieldEncoders[name] = encoder
 }

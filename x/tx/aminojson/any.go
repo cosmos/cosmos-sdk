@@ -2,8 +2,9 @@ package aminojson
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/types/known/anypb"
 	"io"
+
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -28,7 +29,8 @@ func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) e
 
 	_, named := getMessageAminoName(valueMsg)
 	if !named {
-		return fmt.Errorf("message %s is packed into an any field, so requires an amino.name annotation")
+		return fmt.Errorf("message %s is packed into an any field, so requires an amino.name annotation",
+			anyMsg.TypeUrl)
 	}
 
 	return aj.beginMarshal(valueMsg, writer)

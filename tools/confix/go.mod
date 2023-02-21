@@ -3,7 +3,7 @@ module cosmossdk.io/tools/confix
 go 1.19
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230213205158-fc7a156e4d11
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230221204830-dbc4d104b26f
 	github.com/creachadair/atomicfile v0.2.8
 	github.com/creachadair/tomledit v0.0.24
 	github.com/spf13/cobra v1.6.1
@@ -152,11 +152,6 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Here are the short-lived replace of Confix
-// Replace here are pending PRs, or version to be tagged
-// TODO use instead a tagged version of the SDK (with CometBFT) when available
-replace github.com/cosmos/cosmos-sdk => ../..
 
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

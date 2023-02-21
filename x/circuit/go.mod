@@ -103,8 +103,3 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Here are the short-lived replace of Rosetta
-// Replace here are pending PRs, or version to be tagged
-// TODO use instead a tagged version of the SDK (with CometBFT) when available
-replace github.com/cosmos/cosmos-sdk => ../..

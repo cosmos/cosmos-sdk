@@ -73,11 +73,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// Here are the short-lived replace from the module.
-// Replace here are pending PRs, or version to be tagged.
-// TODO update/remove after v0.37.x tag of CometBFT
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-
 // Below are the long-lived replace for store.
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

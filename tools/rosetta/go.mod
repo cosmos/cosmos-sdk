@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.37.0-alpha.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230221204830-dbc4d104b26f
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0
 	github.com/rs/zerolog v1.29.0
@@ -136,8 +136,3 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Here are the short-lived replace of Rosetta
-// Replace here are pending PRs, or version to be tagged
-// TODO use instead a tagged version of the SDK (with CometBFT) when available
-replace github.com/cosmos/cosmos-sdk => ../..

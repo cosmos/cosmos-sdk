@@ -41,7 +41,7 @@ Welcome to the Cosmos SDK's team roadmap.
 * [Release collections v1](https://github.com/cosmos/cosmos-sdk/issues/14300) 
     * Collections is a new abstraction layer similar to the ORM. In the ADR phase it received support from many in the ecosystem. 
     * V1 release should allow modules to be migrated to collections.  
-* Release ORM v1
+* [Release ORM v1](https://github.com/cosmos/cosmos-sdk/issues/11088)
 * Migrate 3 modules to use collections api
     * Migrating 3 modules to use collections would help in show users how to migrate users
 * [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) 

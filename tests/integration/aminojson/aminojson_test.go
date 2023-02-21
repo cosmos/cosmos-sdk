@@ -6,8 +6,10 @@ import (
 	"testing"
 	"time"
 
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -105,7 +107,30 @@ func withDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOp
 var (
 	genOpts = rapidproto.GeneratorOptions{
 		Resolver: protoregistry.GlobalTypes,
-	}.WithGogoUnmarshalCompatibleDecimals(amino.E_Encoding)
+		FieldMaps: []rapidproto.FieldMapper{func(t *rapid.T, field protoreflect.FieldDescriptor, name string) (protoreflect.Value, bool) {
+			opts := field.Options()
+			switch {
+			case proto.HasExtension(opts, cosmos_proto.E_Scalar):
+				scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
+				switch scalar {
+				case "cosmos.Int":
+					i32 := rapid.Int32().Draw(t, name)
+					return protoreflect.ValueOfString(fmt.Sprintf("%d", i32)), true
+				case "cosmos.Dec":
+					return protoreflect.ValueOfString(""), true
+				}
+			case field.Kind() == protoreflect.BytesKind:
+				if proto.HasExtension(opts, amino.E_Encoding) {
+					encoding := proto.GetExtension(opts, amino.E_Encoding).(string)
+					if encoding == "cosmos_dec_bytes" {
+						return protoreflect.ValueOfBytes([]byte{}), true
+					}
+				}
+			}
+
+			return protoreflect.Value{}, false
+		}},
+	}
 	genTypes = []generatedType{
 		// auth
 		genType(&authtypes.Params{}, &authapi.Params{}, genOpts),

@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 	"io"
 
 	"github.com/pkg/errors"
@@ -10,35 +11,17 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
-const (
-	typeUrlName protoreflect.Name = "type_url"
-	valueName   protoreflect.Name = "value"
-)
-
 func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) error {
-	fields := message.Descriptor().Fields()
-	typeUrlField := fields.ByName(typeUrlName)
-	if typeUrlField == nil {
-		return fmt.Errorf("expected type_url field")
-	}
-
-	typeUrl := message.Get(typeUrlField).String()
+	anyMsg := message.Interface().(*anypb.Any)
 	resolver := protoregistry.GlobalTypes
 
-	typ, err := resolver.FindMessageByURL(typeUrl)
+	typ, err := resolver.FindMessageByURL(anyMsg.TypeUrl)
 	if err != nil {
-		return errors.Wrapf(err, "can't resolve type URL %s", typeUrl)
+		return errors.Wrapf(err, "can't resolve type URL %s", anyMsg.TypeUrl)
 	}
-
-	valueField := fields.ByName(valueName)
-	if valueField == nil {
-		return fmt.Errorf("expected value field")
-	}
-
-	valueBz := message.Get(valueField).Bytes()
 
 	valueMsg := typ.New()
-	err = proto.Unmarshal(valueBz, valueMsg.Interface())
+	err = proto.Unmarshal(anyMsg.Value, valueMsg.Interface())
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
-	cosmossdk.io/store v0.0.0-20230219145338-9553bf1eec78
+	cosmossdk.io/store v0.0.0-20230220120340-067ee92d4d1f
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
 	cosmossdk.io/tools/rosetta v0.2.0
 	cosmossdk.io/x/evidence v0.1.0
@@ -204,6 +204,7 @@ replace (
 	cosmossdk.io/x/upgrade => ../x/upgrade
 	// TODO update/remove after v0.37.x tag of CometBFT
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
+	github.com/cosmos/cosmos-sdk/x/circuit => ../x/circuit
 )
 
 // Below are the long-lived replace of the SimApp

@@ -204,8 +204,8 @@ cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78 h1:Scox9JfANgkuAO0F9LMH0e0W5
 cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78/go.mod h1:MyvZ6k9eL0azI/yf8m5gqsM8PgbtFmqjire1OxUMkmc=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 h1:/jnzJ9zFsL7qkV8LCQ1JH3dYHh2EsKZ3k8Mr6AqqiOA=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
-cosmossdk.io/store v0.0.0-20230219145338-9553bf1eec78 h1:KCtuGFJJrHc27q/jEPqnneh1JtWJU+WXBhViJ2z7F5c=
-cosmossdk.io/store v0.0.0-20230219145338-9553bf1eec78/go.mod h1:bUc2HAT7aYgzO1sA5+FNpbkc83kyCVTaUt/AHnVGAQY=
+cosmossdk.io/store v0.0.0-20230220120340-067ee92d4d1f h1:35sAQtwPdzvQhTGz6SwGQO0LPcJjkJWcbc2Olpnpprc=
+cosmossdk.io/store v0.0.0-20230220120340-067ee92d4d1f/go.mod h1:MrrSzGa9eNZAHePmW4h5pPdnsmtQQCgJEztq9hVUKFI=
 cosmossdk.io/x/tx v0.2.0 h1:53f5TIXhpPYJGMm47SUslcV2i8JNBEN3eE08BmxE/Zg=
 cosmossdk.io/x/tx v0.2.0/go.mod h1:CTko7wgt7aBdbxOesZ+Wo1uO/03ueKzIQ0iI323Rqgk=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -344,8 +344,6 @@ github.com/cosmos/cosmos-db v1.0.0-rc.1 h1:SjnT8B6WKMW9WEIX32qMhnEEKcI7ZP0+G1Sa9
 github.com/cosmos/cosmos-db v1.0.0-rc.1/go.mod h1:Dnmk3flSf5lkwCqvvjNpoxjpXzhxnCAFzKHlbaForso=
 github.com/cosmos/cosmos-proto v1.0.0-beta.1 h1:iDL5qh++NoXxG8hSy93FdYJut4XfgbShIocllGaXx/0=
 github.com/cosmos/cosmos-proto v1.0.0-beta.1/go.mod h1:8k2GNZghi5sDRFw/scPL8gMSowT1vDA+5ouxL8GjaUE=
-github.com/cosmos/cosmos-sdk/x/circuit v0.0.0-20230220112800-f69b9ff58fbe h1:+/j0jfCCJU/L10BDa63hB5rxwkJd+HCTf65JH6vFJh4=
-github.com/cosmos/cosmos-sdk/x/circuit v0.0.0-20230220112800-f69b9ff58fbe/go.mod h1:YwHw8ovvun8engjCOGdphG7WOI3CTxDCF/dSrj5xX4s=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=

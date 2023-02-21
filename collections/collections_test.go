@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"errors"
 	"math"
 	"testing"
 
@@ -36,11 +37,13 @@ func (t testStore) Delete(key []byte) error {
 }
 
 func (t testStore) Iterator(start, end []byte) (store.Iterator, error) {
-	return t.db.Iterator(start, end)
+	itr, err := t.db.Iterator(start, end)
+	return coreIterator{itr}, err
 }
 
 func (t testStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
-	return t.db.ReverseIterator(start, end)
+	itr, err := t.db.ReverseIterator(start, end)
+	return coreIterator{itr}, err
 }
 
 var _ store.KVStore = testStore{}
@@ -73,4 +76,66 @@ func TestPrefix(t *testing.T) {
 		bytes[0] = 0x0
 		require.Equal(t, []byte("prefix"), prefix.Bytes())
 	})
+}
+
+var _ store.Iterator = coreIterator{}
+
+type coreIterator struct {
+	iterator db.Iterator
+}
+
+func NewCoreIterator(iterator db.Iterator) (coreIterator, error) {
+	return coreIterator{iterator}, nil
+}
+
+// Domain implements Iterator.
+func (itr coreIterator) Domain() ([]byte, []byte) {
+	return itr.iterator.Domain()
+}
+
+// Valid implements Iterator.
+func (itr coreIterator) Valid() bool {
+	return itr.iterator.Valid()
+}
+
+// Key implements Iterator.
+func (itr coreIterator) Key() ([]byte, error) {
+	// Key returns a copy of the current key.
+	// See https://github.com/syndtr/goleveldb/blob/52c212e6c196a1404ea59592d3f1c227c9f034b2/leveldb/iterator/iter.go#L88
+	if !itr.Valid() {
+		return []byte{}, errors.New("iterator is invalid")
+	}
+
+	return itr.iterator.Key(), nil
+}
+
+// Value implements Iterator.
+func (itr coreIterator) Value() ([]byte, error) {
+	// Value returns a copy of the current value.
+	// See https://github.com/syndtr/goleveldb/blob/52c212e6c196a1404ea59592d3f1c227c9f034b2/leveldb/iterator/iter.go#L88
+	if !itr.Valid() {
+		return []byte{}, errors.New("iterator is invalid")
+	}
+
+	return itr.iterator.Value(), nil
+}
+
+// Next implements Iterator.
+func (itr coreIterator) Next() error {
+	if !itr.Valid() {
+		return errors.New("iterator is invalid")
+	}
+	itr.iterator.Next()
+
+	return nil
+}
+
+// Error implements Iterator.
+func (itr coreIterator) Error() error {
+	return itr.iterator.Error()
+}
+
+// Close implements Iterator.
+func (itr coreIterator) Close() error {
+	return itr.iterator.Close()
 }

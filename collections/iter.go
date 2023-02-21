@@ -215,7 +215,7 @@ func (i Iterator[K, V]) Value() (V, error) {
 
 // Key returns the current storetypes.Iterator decoded key.
 func (i Iterator[K, V]) Key() (K, error) {
-	bytesKey := i.iter.Key()[i.prefixLength:] // strip prefix namespace
+	bytesKey, err := i.iter.Key()[i.prefixLength:] // strip prefix namespace
 
 	read, key, err := i.kc.Decode(bytesKey)
 	if err != nil {

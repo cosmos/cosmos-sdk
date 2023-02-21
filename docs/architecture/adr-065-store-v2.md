@@ -47,7 +47,7 @@ atomic, e.g. transaction execution or governance proposal execution.
 There are a few critical drawbacks to these layers of abstraction and the overall
 design of storage in the Cosmos SDK:
 
-* Since each module has its own IAVL `KVStore`, commitments are not atomic ([ref](https://github.com/cosmos/cosmos-sdk/issues/14625))
+* Since each module has its own IAVL `KVStore`, commitments are not [atomic](https://github.com/cosmos/cosmos-sdk/issues/14625)
     * Note, we can still allow modules to have their own IAVL `KVStore`, but the
       IAVL library will need to support the ability to pass a DB instance as an
       argument to various IAVL APIs.
@@ -73,6 +73,27 @@ be fully agreed upon, such as the snap-shotting mechanism that would result in
 massive state bloat.
 
 ## Decision
+
+We propose to build upon some of the great ideas introduced in [ADR-040](./adr-040-storage-and-smt-state-commitments.md),
+while being a bit more flexible with the underlying implementations and overall
+less intrusive. Specifically, we propose to:
+
+* Separate the concerns of state commitment (**SC**), needed for consensus, and
+  state storage (**SS**), needed for state machine and clients.
+* Reduce layers of abstractions necessary between the root multi-store and
+  underlying stores.
+* Provide atomic module store commitments by providing a batch database object
+  to core IAVL APIs.
+* Reduce complexities in the `CacheKVStore` implementation while also improving
+  performance<sup>[3]</sup>.
+
+Furthermore, we will keep the IAVL is the backing [commitment](https://cryptography.fandom.com/wiki/Commitment_scheme)
+store for the time being. While we might not fully settle on the use of IAVL in
+the long term, we do not have strong empirical evidence to suggest a better
+alternative. Given that the SDK provides interfaces for stores, it should be sufficient
+to change the backing commitment store in the future should evidence arise to
+warrant a better alternative. However there is promising work being done to IAVL
+that should result in significant performance improvement <sup>[1,2]</sup>.
 
 ## Consequences
 
@@ -105,5 +126,6 @@ massive state bloat.
 
 ## References
 
-* https://github.com/cosmos/cosmos-sdk/discussions/13545
-* https://github.com/cosmos/cosmos-sdk/issues/12986
+* [1] https://github.com/cosmos/iavl/pull/676
+* [2] https://github.com/cosmos/iavl/pull/664
+* [3] https://github.com/cosmos/cosmos-sdk/issues/14990

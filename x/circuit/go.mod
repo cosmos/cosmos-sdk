@@ -5,7 +5,7 @@ go 1.19
 require (
 	cosmossdk.io/store v0.0.0-20230220120340-067ee92d4d1f
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
-	github.com/cosmos/gogoproto v1.4.5
+	github.com/cosmos/gogoproto v1.4.6
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.53.0
 	gotest.tools/v3 v3.4.0

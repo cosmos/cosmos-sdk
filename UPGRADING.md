@@ -279,7 +279,7 @@ The module name is assumed by `baseapp` to be the second element of the message 
 In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
 `Baseapp` only emits that event if the module have not already done so.
 
-### `x/params`
+#### `x/params`
 
 The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
 Cosmos SDK modules now store their parameters directly in its repective modules.

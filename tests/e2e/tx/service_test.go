@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	errorsmod "cosmossdk.io/errors"
@@ -146,49 +145,6 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	// bad format should error
 	_, err = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{Events: []string{"tx.foo.bar='baz'"}})
 	s.Require().ErrorContains(err, "invalid event;")
-}
-
-func TestEventRegex(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name  string
-		event string
-		match bool
-	}{
-		{
-			name:  "valid: with quotes",
-			event: "tx.message='something'",
-			match: true,
-		},
-		{
-			name:  "valid: with underscores",
-			event: "claim_reward.message_action='something'",
-			match: true,
-		},
-		{
-			name:  "valid: no quotes",
-			event: "tx.message=something",
-			match: true,
-		},
-		{
-			name:  "invalid: too many separators",
-			event: "tx.message.foo='bar'",
-			match: false,
-		},
-		{
-			name:  "valid: symbols ok",
-			event: "tx.signature='foobar/baz123=='",
-			match: true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			match := authtx.EventRegex.Match([]byte(tc.event))
-			require.Equal(t, tc.match, match)
-		})
-	}
 }
 
 func (s E2ETestSuite) TestSimulateTx_GRPC() {

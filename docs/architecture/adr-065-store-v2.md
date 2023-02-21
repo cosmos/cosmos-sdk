@@ -56,13 +56,21 @@ design of storage in the Cosmos SDK:
 * As the size of a network increases, various performance bottlenecks start to
   emerge in many areas such as query performance, network upgrades, state
   migrations, and general application performance.
+* Developer UX is poor as it does not allow application developers to experiment
+  with different types of approaches to storage and commitments, along with the
+  complications of many layers of abstractions referenced above.
 
 See the [Storage Discussion](https://github.com/cosmos/cosmos-sdk/discussions/13545) for more information.
 
 ## Alternatives
 
-> TODO: Reference various resources on the design and implementation of the original
-> store v2 based on the work from Vulcanize.
+There was a previous attempt to refactor the storage layer described in [ADR-040](./adr-040-storage-and-smt-state-commitments.md).
+However, this approach mainly stems on the short comings of IAVL and various performance
+issues around it. While there was a (partial) implementation of [ADR-040](./adr-040-storage-and-smt-state-commitments.md),
+it was never adopted for a variety of reasons, such as the reliance on using an
+SMT, which was more in a research phase, and some design choices that couldn't
+be fully agreed upon, such as the snap-shotting mechanism that would result in
+massive state bloat.
 
 ## Decision
 

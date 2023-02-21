@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 		srcRowID     RowID
 		srcModelType reflect.Type
 		expObj       interface{}
-		expErr       *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr       *errorsmod.Error
 	}{
 		"happy path": {
 			srcRowID:     EncodeSequence(1),

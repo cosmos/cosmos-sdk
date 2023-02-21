@@ -18,7 +18,6 @@ type tripSuite struct {
 
 func (s *tripSuite) Before(t *testing.T) {
 	s.baseFixture = initFixture(t)
-
 }
 
 func (s *tripSuite) HasPermission(a string, b string) {

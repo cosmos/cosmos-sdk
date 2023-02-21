@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 
 	cmttypes "github.com/cometbft/cometbft/types"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"

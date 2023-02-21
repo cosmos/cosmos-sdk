@@ -11,9 +11,9 @@ Welcome to the Cosmos SDK's team roadmap.
  
 * [Produce a spec for the new store design](https://github.com/cosmos/cosmos-sdk/issues/12986)
     * Research a new design for store. This could entail writing some POC's in order to identify design patterns
-* Store as its own go module **(Done)**
+* [x] Store as its own go module 
     * Store module should be its own go.mod without a dependency on the Cosmos SDK
-* Begin implementation of store v2
+* [Begin implementation of store v2](https://github.com/cosmos/cosmos-sdk/pull/15028)
     * Identify the migration path from store v1 -> store v2
 * Parallel execution of state
     * RFC/ADR is merged into the main on the sdk
@@ -23,12 +23,12 @@ Welcome to the Cosmos SDK's team roadmap.
 
 ### Client UX
 
-* Release v1 of query support (auto-cli) **(Done)**
+* [x] Release v1 of query support (auto-cli) 
     * A version of query support has been merged, documentation is missing
 * Dynamic metadata support 
     * Dynamic support allows the Cosmos SDK to release a cmd line tool that could work with any chain. 
     * Add metadata support to latest version of Cosmos SDK and, if possible, backport to older versions
-* Multi-chain command **(Done)**
+* [x] Multi-chain command **(Done)**
     * Release a cmd line tool that can be pointed a grpc endpoint which then can produce cmd lines to interact with the chain
 * Auto-cli tx support 
     * Tx support for auto-cli/hubl
@@ -47,10 +47,10 @@ Welcome to the Cosmos SDK's team roadmap.
 * [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) 
     * Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up a audit before final release.
 * Core API
-    * [Merge ADR for Core API](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-063-core-module-api.md) **(Done)**
+    * [x] [Merge ADR for Core API](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-063-core-module-api.md) 
     * Migrate three modules to use core api
 * Module Dependency 
-    * Give three modules their own go.mods **(Done)**
+    * [x] Give three modules their own go.mods 
     * Cleanup dependency graph (dependent on integration testing framework)
 * [Metamask signing directly into the sdk](https://github.com/cosmos/cosmos-sdk/discussions/13892) 
 * [ADR-033 (internal message routing)](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)

@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -113,12 +113,12 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Checks to see if proposal exists
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return false, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
+		return false, errors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
 
 	// Check if proposal is still depositable
 	if (proposal.Status != v1.StatusDepositPeriod) && (proposal.Status != v1.StatusVotingPeriod) {
-		return false, sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		return false, errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
 	// update the governance module's account coins pool
@@ -174,22 +174,22 @@ func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 	rate := sdk.MustNewDecFromStr(proposalCancelRate)
 	var cancellationCharges sdk.Coins
 
-	for _, deposits := range keeper.GetDeposits(ctx, proposalID) {
-		depositerAddress := sdk.MustAccAddressFromBech32(deposits.Depositor)
+	for _, deposit := range keeper.GetDeposits(ctx, proposalID) {
+		depositerAddress := sdk.MustAccAddressFromBech32(deposit.Depositor)
 		var remainingAmount sdk.Coins
 
-		for _, deposit := range deposits.Amount {
-			burnAmount := sdk.NewDecFromInt(deposit.Amount).Mul(rate).TruncateInt()
+		for _, coins := range deposit.Amount {
+			burnAmount := sdk.NewDecFromInt(coins.Amount).Mul(rate).TruncateInt()
 			// remaining amount = deposits amount - burn amount
 			remainingAmount = remainingAmount.Add(
 				sdk.NewCoin(
-					deposit.Denom,
-					deposit.Amount.Sub(burnAmount),
+					coins.Denom,
+					coins.Amount.Sub(burnAmount),
 				),
 			)
 			cancellationCharges = cancellationCharges.Add(
 				sdk.NewCoin(
-					deposit.Denom,
+					coins.Denom,
 					burnAmount,
 				),
 			)
@@ -203,6 +203,8 @@ func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 				return err
 			}
 		}
+
+		store.Delete(types.DepositKey(deposit.ProposalId, depositerAddress))
 	}
 
 	// burn the cancellation fee or sent the cancellation charges to destination address.
@@ -231,8 +233,6 @@ func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 			}
 		}
 	}
-
-	store.Delete(types.DepositsKey(proposalID))
 
 	return nil
 }
@@ -278,7 +278,7 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
 	}
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
-		return sdkerrors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
+		return errors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
 	}
 	return nil
 }

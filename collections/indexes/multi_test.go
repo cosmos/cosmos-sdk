@@ -1,9 +1,10 @@
 package indexes
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestMultiIndex(t *testing.T) {

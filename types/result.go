@@ -3,13 +3,13 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
-	"math"
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -83,6 +83,25 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 	}
 }
 
+// NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
+func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmtproto.Block {
+	if res == nil {
+		return nil
+	}
+
+	blk, err := res.Block.ToProto()
+	if err != nil {
+		return nil
+	}
+
+	return &cmtproto.Block{
+		Header:     blk.Header,
+		Data:       blk.Data,
+		Evidence:   blk.Evidence,
+		LastCommit: blk.LastCommit,
+	}
+}
+
 // NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
 func NewResponseFormatBroadcastTx(res *coretypes.ResultBroadcastTx) *TxResponse {
 	if res == nil {
@@ -112,13 +131,28 @@ func (r TxResponse) Empty() bool {
 }
 
 func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse) *SearchTxsResult {
+	totalPages := calcTotalPages(int64(totalCount), int64(limit))
+
 	return &SearchTxsResult{
 		TotalCount: totalCount,
 		Count:      count,
 		PageNumber: page,
-		PageTotal:  uint64(math.Ceil(float64(totalCount) / float64(limit))),
+		PageTotal:  uint64(totalPages),
 		Limit:      limit,
 		Txs:        txs,
+	}
+}
+
+func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*cmtproto.Block) *SearchBlocksResult {
+	totalPages := calcTotalPages(totalCount, limit)
+
+	return &SearchBlocksResult{
+		TotalCount: totalCount,
+		Count:      count,
+		PageNumber: page,
+		PageTotal:  totalPages,
+		Limit:      limit,
+		Blocks:     blocks,
 	}
 }
 
@@ -193,4 +227,17 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 		Events:       events,
 		MsgResponses: []*codectypes.Any{any},
 	}, nil
+}
+
+// calculate total pages in an overflow safe manner
+func calcTotalPages(totalCount int64, limit int64) int64 {
+	totalPages := int64(0)
+	if totalCount != 0 && limit != 0 {
+		if totalCount%limit > 0 {
+			totalPages = totalCount/limit + 1
+		} else {
+			totalPages = totalCount / limit
+		}
+	}
+	return totalPages
 }

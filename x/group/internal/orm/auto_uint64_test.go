@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
@@ -51,7 +51,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		start, end uint64
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package
+		expError   *errorsmod.Error
 		method     func(store storetypes.KVStore, start uint64, end uint64) (Iterator, error)
 	}{
 		"first element": {

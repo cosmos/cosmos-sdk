@@ -5,6 +5,8 @@ import (
 
 	"github.com/armon/go-metrics"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -117,12 +119,12 @@ func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCo
 
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.authority != req.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
+		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
 	}
 
 	if (!req.Params.BaseProposerReward.IsNil() && !req.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck
 		(!req.Params.BonusProposerReward.IsNil() && !req.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck
-		return nil, errors.Wrapf(errors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
+		return nil, errorsmod.Wrapf(errors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -135,7 +137,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 
 func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
 	if k.authority != req.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
+		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -146,7 +148,7 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 	}
 
 	if k.bankKeeper.BlockedAddr(recipient) {
-		return nil, errors.Wrapf(errors.ErrUnauthorized, "%s is not allowed to receive external funds", req.Recipient)
+		return nil, errorsmod.Wrapf(errors.ErrUnauthorized, "%s is not allowed to receive external funds", req.Recipient)
 	}
 
 	if err := k.DistributeFromFeePool(ctx, req.Amount, recipient); err != nil {
@@ -179,7 +181,7 @@ func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types
 
 	validator := k.stakingKeeper.Validator(ctx, valAddr)
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAddr.String())
+		return nil, errorsmod.Wrapf(types.ErrNoValidatorExists, valAddr.String())
 	}
 
 	// Allocate tokens from the distribution module to the validator, which are

@@ -66,7 +66,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 // set equality using a map.
 func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 	require.Equal(t, l1.Len(), l2.Len())
-	var coinsMap = make(map[string]*basev1beta1.Coin, l1.Len())
+	coinsMap := make(map[string]*basev1beta1.Coin, l1.Len())
 
 	for i := 0; i < l1.Len(); i++ {
 		coin, ok := l1.Get(i).Message().Interface().(*basev1beta1.Coin)

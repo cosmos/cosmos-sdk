@@ -9,9 +9,10 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
@@ -119,8 +120,9 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, storetypes.StoreTypeMemory))
 	}
 
-	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
-	noGasCtx := ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	// Create a context with no `BlockGasMeter`, and no `GasMeter`. This ensures we do not consume gas during local
+	// initialization logic.
+	noGasCtx := ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).WithGasMeter(storetypes.NewInfiniteGasMeter())
 
 	// check if memory store has not been initialized yet by checking if initialized flag is nil.
 	if !k.IsInitialized(noGasCtx) {
@@ -233,12 +235,12 @@ func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types
 // with the module name and no two ScopedKeeper can have the same module name.
 func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capability, error) {
 	if strings.TrimSpace(name) == "" {
-		return nil, sdkerrors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
+		return nil, errors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
 	}
 	store := ctx.KVStore(sk.storeKey)
 
 	if _, ok := sk.GetCapability(ctx, name); ok {
-		return nil, sdkerrors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
+		return nil, errors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
 	}
 
 	// create new capability with the current global index
@@ -295,10 +297,10 @@ func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap *types.Capabi
 // also set a forward and reverse index for the capability and capability name.
 func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, name string) error {
 	if cap == nil {
-		return sdkerrors.Wrap(types.ErrNilCapability, "cannot claim nil capability")
+		return errors.Wrap(types.ErrNilCapability, "cannot claim nil capability")
 	}
 	if strings.TrimSpace(name) == "" {
-		return sdkerrors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
+		return errors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
 	}
 	// update capability owner set
 	if err := sk.addOwner(ctx, cap, name); err != nil {
@@ -327,11 +329,11 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, n
 // owners exist, the capability will be globally removed.
 func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability) error {
 	if cap == nil {
-		return sdkerrors.Wrap(types.ErrNilCapability, "cannot release nil capability")
+		return errors.Wrap(types.ErrNilCapability, "cannot release nil capability")
 	}
 	name := sk.GetCapabilityName(ctx, cap)
 	if len(name) == 0 {
-		return sdkerrors.Wrap(types.ErrCapabilityNotOwned, sk.module)
+		return errors.Wrap(types.ErrCapabilityNotOwned, sk.module)
 	}
 
 	memStore := ctx.KVStore(sk.memKey)
@@ -439,16 +441,16 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 // retreived from the memstore.
 func (sk ScopedKeeper) LookupModules(ctx sdk.Context, name string) ([]string, *types.Capability, error) {
 	if strings.TrimSpace(name) == "" {
-		return nil, nil, sdkerrors.Wrap(types.ErrInvalidCapabilityName, "cannot lookup modules with empty capability name")
+		return nil, nil, errors.Wrap(types.ErrInvalidCapabilityName, "cannot lookup modules with empty capability name")
 	}
 	cap, ok := sk.GetCapability(ctx, name)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(types.ErrCapabilityNotFound, name)
+		return nil, nil, errors.Wrap(types.ErrCapabilityNotFound, name)
 	}
 
 	capOwners, ok := sk.GetOwners(ctx, name)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(types.ErrCapabilityOwnersNotFound, name)
+		return nil, nil, errors.Wrap(types.ErrCapabilityOwnersNotFound, name)
 	}
 
 	mods := make([]string, len(capOwners.Owners))

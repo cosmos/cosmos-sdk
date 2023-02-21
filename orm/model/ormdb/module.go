@@ -212,6 +212,7 @@ func (m moduleDB) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 func (m moduleDB) GetTable(message proto.Message) ormtable.Table {
 	return m.tablesByName[message.ProtoReflect().Descriptor().FullName()]
 }
+
 func (m moduleDB) GenesisHandler() appmodule.HasGenesis {
 	return appModuleGenesisWrapper{m}
 }

@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
+	errorsmod "cosmossdk.io/errors"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
@@ -176,15 +177,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			WithBlockHeight(req.Header.Height)
 	}
 
-	// add block gas meter
-	var gasMeter storetypes.GasMeter
-	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
-		gasMeter = storetypes.NewGasMeter(maxGas)
-	} else {
-		gasMeter = storetypes.NewInfiniteGasMeter()
-	}
-
-	// NOTE: header hash is not set in NewContext, so we manually set it here
+	gasMeter := app.getBlockGasMeter(app.deliverState.ctx)
 
 	app.deliverState.ctx = app.deliverState.ctx.
 		WithBlockGasMeter(gasMeter).
@@ -271,13 +264,15 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal called with invalid height")
 	}
 
+	gasMeter := app.getBlockGasMeter(app.prepareProposalState.ctx)
 	ctx := app.getContextForProposal(app.prepareProposalState.ctx, req.Height)
 
 	ctx = ctx.WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx))
+		WithConsensusParams(app.GetConsensusParams(ctx)).
+		WithBlockGasMeter(gasMeter)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -287,6 +282,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 				"time", req.Time,
 				"panic", err,
 			)
+
 			resp = abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 	}()
@@ -315,6 +311,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
+	gasMeter := app.getBlockGasMeter(app.processProposalState.ctx)
 	ctx := app.getContextForProposal(app.processProposalState.ctx, req.Height)
 
 	ctx = ctx.
@@ -323,7 +320,8 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx))
+		WithConsensusParams(app.GetConsensusParams(ctx)).
+		WithBlockGasMeter(gasMeter)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -510,7 +508,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
 	defer func() {
 		if r := recover(); r != nil {
-			res = sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%v", r), app.trace)
+			res = sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrPanic, "%v", r), app.trace)
 		}
 	}()
 
@@ -523,6 +521,10 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	telemetry.IncrCounter(1, "query", req.Path)
 	defer telemetry.MeasureSince(time.Now(), req.Path)
 
+	if req.Path == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace)
+	}
+
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
@@ -531,7 +533,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	path := SplitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {
@@ -546,7 +548,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return handleQueryP2P(app, path)
 	}
 
-	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
+	return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
 }
 
 // ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
@@ -692,27 +694,27 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 func gRPCErrorToSDKError(err error) error {
 	status, ok := grpcstatus.FromError(err)
 	if !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	switch status.Code() {
 	case codes.NotFound:
-		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
 	case codes.InvalidArgument:
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	case codes.FailedPrecondition:
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	case codes.Unauthenticated:
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	default:
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
 }
 
 func checkNegativeHeight(height int64) error {
 	if height < 0 {
 		// Reject invalid heights.
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"cannot query with height < 0; please provide a valid height",
 		)
@@ -735,12 +737,12 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 
 	lastBlockHeight := qms.LatestVersion()
 	if lastBlockHeight == 0 {
-		return sdk.Context{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
+		return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
 	}
 
 	if height > lastBlockHeight {
 		return sdk.Context{},
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				sdkerrors.ErrInvalidHeight,
 				"cannot query with height in the future; please provide a valid height",
 			)
@@ -753,7 +755,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 
 	if height <= 1 && prove {
 		return sdk.Context{},
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			)
@@ -762,7 +764,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
 				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
 			)
@@ -857,7 +859,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 			gInfo, res, err := app.Simulate(txBytes)
 			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to simulate tx"), app.trace)
+				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to simulate tx"), app.trace)
 			}
 
 			simRes := &sdk.SimulationResponse{
@@ -867,7 +869,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 			bz, err := codec.ProtoMarshalJSON(simRes, app.interfaceRegistry)
 			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to JSON encode simulation response"), app.trace)
+				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to JSON encode simulation response"), app.trace)
 			}
 
 			return abci.ResponseQuery{
@@ -884,12 +886,12 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 			}
 
 		default:
-			return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path), app.trace)
+			return sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path), app.trace)
 		}
 	}
 
 	return sdkerrors.QueryResult(
-		sdkerrors.Wrap(
+		errorsmod.Wrap(
 			sdkerrors.ErrUnknownRequest,
 			"expected second parameter to be either 'simulate' or 'version', neither was present",
 		), app.trace)
@@ -899,14 +901,14 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 	// "/store" prefix for store queries
 	queryable, ok := app.cms.(storetypes.Queryable)
 	if !ok {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
 	}
 
 	req.Path = "/" + strings.Join(path[1:], "/")
 
 	if req.Height <= 1 && req.Prove {
 		return sdkerrors.QueryResult(
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			), app.trace)
@@ -922,7 +924,7 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 	// "/p2p" prefix for p2p queries
 	if len(path) < 4 {
 		return sdkerrors.QueryResult(
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>",
 			), app.trace)
 	}
@@ -941,7 +943,7 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 		}
 
 	default:
-		resp = sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
+		resp = sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
 	}
 
 	return resp

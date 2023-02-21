@@ -1,6 +1,6 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cosmossdk.io/api v0.2.6 h1:AoNwaLLapcLsphhMK6+o0kZl+D6MMUaHVqSdwinASGU=
-cosmossdk.io/api v0.2.6/go.mod h1:u/d+GAxil0nWpl1XnQL8nkziQDIWuBDhv8VnDm/s6dI=
+cosmossdk.io/api v0.3.1 h1:NNiOclKRR0AOlO4KIqeaG6PS6kswOMhHD0ir0SscNXE=
+cosmossdk.io/api v0.3.1/go.mod h1:DfHfMkiNA2Uhy8fj0JJlOCYOBp4eWUUJ1te5zBGNyIw=
 cosmossdk.io/core v0.5.1 h1:vQVtFrIYOQJDV3f7rw4pjjVqc1id4+mE0L9hHP66pyI=
 cosmossdk.io/core v0.5.1/go.mod h1:KZtwHCLjcFuo0nmDc24Xy6CRNEL9Vl/MeimQ2aC7NLE=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
@@ -504,6 +504,6 @@ gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gotest.tools/v3 v3.4.0 h1:ZazjZUfuVeZGLAmlKKuyv3IKP5orXcwtOwDQH6YVr6o=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
-pgregory.net/rapid v0.5.3 h1:163N50IHFqr1phZens4FQOdPgfJscR7a562mjQqeo4M=
-pgregory.net/rapid v0.5.3/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
+pgregory.net/rapid v0.5.5 h1:jkgx1TjbQPD/feRoK+S/mXw9e1uj6WilpHrXJowi6oA=
+pgregory.net/rapid v0.5.5/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
 rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=

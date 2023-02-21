@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -84,7 +85,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 	}
 	minSelfDelegation, ok := sdk.NewIntFromString(v.MinSelfDelegation)
 	if !ok {
-		return validator{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
+		return validator{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
 	return validator{

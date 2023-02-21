@@ -108,9 +108,11 @@ Issue: https://github.com/cosmos/iavl/issues/548
 * Completion of Storage v2
     * Goal is to complete the rewrite storage
     * Begin testing the rewrite on mainnets if possible
+    * External Audit
 * Optimistic Execution spec is merged and implementation has begun
     * Goal is to have the spec merged and implementation started. 
 * Store Design should enable parallel execution of transactions. 
+    * Goal is to enable it but it may still require some work to complete it
 
 ### Client UX
 

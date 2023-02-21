@@ -41,13 +41,13 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	err := json.Unmarshal(output.Bytes(), &exportedAppGenesis)
 	assert.NilError(t, err)
 
-	assert.Equal(t, simtestutil.DefaultConsensusParams.Block.MaxBytes, exportedAppGenesis.ConsensusParams.Block.MaxBytes)
-	assert.Equal(t, simtestutil.DefaultConsensusParams.Block.MaxGas, exportedAppGenesis.ConsensusParams.Block.MaxGas)
+	assert.DeepEqual(t, simtestutil.DefaultConsensusParams.Block.MaxBytes, exportedAppGenesis.Consensus.Params.Block.MaxBytes)
+	assert.DeepEqual(t, simtestutil.DefaultConsensusParams.Block.MaxGas, exportedAppGenesis.Consensus.Params.Block.MaxGas)
 
-	assert.Equal(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeDuration, exportedAppGenesis.ConsensusParams.Evidence.MaxAgeDuration)
-	assert.Equal(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeNumBlocks, exportedAppGenesis.ConsensusParams.Evidence.MaxAgeNumBlocks)
+	assert.DeepEqual(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeDuration, exportedAppGenesis.Consensus.Params.Evidence.MaxAgeDuration)
+	assert.DeepEqual(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeNumBlocks, exportedAppGenesis.Consensus.Params.Evidence.MaxAgeNumBlocks)
 
-	assert.Equal(t, simtestutil.DefaultConsensusParams.Validator.PubKeyTypes, exportedAppGenesis.ConsensusParams.Validator.PubKeyTypes)
+	assert.DeepEqual(t, simtestutil.DefaultConsensusParams.Validator.PubKeyTypes, exportedAppGenesis.Consensus.Params.Validator.PubKeyTypes)
 }
 
 func TestExportCmd_HomeDir(t *testing.T) {
@@ -168,9 +168,11 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
 	appGenesis := genutiltypes.AppGenesis{
-		ChainID:    "theChainId",
-		Validators: nil,
-		AppState:   stateBytes,
+		ChainID:  "theChainId",
+		AppState: stateBytes,
+		Consensus: &genutiltypes.ConsensusGenesis{
+			Validators: nil,
+		},
 	}
 
 	// save genesis file

@@ -46,7 +46,7 @@ func startInProcess(cfg Config, val *Validator) error {
 			return nil, err
 		}
 
-		return appGenesis.ToCometBFTGenesisDoc()
+		return appGenesis.ToGenesisDoc()
 	}
 
 	tmNode, err := node.NewNode( //resleak:notresource
@@ -176,9 +176,11 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	}
 
 	appGenesis := genutiltypes.AppGenesis{
-		ChainID:    cfg.ChainID,
-		AppState:   appGenStateJSON,
-		Validators: nil,
+		ChainID:  cfg.ChainID,
+		AppState: appGenStateJSON,
+		Consensus: &genutiltypes.ConsensusGenesis{
+			Validators: nil,
+		},
 	}
 
 	// generate empty genesis files for each validator and save

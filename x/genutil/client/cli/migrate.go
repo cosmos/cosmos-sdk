@@ -72,8 +72,8 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 			// Since some default values are valid values, we just print to
 			// make sure the user didn't forget to update these values.
-			if appGenesis.ConsensusParams.Evidence.MaxBytes == 0 {
-				fmt.Printf("Warning: consensus_params.evidence.max_bytes is set to 0. If this is"+
+			if appGenesis.Consensus.Params.Evidence.MaxBytes == 0 {
+				fmt.Printf("Warning: consensus.params.evidence.max_bytes is set to 0. If this is"+
 					" deliberate, feel free to ignore this warning. If not, please have a look at the chain"+
 					" upgrade guide at %s.\n", chainUpgradeGuide)
 			}

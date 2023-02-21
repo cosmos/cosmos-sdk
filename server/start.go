@@ -309,7 +309,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			return nil, err
 		}
 
-		return appGenesis.ToCometBFTGenesisDoc()
+		return appGenesis.ToGenesisDoc()
 	}
 
 	var (

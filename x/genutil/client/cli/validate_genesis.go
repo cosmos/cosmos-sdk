@@ -63,7 +63,7 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 // CometBFT GenesisDoc. This function does not do any cosmos-related
 // validation.
 func validateGenDoc(appGenesis *types.AppGenesis) error {
-	genDoc, err := appGenesis.ToCometBFTGenesisDoc()
+	genDoc, err := appGenesis.ToGenesisDoc()
 	if err != nil {
 		return err
 	}

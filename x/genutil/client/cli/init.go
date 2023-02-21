@@ -151,7 +151,9 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			appGenesis.AppVersion = version.Version
 			appGenesis.ChainID = chainID
 			appGenesis.AppState = appState
-			appGenesis.Validators = nil
+			appGenesis.Consensus = &types.ConsensusGenesis{
+				Validators: nil,
+			}
 
 			if err = genutil.ExportGenesisFile(appGenesis, genFile); err != nil {
 				return errorsmod.Wrap(err, "Failed to export genesis file")

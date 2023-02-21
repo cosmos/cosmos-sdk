@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,19 +21,16 @@ const (
 	MaxChainIDLen = cmttypes.MaxChainIDLen
 )
 
-// AppGenesisOnly defines the app's genesis.
+// AppGenesis defines the app's genesis.
 type AppGenesis struct {
-	AppName       string          `json:"app_name"`
-	AppVersion    string          `json:"app_version"`
-	GenesisTime   time.Time       `json:"genesis_time"`
-	ChainID       string          `json:"chain_id"`
-	InitialHeight int64           `json:"initial_height"`
-	AppHash       []byte          `json:"app_hash"`
-	AppState      json.RawMessage `json:"app_state,omitempty"`
-
-	// TODO eventually abstract from CometBFT types
-	Validators      []cmttypes.GenesisValidator `json:"validators,omitempty"`
-	ConsensusParams *cmtproto.ConsensusParams   `json:"consensus_params,omitempty"`
+	AppName       string            `json:"app_name"`
+	AppVersion    string            `json:"app_version"`
+	GenesisTime   time.Time         `json:"genesis_time"`
+	ChainID       string            `json:"chain_id"`
+	InitialHeight int64             `json:"initial_height"`
+	AppHash       []byte            `json:"app_hash"`
+	AppState      json.RawMessage   `json:"app_state,omitempty"`
+	Consensus     *ConsensusGenesis `json:"consensus,omitempty"`
 }
 
 // NewAppGenesisWithVersion returns a new AppGenesis with the app name and app version already.
@@ -42,49 +40,10 @@ func NewAppGenesisWithVersion(chainID string, appState json.RawMessage) *AppGene
 		AppVersion: version.Version,
 		ChainID:    chainID,
 		AppState:   appState,
-		Validators: nil,
+		Consensus: &ConsensusGenesis{
+			Validators: nil,
+		},
 	}
-}
-
-// ToCometBFTGenesisDoc converts the AppGenesis to a CometBFT GenesisDoc.
-func (ag *AppGenesis) ToCometBFTGenesisDoc() (*cmttypes.GenesisDoc, error) {
-	var consensusParams *cmttypes.ConsensusParams
-	if ag.ConsensusParams != nil {
-		consensusParams = &cmttypes.ConsensusParams{
-			Block: cmttypes.BlockParams{
-				MaxBytes: ag.ConsensusParams.Block.MaxBytes,
-				MaxGas:   ag.ConsensusParams.Block.MaxGas,
-			},
-			Evidence: cmttypes.EvidenceParams{
-				MaxAgeNumBlocks: ag.ConsensusParams.Evidence.MaxAgeNumBlocks,
-				MaxAgeDuration:  ag.ConsensusParams.Evidence.MaxAgeDuration,
-				MaxBytes:        ag.ConsensusParams.Evidence.MaxBytes,
-			},
-			Validator: cmttypes.ValidatorParams{
-				PubKeyTypes: ag.ConsensusParams.Validator.PubKeyTypes,
-			},
-		}
-	}
-
-	return &cmttypes.GenesisDoc{
-		GenesisTime:     ag.GenesisTime,
-		ChainID:         ag.ChainID,
-		InitialHeight:   ag.InitialHeight,
-		AppHash:         ag.AppHash,
-		AppState:        ag.AppState,
-		ConsensusParams: consensusParams,
-		Validators:      ag.Validators,
-	}, nil
-}
-
-// SaveAs is a utility method for saving AppGenesis as a JSON file.
-func (ag *AppGenesis) SaveAs(file string) error {
-	appGenesisBytes, err := json.MarshalIndent(ag, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(file, appGenesisBytes, 0o600)
 }
 
 // ValidateAndComplete performs validation and completes the AppGenesis.
@@ -109,27 +68,26 @@ func (ag *AppGenesis) ValidateAndComplete() error {
 		ag.GenesisTime = cmttime.Now()
 	}
 
-	// verify that consesus and validators parameters are valid for CometBFT
-	// TODO eventually generalize this for every consensus engine
-	cmtGenesis, err := ag.ToCometBFTGenesisDoc()
-	if err != nil {
+	if err := ag.Consensus.ValidateAndComplete(); err != nil {
 		return err
 	}
-
-	if err := cmtGenesis.ValidateAndComplete(); err != nil {
-		return err
-	}
-
-	ag.Validators = cmtGenesis.Validators
-	consensusParams := cmtGenesis.ConsensusParams.ToProto()
-	ag.ConsensusParams = &consensusParams
 
 	return nil
 }
 
+// SaveAs is a utility method for saving AppGenesis as a JSON file.
+func (ag *AppGenesis) SaveAs(file string) error {
+	appGenesisBytes, err := json.MarshalIndent(ag, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(file, appGenesisBytes, 0o600)
+}
+
 // AppGenesisFromFile reads the AppGenesis from the provided file.
 func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
-	jsonBlob, err := os.ReadFile(genFile) //nolint:gosec
+	jsonBlob, err := os.ReadFile(genFile)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't read AppGenesis file (%s): %w", genFile, err)
 	}
@@ -139,20 +97,111 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 		// fallback to CometBFT genesis
 		var ctmGenesis cmttypes.GenesisDoc
 		if err2 := cmtjson.Unmarshal(jsonBlob, &ctmGenesis); err2 != nil {
-			return nil, fmt.Errorf("error unmarshalling AppGenesis at %s: %w and failed fallback to CometBFT GenDoc: %w", genFile, err, err2)
+			return nil, fmt.Errorf("error unmarshalling AppGenesis at %s: %w\n failed fallback to CometBFT GenDoc: %w", genFile, err, err2)
 		}
 
-		consensusParams := ctmGenesis.ConsensusParams.ToProto()
 		appGenesis = AppGenesis{
-			GenesisTime:     ctmGenesis.GenesisTime,
-			ChainID:         ctmGenesis.ChainID,
-			InitialHeight:   ctmGenesis.InitialHeight,
-			AppHash:         ctmGenesis.AppHash,
-			AppState:        ctmGenesis.AppState,
-			Validators:      ctmGenesis.Validators,
-			ConsensusParams: &consensusParams,
+			GenesisTime:   ctmGenesis.GenesisTime,
+			ChainID:       ctmGenesis.ChainID,
+			InitialHeight: ctmGenesis.InitialHeight,
+			AppHash:       ctmGenesis.AppHash,
+			AppState:      ctmGenesis.AppState,
+			Consensus: &ConsensusGenesis{
+				Validators: ctmGenesis.Validators,
+				Params:     ctmGenesis.ConsensusParams,
+			},
 		}
 	}
 
 	return &appGenesis, nil
+}
+
+// --------------------------
+// CometBFT Genesis Handling
+// --------------------------
+
+// ToGenesisDoc converts the AppGenesis to a CometBFT GenesisDoc.
+func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
+	return &cmttypes.GenesisDoc{
+		GenesisTime:     ag.GenesisTime,
+		ChainID:         ag.ChainID,
+		InitialHeight:   ag.InitialHeight,
+		AppHash:         ag.AppHash,
+		AppState:        ag.AppState,
+		Validators:      ag.Consensus.Validators,
+		ConsensusParams: ag.Consensus.Params,
+	}, nil
+}
+
+// ConsensusGenesis defines the consensus layer's genesis.
+// TODO(@julienrbrt) eventually abstract from CometBFT types
+type ConsensusGenesis struct {
+	Validators []cmttypes.GenesisValidator `json:"validators,omitempty"`
+	Params     *cmttypes.ConsensusParams   `json:"params,omitempty"`
+}
+
+// NewConsensusGenesis returns a ConsensusGenesis with given values.
+// It takes a proto consensus params so it can called from server export command.
+func NewConsensusGenesis(params *cmtproto.ConsensusParams, validators []cmttypes.GenesisValidator) *ConsensusGenesis {
+	return &ConsensusGenesis{
+		Params: &cmttypes.ConsensusParams{
+			Block: cmttypes.BlockParams{
+				MaxBytes: params.Block.MaxBytes,
+				MaxGas:   params.Block.MaxGas,
+			},
+			Evidence: cmttypes.EvidenceParams{
+				MaxAgeNumBlocks: params.Evidence.MaxAgeNumBlocks,
+				MaxAgeDuration:  params.Evidence.MaxAgeDuration,
+				MaxBytes:        params.Evidence.MaxBytes,
+			},
+			Validator: cmttypes.ValidatorParams{
+				PubKeyTypes: params.Validator.PubKeyTypes,
+			},
+		},
+		Validators: validators,
+	}
+}
+
+func (cs *ConsensusGenesis) MarshalJSON() ([]byte, error) {
+	type Alias ConsensusGenesis
+	return cmtjson.Marshal(&Alias{
+		Validators: cs.Validators,
+		Params:     cs.Params,
+	})
+}
+
+func (cs *ConsensusGenesis) UnmarshalJSON(b []byte) error {
+	type Alias ConsensusGenesis
+
+	result := Alias{}
+	if err := cmtjson.Unmarshal(b, &result); err != nil {
+		return err
+	}
+
+	cs.Params = result.Params
+	cs.Validators = result.Validators
+
+	return nil
+}
+
+func (cs *ConsensusGenesis) ValidateAndComplete() error {
+	if cs.Params == nil {
+		cs.Params = cmttypes.DefaultConsensusParams()
+	} else if err := cs.Params.ValidateBasic(); err != nil {
+		return err
+	}
+
+	for i, v := range cs.Validators {
+		if v.Power == 0 {
+			return fmt.Errorf("the genesis file cannot contain validators with no voting power: %v", v)
+		}
+		if len(v.Address) > 0 && !bytes.Equal(v.PubKey.Address(), v.Address) {
+			return fmt.Errorf("incorrect address for validator %v in the genesis file, should be %v", v, v.PubKey.Address())
+		}
+		if len(v.Address) == 0 {
+			cs.Validators[i].Address = v.PubKey.Address()
+		}
+	}
+
+	return nil
 }

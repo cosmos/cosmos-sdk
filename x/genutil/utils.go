@@ -34,7 +34,7 @@ func ExportGenesisFile(genesis *types.AppGenesis, genFile string) error {
 func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.GenesisValidator, appState json.RawMessage, genTime time.Time) error {
 	appGenesis := types.NewAppGenesisWithVersion(chainID, appState)
 	appGenesis.GenesisTime = genTime
-	appGenesis.Validators = validators
+	appGenesis.Consensus.Validators = validators
 
 	if err := appGenesis.ValidateAndComplete(); err != nil {
 		return err

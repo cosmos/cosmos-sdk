@@ -94,11 +94,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return nil
 			}
 
-			var exportedAppGenesis genutiltypes.AppGenesis
-			if err = json.Unmarshal(out, &exportedAppGenesis); err != nil {
-				return err
-			}
-			if err = exportedAppGenesis.SaveAs(outputDocument); err != nil {
+			if err = appGenesis.SaveAs(outputDocument); err != nil {
 				return err
 			}
 

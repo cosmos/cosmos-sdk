@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.2.6 // indirect
+	cosmossdk.io/api v0.3.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect

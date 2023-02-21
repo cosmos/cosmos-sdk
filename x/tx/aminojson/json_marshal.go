@@ -2,7 +2,6 @@ package aminojson
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -122,15 +121,11 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 		}
 		return aj.marshalList(val, writer)
 
-	case string, bool, int32, uint32, protoreflect.EnumNumber:
+	case string, bool, int32, uint32, []byte, protoreflect.EnumNumber:
 		return jsonMarshal(writer, val)
 
 	case uint64, int64:
 		_, err := fmt.Fprintf(writer, `"%d"`, val) // quoted
-		return err
-
-	case []byte:
-		_, err := fmt.Fprintf(writer, `"%s"`, base64.StdEncoding.EncodeToString(val))
 		return err
 
 	default:

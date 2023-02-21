@@ -40,8 +40,8 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				return err
 			}
 
-			if err := validateGenDoc(appGenesis); err != nil {
-				return err
+			if err := appGenesis.ValidateAndComplete(); err != nil {
+				return fmt.Errorf("make sure that you have correctly migrated all CometBFT consensus params. Refer the UPGRADING.md (%s): %w", chainUpgradeGuide, err)
 			}
 
 			var genState map[string]json.RawMessage
@@ -57,23 +57,4 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 			return nil
 		},
 	}
-}
-
-// validateGenDoc reads a genesis file and validates that it is a correct
-// CometBFT GenesisDoc. This function does not do any cosmos-related
-// validation.
-func validateGenDoc(appGenesis *types.AppGenesis) error {
-	genDoc, err := appGenesis.ToGenesisDoc()
-	if err != nil {
-		return err
-	}
-
-	if err := genDoc.ValidateAndComplete(); err != nil {
-		return fmt.Errorf("%w. Make sure that"+
-			" you have correctly migrated all CometBFT consensus params, please see the"+
-			" chain migration guide at %s for more info",
-			err, chainUpgradeGuide)
-	}
-
-	return nil
 }

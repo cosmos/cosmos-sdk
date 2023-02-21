@@ -66,8 +66,8 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return err
 			}
 
-			if err := validateGenDoc(appGenesis); err != nil {
-				return err
+			if err := appGenesis.ValidateAndComplete(); err != nil {
+				return fmt.Errorf("make sure that you have correctly migrated all CometBFT consensus params. Refer the UPGRADING.md (%s): %w", chainUpgradeGuide, err)
 			}
 
 			// Since some default values are valid values, we just print to
@@ -124,11 +124,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return nil
 			}
 
-			var exportedAppGenesis types.AppGenesis
-			if err = json.Unmarshal(bz, &exportedAppGenesis); err != nil {
-				return err
-			}
-			if err = exportedAppGenesis.SaveAs(outputDocument); err != nil {
+			if err = appGenesis.SaveAs(outputDocument); err != nil {
 				return err
 			}
 

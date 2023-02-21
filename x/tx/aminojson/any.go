@@ -26,7 +26,7 @@ func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) e
 		return err
 	}
 
-	aminoName, named := getMessageName(valueMsg)
+	aminoName, named := getMessageAminoName(valueMsg)
 	if !named {
 		return fmt.Errorf("message %s is packed into an any field, so requires an amino.name annotation")
 	}

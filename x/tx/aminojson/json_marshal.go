@@ -83,7 +83,7 @@ func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 }
 
 func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
-	name, named := getMessageName(msg)
+	name, named := getMessageAminoName(msg)
 	if named {
 		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
 		if err != nil {
@@ -169,7 +169,7 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	for i := 0; i < fields.Len(); i++ {
 		f := fields.Get(i)
 		v := msg.Get(f)
-		name := getFieldName(f)
+		name := getAminoFieldName(f)
 		oneof := f.ContainingOneof()
 		isOneOf := oneof != nil
 		oneofFieldName, oneofTypeName, err := getOneOfNames(f)

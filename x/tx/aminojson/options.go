@@ -10,7 +10,9 @@ import (
 	"cosmossdk.io/api/amino"
 )
 
-func getMessageName(msg protoreflect.Message) (string, bool) {
+// getMessageAminoName returns the amino name of a message if it has been set by the `amino.name` option.
+// If the message does not have an amino name, then the function returns false.
+func getMessageAminoName(msg protoreflect.Message) (string, bool) {
 	opts := msg.Descriptor().Options()
 	if proto.HasExtension(opts, amino.E_Name) {
 		name := proto.GetExtension(opts, amino.E_Name)
@@ -29,7 +31,9 @@ func omitEmpty(field protoreflect.FieldDescriptor) bool {
 	return true
 }
 
-func getFieldName(field protoreflect.FieldDescriptor) string {
+// getAminoFieldName returns the amino field name of a field if it has been set by the `amino.field_name` option.
+// If the field does not have an amino field name, then the function returns the protobuf field name.
+func getAminoFieldName(field protoreflect.FieldDescriptor) string {
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_FieldName) {
 		return proto.GetExtension(opts, amino.E_FieldName).(string)

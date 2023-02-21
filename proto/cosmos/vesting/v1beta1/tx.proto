@@ -42,6 +42,7 @@ message MsgCreateVestingAccount {
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -67,6 +68,7 @@ message MsgCreatePermanentLockedAccount {
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -82,7 +84,7 @@ message MsgCreatePermanentLockedAccountResponse {}
 // Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccount {
   option (cosmos.msg.v1.signer) = "from_address";
-  option (amino.name)           = "cosmos-sdk/MsgCreatePeriodicVestingAccount";
+  option (amino.name)           = "cosmos-sdk/MsgCreatePeriodVestAccount";
 
   option (gogoproto.equal) = false;
 

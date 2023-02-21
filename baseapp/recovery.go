@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +55,7 @@ func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recov
 			return nil
 		}
 
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrOutOfGas, fmt.Sprintf(
 				"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 				err.Descriptor, gasWanted, ctx.GasMeter().GasConsumed(),
@@ -68,7 +69,7 @@ func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recov
 // newDefaultRecoveryMiddleware creates a default (last in chain) recovery middleware for app.runTx method.
 func newDefaultRecoveryMiddleware() recoveryMiddleware {
 	handler := func(recoveryObj interface{}) error {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrPanic, fmt.Sprintf(
 				"recovered: %v\nstack:\n%v", recoveryObj, string(debug.Stack()),
 			),

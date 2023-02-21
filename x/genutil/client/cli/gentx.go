@@ -9,8 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/errors"
 	cmttypes "github.com/cometbft/cometbft/types"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"

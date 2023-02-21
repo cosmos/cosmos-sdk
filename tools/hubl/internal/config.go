@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
+	"cosmossdk.io/errors"
 	"github.com/pelletier/go-toml/v2"
-	"github.com/pkg/errors"
 )
 
 type Config struct {
@@ -49,12 +49,12 @@ func SaveConfig(configDir string, config *Config) error {
 		return err
 	}
 
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
 		return err
 	}
 
 	configPath := configFilename(configDir)
-	if err := os.WriteFile(configPath, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(configPath, buf.Bytes(), 0o644); err != nil {
 		return err
 	}
 

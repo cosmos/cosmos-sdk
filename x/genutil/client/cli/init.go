@@ -3,16 +3,17 @@ package cli
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math/unsafe"
 	cfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/cli"
-	cmtrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -86,7 +87,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			case clientCtx.ChainID != "":
 				chainID = clientCtx.ChainID
 			default:
-				chainID = fmt.Sprintf("test-chain-%v", cmtrand.Str(6))
+				chainID = fmt.Sprintf("test-chain-%v", unsafe.Str(6))
 			}
 
 			// Get bip39 mnemonic
@@ -130,7 +131,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			appState, err := json.MarshalIndent(appGenState, "", " ")
 			if err != nil {
-				return errors.Wrap(err, "Failed to marshal default genesis state")
+				return errorsmod.Wrap(err, "Failed to marshal default genesis state")
 			}
 
 			genDoc := &types.GenesisDoc{}
@@ -141,7 +142,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			} else {
 				genDoc, err = types.GenesisDocFromFile(genFile)
 				if err != nil {
-					return errors.Wrap(err, "Failed to read genesis doc from file")
+					return errorsmod.Wrap(err, "Failed to read genesis doc from file")
 				}
 			}
 
@@ -150,7 +151,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			genDoc.AppState = appState
 
 			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-				return errors.Wrap(err, "Failed to export genesis file")
+				return errorsmod.Wrap(err, "Failed to export genesis file")
 			}
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)

@@ -242,7 +242,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 			} else {
 				err = mr.parseRepeated(ctx, subscreens, nf.List(), vr)
 
-				//Skip List Terminator
+				// Skip List Terminator
 				idx++
 			}
 			if err != nil {
@@ -272,7 +272,6 @@ func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Scr
 
 	lengthStr := res[0][1]
 	length, err := strconv.Atoi(lengthStr)
-
 	if err != nil {
 		return fmt.Errorf("malformed length: %q with error: %w", lengthStr, err)
 	}

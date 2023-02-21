@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections/codec"
 )
 
 // Indexes represents a type which groups multiple Index
@@ -46,8 +48,8 @@ func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	pkCodec KeyCodec[PrimaryKey],
-	valueCodec ValueCodec[Value],
+	pkCodec codec.KeyCodec[PrimaryKey],
+	valueCodec codec.ValueCodec[Value],
 	indexes Idx,
 ) *IndexedMap[PrimaryKey, Value, Idx] {
 	return &IndexedMap[PrimaryKey, Value, Idx]{
@@ -112,6 +114,24 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Remove(ctx context.Context, pk Prim
 		return err
 	}
 	return m.m.Remove(ctx, pk)
+}
+
+// Walk applies the same semantics as Map.Walk.
+func (m *IndexedMap[PrimaryKey, Value, Idx]) Walk(ctx context.Context, ranger Ranger[PrimaryKey], walkFunc func(key PrimaryKey, value Value) bool) error {
+	return m.m.Walk(ctx, ranger, walkFunc)
+}
+
+// IterateRaw iterates the IndexedMap using raw bytes keys. Follows the same semantics as Map.IterateRaw
+func (m *IndexedMap[PrimaryKey, Value, Idx]) IterateRaw(ctx context.Context, start, end []byte, order Order) (Iterator[PrimaryKey, Value], error) {
+	return m.m.IterateRaw(ctx, start, end, order)
+}
+
+func (m *IndexedMap[PrimaryKey, Value, Idx]) KeyCodec() codec.KeyCodec[PrimaryKey] {
+	return m.m.KeyCodec()
+}
+
+func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value] {
+	return m.m.ValueCodec()
 }
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value, oldValue *Value) error {

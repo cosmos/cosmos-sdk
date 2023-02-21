@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"cosmossdk.io/errors"
-
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 )

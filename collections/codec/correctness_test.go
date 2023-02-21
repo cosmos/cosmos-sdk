@@ -1,4 +1,4 @@
-package collections_test
+package codec_test
 
 import (
 	"testing"
@@ -20,20 +20,32 @@ func TestKeyCorrectness(t *testing.T) {
 		colltest.TestKeyCodec(t, collections.Uint64Key, 5949485)
 	})
 
+	t.Run("uint32", func(t *testing.T) {
+		colltest.TestKeyCodec(t, collections.Uint32Key, 5548458)
+	})
+
+	t.Run("uint16", func(t *testing.T) {
+		colltest.TestKeyCodec(t, collections.Uint16Key, 1005)
+	})
+
+	t.Run("bool", func(t *testing.T) {
+		colltest.TestKeyCodec(t, collections.BoolKey, true)
+		colltest.TestKeyCodec(t, collections.BoolKey, false)
+	})
+
+	t.Run("int32", func(t *testing.T) {
+		colltest.TestKeyCodec(t, collections.Int32Key, -500)
+	})
+
+	t.Run("int64", func(t *testing.T) {
+		colltest.TestKeyCodec(t, collections.Int64Key, -100)
+	})
+
 	t.Run("Pair", func(t *testing.T) {
 		colltest.TestKeyCodec(
 			t,
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			collections.Join("hello", "testing"),
 		)
-	})
-}
-
-func TestValueCorrectness(t *testing.T) {
-	t.Run("string", func(t *testing.T) {
-		colltest.TestValueCodec(t, collections.StringValue, "i am a string")
-	})
-	t.Run("uint64", func(t *testing.T) {
-		colltest.TestValueCodec(t, collections.Uint64Value, 5948459845)
 	})
 }

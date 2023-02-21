@@ -96,7 +96,7 @@ func (t TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, io.EOF
 	}
 
-	var seconds = int64(b0)
+	seconds := int64(b0)
 	for i := 0; i < 4; i++ {
 		seconds <<= 8
 		seconds |= int64(secondsBz[i])
@@ -124,7 +124,7 @@ func (t TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, io.EOF
 	}
 
-	var nanos = int32(b0) & 0x3F // clear first two bits
+	nanos := int32(b0) & 0x3F // clear first two bits
 	for i := 0; i < 3; i++ {
 		nanos <<= 8
 		nanos |= int32(nanosBz[i])

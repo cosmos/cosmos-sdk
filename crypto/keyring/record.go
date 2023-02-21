@@ -3,6 +3,8 @@ package keyring
 import (
 	"github.com/cockroachdb/errors"
 
+	errorsmod "cosmossdk.io/errors"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -69,7 +71,7 @@ func NewMultiRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
 func (k *Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := k.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return nil, errors.Wrap(ErrCastAny, "PubKey")
+		return nil, errorsmod.Wrap(ErrCastAny, "PubKey")
 	}
 
 	return pk, nil
@@ -131,7 +133,7 @@ func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
 
 	priv, ok := rl.PrivKey.GetCachedValue().(cryptotypes.PrivKey)
 	if !ok {
-		return nil, errors.Wrap(ErrCastAny, "PrivKey")
+		return nil, errorsmod.Wrap(ErrCastAny, "PrivKey")
 	}
 
 	return priv, nil

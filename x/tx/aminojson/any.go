@@ -32,6 +32,9 @@ func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) e
 	}
 
 	_, err = writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, aminoName)))
+	if err != nil {
+		return err
+	}
 
 	err = aj.marshalMessage(valueMsg, writer)
 	if err != nil {

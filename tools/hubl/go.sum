@@ -37,8 +37,8 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 cosmossdk.io/api v0.3.1 h1:NNiOclKRR0AOlO4KIqeaG6PS6kswOMhHD0ir0SscNXE=
 cosmossdk.io/api v0.3.1/go.mod h1:DfHfMkiNA2Uhy8fj0JJlOCYOBp4eWUUJ1te5zBGNyIw=
-cosmossdk.io/client/v2 v2.0.0-20230221204830-dbc4d104b26f h1:9dvmZx+2RSYFS9Bx8RDHjEE3izWWP5XOjLv3OaT1oqE=
-cosmossdk.io/client/v2 v2.0.0-20230221204830-dbc4d104b26f/go.mod h1:i5c3rlO2zeyr6wGW2U0riJWGx07o4ZlZvsdN6uAx+98=
+cosmossdk.io/client/v2 v2.0.0-20230221205652-bc53611b4c2c h1:C9v7K9rrn4abRjUZhg8DJe4YaI69I5c6vXyHAd662zo=
+cosmossdk.io/client/v2 v2.0.0-20230221205652-bc53611b4c2c/go.mod h1:39SEMRM+9bS+FsRr3bgUAKGUU6mLdBPRdr1PmFzp0j8=
 cosmossdk.io/core v0.5.1 h1:vQVtFrIYOQJDV3f7rw4pjjVqc1id4+mE0L9hHP66pyI=
 cosmossdk.io/core v0.5.1/go.mod h1:KZtwHCLjcFuo0nmDc24Xy6CRNEL9Vl/MeimQ2aC7NLE=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=

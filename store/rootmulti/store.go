@@ -1100,6 +1100,15 @@ type storeParams struct {
 	initialVersion uint64
 }
 
+func newStoreParams(key types.StoreKey, db dbm.DB, typ types.StoreType, initialVersion uint64) storeParams { // nolint
+	return storeParams{
+		key:            key,
+		db:             db,
+		typ:            typ,
+		initialVersion: initialVersion,
+	}
+}
+
 func GetLatestVersion(db dbm.DB) int64 {
 	bz, err := db.Get([]byte(latestVersionKey))
 	if err != nil {

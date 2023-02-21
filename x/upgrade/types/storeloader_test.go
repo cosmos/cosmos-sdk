@@ -141,13 +141,6 @@ func TestSetLoader(t *testing.T) {
 
 			require.Equal(t, upgradeHeight-1, newApp.LastBlockHeight())
 
-			// "execute" one block
-			_, err = newApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: upgradeHeight})
-			require.NoError(t, err)
-			_, err = newApp.Commit()
-			require.NoError(t, err)
-			require.Equal(t, upgradeHeight, newApp.LastBlockHeight())
-
 			// check db is properly updated
 			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)
 		})

@@ -301,7 +301,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	migratedID := restore.Commit()
 	require.Equal(t, migratedID.Version, int64(2))
 
-	reload, _ := newMultiStoreWithModifiedMounts(db, types.PruneNothing)
+	reload, _ := newMultiStoreWithModifiedMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	// unmount store3 since store3 was deleted
 	unmountStore(reload, "store3")
 
@@ -648,6 +648,32 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 func TestUnevenStoresHeightCheck(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := newMultiStoreWithMounts(db, types.PruneNothing)
+	err := store.LoadLatestVersion()
+	require.Nil(t, err)
+
+	// commit to increment store's height
+	store.Commit()
+
+	// mount store4 to root store
+	store.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
+
+	// load the stores without upgrades
+	err = store.LoadLatestVersion()
+	require.Error(t, err)
+
+	// now, let's load with upgrades...
+	upgrades := &types.StoreUpgrades{
+		Added: []string{"store4"},
+	}
+	err = store.LoadLatestVersionAndUpgrade(upgrades)
+	require.Nil(t, err)
+}
+
+// TestUnevenStoresHeightCheck tests if loading root store correctly errors when
+// there's any module store with the wrong height
+func TestUnevenStoresHeightCheck(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
 

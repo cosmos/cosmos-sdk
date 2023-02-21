@@ -41,6 +41,7 @@ Welcome to the Cosmos SDK's team roadmap.
 * [Release collections v1](https://github.com/cosmos/cosmos-sdk/issues/14300) 
     * Collections is a new abstraction layer similar to the ORM. In the ADR phase it received support from many in the ecosystem. 
     * V1 release should allow modules to be migrated to collections.  
+* Release ORM v1
 * Migrate 3 modules to use collections api
     * Migrating 3 modules to use collections would help in show users how to migrate users
 * [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) 
@@ -142,7 +143,8 @@ Issue: https://github.com/cosmos/iavl/issues/548
     * Begin Implementation
 * Auth/Accounts v2
     * Spec is merged 
-    * Implementation is nearing completeion 
+    * Implementation is completed
+    * External Audit
 
 ### Research
 
@@ -164,6 +166,13 @@ Issue: https://github.com/cosmos/iavl/issues/548
 * Implement fee market abstractions 
     * Goal is to release an alpha version of fee market abstractions
 
+### Modules
+
+* Staking
+    * Complete staking redesign 
+    * External Audit 
+
+
 ### Research
 
 * Nonce Lanes
@@ -171,6 +180,12 @@ Issue: https://github.com/cosmos/iavl/issues/548
 * Merklization 
     * Research different trees and commitment structures
 
+## Q4
+
+### Research
+
+* Stateless clients
+    * research how stateless clients could evolve in cosmos
 
 
 

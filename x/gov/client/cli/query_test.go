@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -378,6 +380,56 @@ func (s *CLITestSuite) TestCmdQueryVote() {
 			if len(tc.args) != 0 {
 				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 			}
+		})
+	}
+}
+
+func (s *CLITestSuite) TestCmdGeConstitution() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expCmdOutput string
+	}{
+		{
+			"get constitution with json response",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+			},
+			"1 --output=json",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryProposal()
+			cmd.SetArgs(tc.args)
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
+		})
+	}
+}
+
+func (s *CLITestSuite) TestCmdGetConstitution() {
+	testCases := []struct {
+		name      string
+		expOutput string
+	}{
+		{
+			name:      "get constitution",
+			expOutput: "constitution",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdConstitution()
+			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, []string{})
+			s.Require().NoError(err)
+			s.Require().Contains(out.String(), tc.expOutput)
 		})
 	}
 }

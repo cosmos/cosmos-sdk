@@ -194,6 +194,8 @@ require (
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 replace (
+	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
@@ -201,16 +203,8 @@ replace (
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/upgrade => ../x/upgrade
-<<<<<<< HEAD
-	cosmossdk.io/core => ../core
-	cosmossdk.io/collections => ../collections
 	// TODO update/remove after v0.37.x tag of CometBFT
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-||||||| 704a746b30
-	// TODO update/remove after v0.37.x tag of CometBFT
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-=======
->>>>>>> main
 )
 
 // Below are the long-lived replace of the SimApp

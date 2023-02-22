@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"io"
+<<<<<<< HEAD
 	"time"
 
 	dbm "github.com/cometbft/cometbft-db"
@@ -10,6 +11,15 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+=======
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
+>>>>>>> 7f99ad5fe (refactor: cleanup server logic (#15041))
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
 
@@ -18,10 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// ServerStartTime defines the time duration that the server need to stay running after startup
-// for the startup be considered successful
-const ServerStartTime = 5 * time.Second
 
 type (
 	// AppOptions defines an interface that is passed into an application

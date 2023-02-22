@@ -29,6 +29,7 @@ type PriorityNonceMempool struct {
 	senderIndices  map[string]*skiplist.SkipList
 	scores         map[txMeta]txMeta
 	onRead         func(tx sdk.Tx)
+	txReplacement  func(op, np int64, oTx, nTx sdk.Tx) bool
 	maxTx          int
 }
 
@@ -95,9 +96,6 @@ func PriorityNonceWithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption 
 	}
 }
 
-<<<<<<< HEAD
-// PriorityNonceWithMaxTx sets the maximum number of transactions allowed in the mempool with the semantics:
-=======
 // PriorityNonceWithTxReplacement sets a callback to be called when duplicated
 // transaction nonce detected during mempool insert. An application can define a
 // transaction replacement rule based on tx priority or certain transaction fields.
@@ -109,7 +107,6 @@ func PriorityNonceWithTxReplacement(txReplacementRule func(op, np int64, oTx, nT
 
 // PriorityNonceWithMaxTx sets the maximum number of transactions allowed in the
 // mempool with the semantics:
->>>>>>> 77660ec45 (chore: UX Mempool Tweaks (#15121))
 //
 // <0: disabled, `Insert` is a no-op
 // 0: unlimited
@@ -196,12 +193,6 @@ func (mp *PriorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 		mp.senderIndices[sender] = senderIndex
 	}
 
-	mp.priorityCounts[priority]++
-
-	// Since senderIndex is scored by nonce, a changed priority will overwrite the
-	// existing key.
-	key.senderElement = senderIndex.Set(key, tx)
-
 	// Since mp.priorityIndex is scored by priority, then sender, then nonce, a
 	// changed priority will create a new key, so we must remove the old key and
 	// re-insert it to avoid having the same tx with different priorityIndex indexed
@@ -211,6 +202,16 @@ func (mp *PriorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 	// changes.
 	sk := txMeta{nonce: nonce, sender: sender}
 	if oldScore, txExists := mp.scores[sk]; txExists {
+		if mp.txReplacement != nil && !mp.txReplacement(oldScore.priority, priority, senderIndex.Get(key).Value.(sdk.Tx), tx) {
+			return fmt.Errorf(
+				"tx doesn't fit the replacement rule, oldPriority: %v, newPriority: %v, oldTx: %v, newTx: %v",
+				oldScore.priority,
+				priority,
+				senderIndex.Get(key).Value.(sdk.Tx),
+				tx,
+			)
+		}
+
 		mp.priorityIndex.Remove(txMeta{
 			nonce:    nonce,
 			sender:   sender,
@@ -219,6 +220,12 @@ func (mp *PriorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 		})
 		mp.priorityCounts[oldScore.priority]--
 	}
+
+	mp.priorityCounts[priority]++
+
+	// Since senderIndex is scored by nonce, a changed priority will overwrite the
+	// existing key.
+	key.senderElement = senderIndex.Set(key, tx)
 
 	mp.scores[sk] = txMeta{priority: priority}
 	mp.priorityIndex.Set(key, tx)

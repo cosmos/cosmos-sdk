@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,7 +36,8 @@ func TestOutOfOrder(t *testing.T) {
 			{priority: 21, nonce: 4, address: sa},
 			{priority: 8, nonce: 3, address: sa},
 			{priority: 6, nonce: 2, address: sa},
-		}}
+		},
+	}
 
 	for _, outOfOrder := range outOfOrders {
 		var mtxs []sdk.Tx
@@ -56,12 +57,11 @@ func TestOutOfOrder(t *testing.T) {
 	}
 
 	require.Error(t, validateOrder(rmtxs))
-
 }
 
 func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -259,7 +259,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 }
 
 func (s *MempoolTestSuite) TestPriorityTies() {
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -348,22 +348,20 @@ func validateOrder(mtxs []sdk.Tx) error {
 					if a.n > b.n {
 						return fmt.Errorf("same sender tx have wrong nonce order\n%v\n%v", a, b)
 					}
-				} else {
-					// different sender
-					if a.p < b.p {
-						// find a tx with same sender as b and lower nonce
-						found := false
-						for _, c := range itxs {
-							iterations++
-							if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
-								found = true
-								break
-							}
-						}
-						if !found {
-							return fmt.Errorf("different sender tx have wrong order\n%v\n%v", b, a)
+				} else if a.p < b.p { // different sender
+					// find a tx with same sender as b and lower nonce
+					found := false
+					for _, c := range itxs {
+						iterations++
+						if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
+							found = true
+							break
 						}
 					}
+					if !found {
+						return fmt.Errorf("different sender tx have wrong order\n%v\n%v", b, a)
+					}
+
 				}
 			}
 		}
@@ -378,7 +376,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 		s.iterations++
 	}))
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
 
 	t.Logf("running with seed: %d", seed)
@@ -414,7 +412,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	s.mempool = mempool.NewPriorityMempool()
 
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 
 	seed := time.Now().UnixNano()
 	// interesting failing seeds:
@@ -478,7 +476,8 @@ func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
 			priority: priority,
 			nonce:    nonce,
 			address:  addr,
-			id:       i})
+			id:       i,
+		})
 	}
 
 	return res
@@ -616,7 +615,7 @@ func TestPriorityNonceMempool_NextSenderTx(t *testing.T) {
 
 func TestNextSenderTx_TxLimit(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	sa := accounts[0].Address
 	sb := accounts[1].Address
 
@@ -670,8 +669,6 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 		require.Equal(t, 0, mp.CountTx())
 	}
 }
-<<<<<<< HEAD
-=======
 
 func TestNextSenderTx_TxReplacement(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
@@ -724,4 +721,3 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	iter := mp.Select(ctx, nil)
 	require.Equal(t, txs[3], iter.Tx())
 }
->>>>>>> 77660ec45 (chore: UX Mempool Tweaks (#15121))

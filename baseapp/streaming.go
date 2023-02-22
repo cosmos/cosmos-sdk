@@ -50,15 +50,16 @@ func (app *BaseApp) registerStreamingPlugin(
 	keys map[string]*storetypes.KVStoreKey,
 	streamingPlugin interface{},
 ) error {
-	switch t := streamingPlugin.(type) {
-	case storetypes.ABCIListener:
-		app.registerABCIListenerPlugin(appOpts, keys, t)
-	default:
-		return fmt.Errorf("unexpected plugin type %T", t)
+	v, ok := streamingPlugin.(storetypes.ABCIListener)
+	if !ok {
+		return fmt.Errorf("unexpected plugin type %T", v)
 	}
+
+	app.registerABCIListenerPlugin(appOpts, keys, v)
 	return nil
 }
 
+// registerABCIListenerPlugin registers plugins that implement the ABCIListener interface.
 func (app *BaseApp) registerABCIListenerPlugin(
 	appOpts servertypes.AppOptions,
 	keys map[string]*storetypes.KVStoreKey,
@@ -72,7 +73,7 @@ func (app *BaseApp) registerABCIListenerPlugin(
 	app.cms.AddListeners(exposedKeys)
 	app.SetStreamingManager(
 		storetypes.StreamingManager{
-			AbciListeners: []storetypes.ABCIListener{abciListener},
+			ABCIListeners: []storetypes.ABCIListener{abciListener},
 			StopNodeOnErr: stopNodeOnErr,
 		},
 	)

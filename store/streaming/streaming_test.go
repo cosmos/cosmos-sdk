@@ -44,10 +44,9 @@ func (s *PluginTestSuite) SetupTest() {
 	}
 	s.workDir = path
 
-	pluginVersion := "abci_v1"
+	pluginVersion := "abci"
 	// to write data to files, replace stdout/stdout => file/file
-	//pluginPath := fmt.Sprintf("%s/abci/examples/stdout/stdout", s.workDir)
-	pluginPath := fmt.Sprintf("/Users/ergelsgaxhaj/workspace/provenance-abci-listener/build/distributions/provenance-abci-listener-sdk-main/bin/provenance-abci-listener")
+	pluginPath := fmt.Sprintf("%s/abci/examples/stdout/stdout", s.workDir)
 	if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 		s.T().Fail()
 	}
@@ -61,7 +60,7 @@ func (s *PluginTestSuite) SetupTest() {
 	header := tmproto.Header{Height: 1, Time: time.Now()}
 	logger := log.NewNopLogger()
 	streamingService := storetypes.StreamingManager{
-		AbciListeners: []storetypes.ABCIListener{abciListener},
+		ABCIListeners: []storetypes.ABCIListener{abciListener},
 		StopNodeOnErr: true,
 	}
 	s.loggerCtx = NewMockContext(header, logger, streamingService)
@@ -115,7 +114,7 @@ func TestPluginTestSuite(t *testing.T) {
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
 
-		abciListeners := s.loggerCtx.StreamingManager().AbciListeners
+		abciListeners := s.loggerCtx.StreamingManager().ABCIListeners
 		for _, abciListener := range abciListeners {
 			for i := range [50]int{} {
 				err := abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)

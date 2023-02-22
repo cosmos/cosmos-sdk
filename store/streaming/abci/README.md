@@ -270,7 +270,7 @@ func main() {
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: v1.Handshake,
 		Plugins: map[string]plugin.Plugin{
-			"abci_v1": &ABCIListenerGRPCPlugin{Impl: &MyPlugin{}},
+			"abci": &ABCIListenerGRPCPlugin{Impl: &MyPlugin{}},
 		},
 
 		// A non-nil value here enables gRPC serving for this streaming...
@@ -329,8 +329,8 @@ Update the streaming section in `app.toml`
 keys = ["*"]
 
 # The plugin name used for streaming via gRPC
-# Supported plugins: abci_v1
-plugin = "abci_v1"
+# Supported plugins: abci
+plugin = "abci"
 
 # stop-node-on-err specifies whether to stop the node when the 
 stop-node-on-err = true
@@ -362,11 +362,11 @@ Export a plugin from one of the Go or Python examples.
 
 - stdout plugin
 ```shell
-export COSMOS_SDK_ABCI_V1="{path to}/cosmos-sdk/store/streaming/abci/examples/stdout/stdout"
+export COSMOS_SDK_ABCI="{path to}/cosmos-sdk/store/streaming/abci/examples/stdout/stdout"
 ```
 - file plugin (writes to ~/)
 ```shell
-export COSMOS_SDK_ABCI_V1="{path to}/cosmos-sdk/store/streaming/abci/examples/file/file"
+export COSMOS_SDK_ABCI="{path to}/cosmos-sdk/store/streaming/abci/examples/file/file"
 ```
 where `{path to}` is the parent path to the `cosmos-sdk` repo on you system.
 

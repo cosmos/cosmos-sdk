@@ -47,11 +47,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		require.NoError(b, os.RemoveAll(dir))
 	}()
 
-	//
-	//appOptions := make(simtestutil.AppOptionsMap, 0)
-	//appOptions[flags.FlagHome] = DefaultNodeHome
-	//appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
-
 	appOptions := viper.New()
 	if FlagEnableStreamingValue {
 		m := make(map[string]interface{})

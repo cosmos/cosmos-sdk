@@ -411,9 +411,8 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+		ctx: sdk.NewContext(ms, header, false, app.logger).WithStreamingManager(app.streamingManager),
 	}
-	baseState.ctx = baseState.ctx.WithStreamingManager(app.streamingManager)
 
 	switch mode {
 	case runTxModeCheck:

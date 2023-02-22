@@ -21,11 +21,11 @@ type ABCIListener interface {
 	ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*StoreKVPair) error
 }
 
-// StreamingManager is the struct that maintains a list of AbciListeners and configuration settings.
+// StreamingManager is the struct that maintains a list of ABCIListeners and configuration settings.
 type StreamingManager struct {
-	// AbciListeners for hooking into the ABCI message processing of the BaseApp
+	// ABCIListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
-	AbciListeners []ABCIListener
+	ABCIListeners []ABCIListener
 
 	// StopNodeOnErr halts the node when ABCI streaming service listening results in an error.
 	StopNodeOnErr bool

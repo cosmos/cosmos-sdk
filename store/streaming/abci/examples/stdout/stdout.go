@@ -46,7 +46,7 @@ func main() {
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: streamingabci.Handshake,
 		Plugins: map[string]plugin.Plugin{
-			"abci_v1": &streamingabci.ListenerGRPCPlugin{Impl: &StdoutPlugin{}},
+			"abci": &streamingabci.ListenerGRPCPlugin{Impl: &StdoutPlugin{}},
 		},
 
 		// A non-nil value here enables gRPC serving for this streaming...

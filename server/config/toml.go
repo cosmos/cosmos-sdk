@@ -218,7 +218,7 @@ keys = [{{ range .Streaming.ABCI.Keys }}{{ printf "%q, " . }}{{end}}]
 
 # The plugin name used for streaming via gRPC.
 # Streaming is only enabled if this is set.
-# Supported plugins: abci_v1
+# Supported plugins: abci
 plugin = "{{ .Streaming.ABCI.Plugin }}"
 
 # stop-node-on-err specifies whether to stop the node on message delivery error.

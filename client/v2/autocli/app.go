@@ -80,22 +80,30 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	customQueryCmds := map[string]*cobra.Command{}
+	customMsgCmds := map[string]*cobra.Command{}
 	for name, module := range appOptions.Modules {
-		if module, ok := module.(HasCustomQueryCommand); ok {
-			cmd := module.GetQueryCmd()
+		if queryModule, ok := module.(HasCustomQueryCommand); ok {
+			queryCmd := queryModule.GetQueryCmd()
 			// filter any nil commands
-			if cmd != nil {
-				customQueryCmds[name] = cmd
+			if queryCmd != nil {
+				customQueryCmds[name] = queryCmd
+			}
+		}
+		if msgModule, ok := module.(HasCustomTxCommand); ok {
+			msgCmd := msgModule.GetTxCmd()
+			// filter any nil commands
+			if msgCmd != nil {
+				customMsgCmds[name] = msgCmd
 			}
 		}
 	}
 
 	// if we have an existing query command, enhance it or build a custom one
-	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
-		txCmdDesc := modOpts.Tx
-		if txCmdDesc != nil {
+	enhanceQuery := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
+		queryCmdDesc := modOpts.Query
+		if queryCmdDesc != nil {
 			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
-			err := builder.AddQueryServiceCommands(cmd, txCmdDesc)
+			err := builder.AddQueryServiceCommands(cmd, queryCmdDesc)
 			if err != nil {
 				return err
 			}
@@ -106,7 +114,7 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-		if err := builder.EnhanceCommandCommon(queryCmd, moduleOptions, customQueryCmds, enhanceMsg); err != nil {
+		if err := builder.EnhanceCommandCommon(queryCmd, moduleOptions, customQueryCmds, enhanceQuery); err != nil {
 			return err
 		}
 	} else {
@@ -116,6 +124,33 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 		}
 
 		rootCmd.AddCommand(queryCmd)
+	}
+
+	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
+		txCmdDesc := modOpts.Tx
+		if txCmdDesc != nil {
+			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+			err := builder.AddQueryServiceCommands(cmd, txCmdDesc)
+			if err != nil {
+				return err
+			}
+
+			cmd.AddCommand(subCmd)
+		}
+		return nil
+	}
+
+	if msgCmd := findSubCommand(rootCmd, "tx"); msgCmd != nil {
+		if err := builder.EnhanceCommandCommon(msgCmd, moduleOptions, customQueryCmds, enhanceMsg); err != nil {
+			return err
+		}
+	} else {
+		subCmd, err := builder.BuildMsgCommand(moduleOptions, customQueryCmds)
+		if err != nil {
+			return err
+		}
+
+		rootCmd.AddCommand(subCmd)
 	}
 
 	return nil

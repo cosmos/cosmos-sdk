@@ -384,33 +384,6 @@ func (s *CLITestSuite) TestCmdQueryVote() {
 	}
 }
 
-func (s *CLITestSuite) TestCmdGeConstitution() {
-	testCases := []struct {
-		name         string
-		args         []string
-		expCmdOutput string
-	}{
-		{
-			"get constitution with json response",
-			[]string{
-				"1",
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			"1 --output=json",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryProposal()
-			cmd.SetArgs(tc.args)
-			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-		})
-	}
-}
-
 func (s *CLITestSuite) TestCmdGetConstitution() {
 	testCases := []struct {
 		name      string

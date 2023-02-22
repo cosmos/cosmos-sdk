@@ -105,11 +105,23 @@ Where proposal.json contains:
       "amount":[{"denom": "stake","amount": "10"}]
     }
   ],
-  "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
+  // metadata can be any of base64 encoded, raw text, stringified json, IPFS link to json
+  // see below for example metadata
+  "metadata: "4pIMOgIGx1vZGU=",
   "deposit": "10stake"
   "title: "My proposal"
   "summary": "A short summary of my proposal",
   "expedited": false
+}
+
+metadata example: 
+{
+	"title": "",
+	"authors": [""],
+	"summary": "",
+	"details": "", 
+	"proposal_forum_url": "",
+	"vote_option_context": "",
 }
 `,
 				version.AppName,

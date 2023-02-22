@@ -3,6 +3,8 @@ package ante
 import (
 	storetypes "cosmossdk.io/store/types"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -52,14 +54,14 @@ func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	memoLength := len(memoTx.GetMemo())
 	if memoLength > 0 {
 		params := vmd.ak.GetParams(ctx)
 		if uint64(memoLength) > params.MaxMemoCharacters {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrMemoTooLarge,
 				"maximum number of characters is %d but received %d characters",
 				params.MaxMemoCharacters, memoLength,
 			)
@@ -91,7 +93,7 @@ func NewConsumeGasForTxSizeDecorator(ak AccountKeeper) ConsumeTxSizeGasDecorator
 func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 	params := cgts.ak.GetParams(ctx)
 
@@ -195,12 +197,12 @@ func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
 func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	timeoutTx, ok := tx.(TxWithTimeoutHeight)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
 	}
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
 	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
-		return ctx, sdkerrors.Wrapf(
+		return ctx, errorsmod.Wrapf(
 			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", ctx.BlockHeight(), timeoutHeight,
 		)
 	}

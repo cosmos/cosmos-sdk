@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
+	"cosmossdk.io/errors"
 )
 
 // ----------------------------------------------------------------------------

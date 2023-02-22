@@ -187,8 +187,10 @@ type dynamicTypeResolver struct {
 	*ChainInfo
 }
 
-var _ protoregistry.MessageTypeResolver = dynamicTypeResolver{}
-var _ protoregistry.ExtensionTypeResolver = dynamicTypeResolver{}
+var (
+	_ protoregistry.MessageTypeResolver   = dynamicTypeResolver{}
+	_ protoregistry.ExtensionTypeResolver = dynamicTypeResolver{}
+)
 
 func (d dynamicTypeResolver) FindMessageByName(message protoreflect.FullName) (protoreflect.MessageType, error) {
 	desc, err := d.ProtoFiles.FindDescriptorByName(message)

@@ -1,26 +1,33 @@
 package types
 
-import "cosmossdk.io/collections"
+import (
+	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/math"
+)
 
 var (
 	// AccAddressKey follows the same semantics of collections.BytesKey.
 	// It just uses humanised format for the String() and EncodeJSON().
-	AccAddressKey collections.KeyCodec[AccAddress] = genericAddressKey[AccAddress]{
+	AccAddressKey collcodec.KeyCodec[AccAddress] = genericAddressKey[AccAddress]{
 		stringDecoder: AccAddressFromBech32,
 		keyType:       "sdk.AccAddress",
 	}
 
 	// ValAddressKey follows the same semantics as AccAddressKey.
-	ValAddressKey collections.KeyCodec[ValAddress] = genericAddressKey[ValAddress]{
+	ValAddressKey collcodec.KeyCodec[ValAddress] = genericAddressKey[ValAddress]{
 		stringDecoder: ValAddressFromBech32,
 		keyType:       "sdk.ValAddress",
 	}
 
 	// ConsAddressKey follows the same semantics as ConsAddressKey.
-	ConsAddressKey collections.KeyCodec[ConsAddress] = genericAddressKey[ConsAddress]{
+	ConsAddressKey collcodec.KeyCodec[ConsAddress] = genericAddressKey[ConsAddress]{
 		stringDecoder: ConsAddressFromBech32,
 		keyType:       "sdk.ConsAddress",
 	}
+
+	// IntValue represents a collections.ValueCodec to work with Int.
+	IntValue collcodec.ValueCodec[math.Int] = intValueCodec{}
 )
 
 type addressUnion interface {
@@ -76,4 +83,42 @@ func (a genericAddressKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 
 func (a genericAddressKey[T]) SizeNonTerminal(key T) int {
 	return collections.BytesKey.SizeNonTerminal(key)
+}
+
+// Collection Codecs
+
+type intValueCodec struct{}
+
+func (i intValueCodec) Encode(value math.Int) ([]byte, error) {
+	return value.Marshal()
+}
+
+func (i intValueCodec) Decode(b []byte) (math.Int, error) {
+	v := new(Int)
+	err := v.Unmarshal(b)
+	if err != nil {
+		return Int{}, err
+	}
+	return *v, nil
+}
+
+func (i intValueCodec) EncodeJSON(value math.Int) ([]byte, error) {
+	return value.MarshalJSON()
+}
+
+func (i intValueCodec) DecodeJSON(b []byte) (Int, error) {
+	v := new(Int)
+	err := v.UnmarshalJSON(b)
+	if err != nil {
+		return Int{}, err
+	}
+	return *v, nil
+}
+
+func (i intValueCodec) Stringify(value Int) string {
+	return value.String()
+}
+
+func (i intValueCodec) ValueType() string {
+	return "math.Int"
 }

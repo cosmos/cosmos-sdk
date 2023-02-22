@@ -8674,7 +8674,7 @@ func (x *BlockID) GetPartSetHeader() *PartSetHeader {
 	return nil
 }
 
-// Header defines the structure of a Tendermint block header.
+// Header defines the structure of a block header.
 type Header struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

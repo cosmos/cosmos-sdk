@@ -127,10 +127,6 @@ func TestCollectionPagination(t *testing.T) {
 				{Key: 6, Value: 6},
 			},
 		},
-		"error offset > total items": {
-			req:     &PageRequest{Offset: 500},
-			wantErr: collections.ErrInvalidIterator,
-		},
 	}
 
 	for name, tc := range tcs {

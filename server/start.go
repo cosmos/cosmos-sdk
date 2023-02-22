@@ -9,12 +9,13 @@ import (
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"github.com/cometbft/cometbft/abci/server"
-	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
@@ -30,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (
@@ -191,7 +193,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	})
 
 	// add support for all CometBFT-specific command line options
-	tcmd.AddNodeFlags(cmd)
+	cmtcmd.AddNodeFlags(cmd)
 	return cmd
 }
 
@@ -297,7 +299,14 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+	genDocProvider := func() (*cmttypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
+
+		return appGenesis.ToGenesisDoc()
+	}
 
 	var (
 		tmNode   *node.Node

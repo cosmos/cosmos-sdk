@@ -1,7 +1,9 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,15 +84,15 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	}
 
 	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
 	}
 
 	if msg.Description == (Description{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
 	if msg.Commission == (CommissionRates{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
 	}
 
 	if err := msg.Commission.Validate(); err != nil {
@@ -98,7 +100,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	}
 
 	if !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"minimum self delegation must be a positive integer",
 		)
@@ -148,11 +150,11 @@ func (msg MsgEditValidator) ValidateBasic() error {
 	}
 
 	if msg.Description == (Description{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
 	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"minimum self delegation must be a positive integer",
 		)
@@ -160,7 +162,7 @@ func (msg MsgEditValidator) ValidateBasic() error {
 
 	if msg.CommissionRate != nil {
 		if msg.CommissionRate.GT(math.LegacyOneDec()) || msg.CommissionRate.IsNegative() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
+			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
 		}
 	}
 
@@ -200,7 +202,7 @@ func (msg MsgDelegate) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid delegation amount",
 		)
@@ -248,7 +250,7 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
@@ -290,7 +292,7 @@ func (msg MsgUndelegate) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
@@ -332,14 +334,14 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid amount",
 		)
 	}
 
 	if msg.CreationHeight <= 0 {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid height",
 		)
@@ -358,7 +360,7 @@ func (m MsgUpdateParams) GetSignBytes() []byte {
 // ValidateBasic executes sanity validation on the provided data
 func (m MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
-		return sdkerrors.Wrap(err, "invalid authority address")
+		return errorsmod.Wrap(err, "invalid authority address")
 	}
 	return m.Params.Validate()
 }

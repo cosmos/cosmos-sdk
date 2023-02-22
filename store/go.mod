@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	github.com/armon/go-metrics v0.4.1
-	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
+	github.com/cometbft/cometbft v0.37.0-alpha.3
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/gogoproto v1.4.6
@@ -80,11 +80,6 @@ require (
 	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// Here are the short-lived replace from the module.
-// Replace here are pending PRs, or version to be tagged.
-// TODO update/remove after v0.37.x tag of CometBFT
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 
 // Below are the long-lived replace for store.
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

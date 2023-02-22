@@ -18,7 +18,7 @@ require (
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.9.1
-	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
+	github.com/cometbft/cometbft v0.37.0-alpha.3
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
@@ -54,6 +54,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.6.0
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
+	golang.org/x/sync v0.1.0
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.2-0.20230208135220-49eaa78c6c9c

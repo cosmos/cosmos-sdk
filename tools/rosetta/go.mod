@@ -6,8 +6,8 @@ require (
 	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
-	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
+	github.com/cometbft/cometbft v0.37.0-alpha.3
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230221204830-dbc4d104b26f
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0
 	github.com/rs/zerolog v1.29.0

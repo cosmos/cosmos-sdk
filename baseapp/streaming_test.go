@@ -54,7 +54,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	distOpt := func(bapp *baseapp.BaseApp) { bapp.MountStores(distKey1) }
 	mockListener1 := NewMockABCIListener("lis_1")
 	mockListener2 := NewMockABCIListener("lis_2")
-	streamingManager := storetypes.StreamingManager{AbciListeners: []storetypes.ABCIListener{&mockListener1, &mockListener2}}
+	streamingManager := storetypes.StreamingManager{ABCIListeners: []storetypes.ABCIListener{&mockListener1, &mockListener2}}
 	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
 	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
 	suite := NewBaseAppSuite(t, anteOpt, distOpt, streamingManagerOpt, addListenerOpt)

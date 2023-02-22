@@ -202,7 +202,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 
 	// call the streaming service hook with the BeginBlock messages
-	for _, abciListener := range app.streamingManager.AbciListeners {
+	for _, abciListener := range app.streamingManager.ABCIListeners {
 		ctx := app.deliverState.ctx
 		blockHeight := ctx.BlockHeight()
 		if err := abciListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
@@ -233,7 +233,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	// call the streaming service hook with the EndBlock messages
-	for _, abciListener := range app.streamingManager.AbciListeners {
+	for _, abciListener := range app.streamingManager.ABCIListeners {
 		ctx := app.deliverState.ctx
 		blockHeight := ctx.BlockHeight()
 		if err := abciListener.ListenEndBlock(ctx, req, res); err != nil {
@@ -391,7 +391,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	var res abci.ResponseDeliverTx
 	defer func() {
 		// call the streaming service hook with the EndBlock messages
-		for _, abciListener := range app.streamingManager.AbciListeners {
+		for _, abciListener := range app.streamingManager.ABCIListeners {
 			ctx := app.deliverState.ctx
 			blockHeight := ctx.BlockHeight()
 			if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
@@ -447,7 +447,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	}
 
 	// call the streaming service hook with the EndBlock messages
-	abciListeners := app.streamingManager.AbciListeners
+	abciListeners := app.streamingManager.ABCIListeners
 	if len(abciListeners) > 0 {
 		ctx := app.deliverState.ctx
 		blockHeight := ctx.BlockHeight()

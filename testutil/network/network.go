@@ -746,7 +746,7 @@ func (n *Network) Cleanup() {
 
 		if v.tmNode != nil && v.tmNode.IsRunning() {
 			if err := v.tmNode.Stop(); err != nil {
-				n.Logger.Log("failed to stop validator Tendermint node", "err", err)
+				n.Logger.Log("failed to stop validator CometBFT node", "err", err)
 			}
 		}
 

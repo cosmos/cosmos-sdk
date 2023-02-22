@@ -212,7 +212,8 @@ type Iterator[K, V any] struct {
 func (i Iterator[K, V]) Value() (V, error) {
 	val, err := i.iter.Value()
 	if err != nil {
-		return i.vc, err
+		var v V
+		return v, err
 	}
 
 	return i.vc.Decode(val)
@@ -222,7 +223,8 @@ func (i Iterator[K, V]) Value() (V, error) {
 func (i Iterator[K, V]) Key() (K, error) {
 	bytes, err := i.iter.Key() // strip prefix namespace
 	if err != nil {
-		return K, err
+		var k K
+		return k, err
 	}
 
 	bytesKey := bytes[i.prefixLength:]

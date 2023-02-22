@@ -35,8 +35,12 @@ func TestIteratorBasic(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(1), value)
 
+	bytes, err := iter.iter.Key()
+	require.NoError(t, err)
+
+	bytesKey := bytes[:len(m.prefix)]
 	// assert expected prefixing on iter
-	require.Equal(t, m.prefix, iter.iter.Key()[:len(m.prefix)])
+	require.Equal(t, m.prefix, bytesKey)
 
 	// advance iter
 	iter.Next()

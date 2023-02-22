@@ -210,12 +210,22 @@ type Iterator[K, V any] struct {
 
 // Value returns the current iterator value bytes decoded.
 func (i Iterator[K, V]) Value() (V, error) {
-	return i.vc.Decode(i.iter.Value())
+	val, err := i.iter.Value()
+	if err != nil {
+		return i.vc, err
+	}
+
+	return i.vc.Decode(val)
 }
 
 // Key returns the current storetypes.Iterator decoded key.
 func (i Iterator[K, V]) Key() (K, error) {
-	bytesKey, err := i.iter.Key()[i.prefixLength:] // strip prefix namespace
+	bytes, err := i.iter.Key() // strip prefix namespace
+	if err != nil {
+		return K, err
+	}
+
+	bytesKey := bytes[i.prefixLength:]
 
 	read, key, err := i.kc.Decode(bytesKey)
 	if err != nil {
@@ -291,7 +301,7 @@ func (i Iterator[K, V]) KeyValues() ([]KeyValue[K, V], error) {
 }
 
 func (i Iterator[K, V]) Close() error { return i.iter.Close() }
-func (i Iterator[K, V]) Next()        { i.iter.Next() }
+func (i Iterator[K, V]) Next() error  { return i.iter.Next() }
 func (i Iterator[K, V]) Valid() bool  { return i.iter.Valid() }
 
 // KeyValue represent a Key and Value pair of an iteration.

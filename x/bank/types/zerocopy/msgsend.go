@@ -58,15 +58,15 @@ func (m *MsgSend) WithContext(ctx *BufferContext) *MsgSend {
 	return m
 }
 
-func (c *MsgSend) WithBufferContext(ctx *BufferContext) *MsgSend {
-	c.ctx = ctx
-	return c
+func (m *MsgSend) WithBufferContext(ctx *BufferContext) *MsgSend {
+	m.ctx = ctx
+	return m
 }
 
-func (c *MsgSend) BufferContext() *BufferContext {
-	return c.ctx
+func (m *MsgSend) BufferContext() *BufferContext {
+	return m.ctx
 }
 
-func (c *MsgSend) Size() uint32 {
+func (m *MsgSend) Size() uint32 {
 	return msgSendSize
 }

@@ -167,7 +167,8 @@ clean:
 	rm -rf \
 	$(BUILDDIR)/ \
 	artifacts/ \
-	tmp-swagger-gen/
+	tmp-swagger-gen/ \
+	.testnets
 
 .PHONY: distclean clean
 
@@ -397,7 +398,7 @@ proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
 # TODO update/remove after v0.37.x tag of CometBFT
-CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/387422ac220d/proto/tendermint
+CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.37.0-alpha.3/proto/tendermint
 
 CMT_CRYPTO_TYPES     = proto/tendermint/crypto
 CMT_ABCI_TYPES       = proto/tendermint/abci

@@ -5,7 +5,6 @@ import (
 	"math"
 
 	"cosmossdk.io/errors"
-
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 )

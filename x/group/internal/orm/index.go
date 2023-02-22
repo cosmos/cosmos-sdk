@@ -8,7 +8,8 @@ import (
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/store/types"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
@@ -177,7 +178,7 @@ func getStartEndBz(startI interface{}, endI interface{}) ([]byte, []byte, error)
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return nil, nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
+		return nil, nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
 	}
 
 	return start, end, nil

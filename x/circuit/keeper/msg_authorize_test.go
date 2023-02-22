@@ -18,7 +18,6 @@ type authorizeSuite struct {
 
 func (s *authorizeSuite) Before(t *testing.T) {
 	s.baseFixture = initFixture(t)
-
 }
 
 func (s *authorizeSuite) HasPermission(a string, b string) {

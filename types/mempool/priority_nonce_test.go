@@ -175,7 +175,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 		/*
 			The next 4 tests are different permutations of the same set:
 
-			  		{p: 5, n: 1, a: sa},
+			  	{p: 5, n: 1, a: sa},
 					{p: 10, n: 2, a: sa},
 					{p: 20, n: 2, a: sb},
 					{p: 5, n: 1, a: sb},
@@ -240,11 +240,12 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			}
 
 			orderedTxs := fetchTxs(pool.Select(ctx, nil), 1000)
+
 			var txOrder []int
 			for _, tx := range orderedTxs {
 				txOrder = append(txOrder, tx.(testTx).id)
-				fmt.Println(tx)
 			}
+
 			require.Equal(t, tt.order, txOrder)
 			require.NoError(t, validateOrder(orderedTxs))
 

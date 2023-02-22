@@ -3,13 +3,14 @@ package aminojson
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 
+	"github.com/pkg/errors"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
+	multisig "cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/math"
 )
 
@@ -134,5 +135,38 @@ func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 		return err
 	}
 	_, err = w.Write(bz)
+	return err
+}
+
+// thresholdStringEncoder replicates the behavior at:
+// https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/crypto/keys/multisig/amino.go#L35
+// also see:
+// https://github.com/cosmos/cosmos-sdk/blob/b49f948b36bc991db5be431607b475633aed697e/proto/cosmos/crypto/multisig/keys.proto#L15/
+func thresholdStringEncoder(msg protoreflect.Message, w io.Writer) error {
+	pk, ok := msg.Interface().(*multisig.LegacyAminoPubKey)
+	if !ok {
+		return errors.New("thresholdStringEncoder: msg not a multisig.LegacyAminoPubKey")
+	}
+	_, err := w.Write([]byte(fmt.Sprintf(`{"threshold":"%d","pubkeys":`, pk.Threshold)))
+	if err != nil {
+		return err
+	}
+
+	if len(pk.PublicKeys) == 0 {
+		_, err = w.Write([]byte(`[]}`))
+		return err
+	}
+
+	fields := msg.Descriptor().Fields()
+	pubkeysField := fields.ByName("public_keys")
+	pubkeysMsg := msg.Get(pubkeysField).List()
+
+	aj := AminoJSON{}
+	aj.DefineMessageEncoding("key_field", keyFieldEncoder)
+	err = aj.marshalList(pubkeysMsg, w)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write([]byte(`}`))
 	return err
 }

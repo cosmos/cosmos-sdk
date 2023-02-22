@@ -26,6 +26,7 @@ import (
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	consensusapi "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
+	multisigapi "cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
 	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
@@ -48,6 +49,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	gogo_testpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/gogo/testpb"
 	pulsar_testpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/pulsar/testpb"
@@ -172,6 +174,10 @@ var (
 
 		// consensus
 		genType(&consensustypes.MsgUpdateParams{}, &consensusapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
+
+		// crypto
+		genType(&multisig.LegacyAminoPubKey{}, &multisigapi.LegacyAminoPubKey{},
+			genOpts.WithAnyTypes(&ed25519.PubKey{}, &secp256k1.PubKey{})),
 
 		// distribution
 		genType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, genOpts),
@@ -460,6 +466,14 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"crypto/secp256k1": {
 			gogo:   &secp256k1types.PubKey{Key: []byte("key")},
 			pulsar: &secp256k1.PubKey{Key: []byte("key")},
+		},
+		"crypto/legacy_amino_pubkey": {
+			gogo:   &multisig.LegacyAminoPubKey{PubKeys: []*codectypes.Any{pubkeyAny}},
+			pulsar: &multisigapi.LegacyAminoPubKey{PublicKeys: []*anypb.Any{pubkeyAnyPulsar}},
+		},
+		"crypto/legacy_amino_pubkey/empty": {
+			gogo:   &multisig.LegacyAminoPubKey{},
+			pulsar: &multisigapi.LegacyAminoPubKey{},
 		},
 		"consensus/evidence_params/duration": {
 			gogo:   &gov_v1beta1_types.VotingParams{VotingPeriod: 1e9 + 7},

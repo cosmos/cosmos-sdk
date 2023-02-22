@@ -19,7 +19,7 @@ type FieldEncoder func(AminoJSON, protoreflect.Value, io.Writer) error
 
 // AminoJSON is a JSON encoder that uses the Amino JSON encoding rules.
 type AminoJSON struct {
-	// maps cosmos_proto.scalar -> zero value factory
+	// maps cosmos_proto.scalar -> field encoder
 	scalarEncoders  map[string]FieldEncoder
 	messageEncoders map[string]MessageEncoder
 	fieldEncoders   map[string]FieldEncoder

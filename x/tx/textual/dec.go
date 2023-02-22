@@ -21,8 +21,33 @@ type decValueRenderer struct{}
 var _ ValueRenderer = decValueRenderer{}
 
 func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
-	formatted, err := math.FormatDec(v.String())
+	decStr := v.String()
+
+	// If the decimal doesn't contain a point, we assume it's a badly formatted
+	// value. So we assume it's a decimal with 18 decimal places and add the decimal
+	// in the right place.
+	if !strings.Contains(decStr, ".") {
+		isNeg := false
+		if strings.HasPrefix(decStr, "-") {
+			decStr = strings.TrimPrefix(decStr, "-")
+			isNeg = true
+		}
+
+		if len(decStr) < 19 {
+			decStr = "0." + strings.Repeat("0", 18-len(decStr)) + decStr
+		} else {
+			whole, decimal := decStr[:len(decStr)-18], decStr[18:]
+			decStr = whole + "." + decimal
+		}
+
+		if isNeg {
+			decStr = "-" + decStr
+		}
+	}
+
+	formatted, err := math.FormatDec(decStr)
 	if err != nil {
+		fmt.Println(decStr)
 		return nil, err
 	}
 	return []Screen{{Content: formatted}}, nil

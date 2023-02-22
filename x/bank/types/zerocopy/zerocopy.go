@@ -1,6 +1,9 @@
 package zerocopy
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+)
 
 type Serializable[T any] interface {
 	WithBufferContext(*BufferContext) *T
@@ -29,6 +32,7 @@ func (b *Buffer) Alloc(n uint32) (offset uint32, ctx *BufferContext) {
 	for i := uint32(0); i < n; i++ {
 		b.buf = append(b.buf, 0)
 	}
+	fmt.Printf("alloc %d bytes at offset %d\n", n, offset)
 	ctx = &BufferContext{
 		parent: b,
 		offset: offset,
@@ -41,16 +45,18 @@ func (b *Buffer) Resolve(offset uint32) *BufferContext {
 	ctx := &BufferContext{
 		parent: b,
 		buf:    b.buf[offset:],
+		offset: offset,
 	}
 	return ctx
 }
 
 func (c BufferContext) ReadUint32(offset uint32) uint32 {
-	return binary.LittleEndian.Uint32(c.buf[offset : offset+8])
+	return binary.LittleEndian.Uint32(c.buf[offset : offset+4])
 }
 
 func (c BufferContext) SetUint32(offset uint32, value uint32) {
-	binary.LittleEndian.PutUint32(c.buf[offset:offset+8], value)
+	fmt.Printf("set uint32 at offset %d to %d\n", offset+c.offset, value)
+	binary.LittleEndian.PutUint32(c.buf[offset:offset+4], value)
 }
 
 func (c BufferContext) ReadUint64(offset uint32) uint64 {
@@ -58,6 +64,7 @@ func (c BufferContext) ReadUint64(offset uint32) uint64 {
 }
 
 func (c BufferContext) SetUint64(offset uint32, value uint64) {
+	fmt.Printf("set uint64 at offset %d to %d\n", offset+c.offset, value)
 	binary.LittleEndian.PutUint64(c.buf[offset:offset+8], value)
 }
 
@@ -92,6 +99,8 @@ func ReadArray[T any, PT interface {
 	Serializable[T]
 	*T
 }](ctx *BufferContext, offset uint32) Array[*T] {
+	var elem PT
+	size := elem.Size()
 	arrayCtx := ctx.ResolvePointer(offset)
 	if arrayCtx == nil {
 		return Array[*T]{array: nil}
@@ -99,11 +108,10 @@ func ReadArray[T any, PT interface {
 
 	n := arrayCtx.ReadUint32(0)
 	array := make([]*T, n)
-	elemOffset := uint32(4)
+	elemOffset := uint32(4) + arrayCtx.offset
 	for i := uint32(0); i < n; i++ {
 		elem := new(T)
 		pt := PT(elem)
-		size := pt.Size()
 		parent := ctx.parent
 		pt.WithBufferContext(&BufferContext{
 			parent: parent,
@@ -122,14 +130,14 @@ func InitArray[T any, PT interface {
 	*T
 }](ctx *BufferContext, offset uint32, n int) Array[*T] {
 	var elem PT
-	arrayCtx := ctx.AllocPointer(offset, 4+uint32(n)*elem.Size())
+	size := elem.Size()
+	arrayCtx := ctx.AllocPointer(offset, 4+uint32(n)*size)
 	arrayCtx.SetUint32(0, uint32(n))
 	array := make([]*T, n)
-	elemOffset := uint32(4)
+	elemOffset := uint32(4) + arrayCtx.offset
 	for i := 0; i < n; i++ {
 		elem := new(T)
 		pt := PT(elem)
-		size := pt.Size()
 		parent := ctx.parent
 		pt.WithBufferContext(&BufferContext{
 			parent: parent,
@@ -137,6 +145,7 @@ func InitArray[T any, PT interface {
 			buf:    parent.buf[elemOffset : elemOffset+size],
 		})
 		array[i] = elem
+		elemOffset += size
 	}
 	return Array[*T]{array: array}
 }

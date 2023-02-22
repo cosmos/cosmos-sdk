@@ -41,7 +41,7 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.34.26
+	github.com/tendermint/tendermint v0.34.27
 	github.com/tendermint/tm-db v0.6.6
 	github.com/tidwall/btree v1.5.0
 	golang.org/x/crypto v0.5.0
@@ -157,7 +157,7 @@ replace (
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
 
 	// use cometbft
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27-alpha.1.0.20230216102830-0f3ad2cfe7f9
+	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27-alpha.2
 
 	// latest grpc doesn't work with with our modified proto compiler, so we need to enforce
 	// the following version across all dependencies.

@@ -582,7 +582,37 @@ func TestTxOrderN(t *testing.T) {
 	}
 }
 
-func TestTxLimit(t *testing.T) {
+func TestPriorityNonceMempool_NextSenderTx(t *testing.T) {
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	accA := accounts[0].Address
+	accB := accounts[1].Address
+
+	mp := mempool.NewPriorityMempool()
+
+	txs := []testTx{
+		{priority: 20, nonce: 1, address: accA},
+		{priority: 15, nonce: 2, address: accA},
+		{priority: 66, nonce: 3, address: accA},
+		{priority: 20, nonce: 4, address: accA},
+		{priority: 88, nonce: 5, address: accA},
+	}
+
+	for i, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		require.NoError(t, mp.Insert(c, tx))
+		require.Equal(t, i+1, mp.CountTx())
+	}
+
+	tx := mp.NextSenderTx(accB.String())
+	require.Nil(t, tx)
+
+	tx = mp.NextSenderTx(accA.String())
+	require.NotNil(t, tx)
+	require.Equal(t, txs[0], tx)
+}
+
+func TestNextSenderTx_TxLimit(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	sa := accounts[0].Address
@@ -639,7 +669,7 @@ func TestTxLimit(t *testing.T) {
 	}
 }
 
-func TestTxReplacement(t *testing.T) {
+func TestNextSenderTx_TxReplacement(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	sa := accounts[0].Address

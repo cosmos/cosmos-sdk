@@ -466,6 +466,10 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		req.Height = app.LastBlockHeight()
 	}
 
+	if req.Path == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
+		return sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace)
+	}
+
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {

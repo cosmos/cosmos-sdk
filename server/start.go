@@ -243,14 +243,11 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 			return err
 		}
 
-		// start a blocking select to wait for an indication to stop the server
-		select {
-		case <-ctx.Done():
-			// The calling process cancelled or closed the provided context, so we
-			// must gracefully stop the ABCI server.
-			svrCtx.Logger.Info("stopping the ABCI server...")
-			return svr.Stop()
-		}
+		// Wait for the calling process to be cancelled or close the provided context,
+		// so we can gracefully stop the ABCI server.
+		<-ctx.Done()
+		svrCtx.Logger.Info("stopping the ABCI server...")
+		return svr.Stop()
 	})
 
 	return g.Wait()

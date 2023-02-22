@@ -69,7 +69,7 @@ func AddGenesisAccount(
 		return fmt.Errorf("failed to validate new genesis account: %w", err)
 	}
 
-	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genesisFileURL)
+	appState, appGenesis, err := genutiltypes.GenesisStateFromGenFile(genesisFileURL)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 	}
@@ -132,6 +132,6 @@ func AddGenesisAccount(
 		return fmt.Errorf("failed to marshal application genesis state: %w", err)
 	}
 
-	genDoc.AppState = appStateJSON
-	return genutil.ExportGenesisFile(genDoc, genesisFileURL)
+	appGenesis.AppState = appStateJSON
+	return genutil.ExportGenesisFile(appGenesis, genesisFileURL)
 }

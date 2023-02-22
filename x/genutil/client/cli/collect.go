@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	cmttypes "github.com/cometbft/cometbft/types"
+	"cosmossdk.io/errors"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -36,7 +35,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
 
-			genDoc, err := cmttypes.GenesisDocFromFile(config.GenesisFile())
+			appGenesis, err := types.AppGenesisFromFile(config.GenesisFile())
 			if err != nil {
 				return errors.Wrap(err, "failed to read genesis doc from file")
 			}
@@ -47,12 +46,10 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 				genTxsDir = filepath.Join(config.RootDir, "config", "gentx")
 			}
 
-			toPrint := newPrintInfo(config.Moniker, genDoc.ChainID, nodeID, genTxsDir, json.RawMessage(""))
-			initCfg := types.NewInitConfig(genDoc.ChainID, genTxsDir, nodeID, valPubKey)
+			toPrint := newPrintInfo(config.Moniker, appGenesis.ChainID, nodeID, genTxsDir, json.RawMessage(""))
+			initCfg := types.NewInitConfig(appGenesis.ChainID, genTxsDir, nodeID, valPubKey)
 
-			appMessage, err := genutil.GenAppStateFromConfig(cdc,
-				clientCtx.TxConfig,
-				config, initCfg, *genDoc, genBalIterator, validator)
+			appMessage, err := genutil.GenAppStateFromConfig(cdc, clientCtx.TxConfig, config, initCfg, appGenesis, genBalIterator, validator)
 			if err != nil {
 				return errors.Wrap(err, "failed to get genesis app state from config")
 			}

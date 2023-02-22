@@ -141,6 +141,7 @@ func InitArray[T any, PT interface {
 	return Array[*T]{array: array}
 }
 
+// Array is a fixed length array. Its elements, however, should be assumed to be mutable.
 type Array[T any] struct {
 	array []T
 }

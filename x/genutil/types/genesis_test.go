@@ -21,7 +21,7 @@ func TestAppGenesis_Marshal(t *testing.T) {
 
 	out, err := json.Marshal(&genesis)
 	assert.NilError(t, err)
-	assert.Equal(t, string(out), `{"app_name":"simapp","app_version":"0.1.0","genesis_time":"0001-01-01T00:00:00Z","chain_id":"test","initial_height":0,"app_hash":null,"consensus":{}}`)
+	assert.Equal(t, string(out), `{"app_name":"simapp","app_version":"0.1.0","genesis_time":"0001-01-01T00:00:00Z","chain_id":"test","initial_height":0,"app_hash":null}`)
 }
 
 func TestAppGenesis_Unmarshal(t *testing.T) {

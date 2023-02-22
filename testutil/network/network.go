@@ -22,6 +22,7 @@ import (
 	"github.com/tendermint/tendermint/node"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	dbm "github.com/tendermint/tm-db"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -164,10 +165,12 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
-		tmNode  *node.Node
-		api     *api.Server
-		grpc    *grpc.Server
-		grpcWeb *http.Server
+		tmNode   *node.Node
+		api      *api.Server
+		grpc     *grpc.Server
+		grpcWeb  *http.Server
+		errGroup *errgroup.Group
+		cancelFn context.CancelFunc
 	}
 )
 
@@ -593,24 +596,25 @@ func (n *Network) Cleanup() {
 	n.Logger.Log("cleaning up test network...")
 
 	for _, v := range n.Validators {
+		// cancel the validator's context which will signal to the gRPC and API
+		// goroutines that they should gracefully exit.
+		v.cancelFn()
+
+		if err := v.errGroup.Wait(); err != nil {
+			n.Logger.Log("unexpected error waiting for validator gRPC and API processes to exit", "err", err)
+		}
+
 		if v.tmNode != nil && v.tmNode.IsRunning() {
-			_ = v.tmNode.Stop()
-		}
-
-		if v.api != nil {
-			_ = v.api.Close()
-		}
-
-		if v.grpc != nil {
-			v.grpc.Stop()
-			if v.grpcWeb != nil {
-				_ = v.grpcWeb.Close()
+			if err := v.tmNode.Stop(); err != nil {
+				n.Logger.Log("failed to stop validator CometBFT node", "err", err)
 			}
+		}
+
+		if v.grpcWeb != nil {
+			_ = v.grpcWeb.Close()
 		}
 	}
 
-	// Give a brief pause for things to finish closing in other processes. Hopefully this helps with the address-in-use errors.
-	// 100ms chosen randomly.
 	time.Sleep(100 * time.Millisecond)
 
 	if n.Config.CleanupDir {

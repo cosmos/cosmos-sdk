@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (gov) [#15979](https://github.com/cosmos/cosmos-sdk/pull/15979) Improve gov error message when failing to convert v1 proposal to v1beta1.
 * (server) [#16061](https://github.com/cosmos/cosmos-sdk/pull/16061) add comet bootstrap command
 * (store) [#16067](https://github.com/cosmos/cosmos-sdk/pull/16067) Add local snapshots management commands.
+* (server) [#15041](https://github.com/cosmos/cosmos-sdk/pull/15041) Remove unnecessary sleeps from gRPC and API server initiation. The servers will start and accept requests as soon as they're ready.
 
 ### Bug Fixes
 

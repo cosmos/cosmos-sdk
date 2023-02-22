@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/btcsuite/btcd/btcec/v2"
 )
 
 // NewParams creates a BIP 44 parameter object from the params:
@@ -226,7 +226,7 @@ func derivePrivateKey(privKeyBytes [32]byte, chainCode [32]byte, index uint32, h
 		data = append([]byte{byte(0)}, privKeyBytes[:]...)
 	} else {
 		// this can't return an error:
-		ecPub := secp.PrivKeyFromBytes(privKeyBytes[:]).PubKey()
+		_, ecPub := btcec.PrivKeyFromBytes(privKeyBytes[:])
 		pubkeyBytes := ecPub.SerializeCompressed()
 		data = pubkeyBytes
 

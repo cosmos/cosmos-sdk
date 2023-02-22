@@ -2,119 +2,153 @@ package zerocopy
 
 import "encoding/binary"
 
-type Context struct {
+type Serializable[T any] interface {
+	WithBufferContext(*BufferContext) *T
+	BufferContext() *BufferContext
+	Size() uint32
+}
+
+type Buffer struct {
 	buf []byte
 }
 
-func (c Context) ReadUint32(offset uint64) uint32 {
+type BufferContext struct {
+	parent *Buffer
+	offset uint32
+	buf    []byte
+}
+
+const DefaultBufferCapacity = 1024
+
+func (b *Buffer) Alloc(n uint32) (offset uint32, ctx *BufferContext) {
+	if b.buf == nil {
+		b.buf = make([]byte, 0, DefaultBufferCapacity)
+	}
+
+	offset = uint32(len(b.buf))
+	for i := uint32(0); i < n; i++ {
+		b.buf = append(b.buf, 0)
+	}
+	ctx = &BufferContext{
+		parent: b,
+		offset: offset,
+		buf:    b.buf[offset : offset+n],
+	}
+	return
+}
+
+func (b *Buffer) Resolve(offset uint32) *BufferContext {
+	ctx := &BufferContext{
+		parent: b,
+		buf:    b.buf[offset:],
+	}
+	return ctx
+}
+
+func (c BufferContext) ReadUint32(offset uint32) uint32 {
 	return binary.LittleEndian.Uint32(c.buf[offset : offset+8])
 }
 
-func (c Context) SetUint32(offset uint64, value uint32) {
+func (c BufferContext) SetUint32(offset uint32, value uint32) {
 	binary.LittleEndian.PutUint32(c.buf[offset:offset+8], value)
 }
 
-func (c Context) ReadUint64(offset uint64) uint64 {
+func (c BufferContext) ReadUint64(offset uint32) uint64 {
 	return binary.LittleEndian.Uint64(c.buf[offset : offset+8])
 }
 
-func (c Context) SetUint64(offset uint64, value uint64) {
+func (c BufferContext) SetUint64(offset uint32, value uint64) {
 	binary.LittleEndian.PutUint64(c.buf[offset:offset+8], value)
 }
 
-func (c Context) ResolvePointer(offset uint64) Context {
-	ptrOffset := c.ReadUint64(offset)
-	return Context{c.buf[ptrOffset:]}
+func (c BufferContext) ResolvePointer(offset uint32) *BufferContext {
+	ptrOffset := c.ReadUint32(offset)
+	if ptrOffset == 0 {
+		return nil
+	}
+	return c.parent.Resolve(ptrOffset)
 }
 
-func (c Context) ReadString() string {
+func (c BufferContext) AllocPointer(offset uint32, size uint32) *BufferContext {
+	ptrOffset, ctx := c.parent.Alloc(size)
+	c.SetUint32(offset, ptrOffset)
+	return ctx
+}
+
+func (c BufferContext) ReadString() string {
 	n := c.ReadUint32(0)
 	return string(c.buf[4 : 4+n])
 }
 
-func (c Context) SetString(x string) {
+func (c BufferContext) SetString(offset uint32, x string) {
 	n := len(x)
-	binary.LittleEndian.AppendUint32(c.buf, uint32(n))
-	// TODO deal with making sure there's enough space in array
-	copy(c.buf[4:4+n], x)
+	ptrOffset, ctx := c.parent.Alloc(uint32(n) + 4)
+	c.SetUint32(offset, ptrOffset)
+	binary.LittleEndian.PutUint32(ctx.buf[0:4], uint32(n))
+	copy(ctx.buf[4:4+n], x)
 }
 
-type MsgSend struct {
-	ctx Context
+func ReadArray[T any, PT interface {
+	Serializable[T]
+	*T
+}](ctx *BufferContext, offset uint32) Array[*T] {
+	arrayCtx := ctx.ResolvePointer(offset)
+	if arrayCtx == nil {
+		return Array[*T]{array: nil}
+	}
+
+	n := arrayCtx.ReadUint32(0)
+	array := make([]*T, n)
+	elemOffset := uint32(4)
+	for i := uint32(0); i < n; i++ {
+		elem := new(T)
+		pt := PT(elem)
+		size := pt.Size()
+		parent := ctx.parent
+		pt.WithBufferContext(&BufferContext{
+			parent: parent,
+			offset: elemOffset,
+			buf:    parent.buf[elemOffset : elemOffset+size],
+		})
+		array[i] = elem
+		elemOffset += size
+	}
+
+	return Array[*T]{array: array}
 }
 
-func (m MsgSend) FromAddress() string {
-	return m.ctx.ResolvePointer(0).ReadString()
+func InitArray[T any, PT interface {
+	Serializable[T]
+	*T
+}](ctx *BufferContext, offset uint32, n int) Array[*T] {
+	var elem PT
+	arrayCtx := ctx.AllocPointer(offset, 4+uint32(n)*elem.Size())
+	arrayCtx.SetUint32(0, uint32(n))
+	array := make([]*T, n)
+	elemOffset := uint32(4)
+	for i := 0; i < n; i++ {
+		elem := new(T)
+		pt := PT(elem)
+		size := pt.Size()
+		parent := ctx.parent
+		pt.WithBufferContext(&BufferContext{
+			parent: parent,
+			offset: elemOffset,
+			buf:    parent.buf[elemOffset : elemOffset+size],
+		})
+		array[i] = elem
+	}
+	return Array[*T]{array: array}
 }
 
-func (m MsgSend) ToAddress() string {
-	return m.ctx.ResolvePointer(4).ReadString()
+type Array[T any] struct {
+	array []T
 }
 
-func (m MsgSend) SetFromAddress(x string) MsgSend {
-	m.ctx.ResolvePointer(0).SetString(x)
-	return m
+func (a Array[T]) Len() int {
+	return len(a.array)
 }
 
-func (m MsgSend) SetToAddress(x string) MsgSend {
-	m.ctx.ResolvePointer(4).SetString(x)
-	return m
-}
-
-func (m MsgSend) Coins() Array[Coin] {
-	return Array[Coin]{m.ctx.ResolvePointer(8)}
-}
-
-func (m MsgSend) WithContext(ctx Context) MsgSend {
-	m.ctx = ctx
-	return m
-}
-
-type Coin struct {
-	ctx Context
-}
-
-func (c Coin) Denom() string {
-	return c.ctx.ResolvePointer(0).ReadString()
-}
-
-func (c Coin) Amount() string {
-	return c.ctx.ResolvePointer(4).ReadString()
-}
-
-func (c Coin) SetDenom(x string) Coin {
-	c.ctx.ResolvePointer(0).SetString(x)
-	return c
-}
-
-func (c Coin) SetAmount(x string) Coin {
-	c.ctx.ResolvePointer(4).SetString(x)
-	return c
-}
-
-func (c Coin) WithContext(ctx Context) Coin {
-	c.ctx = ctx
-	return c
-}
-
-type Array[T WithContext[T]] struct {
-	ctx Context
-}
-
-func Get[T WithContext[T]](array Array[T], i int) T {
-	var x T
-	array.ctx.ResolvePointer(uint64((i + 1) * 4))
-	return x.WithContext(array.ctx)
-}
-
-func Length[T any](array Array[T]) int {
-	return int(array.ctx.ReadUint64(0))
-}
-
-func Append[T any](array Array[T]) T {
-	panic("TODO")
-}
-
-type WithContext[T any] interface {
-	WithContext(Context) T
+func (a Array[T]) Get(i int) T {
+	return a.array[i]
 }

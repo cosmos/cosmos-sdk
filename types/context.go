@@ -142,11 +142,12 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 	return c
 }
 
-// WithBlockTime returns a Context with an updated CometBFT block header time in UTC time
+// WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
+// Stripping the monotonic component is for time equality.
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
-	newHeader.Time = newTime.UTC()
+	newHeader.Time = newTime.Round(0).UTC()
 	return c.WithBlockHeader(newHeader)
 }
 

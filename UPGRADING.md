@@ -128,7 +128,7 @@ All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead 
 
 The Cosmos SDK has migrated to CometBFT, as its default consensus engine.
 CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
-Due to the import changes, this is a breaking change. Chains need to remove **entierely** their imports of Tendermint Core in their codebase, from direct and indirects imports in their `go.mod`.
+Due to the import changes, this is a breaking change. Chains need to remove **entirely** their imports of Tendermint Core in their codebase, from direct and indirects imports in their `go.mod`.
 
 * Replace `github.com/tendermint/tendermint` by `github.com/cometbft/cometbft`
 * Replace `github.com/tendermint/tm-db` by `github.com/cometbft/cometbft-db`
@@ -279,7 +279,7 @@ The module name is assumed by `baseapp` to be the second element of the message 
 In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
 `Baseapp` only emits that event if the module have not already done so.
 
-### `x/params`
+#### `x/params`
 
 The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
 Cosmos SDK modules now store their parameters directly in its repective modules.

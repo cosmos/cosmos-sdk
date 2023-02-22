@@ -47,7 +47,6 @@ func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 
 	formatted, err := math.FormatDec(decStr)
 	if err != nil {
-		fmt.Println(decStr)
 		return nil, err
 	}
 	return []Screen{{Content: formatted}}, nil

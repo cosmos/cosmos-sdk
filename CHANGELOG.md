@@ -39,7 +39,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  Added ability to query blocks by events with queries directly passed to Tendermint, which will allow for full query operator support, e.g. `>`.
+* (x/genutil) [#15301](https://github.com/cosmos/cosmos-sdk/pull/15031) Add application genesis. The genesis is now entirely managed by the application and passed to CometBFT at note instantiation. Functions that were taking a `cmttypes.GenesisDoc{}` now takes a `genutiltypes.AppGenesis{}`.
+* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659) Added ability to query blocks by events with queries directly passed to Tendermint, which will allow for full query operator support, e.g. `>`.
 * [#14897](https://github.com/cosmos/cosmos-sdk/pull/14897) Migrate the Cosmos SDK to CometBFT.
 * (x/gov) [#14720](https://github.com/cosmos/cosmos-sdk/pull/14720) Upstream expedited proposals from Osmosis.
 * (x/auth) [#14650](https://github.com/cosmos/cosmos-sdk/pull/14650) Add Textual SignModeHandler. It is however **NOT** enabled by default, and should only be used for **TESTING** purposes until `SIGN_MODE_TEXTUAL` is fully released.
@@ -79,6 +80,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/staking) [#14864](https://github.com/cosmos/cosmos-sdk/pull/14864) `create-validator` CLI command now takes a json file as an arg instead of having a bunch of required flags to it.
 * (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  Added ability to query blocks by either height/hash `simd q block --type=height|hash <height|hash>`.
 * (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
 * (x/evidence) [#14757](https://github.com/cosmos/cosmos-sdk/pull/14757) Evidence messages do not need to implement a `.Type()` anymore.
@@ -263,6 +265,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 
 ### CLI Breaking Changes
 
+* (x/staking) [#14864](https://github.com/cosmos/cosmos-sdk/pull/14864) `create-validator` CLI command now takes a json file as an arg instead of having a bunch of required flags to it.
 * (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  `simd q block <height>` is removed as it just output json. The new command allows either height/hash and is `simd q block --type=height|hash <height|hash>`. 
 * (x/gov) [#14880](https://github.com/cosmos/cosmos-sdk/pull/14880) Remove `simd tx gov submit-legacy-proposal cancel-software-upgrade` and `software-upgrade` commands. These commands are now in the `x/upgrade` module and using gov v1. Use `tx upgrade software-upgrade` instead.
 * (grpc-web) [#14652](https://github.com/cosmos/cosmos-sdk/pull/14652) Remove `grpc-web.address` flag.

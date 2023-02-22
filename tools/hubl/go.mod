@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.3.1
-	cosmossdk.io/client/v2 v2.0.0-20230220152935-67f04e629623
+	cosmossdk.io/client/v2 v2.0.0-20230221205652-bc53611b4c2c
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cockroachdb/errors v1.9.1
 	github.com/hashicorp/go-multierror v1.1.1
@@ -36,12 +36,12 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230217215838-f01d8eff3f8b // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d // indirect
+	github.com/cometbft/cometbft v0.37.0-alpha.3 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
-	github.com/cosmos/cosmos-sdk v0.47.0-rc2 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.2 // indirect
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230221204830-dbc4d104b26f // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/iavl v0.21.0-alpha.1 // indirect
@@ -122,8 +122,3 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Here are the short-lived replace of Hubl
-// Replace here are pending PRs, or version to be tagged
-// TODO this can be removed when client/v2 is released with CometBFT changes in the SDK
-replace github.com/cosmos/cosmos-sdk => ../..

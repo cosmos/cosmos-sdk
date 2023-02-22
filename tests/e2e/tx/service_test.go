@@ -340,6 +340,7 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			// Query the tx via gRPC.
+			s.Require().NoError(s.network.WaitForNextBlock())
 			grpcRes, err := s.queryClient.GetTxsEvent(context.Background(), tc.req)
 			if tc.expErr {
 				s.Require().Error(err)

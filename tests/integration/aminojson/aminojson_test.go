@@ -9,7 +9,7 @@ import (
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -49,6 +49,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	gogo_testpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/gogo/testpb"
+	pulsar_testpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -389,6 +391,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
 	pubkeyAnyPulsar := newAny(t, &secp256k1.PubKey{Key: []byte("foo")})
 	dec10bz, _ := types.NewDec(10).Marshal()
+	int123bz, _ := types.NewInt(123).Marshal()
 
 	cases := map[string]struct {
 		gogo               gogoproto.Message
@@ -544,6 +547,22 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"vesting/base_account_pubkey": {
 			gogo:   &vestingtypes.BaseVestingAccount{BaseAccount: &authtypes.BaseAccount{PubKey: pubkeyAny}},
 			pulsar: &vestingapi.BaseVestingAccount{BaseAccount: &authapi.BaseAccount{PubKey: pubkeyAnyPulsar}},
+		},
+		"math/int_as_string": {
+			gogo:   &gogo_testpb.IntAsString{IntAsString: types.NewInt(123)},
+			pulsar: &pulsar_testpb.IntAsString{IntAsString: "123"},
+		},
+		"math/int_as_string/empty": {
+			gogo:   &gogo_testpb.IntAsString{},
+			pulsar: &pulsar_testpb.IntAsString{},
+		},
+		"math/int_as_bytes": {
+			gogo:   &gogo_testpb.IntAsBytes{IntAsBytes: types.NewInt(123)},
+			pulsar: &pulsar_testpb.IntAsBytes{IntAsBytes: int123bz},
+		},
+		"math/int_as_bytes/empty": {
+			gogo:   &gogo_testpb.IntAsBytes{},
+			pulsar: &pulsar_testpb.IntAsBytes{},
 		},
 	}
 	for name, tc := range cases {

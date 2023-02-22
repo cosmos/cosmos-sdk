@@ -26,6 +26,16 @@ func cosmosIntEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
 			return jsonMarshal(w, "0")
 		}
 		return jsonMarshal(w, val)
+	case []byte:
+		if len(val) == 0 {
+			return jsonMarshal(w, "0")
+		}
+		var i math.Int
+		err := i.Unmarshal(val)
+		if err != nil {
+			return err
+		}
+		return jsonMarshal(w, i.String())
 	default:
 		return fmt.Errorf("unsupported type %T", val)
 	}

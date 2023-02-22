@@ -4,6 +4,7 @@ package testpb;
 
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
 
 message streng {
   string value = 1;
@@ -36,4 +37,22 @@ message TestNullableFields {
   streng non_nullable_omitempty = 3 [(gogoproto.nullable) = false];
 
   streng non_nullable_dont_omitempty = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message IntAsString {
+  string int_as_string = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable) = false
+  ];
+}
+
+message IntAsBytes {
+  bytes int_as_bytes = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
 }

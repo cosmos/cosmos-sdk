@@ -103,15 +103,25 @@ will be responsible for committing to data and providing Merkle proofs.
 
 Note, the underlying physical storage database will be the same between both the
 SS and SC layers. So to avoid collisions between (key, value) pairs, both layers
-will be namespaced. 
+will be namespaced.
 
-Given that the existing solution today acts as both SS and SC, we can extract out
-the SC layer without namespacing it, while having the new SS layer be explicitly
-namespaced. In addition, we can keep the existing layer as the new SC layer without
-any significant changes to access patterns or behavior. In other words, the entire
-collection of existing IAVL-backed module `KVStore`s will act as the SC layer.
+#### State Commitment (SC)
 
-#### State Storage
+Given that the existing solution today acts as both SS and SC, we can simply
+repurpose it to act solely as the SC layer without any significant changes to
+access patterns or behavior. In other words, the entire collection of existing
+IAVL-backed module `KVStore`s will act as the SC layer.
+
+However, in order for the SC layer to remain lightweight and not duplicate a
+majority of the data held in the SS layer, we need to have an aggressive pruning
+strategy. A pruning strategy could be enforced programmatically or through
+default values. Given that different networks have different unbonding periods and
+different average block times, default values might be difficult. However, forcing
+a pruning strategy might be too limiting. So we propose to have a configurable
+pruning strategy, number of heights and interval, with a default height retention
+of 2,592,000 (1s block time over a month).
+
+#### State Storage (SS)
 
 In the RMS, we will expose a *single* `KVStore` backed by the same physical
 database that backs the SC layer. This `KVStore` will be explicitly namespaced

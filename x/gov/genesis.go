@@ -13,6 +13,7 @@ import (
 func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
 	k.SetProposalID(ctx, data.StartingProposalId)
 	k.SetParams(ctx, *data.Params)
+	k.SetConstitution(ctx, data.Constitution)
 
 	// check if the deposits pool account exists
 	moduleAcc := k.GetGovernanceAccount(ctx)
@@ -51,7 +52,6 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 		panic(fmt.Sprintf("expected module account was %s but we got %s", balance.String(), totalDeposits.String()))
 	}
 
-	k.SetConstitution(ctx, data.Constitution)
 }
 
 // ExportGenesis - output genesis parameters

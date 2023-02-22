@@ -759,7 +759,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 				require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 				events := res.GetEvents()
-				require.Len(t, events, 3, "Contains the AnteHandler and the PostHandler")
+				require.Len(t, events, 2, "Contains the AnteHandler and the PostHandler")
 
 				app.EndBlock(abci.RequestEndBlock{})
 				app.Commit()

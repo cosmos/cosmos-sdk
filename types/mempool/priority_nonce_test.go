@@ -157,8 +157,8 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{0, 1, 2, 3},
 		},
 		{
-			// if all txs have the same priority they will be ordered lexically sender address, and nonce with the
-			// sender.
+			// If all txs have the same priority they will be ordered lexically sender
+			// address, and nonce with the sender.
 			txs: []txSpec{
 				{p: 10, n: 7, a: sc},
 				{p: 10, n: 8, a: sc},
@@ -170,7 +170,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 				{p: 10, n: 5, a: sb},
 				{p: 10, n: 6, a: sb},
 			},
-			order: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+			order: []int{3, 4, 5, 6, 7, 8, 0, 1, 2},
 		},
 		/*
 			The next 4 tests are different permutations of the same set:

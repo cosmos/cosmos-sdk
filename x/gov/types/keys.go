@@ -51,7 +51,7 @@ var (
 	ParamsKey = []byte{0x30}
 
 	// KeyConstitution is the key string used to store the chain's constitution
-	KeyConstitution = "constitution"
+	KeyConstitution = []byte("constitution")
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))

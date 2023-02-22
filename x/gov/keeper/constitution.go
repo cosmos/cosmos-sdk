@@ -7,7 +7,7 @@ import (
 
 func (keeper Keeper) GetConstitution(ctx sdk.Context) (constitution string) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get([]byte(types.KeyConstitution))
+	bz := store.Get(types.KeyConstitution)
 
 	return string(bz)
 }

@@ -11,3 +11,8 @@ func (keeper Keeper) GetConstitution(ctx sdk.Context) (constitution string) {
 
 	return string(bz)
 }
+
+func (keeper Keeper) SetConstitution(ctx sdk.Context, constitution string) {
+	store := ctx.KVStore(keeper.storeKey)
+	store.Set([]byte(types.KeyConstitution), []byte(constitution))
+}

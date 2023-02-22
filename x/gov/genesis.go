@@ -50,12 +50,15 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	if !balance.Equal(totalDeposits) {
 		panic(fmt.Sprintf("expected module account was %s but we got %s", balance.String(), totalDeposits.String()))
 	}
+
+	k.SetConstitution(ctx, data.Constitution)
 }
 
 // ExportGenesis - output genesis parameters
 func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 	startingProposalID, _ := k.GetProposalID(ctx)
 	proposals := k.GetProposals(ctx)
+	constitution := k.GetConstitution(ctx)
 	params := k.GetParams(ctx)
 
 	var proposalsDeposits v1.Deposits
@@ -74,5 +77,6 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 		Votes:              proposalsVotes,
 		Proposals:          proposals,
 		Params:             &params,
+		Constitution:       constitution,
 	}
 }

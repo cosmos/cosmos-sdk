@@ -1,10 +1,11 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
 	"net"
-	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,8 +18,9 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino" // Import amino.proto file for reflection
 )
 
-// StartGRPCServer starts a gRPC server on the given address.
-func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, error) {
+// NewGRPCServer returns a correctly configured and initialized gRPC server.
+// Note, the caller is responsible for starting the server. See StartGRPCServer.
+func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = config.DefaultGRPCMaxSendMsgSize
@@ -46,6 +48,7 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 			for _, m := range clientCtx.TxConfig.SignModeHandler().Modes() {
 				modes[m.String()] = (int32)(m)
 			}
+
 			return modes
 		}(),
 		ChainID:           clientCtx.ChainID,
@@ -53,32 +56,50 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 		InterfaceRegistry: clientCtx.InterfaceRegistry,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to register reflection service: %w", err)
 	}
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
 	gogoreflection.Register(grpcSrv)
 
+	return grpcSrv, nil
+}
+
+// StartGRPCServer starts the provided gRPC server on the address specified in cfg.
+//
+// Note, this creates a blocking process if the server is started successfully.
+// Otherwise, an error is returned. The caller is expected to provide a Context
+// that is properly canceled or closed to indicate the server should be stopped.
+func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConfig, grpcSrv *grpc.Server) error {
 	listener, err := net.Listen("tcp", cfg.Address)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to listen on address %s: %w", cfg.Address, err)
 	}
 
 	errCh := make(chan error)
+
+	// Start the gRPC in an external goroutine as Serve is blocking and will return
+	// an error upon failure, which we'll send on the error channel that will be
+	// consumed by the for block below.
 	go func() {
-		err = grpcSrv.Serve(listener)
-		if err != nil {
-			errCh <- fmt.Errorf("failed to serve: %w", err)
-		}
+		logger.Info("starting gRPC server...", "address", cfg.Address)
+		errCh <- grpcSrv.Serve(listener)
 	}()
 
+	// Start a blocking select to wait for an indication to stop the server or that
+	// the server failed to start properly.
 	select {
-	case err := <-errCh:
-		return nil, err
+	case <-ctx.Done():
+		// The calling process cancelled or closed the provided context, so we must
+		// gracefully stop the gRPC server.
+		logger.Info("stopping gRPC server...", "address", cfg.Address)
+		grpcSrv.GracefulStop()
 
-	case <-time.After(types.ServerStartTime):
-		// assume server started successfully
-		return grpcSrv, nil
+		return nil
+
+	case err := <-errCh:
+		logger.Error("failed to start gRPC server", "err", err)
+		return err
 	}
 }

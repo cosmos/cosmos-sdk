@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -377,12 +378,22 @@ func TrapSignal(cleanupFunc func()) {
 	}()
 }
 
-// WaitForQuitSignals waits for SIGINT and SIGTERM and returns.
-func WaitForQuitSignals() ErrorCode {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-sigs
-	return ErrorCode{Code: int(sig.(syscall.Signal)) + 128}
+// ListenForQuitSignals listens for SIGINT and SIGTERM. When a signal is received,
+// the cleanup function is called, indicating the caller can gracefully exit or
+// return.
+//
+// Note, this performs a non-blocking process so the caller must ensure the
+// corresponding context derived from the cancelFn is used correctly.
+func ListenForQuitSignals(cancelFn context.CancelFunc, logger tmlog.Logger) {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigCh
+		cancelFn()
+
+		logger.Info("caught signal", "signal", sig.String())
+	}()
 }
 
 // GetAppDBBackend gets the backend type to use for the application DBs.

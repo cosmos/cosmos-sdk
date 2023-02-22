@@ -1,19 +1,20 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // StartGRPCWeb starts a gRPC-Web server on the given address.
-func StartGRPCWeb(grpcSrv *grpc.Server, config config.Config) (*http.Server, error) {
+func StartGRPCWeb(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, config config.Config) error {
 	var options []grpcweb.Option
 	if config.GRPCWeb.EnableUnsafeCORS {
 		options = append(options,
@@ -32,15 +33,24 @@ func StartGRPCWeb(grpcSrv *grpc.Server, config config.Config) (*http.Server, err
 
 	errCh := make(chan error)
 	go func() {
+		logger.Info("starting gRPC web server...", "address", config.GRPCWeb.Address)
 		if err := grpcWebSrv.ListenAndServe(); err != nil {
 			errCh <- fmt.Errorf("[grpc] failed to serve: %w", err)
 		}
 	}()
 
+	// Start a blocking select to wait for an indication to stop the server or that
+	// the server failed to start properly.
 	select {
+	case <-ctx.Done():
+		// The calling process cancelled or closed the provided context, so we must
+		// gracefully stop the gRPC-web server.
+		logger.Info("stopping gRPC web server...", "address", config.GRPCWeb.Address)
+		grpcWebSrv.Close()
+		return nil
+
 	case err := <-errCh:
-		return nil, err
-	case <-time.After(types.ServerStartTime): // assume server started successfully
-		return grpcWebSrv, nil
+		logger.Error("failed to start gRPC Web server", "err", err)
+		return err
 	}
 }

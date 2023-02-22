@@ -33,16 +33,16 @@ to those key-value pairs indicating that they do or do not exist in the global
 application state. This data structure is the base layer `KVStore`.
 
 In addition, the SDK provides abstractions on top of this Merkle data structure.
-Namely, a root multi-store is a collection of each module's `KVStore`. Through
-the root multi-store, the application can serve queries and provide proofs to
-clients in addition to provide a module access to its own unique `KVStore` though
-the use of `StoreKey`, which is an OCAP primitive.
+Namely, a root multi-store (RMS) is a collection of each module's `KVStore`.
+Through the RMS, the application can serve queries and provide proofs to clients
+in addition to provide a module access to its own unique `KVStore` though the use
+of `StoreKey`, which is an OCAP primitive.
 
-There are further layers of abstraction that sit between the root multi-store and
-the underlying IAVL `KVStore`. A `GasKVStore` is responsible for tracking gas
-IO consumption for state machine reads and writes. A `CacheKVStore` is responsible
-for providing a way to cache reads and buffer writes to make state transitions
-atomic, e.g. transaction execution or governance proposal execution.
+There are further layers of abstraction that sit between the RMS and the underlying
+IAVL `KVStore`. A `GasKVStore` is responsible for tracking gas IO consumption for
+state machine reads and writes. A `CacheKVStore` is responsible for providing a
+way to cache reads and buffer writes to make state transitions atomic, e.g.
+transaction execution or governance proposal execution.
 
 There are a few critical drawbacks to these layers of abstraction and the overall
 design of storage in the Cosmos SDK:
@@ -80,8 +80,7 @@ less intrusive. Specifically, we propose to:
 
 * Separate the concerns of state commitment (**SC**), needed for consensus, and
   state storage (**SS**), needed for state machine and clients.
-* Reduce layers of abstractions necessary between the root multi-store and
-  underlying stores.
+* Reduce layers of abstractions necessary between the RMS and underlying stores.
 * Provide atomic module store commitments by providing a batch database object
   to core IAVL APIs.
 * Reduce complexities in the `CacheKVStore` implementation while also improving
@@ -95,13 +94,58 @@ to change the backing commitment store in the future should evidence arise to
 warrant a better alternative. However there is promising work being done to IAVL
 that should result in significant performance improvement <sup>[1,2]</sup>.
 
+### Separating SS and SC
+
+By separating SS and SC, it will allow for us to optimize against primary use cases
+and access patterns to state. Specifically, The SS layer will be responsible for
+direct access to data in the form of (key, value) pairs, whereas the SC layer (IAVL)
+will be responsible for committing to data and providing Merkle proofs.
+
+Note, the underlying physical storage database will be the same between both the
+SS and SC layers. So to avoid collisions between (key, value) pairs, both layers
+will be namespaced. 
+
+Given that the existing solution today acts as both SS and SC, we can extract out
+the SC layer without namespacing it, while having the new SS layer be explicitly
+namespaced. In addition, we can keep the existing layer as the new SC layer without
+any significant changes to access patterns or behavior. In other words, the entire
+collection of existing IAVL-backed module `KVStore`s will act as the SC layer.
+
+#### State Storage
+
+In the RMS, we will expose a *single* `KVStore` backed by the same physical
+database that backs the SC layer. This `KVStore` will be explicitly namespaced
+to avoid collisions and will act as the primary storage for (key, value) pairs.
+
+While we most likely will continue the use of `cosmos-db` to allow for flexibility
+and iteration over preferred physical storage backends as research and benchmarking
+continues. However, we propose to hardcode the use of RocksDB as the primary
+physical storage backend.
+
+Since the SS layer will be implemented as a `KVStore`, it will support the
+following functionality:
+
+* Range queries
+* CRUD operations
+* Historical queries and versioning
+* Pruning
+
+For each height, upon `Commit`, the SS layer will write all (key, value) pairs
+under a [RocksDB user-defined timestamp](https://github.com/facebook/rocksdb/wiki/User-defined-Timestamp-%28Experimental%29).
+
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
+> This section describes the resulting context, after applying the decision. All
+> consequences should be listed here, not just the "positive" ones. A particular
+> decision may have positive, negative, and neutral consequences, but all of them
+> affect the team and project in the future.
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+> All ADRs that introduce backwards incompatibilities must include a section
+> describing these incompatibilities and their severity. The ADR must explain
+> how the author proposes to deal with these incompatibilities. ADR submissions
+> without a sufficient backwards compatibility treatise may be rejected outright.
 
 ### Positive
 

@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -97,11 +96,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 	require := s.Require()
 	val := s.network.Validators[0]
 
-	consPrivKey := ed25519.GenPrivKey()
-	consPubKeyBz, err := s.cfg.Codec.MarshalInterfaceJSON(consPrivKey.PubKey())
-	require.NoError(err)
-	require.NotNil(consPubKeyBz)
-
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 
@@ -120,6 +114,71 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 	require.NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
+	validJSON := fmt.Sprintf(`
+	{
+  		"pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="},
+  		"amount": "%dstake",
+  		"moniker": "NewValidator",
+  		"commission-rate": "0.5",
+  		"commission-max-rate": "1.0",
+  		"commission-max-change-rate": "0.1",
+  		"min-self-delegation": "1"
+	}`, 100)
+	validJSONFile := testutil.WriteToNewTempFile(s.T(), validJSON)
+	defer func() {
+		if err := validJSONFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
+
+	noAmountJSON := `
+	{
+  		"pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="},
+  		"moniker": "NewValidator",
+  		"commission-rate": "0.5",
+  		"commission-max-rate": "1.0",
+  		"commission-max-change-rate": "0.1",
+  		"min-self-delegation": "1"
+	}`
+	noAmountJSONFile := testutil.WriteToNewTempFile(s.T(), noAmountJSON)
+	defer func() {
+		if err := noAmountJSONFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
+
+	noPubKeyJSON := fmt.Sprintf(`
+	{
+  		"amount": "%dstake",
+  		"moniker": "NewValidator",
+  		"commission-rate": "0.5",
+  		"commission-max-rate": "1.0",
+  		"commission-max-change-rate": "0.1",
+  		"min-self-delegation": "1"
+	}`, 100)
+	noPubKeyJSONFile := testutil.WriteToNewTempFile(s.T(), noPubKeyJSON)
+	defer func() {
+		if err := noPubKeyJSONFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
+
+	noMonikerJSON := fmt.Sprintf(`
+	{
+  		"pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="},
+  		"amount": "%dstake",
+  		"commission-rate": "0.5",
+  		"commission-max-rate": "1.0",
+  		"commission-max-change-rate": "0.1",
+  		"min-self-delegation": "1"
+	}`, 100)
+	noMonikerJSONFile := testutil.WriteToNewTempFile(s.T(), noMonikerJSON)
+	defer func() {
+		if err := noMonikerJSONFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
+
 	testCases := []struct {
 		name         string
 		args         []string
@@ -130,14 +189,7 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing amount)",
 			[]string{
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
-				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
-				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
-				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				noAmountJSONFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -148,15 +200,7 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing pubkey)",
 			[]string{
-				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
-				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
-				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
-				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				noPubKeyJSONFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -167,16 +211,7 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing moniker)",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyBz),
-				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
-				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
-				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
-				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				noMonikerJSONFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -187,17 +222,7 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 		{
 			"valid transaction",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyBz),
-				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
-				fmt.Sprintf("--%s=NewValidator", cli.FlagMoniker),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
-				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
-				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
-				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				validJSONFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

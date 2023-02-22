@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/simapp"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -36,6 +35,10 @@ import (
 )
 
 var bankMsgSendEventAction = fmt.Sprintf("message.action='%s'", sdk.MsgTypeURL(&banktypes.MsgSend{}))
+
+func TestE2ETestSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestSuite))
+}
 
 type E2ETestSuite struct {
 	suite.Suite
@@ -101,10 +104,9 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
 	s.Require().Equal(uint32(0), tr.Code)
 
-	s.Require().NoError(s.network.WaitForNextBlock())
-	height, err := s.network.LatestHeight()
+	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	s.Require().NoError(err)
-	s.txHeight = height
+	s.txHeight = resp.Height
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -121,7 +123,6 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	s.Require().NoError(err)
 	s.Require().NotEmpty(resp.TxResponse.TxHash)
 
-	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// get the signature out of the builder
@@ -340,7 +341,6 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			// Query the tx via gRPC.
-			s.Require().NoError(s.network.WaitForNextBlock())
 			grpcRes, err := s.queryClient.GetTxsEvent(context.Background(), tc.req)
 			if tc.expErr {
 				s.Require().Error(err)
@@ -1104,10 +1104,6 @@ func (s E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
 			}
 		})
 	}
-}
-
-func TestE2ETestSuite(t *testing.T) {
-	suite.Run(t, new(E2ETestSuite))
 }
 
 func (s E2ETestSuite) mkTxBuilder() client.TxBuilder {

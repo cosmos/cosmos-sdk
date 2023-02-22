@@ -54,8 +54,8 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.6.0
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
-	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57
 	golang.org/x/sync v0.1.0
+	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.2-0.20230208135220-49eaa78c6c9c
 	gotest.tools/v3 v3.4.0

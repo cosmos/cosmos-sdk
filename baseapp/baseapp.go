@@ -145,8 +145,6 @@ type BaseApp struct { //nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []storetypes.ABCIListener
-
-	circuitBreaker CircuitBreaker
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -436,8 +434,8 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 	}
 }
 
-func (app *BaseApp) SetCircuitBreaker(circuitBreaker CircuitBreaker) {
-	app.circuitBreaker = circuitBreaker
+func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
+	app.msgServiceRouter.SetCircuit(cb)
 }
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
@@ -787,12 +785,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 	for i, msg := range msgs {
 		if mode != runTxModeDeliver && mode != runTxModeSimulate {
 			break
-		}
-
-		if app.circuitBreaker != nil {
-			if allowed := app.circuitBreaker.IsAllowed(ctx, sdk.MsgTypeURL(msg)); allowed == false {
-				break
-			}
 		}
 
 		handler := app.msgServiceRouter.Handler(msg)

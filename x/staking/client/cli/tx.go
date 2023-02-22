@@ -91,15 +91,14 @@ where we can get the pubkey using "%s tendermint show-validator"
 			}
 
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
-      if err != nil {
-				return err
-			}
-      
-			validator, err := parseAndValidateValidatorJSON(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
+			validator, err := parseAndValidateValidatorJSON(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
 
 			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator)
 			if err != nil {

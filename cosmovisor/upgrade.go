@@ -69,14 +69,62 @@ func DownloadBinary(cfg *Config, info *UpgradeInfo) error {
 		// copy binary to binPath from dirPath if zipped directory don't contain bin directory to wrap the binary
 		if err != nil {
 			err = copy.Copy(filepath.Join(dirPath, cfg.Name), binPath)
+		}
+		if err != nil {
+			// If there is only one entry in dirPath, then promote it to the upgradedir
+
+			// Clean up an empty bin directory.
+			os.Remove(filepath.Join(dirPath, "bin"))
+
+			var childName string
+			childName, err = GetOnlyChildName(dirPath)
 			if err != nil {
 				return err
 			}
+
+			// move aside the old dir and move the child to the old dir
+			var tmpPath string
+			tmpPath, err = os.MkdirTemp(filepath.Join(dirPath, ".."), "tmp*")
+			if err != nil {
+				return err
+			}
+			asidePath := filepath.Join(tmpPath, "old")
+			err = os.Rename(dirPath, asidePath)
+			if err == nil {
+				err = os.Rename(filepath.Join(asidePath, childName), dirPath)
+			}
+			os.RemoveAll(tmpPath)
+		}
+		if err != nil {
+			return err
 		}
 	}
 
 	// if it is successful, let's ensure the binary is executable
 	return MarkExecutable(binPath)
+}
+
+func GetOnlyChildName(path string) (string, error) {
+	dents, err := os.ReadDir(path)
+	if err != nil {
+		return "", err
+	}
+	childName := ""
+	for _, dent := range dents {
+		if dent.Name() == "." || dent.Name() == ".." {
+			continue
+		}
+		if childName == "" {
+			childName = dent.Name()
+			continue
+		}
+		return "", fmt.Errorf("more than one child entry in %s", path)
+	}
+
+	if childName == "" {
+		return "", fmt.Errorf("no child entry in %s", path)
+	}
+	return childName, nil
 }
 
 // MarkExecutable will try to set the executable bits if not already set

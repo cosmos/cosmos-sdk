@@ -20,6 +20,7 @@ import (
 var (
 	_ AppModuleBasic = coreAppModuleBasicAdapator{}
 	_ HasGenesis     = coreAppModuleBasicAdapator{}
+	_ HasServices    = coreAppModuleBasicAdapator{}
 )
 
 // CoreAppModuleBasicAdaptor wraps the core API module as an AppModule that this version
@@ -159,5 +160,12 @@ func (c coreAppModuleBasicAdapator) RegisterLegacyAminoCodec(amino *codec.Legacy
 		RegisterLegacyAminoCodec(amino *codec.LegacyAmino)
 	}); ok {
 		mod.RegisterLegacyAminoCodec(amino)
+	}
+}
+
+// RegisterServices implements HasServices
+func (c coreAppModuleBasicAdapator) RegisterServices(cfg Configurator) {
+	if module, ok := c.module.(appmodule.HasServices); ok {
+		module.RegisterServices(cfg)
 	}
 }

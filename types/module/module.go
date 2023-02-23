@@ -372,6 +372,8 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 	for _, module := range m.Modules {
 		if module, ok := module.(HasServices); ok {
 			module.RegisterServices(cfg)
+		} else if module, ok := module.(appmodule.HasServices); ok {
+			module.RegisterServices(cfg)
 		}
 	}
 }

@@ -164,8 +164,11 @@ will set the appropriate value for the timestamp. If no height is provided, the
 SS layer will assume the latest height. The SS layer will store a reverse index
 to lookup `LatestVersion -> timestamp(version)` which is set on `Commit`.
 
+<!-- TODO: Insert section on pruning. -->
+
 #### Proofs
 
+<!-- TODO: Insert section on pruning. -->
 
 ## Consequences
 

@@ -170,6 +170,25 @@ to lookup `LatestVersion -> timestamp(version)` which is set on `Commit`.
 
 <!-- TODO: Insert section on pruning. -->
 
+### Atomic Commitment
+
+We propose to modify the existing IAVL APIs to accept a batch DB object instead
+of relying on an internal batch object in `nodeDB`. Since each underlying IAVL
+`KVStore` shares the same DB in the SC layer, this will allow commits to be
+atomic.
+
+Specifically, we propose to:
+
+* Remove the `dbm.Batch` field from `nodeDB`
+* Update the `SaveVersion` method of the `MutableTree` IAVL type to accept a batch object
+* Update the `Commit` method of the `CommitKVStore` interface to accept a batch object
+* Create a batch object in the RMS during `Commit` and pass this object to each
+  `KVStore`
+* Write the database batch after all stores have committed successfully
+
+Note, this will require IAVL to be updated to not rely or assume on any batch
+being present during `SaveVersion`.
+
 ## Consequences
 
 > This section describes the resulting context, after applying the decision. All

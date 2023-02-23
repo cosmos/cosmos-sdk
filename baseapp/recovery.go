@@ -54,7 +54,7 @@ func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recov
 
 		return sdkerrors.Wrap(
 			sdkerrors.ErrOutOfGas, fmt.Sprintf(
-				"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
+				"out of gas in location: %v; gasWanted: %d, gasUsed: %d. Please retry with a gas (--gas flag) amount higher than gasUsed",
 				err.Descriptor, gasWanted, ctx.GasMeter().GasConsumed(),
 			),
 		)

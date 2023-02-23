@@ -24,9 +24,9 @@ const (
 	timestampDurationNilValue       = 0xFF
 	timestampDurationZeroNanosValue = 0x0
 	timestampDurationBufferSize     = 9
-	timestampSecondsMin             = -62135579038
-	timestampSecondsMax             = 253402318799
-	timestampNanosMax               = 999999999
+	TimestampSecondsMin             = -62135596800
+	TimestampSecondsMax             = 253402300799
+	TimestampNanosMax               = 999999999
 )
 
 var (
@@ -43,10 +43,10 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 
 	seconds, nanos := getTimestampSecondsAndNanos(value)
 	secondsInt := seconds.Int()
-	if secondsInt < timestampSecondsMin || secondsInt > timestampSecondsMax {
-		return fmt.Errorf("timestamp seconds is out of range %d, must be between %d and %d", secondsInt, timestampSecondsMin, timestampSecondsMax)
+	if secondsInt < TimestampSecondsMin || secondsInt > TimestampSecondsMax {
+		return fmt.Errorf("timestamp seconds is out of range %d, must be between %d and %d", secondsInt, TimestampSecondsMin, TimestampSecondsMax)
 	}
-	secondsInt -= timestampSecondsMin
+	secondsInt -= TimestampSecondsMin
 	err := encodeSeconds(secondsInt, w)
 	if err != nil {
 		return err
@@ -58,8 +58,8 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 		return err
 	}
 
-	if nanosInt < 0 || nanosInt > timestampNanosMax {
-		return fmt.Errorf("timestamp nanos is out of range %d, must be between %d and %d", secondsInt, 0, timestampNanosMax)
+	if nanosInt < 0 || nanosInt > TimestampNanosMax {
+		return fmt.Errorf("timestamp nanos is out of range %d, must be between %d and %d", secondsInt, 0, TimestampNanosMax)
 	}
 
 	return encodeNanos(nanosInt, w)
@@ -93,7 +93,7 @@ func (t TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, err
 	}
 
-	seconds += timestampSecondsMin
+	seconds += TimestampSecondsMin
 
 	msg := timestampMsgType.New()
 	msg.Set(timestampSecondsField, protoreflect.ValueOfInt64(seconds))

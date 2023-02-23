@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	durationSecondsMin = -315576000000
-	durationSecondsMax = 315576000000
-	durationNanosMin   = -999999999
-	durationNanosMax   = 999999999
+	DurationSecondsMin = -315576000000
+	DurationSecondsMax = 315576000000
+	DurationNanosMin   = -999999999
+	DurationNanosMax   = 999999999
 )
 
 type DurationCodec struct{}
@@ -25,11 +25,11 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 
 	seconds, nanos := getDurationSecondsAndNanos(value)
 	secondsInt := seconds.Int()
-	if secondsInt < durationSecondsMin || secondsInt > durationSecondsMax {
-		return fmt.Errorf("duration seconds is out of range %d, must be between %d and %d", secondsInt, durationSecondsMin, durationSecondsMax)
+	if secondsInt < DurationSecondsMin || secondsInt > DurationSecondsMax {
+		return fmt.Errorf("duration seconds is out of range %d, must be between %d and %d", secondsInt, DurationSecondsMin, DurationSecondsMax)
 	}
 	negative := secondsInt < 0
-	secondsInt -= durationSecondsMin
+	secondsInt -= DurationSecondsMin
 	err := encodeSeconds(secondsInt, w)
 	if err != nil {
 		return err
@@ -42,13 +42,13 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	}
 
 	if negative {
-		if nanosInt < durationNanosMin || nanosInt > 0 {
-			return fmt.Errorf("negative duration nanos is out of range %d, must be between %d and %d", secondsInt, durationNanosMin, 0)
+		if nanosInt < DurationNanosMin || nanosInt > 0 {
+			return fmt.Errorf("negative duration nanos is out of range %d, must be between %d and %d", secondsInt, DurationNanosMin, 0)
 		}
 		nanosInt = -nanosInt
 	} else {
-		if nanosInt < 0 || nanosInt > durationNanosMax {
-			return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", secondsInt, 0, durationNanosMax)
+		if nanosInt < 0 || nanosInt > DurationNanosMax {
+			return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", secondsInt, 0, DurationNanosMax)
 		}
 	}
 
@@ -61,7 +61,7 @@ func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, err
 	}
 
-	seconds += durationSecondsMin
+	seconds += DurationSecondsMin
 
 	negative := seconds < 0
 

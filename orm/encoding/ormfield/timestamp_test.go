@@ -54,12 +54,13 @@ func TestTimestamp(t *testing.T) {
 	assert.Equal(t, 0, cdc.Compare(val, val2))
 
 	// max value
-	//ts = timestamppb.New(time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC))
-	//val = protoreflect.ValueOfMessage(ts.ProtoReflect())
-	//buf = &bytes.Buffer{}
-	//assert.NilError(t, cdc.Encode(val, buf))
-	//assert.Equal(t, 6, len(buf.Bytes()))
-	//val2, err = cdc.Decode(buf)
-	//assert.NilError(t, err)
-	//assert.Equal(t, 0, cdc.Compare(val, val2))
+	ts = timestamppb.New(time.Date(9999, 12, 31, 23, 59, 59, 999999999, time.UTC))
+	t.Logf("%v", ts)
+	val = protoreflect.ValueOfMessage(ts.ProtoReflect())
+	buf = &bytes.Buffer{}
+	assert.NilError(t, cdc.Encode(val, buf))
+	assert.Equal(t, 9, len(buf.Bytes()))
+	val2, err = cdc.Decode(buf)
+	assert.NilError(t, err)
+	assert.Equal(t, 0, cdc.Compare(val, val2))
 }

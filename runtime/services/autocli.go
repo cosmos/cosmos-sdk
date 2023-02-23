@@ -77,6 +77,8 @@ type autocliConfigurator struct {
 	queryServer autocliServiceRegistrar
 }
 
+var _ module.Configurator = &autocliConfigurator{}
+
 func (a *autocliConfigurator) MsgServer() gogogrpc.Server { return &a.msgServer }
 
 func (a *autocliConfigurator) QueryServer() gogogrpc.Server { return &a.queryServer }
@@ -84,6 +86,9 @@ func (a *autocliConfigurator) QueryServer() gogogrpc.Server { return &a.querySer
 func (a *autocliConfigurator) RegisterMigration(string, uint64, module.MigrationHandler) error {
 	return nil
 }
+
+func (*autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {}
+func (a *autocliConfigurator) Error() error                                       { return nil }
 
 // autocliServiceRegistrar is used to capture the service name for registered services
 type autocliServiceRegistrar struct {

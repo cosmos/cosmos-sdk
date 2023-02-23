@@ -19,37 +19,37 @@ All packages and modules should have unit test coverage. Modules should have the
 The SDK uses `mockgen` to generate mocks for keepers:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/dd556936b23d7443cb7fb1da394c35117efa9da7/scripts/mockgen.sh#L29
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/scripts/mockgen.sh#L3-L6
 ```
 
 You can read more about mockgen [here](https://github.com/golang/mock).
 
 ### Example
 
-As an example, we will walkthrough the [keeper tests](https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper_test.go) of the `x/gov` module.
+As an example, we will walkthrough the [keeper tests](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/keeper/keeper_test.go) of the `x/gov` module.
 
 The `x/gov` module has a `Keeper` type requires a few external dependencies (ie. imports outside `x/gov` to work properly).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper.go#L64-L68
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/keeper/keeper.go#L61-L65
 ```
 
 In order to only test `x/gov`, we mock the [expected keepers](https://docs.cosmos.network/v0.46/building-modules/keeper.html#type-definition) and instantiate the `Keeper` with the mocked dependencies. Note that we may need to configure the mocked dependencies to return the expected values:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/common_test.go#L66-L83
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/keeper/common_test.go#L67-L81
 ```
 
 This allows us to test the `x/gov` module without having to import other modules.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper_test.go#L3-L35
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/keeper/keeper_test.go#L3-L35
 ```
 
 We can test then create unit tests using the newly created `Keeper` instance.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper_test.go#L73-L91
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/keeper/keeper_test.go#L73-L91
 ```
 
 ## Integration Tests
@@ -63,26 +63,28 @@ The goal of these integration tests is to test a component with a minimal applic
 
 Here, we will walkthrough the integration tests of the `x/distribution` module. The `x/distribution` module has, in addition to keeper unit tests, integration tests that test the `x/distribution` module with a minimal application. This is expected as you may want to test the `x/distribution` module with actual application logic, instead of only mocked dependencies.
 
-For creating a minimal application, we use [`simtestutil.Setup`](https://github.com/cosmos/cosmos-sdk/blob/main/testutil/sims/app_helpers.go#L98-L102) and an [`AppConfig`](../tooling/02-depinject.md) of the `x/distribution` minimal dependencies.
+For creating a minimal application, we use [`simtestutil.Setup`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/testutil/sims/app_helpers.go#L95-L99) and an [`AppConfig`](../tooling/02-depinject.md) of the `x/distribution` minimal dependencies.
 
 For instance, the `AppConfig` of `x/distribution` is defined as:
 
-* https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/testutil/app_config.go
+* https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/distribution/testutil/app_config.go
 
 This is a stripped down version of the `simapp` `AppConfig`:
 
-* https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go
+* https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go
 
-_Note, you can as well use the `AppConfig` configurator for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/15b04c2a87e433fe97877a32162b96ba2ebf8982/x/slashing/app_test.go#L54-L61). There no difference between those two ways, use whichever you prefer._
+:::note
+You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/slashing/app_test.go#L54-L62). There no difference between those two ways, use whichever you prefer.
+:::
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/e09516f4795c637ab12b30bf732ce5d86da78424/tests/integration/distribution/keeper/keeper_test.go#L28-L33
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/tests/integration/distribution/keeper/keeper_test.go#L28-L33
 ```
 
 Now the types are injected and we can use them for our tests:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/e09516f4795c637ab12b30bf732ce5d86da78424/tests/integration/distribution/keeper/keeper_test.go#L21-L53
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/tests/integration/distribution/keeper/keeper_test.go#L21-L53
 ```
 
 ## Deterministic and Regression tests	
@@ -97,7 +99,7 @@ Each query is tested using 2 methods:
 Here's an example of regression tests:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/9f3575a10f1a6f1315b94a9be783df5156ce2292/tests/integration/bank/keeper/deterministic_test.go#L102-L115
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/tests/integration/bank/keeper/deterministic_test.go#L102-L115
 ```
 
 ## Simulations
@@ -107,11 +109,11 @@ Simulations uses as well a minimal application, built with [`depinject`](../tool
 Following is an example for `x/gov/` simulations:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/0fbcb0b18381d19b7e556ed07e5467129678d68d/x/gov/simulation/operations_test.go#L290-L307
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/simulation/operations_test.go#L292-L310
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/simulation/operations_test.go#L67-L109
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/simulation/operations_test.go#L69-L111
 ```
 
 ## End-to-end Tests
@@ -126,7 +128,9 @@ Here are some examples:
 * Cosmos Hub E2E tests: <https://github.com/cosmos/gaia/tree/main/tests/e2e>.
 * Osmosis E2E tests: <https://github.com/osmosis-labs/osmosis/tree/main/tests/e2e>.
 
-_Note, the SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html). This page will eventually be updated with better examples._
+:::note warning
+The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html). This page will eventually be updated with better examples.
+:::
 
 ## Summary
 

@@ -8,10 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
@@ -57,7 +59,7 @@ func TestCreate(t *testing.T) {
 	specs := map[string]struct {
 		rowID  RowID
 		src    proto.Message
-		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr *errorsmod.Error
 	}{
 		"empty rowID": {
 			rowID: []byte{},
@@ -97,7 +99,7 @@ func TestCreate(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			ctx := NewMockContext()
-			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
@@ -125,7 +127,7 @@ func TestCreate(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	specs := map[string]struct {
 		src    proto.Message
-		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr *errorsmod.Error
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
@@ -154,7 +156,7 @@ func TestUpdate(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			ctx := NewMockContext()
-			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
@@ -187,7 +189,7 @@ func TestUpdate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	specs := map[string]struct {
 		rowID  []byte
-		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr *errorsmod.Error
 	}{
 		"happy path": {
 			rowID: EncodeSequence(1),
@@ -203,7 +205,7 @@ func TestDelete(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			ctx := NewMockContext()
-			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)

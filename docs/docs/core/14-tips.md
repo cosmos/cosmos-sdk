@@ -28,23 +28,23 @@ The transaction tips flow happens in multiple steps.
 
 2. The tipper drafts a transaction to be executed on the chain A. It can include chain A `Msg`s. However, instead of creating a normal transaction, they create the following `AuxSignerData` document:
 
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L230-L249
-```
+	```protobuf reference
+	https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L237-L256
+	```
 
-where we have defined `SignDocDirectAux` as:
+	where we have defined `SignDocDirectAux` as:
 
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
-```
+	```protobuf reference
+	https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L67-L97
+	```
 
-where `Tip` is defined as
+	where `Tip` is defined as
 
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L219-L228
-```
+	```protobuf reference
+	https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L226-L235
+	```
 
-Notice that this document doesn't sign over the final chain A fees. Instead, it includes a `Tip` field. It also doesn't include the whole `AuthInfo` object as in `SIGN_MODE_DIRECT`, only the minimum information needed by the tipper
+	Notice that this document doesn't sign over the final chain A fees. Instead, it includes a `Tip` field. It also doesn't include the whole `AuthInfo` object as in `SIGN_MODE_DIRECT`, only the minimum information needed by the tipper
 
 3. The tipper signs the `SignDocDirectAux` document and attaches the signature to the `AuxSignerData`, then sends the signed `AuxSignerData` to the fee payer.
 
@@ -93,7 +93,7 @@ type HandlerOptions struct {
 // MyPostHandler returns a posthandler chain with the TipDecorator.
 func MyPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
     if options.BankKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for posthandler")
+		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "bank keeper is required for posthandler")
 	}
 
 	postDecorators := []sdk.AnteDecorator{
@@ -160,7 +160,7 @@ For both commands, the flag `--sign-mode=amino-json` is still available for hard
 
 ## Programmatic Usage
 
-For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/client/tx/aux_builder.go#L16), and can be used as follows:
+For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx/aux_builder.go#L16), and can be used as follows:
 
 ```go
 // Note: there's no need to use clientCtx.TxConfig anymore.

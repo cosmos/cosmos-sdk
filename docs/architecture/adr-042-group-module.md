@@ -122,7 +122,7 @@ message GroupAccountInfo {
     uint64 version = 5;
 
     // decision_policy specifies the group account's decision policy.
-    google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
+    google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "cosmos.group.v1.DecisionPolicy"];
 }
 ```
 

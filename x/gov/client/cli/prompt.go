@@ -63,10 +63,15 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 	}
 
 	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Kind() == reflect.Struct || v.Field(i).Kind() == reflect.Slice {
-			// if the field is a struct skip
-			// in a future we can add a recursive call to Prompt
+		// if the field is a struct skip or not slice of string or int then skip
+		switch v.Field(i).Kind() {
+		case reflect.Struct:
+			// TODO(@julienrbrt) in the future we can add a recursive call to Prompt
 			continue
+		case reflect.Slice:
+			if v.Field(i).Type().Elem().Kind() != reflect.String && v.Field(i).Type().Elem().Kind() != reflect.Int {
+				continue
+			}
 		}
 
 		// create prompts
@@ -117,9 +122,20 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 			// of which on 64-bit machines, which are most common,
 			// int==int64
 			v.Field(i).SetInt(resultInt)
+		case reflect.Slice:
+			switch v.Field(i).Type().Elem().Kind() {
+			case reflect.String:
+				v.Field(i).Set(reflect.ValueOf([]string{result}))
+			case reflect.Int:
+				resultInt, err := strconv.ParseInt(result, 10, 0)
+				if err != nil {
+					return data, fmt.Errorf("invalid value for int: %w", err)
+				}
+
+				v.Field(i).Set(reflect.ValueOf([]int{int(resultInt)}))
+			}
 		default:
-			// skip other types
-			// possibly in the future we can add more types (like slices)
+			// skip any other types
 			continue
 		}
 	}
@@ -172,6 +188,7 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadat
 		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
 	}
 	proposal.Messages = append(proposal.Messages, message)
+
 	return proposal, metadata, nil
 }
 
@@ -256,7 +273,7 @@ func NewCmdDraftProposal() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Your draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
+			fmt.Printf("The draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
 
 			return nil
 		},

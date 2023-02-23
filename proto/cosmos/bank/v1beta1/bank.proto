@@ -40,6 +40,7 @@ message Input {
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -53,6 +54,7 @@ message Output {
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -66,11 +68,12 @@ message Supply {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  option (cosmos_proto.implements_interface) = "SupplyI";
+  option (cosmos_proto.implements_interface) = "cosmos.bank.v1beta1.SupplyI";
 
   repeated cosmos.base.v1beta1.Coin total = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

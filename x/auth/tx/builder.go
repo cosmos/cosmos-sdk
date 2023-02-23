@@ -3,6 +3,8 @@ package tx
 import (
 	"github.com/cosmos/gogoproto/proto"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -122,7 +124,7 @@ func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 		if ok {
 			pks[i] = pk
 		} else {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "Expecting PubKey, got: %T", pkAny)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "Expecting PubKey, got: %T", pkAny)
 		}
 	}
 
@@ -426,7 +428,7 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 		}
 	}
 	if w.tx.AuthInfo.Tip != nil && data.SignDoc.Tip != nil {
-		if !w.tx.AuthInfo.Tip.Amount.IsEqual(data.SignDoc.Tip.Amount) {
+		if !w.tx.AuthInfo.Tip.Amount.Equal(data.SignDoc.Tip.Amount) {
 			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has tip %+v, got %+v in AuxSignerData", w.tx.AuthInfo.Tip.Amount, data.SignDoc.Tip.Amount)
 		}
 		if w.tx.AuthInfo.Tip.Tipper != data.SignDoc.Tip.Tipper {

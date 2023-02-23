@@ -279,7 +279,7 @@ func SimulateMsgCreateGroup(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk gr
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
@@ -318,7 +318,7 @@ func SimulateMsgCreateGroupWithPolicy(cdc *codec.ProtoCodec, ak group.AccountKee
 		}
 		msg.SetDecisionPolicy(decisionPolicy)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to set decision policy"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to set decision policy"), nil, err
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
@@ -339,7 +339,7 @@ func SimulateMsgCreateGroupWithPolicy(cdc *codec.ProtoCodec, ak group.AccountKee
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
@@ -400,7 +400,7 @@ func SimulateMsgCreateGroupPolicy(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			fmt.Printf("ERR DELIVER %v\n", err)
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
@@ -450,17 +450,19 @@ func SimulateMsgSubmitProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "fee error"), nil, err
 		}
 
-		msg := group.MsgSubmitProposal{
+		msg := &group.MsgSubmitProposal{
 			GroupPolicyAddress: groupPolicyAddr,
 			Proposers:          []string{acc.Address.String()},
 			Metadata:           simtypes.RandStringOfLength(r, 10),
+			Title:              "Test Proposal",
+			Summary:            "Summary of the proposal",
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -474,10 +476,10 @@ func SimulateMsgSubmitProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -510,7 +512,7 @@ func SimulateMsgUpdateGroupAdmin(cdc *codec.ProtoCodec, ak group.AccountKeeper, 
 			newAdmin, _ = simtypes.RandomAcc(r, accounts)
 		}
 
-		msg := group.MsgUpdateGroupAdmin{
+		msg := &group.MsgUpdateGroupAdmin{
 			GroupId:  groupID,
 			Admin:    account.GetAddress().String(),
 			NewAdmin: newAdmin.Address.String(),
@@ -520,7 +522,7 @@ func SimulateMsgUpdateGroupAdmin(cdc *codec.ProtoCodec, ak group.AccountKeeper, 
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -534,10 +536,10 @@ func SimulateMsgUpdateGroupAdmin(cdc *codec.ProtoCodec, ak group.AccountKeeper, 
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -561,7 +563,7 @@ func SimulateMsgUpdateGroupMetadata(cdc *codec.ProtoCodec, ak group.AccountKeepe
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMetadata, "fee error"), nil, err
 		}
 
-		msg := group.MsgUpdateGroupMetadata{
+		msg := &group.MsgUpdateGroupMetadata{
 			GroupId:  groupID,
 			Admin:    account.GetAddress().String(),
 			Metadata: simtypes.RandStringOfLength(r, 10),
@@ -571,7 +573,7 @@ func SimulateMsgUpdateGroupMetadata(cdc *codec.ProtoCodec, ak group.AccountKeepe
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -585,10 +587,10 @@ func SimulateMsgUpdateGroupMetadata(cdc *codec.ProtoCodec, ak group.AccountKeepe
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -641,7 +643,7 @@ func SimulateMsgUpdateGroupMembers(cdc *codec.ProtoCodec, ak group.AccountKeeper
 			}
 		}
 
-		msg := group.MsgUpdateGroupMembers{
+		msg := &group.MsgUpdateGroupMembers{
 			GroupId:       groupID,
 			Admin:         acc.Address.String(),
 			MemberUpdates: members,
@@ -651,7 +653,7 @@ func SimulateMsgUpdateGroupMembers(cdc *codec.ProtoCodec, ak group.AccountKeeper
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -665,10 +667,10 @@ func SimulateMsgUpdateGroupMembers(cdc *codec.ProtoCodec, ak group.AccountKeeper
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -701,7 +703,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(cdc *codec.ProtoCodec, ak group.AccountKe
 			newAdmin, _ = simtypes.RandomAcc(r, accounts)
 		}
 
-		msg := group.MsgUpdateGroupPolicyAdmin{
+		msg := &group.MsgUpdateGroupPolicyAdmin{
 			Admin:              acc.Address.String(),
 			GroupPolicyAddress: groupPolicyAddr,
 			NewAdmin:           newAdmin.Address.String(),
@@ -711,7 +713,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(cdc *codec.ProtoCodec, ak group.AccountKe
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -725,10 +727,10 @@ func SimulateMsgUpdateGroupPolicyAdmin(cdc *codec.ProtoCodec, ak group.AccountKe
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -787,7 +789,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(cdc *codec.ProtoCodec, ak group.
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
@@ -815,7 +817,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(cdc *codec.ProtoCodec, ak group.Accoun
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyMetadata, "fee error"), nil, err
 		}
 
-		msg := group.MsgUpdateGroupPolicyMetadata{
+		msg := &group.MsgUpdateGroupPolicyMetadata{
 			Admin:              acc.Address.String(),
 			GroupPolicyAddress: groupPolicyAddr,
 			Metadata:           simtypes.RandStringOfLength(r, 10),
@@ -825,7 +827,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(cdc *codec.ProtoCodec, ak group.Accoun
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -839,10 +841,10 @@ func SimulateMsgUpdateGroupPolicyMetadata(cdc *codec.ProtoCodec, ak group.Accoun
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -917,7 +919,7 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fee error"), nil, err
 		}
 
-		msg := group.MsgWithdrawProposal{
+		msg := &group.MsgWithdrawProposal{
 			ProposalId: uint64(proposalID),
 			Address:    proposer.Address.String(),
 		}
@@ -926,7 +928,7 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -942,12 +944,12 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 
 		if err != nil {
 			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
-				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
+				return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "no-op:group/group-policy was modified"), nil, nil
 			}
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -1021,7 +1023,7 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "member has already voted"), nil, nil
 		}
 
-		msg := group.MsgVote{
+		msg := &group.MsgVote{
 			ProposalId: uint64(proposalID),
 			Voter:      acc.Address.String(),
 			Option:     group.VOTE_OPTION_YES,
@@ -1031,7 +1033,7 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -1047,12 +1049,12 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 
 		if err != nil {
 			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
-				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
+				return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "no-op:group/group-policy was modified"), nil, nil
 			}
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -1065,26 +1067,26 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		_, groupPolicy, acc, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, ""), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, ""), nil, err
 		}
 		if groupPolicy == nil {
-			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "no group policy found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "no group policy found"), nil, nil
 		}
 		groupPolicyAddr := groupPolicy.Address
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "fee error"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
 
 		proposalsResult, err := k.ProposalsByGroupPolicy(sdkCtx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
-			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "fail to query group info"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "fail to query group info"), nil, err
 		}
 		proposals := proposalsResult.GetProposals()
 		if len(proposals) == 0 {
-			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "no proposals found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "no proposals found"), nil, nil
 		}
 
 		proposalID := -1
@@ -1098,10 +1100,10 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 
 		// return no-op if no proposal found
 		if proposalID == -1 {
-			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "no proposals found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "no proposals found"), nil, nil
 		}
 
-		msg := group.MsgExec{
+		msg := &group.MsgExec{
 			ProposalId: uint64(proposalID),
 			Executor:   acc.Address.String(),
 		}
@@ -1109,7 +1111,7 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -1124,12 +1126,12 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
-				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
+				return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "no-op:group/group-policy was modified"), nil, nil
 			}
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -1185,7 +1187,7 @@ func SimulateMsgLeaveGroup(cdc *codec.ProtoCodec, k keeper.Keeper, ak group.Acco
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), err.Error()), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err

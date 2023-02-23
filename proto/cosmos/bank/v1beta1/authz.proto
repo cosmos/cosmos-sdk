@@ -13,12 +13,13 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 //
 // Since: cosmos-sdk 0.43
 message SendAuthorization {
-  option (cosmos_proto.implements_interface) = "Authorization";
+  option (cosmos_proto.implements_interface) = "cosmos.authz.v1beta1.Authorization";
   option (amino.name)                        = "cosmos-sdk/SendAuthorization";
 
   repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -26,5 +27,5 @@ message SendAuthorization {
   // granter. If omitted, any recipient is allowed.
   //
   // Since: cosmos-sdk 0.47
-  repeated string allow_list = 2;
+  repeated string allow_list = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

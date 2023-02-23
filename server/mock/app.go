@@ -7,17 +7,18 @@ import (
 	"fmt"
 	"path/filepath"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 	db "github.com/cosmos/cosmos-db"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
+
+	storetypes "cosmossdk.io/store/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // NewApp creates a simple mock kvstore app for testing. It should work
@@ -29,7 +30,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		return nil, err
 	}
 
-	capKeyMainStore := sdk.NewKVStoreKey("main")
+	capKeyMainStore := storetypes.NewKVStoreKey("main")
 
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
 	baseApp.MountStores(capKeyMainStore)
@@ -95,28 +96,27 @@ type GenesisJSON struct {
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
-	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChain) (abci.ResponseInitChain, error) {
+	return func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 		stateJSON := req.AppStateBytes
 
 		genesisState := new(GenesisJSON)
 		err := json.Unmarshal(stateJSON, genesisState)
 		if err != nil {
-			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-			// return sdk.ErrGenesisParse("").TraceCause(err, "")
+			return abci.ResponseInitChain{}, err
 		}
 
 		for _, val := range genesisState.Values {
 			store := ctx.KVStore(key)
 			store.Set([]byte(val.Key), []byte(val.Value))
 		}
-		return abci.ResponseInitChain{}
+		return abci.ResponseInitChain{}, nil
 	}
 }
 
 // AppGenState can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
-func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (appState json.RawMessage, err error) {
+func AppGenState(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.RawMessage) (appState json.RawMessage, err error) {
 	appState = json.RawMessage(`{
   "values": [
     {
@@ -133,7 +133,7 @@ func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) 
 }
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
-func AppGenStateEmpty(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (appState json.RawMessage, err error) {
+func AppGenStateEmpty(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.RawMessage) (appState json.RawMessage, err error) {
 	appState = json.RawMessage(``)
 	return
 }

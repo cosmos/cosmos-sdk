@@ -30,6 +30,7 @@ func TestRandomizedGenState(t *testing.T) {
 		Cdc:          encCfg.Codec,
 		Rand:         r,
 		NumBonded:    3,
+		BondDenom:    sdk.DefaultBondDenom,
 		Accounts:     simtypes.RandomAccounts(r, 3),
 		InitialStake: math.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),

@@ -3,7 +3,7 @@ package depinject
 import (
 	"reflect"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 )
 
 // Config is a functional configuration of a container.

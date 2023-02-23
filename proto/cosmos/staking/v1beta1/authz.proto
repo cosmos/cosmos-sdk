@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 //
 // Since: cosmos-sdk 0.43
 message StakeAuthorization {
-  option (cosmos_proto.implements_interface) = "Authorization";
+  option (cosmos_proto.implements_interface) = "cosmos.authz.v1beta1.Authorization";
   option (amino.name)                        = "cosmos-sdk/StakeAuthorization";
 
   // max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is
@@ -22,9 +22,9 @@ message StakeAuthorization {
   oneof validators {
     // allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's
     // account.
-    Validators allow_list = 2;
+    Validators allow_list = 2 [(amino.oneof_name) = "cosmos-sdk/StakeAuthorization/AllowList"];
     // deny_list specifies list of validator addresses to whom grantee can not delegate tokens.
-    Validators deny_list = 3;
+    Validators deny_list = 3 [(amino.oneof_name) = "cosmos-sdk/StakeAuthorization/DenyList"];
   }
   // Validators defines list of validator addresses.
   message Validators {

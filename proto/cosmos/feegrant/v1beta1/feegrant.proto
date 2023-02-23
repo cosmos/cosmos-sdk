@@ -10,12 +10,12 @@ import "amino/amino.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
+option go_package = "cosmossdk.io/x/feegrant";
 
 // BasicAllowance implements Allowance with a one-time grant of coins
 // that optionally expires. The grantee can use up to SpendLimit to cover fees.
 message BasicAllowance {
-  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+  option (cosmos_proto.implements_interface) = "cosmos.feegrant.v1beta1.FeeAllowanceI";
   option (amino.name)                        = "cosmos-sdk/BasicAllowance";
 
   // spend_limit specifies the maximum amount of coins that can be spent
@@ -24,6 +24,7 @@ message BasicAllowance {
   repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -34,7 +35,7 @@ message BasicAllowance {
 // PeriodicAllowance extends Allowance to allow for both a maximum cap,
 // as well as a limit per time period.
 message PeriodicAllowance {
-  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+  option (cosmos_proto.implements_interface) = "cosmos.feegrant.v1beta1.FeeAllowanceI";
   option (amino.name)                        = "cosmos-sdk/PeriodicAllowance";
 
   // basic specifies a struct of `BasicAllowance`
@@ -50,6 +51,7 @@ message PeriodicAllowance {
   repeated cosmos.base.v1beta1.Coin period_spend_limit = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -57,6 +59,7 @@ message PeriodicAllowance {
   repeated cosmos.base.v1beta1.Coin period_can_spend = 4 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -70,11 +73,11 @@ message PeriodicAllowance {
 // AllowedMsgAllowance creates allowance only for specified message types.
 message AllowedMsgAllowance {
   option (gogoproto.goproto_getters)         = false;
-  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+  option (cosmos_proto.implements_interface) = "cosmos.feegrant.v1beta1.FeeAllowanceI";
   option (amino.name)                        = "cosmos-sdk/AllowedMsgAllowance";
 
   // allowance can be any of basic and periodic fee allowance.
-  google.protobuf.Any allowance = 1 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
+  google.protobuf.Any allowance = 1 [(cosmos_proto.accepts_interface) = "cosmos.feegrant.v1beta1.FeeAllowanceI"];
 
   // allowed_messages are the messages for which the grantee has the access.
   repeated string allowed_messages = 2;
@@ -89,5 +92,5 @@ message Grant {
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // allowance can be any of basic, periodic, allowed fee allowance.
-  google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
+  google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "cosmos.feegrant.v1beta1.FeeAllowanceI"];
 }

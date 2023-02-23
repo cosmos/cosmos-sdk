@@ -4,16 +4,17 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -66,13 +67,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := types.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(s.genesisAccountBalance))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(s.genesisAccountBalance))),
 	}
 
 	genesisState, err := sims.GenesisStateWithValSet(cdc, app.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
 	s.NoError(err)
 
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 	s.NoError(err)
 
 	// init chain will set the validator set and initialize the genesis accounts
@@ -85,7 +86,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 		Height:             app.LastBlockHeight() + 1,
 		AppHash:            app.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
@@ -94,7 +95,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// end of app init
 
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, bankKeeper)
 	testdata.RegisterQueryServer(queryHelper, testdata.QueryImpl{})
@@ -124,7 +125,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 	)
 	s.Require().NoError(err)
 	bal := res.GetBalance()
-	s.Equal(sdk.NewCoin(denom, sdk.NewInt(s.genesisAccountBalance)), *bal)
+	s.Equal(sdk.NewCoin(denom, sdkmath.NewInt(s.genesisAccountBalance)), *bal)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

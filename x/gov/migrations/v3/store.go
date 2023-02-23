@@ -1,9 +1,10 @@
 package v3
 
 import (
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -12,7 +13,7 @@ import (
 
 // migrateProposals migrates all legacy proposals into MsgExecLegacyContent
 // proposals.
-func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
+func migrateProposals(store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	propStore := prefix.NewStore(store, v1.ProposalsKeyPrefix)
 
 	iter := propStore.Iterator(nil, nil)
@@ -43,7 +44,7 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 // migrateVotes migrates all v1beta1 weighted votes (with sdk.Dec as weight)
 // to v1 weighted votes (with string as weight)
-func migrateVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
+func migrateVotes(store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	votesStore := prefix.NewStore(store, v1.VotesKeyPrefix)
 
 	iter := votesStore.Iterator(nil, nil)

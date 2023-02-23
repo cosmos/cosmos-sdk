@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -22,10 +24,10 @@ import (
 
 func TestSetWithdrawAddr(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 
 	delegatorAddr := addrs[0]
@@ -68,10 +70,10 @@ func TestSetWithdrawAddr(t *testing.T) {
 
 func TestWithdrawValidatorCommission(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 	addrs := simtestutil.CreateIncrementalAccounts(1)
 
 	valAddr := sdk.ValAddress(addrs[0])
@@ -123,10 +125,10 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 func TestGetTotalRewards(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 
 	valAddr0 := sdk.ValAddress(addrs[0])
@@ -164,10 +166,10 @@ func TestGetTotalRewards(t *testing.T) {
 
 func TestFundCommunityPool(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 	addrs := simtestutil.CreateIncrementalAccounts(1)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)

@@ -8,16 +8,20 @@ import (
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	errorsmod "cosmossdk.io/errors"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,16 +49,16 @@ func TestABCI_InitChain(t *testing.T) {
 	logger := defaultLogger()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
-	capKey := sdk.NewKVStoreKey("main")
-	capKey2 := sdk.NewKVStoreKey("key2")
+	capKey := storetypes.NewKVStoreKey("main")
+	capKey2 := storetypes.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
 
 	// set a value in the store on init chain
 	key, value := []byte("hello"), []byte("goodbye")
-	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
-		return abci.ResponseInitChain{}
+		return abci.ResponseInitChain{}, nil
 	}
 
 	query := abci.RequestQuery{
@@ -111,7 +115,7 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// commit and ensure we can still query
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.Commit()
 
@@ -149,14 +153,14 @@ func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
 
 	require.PanicsWithError(t, "invalid height: 4; expected: 3", func() {
 		app.BeginBlock(abci.RequestBeginBlock{
-			Header: tmproto.Header{
+			Header: cmtproto.Header{
 				Height: 4,
 			},
 		})
 	})
 
 	app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height: 3,
 		},
 	})
@@ -176,23 +180,30 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	suite := NewBaseAppSuite(t, grpcQueryOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
-
-	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-	suite.baseApp.Commit()
 
 	req := testdata.SayHelloRequest{Name: "foo"}
 	reqBz, err := req.Marshal()
 	require.NoError(t, err)
 
+	resQuery := suite.baseApp.Query(abci.RequestQuery{
+		Data: reqBz,
+		Path: "/testpb.Query/SayHello",
+	})
+	require.Equal(t, sdkerrors.ErrInvalidHeight.ABCICode(), resQuery.Code, resQuery)
+	require.Contains(t, resQuery.Log, "TestABCI_GRPCQuery is not ready; please wait for first block")
+
+	header := cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	suite.baseApp.Commit()
+
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
-		Path: "/testdata.Query/SayHello",
+		Path: "/testpb.Query/SayHello",
 	}
 
-	resQuery := suite.baseApp.Query(reqQuery)
+	resQuery = suite.baseApp.Query(reqQuery)
 	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
 
 	var res testdata.SayHelloResponse
@@ -557,8 +568,8 @@ func TestABCI_EndBlock(t *testing.T) {
 	name := t.Name()
 	logger := defaultLogger()
 
-	cp := &tmproto.ConsensusParams{
-		Block: &tmproto.BlockParams{
+	cp := &cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
 			MaxGas: 5000000,
 		},
 	}
@@ -569,12 +580,12 @@ func TestABCI_EndBlock(t *testing.T) {
 		ConsensusParams: cp,
 	})
 
-	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
 		return abci.ResponseEndBlock{
 			ValidatorUpdates: []abci.ValidatorUpdate{
 				{Power: 100},
 			},
-		}
+		}, nil
 	})
 	app.Seal()
 
@@ -596,7 +607,7 @@ func TestABCI_CheckTx(t *testing.T) {
 
 	nTxs := int64(5)
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	for i := int64(0); i < nTxs; i++ {
@@ -617,7 +628,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.Equal(t, nTxs, storedCounter)
 
 	// if a block is committed, CheckTx state should be reset
-	header := tmproto.Header{Height: 1}
+	header := cmtproto.Header{Height: 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header, Hash: []byte("hash")})
 
 	require.NotNil(t, getCheckStateCtx(suite.baseApp).BlockGasMeter(), "block gas meter should have been set to checkState")
@@ -637,7 +648,7 @@ func TestABCI_DeliverTx(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	deliverKey := []byte("deliver-key")
@@ -647,7 +658,7 @@ func TestABCI_DeliverTx(t *testing.T) {
 	txPerHeight := 5
 
 	for blockN := 0; blockN < nBlocks; blockN++ {
-		header := tmproto.Header{Height: int64(blockN) + 1}
+		header := cmtproto.Header{Height: int64(blockN) + 1}
 		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 		for i := 0; i < txPerHeight; i++ {
@@ -677,7 +688,7 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	deliverKey := []byte("deliver-key")
@@ -688,7 +699,7 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 
 	// run a multi-msg tx
 	// with all msgs the same route
-	header := tmproto.Header{Height: 1}
+	header := cmtproto.Header{Height: 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	tx := newTxCounter(t, suite.txConfig, 0, 0, 1, 2)
@@ -745,14 +756,14 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
 			return
 		})
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{gasConsumed})
@@ -760,7 +771,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		count := int64(blockN + 1)
-		header := tmproto.Header{Height: count}
+		header := cmtproto.Header{Height: count}
 		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 		tx := newTxCounter(t, suite.txConfig, count, count)
@@ -812,10 +823,10 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	header := tmproto.Header{Height: 1}
+	header := cmtproto.Header{Height: 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// transaction with no messages
@@ -825,7 +836,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ := sdkerrors.ABCIInfo(err, false)
+		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrInvalidRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrInvalidRequest.ABCICode(), code, err)
 	}
@@ -853,7 +864,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 			if testCase.fail {
 				require.Error(t, err)
 
-				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				space, code, _ := errorsmod.ABCIInfo(err, false)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.ABCICode(), code, err)
 			} else {
@@ -873,7 +884,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ := sdkerrors.ABCIInfo(err, false)
+		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
@@ -886,7 +897,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ = sdkerrors.ABCIInfo(err, false)
+		space, code, _ = errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 	}
@@ -910,7 +921,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
 			// AnteHandlers must have their own defer/recover in order for the BaseApp
 			// to know how much gas was used! This is because the GasMeter is created in
@@ -919,8 +930,8 @@ func TestABCI_TxGasLimits(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+					case storetypes.ErrorOutOfGas:
+						err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -938,10 +949,10 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	header := tmproto.Header{Height: 1}
+	header := cmtproto.Header{Height: 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	testCases := []struct {
@@ -982,7 +993,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 			require.Error(t, err)
 			require.Nil(t, result)
 
-			space, code, _ := sdkerrors.ABCIInfo(err, false)
+			space, code, _ := errorsmod.ABCIInfo(err, false)
 			require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
 			require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
 		}
@@ -993,13 +1004,13 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+					case storetypes.ErrorOutOfGas:
+						err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -1017,14 +1028,14 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{
-			Block: &tmproto.BlockParams{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Block: &cmtproto.BlockParams{
 				MaxGas: 100,
 			},
 		},
 	})
 
-	header := tmproto.Header{Height: 1}
+	header := cmtproto.Header{Height: 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	testCases := []struct {
@@ -1050,7 +1061,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		tx := tc.tx
 
 		// reset the block gas
-		header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+		header := cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
 		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 		// execute the transaction multiple times
@@ -1064,7 +1075,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 				require.Error(t, err, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
 				require.Nil(t, result, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
 
-				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				space, code, _ := errorsmod.ABCIInfo(err, false)
 				require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
 				require.True(t, ctx.BlockGasMeter().IsOutOfGas())
@@ -1088,14 +1099,14 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	gasWanted := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasWanted))
 
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
+					case storetypes.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+						err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 					default:
 						panic(r)
 					}
@@ -1105,7 +1116,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 			counter, failOnAnte := parseTxMemo(t, tx)
 			newCtx.GasMeter().ConsumeGas(uint64(counter), "counter-ante")
 			if failOnAnte {
-				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+				return newCtx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
 			return
@@ -1116,14 +1127,14 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{
-			Block: &tmproto.BlockParams{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Block: &cmtproto.BlockParams{
 				MaxGas: 9,
 			},
 		},
 	})
 
-	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	tx := newTxCounter(t, suite.txConfig, 5, 0)
@@ -1157,7 +1168,7 @@ func TestABCI_Query(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	// NOTE: "/store/key1" tells us KVStore
@@ -1182,7 +1193,7 @@ func TestABCI_Query(t *testing.T) {
 	require.Equal(t, 0, len(res.Value))
 
 	// query is still empty after a DeliverTx before we commit
-	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	_, resTx, err = suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
@@ -1295,8 +1306,8 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
-			ConsensusParams: &tmproto.ConsensusParams{
-				Evidence: &tmproto.EvidenceParams{
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Evidence: &cmtproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
 			},
@@ -1320,11 +1331,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
-	})
-
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	tx := newTxCounter(t, suite.txConfig, 0, 1)
@@ -1347,6 +1354,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
+		Height:     1,
 	}
 	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
 	require.Equal(t, 2, len(resPrepareProposal.Txs))
@@ -1362,11 +1370,60 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+	})
+
 	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, 1, pool.CountTx())
 
 	require.NotEmpty(t, res.Events)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+}
+
+func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
+	someKey := []byte("some-key")
+
+	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
+			ctx.KVStore(capKey1).Set(someKey, []byte("foo"))
+			return abci.ResponseInitChain{}, nil
+		})
+	}
+
+	prepareOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+			value := ctx.KVStore(capKey1).Get(someKey)
+			// We should be able to access any state written in InitChain
+			require.Equal(t, "foo", string(value))
+			return abci.ResponsePrepareProposal{Txs: req.Txs}
+		})
+	}
+
+	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1, // this value can't be 0
+	}
+	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
+	require.Equal(t, 0, len(resPrepareProposal.Txs))
+
+	reqProposalTxBytes := [][]byte{}
+	reqProcessProposal := abci.RequestProcessProposal{
+		Txs: reqProposalTxBytes,
+	}
+
+	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+	})
 }
 
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
@@ -1378,7 +1435,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	for i := 0; i < 100; i++ {
@@ -1389,9 +1446,10 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1500,
+		Height:     1,
 	}
 	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
-	require.Equal(t, 10, len(resPrepareProposal.Txs))
+	require.Equal(t, 11, len(resPrepareProposal.Txs))
 }
 
 func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
@@ -1403,7 +1461,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	tx := newTxCounter(t, suite.txConfig, 0, 0)
@@ -1412,6 +1470,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
+		Height:     1,
 	}
 	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
@@ -1426,7 +1485,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	tx := newTxCounter(t, suite.txConfig, 0, 0)
@@ -1449,6 +1508,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 
 	req := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
+		Height:     1,
 	}
 	res := suite.baseApp.PrepareProposal(req)
 	require.Equal(t, 1, len(res.Txs))
@@ -1463,11 +1523,12 @@ func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 	suite := NewBaseAppSuite(t, prepareOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	req := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
+		Height:     1,
 	}
 
 	require.NotPanics(t, func() {
@@ -1485,7 +1546,7 @@ func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	suite := NewBaseAppSuite(t, processOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
+		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	require.NotPanics(t, func() {

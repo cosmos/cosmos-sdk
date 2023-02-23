@@ -6,7 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
@@ -16,6 +17,13 @@ import (
 )
 
 var _ v1.QueryServer = Keeper{}
+
+func (q Keeper) Constitution(c context.Context, req *v1.QueryConstitutionRequest) (*v1.QueryConstitutionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	constitution := q.GetConstitution(ctx)
+
+	return &v1.QueryConstitutionResponse{Constitution: constitution}, nil
+}
 
 // Proposal returns proposal details based on ProposalID
 func (q Keeper) Proposal(c context.Context, req *v1.QueryProposalRequest) (*v1.QueryProposalResponse, error) {

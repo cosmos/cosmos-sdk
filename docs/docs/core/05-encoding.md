@@ -105,10 +105,14 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
-* use `cosmos_proto.accepts_interface` to annote fields that accept interfaces
-* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+* use `cosmos_proto.accepts_interface` to annote `Any` fields that accept interfaces
+    * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+    * example: `(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"` (and not just `Content`)
 * annotate interface implementations with `cosmos_proto.implements_interface`
-* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+    * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+    * example: `(cosmos_proto.implements_interface) = "cosmos.authz.v1beta1.Authorization"` (and not just `Authorization`)
+
+Code generators can then match the `accepts_interface` and `implements_interface` annotations to know whether some Protobuf messages are allowed to be packed in a given `Any` field or not.
 
 ### Transaction Encoding
 
@@ -122,17 +126,17 @@ the consensus engine accepts only transactions in the form of raw bytes.
 * The `TxDecoder` object performs the decoding.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/tx_msg.go#L72-L76
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/tx_msg.go#L76-L80
 ```
 
 A standard implementation of both these objects can be found in the [`auth/tx` module](../modules/auth/tx/README.md):
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/tx/decoder.go
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/tx/decoder.go
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/tx/encoder.go
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/tx/encoder.go
 ```
 
 See [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) for details of how a transaction is encoded.
@@ -153,7 +157,7 @@ message Profile {
 In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../modules/auth/1-vesting.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `AccountI` interface?
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/types/account.go#L301-L324
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/types/account.go#L307-L330
 ```
 
 In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been decided to use [`Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto)s to encode interfaces in protobuf. An `Any` contains an arbitrary serialized message as bytes, along with a URL that acts as a globally unique identifier for and resolves to that message's type. This strategy allows us to pack arbitrary Go types inside protobuf messages. Our new `Profile` then looks like:
@@ -162,7 +166,7 @@ In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been de
 message Profile {
   // account is the account associated to a profile.
   google.protobuf.Any account = 1 [
-    (cosmos_proto.accepts_interface) = "AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
+    (cosmos_proto.accepts_interface) = "cosmos.auth.v1beta1.AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
   ];
   // bio is a short description of the account.
   string bio = 4;
@@ -192,7 +196,7 @@ bz, err := cdc.Marshal(profile)
 jsonBz, err := cdc.MarshalJSON(profile)
 ```
 
-To summarize, to encode an interface, you must 1/ pack the interface into an `Any` and 2/ marshal the `Any`. For convenience, the Cosmos SDK provides a `MarshalInterface` method to bundle these two steps. Have a look at [a real-life example in the x/auth module](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/keeper/keeper.go#L230-L233).
+To summarize, to encode an interface, you must 1/ pack the interface into an `Any` and 2/ marshal the `Any`. For convenience, the Cosmos SDK provides a `MarshalInterface` method to bundle these two steps. Have a look at [a real-life example in the x/auth module](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/keeper/keeper.go#L240-L243).
 
 The reverse operation of retrieving the concrete Go type from inside an `Any`, called "unpacking", is done with the `GetCachedValue()` on `Any`.
 
@@ -236,12 +240,12 @@ The above `Profile` example is a fictive example used for educational purposes. 
 * the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
 * the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
 * the `AuthorizationI` interface for encoding different types of x/authz authorizations,
-* the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/types/staking.pb.go#L306-L339) struct that contains information about a validator.
+* the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/types/staking.pb.go#L340-L377) struct that contains information about a validator.
 
 A real-life example of encoding the pubkey as `Any` inside the Validator struct in x/staking is shown in the following example:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/types/validator.go#L40-L61
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/types/validator.go#L41-L64
 ```
 
 #### `Any`'s TypeURL
@@ -249,13 +253,13 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/types/validator.go#L
 When packing a protobuf message inside an `Any`, the message's type is uniquely defined by its type URL, which is the message's fully qualified name prefixed by a `/` (slash) character. In some implementations of `Any`, like the gogoproto one, there's generally [a resolvable prefix, e.g. `type.googleapis.com`](https://github.com/gogo/protobuf/blob/b03c65ea87cdc3521ede29f62fe3ce239267c1bc/protobuf/google/protobuf/any.proto#L87-L91). However, in the Cosmos SDK, we made the decision to not include such prefix, to have shorter type URLs. The Cosmos SDK's own `Any` implementation can be found in `github.com/cosmos/cosmos-sdk/codec/types`.
 
 The Cosmos SDK is also switching away from gogoproto to the official `google.golang.org/protobuf` (known as the Protobuf API v2). Its default `Any` implementation also contains the [`type.googleapis.com`](https://github.com/protocolbuffers/protobuf-go/blob/v1.28.1/types/known/anypb/any.pb.go#L266) prefix. To maintain compatibility with the SDK, the following methods from `"google.golang.org/protobuf/types/known/anypb"` should not be used:
-- `anypb.New`
-- `anypb.MarshalFrom`
-- `anypb.Any#MarshalFrom`
+* `anypb.New`
+* `anypb.MarshalFrom`
+* `anypb.Any#MarshalFrom`
 
 Instead, the Cosmos SDK provides helper functions in `"github.com/cosmos/cosmos-proto/any"`, which create an official `anypb.Any` without inserting the prefixes:
-- `any.New`
-- `any.MarshalFrom`
+* `any.New`
+* `any.MarshalFrom`
 
 For example, to pack a `sdk.Msg` called `internalMsg`, use:
 
@@ -306,7 +310,7 @@ For example, in the `x/evidence` module defines an `Evidence` interface, which i
 
 message MsgSubmitEvidence {
   string              submitter = 1;
-  google.protobuf.Any evidence  = 2 [(cosmos_proto.accepts_interface) = "Evidence"];
+  google.protobuf.Any evidence  = 2 [(cosmos_proto.accepts_interface) = "cosmos.evidence.v1beta1.Evidence"];
 }
 ```
 
@@ -315,7 +319,7 @@ The Cosmos SDK `codec.Codec` interface provides support methods `MarshalInterfac
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/codec/types/interface_registry.go#L25-L55
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/codec/types/interface_registry.go#L24-L57
 ```
 
 In addition, an `UnpackInterfaces` phase should be introduced to deserialization to unpack interfaces before they're needed. Protobuf types that contain a protobuf `Any` either directly or via one of their members should implement the `UnpackInterfacesMessage` interface:
@@ -334,11 +338,11 @@ For that reason a proto Message's `String()` must not be customized, and the `go
 A correct YAML output can be obtained through ProtoJSON, using the `JSONToYAML` function:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/codec/yaml.go#L8-L20
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/codec/yaml.go#L8-L20
 ```
 
 For example:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/types/account.go#L139-L151
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/types/account.go#L141-L151
 ```

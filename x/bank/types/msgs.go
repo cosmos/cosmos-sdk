@@ -1,22 +1,21 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
-
-// bank message types
-const (
-	TypeMsgSend           = "send"
-	TypeMsgMultiSend      = "multisend"
-	TypeMsgSetSendEnabled = "set_send_enabled"
-	TypeMsgUpdateParams   = "update_params"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
 	_ sdk.Msg = &MsgSend{}
 	_ sdk.Msg = &MsgMultiSend{}
 	_ sdk.Msg = &MsgUpdateParams{}
+
+	_ legacytx.LegacyMsg = &MsgSend{}
+	_ legacytx.LegacyMsg = &MsgMultiSend{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 )
 
 // NewMsgSend - construct a msg to send coins from one account to another.
@@ -25,12 +24,6 @@ var (
 func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
 	return &MsgSend{FromAddress: fromAddr.String(), ToAddress: toAddr.String(), Amount: amount}
 }
-
-// Route Implements Msg.
-func (msg MsgSend) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
@@ -43,11 +36,11 @@ func (msg MsgSend) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	return nil
@@ -68,12 +61,6 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
 	return &MsgMultiSend{Inputs: in, Outputs: out}
 }
-
-// Route Implements Msg
-func (msg MsgMultiSend) Route() string { return RouterKey }
-
-// Type Implements Msg
-func (msg MsgMultiSend) Type() string { return TypeMsgMultiSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMultiSend) ValidateBasic() error {
@@ -118,11 +105,11 @@ func (in Input) ValidateBasic() error {
 	}
 
 	if !in.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
 
 	if !in.Coins.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
 
 	return nil
@@ -145,11 +132,11 @@ func (out Output) ValidateBasic() error {
 	}
 
 	if !out.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
 	}
 
 	if !out.Coins.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
 	}
 
 	return nil
@@ -186,7 +173,7 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 	}
 
 	// make sure inputs and outputs match
-	if !totalIn.IsEqual(totalOut) {
+	if !totalIn.Equal(totalOut) {
 		return ErrInputOutputMismatch
 	}
 

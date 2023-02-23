@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -50,7 +50,7 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -70,21 +70,21 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simulation.WeightMsgCreateGroup, group.MsgCreateGroup{}.Route(), simulation.TypeMsgCreateGroup},
-		{simulation.WeightMsgCreateGroupPolicy, group.MsgCreateGroupPolicy{}.Route(), simulation.TypeMsgCreateGroupPolicy},
-		{simulation.WeightMsgCreateGroupWithPolicy, group.MsgCreateGroupWithPolicy{}.Route(), simulation.TypeMsgCreateGroupWithPolicy},
-		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
-		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
-		{simulation.WeightMsgWithdrawProposal, group.MsgWithdrawProposal{}.Route(), simulation.TypeMsgWithdrawProposal},
-		{simulation.WeightMsgVote, group.MsgVote{}.Route(), simulation.TypeMsgVote},
-		{simulation.WeightMsgExec, group.MsgExec{}.Route(), simulation.TypeMsgExec},
-		{simulation.WeightMsgUpdateGroupMetadata, group.MsgUpdateGroupMetadata{}.Route(), simulation.TypeMsgUpdateGroupMetadata},
-		{simulation.WeightMsgUpdateGroupAdmin, group.MsgUpdateGroupAdmin{}.Route(), simulation.TypeMsgUpdateGroupAdmin},
-		{simulation.WeightMsgUpdateGroupMembers, group.MsgUpdateGroupMembers{}.Route(), simulation.TypeMsgUpdateGroupMembers},
-		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.MsgUpdateGroupPolicyAdmin{}.Route(), simulation.TypeMsgUpdateGroupPolicyAdmin},
-		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.MsgUpdateGroupPolicyDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
-		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.MsgUpdateGroupPolicyMetadata{}.Route(), simulation.TypeMsgUpdateGroupPolicyMetadata},
-		{simulation.WeightMsgLeaveGroup, group.MsgLeaveGroup{}.Route(), simulation.TypeMsgLeaveGroup},
+		{simulation.WeightMsgCreateGroup, group.ModuleName, simulation.TypeMsgCreateGroup},
+		{simulation.WeightMsgCreateGroupPolicy, group.ModuleName, simulation.TypeMsgCreateGroupPolicy},
+		{simulation.WeightMsgCreateGroupWithPolicy, group.ModuleName, simulation.TypeMsgCreateGroupWithPolicy},
+		{simulation.WeightMsgSubmitProposal, group.ModuleName, simulation.TypeMsgSubmitProposal},
+		{simulation.WeightMsgSubmitProposal, group.ModuleName, simulation.TypeMsgSubmitProposal},
+		{simulation.WeightMsgWithdrawProposal, group.ModuleName, simulation.TypeMsgWithdrawProposal},
+		{simulation.WeightMsgVote, group.ModuleName, simulation.TypeMsgVote},
+		{simulation.WeightMsgExec, group.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightMsgUpdateGroupMetadata, group.ModuleName, simulation.TypeMsgUpdateGroupMetadata},
+		{simulation.WeightMsgUpdateGroupAdmin, group.ModuleName, simulation.TypeMsgUpdateGroupAdmin},
+		{simulation.WeightMsgUpdateGroupMembers, group.ModuleName, simulation.TypeMsgUpdateGroupMembers},
+		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.ModuleName, simulation.TypeMsgUpdateGroupPolicyAdmin},
+		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.ModuleName, simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
+		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.ModuleName, simulation.TypeMsgUpdateGroupPolicyMetadata},
+		{simulation.WeightMsgLeaveGroup, group.ModuleName, simulation.TypeMsgLeaveGroup},
 	}
 
 	for i, w := range weightedOps {
@@ -124,7 +124,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroup() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -153,7 +153,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupWithPolicy() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -197,7 +197,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -250,7 +250,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -309,14 +309,14 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 			ToAddress:   addr,
 			Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
 		},
-	}, "", 0)
+	}, "", 0, "MsgSend", "this is a test proposal")
 	suite.Require().NoError(err)
 	_, err = suite.groupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -376,14 +376,14 @@ func (suite *SimTestSuite) TestSimulateVote() {
 			ToAddress:   addr,
 			Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
 		},
-	}, "", 0)
+	}, "", 0, "MsgSend", "this is a test proposal")
 	suite.Require().NoError(err)
 	_, err = suite.groupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -442,7 +442,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 			ToAddress:   addr,
 			Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
 		},
-	}, "", 0)
+	}, "", 0, "MsgSend", "this is a test proposal")
 	suite.Require().NoError(err)
 	proposalRes, err := suite.groupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
@@ -458,7 +458,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -500,7 +500,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -542,7 +542,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -584,7 +584,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -637,7 +637,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -690,7 +690,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -743,7 +743,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -809,7 +809,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},

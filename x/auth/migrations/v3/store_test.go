@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -39,8 +41,8 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v1.ModuleName)
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 
@@ -60,7 +62,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	randAccNumber := uint64(rand.Intn(100000-10000) + 10000)
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), randAccNumber, 0)
 
-	ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	ctx = app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
 
 	// migrator
 	m := keeper.NewMigrator(accountKeeper, app.GRPCQueryRouter(), legacySubspace)

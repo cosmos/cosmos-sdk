@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	tmrand "github.com/tendermint/tendermint/libs/rand"
+	"cosmossdk.io/math/unsafe"
 )
 
 func randCompactBitArray(bits int) (*CompactBitArray, []byte) {
 	numBytes := (bits + 7) / 8
-	src := tmrand.Bytes((bits + 7) / 8)
+	src := unsafe.Bytes((bits + 7) / 8)
 	bA := NewCompactBitArray(bits)
 
 	for i := 0; i < numBytes-1; i++ {

@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -61,7 +61,7 @@ func TestOutOfOrder(t *testing.T) {
 
 func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -157,8 +157,8 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{0, 1, 2, 3},
 		},
 		{
-			// if all txs have the same priority they will be ordered lexically sender address, and nonce with the
-			// sender.
+			// If all txs have the same priority they will be ordered lexically sender
+			// address, and nonce with the sender.
 			txs: []txSpec{
 				{p: 10, n: 7, a: sc},
 				{p: 10, n: 8, a: sc},
@@ -170,12 +170,12 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 				{p: 10, n: 5, a: sb},
 				{p: 10, n: 6, a: sb},
 			},
-			order: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+			order: []int{3, 4, 5, 6, 7, 8, 0, 1, 2},
 		},
 		/*
 			The next 4 tests are different permutations of the same set:
 
-			  		{p: 5, n: 1, a: sa},
+			  	{p: 5, n: 1, a: sa},
 					{p: 10, n: 2, a: sa},
 					{p: 20, n: 2, a: sb},
 					{p: 5, n: 1, a: sb},
@@ -240,11 +240,12 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			}
 
 			orderedTxs := fetchTxs(pool.Select(ctx, nil), 1000)
+
 			var txOrder []int
 			for _, tx := range orderedTxs {
 				txOrder = append(txOrder, tx.(testTx).id)
-				fmt.Println(tx)
 			}
+
 			require.Equal(t, tt.order, txOrder)
 			require.NoError(t, validateOrder(orderedTxs))
 
@@ -258,7 +259,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 }
 
 func (s *MempoolTestSuite) TestPriorityTies() {
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -375,7 +376,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 		s.iterations++
 	}))
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
 
 	t.Logf("running with seed: %d", seed)
@@ -411,7 +412,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	s.mempool = mempool.NewPriorityMempool()
 
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 
 	seed := time.Now().UnixNano()
 	// interesting failing seeds:
@@ -582,9 +583,39 @@ func TestTxOrderN(t *testing.T) {
 	}
 }
 
-func TestTxLimit(t *testing.T) {
+func TestPriorityNonceMempool_NextSenderTx(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	accA := accounts[0].Address
+	accB := accounts[1].Address
+
+	mp := mempool.NewPriorityMempool()
+
+	txs := []testTx{
+		{priority: 20, nonce: 1, address: accA},
+		{priority: 15, nonce: 2, address: accA},
+		{priority: 66, nonce: 3, address: accA},
+		{priority: 20, nonce: 4, address: accA},
+		{priority: 88, nonce: 5, address: accA},
+	}
+
+	for i, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		require.NoError(t, mp.Insert(c, tx))
+		require.Equal(t, i+1, mp.CountTx())
+	}
+
+	tx := mp.NextSenderTx(accB.String())
+	require.Nil(t, tx)
+
+	tx = mp.NextSenderTx(accA.String())
+	require.NotNil(t, tx)
+	require.Equal(t, txs[0], tx)
+}
+
+func TestNextSenderTx_TxLimit(t *testing.T) {
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	sa := accounts[0].Address
 	sb := accounts[1].Address
 
@@ -637,4 +668,56 @@ func TestTxLimit(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 0, mp.CountTx())
 	}
+}
+
+func TestNextSenderTx_TxReplacement(t *testing.T) {
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	sa := accounts[0].Address
+
+	txs := []testTx{
+		{priority: 20, nonce: 1, address: sa},
+		{priority: 15, nonce: 1, address: sa}, // priority is less than the first Tx, failed tx replacement when the option enabled.
+		{priority: 23, nonce: 1, address: sa}, // priority is not 20% more than the first Tx, failed tx replacement when the option enabled.
+		{priority: 24, nonce: 1, address: sa}, // priority is 20% more than the first Tx, the first tx will be replaced.
+	}
+
+	// test Priority with default mempool
+	mp := mempool.NewPriorityMempool()
+	for _, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		require.NoError(t, mp.Insert(c, tx))
+		require.Equal(t, 1, mp.CountTx())
+
+		iter := mp.Select(ctx, nil)
+		require.Equal(t, tx, iter.Tx())
+	}
+
+	// test Priority with TxReplacement
+	// we set a TestTxReplacement rule which the priority of the new Tx must be 20% more than the priority of the old Tx
+	// otherwise, the Insert will return error
+	feeBump := 20
+	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithTxReplacement(func(op, np int64, oTx, nTx sdk.Tx) bool {
+		threshold := int64(100 + feeBump)
+		return np >= op*threshold/100
+	}))
+
+	c := ctx.WithPriority(txs[0].priority)
+	require.NoError(t, mp.Insert(c, txs[0]))
+	require.Equal(t, 1, mp.CountTx())
+
+	c = ctx.WithPriority(txs[1].priority)
+	require.Error(t, mp.Insert(c, txs[1]))
+	require.Equal(t, 1, mp.CountTx())
+
+	c = ctx.WithPriority(txs[2].priority)
+	require.Error(t, mp.Insert(c, txs[2]))
+	require.Equal(t, 1, mp.CountTx())
+
+	c = ctx.WithPriority(txs[3].priority)
+	require.NoError(t, mp.Insert(c, txs[3]))
+	require.Equal(t, 1, mp.CountTx())
+
+	iter := mp.Select(ctx, nil)
+	require.Equal(t, txs[3], iter.Tx())
 }

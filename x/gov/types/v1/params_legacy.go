@@ -16,7 +16,7 @@ var (
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
 )
 
-// ParamKeyTable - Key declaration for parameters
+// Deprecated: ParamKeyTable - Key declaration for parameters
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable(
 		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),

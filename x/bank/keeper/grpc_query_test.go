@@ -25,7 +25,11 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	_, err = queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{Address: addr.String()})
 	suite.Require().Error(err)
 
-	req := types.NewQueryBalanceRequest(addr, fooDenom)
+	req := types.NewQueryBalanceRequest(addr, "0000")
+	_, err = queryClient.Balance(gocontext.Background(), req)
+	suite.Require().Error(err)
+
+	req = types.NewQueryBalanceRequest(addr, fooDenom)
 	res, err := queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -53,7 +57,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 		Limit:      1,
 		CountTotal: false,
 	}
-	req := types.NewQueryAllBalancesRequest(addr, pageReq)
+	req := types.NewQueryAllBalancesRequest(addr, pageReq, false)
 	res, err := queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -61,11 +65,14 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 
 	fooCoins := newFooCoin(50)
 	barCoins := newBarCoin(30)
+	ibcCoins := newIbcCoin(20)
 
-	origCoins := sdk.NewCoins(fooCoins, barCoins)
+	origCoins := sdk.NewCoins(fooCoins, barCoins, ibcCoins)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
+
+	addIBCMetadata(ctx, suite.bankKeeper)
 
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -79,10 +86,37 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 		Limit:      1,
 		CountTotal: true,
 	}
-	req = types.NewQueryAllBalancesRequest(addr, pageReq)
+	req = types.NewQueryAllBalancesRequest(addr, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
+	suite.NotNil(res.Pagination.NextKey)
+
+	pageThree := res.Pagination.NextKey
+
+	suite.T().Log("query third page with nextkey")
+	pageReq = &query.PageRequest{
+		Key:        pageThree,
+		Limit:      1,
+		CountTotal: true,
+	}
+	req = types.NewQueryAllBalancesRequest(addr, pageReq, false)
+	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(res.Balances[0].Denom, ibcCoins.Denom)
+
+	suite.T().Log("query third page with nextkey and resolve ibc denom")
+	pageReq = &query.PageRequest{
+		Key:        pageThree,
+		Limit:      1,
+		CountTotal: true,
+	}
+	req = types.NewQueryAllBalancesRequest(addr, pageReq, true)
+	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(res.Balances[0].Denom, ibcPath+"/"+ibcBaseDenom)
 	suite.Nil(res.Pagination.NextKey)
 }
 
@@ -135,6 +169,58 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	suite.Nil(res.Pagination.NextKey)
 	suite.EqualValues(30, res.Balances[0].Amount.Int64())
 	suite.EqualValues(25, res.Balances[1].Amount.Int64())
+}
+
+func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
+	ctx := suite.ctx
+	_, _, addr := testdata.KeyTestPubAddr()
+	ctx = ctx.WithBlockTime(time.Now())
+	queryClient := suite.mockQueryClient(ctx)
+
+	_, err := queryClient.SpendableBalanceByDenom(ctx, &types.QuerySpendableBalanceByDenomRequest{})
+	suite.Require().Error(err)
+
+	req := types.NewQuerySpendableBalanceByDenomRequest(addr, fooDenom)
+	acc := authtypes.NewBaseAccountWithAddress(addr)
+
+	suite.mockSpendableCoins(ctx, acc)
+	res, err := queryClient.SpendableBalanceByDenom(ctx, req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.True(res.Balance.IsZero())
+
+	fooCoins := newFooCoin(100)
+	barCoins := newBarCoin(30)
+
+	origCoins := sdk.NewCoins(fooCoins, barCoins)
+	vacc := vestingtypes.NewContinuousVestingAccount(
+		acc,
+		sdk.NewCoins(fooCoins),
+		ctx.BlockTime().Unix(),
+		ctx.BlockTime().Add(time.Hour).Unix(),
+	)
+
+	suite.mockFundAccount(addr)
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr, origCoins))
+
+	// move time forward for half of the tokens to vest
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
+	queryClient = suite.mockQueryClient(ctx)
+
+	// check fooCoins first, it has some vested and some vesting
+	suite.mockSpendableCoins(ctx, vacc)
+	res, err = queryClient.SpendableBalanceByDenom(ctx, req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.EqualValues(50, res.Balance.Amount.Int64())
+
+	// check barCoins, all of it is spendable
+	req.Denom = barDenom
+	suite.mockSpendableCoins(ctx, vacc)
+	res, err = queryClient.SpendableBalanceByDenom(ctx, req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.EqualValues(30, res.Balance.Amount.Int64())
 }
 
 func (suite *KeeperTestSuite) TestQueryTotalSupply() {

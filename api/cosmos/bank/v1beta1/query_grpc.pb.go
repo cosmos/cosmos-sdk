@@ -29,7 +29,7 @@ type QueryClient interface {
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
 	AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
-	// SpendableBalances queries the spenable balance of all coins for a single
+	// SpendableBalances queries the spendable balance of all coins for a single
 	// account.
 	//
 	// When called from another module, this query might consume a high amount of
@@ -37,6 +37,14 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error)
+	// SpendableBalanceByDenom queries the spendable balance of a single denom for
+	// a single account.
+	//
+	// When called from another module, this query might consume a high amount of
+	// gas if the pagination field is incorrectly set.
+	//
+	// Since: cosmos-sdk 0.47
+	SpendableBalanceByDenom(ctx context.Context, in *QuerySpendableBalanceByDenomRequest, opts ...grpc.CallOption) (*QuerySpendableBalanceByDenomResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	//
 	// When called from another module, this query might consume a high amount of
@@ -101,6 +109,15 @@ func (c *queryClient) AllBalances(ctx context.Context, in *QueryAllBalancesReque
 func (c *queryClient) SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error) {
 	out := new(QuerySpendableBalancesResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/SpendableBalances", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SpendableBalanceByDenom(ctx context.Context, in *QuerySpendableBalanceByDenomRequest, opts ...grpc.CallOption) (*QuerySpendableBalanceByDenomResponse, error) {
+	out := new(QuerySpendableBalanceByDenomResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/SpendableBalanceByDenom", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +198,7 @@ type QueryServer interface {
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
 	AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
-	// SpendableBalances queries the spenable balance of all coins for a single
+	// SpendableBalances queries the spendable balance of all coins for a single
 	// account.
 	//
 	// When called from another module, this query might consume a high amount of
@@ -189,6 +206,14 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error)
+	// SpendableBalanceByDenom queries the spendable balance of a single denom for
+	// a single account.
+	//
+	// When called from another module, this query might consume a high amount of
+	// gas if the pagination field is incorrectly set.
+	//
+	// Since: cosmos-sdk 0.47
+	SpendableBalanceByDenom(context.Context, *QuerySpendableBalanceByDenomRequest) (*QuerySpendableBalanceByDenomResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	//
 	// When called from another module, this query might consume a high amount of
@@ -237,6 +262,9 @@ func (UnimplementedQueryServer) AllBalances(context.Context, *QueryAllBalancesRe
 }
 func (UnimplementedQueryServer) SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SpendableBalances not implemented")
+}
+func (UnimplementedQueryServer) SpendableBalanceByDenom(context.Context, *QuerySpendableBalanceByDenomRequest) (*QuerySpendableBalanceByDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpendableBalanceByDenom not implemented")
 }
 func (UnimplementedQueryServer) TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TotalSupply not implemented")
@@ -322,6 +350,24 @@ func _Query_SpendableBalances_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).SpendableBalances(ctx, req.(*QuerySpendableBalancesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SpendableBalanceByDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySpendableBalanceByDenomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SpendableBalanceByDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Query/SpendableBalanceByDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SpendableBalanceByDenom(ctx, req.(*QuerySpendableBalanceByDenomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -470,6 +516,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SpendableBalances",
 			Handler:    _Query_SpendableBalances_Handler,
+		},
+		{
+			MethodName: "SpendableBalanceByDenom",
+			Handler:    _Query_SpendableBalanceByDenom_Handler,
 		},
 		{
 			MethodName: "TotalSupply",

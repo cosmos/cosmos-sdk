@@ -152,7 +152,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	// defensive edge case may happen on the very final digits
 	// of the decCoins due to operation order of the distribution mechanism.
 	rewards := rewardsRaw.Intersect(outstanding)
-	if !rewards.IsEqual(rewardsRaw) {
+	if !rewards.Equal(rewardsRaw) {
 		logger := k.Logger(ctx)
 		logger.Info(
 			"rounding error withdrawing rewards from validator",

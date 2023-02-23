@@ -7,6 +7,8 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -193,7 +195,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.ValidatorsKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -209,7 +211,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint32) (validators [
 	store := ctx.KVStore(k.storeKey)
 	validators = make([]types.Validator, maxRetrieve)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.ValidatorsKey)
 	defer iterator.Close()
 
 	i := 0
@@ -245,9 +247,9 @@ func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 }
 
 // returns an iterator for the current validator power store
-func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	return storetypes.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 }
 
 // Last Validator Index
@@ -282,9 +284,9 @@ func (k Keeper) DeleteLastValidatorPower(ctx sdk.Context, operator sdk.ValAddres
 }
 
 // returns an iterator for the consensus validators in the last block
-func (k Keeper) LastValidatorsIterator(ctx sdk.Context) (iterator sdk.Iterator) {
+func (k Keeper) LastValidatorsIterator(ctx sdk.Context) (iterator storetypes.Iterator) {
 	store := ctx.KVStore(k.storeKey)
-	iterator = sdk.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
+	iterator = storetypes.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
 
 	return iterator
 }
@@ -293,7 +295,7 @@ func (k Keeper) LastValidatorsIterator(ctx sdk.Context) (iterator sdk.Iterator) 
 func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operator sdk.ValAddress, power int64) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iter := sdk.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
+	iter := storetypes.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
@@ -316,7 +318,7 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 	maxValidators := k.MaxValidators(ctx)
 	validators = make([]types.Validator, maxValidators)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
 	defer iterator.Close()
 
 	i := 0
@@ -408,9 +410,9 @@ func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 
 // ValidatorQueueIterator returns an interator ranging over validators that are
 // unbonding whose unbonding completion occurs at the given height and time.
-func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHeight int64) sdk.Iterator {
+func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHeight int64) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(types.ValidatorQueueKey, sdk.InclusiveEndBytes(types.GetValidatorQueueKey(endTime, endHeight)))
+	return store.Iterator(types.ValidatorQueueKey, storetypes.InclusiveEndBytes(types.GetValidatorQueueKey(endTime, endHeight)))
 }
 
 // UnbondAllMatureValidators unbonds all the mature unbonding validators that

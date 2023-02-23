@@ -11,15 +11,15 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 
-	sdkerrors "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	"cosmossdk.io/store/types"
 )
 
 func checksums(slice [][]byte) [][]byte {
@@ -130,7 +130,7 @@ func (m *mockSnapshotter) Restore(
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
+			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
 		}
 		payload := item.GetExtensionPayload()
 		if payload == nil {

@@ -576,534 +576,6 @@ func (x *fastReflection_MsgAuthorizeCircuitBreaker) ProtoMethods() *protoiface.M
 	}
 }
 
-var _ protoreflect.List = (*_CircuitBreakerPermissions_2_list)(nil)
-
-type _CircuitBreakerPermissions_2_list struct {
-	list *[]string
-}
-
-func (x *_CircuitBreakerPermissions_2_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_CircuitBreakerPermissions_2_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
-}
-
-func (x *_CircuitBreakerPermissions_2_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_CircuitBreakerPermissions_2_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_CircuitBreakerPermissions_2_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message CircuitBreakerPermissions at list field LimitTypeUrls as it is not of Message kind"))
-}
-
-func (x *_CircuitBreakerPermissions_2_list) Truncate(n int) {
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_CircuitBreakerPermissions_2_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
-}
-
-func (x *_CircuitBreakerPermissions_2_list) IsValid() bool {
-	return x.list != nil
-}
-
-var (
-	md_CircuitBreakerPermissions                 protoreflect.MessageDescriptor
-	fd_CircuitBreakerPermissions_level           protoreflect.FieldDescriptor
-	fd_CircuitBreakerPermissions_limit_type_urls protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_cosmos_circuit_v1_tx_proto_init()
-	md_CircuitBreakerPermissions = File_cosmos_circuit_v1_tx_proto.Messages().ByName("CircuitBreakerPermissions")
-	fd_CircuitBreakerPermissions_level = md_CircuitBreakerPermissions.Fields().ByName("level")
-	fd_CircuitBreakerPermissions_limit_type_urls = md_CircuitBreakerPermissions.Fields().ByName("limit_type_urls")
-}
-
-var _ protoreflect.Message = (*fastReflection_CircuitBreakerPermissions)(nil)
-
-type fastReflection_CircuitBreakerPermissions CircuitBreakerPermissions
-
-func (x *CircuitBreakerPermissions) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_CircuitBreakerPermissions)(x)
-}
-
-func (x *CircuitBreakerPermissions) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_circuit_v1_tx_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_CircuitBreakerPermissions_messageType fastReflection_CircuitBreakerPermissions_messageType
-var _ protoreflect.MessageType = fastReflection_CircuitBreakerPermissions_messageType{}
-
-type fastReflection_CircuitBreakerPermissions_messageType struct{}
-
-func (x fastReflection_CircuitBreakerPermissions_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_CircuitBreakerPermissions)(nil)
-}
-func (x fastReflection_CircuitBreakerPermissions_messageType) New() protoreflect.Message {
-	return new(fastReflection_CircuitBreakerPermissions)
-}
-func (x fastReflection_CircuitBreakerPermissions_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_CircuitBreakerPermissions
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_CircuitBreakerPermissions) Descriptor() protoreflect.MessageDescriptor {
-	return md_CircuitBreakerPermissions
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_CircuitBreakerPermissions) Type() protoreflect.MessageType {
-	return _fastReflection_CircuitBreakerPermissions_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_CircuitBreakerPermissions) New() protoreflect.Message {
-	return new(fastReflection_CircuitBreakerPermissions)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_CircuitBreakerPermissions) Interface() protoreflect.ProtoMessage {
-	return (*CircuitBreakerPermissions)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_CircuitBreakerPermissions) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Level != 0 {
-		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Level))
-		if !f(fd_CircuitBreakerPermissions_level, value) {
-			return
-		}
-	}
-	if len(x.LimitTypeUrls) != 0 {
-		value := protoreflect.ValueOfList(&_CircuitBreakerPermissions_2_list{list: &x.LimitTypeUrls})
-		if !f(fd_CircuitBreakerPermissions_limit_type_urls, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_CircuitBreakerPermissions) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
-		return x.Level != 0
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_type_urls":
-		return len(x.LimitTypeUrls) != 0
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
-		}
-		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CircuitBreakerPermissions) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
-		x.Level = 0
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_type_urls":
-		x.LimitTypeUrls = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
-		}
-		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_CircuitBreakerPermissions) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
-		value := x.Level
-		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_type_urls":
-		if len(x.LimitTypeUrls) == 0 {
-			return protoreflect.ValueOfList(&_CircuitBreakerPermissions_2_list{})
-		}
-		listValue := &_CircuitBreakerPermissions_2_list{list: &x.LimitTypeUrls}
-		return protoreflect.ValueOfList(listValue)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
-		}
-		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CircuitBreakerPermissions) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
-		x.Level = (CircuitBreakerPermissions_Level)(value.Enum())
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_type_urls":
-		lv := value.List()
-		clv := lv.(*_CircuitBreakerPermissions_2_list)
-		x.LimitTypeUrls = *clv.list
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
-		}
-		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CircuitBreakerPermissions) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_type_urls":
-		if x.LimitTypeUrls == nil {
-			x.LimitTypeUrls = []string{}
-		}
-		value := &_CircuitBreakerPermissions_2_list{list: &x.LimitTypeUrls}
-		return protoreflect.ValueOfList(value)
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
-		panic(fmt.Errorf("field level of message cosmos.circuit.v1.CircuitBreakerPermissions is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
-		}
-		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_CircuitBreakerPermissions) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
-		return protoreflect.ValueOfEnum(0)
-	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_type_urls":
-		list := []string{}
-		return protoreflect.ValueOfList(&_CircuitBreakerPermissions_2_list{list: &list})
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
-		}
-		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_CircuitBreakerPermissions) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.circuit.v1.CircuitBreakerPermissions", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_CircuitBreakerPermissions) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CircuitBreakerPermissions) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_CircuitBreakerPermissions) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_CircuitBreakerPermissions) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*CircuitBreakerPermissions)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.Level != 0 {
-			n += 1 + runtime.Sov(uint64(x.Level))
-		}
-		if len(x.LimitTypeUrls) > 0 {
-			for _, s := range x.LimitTypeUrls {
-				l = len(s)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*CircuitBreakerPermissions)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.LimitTypeUrls) > 0 {
-			for iNdEx := len(x.LimitTypeUrls) - 1; iNdEx >= 0; iNdEx-- {
-				i -= len(x.LimitTypeUrls[iNdEx])
-				copy(dAtA[i:], x.LimitTypeUrls[iNdEx])
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.LimitTypeUrls[iNdEx])))
-				i--
-				dAtA[i] = 0x12
-			}
-		}
-		if x.Level != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Level))
-			i--
-			dAtA[i] = 0x8
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*CircuitBreakerPermissions)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CircuitBreakerPermissions: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CircuitBreakerPermissions: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Level", wireType)
-				}
-				x.Level = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.Level |= CircuitBreakerPermissions_Level(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LimitTypeUrls", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.LimitTypeUrls = append(x.LimitTypeUrls, string(dAtA[iNdEx:postIndex]))
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
 var (
 	md_MsgAuthorizeCircuitBreakerResponse protoreflect.MessageDescriptor
 )
@@ -1122,7 +594,7 @@ func (x *MsgAuthorizeCircuitBreakerResponse) ProtoReflect() protoreflect.Message
 }
 
 func (x *MsgAuthorizeCircuitBreakerResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_circuit_v1_tx_proto_msgTypes[2]
+	mi := &file_cosmos_circuit_v1_tx_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1425,6 +897,534 @@ func (x *fastReflection_MsgAuthorizeCircuitBreakerResponse) ProtoMethods() *prot
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAuthorizeCircuitBreakerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_CircuitBreakerPermissions_2_list)(nil)
+
+type _CircuitBreakerPermissions_2_list struct {
+	list *[]string
+}
+
+func (x *_CircuitBreakerPermissions_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_CircuitBreakerPermissions_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_CircuitBreakerPermissions_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_CircuitBreakerPermissions_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_CircuitBreakerPermissions_2_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message CircuitBreakerPermissions at list field LimitMsgTypes as it is not of Message kind"))
+}
+
+func (x *_CircuitBreakerPermissions_2_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_CircuitBreakerPermissions_2_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_CircuitBreakerPermissions_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_CircuitBreakerPermissions                 protoreflect.MessageDescriptor
+	fd_CircuitBreakerPermissions_level           protoreflect.FieldDescriptor
+	fd_CircuitBreakerPermissions_limit_msg_types protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_circuit_v1_tx_proto_init()
+	md_CircuitBreakerPermissions = File_cosmos_circuit_v1_tx_proto.Messages().ByName("CircuitBreakerPermissions")
+	fd_CircuitBreakerPermissions_level = md_CircuitBreakerPermissions.Fields().ByName("level")
+	fd_CircuitBreakerPermissions_limit_msg_types = md_CircuitBreakerPermissions.Fields().ByName("limit_msg_types")
+}
+
+var _ protoreflect.Message = (*fastReflection_CircuitBreakerPermissions)(nil)
+
+type fastReflection_CircuitBreakerPermissions CircuitBreakerPermissions
+
+func (x *CircuitBreakerPermissions) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_CircuitBreakerPermissions)(x)
+}
+
+func (x *CircuitBreakerPermissions) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_circuit_v1_tx_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_CircuitBreakerPermissions_messageType fastReflection_CircuitBreakerPermissions_messageType
+var _ protoreflect.MessageType = fastReflection_CircuitBreakerPermissions_messageType{}
+
+type fastReflection_CircuitBreakerPermissions_messageType struct{}
+
+func (x fastReflection_CircuitBreakerPermissions_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_CircuitBreakerPermissions)(nil)
+}
+func (x fastReflection_CircuitBreakerPermissions_messageType) New() protoreflect.Message {
+	return new(fastReflection_CircuitBreakerPermissions)
+}
+func (x fastReflection_CircuitBreakerPermissions_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_CircuitBreakerPermissions
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_CircuitBreakerPermissions) Descriptor() protoreflect.MessageDescriptor {
+	return md_CircuitBreakerPermissions
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_CircuitBreakerPermissions) Type() protoreflect.MessageType {
+	return _fastReflection_CircuitBreakerPermissions_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_CircuitBreakerPermissions) New() protoreflect.Message {
+	return new(fastReflection_CircuitBreakerPermissions)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_CircuitBreakerPermissions) Interface() protoreflect.ProtoMessage {
+	return (*CircuitBreakerPermissions)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_CircuitBreakerPermissions) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Level != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Level))
+		if !f(fd_CircuitBreakerPermissions_level, value) {
+			return
+		}
+	}
+	if len(x.LimitMsgTypes) != 0 {
+		value := protoreflect.ValueOfList(&_CircuitBreakerPermissions_2_list{list: &x.LimitMsgTypes})
+		if !f(fd_CircuitBreakerPermissions_limit_msg_types, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_CircuitBreakerPermissions) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
+		return x.Level != 0
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_msg_types":
+		return len(x.LimitMsgTypes) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
+		}
+		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_CircuitBreakerPermissions) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
+		x.Level = 0
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_msg_types":
+		x.LimitMsgTypes = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
+		}
+		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_CircuitBreakerPermissions) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
+		value := x.Level
+		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_msg_types":
+		if len(x.LimitMsgTypes) == 0 {
+			return protoreflect.ValueOfList(&_CircuitBreakerPermissions_2_list{})
+		}
+		listValue := &_CircuitBreakerPermissions_2_list{list: &x.LimitMsgTypes}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
+		}
+		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_CircuitBreakerPermissions) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
+		x.Level = (CircuitBreakerPermissions_Level)(value.Enum())
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_msg_types":
+		lv := value.List()
+		clv := lv.(*_CircuitBreakerPermissions_2_list)
+		x.LimitMsgTypes = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
+		}
+		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_CircuitBreakerPermissions) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_msg_types":
+		if x.LimitMsgTypes == nil {
+			x.LimitMsgTypes = []string{}
+		}
+		value := &_CircuitBreakerPermissions_2_list{list: &x.LimitMsgTypes}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
+		panic(fmt.Errorf("field level of message cosmos.circuit.v1.CircuitBreakerPermissions is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
+		}
+		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_CircuitBreakerPermissions) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.level":
+		return protoreflect.ValueOfEnum(0)
+	case "cosmos.circuit.v1.CircuitBreakerPermissions.limit_msg_types":
+		list := []string{}
+		return protoreflect.ValueOfList(&_CircuitBreakerPermissions_2_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.v1.CircuitBreakerPermissions"))
+		}
+		panic(fmt.Errorf("message cosmos.circuit.v1.CircuitBreakerPermissions does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_CircuitBreakerPermissions) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.circuit.v1.CircuitBreakerPermissions", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_CircuitBreakerPermissions) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_CircuitBreakerPermissions) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_CircuitBreakerPermissions) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_CircuitBreakerPermissions) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*CircuitBreakerPermissions)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Level != 0 {
+			n += 1 + runtime.Sov(uint64(x.Level))
+		}
+		if len(x.LimitMsgTypes) > 0 {
+			for _, s := range x.LimitMsgTypes {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*CircuitBreakerPermissions)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.LimitMsgTypes) > 0 {
+			for iNdEx := len(x.LimitMsgTypes) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.LimitMsgTypes[iNdEx])
+				copy(dAtA[i:], x.LimitMsgTypes[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.LimitMsgTypes[iNdEx])))
+				i--
+				dAtA[i] = 0x12
+			}
+		}
+		if x.Level != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Level))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*CircuitBreakerPermissions)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CircuitBreakerPermissions: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CircuitBreakerPermissions: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Level", wireType)
+				}
+				x.Level = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Level |= CircuitBreakerPermissions_Level(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LimitMsgTypes", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.LimitMsgTypes = append(x.LimitMsgTypes, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -3333,7 +3333,7 @@ func (x CircuitBreakerPermissions_Level) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CircuitBreakerPermissions_Level.Descriptor instead.
 func (CircuitBreakerPermissions_Level) EnumDescriptor() ([]byte, []int) {
-	return file_cosmos_circuit_v1_tx_proto_rawDescGZIP(), []int{1, 0}
+	return file_cosmos_circuit_v1_tx_proto_rawDescGZIP(), []int{2, 0}
 }
 
 // MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker request type.
@@ -3394,55 +3394,6 @@ func (x *MsgAuthorizeCircuitBreaker) GetPermissions() *CircuitBreakerPermissions
 	return nil
 }
 
-// CircuitBreakerPermissions are the permissions that an account has to trip
-// or reset the circuit breaker.
-type CircuitBreakerPermissions struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// level is the level of permissions granted to this account.
-	Level CircuitBreakerPermissions_Level `protobuf:"varint,1,opt,name=level,proto3,enum=cosmos.circuit.v1.CircuitBreakerPermissions_Level" json:"level,omitempty"`
-	// limit_type_urls is used with LEVEL_SOME_MSGS to limit the lists of Msg type
-	// URLs that the account can pause. It is an error to use limit_type_urls with
-	// a level other than LEVEL_SOME_MSGS.
-	LimitTypeUrls []string `protobuf:"bytes,2,rep,name=limit_type_urls,json=limitTypeUrls,proto3" json:"limit_type_urls,omitempty"`
-}
-
-func (x *CircuitBreakerPermissions) Reset() {
-	*x = CircuitBreakerPermissions{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_circuit_v1_tx_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CircuitBreakerPermissions) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CircuitBreakerPermissions) ProtoMessage() {}
-
-// Deprecated: Use CircuitBreakerPermissions.ProtoReflect.Descriptor instead.
-func (*CircuitBreakerPermissions) Descriptor() ([]byte, []int) {
-	return file_cosmos_circuit_v1_tx_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *CircuitBreakerPermissions) GetLevel() CircuitBreakerPermissions_Level {
-	if x != nil {
-		return x.Level
-	}
-	return CircuitBreakerPermissions_LEVEL_NONE_UNSPECIFIED
-}
-
-func (x *CircuitBreakerPermissions) GetLimitTypeUrls() []string {
-	if x != nil {
-		return x.LimitTypeUrls
-	}
-	return nil
-}
-
 // MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker response type.
 type MsgAuthorizeCircuitBreakerResponse struct {
 	state         protoimpl.MessageState
@@ -3453,7 +3404,7 @@ type MsgAuthorizeCircuitBreakerResponse struct {
 func (x *MsgAuthorizeCircuitBreakerResponse) Reset() {
 	*x = MsgAuthorizeCircuitBreakerResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_circuit_v1_tx_proto_msgTypes[2]
+		mi := &file_cosmos_circuit_v1_tx_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3467,7 +3418,56 @@ func (*MsgAuthorizeCircuitBreakerResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgAuthorizeCircuitBreakerResponse.ProtoReflect.Descriptor instead.
 func (*MsgAuthorizeCircuitBreakerResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_circuit_v1_tx_proto_rawDescGZIP(), []int{1}
+}
+
+// CircuitBreakerPermissions are the permissions that an account has to trip
+// or reset the circuit breaker.
+type CircuitBreakerPermissions struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// level is the level of permissions granted to this account.
+	Level CircuitBreakerPermissions_Level `protobuf:"varint,1,opt,name=level,proto3,enum=cosmos.circuit.v1.CircuitBreakerPermissions_Level" json:"level,omitempty"`
+	// limit_msg_types is used with LEVEL_SOME_MSGS to limit the lists of Msg type
+	// name that the account can pause. It is an error to use limit_msg_types with
+	// a level other than LEVEL_SOME_MSGS.
+	LimitMsgTypes []string `protobuf:"bytes,2,rep,name=limit_msg_types,json=limitMsgTypes,proto3" json:"limit_msg_types,omitempty"`
+}
+
+func (x *CircuitBreakerPermissions) Reset() {
+	*x = CircuitBreakerPermissions{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_circuit_v1_tx_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CircuitBreakerPermissions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CircuitBreakerPermissions) ProtoMessage() {}
+
+// Deprecated: Use CircuitBreakerPermissions.ProtoReflect.Descriptor instead.
+func (*CircuitBreakerPermissions) Descriptor() ([]byte, []int) {
 	return file_cosmos_circuit_v1_tx_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CircuitBreakerPermissions) GetLevel() CircuitBreakerPermissions_Level {
+	if x != nil {
+		return x.Level
+	}
+	return CircuitBreakerPermissions_LEVEL_NONE_UNSPECIFIED
+}
+
+func (x *CircuitBreakerPermissions) GetLimitMsgTypes() []string {
+	if x != nil {
+		return x.LimitMsgTypes
+	}
+	return nil
 }
 
 // MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker request type.
@@ -3640,25 +3640,25 @@ var file_cosmos_circuit_v1_tx_proto_rawDesc = []byte{
 	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61,
 	0x6b, 0x65, 0x72, 0x50, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x0b,
 	0x70, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x3a, 0x0c, 0x82, 0xe7, 0xb0,
-	0x2a, 0x07, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x22, 0xf2, 0x01, 0x0a, 0x19, 0x43, 0x69,
-	0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x50, 0x65, 0x72, 0x6d,
-	0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x48, 0x0a, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x69, 0x72, 0x63, 0x75,
-	0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x50, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73,
-	0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x52, 0x05, 0x6c, 0x65, 0x76, 0x65,
-	0x6c, 0x12, 0x26, 0x0a, 0x0f, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x5f,
-	0x75, 0x72, 0x6c, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0d, 0x6c, 0x69, 0x6d, 0x69,
-	0x74, 0x54, 0x79, 0x70, 0x65, 0x55, 0x72, 0x6c, 0x73, 0x22, 0x63, 0x0a, 0x05, 0x4c, 0x65, 0x76,
-	0x65, 0x6c, 0x12, 0x1a, 0x0a, 0x16, 0x4c, 0x45, 0x56, 0x45, 0x4c, 0x5f, 0x4e, 0x4f, 0x4e, 0x45,
-	0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x13,
-	0x0a, 0x0f, 0x4c, 0x45, 0x56, 0x45, 0x4c, 0x5f, 0x53, 0x4f, 0x4d, 0x45, 0x5f, 0x4d, 0x53, 0x47,
-	0x53, 0x10, 0x01, 0x12, 0x12, 0x0a, 0x0e, 0x4c, 0x45, 0x56, 0x45, 0x4c, 0x5f, 0x41, 0x4c, 0x4c,
-	0x5f, 0x4d, 0x53, 0x47, 0x53, 0x10, 0x02, 0x12, 0x15, 0x0a, 0x11, 0x4c, 0x45, 0x56, 0x45, 0x4c,
-	0x5f, 0x53, 0x55, 0x50, 0x45, 0x52, 0x5f, 0x41, 0x44, 0x4d, 0x49, 0x4e, 0x10, 0x03, 0x22, 0x24,
-	0x0a, 0x22, 0x4d, 0x73, 0x67, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x43, 0x69,
-	0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x69, 0x0a, 0x15, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x69, 0x70, 0x43,
+	0x2a, 0x07, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x22, 0x24, 0x0a, 0x22, 0x4d, 0x73, 0x67,
+	0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74,
+	0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0xf2, 0x01, 0x0a, 0x19, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b,
+	0x65, 0x72, 0x50, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x48, 0x0a,
+	0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x32, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x50,
+	0x65, 0x72, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x4c, 0x65, 0x76, 0x65, 0x6c,
+	0x52, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x12, 0x26, 0x0a, 0x0f, 0x6c, 0x69, 0x6d, 0x69, 0x74,
+	0x5f, 0x6d, 0x73, 0x67, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09,
+	0x52, 0x0d, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x4d, 0x73, 0x67, 0x54, 0x79, 0x70, 0x65, 0x73, 0x22,
+	0x63, 0x0a, 0x05, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x12, 0x1a, 0x0a, 0x16, 0x4c, 0x45, 0x56, 0x45,
+	0x4c, 0x5f, 0x4e, 0x4f, 0x4e, 0x45, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49,
+	0x45, 0x44, 0x10, 0x00, 0x12, 0x13, 0x0a, 0x0f, 0x4c, 0x45, 0x56, 0x45, 0x4c, 0x5f, 0x53, 0x4f,
+	0x4d, 0x45, 0x5f, 0x4d, 0x53, 0x47, 0x53, 0x10, 0x01, 0x12, 0x12, 0x0a, 0x0e, 0x4c, 0x45, 0x56,
+	0x45, 0x4c, 0x5f, 0x41, 0x4c, 0x4c, 0x5f, 0x4d, 0x53, 0x47, 0x53, 0x10, 0x02, 0x12, 0x15, 0x0a,
+	0x11, 0x4c, 0x45, 0x56, 0x45, 0x4c, 0x5f, 0x53, 0x55, 0x50, 0x45, 0x52, 0x5f, 0x41, 0x44, 0x4d,
+	0x49, 0x4e, 0x10, 0x03, 0x22, 0x69, 0x0a, 0x15, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x69, 0x70, 0x43,
 	0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x1c, 0x0a,
 	0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x22, 0x0a, 0x0d, 0x6d,
@@ -3667,51 +3667,51 @@ var file_cosmos_circuit_v1_tx_proto_rawDesc = []byte{
 	0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22,
 	0x1f, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x69, 0x70, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69,
 	0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x67, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x73, 0x65, 0x74, 0x43, 0x69, 0x72, 0x63,
+	0x22, 0x6a, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x73, 0x65, 0x74, 0x43, 0x69, 0x72, 0x63,
 	0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x1c, 0x0a, 0x09, 0x61, 0x75,
 	0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x61,
 	0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x22, 0x0a, 0x0d, 0x6d, 0x73, 0x67, 0x5f,
 	0x74, 0x79, 0x70, 0x65, 0x5f, 0x75, 0x72, 0x6c, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52,
-	0x0b, 0x6d, 0x73, 0x67, 0x54, 0x79, 0x70, 0x65, 0x55, 0x72, 0x6c, 0x73, 0x3a, 0x0b, 0x82, 0xe7,
-	0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x20, 0x0a, 0x1e, 0x4d, 0x73, 0x67,
-	0x52, 0x65, 0x73, 0x65, 0x74, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61,
-	0x6b, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xf4, 0x02, 0x0a, 0x03,
-	0x4d, 0x73, 0x67, 0x12, 0x7f, 0x0a, 0x17, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65,
-	0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x2d,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e,
-	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x43,
-	0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x1a, 0x35, 0x2e,
+	0x0b, 0x6d, 0x73, 0x67, 0x54, 0x79, 0x70, 0x65, 0x55, 0x72, 0x6c, 0x73, 0x3a, 0x0e, 0x82, 0xe7,
+	0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x20, 0x0a, 0x1e,
+	0x4d, 0x73, 0x67, 0x52, 0x65, 0x73, 0x65, 0x74, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42,
+	0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xf4,
+	0x02, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x7f, 0x0a, 0x17, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72,
+	0x69, 0x7a, 0x65, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65,
+	0x72, 0x12, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75,
+	0x69, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
+	0x7a, 0x65, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72,
+	0x1a, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69,
+	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a,
+	0x65, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x70, 0x0a, 0x12, 0x54, 0x72, 0x69, 0x70, 0x43,
+	0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x28, 0x2e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x43, 0x69,
-	0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x70, 0x0a, 0x12, 0x54, 0x72, 0x69, 0x70, 0x43, 0x69, 0x72, 0x63,
-	0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x54, 0x72, 0x69, 0x70, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65,
-	0x61, 0x6b, 0x65, 0x72, 0x1a, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69,
-	0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x69, 0x70,
-	0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x73, 0x0a, 0x13, 0x52, 0x65, 0x73, 0x65, 0x74, 0x43,
-	0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x29, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x73, 0x65, 0x74, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69,
-	0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x52, 0x65, 0x73, 0x65, 0x74, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61,
-	0x6b, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0,
-	0x2a, 0x01, 0x42, 0xb4, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
-	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x63, 0x69, 0x72, 0x63,
-	0x75, 0x69, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x58, 0xaa, 0x02, 0x11, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x56, 0x31, 0xca,
-	0x02, 0x11, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74,
-	0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x69, 0x72,
-	0x63, 0x75, 0x69, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x43, 0x69,
-	0x72, 0x63, 0x75, 0x69, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x69, 0x70, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74,
+	0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x1a, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54,
+	0x72, 0x69, 0x70, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65,
+	0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x73, 0x0a, 0x13, 0x52, 0x65, 0x73,
+	0x65, 0x74, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72,
+	0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69,
+	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x73, 0x65, 0x74, 0x43, 0x69, 0x72,
+	0x63, 0x75, 0x69, 0x74, 0x42, 0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x1a, 0x31, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31, 0x2e,
+	0x4d, 0x73, 0x67, 0x52, 0x65, 0x73, 0x65, 0x74, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x42,
+	0x72, 0x65, 0x61, 0x6b, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
+	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xb4, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e, 0x76, 0x31, 0x42,
+	0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x63,
+	0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x58, 0xaa, 0x02,
+	0x11, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x2e,
+	0x56, 0x31, 0xca, 0x02, 0x11, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x69, 0x72, 0x63,
+	0x75, 0x69, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a,
+	0x3a, 0x43, 0x69, 0x72, 0x63, 0x75, 0x69, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3731,20 +3731,20 @@ var file_cosmos_circuit_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_cosmos_circuit_v1_tx_proto_goTypes = []interface{}{
 	(CircuitBreakerPermissions_Level)(0),       // 0: cosmos.circuit.v1.CircuitBreakerPermissions.Level
 	(*MsgAuthorizeCircuitBreaker)(nil),         // 1: cosmos.circuit.v1.MsgAuthorizeCircuitBreaker
-	(*CircuitBreakerPermissions)(nil),          // 2: cosmos.circuit.v1.CircuitBreakerPermissions
-	(*MsgAuthorizeCircuitBreakerResponse)(nil), // 3: cosmos.circuit.v1.MsgAuthorizeCircuitBreakerResponse
+	(*MsgAuthorizeCircuitBreakerResponse)(nil), // 2: cosmos.circuit.v1.MsgAuthorizeCircuitBreakerResponse
+	(*CircuitBreakerPermissions)(nil),          // 3: cosmos.circuit.v1.CircuitBreakerPermissions
 	(*MsgTripCircuitBreaker)(nil),              // 4: cosmos.circuit.v1.MsgTripCircuitBreaker
 	(*MsgTripCircuitBreakerResponse)(nil),      // 5: cosmos.circuit.v1.MsgTripCircuitBreakerResponse
 	(*MsgResetCircuitBreaker)(nil),             // 6: cosmos.circuit.v1.MsgResetCircuitBreaker
 	(*MsgResetCircuitBreakerResponse)(nil),     // 7: cosmos.circuit.v1.MsgResetCircuitBreakerResponse
 }
 var file_cosmos_circuit_v1_tx_proto_depIdxs = []int32{
-	2, // 0: cosmos.circuit.v1.MsgAuthorizeCircuitBreaker.permissions:type_name -> cosmos.circuit.v1.CircuitBreakerPermissions
+	3, // 0: cosmos.circuit.v1.MsgAuthorizeCircuitBreaker.permissions:type_name -> cosmos.circuit.v1.CircuitBreakerPermissions
 	0, // 1: cosmos.circuit.v1.CircuitBreakerPermissions.level:type_name -> cosmos.circuit.v1.CircuitBreakerPermissions.Level
 	1, // 2: cosmos.circuit.v1.Msg.AuthorizeCircuitBreaker:input_type -> cosmos.circuit.v1.MsgAuthorizeCircuitBreaker
 	4, // 3: cosmos.circuit.v1.Msg.TripCircuitBreaker:input_type -> cosmos.circuit.v1.MsgTripCircuitBreaker
 	6, // 4: cosmos.circuit.v1.Msg.ResetCircuitBreaker:input_type -> cosmos.circuit.v1.MsgResetCircuitBreaker
-	3, // 5: cosmos.circuit.v1.Msg.AuthorizeCircuitBreaker:output_type -> cosmos.circuit.v1.MsgAuthorizeCircuitBreakerResponse
+	2, // 5: cosmos.circuit.v1.Msg.AuthorizeCircuitBreaker:output_type -> cosmos.circuit.v1.MsgAuthorizeCircuitBreakerResponse
 	5, // 6: cosmos.circuit.v1.Msg.TripCircuitBreaker:output_type -> cosmos.circuit.v1.MsgTripCircuitBreakerResponse
 	7, // 7: cosmos.circuit.v1.Msg.ResetCircuitBreaker:output_type -> cosmos.circuit.v1.MsgResetCircuitBreakerResponse
 	5, // [5:8] is the sub-list for method output_type
@@ -3773,7 +3773,7 @@ func file_cosmos_circuit_v1_tx_proto_init() {
 			}
 		}
 		file_cosmos_circuit_v1_tx_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CircuitBreakerPermissions); i {
+			switch v := v.(*MsgAuthorizeCircuitBreakerResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3785,7 +3785,7 @@ func file_cosmos_circuit_v1_tx_proto_init() {
 			}
 		}
 		file_cosmos_circuit_v1_tx_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgAuthorizeCircuitBreakerResponse); i {
+			switch v := v.(*CircuitBreakerPermissions); i {
 			case 0:
 				return &v.state
 			case 1:

@@ -147,7 +147,7 @@ service Msg {
 // Grant gives permissions to execute
 // the provided method with expiration time.
 message Grant {
-  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "cosmos.authz.v1beta1.Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
@@ -165,7 +165,7 @@ message MsgExecResponse {
 message MsgExec {
   string   grantee                  = 1;
   // Authorization Msg requests to execute. Each msg must implement Authorization interface
-  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "sdk.Msg"];;
+  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];;
 }
 ```
 

@@ -8,7 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -22,12 +23,8 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -47,10 +44,6 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
@@ -63,6 +56,15 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
 		denom := string(key)
+
+		// IBC denom metadata will be registered in ibc-go after first mint
+		//
+		// Since: ibc-go v7
+		if req.ResolveDenom {
+			if metadata, ok := k.GetDenomMetaData(sdkCtx, denom); ok {
+				denom = metadata.Display
+			}
+		}
 		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
 		if err != nil {
 			return err
@@ -113,6 +115,29 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	return &types.QuerySpendableBalancesResponse{Balances: result, Pagination: pageRes}, nil
 }
 
+// SpendableBalanceByDenom implements a gRPC query handler for retrieving an account's
+// spendable balance for a specific denom.
+func (k BaseKeeper) SpendableBalanceByDenom(ctx context.Context, req *types.QuerySpendableBalanceByDenomRequest) (*types.QuerySpendableBalanceByDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	spendable := k.SpendableCoin(sdkCtx, addr, req.Denom)
+
+	return &types.QuerySpendableBalanceByDenomResponse{Balance: &spendable}, nil
+}
+
 // TotalSupply implements the Query/TotalSupply gRPC method
 func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -130,8 +155,8 @@ func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -185,8 +210,8 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -209,8 +234,8 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

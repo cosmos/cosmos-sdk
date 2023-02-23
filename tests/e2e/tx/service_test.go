@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/simapp"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -101,10 +101,9 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
 	s.Require().Equal(uint32(0), tr.Code)
 
-	s.Require().NoError(s.network.WaitForNextBlock())
-	height, err := s.network.LatestHeight()
+	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	s.Require().NoError(err)
-	s.txHeight = height
+	s.txHeight = resp.Height
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -121,7 +120,6 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	s.Require().NoError(err)
 	s.Require().NotEmpty(resp.TxResponse.TxHash)
 
-	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// get the signature out of the builder
@@ -1157,7 +1155,7 @@ type protoTxProvider interface {
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}
 
 	return protoProvider.GetProtoTx(), nil

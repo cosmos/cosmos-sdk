@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/bytes"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/bytes"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmt "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,13 +45,17 @@ func (s *resultTestSuite) TestParseABCILog() {
 
 func (s *resultTestSuite) TestABCIMessageLog() {
 	cdc := codec.NewLegacyAmino()
-	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
+	events := sdk.Events{
+		sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo")),
+		sdk.NewEvent("transfer", sdk.NewAttribute("sender", "bar")),
+	}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
 	msgLogs := sdk.ABCIMessageLogs{msgLog}
 	bz, err := cdc.MarshalJSON(msgLogs)
 
 	s.Require().NoError(err)
 	s.Require().Equal(string(bz), msgLogs.String())
+	s.Require().Equal(`[{"msg_index":0,"events":[{"type":"transfer","attributes":[{"key":"sender","value":"foo"}]},{"type":"transfer","attributes":[{"key":"sender","value":"bar"}]}]}]`, msgLogs.String())
 }
 
 func (s *resultTestSuite) TestNewSearchTxsResult() {
@@ -133,6 +140,44 @@ txhash: "74657374"
 		TxHash:    "74657374",
 	}, sdk.NewResponseFormatBroadcastTx(resultBroadcastTx))
 	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTx(nil))
+}
+
+func (s *resultTestSuite) TestNewSearchBlocksResult() {
+	got := sdk.NewSearchBlocksResult(150, 20, 2, 20, []*cmtt.Block{})
+	s.Require().Equal(&sdk.SearchBlocksResult{
+		TotalCount: 150,
+		Count:      20,
+		PageNumber: 2,
+		PageTotal:  8,
+		Limit:      20,
+		Blocks:     []*cmtt.Block{},
+	}, got)
+}
+
+func (s *resultTestSuite) TestResponseResultBlock() {
+	timestamp := time.Now()
+	timestampStr := timestamp.UTC().Format(time.RFC3339)
+
+	//  create a block
+	resultBlock := &coretypes.ResultBlock{Block: &cmt.Block{
+		Header: cmt.Header{
+			Height: 10,
+			Time:   timestamp,
+		},
+		Evidence: cmt.EvidenceData{
+			Evidence: make(cmt.EvidenceList, 0),
+		},
+	}}
+
+	blk, err := resultBlock.Block.ToProto()
+	s.Require().NoError(err)
+
+	want := &cmtt.Block{
+		Header:   blk.Header,
+		Evidence: blk.Evidence,
+	}
+
+	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestampStr))
 }
 
 func TestWrapServiceResult(t *testing.T) {

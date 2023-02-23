@@ -671,7 +671,7 @@ func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 func TestFormatDec(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
-	raw, err := os.ReadFile("../tx/textual/internal/testdata/decimals.json")
+	raw, err := os.ReadFile("../x/tx/textual/internal/testdata/decimals.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -713,4 +713,10 @@ func TestFormatDecNonDigits(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNegativePrecisionPanic(t *testing.T) {
+	require.Panics(t, func() {
+		math.LegacyNewDecWithPrec(10, -1)
+	})
 }

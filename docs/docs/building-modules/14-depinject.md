@@ -32,7 +32,7 @@ A chain developer can then use the module by following these two steps:
 The module available configuration is defined in a Protobuf file, located at `{moduleName}/module/v1/module.proto`.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/proto/cosmos/group/module/v1/module.proto
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/module/v1/module.proto
 ```
 
 * `go_import` must point to the Go package of the custom module.
@@ -41,16 +41,16 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/proto/cosmos/group/modu
   Taking `group` as example, a chain developer is able to decide, thanks to `uint64 max_metadata_len`, what the maximum metatada length allowed for a group porposal is.
 
   ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app_config.go#L202-L206
+  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L226-L230
   ```
 
-That message is generated using [`pulsar`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/scripts/protocgen-pulsar.sh) (by running `make proto-gen`).
-In the case of the `group` module, this file is generated here: https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/api/cosmos/group/module/v1/module.pulsar.go.
+That message is generated using [`pulsar`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/scripts/protocgen-pulsar.sh) (by running `make proto-gen`).
+In the case of the `group` module, this file is generated here: https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/api/cosmos/group/module/v1/module.pulsar.go.
 
 The part that is relevant for the module configuration is:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/api/cosmos/group/module/v1/module.pulsar.go#L515-L527
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/api/cosmos/group/module/v1/module.pulsar.go#L515-L527
 ```
 
 :::note
@@ -63,22 +63,20 @@ Once the configuration proto is defined, the module's `module.go` must define wh
 The boilerplate is similar for all modules.
 
 :::warning
-
 All methods, structs and their fields must be public for `depinject`.
-
 :::
 
 1. Import the module configuration generated package:
 
   ```go reference
-  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/x/group/module/module.go#L14-L15
+  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/module/module.go#L12-L14
   ```
 
   Define an `init()` function for defining the `providers` of the module configuration:  
   This registers the module configuration message and the wiring of the module.
 
   ```go reference
-  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/x/group/module/module.go#L192-L197
+  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/module/module.go#L199-L204
   ```
 
 2. Define a struct that inherits `depinject.In` and define the module inputs (i.e. module dependencies):
@@ -90,20 +88,20 @@ All methods, structs and their fields must be public for `depinject`.
   :::
 
   ```go reference
-  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/x/group/module/module.go#L199-L209
+  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/module/module.go#L206-L216
   ```
 
 3. Define the module outputs with a public struct that inherits `depinject.Out`:
    The module outputs are the dependencies that the module provides to other modules. It is usually the module itself and its keeper.
 
   ```go reference
-  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/x/group/module/module.go#L211-L216
+  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/module/module.go#L218-L223
   ```
 
 4. Create a function named `ProvideModule` (as called in 1.) and use the inputs for instantiating the module outputs.
 
   ```go reference
-  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/x/group/module/module.go#L217-L227
+  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/module/module.go#L225-L235
   ```
 
 The `ProvideModule` function should return an instance of `cosmossdk.io/core/appmodule.AppModule` which implements
@@ -112,7 +110,7 @@ one or more app module extension interfaces for initializing the module.
 Following is the complete app wiring configuration for `group`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/x/group/module/module.go#L218-L228
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/module/module.go#L195-L235
 ```
 
 The module is now ready to be used with `depinject` by a chain developer.

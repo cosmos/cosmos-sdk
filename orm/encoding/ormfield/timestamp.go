@@ -43,7 +43,7 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	seconds, nanos := getTimestampSecondsAndNanos(value)
 	secondsInt := seconds.Int()
 	if secondsInt < timestampSecondsMin || secondsInt > timestampSecondsMax {
-		return fmt.Errorf("seconds is out of range %d, must be between %d and %d", secondsInt, timestampSecondsMin, timestampSecondsMax)
+		return fmt.Errorf("timestamp seconds is out of range %d, must be between %d and %d", secondsInt, timestampSecondsMin, timestampSecondsMax)
 	}
 	secondsInt -= timestampSecondsMin
 	var secondsBz [5]byte
@@ -64,7 +64,7 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	}
 
 	if nanosInt < 0 || nanosInt > timestampNanosMax {
-		return fmt.Errorf("nanos is out of range %d, must be between %d and %d", secondsInt, 0, timestampNanosMax)
+		return fmt.Errorf("timestamp nanos is out of range %d, must be between %d and %d", secondsInt, 0, timestampNanosMax)
 	}
 
 	var nanosBz [4]byte

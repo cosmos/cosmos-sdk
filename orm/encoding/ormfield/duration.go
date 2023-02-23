@@ -1,13 +1,18 @@
 package ormfield
 
 import (
+	"fmt"
 	io "io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 const (
-	durationNilValue = 0x40
+	durationNilValue   = 0x40
+	durationSecondsMin = -315576000000
+	durationSecondsMax = 315576000000
+	durationNanosMin   = -999999999
+	durationNanosMax   = 999999999
 )
 
 var (
@@ -16,11 +21,6 @@ var (
 
 type DurationCodec struct{}
 
-func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	// nil case
 	if !value.IsValid() {
@@ -28,6 +28,23 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 		return err
 	}
 
+	seconds, nanos := getDurationSecondsAndNanos(value)
+	secondsInt := seconds.Int()
+	if secondsInt < durationSecondsMin || secondsInt > durationSecondsMax {
+		return fmt.Errorf("duration seconds is out of range %d, must be between %d and %d", secondsInt, durationSecondsMin, durationSecondsMax)
+	}
+
+	// TODO: implement me
+
+	nanosInt := nanos.Int()
+	if nanosInt < durationNanosMin || nanosInt > durationNanosMax {
+		return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", secondsInt, durationNanosMin, durationNanosMax)
+	}
+
+	panic("implement me")
+}
+
+func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 	//TODO implement me
 	panic("implement me")
 }

@@ -3,6 +3,7 @@ package textual
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -24,25 +25,16 @@ func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 	decStr := v.String()
 
 	// If the decimal doesn't contain a point, we assume it's a badly formatted
-	// value. So we assume it's a decimal with 18 decimal places and add the decimal
-	// in the right place.
+	// value. So we try to parse it as an integer and then convert it to a
+	// decimal.
 	if !strings.Contains(decStr, ".") {
-		isNeg := false
-		if strings.HasPrefix(decStr, "-") {
-			decStr = strings.TrimPrefix(decStr, "-")
-			isNeg = true
+		parsedInt, ok := new(big.Int).SetString(decStr, 10)
+		if !ok {
+			return nil, fmt.Errorf("invalid decimal: %s", decStr)
 		}
 
-		if len(decStr) < 19 {
-			decStr = "0." + strings.Repeat("0", 18-len(decStr)) + decStr
-		} else {
-			whole, decimal := decStr[:len(decStr)-18], decStr[18:]
-			decStr = whole + "." + decimal
-		}
-
-		if isNeg {
-			decStr = "-" + decStr
-		}
+		// We assume the decimal has 18 digits of precision.
+		decStr = math.LegacyNewDecFromBigIntWithPrec(parsedInt, math.LegacyPrecision).String()
 	}
 
 	formatted, err := math.FormatDec(decStr)

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -29,11 +30,10 @@ type Server struct {
 	Router            *mux.Router
 	GRPCGatewayRouter *runtime.ServeMux
 	ClientCtx         client.Context
+	GRPCSrv           *grpc.Server
+	logger            log.Logger
+	metrics           *telemetry.Metrics
 
-	GRPCSrv *grpc.Server
-
-	logger  log.Logger
-	metrics *telemetry.Metrics
 	// Start() is blocking and generally called from a separate goroutine.
 	// Close() can be called asynchronously and access shared memory
 	// via the listener. Therefore, we sync access to Start and Close with
@@ -51,6 +51,7 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 	switch strings.ToLower(key) {
 	case grpctypes.GRPCBlockHeightHeader:
 		return grpctypes.GRPCBlockHeightHeader, true
+
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}
@@ -86,11 +87,14 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 	}
 }
 
-// Start starts the API server. Internally, the API server leverages Tendermint's
+// Start starts the API server. Internally, the API server leverages CometBFT's
 // JSON RPC server. Configuration options are provided via config.APIConfig
-// and are delegated to the Tendermint JSON RPC server. The process is
-// non-blocking, so an external signal handler must be used.
-func (s *Server) Start(cfg config.Config) error {
+// and are delegated to the CometBFT JSON RPC server.
+//
+// Note, this creates a blocking process if the server is started successfully.
+// Otherwise, an error is returned. The caller is expected to provide a Context
+// that is properly canceled or closed to indicate the server should be stopped.
+func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	s.mtx.Lock()
 
 	cmtCfg := tmrpcserver.DefaultConfig()
@@ -134,13 +138,35 @@ func (s *Server) Start(cfg config.Config) error {
 	// register grpc-gateway routes (after grpc-web server as the first match is used)
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 
-	s.logger.Info("starting API server...")
-	if cfg.API.EnableUnsafeCORS {
-		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-		return tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), s.logger, cmtCfg)
-	}
+	errCh := make(chan error)
 
-	return tmrpcserver.Serve(s.listener, s.Router, s.logger, cmtCfg)
+	// Start the API in an external goroutine as Serve is blocking and will return
+	// an error upon failure, which we'll send on the error channel that will be
+	// consumed by the for block below.
+	go func(enableUnsafeCORS bool) {
+		s.logger.Info("starting API server...", "address", cfg.API.Address)
+
+		if enableUnsafeCORS {
+			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), s.logger, cmtCfg)
+		} else {
+			errCh <- tmrpcserver.Serve(s.listener, s.Router, s.logger, cmtCfg)
+		}
+	}(cfg.API.EnableUnsafeCORS)
+
+	// Start a blocking select to wait for an indication to stop the server or that
+	// the server failed to start properly.
+	select {
+	case <-ctx.Done():
+		// The calling process cancelled or closed the provided context, so we must
+		// gracefully stop the API server.
+		s.logger.Info("stopping API server...", "address", cfg.API.Address)
+		return s.Close()
+
+	case err := <-errCh:
+		s.logger.Error("failed to start API server", "err", err)
+		return err
+	}
 }
 
 // Close closes the API server.

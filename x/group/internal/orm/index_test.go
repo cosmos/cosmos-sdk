@@ -5,10 +5,11 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 
@@ -129,7 +130,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		start, end interface{}
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package
+		expError   *errorsmod.Error
 		method     func(store storetypes.KVStore, start, end interface{}) (Iterator, error)
 	}{
 		"exact match with a single result": {

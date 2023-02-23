@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/x/tx/textual"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	txsigning "cosmossdk.io/x/tx/signing"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -19,7 +23,7 @@ import (
 // for TESTING purposes. It will be enabled once SIGN_MODE_TEXTUAL is fully
 // released, see https://github.com/cosmos/cosmos-sdk/issues/11970.
 type signModeTextualHandler struct {
-	t textual.Textual
+	t textual.SignModeHandler
 }
 
 var _ signing.SignModeHandler = signModeTextualHandler{}
@@ -50,15 +54,30 @@ func (h signModeTextualHandler) GetSignBytesWithContext(ctx context.Context, mod
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
-	bodyBz := protoTx.getBodyBytes()
-	authInfoBz := protoTx.getAuthInfoBytes()
-
 	pbAny, err := codectypes.NewAnyWithValue(data.PubKey)
 	if err != nil {
 		return nil, err
 	}
 
-	return h.t.GetSignBytes(ctx, bodyBz, authInfoBz, txsigning.SignerData{
+	txBody := &txv1beta1.TxBody{}
+	txAuthInfo := &txv1beta1.AuthInfo{}
+	err = proto.Unmarshal(protoTx.getBodyBytes(), txBody)
+	if err != nil {
+		return nil, err
+	}
+	err = proto.Unmarshal(protoTx.getAuthInfoBytes(), txAuthInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	txData := txsigning.TxData{
+		Body:          txBody,
+		AuthInfo:      txAuthInfo,
+		BodyBytes:     protoTx.getBodyBytes(),
+		AuthInfoBytes: protoTx.getAuthInfoBytes(),
+	}
+
+	return h.t.GetSignBytes(ctx, txsigning.SignerData{
 		Address:       data.Address,
 		ChainId:       data.ChainID,
 		AccountNumber: data.AccountNumber,
@@ -67,5 +86,5 @@ func (h signModeTextualHandler) GetSignBytesWithContext(ctx context.Context, mod
 			TypeUrl: pbAny.TypeUrl,
 			Value:   pbAny.Value,
 		},
-	})
+	}, txData)
 }

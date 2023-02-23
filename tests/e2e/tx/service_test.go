@@ -10,8 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/simapp"
+	errorsmod "cosmossdk.io/errors"
 
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -90,6 +91,8 @@ func (s *E2ETestSuite) SetupSuite() {
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s", flags.FlagOffline),
+		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),
 		fmt.Sprintf("--%s=2", flags.FlagSequence),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1155,7 +1158,7 @@ type protoTxProvider interface {
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}
 
 	return protoProvider.GetProtoTx(), nil

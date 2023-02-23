@@ -19,7 +19,7 @@ import (
 
 func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.Codec) error {
 	logger := log.NewNopLogger()
-	cfg, err := CreateDefaultTendermintConfig(home)
+	cfg, err := CreateDefaultCometConfig(home)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.Codec) erro
 	return cmd.ExecuteContext(ctx)
 }
 
-func CreateDefaultTendermintConfig(rootDir string) (*cmtcfg.Config, error) {
+func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {
 	conf := cmtcfg.DefaultConfig()
 	conf.SetRoot(rootDir)
 	cmtcfg.EnsureRoot(rootDir)

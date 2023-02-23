@@ -60,7 +60,7 @@ func TestInitCmd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
 			serverCtx := server.NewContext(viper.New(), cfg, logger)
@@ -93,7 +93,7 @@ func TestInitCmd(t *testing.T) {
 func TestInitRecover(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
@@ -124,7 +124,7 @@ func TestInitRecover(t *testing.T) {
 func TestInitDefaultBondDenom(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
@@ -152,7 +152,7 @@ func TestInitDefaultBondDenom(t *testing.T) {
 func TestEmptyState(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
@@ -193,7 +193,7 @@ func TestEmptyState(t *testing.T) {
 
 	require.Contains(t, out, "genesis_time")
 	require.Contains(t, out, "chain_id")
-	require.Contains(t, out, "consensus_params")
+	require.Contains(t, out, "consensus")
 	require.Contains(t, out, "app_hash")
 	require.Contains(t, out, "app_state")
 }
@@ -230,7 +230,7 @@ func TestStartStandAlone(t *testing.T) {
 
 func TestInitNodeValidatorFiles(t *testing.T) {
 	home := t.TempDir()
-	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
@@ -243,7 +243,7 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 func TestInitConfig(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)

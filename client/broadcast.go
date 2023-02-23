@@ -35,7 +35,12 @@ func (ctx Context) BroadcastTx(txBytes []byte) (res *sdk.TxResponse, err error) 
 	return res, err
 }
 
-// CheckTendermintError checks if the error returned from BroadcastTx is a
+// Deprecated: Use CheckCometError instead.
+func CheckTendermintError(err error, tx cmttypes.Tx) *sdk.TxResponse {
+	return CheckCometError(err, tx)
+}
+
+// CheckCometError checks if the error returned from BroadcastTx is a
 // CometBFT error that is returned before the tx is submitted due to
 // precondition checks that failed. If an CometBFT error is detected, this
 // function returns the correct code back in TxResponse.
@@ -43,7 +48,7 @@ func (ctx Context) BroadcastTx(txBytes []byte) (res *sdk.TxResponse, err error) 
 // TODO: Avoid brittle string matching in favor of error matching. This requires
 // a change to CometBFT's RPCError type to allow retrieval or matching against
 // a concrete error type.
-func CheckTendermintError(err error, tx cmttypes.Tx) *sdk.TxResponse {
+func CheckCometError(err error, tx cmttypes.Tx) *sdk.TxResponse {
 	if err == nil {
 		return nil
 	}
@@ -87,7 +92,7 @@ func (ctx Context) BroadcastTxSync(txBytes []byte) (*sdk.TxResponse, error) {
 	}
 
 	res, err := node.BroadcastTxSync(context.Background(), txBytes)
-	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
+	if errRes := CheckCometError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}
 
@@ -103,7 +108,7 @@ func (ctx Context) BroadcastTxAsync(txBytes []byte) (*sdk.TxResponse, error) {
 	}
 
 	res, err := node.BroadcastTxAsync(context.Background(), txBytes)
-	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
+	if errRes := CheckCometError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}
 

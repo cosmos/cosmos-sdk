@@ -167,7 +167,8 @@ clean:
 	rm -rf \
 	$(BUILDDIR)/ \
 	artifacts/ \
-	tmp-swagger-gen/
+	tmp-swagger-gen/ \
+	.testnets
 
 .PHONY: distclean clean
 
@@ -349,7 +350,7 @@ benchmark:
 ###############################################################################
 
 golangci_lint_cmd=golangci-lint
-golangci_version=v1.50.1
+golangci_version=v1.51.1
 
 lint:
 	@echo "--> Running linter"
@@ -372,7 +373,7 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.6
+protoVer=0.12.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -397,7 +398,7 @@ proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
 # TODO update/remove after v0.37.x tag of CometBFT
-CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/387422ac220d/proto/tendermint
+CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.37.0-alpha.3/proto/tendermint
 
 CMT_CRYPTO_TYPES     = proto/tendermint/crypto
 CMT_ABCI_TYPES       = proto/tendermint/abci

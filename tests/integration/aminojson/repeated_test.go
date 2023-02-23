@@ -1,16 +1,18 @@
 package aminojson
 
 import (
+	"fmt"
+	"testing"
+
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/x/tx/aminojson"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	gogopb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/gogo/testpb"
 	pulsarpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/pulsar/testpb"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestRepeatedFields(t *testing.T) {
@@ -60,7 +62,7 @@ func TestRepeatedFields(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			gogoBz, err := cdc.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
-			pulsarBz, err := aj.MarshalAmino(tc.pulsar)
+			pulsarBz, err := aj.Marshal(tc.pulsar)
 			if tc.errs {
 				require.Error(t, err)
 				return

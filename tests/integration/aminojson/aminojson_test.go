@@ -364,7 +364,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 
 				legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
 				require.NoError(t, err)
-				aminoJson, err := aj.MarshalAmino(msg)
+				aminoJson, err := aj.Marshal(msg)
 				require.NoError(t, err)
 				require.Equal(t, string(legacyAminoJson), string(aminoJson))
 			})
@@ -584,7 +584,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogoBytes, err := encCfg.Amino.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
 
-			pulsarBytes, err := aj.MarshalAmino(tc.pulsar)
+			pulsarBytes, err := aj.Marshal(tc.pulsar)
 			if tc.pulsarMarshalFails {
 				require.Error(t, err)
 				return
@@ -653,11 +653,11 @@ func TestSendAuthorization(t *testing.T) {
 	require.Zero(t, len(pulsar.SpendLimit))
 
 	legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
-	aminoJson, err := aj.MarshalAmino(sanityPulsar)
+	aminoJson, err := aj.Marshal(sanityPulsar)
 
 	require.Equal(t, string(legacyAminoJson), string(aminoJson))
 
-	aminoJson, err = aj.MarshalAmino(pulsar)
+	aminoJson, err = aj.Marshal(pulsar)
 	require.NoError(t, err)
 
 	// at this point, pulsar.SpendLimit = [], and gogo.SpendLimit = nil, but they will both marshal to `[]`

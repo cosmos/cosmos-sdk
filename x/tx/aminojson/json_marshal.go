@@ -84,8 +84,8 @@ func (enc Encoder) DefineFieldEncoding(name string, encoder FieldEncoder) Encode
 	return enc
 }
 
-// MarshalAmino serializes a protobuf message to JSON.
-func (enc Encoder) MarshalAmino(message proto.Message) ([]byte, error) {
+// Marshal serializes a protobuf message to JSON.
+func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := enc.beginMarshal(message.ProtoReflect(), buf)
 	return buf.Bytes(), err

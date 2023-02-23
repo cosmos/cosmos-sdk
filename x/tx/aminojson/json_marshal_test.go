@@ -41,7 +41,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			bz, err := aj.MarshalAmino(tc.msg)
+			bz, err := aj.Marshal(tc.msg)
 
 			if tc.shouldErr {
 				require.Error(t, err)
@@ -91,7 +91,7 @@ func TestAminoJSON(t *testing.T) {
 		Si64:     -59268425823934,
 		Sf64:     -659101379604211154,
 	}
-	bz, err := aminojson.NewAminoJSON().MarshalAmino(msg)
+	bz, err := aminojson.NewAminoJSON().Marshal(msg)
 	assert.NilError(t, err)
 	legacyBz, err := cdc.MarshalJSON(msg)
 	assert.NilError(t, err)
@@ -102,7 +102,7 @@ func TestRapid(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&testpb.ABitOfEverything{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
-		bz, err := aminojson.NewAminoJSON().MarshalAmino(msg)
+		bz, err := aminojson.NewAminoJSON().Marshal(msg)
 		assert.NilError(t, err)
 		checkInvariants(t, msg, bz)
 	})

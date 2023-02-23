@@ -24,8 +24,8 @@ var _ ValueRenderer = decValueRenderer{}
 func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	decStr := v.String()
 
-	// If the decimal doesn't contain a point, we assume it's a badly formatted
-	// value. So we try to parse it as an integer and then convert it to a
+	// If the decimal doesn't contain a point, we assume it's a value formatted using the legacy
+	// `sdk.Dec`. So we try to parse it as an integer and then convert it to a
 	// decimal.
 	if !strings.Contains(decStr, ".") {
 		parsedInt, ok := new(big.Int).SetString(decStr, 10)

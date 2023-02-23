@@ -64,9 +64,23 @@ func NewCreateValidatorCmd() *cobra.Command {
 				return err
 			}
 
+<<<<<<< HEAD
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
 				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
+=======
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			validator, err := parseAndValidateValidatorJSON(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
+
+			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator)
+>>>>>>> c71d19939 (fix: change the behavior of offline mode correctly (#15123))
 			if err != nil {
 				return err
 			}

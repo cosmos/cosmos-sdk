@@ -47,7 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#14650](https://github.com/cosmos/cosmos-sdk/pull/14650) Add Textual SignModeHandler. It is however **NOT** enabled by default, and should only be used for **TESTING** purposes until `SIGN_MODE_TEXTUAL` is fully released.
 * (cli) [#14655](https://github.com/cosmos/cosmos-sdk/pull/14655) Add a new command to list supported algos.
 * (x/crisis) [#14588](https://github.com/cosmos/cosmos-sdk/pull/14588) Use CacheContext() in AssertInvariants()
-* (client) [#14342](https://github.com/cosmos/cosmos-sdk/pull/14342) Add `simd config` command is now a sub-command, for setting, getting and migrating Cosmos SDK configuration files.
+* (client) [#14342](https://github.com/cosmos/cosmos-sdk/pull/14342) Add `<app> config` command is now a sub-command, for setting, getting and migrating Cosmos SDK configuration files.
 * (query) [#14468](https://github.com/cosmos/cosmos-sdk/pull/14468) Implement pagination for collections.
 * (x/bank) [#14045](https://github.com/cosmos/cosmos-sdk/pull/14045) Add CLI command `spendable-balances`, which also accepts the flag `--denom`.
 * (x/slashing, x/staking) [#14363](https://github.com/cosmos/cosmos-sdk/pull/14363) Add the infraction a validator commited type as an argument to a `SlashWithInfractionReason` keeper method.
@@ -83,7 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (server) [#15041](https://github.com/cosmos/cosmos-sdk/pull/15041) Remove unnecessary sleeps from gRPC and API server initiation. The servers will start and accept requests as soon as they're ready.
 * (x/staking) [#14864](https://github.com/cosmos/cosmos-sdk/pull/14864) `create-validator` CLI command now takes a json file as an arg instead of having a bunch of required flags to it.
-* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  Added ability to query blocks by either height/hash `simd q block --type=height|hash <height|hash>`.
+* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  Added ability to query blocks by either height/hash `<app> q block --type=height|hash <height|hash>`.
 * (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
 * (x/evidence) [#14757](https://github.com/cosmos/cosmos-sdk/pull/14757) Evidence messages do not need to implement a `.Type()` anymore.
 * (x/auth/tx) [#14751](https://github.com/cosmos/cosmos-sdk/pull/14751) Remove `.Type()` and `Route()` methods from all msgs and `legacytx.LegacyMsg` interface.
@@ -98,7 +98,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (protobuf) [#14476](https://github.com/cosmos/cosmos-sdk/pull/14476) Clean up protobuf annotations `{accepts,implements}_interface`.
 * (module) [#14415](https://github.com/cosmos/cosmos-sdk/pull/14415) Loosen assertions in SetOrderBeginBlockers() and SetOrderEndBlockers()
 * (context)[#14384](https://github.com/cosmos/cosmos-sdk/pull/14384) refactor(context): Pass EventManager to the context as an interface.
-* (types) [#14354](https://github.com/cosmos/cosmos-sdk/pull/14354) - improve performance on Context.KVStore and Context.TransientStore by 40%
+* (types) [#14354](https://github.com/cosmos/cosmos-sdk/pull/14354) improve performance on Context.KVStore and Context.TransientStore by 40%
 * (crypto/keyring) [#14151](https://github.com/cosmos/cosmos-sdk/pull/14151) Move keys presentation from `crypto/keyring` to `client/keys`
 * (types) [#14163](https://github.com/cosmos/cosmos-sdk/pull/14163) Refactor `(coins Coins) Validate()` to avoid unnecessary map.
 * (signing) [#14087](https://github.com/cosmos/cosmos-sdk/pull/14087) Add SignModeHandlerWithContext interface with a new `GetSignBytesWithContext` to get the sign bytes using `context.Context` as an argument to access state.

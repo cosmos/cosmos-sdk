@@ -12,10 +12,10 @@ import (
 )
 
 // MessageEncoder is a function that can encode a protobuf protoreflect.Message to JSON.
-type MessageEncoder func(protoreflect.Message, io.Writer) error
+type MessageEncoder func(*Encoder, protoreflect.Message, io.Writer) error
 
 // FieldEncoder is a function that can encode a protobuf protoreflect.Value to JSON.
-type FieldEncoder func(Encoder, protoreflect.Value, io.Writer) error
+type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 
 // Encoder is a JSON encoder that uses the Amino JSON encoding rules for protobuf messages.
 type Encoder struct {
@@ -159,7 +159,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 	}
 
 	if encoder := enc.getMessageEncoder(msg); encoder != nil {
-		err := encoder(msg, writer)
+		err := encoder(&enc, msg, writer)
 		return err
 	}
 
@@ -226,7 +226,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 
 		// encode value
 		if encoder := enc.getFieldEncoding(f); encoder != nil {
-			err = encoder(enc, v, writer)
+			err = encoder(&enc, v, writer)
 			if err != nil {
 				return err
 			}

@@ -20,7 +20,7 @@ import (
 //	(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"
 //
 // In pulsar message they represented as strings, which is the only format this encoder supports.
-func cosmosIntEncoder(_ Encoder, v protoreflect.Value, w io.Writer) error {
+func cosmosIntEncoder(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch val := v.Interface().(type) {
 	case string:
 		if val == "" {
@@ -44,7 +44,7 @@ func cosmosIntEncoder(_ Encoder, v protoreflect.Value, w io.Writer) error {
 
 // cosmosDecEncoder provides legacy compatible encoding for cosmos.Dec and cosmos.Int types. These are sometimes
 // represented as strings in pulsar messages and sometimes as bytes.  This encoder handles both cases.
-func cosmosDecEncoder(_ Encoder, v protoreflect.Value, w io.Writer) error {
+func cosmosDecEncoder(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch val := v.Interface().(type) {
 	case string:
 		if val == "" {
@@ -68,14 +68,14 @@ func cosmosDecEncoder(_ Encoder, v protoreflect.Value, w io.Writer) error {
 
 // nullSliceAsEmptyEncoder replicates the behavior at:
 // https://github.com/cosmos/cosmos-sdk/blob/be9bd7a8c1b41b115d58f4e76ee358e18a52c0af/types/coin.go#L199-L205
-func nullSliceAsEmptyEncoder(aj Encoder, v protoreflect.Value, w io.Writer) error {
+func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch list := v.Interface().(type) {
 	case protoreflect.List:
 		if list.Len() == 0 {
 			_, err := w.Write([]byte("[]"))
 			return err
 		}
-		return aj.marshalList(list, w)
+		return enc.marshalList(list, w)
 	default:
 		return fmt.Errorf("unsupported type %T", list)
 	}
@@ -84,7 +84,7 @@ func nullSliceAsEmptyEncoder(aj Encoder, v protoreflect.Value, w io.Writer) erro
 // keyFieldEncoder replicates the behavior at described at:
 // https://github.com/cosmos/cosmos-sdk/blob/b49f948b36bc991db5be431607b475633aed697e/proto/cosmos/crypto/secp256k1/keys.proto#L16
 // The message is treated if it were bytes directly without the key field specified.
-func keyFieldEncoder(msg protoreflect.Message, w io.Writer) error {
+func keyFieldEncoder(_ *Encoder, msg protoreflect.Message, w io.Writer) error {
 	keyField := msg.Descriptor().Fields().ByName("key")
 	if keyField == nil {
 		return errors.New(`message encoder for key_field: no field named "key" found`)
@@ -113,7 +113,7 @@ type moduleAccountPretty struct {
 
 // moduleAccountEncoder replicates the behavior in
 // https://github.com/cosmos/cosmos-sdk/blob/41a3dfeced2953beba3a7d11ec798d17ee19f506/x/auth/types/account.go#L230-L254
-func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
+func moduleAccountEncoder(_ *Encoder, msg protoreflect.Message, w io.Writer) error {
 	ma := msg.Interface().(*authapi.ModuleAccount)
 	pretty := moduleAccountPretty{
 		PubKey:      "",
@@ -142,7 +142,7 @@ func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 // https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/crypto/keys/multisig/amino.go#L35
 // also see:
 // https://github.com/cosmos/cosmos-sdk/blob/b49f948b36bc991db5be431607b475633aed697e/proto/cosmos/crypto/multisig/keys.proto#L15/
-func thresholdStringEncoder(msg protoreflect.Message, w io.Writer) error {
+func thresholdStringEncoder(enc *Encoder, msg protoreflect.Message, w io.Writer) error {
 	pk, ok := msg.Interface().(*multisig.LegacyAminoPubKey)
 	if !ok {
 		return errors.New("thresholdStringEncoder: msg not a multisig.LegacyAminoPubKey")
@@ -161,8 +161,7 @@ func thresholdStringEncoder(msg protoreflect.Message, w io.Writer) error {
 	pubkeysField := fields.ByName("public_keys")
 	pubkeys := msg.Get(pubkeysField).List()
 
-	aj := Encoder{}.DefineMessageEncoding("key_field", keyFieldEncoder)
-	err = aj.marshalList(pubkeys, w)
+	err = enc.marshalList(pubkeys, w)
 	if err != nil {
 		return err
 	}

@@ -118,7 +118,7 @@ strategy. A pruning strategy could be enforced programmatically or through
 default values. Given that different networks have different unbonding periods and
 different average block times, default values might be difficult. However, forcing
 a pruning strategy might be too limiting. So we propose to have a configurable
-pruning strategy, number of heights and interval, with a default height retention
+pruning strategy, height retention and interval, with a default height retention
 of 2,592,000 (1s block time over a month).
 
 #### State Storage (SS)
@@ -127,10 +127,10 @@ In the RMS, we will expose a *single* `KVStore` backed by the same physical
 database that backs the SC layer. This `KVStore` will be explicitly namespaced
 to avoid collisions and will act as the primary storage for (key, value) pairs.
 
-While we most likely will continue the use of `cosmos-db` to allow for flexibility
-and iteration over preferred physical storage backends as research and benchmarking
-continues. However, we propose to hardcode the use of RocksDB as the primary
-physical storage backend.
+While we most likely will continue the use of `cosmos-db`, or some local interface,
+to allow for flexibility and iteration over preferred physical storage backends
+as research and benchmarking continues. However, we propose to hardcode the use
+of RocksDB as the primary physical storage backend.
 
 Since the SS layer will be implemented as a `KVStore`, it will support the
 following functionality:
@@ -140,8 +140,18 @@ following functionality:
 * Historical queries and versioning
 * Pruning
 
-For each height, upon `Commit`, the SS layer will write all (key, value) pairs
-under a [RocksDB user-defined timestamp](https://github.com/facebook/rocksdb/wiki/User-defined-Timestamp-%28Experimental%29).
+The RMS will keep track of all buffered writes using a dedicated and internal
+`MemoryListener` for each `StoreKey`. For each block height, upon `Commit`, the
+SS layer will write all buffered (key, value) pairs under a [RocksDB user-defined timestamp](https://github.com/facebook/rocksdb/wiki/User-defined-Timestamp-%28Experimental%29) column
+family using the block height as the timestamp, which is an unsigned integer.
+This will allow a client to fetch (key, value) pairs at historical and current
+heights along with making iteration and range queries relatively performant as
+the timestamp is the key suffix.
+
+Note, we choose not to use a more general approach of allowing any embedded key/value
+database using height key-prefixed keys to effectively version state because doing
+so would yield variable length keys in most common databases which would effectively
+make it less performant, e.g. iteration and range queries.
 
 ## Consequences
 

@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (cli) [#8](https://github.com/evmos/cosmos-sdk/pull/8) Add `auto` option for fees flag
+
 ## [v0.46.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.9) - 2022-02-07
 
 ### Improvements

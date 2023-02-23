@@ -278,6 +278,7 @@ func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
 	// send coins
 	acct2 := "sally"
 	err = k.Send(ctx, acct1, acct2, denom, 30)
+	assert.NilError(t, err)
 	bal, err = k.Balance(ctx, acct1, denom)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(70), bal)
@@ -287,6 +288,7 @@ func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
 
 	// burn coins
 	err = k.Burn(ctx, acct2, denom, 3)
+	assert.NilError(t, err)
 	bal, err = k.Balance(ctx, acct2, denom)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(27), bal)

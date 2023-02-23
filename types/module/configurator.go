@@ -3,18 +3,18 @@ package module
 import (
 	"fmt"
 
+	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	googlegrpc "google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
-
-	errorsmod "cosmossdk.io/errors"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 )
 
 // Configurator provides the hooks to allow modules to configure and register
@@ -52,25 +52,30 @@ type configurator struct {
 
 	// migrations is a map of moduleName -> fromVersion -> migration script handler
 	migrations map[string]map[uint64]MigrationHandler
+
+	registryCache *protoregistry.Files
 }
 
-// RegisterService implements Configurator
+// RegisterService implements the grpc.Server interface
 func (c configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}) {
-	fds, err := proto.MergedFileDescriptors()
-	if err != nil {
-		panic(err)
+	if c.registryCache == nil {
+		var err error
+		c.registryCache, err = proto.MergedRegistry()
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	for _, fd := range fds.File {
-		for _, svc := range fd.GetService() {
-			if sd.ServiceName == fd.GetPackage()+"."+svc.GetName() {
-				if protobuf.HasExtension(svc.Options, cosmosmsg.E_Service) {
-					c.msgServer.RegisterService(sd, ss)
-				} else {
-					c.queryServer.RegisterService(sd, ss)
-				}
-			}
-		}
+	desc, err := c.registryCache.FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
+	if err != nil {
+		panic(err)
+
+	}
+
+	if protobuf.HasExtension(desc.Options(), cosmosmsg.E_Service) {
+		c.msgServer.RegisterService(sd, ss)
+	} else {
+		c.queryServer.RegisterService(sd, ss)
 	}
 }
 

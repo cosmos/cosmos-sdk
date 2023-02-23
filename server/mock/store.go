@@ -58,6 +58,10 @@ func (ms multiStore) SetMetrics(metrics.StoreMetrics) {
 	panic("not implemented")
 }
 
+func (ms multiStore) ListeningEnabled(key storetypes.StoreKey) bool {
+	panic("not implemented")
+}
+
 func (ms multiStore) PopStateCache() []*storetypes.StoreKVPair {
 	panic("not implemented")
 }

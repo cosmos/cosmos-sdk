@@ -77,13 +77,6 @@ type Store struct {
 	listeners map[types.StoreKey]*types.MemoryListener
 
 	metrics metrics.StoreMetrics
-
-	// listenersMx is a sync.Mutex used by state listeners attached to StoreKeys.
-	// The operations involved with state listening are mutating and destructive;
-	// adding listeners (CacheMultiStore, CacheMultiStoreWithVersion) and popping
-	// the current block's state changes (PopStateCache) need to be synchronized.
-	// Therefore, the listenersMx is used to synchronize between calls.
-	listenersMx sync.Mutex
 }
 
 var (
@@ -407,8 +400,6 @@ func (rs *Store) TracingEnabled() bool {
 
 // AddListeners adds a listener for the KVStore belonging to the provided StoreKey
 func (rs *Store) AddListeners(keys []types.StoreKey) {
-	rs.listenersMx.Lock()
-	defer rs.listenersMx.Unlock()
 	for i := range keys {
 		listener := rs.listeners[keys[i]]
 		if listener == nil {
@@ -417,8 +408,8 @@ func (rs *Store) AddListeners(keys []types.StoreKey) {
 	}
 }
 
-// listeningEnabled returns if listening is enabled for a specific KVStore
-func (rs *Store) listeningEnabled(key types.StoreKey) bool {
+// ListeningEnabled returns if listening is enabled for a specific KVStore
+func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 	if ls, ok := rs.listeners[key]; ok {
 		return ls != nil
 	}
@@ -430,8 +421,6 @@ func (rs *Store) listeningEnabled(key types.StoreKey) bool {
 // not the state in the store itself. This is a mutating and destructive operation.
 // This method has been synchronized.
 func (rs *Store) PopStateCache() []*types.StoreKVPair {
-	rs.listenersMx.Lock()
-	defer rs.listenersMx.Unlock()
 	var cache []*types.StoreKVPair
 	for key := range rs.listeners {
 		ls := rs.listeners[key]
@@ -515,14 +504,12 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
-	rs.listenersMx.Lock()
-	defer rs.listenersMx.Unlock()
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		store := types.KVStore(v)
 		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
 		// set same listeners on cache store will observe duplicated writes.
-		if rs.listeningEnabled(k) {
+		if rs.ListeningEnabled(k) {
 			store = listenkv.NewStore(store, k, rs.listeners[k])
 		}
 		stores[k] = store
@@ -535,8 +522,6 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
-	rs.listenersMx.Lock()
-	defer rs.listenersMx.Unlock()
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	for key, store := range rs.stores {
 		var cacheStore types.KVStore
@@ -559,7 +544,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 
 		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
 		// set same listeners on cache store will observe duplicated writes.
-		if rs.listeningEnabled(key) {
+		if rs.ListeningEnabled(key) {
 			cacheStore = listenkv.NewStore(cacheStore, key, rs.listeners[key])
 		}
 
@@ -591,8 +576,6 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 // NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
 // set on the root store.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
-	rs.listenersMx.Lock()
-	defer rs.listenersMx.Unlock()
 	s := rs.stores[key]
 	if s == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
@@ -602,7 +585,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
 	}
-	if rs.listeningEnabled(key) {
+	if rs.ListeningEnabled(key) {
 		store = listenkv.NewStore(store, key, rs.listeners[key])
 	}
 

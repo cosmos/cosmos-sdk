@@ -659,15 +659,15 @@ func TestAddListenersAndListeningEnabled(t *testing.T) {
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	testKey := types.NewKVStoreKey("listening_test_key")
-	enabled := multi.listeningEnabled(testKey)
+	enabled := multi.ListeningEnabled(testKey)
 	require.False(t, enabled)
 
 	wrongTestKey := types.NewKVStoreKey("wrong_listening_test_key")
 	multi.AddListeners([]types.StoreKey{testKey})
-	enabled = multi.listeningEnabled(wrongTestKey)
+	enabled = multi.ListeningEnabled(wrongTestKey)
 	require.False(t, enabled)
 
-	enabled = multi.listeningEnabled(testKey)
+	enabled = multi.ListeningEnabled(testKey)
 	require.True(t, enabled)
 }
 

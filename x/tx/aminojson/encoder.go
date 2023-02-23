@@ -159,11 +159,10 @@ func thresholdStringEncoder(msg protoreflect.Message, w io.Writer) error {
 
 	fields := msg.Descriptor().Fields()
 	pubkeysField := fields.ByName("public_keys")
-	pubkeysMsg := msg.Get(pubkeysField).List()
+	pubkeys := msg.Get(pubkeysField).List()
 
-	aj := AminoJSON{}
-	aj.DefineMessageEncoding("key_field", keyFieldEncoder)
-	err = aj.marshalList(pubkeysMsg, w)
+	aj := AminoJSON{}.DefineMessageEncoding("key_field", keyFieldEncoder)
+	err = aj.marshalList(pubkeys, w)
 	if err != nil {
 		return err
 	}

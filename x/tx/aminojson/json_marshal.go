@@ -54,11 +54,12 @@ func NewAminoJSON() AminoJSON {
 //	  option (amino.message_encoding)            = "module_account";
 //	  ...
 //	}
-func (aj *AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) {
+func (aj AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) AminoJSON {
 	if aj.messageEncoders == nil {
 		aj.messageEncoders = map[string]MessageEncoder{}
 	}
 	aj.messageEncoders[name] = encoder
+	return aj
 }
 
 // DefineFieldEncoding defines a custom encoding for a protobuf field.  The `name` field must match a usage of
@@ -74,21 +75,22 @@ func (aj *AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) 
 //	  ];
 //	  ...
 //	}
-func (aj *AminoJSON) DefineFieldEncoding(name string, encoder FieldEncoder) {
+func (aj AminoJSON) DefineFieldEncoding(name string, encoder FieldEncoder) AminoJSON {
 	if aj.fieldEncoders == nil {
 		aj.fieldEncoders = map[string]FieldEncoder{}
 	}
 	aj.fieldEncoders[name] = encoder
+	return aj
 }
 
 // MarshalAmino serializes a protobuf message to JSON.
-func (aj *AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
+func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := aj.beginMarshal(message.ProtoReflect(), buf)
 	return buf.Bytes(), err
 }
 
-func (aj *AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
+func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
 	name, named := getMessageAminoName(msg)
 	if named {
 		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
@@ -112,7 +114,7 @@ func (aj *AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) er
 	return nil
 }
 
-func (aj *AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
+func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
 		err := aj.marshalMessage(val, writer)
@@ -140,7 +142,7 @@ func (aj *AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	}
 }
 
-func (aj *AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
+func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
 	if msg == nil {
 		return errors.New("nil message")
 	}
@@ -223,7 +225,7 @@ func (aj *AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) 
 
 		// encode value
 		if encoder := aj.getFieldEncoding(f); encoder != nil {
-			err = encoder(*aj, v, writer)
+			err = encoder(aj, v, writer)
 			if err != nil {
 				return err
 			}
@@ -262,7 +264,7 @@ func jsonMarshal(w io.Writer, v interface{}) error {
 	return err
 }
 
-func (aj *AminoJSON) marshalList(list protoreflect.List, writer io.Writer) error {
+func (aj AminoJSON) marshalList(list protoreflect.List, writer io.Writer) error {
 	n := list.Len()
 
 	_, err := writer.Write([]byte("["))

@@ -149,9 +149,23 @@ heights along with making iteration and range queries relatively performant as
 the timestamp is the key suffix.
 
 Note, we choose not to use a more general approach of allowing any embedded key/value
-database using height key-prefixed keys to effectively version state because doing
-so would yield variable length keys in most common databases which would effectively
-make it less performant, e.g. iteration and range queries.
+database, such as LevelDB or PebbleDB, using height key-prefixed keys to
+effectively version state because most of these databases use variable length
+keys which would effectively make actions likes iteration and range queries less
+performant.
+
+The state machine will continue to query state through it's own dedicated `KVStore`
+using the relevant `KVStoreKey`. However, the query will be invoked against the
+SC layer as it is today. Client queries, on the other hand, will be routed through
+the `MultiStore` set in `BaseApp` via a `abci.RequestQuery`. This in effect will
+route the query to the RMS and the RMS will use the SS layer to perform a direct
+key lookup. If a version is specified the `abci.RequestQuery` object, the SS `KVStore`
+will set the appropriate value for the timestamp. If no height is provided, the
+SS layer will assume the latest height. The SS layer will store a reverse index
+to lookup `LatestVersion -> timestamp(version)` which is set on `Commit`.
+
+#### Proofs
+
 
 ## Consequences
 

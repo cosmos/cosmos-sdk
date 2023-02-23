@@ -71,6 +71,7 @@ type BaseApp struct { //nolint: maligned
 	prepareProposal sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
 	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
 	commiter        sdk.Commiter               // logic to run during commit
+	precommiter     sdk.Precommiter            // logic to run during commit using the deliverState
 	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
 	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
 	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.

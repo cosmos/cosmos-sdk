@@ -175,6 +175,14 @@ func (app *BaseApp) SetCommiter(commiter sdk.Commiter) {
 	app.commiter = commiter
 }
 
+func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
+	if app.sealed {
+		panic("SetPrecommiter() on sealed BaseApp")
+	}
+
+	app.precommiter = precommiter
+}
+
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	if app.sealed {
 		panic("SetAnteHandler() on sealed BaseApp")

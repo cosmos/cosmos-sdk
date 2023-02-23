@@ -485,6 +485,10 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
 
+	if app.precommiter != nil {
+		app.precommiter(app.deliverState.ctx)
+	}
+
 	// empty/reset the deliver state
 	app.deliverState = nil
 

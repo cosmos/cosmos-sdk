@@ -992,3 +992,116 @@ func (mr *MockCommitAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interfa
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockCommitAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
+
+// MockPrecommitAppModule is a mock of PrecommitAppModule interface.
+type MockPrecommitAppModule struct {
+	ctrl     *gomock.Controller
+	recorder *MockPrecommitAppModuleMockRecorder
+}
+
+// MockPrecommitAppModuleMockRecorder is the mock recorder for MockPrecommitAppModule.
+type MockPrecommitAppModuleMockRecorder struct {
+	mock *MockPrecommitAppModule
+}
+
+// NewMockPrecommitAppModule creates a new mock instance.
+func NewMockPrecommitAppModule(ctrl *gomock.Controller) *MockPrecommitAppModule {
+	mock := &MockPrecommitAppModule{ctrl: ctrl}
+	mock.recorder = &MockPrecommitAppModuleMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPrecommitAppModule) EXPECT() *MockPrecommitAppModuleMockRecorder {
+	return m.recorder
+}
+
+// GetQueryCmd mocks base method.
+func (m *MockPrecommitAppModule) GetQueryCmd() *cobra.Command {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetQueryCmd")
+	ret0, _ := ret[0].(*cobra.Command)
+	return ret0
+}
+
+// GetQueryCmd indicates an expected call of GetQueryCmd.
+func (mr *MockPrecommitAppModuleMockRecorder) GetQueryCmd() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockPrecommitAppModule)(nil).GetQueryCmd))
+}
+
+// GetTxCmd mocks base method.
+func (m *MockPrecommitAppModule) GetTxCmd() *cobra.Command {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTxCmd")
+	ret0, _ := ret[0].(*cobra.Command)
+	return ret0
+}
+
+// GetTxCmd indicates an expected call of GetTxCmd.
+func (mr *MockPrecommitAppModuleMockRecorder) GetTxCmd() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockPrecommitAppModule)(nil).GetTxCmd))
+}
+
+// Name mocks base method.
+func (m *MockPrecommitAppModule) Name() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Name")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Name indicates an expected call of Name.
+func (mr *MockPrecommitAppModuleMockRecorder) Name() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockPrecommitAppModule)(nil).Name))
+}
+
+// Precommit mocks base method.
+func (m *MockPrecommitAppModule) Precommit(arg0 types1.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Precommit", arg0)
+}
+
+// Precommit indicates an expected call of Precommit.
+func (mr *MockPrecommitAppModuleMockRecorder) Precommit(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Precommit", reflect.TypeOf((*MockPrecommitAppModule)(nil).Precommit), arg0)
+}
+
+// RegisterGRPCGatewayRoutes mocks base method.
+func (m *MockPrecommitAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
+}
+
+// RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
+func (mr *MockPrecommitAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockPrecommitAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
+}
+
+// RegisterInterfaces mocks base method.
+func (m *MockPrecommitAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterInterfaces", arg0)
+}
+
+// RegisterInterfaces indicates an expected call of RegisterInterfaces.
+func (mr *MockPrecommitAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockPrecommitAppModule)(nil).RegisterInterfaces), arg0)
+}
+
+// RegisterLegacyAminoCodec mocks base method.
+func (m *MockPrecommitAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
+}
+
+// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
+func (mr *MockPrecommitAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockPrecommitAppModule)(nil).RegisterLegacyAminoCodec), arg0)
+}

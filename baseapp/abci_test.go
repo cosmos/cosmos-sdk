@@ -626,6 +626,33 @@ func TestBaseApp_Commit(t *testing.T) {
 	require.Equal(t, true, wasCommiterCalled)
 }
 
+func TestBaseApp_Precommit(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := log.NewTestLogger(t)
+
+	cp := &tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
+			MaxGas: 5000000,
+		},
+	}
+
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: cp,
+	})
+
+	wasPrecommiterCalled := false
+	app.SetPrecommiter(func(ctx sdk.Context) {
+		wasPrecommiterCalled = true
+	})
+	app.Seal()
+
+	app.Commit()
+	require.Equal(t, true, wasPrecommiterCalled)
+}
+
 func TestABCI_CheckTx(t *testing.T) {
 	// This ante handler reads the key and checks that the value matches the
 	// current counter. This ensures changes to the KVStore persist across
@@ -1361,7 +1388,6 @@ func TestCommiterCalledWithCheckState(t *testing.T) {
 
 	wasCommiterCalled := false
 	app.SetCommiter(func(ctx sdk.Context) {
-		// Make sure context is for next block
 		require.Equal(t, true, ctx.IsCheckTx())
 		wasCommiterCalled = true
 	})
@@ -1370,6 +1396,28 @@ func TestCommiterCalledWithCheckState(t *testing.T) {
 	app.Commit()
 
 	require.Equal(t, true, wasCommiterCalled)
+}
+
+// Verifies that the Precommiter is called with the deliverState.
+func TestPrecommiterCalledWithDeliverState(t *testing.T) {
+	t.Parallel()
+
+	logger := log.NewTestLogger(t)
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+
+	wasPrecommiterCalled := false
+	app.SetPrecommiter(func(ctx sdk.Context) {
+		require.Equal(t, false, ctx.IsCheckTx())
+		require.Equal(t, false, ctx.IsReCheckTx())
+		wasPrecommiterCalled = true
+	})
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.Commit()
+
+	require.Equal(t, true, wasPrecommiterCalled)
 }
 
 func TestABCI_Proposal_HappyPath(t *testing.T) {

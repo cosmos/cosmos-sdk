@@ -65,11 +65,11 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	return cmd, nil
 }
 
-// EnhanceCommandCommon enhances the provided query or msg command with either generated commands based on the provided module
+// enhanceCommandCommon enhances the provided query or msg command with either generated commands based on the provided module
 // options or the provided custom commands for each module. If the provided query command already contains a command
 // for a module, that command is not over-written by this method. This allows a graceful addition of autocli to
 // automatically fill in missing commands.
-func (b *Builder) EnhanceCommandCommon(cmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command, buildModuleCommand func(*cobra.Command, *autocliv1.ModuleOptions, string) error) error {
+func (b *Builder) enhanceCommandCommon(cmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command, buildModuleCommand func(*cobra.Command, *autocliv1.ModuleOptions, string) error) error {
 	allModuleNames := map[string]bool{}
 	for moduleName := range moduleOptions {
 		allModuleNames[moduleName] = true

@@ -29,7 +29,7 @@ func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOpti
 		}
 		return nil
 	}
-	if err := b.EnhanceCommandCommon(msgCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
+	if err := b.enhanceCommandCommon(msgCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
 		return nil, err
 	}
 

@@ -416,7 +416,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	options := map[string]*autocliv1.ModuleOptions{
 		"test": {},
 	}
-	err := b.EnhanceCommandCommon(cmd, options, map[string]*cobra.Command{}, enhanceMsg)
+	err := b.enhanceCommandCommon(cmd, options, map[string]*cobra.Command{}, enhanceMsg)
 	assert.NilError(t, err)
 
 	cmd = &cobra.Command{Use: "test"}
@@ -424,7 +424,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	customCommands := map[string]*cobra.Command{
 		"test2": {Use: "test"},
 	}
-	err = b.EnhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
+	err = b.enhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
 	assert.NilError(t, err)
 
 	cmd = &cobra.Command{Use: "test"}
@@ -432,7 +432,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 		"test": {Tx: nil},
 	}
 	customCommands = map[string]*cobra.Command{}
-	err = b.EnhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
+	err = b.enhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
 	assert.NilError(t, err)
 
 }

@@ -114,7 +114,7 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-		if err := builder.EnhanceCommandCommon(queryCmd, moduleOptions, customQueryCmds, enhanceQuery); err != nil {
+		if err := builder.enhanceCommandCommon(queryCmd, moduleOptions, customQueryCmds, enhanceQuery); err != nil {
 			return err
 		}
 	} else {
@@ -141,7 +141,7 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if msgCmd := findSubCommand(rootCmd, "tx"); msgCmd != nil {
-		if err := builder.EnhanceCommandCommon(msgCmd, moduleOptions, customQueryCmds, enhanceMsg); err != nil {
+		if err := builder.enhanceCommandCommon(msgCmd, moduleOptions, customQueryCmds, enhanceMsg); err != nil {
 			return err
 		}
 	} else {

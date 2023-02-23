@@ -127,13 +127,14 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
-		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
+		err := b.AddQueryServiceCommands(cmd, cmdDescriptor)
 		return cmd, err
 	}
 	cmd, err := buildModuleQueryCommand("test", testCmdDesc)
 	assert.NilError(t, err)
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
+	fmt.Println(conn.out.String())
 	assert.NilError(t, cmd.Execute())
 	return conn
 }

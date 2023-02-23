@@ -21,10 +21,10 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 	queryCmd.Aliases = []string{"q"}
 
 	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
-		txCmdDesc := modOpts.Tx
-		if txCmdDesc != nil {
+		txQueryDesc := modOpts.Query
+		if txQueryDesc != nil {
 			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
-			err := b.AddQueryServiceCommands(cmd, txCmdDesc)
+			err := b.AddQueryServiceCommands(subCmd, txQueryDesc)
 			if err != nil {
 				return err
 			}
@@ -33,7 +33,7 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 		}
 		return nil
 	}
-	if err := b.EnhanceCommandCommon(queryCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
+	if err := b.enhanceCommandCommon(queryCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
 		return nil, err
 	}
 

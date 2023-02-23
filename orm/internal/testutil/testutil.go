@@ -95,6 +95,10 @@ var TestFieldSpecs = []TestFieldSpec{
 	{
 		"dur",
 		rapid.Custom(func(t *rapid.T) protoreflect.Message {
+			isNil := rapid.Float32().Draw(t, "isNil")
+			if isNil >= 0.95 { // draw a nil 5% of the time
+				return nil
+			}
 			seconds := rapid.Int64Range(0, 315576000000).Draw(t, "seconds")
 			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
 			return (&durationpb.Duration{

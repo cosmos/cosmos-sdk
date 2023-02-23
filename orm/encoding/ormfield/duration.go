@@ -8,15 +8,10 @@ import (
 )
 
 const (
-	durationNilValue   = 0x40
 	durationSecondsMin = -315576000000
 	durationSecondsMax = 315576000000
 	durationNanosMin   = -999999999
 	durationNanosMax   = 999999999
-)
-
-var (
-	durationNilBz = []byte{durationNilValue}
 )
 
 type DurationCodec struct{}
@@ -24,7 +19,7 @@ type DurationCodec struct{}
 func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	// nil case
 	if !value.IsValid() {
-		_, err := w.Write(durationNilBz)
+		_, err := w.Write(timestampDurationNilBz)
 		return err
 	}
 
@@ -33,40 +28,95 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	if secondsInt < durationSecondsMin || secondsInt > durationSecondsMax {
 		return fmt.Errorf("duration seconds is out of range %d, must be between %d and %d", secondsInt, durationSecondsMin, durationSecondsMax)
 	}
-
-	// TODO: implement me
-
-	nanosInt := nanos.Int()
-	if nanosInt < durationNanosMin || nanosInt > durationNanosMax {
-		return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", secondsInt, durationNanosMin, durationNanosMax)
+	negative := secondsInt < 0
+	secondsInt -= durationSecondsMin
+	err := encodeSeconds(secondsInt, w)
+	if err != nil {
+		return err
 	}
 
-	panic("implement me")
+	nanosInt := nanos.Int()
+	if nanosInt == 0 {
+		_, err = w.Write(timestampZeroNanosBz)
+		return err
+	}
+
+	if negative {
+		if nanosInt < durationNanosMin || nanosInt > 0 {
+			return fmt.Errorf("negative duration nanos is out of range %d, must be between %d and %d", secondsInt, durationNanosMin, 0)
+		}
+		nanosInt = -nanosInt
+	} else {
+		if nanosInt < 0 || nanosInt > durationNanosMax {
+			return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", secondsInt, 0, durationNanosMax)
+		}
+	}
+
+	return encodeNanos(nanosInt, w)
 }
 
 func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
-	//TODO implement me
-	panic("implement me")
+	isNil, seconds, err := decodeSeconds(r)
+	if isNil || err != nil {
+		return protoreflect.Value{}, err
+	}
+
+	seconds += durationSecondsMin
+
+	negative := seconds < 0
+
+	msg := durationMsgType.New()
+	msg.Set(durationSecondsField, protoreflect.ValueOfInt64(seconds))
+
+	nanos, err := decodeNanos(r)
+	if err != nil {
+		return protoreflect.Value{}, err
+	}
+
+	if nanos == 0 {
+		return protoreflect.ValueOfMessage(msg), nil
+	}
+
+	if negative {
+		nanos = -nanos
+	}
+
+	msg.Set(durationNanosField, protoreflect.ValueOfInt32(nanos))
+	return protoreflect.ValueOfMessage(msg), nil
 }
 
 func (d DurationCodec) Compare(v1, v2 protoreflect.Value) int {
-	//TODO implement me
-	panic("implement me")
+	if !v1.IsValid() {
+		if !v2.IsValid() {
+			return 0
+		}
+		return 1
+	}
+
+	if !v2.IsValid() {
+		return -1
+	}
+
+	s1, n1 := getDurationSecondsAndNanos(v1)
+	s2, n2 := getDurationSecondsAndNanos(v2)
+	c := compareInt(s1, s2)
+	if c != 0 {
+		return c
+	} else {
+		return compareInt(n1, n2)
+	}
 }
 
 func (d DurationCodec) IsOrdered() bool {
-	//TODO implement me
-	panic("implement me")
+	return true
 }
 
 func (d DurationCodec) FixedBufferSize() int {
-	//TODO implement me
-	panic("implement me")
+	return timestampDurationBufferSize
 }
 
-func (d DurationCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
-	//TODO implement me
-	panic("implement me")
+func (d DurationCodec) ComputeBufferSize(protoreflect.Value) (int, error) {
+	return timestampDurationBufferSize, nil
 }
 
 var (

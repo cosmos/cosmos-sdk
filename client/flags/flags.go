@@ -14,9 +14,10 @@ const (
 	// DefaultGasAdjustment is applied to gas estimates to avoid tx execution
 	// failures due to state changes that might occur between the tx simulation
 	// and the actual run.
-	DefaultGasAdjustment = 1.0
+	DefaultGasAdjustment = 1.2
 	DefaultGasLimit      = 200000
-	GasFlagAuto          = "auto"
+
+	FlagAuto = "auto"
 
 	// DefaultKeyringBackend
 	DefaultKeyringBackend = keyring.BackendOS
@@ -112,7 +113,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 	cmd.Flags().Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")
 	cmd.Flags().String(FlagNote, "", "Note to add a description to the transaction (previously --memo)")
-	cmd.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10uatom")
+	// --fees can accept integers+denom and "auto"
+	cmd.Flags().String(FlagFees, FlagAuto, fmt.Sprintf("Fees to pay along with transaction; eg: 10uatom. By default, is set to %q to calculate sufficient fees and gas automatically", FlagAuto))
 	cmd.Flags().String(FlagGasPrices, "", "Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)")
 	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 	cmd.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
@@ -129,10 +131,9 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagFeeGranter, "", "Fee granter grants fees for the transaction")
 	cmd.Flags().String(FlagTip, "", "Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator")
 	cmd.Flags().Bool(FlagAux, false, "Generate aux signer data instead of sending a tx")
-
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically. Note: %q option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of %q. (default %d)",
-		GasFlagAuto, GasFlagAuto, FlagFees, DefaultGasLimit))
+		FlagAuto, FlagAuto, FlagFees, DefaultGasLimit))
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd
@@ -153,7 +154,7 @@ type GasSetting struct {
 
 func (v *GasSetting) String() string {
 	if v.Simulate {
-		return GasFlagAuto
+		return FlagAuto
 	}
 
 	return strconv.FormatUint(v.Gas, 10)
@@ -168,13 +169,13 @@ func ParseGasSetting(gasStr string) (GasSetting, error) {
 	case "":
 		return GasSetting{false, DefaultGasLimit}, nil
 
-	case GasFlagAuto:
+	case FlagAuto:
 		return GasSetting{true, 0}, nil
 
 	default:
 		gas, err := strconv.ParseUint(gasStr, 10, 64)
 		if err != nil {
-			return GasSetting{}, fmt.Errorf("gas must be either integer or %s", GasFlagAuto)
+			return GasSetting{}, fmt.Errorf("gas must be either integer or %s", FlagAuto)
 		}
 
 		return GasSetting{false, gas}, nil

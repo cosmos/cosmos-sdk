@@ -22,9 +22,11 @@ import (
 // set the discoverLedger function which is responsible for loading the Ledger
 // device at runtime or returning an error.
 func init() {
-	discoverLedger = func() (SECP256K1, error) {
+	options.discoverLedger = func() (SECP256K1, error) {
 		return LedgerSECP256K1Mock{}, nil
 	}
+
+	initOptionsDefault()
 }
 
 type LedgerSECP256K1Mock struct{}

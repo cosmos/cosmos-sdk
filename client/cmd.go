@@ -284,7 +284,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		// If the `from` signer account is a ledger key, we need to use
 		// SIGN_MODE_AMINO_JSON, because ledger doesn't support proto yet.
 		// ref: https://github.com/cosmos/cosmos-sdk/issues/8109
-		if keyType == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON {
+		if keyType == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON && !clientCtx.LedgerHasProtobuf {
 			fmt.Println("Default sign-mode 'direct' not supported by Ledger, using sign-mode 'amino-json'.")
 			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
 		}
@@ -306,6 +306,20 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 				clientCtx = clientCtx.WithSignModeStr(flags.SignModeDirectAux)
 			}
 		}
+	}
+
+	feesStr, _ := flagSet.GetString(flags.FlagFees)
+	gasStr, _ := flagSet.GetString(flags.FlagGas)
+	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
+
+	// if used --gas=auto, then don't accept any other flag related to fees (e.g. --fees, --gas-price)
+	if gasStr == flags.FlagAuto && ((feesStr != flags.FlagAuto && feesStr != "") || gasPricesStr != "") {
+		return clientCtx, fmt.Errorf("you are using the --gas %q flag. It is not allowed to specify other flags (e.g. --fees and/or --gas-prices)", flags.FlagAuto)
+	}
+
+	// ditto for --fees=auto
+	if feesStr == flags.FlagAuto && (gasStr != "" || gasPricesStr != "") {
+		return clientCtx, fmt.Errorf("you are using the --fees %q flag. It is not allowed to specify other flags (e.g. --gas and/or --gas-prices)", flags.FlagAuto)
 	}
 
 	return clientCtx, nil

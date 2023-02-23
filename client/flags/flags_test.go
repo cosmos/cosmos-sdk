@@ -16,7 +16,7 @@ func TestParseGasSetting(t *testing.T) {
 		expectErr bool
 	}{
 		{"empty input", "", flags.GasSetting{false, flags.DefaultGasLimit}, false},
-		{"auto", flags.GasFlagAuto, flags.GasSetting{true, 0}, false},
+		{"auto", flags.FlagAuto, flags.GasSetting{true, 0}, false},
 		{"valid custom gas", "73800", flags.GasSetting{false, 73800}, false},
 		{"invalid custom gas", "-73800", flags.GasSetting{false, 0}, true},
 	}

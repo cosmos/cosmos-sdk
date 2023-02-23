@@ -8,7 +8,7 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 The Cosmos SDK has migrated to CometBFT, as its default consensus engine.
 CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
-Due to the import changes, this is a breaking change. Chains need to remove **entierely** their imports of Tendermint Core in their codebase, from direct and indirects imports in their `go.mod`.
+Due to the import changes, this is a breaking change. Chains need to remove **entirely** their imports of Tendermint Core in their codebase, from direct and indirects imports in their `go.mod`.
 
 * Replace `github.com/tendermint/tendermint` by `github.com/cometbft/cometbft`
 * Replace `github.com/tendermint/tm-db` by `github.com/cometbft/cometbft-db`

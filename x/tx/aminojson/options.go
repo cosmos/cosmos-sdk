@@ -75,8 +75,8 @@ func (enc Encoder) getMessageEncoder(message protoreflect.Message) MessageEncode
 func (enc Encoder) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEncoder {
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_Encoding) {
-		enc := proto.GetExtension(opts, amino.E_Encoding).(string)
-		if fn, ok := enc.fieldEncoders[enc]; ok {
+		encoding := proto.GetExtension(opts, amino.E_Encoding).(string)
+		if fn, ok := enc.fieldEncoders[encoding]; ok {
 			return fn
 		}
 	}

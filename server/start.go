@@ -137,13 +137,13 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
 			if !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
-				return wrapCPUProfile(serverCtx, func() error {
+				return WrapCPUProfile(serverCtx, func() error {
 					return startStandAlone(serverCtx, appCreator)
 				})
 			}
 
 			// amino is needed here for backwards compatibility of REST routes
-			err = wrapCPUProfile(serverCtx, func() error {
+			err = WrapCPUProfile(serverCtx, func() error {
 				return startInProcess(serverCtx, clientCtx, appCreator)
 			})
 			errCode, ok := err.(ErrorCode)
@@ -505,8 +505,8 @@ func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
 	return telemetry.New(cfg.Telemetry)
 }
 
-// wrapCPUProfile runs callback in a goroutine, then wait for quit signals.
-func wrapCPUProfile(ctx *Context, callback func() error) error {
+// WrapCPUProfile runs callback in a goroutine, then wait for quit signals.
+func WrapCPUProfile(ctx *Context, callback func() error) error {
 	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
 		f, err := os.Create(cpuProfile)
 		if err != nil {

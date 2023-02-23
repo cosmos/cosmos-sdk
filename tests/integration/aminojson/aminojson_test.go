@@ -311,7 +311,7 @@ var (
 	}
 )
 
-// TestAminoJSON_Equivalence tests that x/tx/AminoJSON encoding is equivalent to the legacy AminoJSON encoding.
+// TestAminoJSON_Equivalence tests that x/tx/Encoder encoding is equivalent to the legacy Encoder encoding.
 // A custom generator is used to generate random messages that are then encoded using both encoders.  The custom
 // generator only supports proto.Message (which implement the protoreflect API) so in order to test legacy gogo types
 // we end up with a workflow as follows:
@@ -382,7 +382,7 @@ func newAny(t *testing.T, msg proto.Message) *anypb.Any {
 	}
 }
 
-// TestAminoJSON_LegacyParity tests that the AminoJSON encoder produces the same output as the AminoJSON encoder.
+// TestAminoJSON_LegacyParity tests that the Encoder encoder produces the same output as the Encoder encoder.
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},

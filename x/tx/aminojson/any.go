@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
-func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) error {
+func (enc Encoder) marshalAny(message protoreflect.Message, writer io.Writer) error {
 	anyMsg := message.Interface().(*anypb.Any)
 	resolver := protoregistry.GlobalTypes
 
@@ -33,5 +33,5 @@ func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) e
 			anyMsg.TypeUrl)
 	}
 
-	return aj.beginMarshal(valueMsg, writer)
+	return enc.beginMarshal(valueMsg, writer)
 }

@@ -61,28 +61,28 @@ func getOneOfNames(field protoreflect.FieldDescriptor) (string, string, error) {
 	return fieldName, typeName, nil
 }
 
-func (aj AminoJSON) getMessageEncoder(message protoreflect.Message) MessageEncoder {
+func (enc Encoder) getMessageEncoder(message protoreflect.Message) MessageEncoder {
 	opts := message.Descriptor().Options()
 	if proto.HasExtension(opts, amino.E_MessageEncoding) {
 		encoding := proto.GetExtension(opts, amino.E_MessageEncoding).(string)
-		if fn, ok := aj.messageEncoders[encoding]; ok {
+		if fn, ok := enc.messageEncoders[encoding]; ok {
 			return fn
 		}
 	}
 	return nil
 }
 
-func (aj AminoJSON) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEncoder {
+func (enc Encoder) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEncoder {
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_Encoding) {
 		enc := proto.GetExtension(opts, amino.E_Encoding).(string)
-		if fn, ok := aj.fieldEncoders[enc]; ok {
+		if fn, ok := enc.fieldEncoders[enc]; ok {
 			return fn
 		}
 	}
 	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
 		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
-		if fn, ok := aj.scalarEncoders[scalar]; ok {
+		if fn, ok := enc.scalarEncoders[scalar]; ok {
 			return fn
 		}
 	}

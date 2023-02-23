@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
-	multisig "cosmossdk.io/api/cosmos/crypto/multisig"
+	"cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/math"
 )
 
@@ -20,7 +20,7 @@ import (
 //	(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"
 //
 // In pulsar message they represented as strings, which is the only format this encoder supports.
-func cosmosIntEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
+func cosmosIntEncoder(_ Encoder, v protoreflect.Value, w io.Writer) error {
 	switch val := v.Interface().(type) {
 	case string:
 		if val == "" {
@@ -44,7 +44,7 @@ func cosmosIntEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
 
 // cosmosDecEncoder provides legacy compatible encoding for cosmos.Dec and cosmos.Int types. These are sometimes
 // represented as strings in pulsar messages and sometimes as bytes.  This encoder handles both cases.
-func cosmosDecEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
+func cosmosDecEncoder(_ Encoder, v protoreflect.Value, w io.Writer) error {
 	switch val := v.Interface().(type) {
 	case string:
 		if val == "" {
@@ -68,7 +68,7 @@ func cosmosDecEncoder(_ AminoJSON, v protoreflect.Value, w io.Writer) error {
 
 // nullSliceAsEmptyEncoder replicates the behavior at:
 // https://github.com/cosmos/cosmos-sdk/blob/be9bd7a8c1b41b115d58f4e76ee358e18a52c0af/types/coin.go#L199-L205
-func nullSliceAsEmptyEncoder(aj AminoJSON, v protoreflect.Value, w io.Writer) error {
+func nullSliceAsEmptyEncoder(aj Encoder, v protoreflect.Value, w io.Writer) error {
 	switch list := v.Interface().(type) {
 	case protoreflect.List:
 		if list.Len() == 0 {
@@ -161,7 +161,7 @@ func thresholdStringEncoder(msg protoreflect.Message, w io.Writer) error {
 	pubkeysField := fields.ByName("public_keys")
 	pubkeys := msg.Get(pubkeysField).List()
 
-	aj := AminoJSON{}.DefineMessageEncoding("key_field", keyFieldEncoder)
+	aj := Encoder{}.DefineMessageEncoding("key_field", keyFieldEncoder)
 	err = aj.marshalList(pubkeys, w)
 	if err != nil {
 		return err

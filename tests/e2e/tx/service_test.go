@@ -12,6 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -135,7 +136,7 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	b64Sig := base64.StdEncoding.EncodeToString(sig.Signature)
 	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, b64Sig)
 	res, err := s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{
-		Events:  []string{sigFormatted},
+		Query:   sigFormatted,
 		OrderBy: 0,
 		Page:    0,
 		Limit:   10,
@@ -146,7 +147,7 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	s.Require().Equal(res.Txs[0].Signatures[0], sig.Signature)
 
 	// bad format should error
-	_, err = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{Events: []string{"tx.foo.bar='baz'"}})
+	_, err = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{Query: "tx.foo.bar='baz'"})
 	s.Require().ErrorContains(err, "invalid event;")
 }
 
@@ -250,48 +251,62 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 		{
 			"nil request",
 			nil,
-			true, "request cannot be nil", 0,
+			true,
+			"request cannot be nil",
+			0,
 		},
 		{
 			"empty request",
 			&tx.GetTxsEventRequest{},
-			true, "must declare at least one event to search", 0,
+			true,
+			"query cannot be empty",
+			0,
 		},
 		{
 			"request with dummy event",
-			&tx.GetTxsEventRequest{Events: []string{"foobar"}},
-			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}", 0,
+			&tx.GetTxsEventRequest{Query: "foobar"},
+			true,
+			"failed to search for txs",
+			0,
 		},
 		{
 			"request with order-by",
 			&tx.GetTxsEventRequest{
-				Events:  []string{bankMsgSendEventAction},
+				Query:   bankMsgSendEventAction,
 				OrderBy: tx.OrderBy_ORDER_BY_ASC,
 			},
-			false, "", 3,
+			false,
+			"",
+			3,
 		},
 		{
 			"without pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{bankMsgSendEventAction},
+				Query: bankMsgSendEventAction,
 			},
-			false, "", 3,
+			false,
+			"",
+			3,
 		},
 		{
 			"with pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{bankMsgSendEventAction},
-				Page:   2,
-				Limit:  2,
+				Query: bankMsgSendEventAction,
+				Page:  2,
+				Limit: 2,
 			},
-			false, "", 1,
+			false,
+			"",
+			1,
 		},
 		{
 			"with multi events",
 			&tx.GetTxsEventRequest{
-				Events: []string{bankMsgSendEventAction, "message.module='bank'"},
+				Query: fmt.Sprintf("%s AND message.module='bank'", bankMsgSendEventAction),
 			},
-			false, "", 3,
+			false,
+			"",
+			3,
 		},
 	}
 	for _, tc := range testCases {
@@ -306,6 +321,7 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 				s.Require().Equal(len(grpcRes.Txs), tc.expLen)
+
 				// Make sure fields are populated.
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681

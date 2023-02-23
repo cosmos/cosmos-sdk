@@ -161,6 +161,9 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+// TODO remove after CometBFT fix
+replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
+
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp

@@ -264,7 +264,8 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (x/staking) [#14590](https://github.com/cosmos/cosmos-sdk/pull/14590) `MsgUndelegateResponse` now includes undelegated amount. `x/staking` module's `keeper.Undelegate` now returns 3 values (completionTime,undelegateAmount,error)  instead of 2.
 * (x/feegrant) [14649](https://github.com/cosmos/cosmos-sdk/pull/14649) Extract Feegrant in its own go.mod and rename the package to `cosmossdk.io/x/feegrant`.
 * (x/bank) [#14894](https://github.com/cosmos/cosmos-sdk/pull/14894) Return a human readable denomination for IBC vouchers when querying bank balances. Added a `ResolveDenom` parameter to `types.QueryAllBalancesRequest`.
-* (crypto) [#15070](https://github.com/cosmos/cosmos-sdk/pull/15070) `GenerateFromPassword` and `Cost` from `bcrypt.go` now take a `uint32` instead of a `int` type.  
+* (crypto) [#15070](https://github.com/cosmos/cosmos-sdk/pull/15070) `GenerateFromPassword` and `Cost` from `bcrypt.go` now take a `uint32` instead of a `int` type.
+* (client) [#15123](https://github.com/cosmos/cosmos-sdk/pull/15123) `NewFactoryCLI` now returns an error, in addition to the `Factory`.
 
 ### Client Breaking Changes
 
@@ -315,6 +316,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints.
 * (x/auth) [#13877](https://github.com/cosmos/cosmos-sdk/pull/13877) Handle missing account numbers during `InitGenesis`.
 * (cli) [#14509](https://github.com/cosmos/cosmos-sdk/pull/#14509) Added missing options to keyring-backend flag usage
+* (cli) [#15123](https://github.com/cosmos/cosmos-sdk/pull/15123) Change the offline mode behavior that does not match the written in the description to behave as written
 
 ### Deprecated
 

@@ -133,8 +133,8 @@ func testMsgBuildError(t *testing.T, args ...string) error {
 		return cmd, err
 	}
 	cmd, err := buildModuleMsgCommand("test", testCmdMsgDesc)
+	assert.NilError(t, err)
 	cmd.SetArgs(args)
-	cmd.SetOut(conn.out)
 	return cmd.Execute()
 }
 

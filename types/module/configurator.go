@@ -24,6 +24,9 @@ import (
 type Configurator interface {
 	grpc.Server
 
+	// Error returns the last error encountered during RegisterService.
+	Error() error
+
 	// MsgServer returns a grpc.Server instance which allows registering services
 	// that will handle TxBody.messages in transactions. These Msg's WILL NOT
 	// be exposed as gRPC services.
@@ -54,22 +57,19 @@ type configurator struct {
 	migrations map[string]map[uint64]MigrationHandler
 
 	registryCache *protoregistry.Files
+	err           error
 }
 
-// RegisterService implements the grpc.Server interface
-func (c configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}) {
+// RegisterService implements the grpc.Server interface.
+func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}) {
 	if c.registryCache == nil {
-		var err error
-		c.registryCache, err = proto.MergedRegistry()
-		if err != nil {
-			panic(err)
-		}
+		c.registryCache, c.err = proto.MergedRegistry()
 	}
 
 	desc, err := c.registryCache.FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
 	if err != nil {
-		panic(err)
-
+		c.err = err
+		return
 	}
 
 	if protobuf.HasExtension(desc.Options(), cosmosmsg.E_Service) {
@@ -79,9 +79,14 @@ func (c configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}
 	}
 }
 
+// Error returns the last error encountered during RegisterService.
+func (c *configurator) Error() error {
+	return c.err
+}
+
 // NewConfigurator returns a new Configurator instance
 func NewConfigurator(cdc codec.Codec, msgServer grpc.Server, queryServer grpc.Server) Configurator {
-	return configurator{
+	return &configurator{
 		cdc:         cdc,
 		msgServer:   msgServer,
 		queryServer: queryServer,
@@ -89,20 +94,20 @@ func NewConfigurator(cdc codec.Codec, msgServer grpc.Server, queryServer grpc.Se
 	}
 }
 
-var _ Configurator = configurator{}
+var _ Configurator = &configurator{}
 
 // MsgServer implements the Configurator.MsgServer method
-func (c configurator) MsgServer() grpc.Server {
+func (c *configurator) MsgServer() grpc.Server {
 	return c.msgServer
 }
 
 // QueryServer implements the Configurator.QueryServer method
-func (c configurator) QueryServer() grpc.Server {
+func (c *configurator) QueryServer() grpc.Server {
 	return c.queryServer
 }
 
 // RegisterMigration implements the Configurator.RegisterMigration method
-func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error {
+func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error {
 	if fromVersion == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidVersion, "module migration versions should start at 1")
 	}
@@ -122,7 +127,7 @@ func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, h
 
 // runModuleMigrations runs all in-place store migrations for one given module from a
 // version to another version.
-func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
+func (c *configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
 	// No-op if toVersion is the initial version or if the version is unchanged.
 	if toVersion <= 1 || fromVersion == toVersion {
 		return nil

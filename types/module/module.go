@@ -368,7 +368,7 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterServices registers all module services
-func (m *Manager) RegisterServices(cfg Configurator) {
+func (m *Manager) RegisterServices(cfg Configurator) error {
 	for _, module := range m.Modules {
 		if module, ok := module.(HasServices); ok {
 			module.RegisterServices(cfg)
@@ -377,7 +377,13 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 		if module, ok := module.(appmodule.HasServices); ok {
 			module.RegisterServices(cfg)
 		}
+
+		if cfg.Error() != nil {
+			return cfg.Error()
+		}
 	}
+
+	return nil
 }
 
 // InitGenesis performs init genesis functionality for modules. Exactly one
@@ -590,9 +596,9 @@ type VersionMap map[string]uint64
 //
 // Please also refer to docs/core/upgrade.md for more information.
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
-	c, ok := cfg.(configurator)
+	c, ok := cfg.(*configurator)
 	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", &configurator{}, cfg)
 	}
 	modules := m.OrderMigrations
 	if modules == nil {

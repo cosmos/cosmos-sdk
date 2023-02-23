@@ -134,7 +134,6 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 	assert.NilError(t, err)
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
-	fmt.Println(conn.out.String())
 	assert.NilError(t, cmd.Execute())
 	return conn
 }

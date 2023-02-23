@@ -106,6 +106,48 @@ withdraw_addr_enabled: true`,
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDistributionInfo() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"invalid val address",
+			[]string{"invalid address", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"json output",
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+		{
+			"text output",
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidatorDistributionInfo()
+			clientCtx := val.ClientCtx
+
+			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 	val := s.network.Validators[0]
 

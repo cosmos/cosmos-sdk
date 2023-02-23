@@ -33,7 +33,7 @@ Welcome to the Cosmos SDK's team roadmap.
 * Auto-cli tx support 
     * Tx support for auto-cli/hubl
         * This would fully remove the need for application developers to write cli commands for their modules
-* Consensus Key Rotation
+* [Consensus Key Rotation](https://github.com/cosmos/cosmos-sdk/issues/5231)
 
 
 ### Dev UX
@@ -41,9 +41,9 @@ Welcome to the Cosmos SDK's team roadmap.
 * [Release collections v1](https://github.com/cosmos/cosmos-sdk/issues/14300) 
     * Collections is a new abstraction layer similar to the ORM. In the ADR phase it received support from many in the ecosystem. 
     * V1 release should allow modules to be migrated to collections.  
+    * Migrate 3 modules to use collections api
+        *  Migrating 3 modules to use collections would help in show users how to migrate users
 * [Release ORM v1](https://github.com/cosmos/cosmos-sdk/issues/11088)
-* Migrate 3 modules to use collections api
-    * Migrating 3 modules to use collections would help in show users how to migrate users
 * [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) 
     * Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up a audit before final release.
 * Core API
@@ -92,9 +92,9 @@ Issue: https://github.com/cosmos/cosmos-sdk/issues/12272
 
 ### IAVL
 
-* [ADR 001](https://github.com/cosmos/iavl/pull/608) 
+* [x] [ADR 001](https://github.com/cosmos/iavl/pull/608) 
     * Implementation has been completed, waiting on reviewers
-* [Prepare the migration path](https://github.com/cosmos/iavl/issues/675) 
+* [x] [Prepare the migration path](https://github.com/cosmos/iavl/issues/675) 
     * Migration path has not been finalized
 * Test on mainnets 
     * If possible we would like to test the new IAVL design on mainnets to observer behavior changes. 

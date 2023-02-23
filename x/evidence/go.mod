@@ -10,9 +10,9 @@ require (
 	cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
-	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-	github.com/cosmos/cosmos-proto v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
+	github.com/cometbft/cometbft v0.37.0-alpha.3
+	github.com/cosmos/cosmos-proto v1.0.0-beta.2
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230221204830-dbc4d104b26f
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
@@ -139,6 +139,7 @@ require (
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb // indirect
 	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
@@ -150,11 +151,6 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Here are the short-lived replace from the module.
-// Replace here are pending PRs, or version to be tagged.
-// TODO use instead a tagged version of the SDK (with CometBFT) when available
-replace github.com/cosmos/cosmos-sdk => ../..
 
 // Below are the long-lived replace of the Cosmos SDK
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

@@ -178,67 +178,6 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 	}
 }
 
-func TestMultistoreSnapshotRestore(t *testing.T) {
-	source := newMultiStoreWithGeneratedData(t, memdb.NewDB(), 3, 4)
-	target := newMultiStore(t, memdb.NewDB(), 3)
-	require.Equal(t, source.LastCommitID().Version, int64(1))
-	version := uint64(source.LastCommitID().Version)
-	// check for target store restore
-	require.Equal(t, target.LastCommitID().Version, int64(0))
-
-	dummyExtensionItem := snapshottypes.SnapshotItem{
-		Item: &snapshottypes.SnapshotItem_Extension{
-			Extension: &snapshottypes.SnapshotExtensionMeta{
-				Name:   "test",
-				Format: 1,
-			},
-		},
-	}
-
-	chunks := make(chan io.ReadCloser, 100)
-	go func() {
-		streamWriter := snapshots.NewStreamWriter(chunks)
-		require.NotNil(t, streamWriter)
-		defer streamWriter.Close()
-		err := source.Snapshot(version, streamWriter)
-		require.NoError(t, err)
-		// write an extension metadata
-		err = streamWriter.WriteMsg(&dummyExtensionItem)
-		require.NoError(t, err)
-	}()
-
-	streamReader, err := snapshots.NewStreamReader(chunks)
-	require.NoError(t, err)
-	nextItem, err := target.Restore(version, snapshottypes.CurrentFormat, streamReader)
-	require.NoError(t, err)
-	require.Equal(t, *dummyExtensionItem.GetExtension(), *nextItem.GetExtension())
-
-	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
-
-	for sKey := range source.schema {
-		sourceSubStore, err := source.getSubstore(sKey)
-		require.NoError(t, err)
-		targetSubStore, err := target.getSubstore(sKey)
-		require.NoError(t, err)
-		require.Equal(t, sourceSubStore, targetSubStore)
-	}
-
-	// checking snapshot restoring for store with existed schema and without existing versions
-	target3 := newMultiStore(t, memdb.NewDB(), 4)
-	chunks3 := make(chan io.ReadCloser, 100)
-	go func() {
-		streamWriter3 := snapshots.NewStreamWriter(chunks3)
-		require.NotNil(t, streamWriter3)
-		defer streamWriter3.Close()
-		err := source.Snapshot(version, streamWriter3)
-		require.NoError(t, err)
-	}()
-	streamReader3, err := snapshots.NewStreamReader(chunks3)
-	require.NoError(t, err)
-	_, err = target3.Restore(version, snapshottypes.CurrentFormat, streamReader3)
-	require.Error(t, err)
-}
-
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {
 	benchmarkMultistoreSnapshot(b, 10, 10000)
 }

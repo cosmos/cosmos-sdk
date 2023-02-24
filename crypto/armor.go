@@ -167,6 +167,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, kdf string, passphrase string) 
 		}
 		key = crypto.Sha256(key) // get 32 bytes
 	} else if kdf == KDFScrypt {
+		// TODO: we should probably store these params in the header
 		key, err = scrypt.Key([]byte(passphrase), saltBytes, 1<<15, 8, 1, 32)
 		if err != nil {
 			panic(errorsmod.Wrap(err, "error generating scrypt key from passphrase"))

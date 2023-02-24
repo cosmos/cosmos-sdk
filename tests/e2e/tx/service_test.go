@@ -399,7 +399,7 @@ func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
 				s.Require().NotZero(result.TxResponses[0].Height)
-				s.Require().Equal(tc.expLen, int(result.Total))
+				s.Require().Equal(tc.expLen, len(result.Txs))
 			}
 		})
 	}

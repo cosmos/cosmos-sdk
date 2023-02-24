@@ -46,7 +46,7 @@ const (
 	passKeyringPrefix  = "keyring-%s"
 
 	// temporary pass phrase for exporting a key during a key rename
-	passPhrase = "temp"
+	tempPassPhrase = "temp"
 )
 
 var (
@@ -454,7 +454,7 @@ func (ks keystore) Rename(oldName, newName string) error {
 		return errorsmod.Wrap(ErrKeyAlreadyExists, fmt.Sprintf("rename failed, %s", newName))
 	}
 
-	armor, err := ks.ExportPrivKeyArmor(oldName, passPhrase)
+	armor, err := ks.ExportPrivKeyArmor(oldName, tempPassPhrase)
 	if err != nil {
 		return err
 	}
@@ -463,7 +463,7 @@ func (ks keystore) Rename(oldName, newName string) error {
 		return err
 	}
 
-	if err := ks.ImportPrivKey(newName, armor, passPhrase); err != nil {
+	if err := ks.ImportPrivKey(newName, armor, tempPassPhrase); err != nil {
 		return err
 	}
 

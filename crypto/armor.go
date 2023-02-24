@@ -135,7 +135,7 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 
 // Encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo string) string {
-	kdf := KDFScrypt //KDFBcrypt
+	kdf := KDFScrypt // every new encrypted key will use scrypt
 	saltBytes, encBytes := encryptPrivKey(privKey, kdf, passphrase)
 	header := map[string]string{
 		"kdf":  kdf,

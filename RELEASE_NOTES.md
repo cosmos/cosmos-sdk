@@ -1,14 +1,19 @@
-# Cosmos SDK v0.45.14 Release Notes
+# Cosmos SDK v0.45.15 Release Notes
 
-This release fixes a possible way to DoS a node.
-
-**NOTE**: Add or update the following replace in the `go.mod` of your application:
+This release includes the migration to CometBFT. This migration should be not breaking.
+From `v0.45.15`+, the following replace is *mandatory* in the `go.mod` of your application:
 
 ```go
-// use informal system fork of tendermint
-replace github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
+// use cometbft
+replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
 ```
+
+A more complete migration is happening in Cosmos SDK v0.47.
+
+Additionally, the SDK sets its minimum version to Go 1.19.
+This is not because the SDK uses new Go 1.19 functionalities, but because we recommend chains as well to upgrade to Go 1.19 because Go 1.18 is not supported anymore.
+We recommend applications to perform a **coordinated upgrade** when migrating from Go 1.18 to Go 1.19.
 
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.45.x/CHANGELOG.md) for an exhaustive list of changes.
 
-**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.45.13...v0.45.14
+**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.45.14...v0.45.15

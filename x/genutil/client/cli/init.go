@@ -108,7 +108,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			}
 
 			// Get initial height
-			initHeight, err := cmd.Flags().GetInt64(flags.FlagInitHeight)
+			initHeight, _ := cmd.Flags().GetInt64(flags.FlagInitHeight)
 			if initHeight < 1 {
 				initHeight = 1
 			}

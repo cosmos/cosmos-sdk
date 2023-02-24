@@ -351,7 +351,7 @@ func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 1),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 2),
 			false,
 			"", 1,
 		},

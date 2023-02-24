@@ -11,6 +11,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/xsalsa20symmetric"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/scrypt"
 
 	"cosmossdk.io/depinject"
 
@@ -52,11 +53,12 @@ func TestScryptArmorUnarmorPrivKey(t *testing.T) {
 	require.Contains(t, err.Error(), "unrecognized armor type")
 
 	// armor key manually
+	params := crypto.ScryptDefaultParams()
 	encryptPrivKeyFn := func(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 		saltBytes = cmtcrypto.CRandBytes(16)
-		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), crypto.BcryptSecurityParameter)
+		key, err := scrypt.Key([]byte(passphrase), saltBytes, params.N, params.R, params.P, params.DKLen)
 		require.NoError(t, err)
-		key = cmtcrypto.Sha256(key) // get 32 bytes
+
 		privKeyBytes := legacy.Cdc.Amino.MustMarshalBinaryBare(privKey)
 		return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 	}
@@ -64,14 +66,21 @@ func TestScryptArmorUnarmorPrivKey(t *testing.T) {
 
 	// wrong kdf header
 	headerWrongKdf := map[string]string{
-		"kdf":  "wrong",
-		"salt": fmt.Sprintf("%X", saltBytes),
-		"type": "secp256k",
+		"kdf":       "wrong",
+		"kdfparams": params.String(),
+		"salt":      fmt.Sprintf("%X", saltBytes),
+		"type":      "secp256k",
 	}
 	armored = crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerWrongKdf, encBytes)
 	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.Error(t, err)
 	require.Equal(t, "unrecognized KDF type: wrong", err.Error())
+
+	// fix kdf and try again
+	headerWrongKdf["kdf"] = "scrypt"
+	armored = crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerWrongKdf, encBytes)
+	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
+	require.NoError(t, err)
 }
 
 func TestBcryptArmorUnarmorPrivKey(t *testing.T) {

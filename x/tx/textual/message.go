@@ -54,7 +54,7 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 			return nil, err
 		}
 
-		subscreens := make([]Screen, 0)
+		var subscreens []Screen
 		if fd.IsList() {
 			if r, ok := vr.(RepeatedValueRenderer); ok {
 				// If the field is a list, and handles its own repeated rendering

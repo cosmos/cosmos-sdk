@@ -59,6 +59,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 			require.Equal(t, string(legacyBz), string(bz))
 
 			goProtoJSON, err := protojson.Marshal(tc.msg)
+			assert.NilError(t, err)
 			err = cdc.UnmarshalJSON(bz, msg2)
 			assert.NilError(t, err, "unmarshal failed: %s vs %s", legacyBz, goProtoJSON)
 		})

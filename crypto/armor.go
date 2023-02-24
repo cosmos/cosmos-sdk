@@ -26,8 +26,9 @@ const (
 
 	defaultAlgo = "secp256k1"
 
-	headerVersion = "version"
-	headerType    = "type"
+	headerVersion   = "version"
+	headerType      = "type"
+	headerKDFParams = "kdfparams"
 )
 
 // BcryptSecurityParameter is security parameter var, and it can be changed within the lcd test.
@@ -46,9 +47,78 @@ const (
 var BcryptSecurityParameter uint32 = 12
 
 var (
-	KDFBcrypt = "bcrypt"
-	KDFScrypt = "scrypt"
+	KDFBcrypt  = "bcrypt"
+	KDFScrypt  = "scrypt"
+	DefaultKDF = KDFScrypt
 )
+
+// TODO: verify that these parameters are reasonable
+var (
+	ScryptDefaultN     int = 1 << 15
+	ScryptDefaultR     int = 8
+	ScryptDefaultP     int = 1
+	ScryptDefaultDKLen int = 32
+)
+
+// Scrypt params
+type scryptParams struct {
+	N     int `json:"n"`
+	R     int `json:"r"`
+	P     int `json:"p"`
+	DKLen int `json:"dklen"`
+}
+
+func ScryptDefaultParams() scryptParams {
+	return scryptParams{
+		N:     ScryptDefaultN,
+		R:     ScryptDefaultR,
+		P:     ScryptDefaultP,
+		DKLen: ScryptDefaultDKLen,
+	}
+}
+
+func (p scryptParams) String() string {
+	return fmt.Sprintf("n=%d,r=%d,p=%d,dklen=%d", p.N, p.R, p.P, p.DKLen)
+}
+
+func parseScryptParams(params string) (scryptParams, error) {
+	var p scryptParams
+	_, err := fmt.Sscanf(params, "n=%d,r=%d,p=%d,dklen=%d", &p.N, &p.R, &p.P, &p.DKLen)
+	if err != nil {
+		return p, fmt.Errorf("invalid scrypt params: %v %s", err, params)
+	}
+	return p, nil
+}
+
+func deriveKey(header map[string]string, passphrase string) ([]byte, error) {
+	kdf := header["kdf"]
+	salt, err := hex.DecodeString(header["salt"])
+	if err != nil {
+		return nil, fmt.Errorf("error decoding salt: %v", err.Error())
+	}
+
+	if kdf == KDFBcrypt {
+		key, err := bcrypt.GenerateFromPassword(salt, []byte(passphrase), BcryptSecurityParameter)
+		if err != nil {
+			return nil, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")
+		}
+		key = crypto.Sha256(key) // get 32 bytes
+		return key, nil
+	} else if kdf == KDFScrypt {
+		params, err := parseScryptParams(header[headerKDFParams])
+		if err != nil {
+			return nil, errorsmod.Wrap(err, "error parsing scrypt params")
+		}
+
+		key, err := scrypt.Key([]byte(passphrase), salt, params.N, params.R, params.P, params.DKLen)
+		if err != nil {
+			return nil, errorsmod.Wrap(err, "error generating scrypt key from passphrase")
+		}
+		return key, nil
+	}
+
+	return nil, fmt.Errorf("unrecognized KDF type: %s", kdf)
+}
 
 //-----------------------------------------------------------------
 // add armor
@@ -130,17 +200,20 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 	return
 }
 
-//-----------------------------------------------------------------
+// -----------------------------------------------------------------
 // encrypt/decrypt with armor
 
 // Encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo string) string {
-	kdf := KDFScrypt // every new encrypted key will use scrypt
-	saltBytes, encBytes := encryptPrivKey(privKey, kdf, passphrase)
 	header := map[string]string{
-		"kdf":  kdf,
-		"salt": fmt.Sprintf("%X", saltBytes),
+		"kdf": DefaultKDF,
 	}
+
+	if header["kdf"] == KDFScrypt {
+		header[headerKDFParams] = ScryptDefaultParams().String()
+	}
+
+	header, encBytes := encryptPrivKey(privKey, header, passphrase)
 
 	if algo != "" {
 		header[headerType] = algo
@@ -154,31 +227,16 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 // encrypt the given privKey with the passphrase using a randomly
 // generated salt and the xsalsa20 cipher. returns the salt and the
 // encrypted priv key.
-func encryptPrivKey(privKey cryptotypes.PrivKey, kdf string, passphrase string) (saltBytes []byte, encBytes []byte) {
-	saltBytes = crypto.CRandBytes(16)
-	var (
-		key []byte
-		err error
-	)
-	if kdf == KDFBcrypt {
-		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-		if err != nil {
-			panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
-		}
-		key = crypto.Sha256(key) // get 32 bytes
-	} else if kdf == KDFScrypt {
-		// TODO: we should probably store these params in the header
-		key, err = scrypt.Key([]byte(passphrase), saltBytes, 1<<15, 8, 1, 32)
-		if err != nil {
-			panic(errorsmod.Wrap(err, "error generating scrypt key from passphrase"))
-		}
-	} else {
-		panic(fmt.Sprintf("unrecognized KDF: %s", kdf))
+func encryptPrivKey(privKey cryptotypes.PrivKey, header map[string]string, passphrase string) (updatedHeader map[string]string, encBytes []byte) {
+	header["salt"] = fmt.Sprintf("%X", crypto.CRandBytes(16))
+	key, err := deriveKey(header, passphrase)
+	if err != nil {
+		panic(errorsmod.Wrap(err, "error deriving key from passphrase"))
 	}
 
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 
-	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
+	return header, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
 
 // UnarmorDecryptPrivKey returns the privkey byte slice, a string of the algo type, and an error
@@ -192,20 +250,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 		return privKey, "", fmt.Errorf("unrecognized armor type: %v", blockType)
 	}
 
-	if header["kdf"] != KDFBcrypt && header["kdf"] != KDFScrypt {
-		return privKey, "", fmt.Errorf("unrecognized KDF type: %v", header["kdf"])
-	}
-
-	if header["salt"] == "" {
-		return privKey, "", fmt.Errorf("missing salt bytes")
-	}
-
-	saltBytes, err := hex.DecodeString(header["salt"])
-	if err != nil {
-		return privKey, "", fmt.Errorf("error decoding salt: %v", err.Error())
-	}
-
-	privKey, err = decryptPrivKey(saltBytes, encBytes, header["kdf"], passphrase)
+	privKey, err = decryptPrivKey(encBytes, header, passphrase)
 
 	if header[headerType] == "" {
 		header[headerType] = defaultAlgo
@@ -214,21 +259,10 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 	return privKey, header[headerType], err
 }
 
-func decryptPrivKey(saltBytes []byte, encBytes []byte, kdf, passphrase string) (privKey cryptotypes.PrivKey, err error) {
-	var key []byte
-	if kdf == KDFBcrypt {
-		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-		if err != nil {
-			panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
-		}
-		key = crypto.Sha256(key) // get 32 bytes
-	} else if kdf == KDFScrypt {
-		key, err = scrypt.Key([]byte(passphrase), saltBytes, 1<<15, 8, 1, 32)
-		if err != nil {
-			panic(errorsmod.Wrap(err, "error generating scrypt key from passphrase"))
-		}
-	} else {
-		panic(fmt.Sprintf("unrecognized KDF: %s", kdf))
+func decryptPrivKey(encBytes []byte, header map[string]string, passphrase string) (privKey cryptotypes.PrivKey, err error) {
+	key, err := deriveKey(header, passphrase)
+	if err != nil {
+		return nil, err
 	}
 
 	privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)

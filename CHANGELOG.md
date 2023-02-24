@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.46.10-ledger] - 2023-02-24
+## v0.46.10-ledger - 2023-02-24
 
 ### Improvements
 

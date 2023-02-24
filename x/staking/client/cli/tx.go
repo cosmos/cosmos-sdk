@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -109,7 +108,6 @@ where we can get the pubkey using "%s tendermint show-validator"
 		},
 	}
 
-	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -383,17 +381,6 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		return txf, nil, err
 	}
 
-	genOnly, _ := fs.GetBool(flags.FlagGenerateOnly)
-	if genOnly {
-		ip, _ := fs.GetString(FlagIP)
-		p2pPort, _ := fs.GetUint(FlagP2PPort)
-		nodeID, _ := fs.GetString(FlagNodeID)
-
-		if nodeID != "" && ip != "" && p2pPort > 0 {
-			txf = txf.WithMemo(fmt.Sprintf("%s@%s:%d", nodeID, ip, p2pPort))
-		}
-	}
-
 	return txf, msg, nil
 }
 
@@ -401,7 +388,6 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 // this is anticipated to be used with the gen-tx
 func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
-	fsCreateValidator.String(FlagIP, ipDefault, "The node's public P2P IP")
 	fsCreateValidator.Uint(FlagP2PPort, 26656, "The node's public P2P port")
 	fsCreateValidator.String(FlagNodeID, "", "The node's NodeID")
 	fsCreateValidator.String(FlagMoniker, "", "The validator's (optional) moniker")
@@ -441,7 +427,6 @@ type TxCreateValidatorConfig struct {
 
 	PubKey cryptotypes.PubKey
 
-	IP              string
 	P2PPort         uint
 	Website         string
 	SecurityContact string
@@ -451,15 +436,6 @@ type TxCreateValidatorConfig struct {
 
 func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey) (TxCreateValidatorConfig, error) {
 	c := TxCreateValidatorConfig{}
-
-	ip, err := flagSet.GetString(FlagIP)
-	if err != nil {
-		return c, err
-	}
-
-	if ip == "" {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to retrieve an external IP; the tx's memo field will be unset")
-	}
 
 	p2pPort, err := flagSet.GetUint(FlagP2PPort)
 	if err != nil {
@@ -511,7 +487,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		return c, err
 	}
 
-	c.IP = ip
 	c.P2PPort = p2pPort
 	c.Website = website
 	c.SecurityContact = securityContact
@@ -592,16 +567,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	)
 	if err != nil {
 		return txBldr, msg, err
-	}
-
-	if generateOnly {
-		ip := config.IP
-		p2pPort := config.P2PPort
-		nodeID := config.NodeID
-
-		if nodeID != "" && ip != "" && p2pPort > 0 {
-			txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:%d", nodeID, ip, p2pPort))
-		}
 	}
 
 	return txBldr, msg, nil

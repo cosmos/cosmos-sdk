@@ -76,14 +76,12 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 	chainID := "chainID"
-	ip := "1.1.1.1"
 	nodeID := "nodeID"
 	privKey := ed25519.GenPrivKey()
 	valPubKey := privKey.PubKey()
 	moniker := "DefaultMoniker"
 	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string) cli.TxCreateValidatorConfig {
 		return cli.TxCreateValidatorConfig{
-			IP:                      ip,
 			ChainID:                 chainID,
 			NodeID:                  nodeID,
 			P2PPort:                 26656,

@@ -12,17 +12,17 @@ import (
 
 	"github.com/99designs/keyring"
 	"github.com/cockroachdb/errors"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
 
 	"github.com/cosmos/go-bip39"
 
 	errorsmod "cosmossdk.io/errors"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -751,8 +751,8 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			saltBytes := cmtcrypto.CRandBytes(16)
-			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
+			// saltBytes := cmtcrypto.CRandBytes(16)
+			passwordHash, err := bcrypt.GenerateFromPassword([]byte(pass), 2)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				continue

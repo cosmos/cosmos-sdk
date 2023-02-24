@@ -386,7 +386,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 
 // Return the flagset, particular flags, and a description of defaults
 // this is anticipated to be used with the gen-tx
-func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
+func CreateValidatorMsgFlagSet() (fs *flag.FlagSet, defaultsDesc string) {
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
 	fsCreateValidator.Uint(FlagP2PPort, 26656, "The node's public P2P port")
 	fsCreateValidator.String(FlagNodeID, "", "The node's NodeID")

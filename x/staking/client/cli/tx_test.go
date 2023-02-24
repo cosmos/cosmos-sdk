@@ -145,7 +145,7 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-			fs, _ := cli.CreateValidatorMsgFlagSet(ip)
+			fs, _ := cli.CreateValidatorMsgFlagSet()
 			fs.String(flags.FlagName, "", "name of private key with which to sign the gentx")
 
 			tc.fsModify(fs)

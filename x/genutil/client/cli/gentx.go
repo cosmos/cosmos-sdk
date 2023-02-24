@@ -28,8 +28,7 @@ import (
 
 // GenTxCmd builds the application's gentx command.
 func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
-	ipDefault, _ := server.ExternalIP()
-	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
+	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet()
 
 	cmd := &cobra.Command{
 		Use:   "gentx [key_name] [amount]",

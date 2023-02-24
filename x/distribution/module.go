@@ -175,7 +175,10 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the distribution module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(ctx, req, am.keeper)
+	// dont dist on proof blocks
+	if !req.IsProofBlock {
+		BeginBlocker(ctx, req, am.keeper)
+	}
 }
 
 // AppModuleSimulation functions

@@ -183,8 +183,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock returns the begin blocker for the staking module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper)
+func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
+	// dont stake on proof blocks
+	if !req.IsProofBlock {
+		BeginBlocker(ctx, am.keeper)
+	}
 }
 
 // EndBlock returns the end blocker for the staking module. It returns no validator

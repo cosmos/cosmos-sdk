@@ -145,10 +145,6 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	s.Require().Len(res.Txs, 1)
 	s.Require().Len(res.Txs[0].Signatures, 1)
 	s.Require().Equal(res.Txs[0].Signatures[0], sig.Signature)
-
-	// bad format should error
-	_, err = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{Query: "tx.foo.bar='baz'"})
-	s.Require().ErrorContains(err, "invalid event;")
 }
 
 func (s E2ETestSuite) TestSimulateTx_GRPC() {
@@ -345,47 +341,47 @@ func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 			"empty params",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
 			true,
-			"must declare at least one event to search", 0,
+			"query cannot be empty", 0,
 		},
 		{
 			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, bankMsgSendEventAction),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, bankMsgSendEventAction),
 			false,
 			"", 3,
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 2),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 1),
 			false,
 			"", 1,
 		},
 		{
 			"valid request: order by asc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"valid request: order by desc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"invalid request: invalid order by",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			true,
 			"is not a valid tx.OrderBy", 0,
 		},
 		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"expect pass with escape event",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
 			false,
 			"", 3,
 		},
@@ -399,11 +395,11 @@ func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 			} else {
 				var result tx.GetTxsEventResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "failed to unmarshal JSON: %s", res)
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
 				s.Require().NotZero(result.TxResponses[0].Height)
-				s.Require().Equal(len(result.Txs), tc.expLen)
+				s.Require().Equal(tc.expLen, int(result.Total))
 			}
 		})
 	}

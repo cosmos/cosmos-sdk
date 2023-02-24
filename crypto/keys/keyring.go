@@ -2,6 +2,7 @@ package keys
 
 import (
 	"bufio"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -24,6 +25,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
+
+	pdkdf2 "golang.org/x/crypto/pbkdf2"
 )
 
 var _ Keybase = keyringKeybase{}
@@ -519,11 +522,8 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 			}
 
 			saltBytes := crypto.CRandBytes(16)
-			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				continue
-			}
+
+			passwordHash := pdkdf2.Key([]byte(pass), saltBytes, 10, 24, sha256.New)
 
 			if err := ioutil.WriteFile(dir+"/keyhash", passwordHash, 0555); err != nil {
 				return "", err

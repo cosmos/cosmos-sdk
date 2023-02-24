@@ -8,6 +8,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck
+	"golang.org/x/crypto/scrypt"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -43,6 +44,11 @@ const (
 // a bcrypt hash. (Recall that the nonce still exists to break rainbow tables)
 // For further notes on security parameter choice, see README.md
 var BcryptSecurityParameter uint32 = 12
+
+var (
+	KDFBcrypt = "bcrypt"
+	KDFScrypt = "scrypt"
+)
 
 //-----------------------------------------------------------------
 // add armor
@@ -129,9 +135,10 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 
 // Encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo string) string {
-	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
+	kdf := KDFScrypt //KDFBcrypt
+	saltBytes, encBytes := encryptPrivKey(privKey, kdf, passphrase)
 	header := map[string]string{
-		"kdf":  "bcrypt",
+		"kdf":  kdf,
 		"salt": fmt.Sprintf("%X", saltBytes),
 	}
 
@@ -147,14 +154,27 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 // encrypt the given privKey with the passphrase using a randomly
 // generated salt and the xsalsa20 cipher. returns the salt and the
 // encrypted priv key.
-func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
+func encryptPrivKey(privKey cryptotypes.PrivKey, kdf string, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-	if err != nil {
-		panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
+	var (
+		key []byte
+		err error
+	)
+	if kdf == KDFBcrypt {
+		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
+		if err != nil {
+			panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
+		}
+		key = crypto.Sha256(key) // get 32 bytes
+	} else if kdf == KDFScrypt {
+		key, err = scrypt.Key([]byte(passphrase), saltBytes, 1<<15, 8, 1, 32)
+		if err != nil {
+			panic(errorsmod.Wrap(err, "error generating scrypt key from passphrase"))
+		}
+	} else {
+		panic(fmt.Sprintf("unrecognized KDF: %s", kdf))
 	}
 
-	key = crypto.Sha256(key) // get 32 bytes
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
@@ -171,7 +191,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 		return privKey, "", fmt.Errorf("unrecognized armor type: %v", blockType)
 	}
 
-	if header["kdf"] != "bcrypt" {
+	if header["kdf"] != KDFBcrypt && header["kdf"] != KDFScrypt {
 		return privKey, "", fmt.Errorf("unrecognized KDF type: %v", header["kdf"])
 	}
 
@@ -184,7 +204,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 		return privKey, "", fmt.Errorf("error decoding salt: %v", err.Error())
 	}
 
-	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
+	privKey, err = decryptPrivKey(saltBytes, encBytes, header["kdf"], passphrase)
 
 	if header[headerType] == "" {
 		header[headerType] = defaultAlgo
@@ -193,13 +213,22 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 	return privKey, header[headerType], err
 }
 
-func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey cryptotypes.PrivKey, err error) {
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-	if err != nil {
-		return privKey, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")
+func decryptPrivKey(saltBytes []byte, encBytes []byte, kdf, passphrase string) (privKey cryptotypes.PrivKey, err error) {
+	var key []byte
+	if kdf == KDFBcrypt {
+		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
+		if err != nil {
+			panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
+		}
+		key = crypto.Sha256(key) // get 32 bytes
+	} else if kdf == KDFScrypt {
+		key, err = scrypt.Key([]byte(passphrase), saltBytes, 1<<15, 8, 1, 32)
+		if err != nil {
+			panic(errorsmod.Wrap(err, "error generating scrypt key from passphrase"))
+		}
+	} else {
+		panic(fmt.Sprintf("unrecognized KDF: %s", kdf))
 	}
-
-	key = crypto.Sha256(key) // Get 32 bytes
 
 	privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 	if err != nil && err == xsalsa20symmetric.ErrCiphertextDecrypt {

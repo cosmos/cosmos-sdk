@@ -270,6 +270,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 ### Client Breaking Changes
 
 * (grpc-web) [#14652](https://github.com/cosmos/cosmos-sdk/pull/14652) Use same port for gRPC-Web and the API server.
+* (x/staking) [#15146](https://github.com/cosmos/cosmos-sdk/pull/15146) Remove automatic setting IP in `MsgCreateValidator` and genesis transcations to create validators. 
 
 ### CLI Breaking Changes
 

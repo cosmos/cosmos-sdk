@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk
 
-go 1.18
+go 1.19
 
 require (
 	cosmossdk.io/core v0.5.1

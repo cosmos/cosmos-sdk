@@ -6,12 +6,8 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-<<<<<<< HEAD
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-=======
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
->>>>>>> e55b1a9fb (fix: Make WithBlockTime() consistent with CometBFT canonical time (#15124))
+	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -169,10 +165,10 @@ func (s *contextTestSuite) TestContextHeader() {
 
 func (s *contextTestSuite) TestWithBlockTime() {
 	now := time.Now()
-	ctx := types.NewContext(nil, cmtproto.Header{}, false, nil)
+	ctx := types.NewContext(nil, tmproto.Header{}, false, nil)
 	ctx = ctx.WithBlockTime(now)
-	cmttime2 := cmttime.Canonical(now)
-	s.Require().Equal(ctx.BlockTime(), cmttime2)
+	tmtime2 := tmtime.Canonical(now)
+	s.Require().Equal(ctx.BlockTime(), tmtime2)
 }
 
 func (s *contextTestSuite) TestContextHeaderClone() {

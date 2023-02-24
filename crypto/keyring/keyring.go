@@ -751,7 +751,6 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			// saltBytes := cmtcrypto.CRandBytes(16)
 			passwordHash, err := bcrypt.GenerateFromPassword([]byte(pass), 2)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)

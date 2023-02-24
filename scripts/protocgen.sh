@@ -54,4 +54,4 @@ for dir in $proto_dirs; do
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
 
-go mod tidy -compat=1.18
+go mod tidy -compat=1.19

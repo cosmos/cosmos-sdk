@@ -77,21 +77,9 @@ func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]b
 		for _, item := range items {
 			types.WriteExtensionPayload(protoWriter, item)
 		}
-		// write extension metadata
-		_ = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-			Item: &snapshottypes.SnapshotItem_Extension{
-				Extension: &snapshottypes.SnapshotExtensionMeta{
-					Name:   ext.SnapshotName(),
-					Format: ext.SnapshotFormat(),
-				},
-			},
-		})
-		_ = ext.SnapshotExtension(0, func(payload []byte) error {
-			return snapshottypes.WriteExtensionPayload(protoWriter, payload)
-		})
-		protoWriter.Close()
-		bufWriter.Flush()
-		chunkWriter.Close()
+		_ = protoWriter.Close()
+		_ = bufWriter.Flush()
+		_ = chunkWriter.Close()
 	}()
 
 	var chunks [][]byte

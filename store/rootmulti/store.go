@@ -1100,7 +1100,7 @@ type storeParams struct {
 	initialVersion uint64
 }
 
-func newStoreParams(key types.StoreKey, db dbm.DB, typ types.StoreType, initialVersion uint64) storeParams { // nolint
+func newStoreParams(key types.StoreKey, db dbm.DB, typ types.StoreType, initialVersion uint64) storeParams {
 	return storeParams{
 		key:            key,
 		db:             db,

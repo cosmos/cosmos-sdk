@@ -20,8 +20,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
-          check-latest: true
+          go-version: 1.19
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Create release

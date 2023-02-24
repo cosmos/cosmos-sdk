@@ -1,0 +1,115 @@
+name: Tests Race
+#  Tests Race workflow runs unit tests with the race detector
+#  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup-runs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: rokroskar/workflow-run-cleanup-action@master
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
+
+  install-tparse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Display go version
+        run: go version
+      - name: install tparse
+        run: go install github.com/mfridman/tparse@v0.8.3
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-tparse-binary
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - uses: technote-space/get-diff-action@v6.0.1
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/**.go
+            **/go.mod
+            **/go.sum
+      - name: Build
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
+
+      - name: Build cosmovisor
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
+
+  split-test-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Create a file with all core Cosmos SDK pkgs
+        run: go list ./... > pkgs.txt
+      - name: Split pkgs into 4 files
+        run: split -d -n l/4 pkgs.txt pkgs.txt.part.
+      # cache multiple
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ github.sha }}-00"
+          path: ./pkgs.txt.part.00
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ github.sha }}-01"
+          path: ./pkgs.txt.part.01
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ github.sha }}-02"
+          path: ./pkgs.txt.part.02
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ github.sha }}-03"
+          path: ./pkgs.txt.part.03
+
+  test-race:
+    runs-on: ubuntu-latest
+    needs: split-test-files
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["00", "01", "02", "03"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - uses: actions/download-artifact@v3
+        with:
+          name: "${{ github.sha }}-${{ matrix.part }}"
+        if: env.GIT_DIFF
+      - name: test & coverage report creation
+        run: |
+          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock'
+        if: env.GIT_DIFF
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ github.sha }}-${{ matrix.part }}-race-output"
+          path: ./${{ matrix.part }}-race-output.txt

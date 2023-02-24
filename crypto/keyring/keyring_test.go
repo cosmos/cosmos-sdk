@@ -1729,7 +1729,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 			backend: BackendTest,
 			mnemonics: []string{
 				"faint misery damage shoot wedding chat dress joy page stand gun business dance amount amused pond smart rate inner ill loud agree two evil",
-				"window surprise chief blame huge umbrella pool home draw staff water brief modify depth whisper hawk floor § fury property pond cluster ethics super",
+				"window surprise chief blame huge umbrella pool home draw staff water brief modify depth whisper hawk floor come fury property pond cluster ethics super",
 			},
 		},
 		{

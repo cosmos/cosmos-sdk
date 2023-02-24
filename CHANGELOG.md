@@ -40,6 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Improvements
 
+* (deps) Set minimum version to Go 1.19. Go 1.18 is no longer supported by the Go team.
+* (deps) Migrate to [CometBFT](https://github.com/cometbft/cometbft). Follow the instructions in the [release notes](./RELEASE_NOTES.md).
 * (deps) [#15127](https://github.com/cosmos/cosmos-sdk/pull/15127) Bump btcd.
 * (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
 

@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine AS build
+FROM golang:1.19-alpine AS build
 RUN apk add build-base git linux-headers
 WORKDIR /work
 COPY go.mod go.sum /work/

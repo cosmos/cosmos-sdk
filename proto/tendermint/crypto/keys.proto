@@ -5,7 +5,7 @@ option go_package = "github.com/tendermint/tendermint/proto/tendermint/crypto";
 
 import "gogoproto/gogo.proto";
 
-// PublicKey defines the keys available for use with Tendermint Validators
+// PublicKey defines the keys available for use with Validators
 message PublicKey {
   option (gogoproto.compare) = true;
   option (gogoproto.equal)   = true;

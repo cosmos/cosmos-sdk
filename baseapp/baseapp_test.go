@@ -1792,7 +1792,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 2, Chunks: 5},
+				{Height: 20, Format: snapshottypes.CurrentFormat, Chunks: 5},
 			},
 		},
 		"prune everything with snapshot": {
@@ -1804,7 +1804,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 2, Chunks: 5},
+				{Height: 20, Format: snapshottypes.CurrentFormat, Chunks: 5},
 			},
 		},
 		"default pruning with snapshot": {
@@ -1816,7 +1816,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 2, Chunks: 5},
+				{Height: 20, Format: snapshottypes.CurrentFormat, Chunks: 5},
 			},
 		},
 		"custom": {
@@ -1828,8 +1828,8 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewCustomPruningOptions(12, 12),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 25, Format: 2, Chunks: 6},
-				{Height: 20, Format: 2, Chunks: 5},
+				{Height: 25, Format: snapshottypes.CurrentFormat, Chunks: 6},
+				{Height: 20, Format: snapshottypes.CurrentFormat, Chunks: 5},
 			},
 		},
 		"no snapshots": {
@@ -1850,9 +1850,9 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 9, Format: 2, Chunks: 2},
-				{Height: 6, Format: 2, Chunks: 2},
-				{Height: 3, Format: 2, Chunks: 1},
+				{Height: 9, Format: snapshottypes.CurrentFormat, Chunks: 2},
+				{Height: 6, Format: snapshottypes.CurrentFormat, Chunks: 2},
+				{Height: 3, Format: snapshottypes.CurrentFormat, Chunks: 1},
 			},
 		},
 	}
@@ -1928,7 +1928,7 @@ func TestLoadSnapshotChunk(t *testing.T) {
 	}{
 		"Existing snapshot": {2, snapshottypes.CurrentFormat, 1, false},
 		"Missing height":    {100, snapshottypes.CurrentFormat, 1, true},
-		"Missing format":    {2, 3, 1, true},
+		"Missing format":    {2, snapshottypes.CurrentFormat + 1, 1, true},
 		"Missing chunk":     {2, snapshottypes.CurrentFormat, 9, true},
 		"Zero height":       {0, snapshottypes.CurrentFormat, 1, true},
 		"Zero format":       {2, 0, 1, true},

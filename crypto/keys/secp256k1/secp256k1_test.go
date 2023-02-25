@@ -31,7 +31,7 @@ type keyData struct {
 The following code snippet has been used to generate test vectors. The purpose of these vectors are to check our
 implementation of secp256k1 against go-ethereum's one. It has been commented to avoid dependencies.
 
-	github.com/btcsuite/btcutil v1.0.2
+	github.com/btcsuite/btcd/btcutil v1.0.2
 	github.com/ethereum/go-ethereum v1.10.26
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 
@@ -42,7 +42,7 @@ implementation of secp256k1 against go-ethereum's one. It has been commented to 
 		"crypto/sha256"
 		"encoding/hex"
 		"fmt"
-		"github.com/btcsuite/btcutil/base58"
+		"github.com/btcsuite/btcd/btcutil/base58"
 		"github.com/ethereum/go-ethereum/crypto"
 		"golang.org/x/crypto/ripemd160"
 	)

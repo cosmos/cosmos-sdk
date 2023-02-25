@@ -21,7 +21,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.Id)
 
-		if !keeper.GetParams(ctx).BurnProposalDeposit {
+		if !keeper.GetParams(ctx).BurnProposalDepositPrevote {
 			keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 		} else {
 			keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal

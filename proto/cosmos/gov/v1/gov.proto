@@ -251,7 +251,7 @@ message Params {
   // burn deposits if the proposal does not enter voting period
   //
   // Since: cosmos-sdk 0.47
-  bool burn_proposal_deposit = 14;
+  bool burn_proposal_deposit_prevote = 14;
   // burn deposits if quorum with vote type no_veto is met
   //
   // Since: cosmos-sdk 0.47

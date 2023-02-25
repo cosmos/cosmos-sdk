@@ -39,7 +39,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 		sdk.ZeroDec().String(),
 		sdk.ZeroDec().String(),
 		"",
-		defaultParams.BurnProposalDeposit,
+		defaultParams.BurnProposalDepositPrevote,
 		defaultParams.BurnVoteQuorum,
 		defaultParams.BurnVoteVeto,
 	)

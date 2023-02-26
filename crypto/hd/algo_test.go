@@ -18,7 +18,7 @@ func TestDerivation(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, bz)
 
-	badBz, err := EthSecp256k1.Derive()(mnemonic, "", "44'/60'/0'/0/0")
+	badBz, err := EthSecp256k1.Derive()(mnemonic, "", "44'/118'/0'/0/0")
 	require.NoError(t, err)
 	require.NotEmpty(t, badBz)
 

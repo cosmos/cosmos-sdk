@@ -83,21 +83,25 @@ func (s ethSecp256k1Algo) Name() PubKeyType {
 	return EthSecp256k1Type
 }
 
-// Derive derives and returns the eth_secp256k1 private key for the given mnemonic and HD path.
+// `Derive` derives and returns the eth_secp256k1 private key for the given mnemonic and HD path.
 func (s ethSecp256k1Algo) Derive() DeriveFn {
 	return func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error) {
-		derivedKey, err := secp256k1Algo{}.Derive()(mnemonic, bip39Passphrase, hdPath)
+		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 		if err != nil {
 			return nil, err
 		}
 
-		x, err := secp256k1.EthPrivKey{Key: derivedKey}.ToECDSA()
+		masterPriv, ch := ComputeMastersFromSeed(seed)
+		if len(hdPath) == 0 {
+			return ECDSAify(masterPriv[:])
+		}
+
+		derivedKey, err := DerivePrivateKeyForPath(masterPriv, ch, hdPath)
 		if err != nil {
 			return nil, err
 		}
 
-		// Return the private key as a byte slice.
-		return secp256k1.FromECDSA(x), nil
+		return ECDSAify(derivedKey)
 	}
 }
 
@@ -110,4 +114,16 @@ func (s ethSecp256k1Algo) Generate() GenerateFn {
 			Key: bzArr,
 		}
 	}
+}
+
+// `ECDSAify` converts a private key to an ECDSA private key.
+func ECDSAify(key []byte) ([]byte, error) {
+	// Convert the private key to an ECDSA private key.
+	x, err := secp256k1.EthPrivKey{Key: key}.ToECDSA()
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the private key as a byte slice.
+	return secp256k1.FromECDSA(x), nil
 }

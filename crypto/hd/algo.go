@@ -86,17 +86,7 @@ func (s ethSecp256k1Algo) Name() PubKeyType {
 // Derive derives and returns the eth_secp256k1 private key for the given mnemonic and HD path.
 func (s ethSecp256k1Algo) Derive() DeriveFn {
 	return func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error) {
-		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
-		if err != nil {
-			return nil, err
-		}
-
-		masterPriv, ch := ComputeMastersFromSeed(seed)
-		if len(hdPath) == 0 {
-			return masterPriv[:], nil
-		}
-
-		derivedKey, err := DerivePrivateKeyForPath(masterPriv, ch, hdPath)
+		derivedKey, err := secp256k1Algo{}.Derive()(mnemonic, bip39Passphrase, hdPath)
 		if err != nil {
 			return nil, err
 		}

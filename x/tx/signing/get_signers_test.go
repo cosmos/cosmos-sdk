@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetSigners(t *testing.T) {
-	ctx := GetSignersOptions{}.CreateContext()
+	ctx := NewGetSignersContext(GetSignersOptions{})
 	tests := []struct {
 		name    string
 		msg     proto.Message

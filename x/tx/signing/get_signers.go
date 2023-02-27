@@ -14,34 +14,25 @@ import (
 // option.
 type GetSignersContext struct {
 	protoFiles      *protoregistry.Files
-	protoTypes      protoregistry.MessageTypeResolver
 	getSignersFuncs map[protoreflect.FullName]getSignersFunc
 }
 
 // GetSignersOptions are options for creating GetSignersContext.
 type GetSignersOptions struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
+	// If it is nil, the global protobuf registry will be used.
 	ProtoFiles *protoregistry.Files
-
-	// ProtoTypes are the protobuf types to use for resolving message types.
-	ProtoTypes protoregistry.MessageTypeResolver
 }
 
-// CreateContext creates a GetSignersContext from the given options.
-func (c GetSignersOptions) CreateContext() *GetSignersContext {
-	protoFiles := c.ProtoFiles
+// NewGetSignersContext creates a new GetSignersContext using the provided options.
+func NewGetSignersContext(options GetSignersOptions) *GetSignersContext {
+	protoFiles := options.ProtoFiles
 	if protoFiles == nil {
 		protoFiles = protoregistry.GlobalFiles
 	}
 
-	protoTypes := c.ProtoTypes
-	if protoTypes == nil {
-		protoTypes = protoregistry.GlobalTypes
-	}
-
 	return &GetSignersContext{
 		protoFiles:      protoFiles,
-		protoTypes:      protoTypes,
 		getSignersFuncs: map[protoreflect.FullName]getSignersFunc{},
 	}
 }

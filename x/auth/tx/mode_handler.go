@@ -14,12 +14,6 @@ type SignModeHandlerPair struct {
 	handler signing.SignModeHandler
 }
 
-var DefaultSignModeHandlerPairs = []SignModeHandlerPair{
-	{signingtypes.SignMode_SIGN_MODE_DIRECT, signModeDirectHandler{}},
-	{signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signModeDirectAuxHandler{}},
-	{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signModeLegacyAminoJSONHandler{}},
-}
-
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
 var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,

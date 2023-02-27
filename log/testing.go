@@ -11,7 +11,7 @@ func NewTestingLogger() Logger {
 	}
 
 	if testing.Verbose() {
-		_testingLogger = NewLogger()
+		_testingLogger = NewLoggerWithKV(ModuleKey, "test")
 	} else {
 		_testingLogger = NewNopLogger()
 	}

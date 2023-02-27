@@ -63,8 +63,8 @@ func checkNumberTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Valu
 	screens, err := r.Format(context.Background(), pv)
 	require.NoError(t, err)
 	require.Len(t, screens, 1)
-	require.Equal(t, 0, screens[0].Indent)
-	require.Equal(t, false, screens[0].Expert)
+	require.Zero(t, screens[0].Indent)
+	require.False(t, screens[0].Expert)
 
 	require.Equal(t, expected, screens[0].Content)
 
@@ -78,5 +78,5 @@ func checkNumberTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Valu
 	v1, err := math.LegacyNewDecFromStr(value.String())
 	require.NoError(t, err)
 
-	require.True(t, v.Equal(v1))
+	require.Truef(t, v.Equal(v1), "%s != %s", v, v1)
 }

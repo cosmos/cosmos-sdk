@@ -5,6 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -89,4 +90,8 @@ func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec
 
 func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 	return nil
+}
+
+func (h Hooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey, rotationFee sdk.Coin) error {
+	return h.k.PerformConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey)
 }

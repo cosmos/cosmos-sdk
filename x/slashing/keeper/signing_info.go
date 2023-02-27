@@ -7,6 +7,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -157,4 +158,32 @@ func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.C
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
 	}
+}
+
+// RemoveValidatorSigningInfo removes the validator signing info from a consensus address key
+func (k Keeper) RemoveValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.ValidatorSigningInfoKey(address))
+}
+
+func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey) error {
+	// Connect new consensus address with PubKey
+	k.AddPubkey(ctx, newPubKey)
+
+	// Migrate ValidatorSigningInfo from oldPubKey to newPubKey
+	signingInfo, found := k.GetValidatorSigningInfo(ctx, sdk.ConsAddress(oldPubKey.Address()))
+	if !found {
+		return nil
+	}
+	// k.RemoveValidatorSigningInfo(ctx, sdk.ConsAddress(oldPubKey.Address()))
+	k.SetValidatorSigningInfo(ctx, sdk.ConsAddress(newPubKey.Address()), signingInfo)
+
+	// Migrate ValidatorMissedBlockBitArray from oldPubKey to newPubKey
+	missedBlocks := k.GetValidatorMissedBlocks(ctx, sdk.ConsAddress(oldPubKey.Address()))
+	k.clearValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(oldPubKey.Address()))
+	for _, missed := range missedBlocks {
+		k.SetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(newPubKey.Address()), missed.Index, missed.Missed)
+	}
+
+	return nil
 }

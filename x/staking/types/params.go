@@ -29,20 +29,35 @@ const (
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
+
+	// DefaultMaxConsPubKeyRotations is param to set validators can rotate their
+	// keys only for 10 times
+	DefaultMaxConsPubKeyRotations uint64 = 10
 )
 
-// DefaultMinCommissionRate is set to 0%
-var DefaultMinCommissionRate = math.LegacyZeroDec()
+var (
+	// DefaultMinCommissionRate is set to 0%
+	DefaultMinCommissionRate = math.LegacyZeroDec()
+
+	// DefaultConsPubKeyRotationFee is fees used to rotate the ConsPubkey
+	DefaultConsPubKeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)
+)
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minCommissionRate sdk.Dec) Params {
+func NewParams(unbondingTime time.Duration,
+	maxValidators, maxEntries, historicalEntries uint32,
+	bondDenom string, minCommissionRate sdk.Dec,
+	maxConsPubKeyRotations uint64, consPubKeyRotationFee sdk.Coin) Params {
+
 	return Params{
-		UnbondingTime:     unbondingTime,
-		MaxValidators:     maxValidators,
-		MaxEntries:        maxEntries,
-		HistoricalEntries: historicalEntries,
-		BondDenom:         bondDenom,
-		MinCommissionRate: minCommissionRate,
+		UnbondingTime:          unbondingTime,
+		MaxValidators:          maxValidators,
+		MaxEntries:             maxEntries,
+		HistoricalEntries:      historicalEntries,
+		BondDenom:              bondDenom,
+		MinCommissionRate:      minCommissionRate,
+		MaxConsPubkeyRotations: maxConsPubKeyRotations,
+		ConsPubkeyRotationFee:  consPubKeyRotationFee,
 	}
 }
 
@@ -55,6 +70,8 @@ func DefaultParams() Params {
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
+		DefaultMaxConsPubKeyRotations,
+		DefaultConsPubKeyRotationFee,
 	)
 }
 

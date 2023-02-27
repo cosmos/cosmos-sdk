@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // NewHistoricalInfo will create a historical information struct from header and valset
@@ -81,4 +82,42 @@ func (hi HistoricalInfo) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+// func MustUnmarshalConsPubKeyRotationHistory(cdc codec.BinaryCodec, value []byte) ConsPubKeyRotationHistory {
+// 	hi, err := UnmarshalConsPubKeyRotationHistory(cdc, value)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	return hi
+// }
+
+// func UnmarshalConsPubKeyRotationHistory(cdc codec.BinaryCodec, value []byte) (hi ConsPubKeyRotationHistory, err error) {
+// 	err = cdc.Unmarshal(value, &hi)
+// 	return hi, err
+// }
+
+// func MustMarshalConsPubKeyRotationHistory(cdc codec.BinaryCodec, history ConsPubKeyRotationHistory) []byte {
+// 	hi, err := MarshalConsPubKeyRotationHistory(cdc, history)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	return hi
+// }
+
+// func MarshalConsPubKeyRotationHistory(cdc codec.BinaryCodec, hi ConsPubKeyRotationHistory) ([]byte, error) {
+// 	return cdc.Marshal(&hi)
+// }
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (hi ConsPubKeyRotationHistory) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var oldPubKey cryptotypes.PubKey
+	err := unpacker.UnpackAny(hi.OldConsPubkey, &oldPubKey)
+	if err != nil {
+		return err
+	}
+	var newPubKey cryptotypes.PubKey
+	return unpacker.UnpackAny(hi.NewConsPubkey, &newPubKey)
 }

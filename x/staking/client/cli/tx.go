@@ -50,6 +50,7 @@ func NewTxCmd() *cobra.Command {
 		NewRedelegateCmd(),
 		NewUnbondCmd(),
 		NewCancelUnbondingDelegation(),
+		NewRotateConsensusKeyCmd(),
 	)
 
 	return stakingTxCmd
@@ -605,4 +606,44 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	return txBldr, msg, nil
+}
+
+func NewRotateConsensusKeyCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rotate-cons-pubkey",
+		Short: "rotate validator consensus pub key",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			valAddr := clientCtx.GetFromAddress()
+			pkStr, err := cmd.Flags().GetString(FlagPubKey)
+			if err != nil {
+				return err
+			}
+
+			var pk cryptotypes.PubKey
+			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pkStr), &pk); err != nil {
+				return err
+			}
+
+			msg, err := types.NewMsgRotateConsPubKey(sdk.ValAddress(valAddr), pk)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetPublicKey())
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
+	_ = cmd.MarkFlagRequired(FlagPubKey)
+
+	return cmd
 }

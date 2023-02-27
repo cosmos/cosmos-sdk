@@ -3,6 +3,7 @@ package types
 import (
 	"cosmossdk.io/math"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -105,6 +106,7 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error
 	AfterUnbondingInitiated(ctx sdk.Context, id uint64) error
+	AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey, rotationFee sdk.Coin) error
 }
 
 // StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.

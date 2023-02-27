@@ -75,6 +75,17 @@ func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validato
 }
 
 // validator index
+func (k Keeper) DeleteValidatorByConsAddr(ctx sdk.Context, validator types.ValidatorI) error {
+	consPk, err := validator.GetConsAddr()
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetValidatorByConsAddrKey(consPk))
+	return nil
+}
+
+// validator index
 func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
 	// jailed validators are not kept in the power index
 	if validator.Jailed {

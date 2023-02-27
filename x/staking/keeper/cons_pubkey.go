@@ -30,3 +30,18 @@ func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, operatorA
 	}
 	return
 }
+
+func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height int64) (historyObjects []types.ConsPubKeyRotationHistory) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetBlockConsPubKeyRotationHistoryPrefix(height))
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var history types.ConsPubKeyRotationHistory
+
+		k.cdc.MustUnmarshal(iterator.Value(), &history)
+		historyObjects = append(historyObjects, history)
+	}
+	return
+}

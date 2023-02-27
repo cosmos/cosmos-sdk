@@ -1,6 +1,7 @@
 package types
 
 import (
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -109,6 +110,13 @@ func (h MultiStakingHooks) AfterUnbondingInitiated(ctx sdk.Context, id uint64) e
 		if err := h[i].AfterUnbondingInitiated(ctx, id); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (h MultiStakingHooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey, rotationFee sdk.Coin) error {
+	for i := range h {
+		return h[i].AfterConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey, rotationFee)
 	}
 	return nil
 }

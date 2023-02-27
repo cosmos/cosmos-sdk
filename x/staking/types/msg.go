@@ -20,6 +20,8 @@ var (
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
+	_ sdk.Msg                            = &MsgRotateConsPubKey{}
+	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
 
 	_ legacytx.LegacyMsg = &MsgCreateValidator{}
 	_ legacytx.LegacyMsg = &MsgEditValidator{}
@@ -28,6 +30,7 @@ var (
 	_ legacytx.LegacyMsg = &MsgBeginRedelegate{}
 	_ legacytx.LegacyMsg = &MsgCancelUnbondingDelegation{}
 	_ legacytx.LegacyMsg = &MsgUpdateParams{}
+	_ legacytx.LegacyMsg = &MsgRotateConsPubKey{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -369,4 +372,45 @@ func (m MsgUpdateParams) ValidateBasic() error {
 func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
+}
+
+// NewMsgRotateConsPubKey creates a new MsgRotateConsPubKey instance.
+func NewMsgRotateConsPubKey(valAddr sdk.ValAddress, pubKey cryptotypes.PubKey) (*MsgRotateConsPubKey, error) {
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		var err error
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+			return nil, err
+		}
+	}
+	return &MsgRotateConsPubKey{
+		ValidatorAddress: valAddr.String(),
+		NewPubkey:        pkAny,
+	}, nil
+}
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgRotateConsPubKey) GetSigners() []sdk.AccAddress {
+	signer, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	return []sdk.AccAddress{sdk.AccAddress(signer)}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgRotateConsPubKey) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgRotateConsPubKey) ValidateBasic() error {
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgRotateConsPubKey) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	return unpacker.UnpackAny(msg.NewPubkey, &pubKey)
 }

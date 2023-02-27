@@ -10,6 +10,8 @@ import (
 
 	"cosmossdk.io/math"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -199,6 +201,51 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
+
+	rotationFee := k.ConsPubKeyRotationFee(ctx)
+	// ApplyAndReturnValidatorSetUpdates checks if there is ConsPubKeyRotationHistory
+	// with ConsPubKeyRotationHistory.RotatedHeight == ctx.BlockHeight() and if so, generates 2 ValidatorUpdate,
+	// one for a remove validator and one for create new validator
+	// TODO: consider the case, validator's voting power and consensus pubkey both values are
+	// changed on this block
+	historyObjects := k.GetBlockConsPubKeyRotationHistory(ctx, ctx.BlockHeight())
+	for _, history := range historyObjects {
+		valAddr, err := sdk.ValAddressFromBech32(history.OperatorAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		validator := k.mustGetValidator(ctx, valAddr)
+
+		oldPk := history.OldConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		oldTmPk, err := cryptocodec.ToCmtProtoPublicKey(oldPk)
+		if err != nil {
+			return nil, err
+		}
+
+		newPk := history.NewConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		newTmPk, err := cryptocodec.ToCmtProtoPublicKey(newPk)
+		if err != nil {
+			return nil, err
+		}
+
+		updates = append(updates, abci.ValidatorUpdate{
+			PubKey: oldTmPk,
+			Power:  0,
+		})
+		updates = append(updates, abci.ValidatorUpdate{
+			PubKey: newTmPk,
+			Power:  validator.ConsensusPower(powerReduction),
+		})
+
+		err = k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, rotationFee)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// TODO: at previousVotes Iteration logic of AllocateTokens, previousVote using OldConsPubKey
+	// match up with ConsPubKeyRotationHistory, and replace validator for token allocation
 
 	// Update the pools based on the recent updates in the validator set:
 	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred

@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
-	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
+	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
@@ -46,7 +46,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
-	github.com/linxGnu/grocksdb v1.7.10 // indirect
+	github.com/linxGnu/grocksdb v1.7.14 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

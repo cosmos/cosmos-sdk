@@ -249,7 +249,7 @@ func (cfg *Config) validate() []error {
 	}
 
 	// check the DataBackupPath
-	if cfg.UnsafeSkipBackup == true {
+	if cfg.UnsafeSkipBackup {
 		return errs
 	}
 
@@ -364,8 +364,8 @@ func (cfg Config) DetailString() string {
 		{EnvName, cfg.Name},
 		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
-		{EnvRestartDelay, fmt.Sprintf("%s", cfg.RestartDelay)},
-		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
+		{EnvRestartDelay, cfg.RestartDelay.String()},
+		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},

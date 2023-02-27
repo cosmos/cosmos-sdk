@@ -57,8 +57,8 @@ func printVersionJSON(logger log.Logger, args []string) error {
 	buf := new(strings.Builder)
 
 	// disable logger
-	l := logger.Impl().Level(zerolog.Disabled)
-	logger = log.NewCustomLogger(l)
+	zl := logger.Impl().(*zerolog.Logger)
+	logger = log.NewCustomLogger(zl.Level(zerolog.Disabled))
 
 	if err := Run(
 		logger,

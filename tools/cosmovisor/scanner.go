@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/log"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/rs/zerolog"
 )
 
 type fileWatcher struct {
@@ -110,7 +111,8 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 	info, err := parseUpgradeInfoFile(fw.filename)
 	if err != nil {
-		fw.logger.Impl().Fatal().Err(err).Msg("failed to parse upgrade info file")
+		zl := fw.logger.Impl().(*zerolog.Logger)
+		zl.Fatal().Err(err).Msg("failed to parse upgrade info file")
 		return false
 	}
 

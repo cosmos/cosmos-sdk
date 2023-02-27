@@ -6,7 +6,8 @@ import (
 	"os"
 	"runtime"
 
-	"cosmossdk.io/log"
+	"github.com/rs/zerolog"
+
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -14,7 +15,7 @@ import (
 // UpgradeBinary will be called after the log message has been parsed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
-func UpgradeBinary(logger log.Logger, cfg *Config, p upgradetypes.Plan) error {
+func UpgradeBinary(logger *zerolog.Logger, cfg *Config, p upgradetypes.Plan) error {
 	// simplest case is to switch the link
 	err := plan.EnsureBinary(cfg.UpgradeBin(p.Name))
 	if err == nil {
@@ -54,11 +55,11 @@ func UpgradeBinary(logger log.Logger, cfg *Config, p upgradetypes.Plan) error {
 	}
 
 	// If not there, then we try to download it... maybe
-	logger.Info("no upgrade binary found, beginning to download it")
+	logger.Info().Msg("no upgrade binary found, beginning to download it")
 	if err := plan.DownloadUpgrade(cfg.UpgradeDir(p.Name), url, cfg.Name); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
-	logger.Info("downloading binary complete")
+	logger.Info().Msg("downloading binary complete")
 
 	// and then set the binary again
 	if err := plan.EnsureBinary(cfg.UpgradeBin(p.Name)); err != nil {

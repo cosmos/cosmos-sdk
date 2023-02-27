@@ -15,9 +15,9 @@ type BalanceTable interface {
 	Update(ctx context.Context, balance *Balance) error
 	Save(ctx context.Context, balance *Balance) error
 	Delete(ctx context.Context, balance *Balance) error
-	Has(ctx context.Context, address string, denom string) (found bool, err error)
+	Has(ctx context.Context, address []byte, denom string) (found bool, err error)
 	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
-	Get(ctx context.Context, address string, denom string) (*Balance, error)
+	Get(ctx context.Context, address []byte, denom string) (*Balance, error)
 	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 	DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error
@@ -53,12 +53,12 @@ func (x BalanceAddressDenomIndexKey) id() uint32            { return 0 }
 func (x BalanceAddressDenomIndexKey) values() []interface{} { return x.vs }
 func (x BalanceAddressDenomIndexKey) balanceIndexKey()      {}
 
-func (this BalanceAddressDenomIndexKey) WithAddress(address string) BalanceAddressDenomIndexKey {
+func (this BalanceAddressDenomIndexKey) WithAddress(address []byte) BalanceAddressDenomIndexKey {
 	this.vs = []interface{}{address}
 	return this
 }
 
-func (this BalanceAddressDenomIndexKey) WithAddressDenom(address string, denom string) BalanceAddressDenomIndexKey {
+func (this BalanceAddressDenomIndexKey) WithAddressDenom(address []byte, denom string) BalanceAddressDenomIndexKey {
 	this.vs = []interface{}{address, denom}
 	return this
 }
@@ -96,11 +96,11 @@ func (this balanceTable) Delete(ctx context.Context, balance *Balance) error {
 	return this.table.Delete(ctx, balance)
 }
 
-func (this balanceTable) Has(ctx context.Context, address string, denom string) (found bool, err error) {
+func (this balanceTable) Has(ctx context.Context, address []byte, denom string) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, address, denom)
 }
 
-func (this balanceTable) Get(ctx context.Context, address string, denom string) (*Balance, error) {
+func (this balanceTable) Get(ctx context.Context, address []byte, denom string) (*Balance, error) {
 	var balance Balance
 	found, err := this.table.PrimaryKey().Get(ctx, &balance, address, denom)
 	if err != nil {

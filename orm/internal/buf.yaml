@@ -1,5 +1,6 @@
 version: v1
 deps:
+  - buf.build/cosmos/cosmos-proto
   - buf.build/googleapis/googleapis
 lint:
   use:

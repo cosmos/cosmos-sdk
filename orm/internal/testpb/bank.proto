@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package testpb;
 
+import "cosmos_proto/cosmos.proto";
 import "cosmos/orm/v1/orm.proto";
 import "cosmos/orm/v1alpha1/schema.proto";
 import "cosmos/app/v1alpha1/module.proto";
@@ -28,7 +29,7 @@ message Balance {
     index: {id: 1 fields: "denom"}
   };
 
-  string address = 1;
+  bytes address = 1 [(cosmos_proto.scalar) = "cosmos.AddressBytes"];
   string denom = 2;
   uint64 amount = 3;
 }

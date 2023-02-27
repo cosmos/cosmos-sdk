@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 	"golang.org/x/exp/maps"
@@ -360,6 +361,15 @@ func (g queryProtoGen) fieldType(descriptor protoreflect.FieldDescriptor) string
 		message := descriptor.Message()
 		g.imports[message.ParentFile().Path()] = true
 		return string(message.FullName())
+	}
+
+	if descriptor.Kind() == protoreflect.BytesKind {
+		scalar := proto.GetExtension(descriptor.Options(), cosmos_proto.E_Scalar)
+		if scalar != nil {
+			if scalar.(string) == "cosmos.AddressBytes" {
+				return "string"
+			}
+		}
 	}
 
 	return descriptor.Kind().String()

@@ -64,14 +64,14 @@ func NewKeeper(db ormdb.ModuleDB) (Keeper, error) {
 }
 
 type Keeper interface {
-	Send(ctx context.Context, from, to, denom string, amount uint64) error
-	Mint(ctx context.Context, acct, denom string, amount uint64) error
-	Burn(ctx context.Context, acct, denom string, amount uint64) error
-	Balance(ctx context.Context, acct, denom string) (uint64, error)
+	Send(ctx context.Context, from, to []byte, denom string, amount uint64) error
+	Mint(ctx context.Context, acct []byte, denom string, amount uint64) error
+	Burn(ctx context.Context, acct []byte, denom string, amount uint64) error
+	Balance(ctx context.Context, acct []byte, denom string) (uint64, error)
 	Supply(ctx context.Context, denom string) (uint64, error)
 }
 
-func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64) error {
+func (k keeper) Send(ctx context.Context, from, to []byte, denom string, amount uint64) error {
 	err := k.safeSubBalance(ctx, from, denom, amount)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 	return k.addBalance(ctx, to, denom, amount)
 }
 
-func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
+func (k keeper) Mint(ctx context.Context, acct []byte, denom string, amount uint64) error {
 	supply, err := k.store.SupplyTable().Get(ctx, denom)
 	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
@@ -100,7 +100,7 @@ func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) err
 	return k.addBalance(ctx, acct, denom, amount)
 }
 
-func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) error {
+func (k keeper) Burn(ctx context.Context, acct []byte, denom string, amount uint64) error {
 	supplyStore := k.store.SupplyTable()
 	supply, err := supplyStore.Get(ctx, denom)
 	if err != nil {
@@ -125,7 +125,7 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 	return k.safeSubBalance(ctx, acct, denom, amount)
 }
 
-func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
+func (k keeper) Balance(ctx context.Context, acct []byte, denom string) (uint64, error) {
 	balance, err := k.store.BalanceTable().Get(ctx, acct, denom)
 	if err != nil {
 		if ormerrors.IsNotFound(err) {
@@ -149,7 +149,7 @@ func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 	return supply.Amount, err
 }
 
-func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
+func (k keeper) addBalance(ctx context.Context, acct []byte, denom string, amount uint64) error {
 	balance, err := k.store.BalanceTable().Get(ctx, acct, denom)
 	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
@@ -168,7 +168,7 @@ func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint6
 	return k.store.BalanceTable().Save(ctx, balance)
 }
 
-func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount uint64) error {
+func (k keeper) safeSubBalance(ctx context.Context, acct []byte, denom string, amount uint64) error {
 	balanceStore := k.store.BalanceTable()
 	balance, err := balanceStore.Get(ctx, acct, denom)
 	if err != nil {
@@ -265,7 +265,7 @@ func TestModuleDB(t *testing.T) {
 func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
 	// mint coins
 	denom := "foo"
-	acct1 := "bob"
+	acct1 := []byte("bob")
 	err := k.Mint(ctx, acct1, denom, 100)
 	assert.NilError(t, err)
 	bal, err := k.Balance(ctx, acct1, denom)
@@ -276,7 +276,7 @@ func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
 	assert.Equal(t, uint64(100), supply)
 
 	// send coins
-	acct2 := "sally"
+	acct2 := []byte("sally")
 	err = k.Send(ctx, acct1, acct2, denom, 30)
 	assert.NilError(t, err)
 	bal, err = k.Balance(ctx, acct1, denom)
@@ -310,8 +310,8 @@ func TestHooks(t *testing.T) {
 	assert.NilError(t, err)
 
 	denom := "foo"
-	acct1 := "bob"
-	acct2 := "sally"
+	acct1 := []byte("bob")
+	acct2 := []byte("sally")
 
 	validateHooks.EXPECT().ValidateInsert(gomock.Any(), ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}))
 	validateHooks.EXPECT().ValidateInsert(gomock.Any(), ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}))

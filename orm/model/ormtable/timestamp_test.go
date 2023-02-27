@@ -17,6 +17,7 @@ func TestTimestampIndex(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleTimestamp{}).ProtoReflect().Type(),
 	})
+	assert.NilError(t, err)
 	backend := testkv.NewDebugBackend(testkv.NewSplitMemBackend(), &testkv.EntryCodecDebugger{
 		EntryCodec: table,
 		//Print: func(s string) {
@@ -70,6 +71,7 @@ func TestTimestampIndex(t *testing.T) {
 	assert.NilError(t, err)
 
 	res, err := store.Get(ctx, id)
+	assert.NilError(t, err)
 	assert.Assert(t, res.Ts == nil)
 
 	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{})

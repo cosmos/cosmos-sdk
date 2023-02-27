@@ -105,6 +105,8 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 		}
 	}()
 	defer server.GracefulStop()
+
+	defer server.GracefulStop()
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 	defer func() {
@@ -113,6 +115,7 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 			panic(err)
 		}
 	}()
+	defer listener.Close()
 
 	conn := &testClientConn{
 		ClientConn: clientConn,

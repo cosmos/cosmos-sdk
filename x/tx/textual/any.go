@@ -26,6 +26,8 @@ func NewAnyValueRenderer(t *SignModeHandler) ValueRenderer {
 // Format implements the ValueRenderer interface.
 func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	msg := v.Message().Interface()
+	omitHeader := 0
+
 	anymsg, ok := msg.(*anypb.Any)
 	if !ok {
 		return nil, fmt.Errorf("expected Any, got %T", msg)
@@ -45,10 +47,15 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 		return nil, err
 	}
 
-	screens := make([]Screen, 1+len(subscreens))
+	// The Any value renderer suppresses emission of the object header
+	if subscreens[0].Content == fmt.Sprintf("%s object", internalMsg.ProtoReflect().Descriptor().Name()) {
+		omitHeader = 1
+	}
+
+	screens := make([]Screen, (1-omitHeader)+len(subscreens))
 	screens[0].Content = anymsg.GetTypeUrl()
-	for i, subscreen := range subscreens {
-		subscreen.Indent++
+	for i, subscreen := range subscreens[omitHeader:] {
+		subscreen.Indent += 1 - omitHeader
 		screens[i+1] = subscreen
 	}
 
@@ -80,6 +87,16 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		}
 		subscreens[i-1] = screens[i]
 		subscreens[i-1].Indent--
+	}
+
+	// Prepend with a "%s object" if the message goes through the default
+	// messageValueRenderer.
+	if _, found := ar.tr.messages[msgType.Descriptor().FullName()]; !found {
+		for i := range subscreens {
+			subscreens[i].Indent++
+		}
+
+		subscreens = append([]Screen{{Content: fmt.Sprintf("%s object", msgType.Descriptor().Name())}}, subscreens...)
 	}
 
 	internalMsg, err := vr.Parse(ctx, subscreens)

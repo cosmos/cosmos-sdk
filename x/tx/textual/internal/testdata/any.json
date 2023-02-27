@@ -4,8 +4,7 @@
             "@type": "/Foo"
         },
         "screens": [
-            {"content": "/Foo"},
-            {"content": "Foo object", "indent": 1}
+            {"content": "/Foo"}
         ]
     },
     {
@@ -15,8 +14,7 @@
         },
         "screens": [
             {"content": "/Foo"},
-            {"content": "Foo object", "indent": 1},
-            {"title": "Full name", "content": "testing", "indent": 2}
+            {"title": "Full name", "content": "testing", "indent": 1}
         ]
     },
     {
@@ -38,8 +36,7 @@
         },
         "screens": [
             {"content": "/google.protobuf.Any"},
-            {"content": "/Foo", "indent": 1},
-            {"content": "Foo object", "indent": 2}
+            {"content": "/Foo", "indent": 1}
         ]
     },
     {
@@ -53,8 +50,7 @@
         "screens": [
             {"content": "/google.protobuf.Any"},
             {"content": "/Foo", "indent": 1},
-            {"content": "Foo object", "indent": 2},
-            {"title": "Full name", "content": "testing", "indent": 3}
+            {"title": "Full name", "content": "testing", "indent": 2}
         ]
     },
     {
@@ -67,10 +63,8 @@
         },
         "screens": [
             {"content": "/A"},
-            {"content": "A object", "indent": 1},
-            {"title": "ANY", "content": "/Foo", "indent": 2},
-            {"content": "Foo object", "indent": 3},
-            {"title": "Full name", "content": "testing", "indent": 4}
+            {"title": "ANY", "content": "/Foo", "indent": 1},
+            {"title": "Full name", "content": "testing", "indent": 2}
         ]
     }
 ]

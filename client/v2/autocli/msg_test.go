@@ -100,6 +100,7 @@ func testMsgBuildError(t *testing.T, args ...string) *testClientConn {
 	defer server.GracefulStop()
 	testpb.RegisterMsgServer(server, &testMessageServer{})
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	defer listener.Close()
 	assert.NilError(t, err)
 	go func() {
 		err := server.Serve(listener)
@@ -148,6 +149,8 @@ func testMsgExec(t *testing.T, args ...string) *testClientConn {
 	defer server.GracefulStop()
 	testpb.RegisterMsgServer(server, &testMessageServer{})
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	defer listener.Close()
+
 	assert.NilError(t, err)
 	go func() {
 		err := server.Serve(listener)

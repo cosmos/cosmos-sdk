@@ -16,6 +16,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	circuitclient "github.com/cosmos/cosmos-sdk/x/circuit/client"
 	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
@@ -66,12 +67,12 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 
 // GetTxCmd returns the root tx command for the bank module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil //TODO:implement
+	return circuitclient.NewTxCmd()
 }
 
 // GetQueryCmd returns no root query command for the bank module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil //TODO:implement
+	return circuitclient.GetQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.

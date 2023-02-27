@@ -99,14 +99,14 @@ func (l ZeroLogWrapper) Impl() interface{} {
 
 // FilterKeys returns a new logger that filters out all key/value pairs that do not match the filter
 // NOTE: this is going significantly slow down the logger
-func FilterKeys(logger Logger, filter func(key string, level zerolog.Level) bool) Logger {
+func FilterKeys(logger Logger, filter func(key, level string) bool) Logger {
 	zl := logger.Impl().(*zerolog.Logger)
-	filteredLogger := zl.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, _ string) {
-		// TODO implement this in zerolog
+	filteredLogger := zl.Hook(zerolog.HookFunc(func(e *zerolog.Event, lvl zerolog.Level, _ string) {
+		// TODO wait for https://github.com/rs/zerolog/pull/527 to be merged
 		// keys := e.GetKeys()
 		keys := []string{}
 		for _, key := range keys {
-			if filter(key, level) {
+			if filter(key, lvl.String()) {
 				e.Discard()
 				break
 			}

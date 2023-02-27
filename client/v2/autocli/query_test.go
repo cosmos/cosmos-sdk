@@ -298,6 +298,7 @@ type testClientConn struct {
 	lastRequest  interface{}
 	lastResponse interface{}
 	out          *bytes.Buffer
+	errorOut     *bytes.Buffer
 }
 
 func (t *testClientConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {

@@ -71,6 +71,7 @@ func TestPaginationLimitCountTotal(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
+	assert.NilError(t, err)
 	backend := testkv.NewSplitMemBackend()
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleTableTable(table)
@@ -107,6 +108,7 @@ func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.Reado
 		entry, err := table.DecodeEntry(key, value)
 		assert.NilError(t, err)
 		k, v, err := table.EncodeEntry(entry)
+		assert.NilError(t, err)
 		assert.Assert(t, bytes.Equal(key, k), "%x %x %s", key, k, entry)
 		assert.Assert(t, bytes.Equal(value, v), "%x %x %s", value, v, entry)
 		it.Next()
@@ -116,6 +118,7 @@ func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.Reado
 func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backend) {
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleTableTable(table)
+	assert.NilError(t, err)
 
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{
@@ -147,6 +150,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// insert one record
 	err = store.Insert(ctx, data[0])
+	assert.NilError(t, err)
 	// trivial prefix query has one record
 	it, err := store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
@@ -154,6 +158,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// insert one record
 	err = store.Insert(ctx, data[1])
+	assert.NilError(t, err)
 	// trivial prefix query has two records
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
@@ -203,6 +208,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 		testpb.ExampleTableStrU32IndexKey{}.WithStr("abd"),
 		ormlist.Reverse(),
 	)
+	assert.NilError(t, err)
 	assertIteratorItems(it, 9, 3, 1, 8, 7, 2, 0)
 
 	// another prefix query forwards
@@ -210,12 +216,14 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	it, err = store.List(ctx,
 		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abe", 7),
 	)
+	assert.NilError(t, err)
 	assertIteratorItems(it, 5, 6)
 	// and backwards
 	it, err = store.List(ctx,
 		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abc", 4),
 		ormlist.Reverse(),
 	)
+	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 0)
 
 	// try filtering
@@ -745,6 +753,7 @@ func TestInsertReturningFieldName(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleAutoIncFieldName{}).ProtoReflect().Type(),
 	})
+	assert.NilError(t, err)
 	backend := testkv.NewSplitMemBackend()
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleAutoIncFieldNameTable(table)

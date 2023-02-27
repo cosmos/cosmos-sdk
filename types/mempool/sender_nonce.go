@@ -37,7 +37,7 @@ type SenderNonceMempool struct {
 	existingTx map[txKey]bool
 }
 
-type SenderNonceOptions func(mp *SenderNonceMempool)
+type SenderNonceOptions func(*SenderNonceMempool)
 
 type txKey struct {
 	address string
@@ -103,8 +103,8 @@ func (snm *SenderNonceMempool) setSeed(seed int64) {
 // NextSenderTx returns the next transaction for a given sender by nonce order,
 // i.e. the next valid transaction for the sender. If no such transaction exists,
 // nil will be returned.
-func (mp *SenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
-	senderIndex, ok := mp.senders[sender]
+func (snm *SenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
+	senderIndex, ok := snm.senders[sender]
 	if !ok {
 		return nil
 	}

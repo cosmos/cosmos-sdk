@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/core v0.5.1
-	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
+	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/hashicorp/go-multierror v1.1.1 // TODO: remove with go 1.20 release
 	github.com/stretchr/testify v1.8.1
 	pgregory.net/rapid v0.5.5
@@ -32,7 +32,7 @@ require (
 	github.com/klauspost/compress v1.15.12 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/linxGnu/grocksdb v1.7.10 // indirect
+	github.com/linxGnu/grocksdb v1.7.14 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

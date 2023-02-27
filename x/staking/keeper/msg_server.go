@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -488,4 +489,82 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	// Implementation is based on this ADR
+	// https://docs.cosmos.network/master/architecture/adr-016-validator-consensus-key-rotation.html
+
+	pk, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
+	}
+
+	consAddr := sdk.ConsAddress(pk.Address())
+
+	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
+	validator := k.Keeper.ValidatorByConsAddr(ctx, consAddr)
+	if validator != nil {
+		return nil, types.ErrConsensusPubKeyAlreadyUsedForAValidator
+	}
+
+	// checks if the validator is exceeding parameter MaxConsPubKeyRotations by iterating ConsPubKeyRotationHistory
+	maxConsPubKeyRotations := k.MaxConsPubKeyRotations(ctx)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	historyObjects := k.GetValidatorConsPubKeyRotationHistory(ctx, valAddr)
+	if len(historyObjects) >= int(maxConsPubKeyRotations) {
+		return nil, types.ErrExceedingMaxConsPubKeyRotations
+	}
+
+	// checks if the signing account has enough balance to pay KeyRotationFee
+	// pays KeyRotationFee to community fund
+	rotationFee := k.ConsPubKeyRotationFee(ctx)
+	sender := sdk.AccAddress(valAddr)
+
+	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, sdk.Coins{rotationFee})
+	if err != nil {
+		return nil, err
+	}
+
+	validator, found := k.Keeper.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	if sdk.AccAddress(validator.GetOperator()).String() != sender.String() {
+		return nil, sdkerrors.ErrorInvalidSigner
+	}
+
+	// deletes old ValidatorByConsAddr
+	// err = k.DeleteValidatorByConsAddr(ctx, validator)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// overwrites NewPubKey in validator.ConsPubKey
+	val, ok := validator.(types.Validator)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting types.Validator, got %T", validator)
+	}
+
+	// SetValidatorByConsAddr for NewPubKey
+	oldConsensusPubKey := val.ConsensusPubkey
+	val.ConsensusPubkey = msg.NewPubkey
+	k.SetValidatorByConsAddr(ctx, val)
+	k.SetValidator(ctx, val)
+
+	// Add ConsPubKeyRotationHistory for tracking rotation
+	k.SetConsPubKeyRotationHistory(ctx, types.ConsPubKeyRotationHistory{
+		OperatorAddress: validator.GetOperator().String(),
+		OldConsPubkey:   oldConsensusPubKey,
+		NewConsPubkey:   msg.NewPubkey,
+		Height:          uint64(ctx.BlockHeight()),
+	})
+
+	return res, err
 }

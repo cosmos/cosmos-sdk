@@ -76,3 +76,13 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.cdc.MustUnmarshal(bz, &params)
 	return params
 }
+
+// MaxConsPubKeyRotations - Maximum consensus pubkey rotations
+func (k Keeper) MaxConsPubKeyRotations(ctx sdk.Context) (res uint64) {
+	return k.GetParams(ctx).MaxConsPubkeyRotations
+}
+
+func (k Keeper) ConsPubKeyRotationFee(ctx sdk.Context) (res sdk.Coin) {
+	// return k.GetParams(ctx).ConsPubKeyRotationFee
+	return k.GetParams(ctx).ConsPubkeyRotationFee
+}

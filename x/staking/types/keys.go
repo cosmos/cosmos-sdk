@@ -54,6 +54,9 @@ var (
 	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
+
+	ValidatorConsPubKeyRotationHistoryKey = []byte{0x70} // prefix for consPubkey rotation history by validator
+	BlockConsPubKeyRotationHistoryKey     = []byte{0x71} // prefix for consPubkey rotation history by height
 )
 
 // UnbondingType defines the type of unbonding operation
@@ -377,4 +380,30 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKey(height int64) []byte {
 	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
+}
+
+func GetValidatorConsPubKeyRotationHistoryKey(history ConsPubKeyRotationHistory) []byte {
+	return append(append(
+		ValidatorConsPubKeyRotationHistoryKey,
+		[]byte(history.OperatorAddress)...),
+		sdk.Uint64ToBigEndian(uint64(history.Height))...)
+}
+
+func GetBlockConsPubKeyRotationHistoryKey(history ConsPubKeyRotationHistory) []byte {
+	return append(append(
+		BlockConsPubKeyRotationHistoryKey,
+		sdk.Uint64ToBigEndian(uint64(history.Height))...),
+		[]byte(history.OperatorAddress)...)
+}
+
+func GetValdiatorConsPubKeyRotationHistoryPrefix(operatorAddress string) []byte {
+	return append(
+		ValidatorConsPubKeyRotationHistoryKey,
+		[]byte(operatorAddress)...)
+}
+
+func GetBlockConsPubKeyRotationHistoryPrefix(height int64) []byte {
+	return append(
+		BlockConsPubKeyRotationHistoryKey,
+		sdk.Uint64ToBigEndian(uint64(height))...)
 }

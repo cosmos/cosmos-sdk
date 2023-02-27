@@ -14,9 +14,8 @@ const ModuleKey = "module"
 var ContextKey struct{}
 
 // Logger is the Cosmos SDK logger interface
-// It aimed to be used as a wrapper around zerolog
-// It maintains as much backward compatibility with the CometBFT logger as possible (use server.CometZeroLogWrapper for 100% compatibility)
-// All functionalities of Zerolog are available through the Impl() method
+// It maintains as much backward compatibility with the CometBFT logger as possible
+// All functionalities of the logger are available through the Impl() method
 type Logger interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.
 	// The key of the tuple must be a string.
@@ -96,4 +95,23 @@ func (l ZeroLogWrapper) With(keyVals ...interface{}) Logger {
 // It can be used to used zerolog structured API directly instead of the wrapper
 func (l ZeroLogWrapper) Impl() interface{} {
 	return l.Logger
+}
+
+// FilterKeys returns a new logger that filters out all key/value pairs that do not match the filter
+// NOTE: this is going significantly slow down the logger
+func FilterKeys(logger Logger, filter func(key string, level zerolog.Level) bool) Logger {
+	zl := logger.Impl().(*zerolog.Logger)
+	filteredLogger := zl.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, _ string) {
+		// TODO implement this in zerolog
+		// keys := e.GetKeys()
+		keys := []string{}
+		for _, key := range keys {
+			if filter(key, level) {
+				e.Discard()
+				break
+			}
+		}
+	}))
+
+	return NewCustomLogger(filteredLogger)
 }

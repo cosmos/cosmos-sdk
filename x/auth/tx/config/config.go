@@ -36,6 +36,8 @@ type TxInputs struct {
 	// TxBankKeeper is the expected bank keeper to be passed to Textual
 	TxBankKeeper   BankKeeper
 	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
+
+	CustomSignModes func() []tx.SignModeHandlerPair `optional:"true"`
 }
 
 //nolint:revive
@@ -48,7 +50,12 @@ type TxOutputs struct {
 
 func ProvideModule(in TxInputs) TxOutputs {
 	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
-	txConfig := tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
+	var txConfig client.TxConfig
+	if in.CustomSignModes == nil {
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
+	} else {
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual, in.CustomSignModes()...)
+	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers

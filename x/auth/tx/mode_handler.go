@@ -9,6 +9,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+type SignModeHandlerPair struct {
+	mode    signingtypes.SignMode
+	handler signing.SignModeHandler
+}
+
+var DefaultSignModeHandlerPairs = []SignModeHandlerPair{
+	{signingtypes.SignMode_SIGN_MODE_DIRECT, signModeDirectHandler{}},
+	{signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signModeDirectAuxHandler{}},
+	{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signModeLegacyAminoJSONHandler{}},
+}
+
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
 var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
@@ -24,13 +35,14 @@ var DefaultSignModes = []signingtypes.SignMode{
 
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
 // SIGN_MODE_DIRECT, SIGN_MODE_DIRECT_AUX and SIGN_MODE_LEGACY_AMINO_JSON.
-func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHandler) signing.SignModeHandler {
+func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHandler, customSignModes ...SignModeHandlerPair) signing.SignModeHandler {
 	if len(modes) < 1 {
 		panic(fmt.Errorf("no sign modes enabled"))
 	}
 
-	handlers := make([]signing.SignModeHandler, len(modes))
+	handlers := make([]signing.SignModeHandler, len(modes)+len(customSignModes))
 
+	// handle cosmos-sdk defined sign modes
 	for i, mode := range modes {
 		switch mode {
 		case signingtypes.SignMode_SIGN_MODE_DIRECT:
@@ -44,6 +56,11 @@ func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHan
 		default:
 			panic(fmt.Errorf("unsupported sign mode %+v", mode))
 		}
+	}
+
+	// add custom sign modes
+	for i, custom := range customSignModes {
+		handlers[i] = custom.handler
 	}
 
 	return signing.NewSignModeHandlerMap(

@@ -97,6 +97,7 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 
 func testMsgBuildError(t *testing.T, args ...string) *testClientConn {
 	server := grpc.NewServer()
+	defer server.GracefulStop()
 	testpb.RegisterMsgServer(server, &testMessageServer{})
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	assert.NilError(t, err)
@@ -144,6 +145,7 @@ func testMsgBuildError(t *testing.T, args ...string) *testClientConn {
 
 func testMsgExec(t *testing.T, args ...string) *testClientConn {
 	server := grpc.NewServer()
+	defer server.GracefulStop()
 	testpb.RegisterMsgServer(server, &testMessageServer{})
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	assert.NilError(t, err)

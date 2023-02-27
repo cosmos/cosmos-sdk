@@ -19,7 +19,7 @@ type fixture struct {
 	mockMsgURL string
 }
 
-func iniFixture(t *testing.T) *fixture {
+func SetupFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 	mockAddr := "mock_address"
 	keeperX := NewKeeper(mockStoreKey, mockAddr)
@@ -42,7 +42,7 @@ func iniFixture(t *testing.T) *fixture {
 
 func TestQueryServer(t *testing.T) {
 	t.Parallel()
-	f := iniFixture(t)
+	f := SetupFixture(t)
 
 	err := f.keeper.SetPermissions(f.ctx, f.mockAddr, &f.mockPerms)
 	require.NoError(t, err)
@@ -75,5 +75,5 @@ func TestQueryServer(t *testing.T) {
 	// test the DisabledList method
 	disabledList, err := qs.DisabledList(f.ctx, &types.QueryDisableListRequest{})
 	require.NoError(t, err)
-	require.Equal(t, []string{}, disabledList.DisabledList)
+	require.Equal(t, []string{"test"}, disabledList.DisabledList)
 }

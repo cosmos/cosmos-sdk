@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 	"github.com/cosmos/gogoproto/proto"
+	"strings"
 )
 
 var _ types.QueryServer = QueryServer{}
@@ -40,8 +41,9 @@ func (qs QueryServer) Accounts(c context.Context, req *types.QueryAccountsReques
 	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
 		perm := &types.Permissions{}
 		proto.Unmarshal(value, perm)
+		trim := strings.TrimRight(string(key), "\x00")
 		accounts = append(accounts, &types.GenesisAccountPermissions{
-			Address:     string(key),
+			Address:     string(trim),
 			Permissions: perm,
 		})
 

@@ -57,8 +57,8 @@ func printVersionJSON(logger log.Logger, args []string) error {
 	buf := new(strings.Builder)
 
 	// disable logger
-	l := logger.Level(zerolog.Disabled)
-	logger = l
+	l := logger.Impl().Level(zerolog.Disabled)
+	logger = log.NewCustomLogger(l)
 
 	if err := Run(
 		logger,
@@ -76,8 +76,6 @@ func printVersionJSON(logger log.Logger, args []string) error {
 		AppVersion: json.RawMessage(buf.String()),
 	})
 	if err != nil {
-		l := logger.Level(zerolog.TraceLevel)
-		logger = l
 		return fmt.Errorf("can't print version output, expected valid json from APP, got: %s - %w", buf.String(), err)
 	}
 

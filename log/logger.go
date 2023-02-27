@@ -13,13 +13,27 @@ const ModuleKey = "module"
 // ContextKey is used to store the logger in the context
 var ContextKey struct{}
 
+// Logger is the Cosmos SDK logger interface
+// It aimed to be used as a wrapper around zerolog
+// It maintains as much backward compatibility with the CometBFT logger as possible (use server.CometZeroLogWrapper for 100% compatibility)
+// All functionalities of Zerolog are available through the Impl() method
 type Logger interface {
+	// Info takes a message and a set of key/value pairs and logs with level INFO.
+	// The key of the tuple must be a string.
 	Info(msg string, keyVals ...interface{})
+
+	// Error takes a message and a set of key/value pairs and logs with level DEBUG.
+	// The key of the tuple must be a string.
 	Error(msg string, keyVals ...interface{})
+
+	// Debug takes a message and a set of key/value pairs and logs with level ERR.
+	// The key of the tuple must be a string.
 	Debug(msg string, keyVals ...interface{})
+
+	// With returns a new wrapped logger with additional context provided by a set
 	With(keyVals ...interface{}) Logger
 
-	Level(lvl zerolog.Level) Logger
+	// Impl returns the underlying zerolog logger
 	Impl() *zerolog.Logger
 }
 
@@ -73,12 +87,6 @@ func (l ZeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 // With returns a new wrapped logger with additional context provided by a set
 func (l ZeroLogWrapper) With(keyVals ...interface{}) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
-	return ZeroLogWrapper{&logger}
-}
-
-// Level returns a new wrapped logger with the given level
-func (l ZeroLogWrapper) Level(lvl zerolog.Level) Logger {
-	logger := l.Logger.Level(lvl)
 	return ZeroLogWrapper{&logger}
 }
 

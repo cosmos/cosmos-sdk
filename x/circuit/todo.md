@@ -1,5 +1,4 @@
 # TODO
 
-* cli 
-* tests for query server
+* tests for query server, cli and msg server
 * test baseapp addition of circuit

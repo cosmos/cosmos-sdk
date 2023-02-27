@@ -88,7 +88,7 @@ const (
 	// This differs from FlagOutputDocument that is used to set the output file.
 	FlagOutput = cmtcli.OutputFlag
 
-	// CometBFT logging flags
+	// Logging flags
 	FlagLogLevel  = "log_level"
 	FlagLogFormat = "log_format"
 )

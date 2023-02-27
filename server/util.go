@@ -17,7 +17,9 @@ import (
 
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -153,21 +155,26 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	var logger log.Logger
 	if serverCtx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
-		logger = log.NewLogger()
+		zl := zerolog.New(os.Stdout).With().Timestamp().Logger()
+		logger = log.NewCustomLogger(zl)
 	} else {
-		// logger = cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
 		logger = log.NewLogger()
 	}
-	// logger, err = cmtflags.ParseLogLevel(config.LogLevel, logger, cmtcfg.DefaultLogLevel)
-	// if err != nil {
-	// 	return err
-	// }
 
-	// Check if the CometBFT flag for trace logging is set if it is then setup
-	// a tracing logger in this app as well.
-	// if serverCtx.Viper.GetBool(cmtcli.TraceFlag) {
-	// 	logger = cmtlog.NewTracingLogger(logger)
-	// }
+	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
+	logLvl, err := zerolog.ParseLevel(logLvlStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
+	}
+
+	zl := logger.Impl().(*zerolog.Logger)
+	logger = log.NewCustomLogger(zl.Level(logLvl))
+
+	// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
+	// Note it overrides log level passed in `log_levels`.
+	if serverCtx.Viper.GetBool(cmtcli.TraceFlag) {
+		logger = log.NewCustomLogger(zl.Level(zerolog.TraceLevel))
+	}
 
 	serverCtx.Logger = logger.With("module", "server")
 

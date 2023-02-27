@@ -34,7 +34,8 @@ type Logger interface {
 	With(keyVals ...interface{}) Logger
 
 	// Impl returns the underlying logger implementation
-	// It is used to access the full functionality of the underlying logger
+	// It is used to access the full functionalities of the underlying logger
+	// Advanced users can type cast the returned value to the actual logger
 	Impl() interface{}
 }
 

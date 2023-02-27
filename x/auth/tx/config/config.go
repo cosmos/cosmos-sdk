@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -37,7 +38,7 @@ type TxInputs struct {
 	TxBankKeeper   BankKeeper
 	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
 
-	CustomSignModes func() []tx.SignModeHandlerPair `optional:"true"`
+	CustomSignModeHandlers func() []signing.SignModeHandler `optional:"true"`
 }
 
 //nolint:revive
@@ -51,10 +52,10 @@ type TxOutputs struct {
 func ProvideModule(in TxInputs) TxOutputs {
 	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
 	var txConfig client.TxConfig
-	if in.CustomSignModes == nil {
+	if in.CustomSignModeHandlers == nil {
 		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
 	} else {
-		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual, in.CustomSignModes()...)
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual, in.CustomSignModeHandlers()...)
 	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {

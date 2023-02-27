@@ -27,7 +27,7 @@ type config struct {
 // NOTE: Use NewTxConfigWithHandler to provide a custom signing handler in case the sign mode
 // is not supported by default (eg: SignMode_SIGN_MODE_EIP_191). Use NewTxConfigWithTextual
 // to enable SIGN_MODE_TEXTUAL (for testing purposes for now).
-func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, customSignModes ...SignModeHandlerPair) client.TxConfig {
+func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, customSignModes ...signing.SignModeHandler) client.TxConfig {
 	for _, m := range enabledSignModes {
 		if m == signingtypes.SignMode_SIGN_MODE_TEXTUAL {
 			panic("cannot use NewTxConfig with SIGN_MODE_TEXTUAL enabled; please use NewTxConfigWithTextual")
@@ -40,7 +40,7 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 // NewTxConfigWithTextual is like NewTxConfig with the ability to add
 // a SIGN_MODE_TEXTUAL renderer. It is currently still EXPERIMENTAL, for should
 // be used for TESTING purposes only, until Textual is fully released.
-func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, textual *textual.SignModeHandler, customSignModes ...SignModeHandlerPair) client.TxConfig {
+func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, textual *textual.SignModeHandler, customSignModes ...signing.SignModeHandler) client.TxConfig {
 	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual))
 }
 

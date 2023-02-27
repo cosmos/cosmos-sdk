@@ -99,7 +99,7 @@ func testMsgExec(t *testing.T, args ...string) *testClientConn {
 	server := grpc.NewServer()
 	defer server.GracefulStop()
 	testpb.RegisterMsgServer(server, &testMessageServer{})
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	listener, err := net.Listen("tcp", "0.0.0.0:0")
 	defer listener.Close()
 
 	assert.NilError(t, err)

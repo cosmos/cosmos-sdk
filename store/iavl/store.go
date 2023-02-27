@@ -7,12 +7,12 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
-	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/confio/ics23/go"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 
-	sdkerrors "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"
@@ -275,7 +275,7 @@ func (st *Store) SetInitialVersion(version int64) {
 func (st *Store) Export(version int64) (*iavl.Exporter, error) {
 	istore, err := st.GetImmutable(version)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "iavl export failed for version %v", version)
+		return nil, errorsmod.Wrapf(err, "iavl export failed for version %v", version)
 	}
 	tree, ok := istore.tree.(*immutableTree)
 	if !ok || tree == nil {
@@ -322,7 +322,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer st.metrics.MeasureSince("store", "iavl", "query")
 
 	if len(req.Data) == 0 {
-		return types.QueryResult(sdkerrors.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
+		return types.QueryResult(errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
 	}
 
 	tree := st.tree
@@ -387,7 +387,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.Value = bz
 
 	default:
-		return types.QueryResult(sdkerrors.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
+		return types.QueryResult(errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
 	}
 
 	return res
@@ -396,7 +396,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto.ProofOps {
+func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *cmtprotocrypto.ProofOps {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error
@@ -419,5 +419,5 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 	}
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
+	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}
 }

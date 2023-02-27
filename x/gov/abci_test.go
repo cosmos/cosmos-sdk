@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -25,10 +25,10 @@ import (
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
@@ -82,10 +82,10 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
@@ -168,10 +168,10 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 func TestTickPassedDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
@@ -241,13 +241,13 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(tc.expedited)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
 
-			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+			header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
 			app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
@@ -345,7 +345,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(tc.expedited)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
@@ -354,7 +354,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+			header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
 			app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 			valAddr := sdk.ValAddress(addrs[0])
@@ -403,13 +403,13 @@ func TestProposalPassedEndblocker(t *testing.T) {
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 1, valTokens)
 
 	SortAddresses(addrs)
 
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	valAddr := sdk.ValAddress(addrs[0])
@@ -473,7 +473,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(true)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
 			params := suite.GovKeeper.GetParams(ctx)
@@ -483,7 +483,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+			header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
 			app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 			valAddr := sdk.ValAddress(addrs[0])

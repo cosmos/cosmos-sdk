@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	tmcfg "github.com/cometbft/cometbft/config"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/viper"
@@ -19,7 +19,7 @@ import (
 
 func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.Codec) error {
 	logger := log.NewNopLogger()
-	cfg, err := CreateDefaultTendermintConfig(home)
+	cfg, err := CreateDefaultCometConfig(home)
 	if err != nil {
 		return err
 	}
@@ -40,10 +40,10 @@ func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.Codec) erro
 	return cmd.ExecuteContext(ctx)
 }
 
-func CreateDefaultTendermintConfig(rootDir string) (*tmcfg.Config, error) {
-	conf := tmcfg.DefaultConfig()
+func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {
+	conf := cmtcfg.DefaultConfig()
 	conf.SetRoot(rootDir)
-	tmcfg.EnsureRoot(rootDir)
+	cmtcfg.EnsureRoot(rootDir)
 
 	if err := conf.ValidateBasic(); err != nil {
 		return nil, fmt.Errorf("error in config file: %v", err)

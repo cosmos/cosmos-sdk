@@ -59,7 +59,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
@@ -67,7 +67,7 @@ func (s *CLITestSuite) SetupSuite() {
 	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -292,8 +292,10 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 		{
 			"fee event happy case",
 			[]string{
-				fmt.Sprintf("--events=tx.fee=%s",
-					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+				fmt.Sprintf(
+					"--query=tx.fee='%s'",
+					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String(),
+				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"",
@@ -301,8 +303,10 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 		{
 			"no matching fee event",
 			[]string{
-				fmt.Sprintf("--events=tx.fee=%s",
-					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))).String()),
+				fmt.Sprintf(
+					"--query=tx.fee='%s'",
+					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))).String(),
+				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"",

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -437,19 +438,21 @@ func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute s
 // combineEvents queries txs by events with all events from each event group,
 // and combines all those events together.
 //
-// Tx are indexed in tendermint via their Msgs `Type()`, which can be:
+// Tx are indexed in CometBFT via their Msgs `Type()`, which can be:
 // - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 // - via ADR-031 proto msgs, their `Type()` is the protobuf FQ method name.
 // In searching for events, we search for both `Type()`s, and we use the
 // `combineEvents` function here to merge events.
 func combineEvents(clientCtx client.Context, page int, eventGroups ...[]string) (*sdk.SearchTxsResult, error) {
-	// Only the Txs field will be populated in the final SearchTxsResult.
+	// only the Txs field will be populated in the final SearchTxsResult
 	allTxs := []*sdk.TxResponse{}
 	for _, events := range eventGroups {
-		res, err := authtx.QueryTxsByEvents(clientCtx, events, page, defaultLimit, "")
+		q := strings.Join(events, " AND ")
+		res, err := authtx.QueryTxsByEvents(clientCtx, page, defaultLimit, q, "")
 		if err != nil {
 			return nil, err
 		}
+
 		allTxs = append(allTxs, res.Txs...)
 	}
 

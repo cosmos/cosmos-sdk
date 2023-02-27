@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -271,8 +271,8 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	}
 }
 
-// Check SortTendermint sorts the same as tendermint
-func TestValidatorsSortTendermint(t *testing.T) {
+// Check SortCometBFT sorts the same as CometBFT
+func TestValidatorsSortCometBFT(t *testing.T) {
 	vals := make([]types.Validator, 100)
 
 	for i := range vals {
@@ -289,24 +289,24 @@ func TestValidatorsSortTendermint(t *testing.T) {
 
 	valz := types.Validators(vals)
 
-	// create expected tendermint validators by converting to tendermint then sorting
-	expectedVals, err := testutil.ToTmValidators(valz, sdk.DefaultPowerReduction)
+	// create expected CometBFT validators by converting to CometBFT then sorting
+	expectedVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
-	sort.Sort(tmtypes.ValidatorsByVotingPower(expectedVals))
+	sort.Sort(cmttypes.ValidatorsByVotingPower(expectedVals))
 
-	// sort in SDK and then convert to tendermint
+	// sort in SDK and then convert to CometBFT
 	sort.SliceStable(valz, func(i, j int) bool {
 		return types.ValidatorsByVotingPower(valz).Less(i, j, sdk.DefaultPowerReduction)
 	})
-	actualVals, err := testutil.ToTmValidators(valz, sdk.DefaultPowerReduction)
+	actualVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
 
-	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in Tendermint")
+	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in CometBFT")
 }
 
-func TestValidatorToTm(t *testing.T) {
+func TestValidatorToCmt(t *testing.T) {
 	vals := make(types.Validators, 10)
-	expected := make([]*tmtypes.Validator, 10)
+	expected := make([]*cmttypes.Validator, 10)
 
 	for i := range vals {
 		pk := ed25519.GenPrivKey().PubKey()
@@ -314,11 +314,11 @@ func TestValidatorToTm(t *testing.T) {
 		val.Status = types.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
-		tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
 		require.NoError(t, err)
-		expected[i] = tmtypes.NewValidator(tmPk, val.ConsensusPower(sdk.DefaultPowerReduction))
+		expected[i] = cmttypes.NewValidator(cmtPk, val.ConsensusPower(sdk.DefaultPowerReduction))
 	}
-	vs, err := testutil.ToTmValidators(vals, sdk.DefaultPowerReduction)
+	vs, err := testutil.ToCmtValidators(vals, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
 	require.Equal(t, expected, vs)
 }

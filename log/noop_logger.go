@@ -2,11 +2,11 @@ package log
 
 import cmlog "github.com/cometbft/cometbft/libs/log"
 
-var _ Logger = &NoOp{}
+var _ Logger = NoOp{}
 
 type NoOp struct{}
 
-func NewNoOpLogger() *NoOp {
+func NewNopLogger() Logger {
 	return &NoOp{}
 }
 

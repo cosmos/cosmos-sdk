@@ -14,13 +14,13 @@ import (
 )
 
 var (
-	_ Mempool  = (*senderNonceMempool)(nil)
-	_ Iterator = (*senderNonceMepoolIterator)(nil)
+	_ Mempool  = (*SenderNonceMempool)(nil)
+	_ Iterator = (*senderNonceMempoolIterator)(nil)
 )
 
 var DefaultMaxTx = 0
 
-// senderNonceMempool is a mempool that prioritizes transactions within a sender
+// SenderNonceMempool is a mempool that prioritizes transactions within a sender
 // by nonce, the lowest first, but selects a random sender on each iteration.
 // The mempool is iterated by:
 //
@@ -30,14 +30,14 @@ var DefaultMaxTx = 0
 //
 // Note that PrepareProposal could choose to stop iteration before reaching the
 // end if maxBytes is reached.
-type senderNonceMempool struct {
+type SenderNonceMempool struct {
 	senders    map[string]*skiplist.SkipList
 	rnd        *rand.Rand
 	maxTx      int
 	existingTx map[txKey]bool
 }
 
-type SenderNonceOptions func(mp *senderNonceMempool)
+type SenderNonceOptions func(*SenderNonceMempool)
 
 type txKey struct {
 	address string
@@ -46,10 +46,10 @@ type txKey struct {
 
 // NewSenderNonceMempool creates a new mempool that prioritizes transactions by
 // nonce, the lowest first, picking a random sender on each iteration.
-func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
+func NewSenderNonceMempool(opts ...SenderNonceOptions) *SenderNonceMempool {
 	senderMap := make(map[string]*skiplist.SkipList)
 	existingTx := make(map[txKey]bool)
-	snp := &senderNonceMempool{
+	snp := &SenderNonceMempool{
 		senders:    senderMap,
 		maxTx:      DefaultMaxTx,
 		existingTx: existingTx,
@@ -78,7 +78,7 @@ func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
 //	random_seed := int64(1000)
 //	NewSenderNonceMempool(SenderNonceSeedTxOpt(random_seed))
 func SenderNonceSeedOpt(seed int64) SenderNonceOptions {
-	return func(snp *senderNonceMempool) {
+	return func(snp *SenderNonceMempool) {
 		snp.setSeed(seed)
 	}
 }
@@ -90,19 +90,32 @@ func SenderNonceSeedOpt(seed int64) SenderNonceOptions {
 //
 //	NewSenderNonceMempool(SenderNonceMaxTxOpt(100))
 func SenderNonceMaxTxOpt(maxTx int) SenderNonceOptions {
-	return func(snp *senderNonceMempool) {
+	return func(snp *SenderNonceMempool) {
 		snp.maxTx = maxTx
 	}
 }
 
-func (snm *senderNonceMempool) setSeed(seed int64) {
+func (snm *SenderNonceMempool) setSeed(seed int64) {
 	s1 := rand.NewSource(seed)
 	snm.rnd = rand.New(s1) //#nosec // math/rand is seeded from crypto/rand by default
 }
 
+// NextSenderTx returns the next transaction for a given sender by nonce order,
+// i.e. the next valid transaction for the sender. If no such transaction exists,
+// nil will be returned.
+func (snm *SenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
+	senderIndex, ok := snm.senders[sender]
+	if !ok {
+		return nil
+	}
+
+	cursor := senderIndex.Front()
+	return cursor.Value.(sdk.Tx)
+}
+
 // Insert adds a tx to the mempool. It returns an error if the tx does not have
 // at least one signer. Note, priority is ignored.
-func (snm *senderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
+func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	if snm.maxTx > 0 && snm.CountTx() >= snm.maxTx {
 		return ErrMempoolTxMaxCapacity
 	}
@@ -119,7 +132,7 @@ func (snm *senderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	}
 
 	sig := sigs[0]
-	sender := sig.PubKey.Address().String()
+	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
 
 	senderTxs, found := snm.senders[sender]
@@ -138,7 +151,7 @@ func (snm *senderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 
 // Select returns an iterator ordering transactions the mempool with the lowest
 // nonce of a random selected sender first.
-func (snm *senderNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
+func (snm *SenderNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
 	var senders []string
 
 	senderCursors := make(map[string]*skiplist.Element)
@@ -157,7 +170,7 @@ func (snm *senderNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
 		s = s.Next()
 	}
 
-	iter := &senderNonceMepoolIterator{
+	iter := &senderNonceMempoolIterator{
 		senders:       senders,
 		rnd:           snm.rnd,
 		senderCursors: senderCursors,
@@ -167,13 +180,13 @@ func (snm *senderNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
 }
 
 // CountTx returns the total count of txs in the mempool.
-func (snm *senderNonceMempool) CountTx() int {
+func (snm *SenderNonceMempool) CountTx() int {
 	return len(snm.existingTx)
 }
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not
 // have at least one signer or the tx was not found in the pool.
-func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
+func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -183,7 +196,7 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	}
 
 	sig := sigs[0]
-	sender := sig.PubKey.Address().String()
+	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
 
 	senderTxs, found := snm.senders[sender]
@@ -206,7 +219,7 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	return nil
 }
 
-type senderNonceMepoolIterator struct {
+type senderNonceMempoolIterator struct {
 	rnd           *rand.Rand
 	currentTx     *skiplist.Element
 	senders       []string
@@ -215,7 +228,7 @@ type senderNonceMepoolIterator struct {
 
 // Next returns the next iterator state which will contain a tx with the next
 // smallest nonce of a randomly selected sender.
-func (i *senderNonceMepoolIterator) Next() Iterator {
+func (i *senderNonceMempoolIterator) Next() Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := i.rnd.Intn(len(i.senders))
 		sender := i.senders[senderIndex]
@@ -231,7 +244,7 @@ func (i *senderNonceMepoolIterator) Next() Iterator {
 			i.senders = removeAtIndex(i.senders, senderIndex)
 		}
 
-		return &senderNonceMepoolIterator{
+		return &senderNonceMempoolIterator{
 			senders:       i.senders,
 			currentTx:     senderCursor,
 			rnd:           i.rnd,
@@ -242,7 +255,7 @@ func (i *senderNonceMepoolIterator) Next() Iterator {
 	return nil
 }
 
-func (i *senderNonceMepoolIterator) Tx() sdk.Tx {
+func (i *senderNonceMempoolIterator) Tx() sdk.Tx {
 	return i.currentTx.Value.(sdk.Tx)
 }
 

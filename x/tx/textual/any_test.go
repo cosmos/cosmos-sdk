@@ -7,9 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/x/tx/textual"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/x/tx/textual"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -30,7 +31,7 @@ func TestAny(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	tr := textual.NewTextual(EmptyCoinMetadataQuerier)
+	tr := textual.NewSignModeHandler(EmptyCoinMetadataQuerier)
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			anyMsg := anypb.Any{}
@@ -38,7 +39,7 @@ func TestAny(t *testing.T) {
 			require.NoError(t, err)
 
 			// Format into screens and check vs expected
-			rend := textual.NewAnyValueRenderer((&tr))
+			rend := textual.NewAnyValueRenderer((tr))
 			screens, err := rend.Format(context.Background(), protoreflect.ValueOfMessage(anyMsg.ProtoReflect()))
 			require.NoError(t, err)
 			require.Equal(t, tc.Screens, screens)

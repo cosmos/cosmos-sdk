@@ -9,8 +9,8 @@ import (
 
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtime "github.com/cometbft/cometbft/types/time"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -124,7 +124,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations
@@ -607,7 +607,7 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 	balances := sdk.NewCoins(newFooCoin(50))
 
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -626,7 +626,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 func (suite *KeeperTestSuite) TestValidateBalance() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
@@ -846,7 +846,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 func (suite *KeeperTestSuite) TestSpendableCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -879,7 +879,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 func (suite *KeeperTestSuite) TestVestingAccountSend() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -908,7 +908,7 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
@@ -942,7 +942,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -974,7 +974,7 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -1011,7 +1011,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 func (suite *KeeperTestSuite) TestDelegateCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -1068,7 +1068,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins_Invalid() {
 func (suite *KeeperTestSuite) TestUndelegateCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))

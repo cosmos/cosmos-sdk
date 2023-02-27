@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -17,7 +17,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	app, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
 	require.NoError(b, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
@@ -40,7 +40,7 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	app, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
 	require.NoError(b, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	b.ResetTimer()
 

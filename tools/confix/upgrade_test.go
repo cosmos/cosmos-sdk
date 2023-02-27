@@ -29,7 +29,7 @@ func TestCheckValid(t *testing.T) {
 	assert.ErrorContains(t, err, "unknown config")
 
 	err = confix.CheckValid("config.toml", mustReadConfig(t, "data/v0.45-app.toml"))
-	assert.Error(t, err, "tendermint config is not supported")
+	assert.Error(t, err, "cometbft config is not supported")
 
 	err = confix.CheckValid("client.toml", mustReadConfig(t, "data/v0.45-app.toml"))
 	assert.Error(t, err, "client config invalid: chain-id is empty")

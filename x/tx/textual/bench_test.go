@@ -54,7 +54,7 @@ func BenchmarkDecimalValueRendererFormat(b *testing.B) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		for _, value := range intValues {
+		for _, value := range decimalValues {
 			if _, err := dvr.Format(ctx, value); err != nil {
 				b.Fatal(err)
 			}

@@ -35,39 +35,26 @@ type ZeroLogWrapper struct {
 // of key/value tuples may be provided to add context to the log. The number of
 // tuples must be even and the key of the tuple must be a string.
 func (z ZeroLogWrapper) Info(msg string, keyVals ...interface{}) {
-	z.Logger.Info().Fields(getLogFields(keyVals...)).Msg(msg)
+	z.Logger.Info().Fields(keyVals).Msg(msg)
 }
 
 // Error implements Tendermint's Logger interface and logs with level ERR. A set
 // of key/value tuples may be provided to add context to the log. The number of
 // tuples must be even and the key of the tuple must be a string.
 func (z ZeroLogWrapper) Error(msg string, keyVals ...interface{}) {
-	z.Logger.Error().Fields(getLogFields(keyVals...)).Msg(msg)
+	z.Logger.Error().Fields(keyVals).Msg(msg)
 }
 
 // Debug implements Tendermint's Logger interface and logs with level DEBUG. A set
 // of key/value tuples may be provided to add context to the log. The number of
 // tuples must be even and the key of the tuple must be a string.
 func (z ZeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
-	z.Logger.Debug().Fields(getLogFields(keyVals...)).Msg(msg)
+	z.Logger.Debug().Fields(keyVals).Msg(msg)
 }
 
 // With returns a new wrapped logger with additional context provided by a set
 // of key/value tuples. The number of tuples must be even and the key of the
 // tuple must be a string.
 func (z ZeroLogWrapper) With(keyVals ...interface{}) cmtlog.Logger {
-	return ZeroLogWrapper{z.Logger.With().Fields(getLogFields(keyVals...)).Logger()}
-}
-
-func getLogFields(keyVals ...interface{}) map[string]interface{} {
-	if len(keyVals)%2 != 0 {
-		return nil
-	}
-
-	fields := make(map[string]interface{})
-	for i := 0; i < len(keyVals); i += 2 {
-		fields[keyVals[i].(string)] = keyVals[i+1]
-	}
-
-	return fields
+	return ZeroLogWrapper{z.Logger.With().Fields(keyVals).Logger()}
 }

@@ -16,9 +16,13 @@ import (
 	"cosmossdk.io/x/tx/textual"
 )
 
+// Dedicated type for context Values, to avoid conflicts,
+// per the (context.Context).WithValue docs.
+type mockCoinMetadata string
+
 // mockCoinMetadataKey is used in the mock coin metadata querier.
-func mockCoinMetadataKey(denom string) string {
-	return fmt.Sprintf("%s-%s", "coin-metadata", denom)
+func mockCoinMetadataKey(denom string) mockCoinMetadata {
+	return mockCoinMetadata(fmt.Sprintf("%s-%s", "coin-metadata", denom))
 }
 
 // mockCoinMetadataQuerier is a mock querier for coin metadata used for test

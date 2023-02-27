@@ -8,7 +8,7 @@ require (
 	github.com/otiai10/copy v1.9.0
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cobra v1.6.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 )
 
 require (

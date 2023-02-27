@@ -23,7 +23,7 @@ service BankQueryService {
   // BalancesByDenom queries the Balance table using the primary key index.
   rpc BalancesByDenom(BalancesByDenomRequest) returns (BalancesByDenomResponse) {
     option (google.api.http) = {
-      get: "/testpb/balances.denom"
+      get: "/testpb/balances-by-denom"
     };
   }
   // Supply queries the Supply table by its primary key.

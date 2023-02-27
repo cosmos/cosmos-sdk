@@ -205,7 +205,7 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 		g.svc.Indent()
 		g.svc.F("option (google.api.http) = {")
 		g.svc.Indent()
-		g.svc.F(`get: "/%s.%s"`, restPath, fieldsToKebabCase(index.Fields))
+		g.svc.F(`get: "/%s-by-%s"`, restPath, fieldsToKebabCase(index.Fields))
 		g.svc.Dedent()
 		g.svc.F("};")
 		g.svc.Dedent()

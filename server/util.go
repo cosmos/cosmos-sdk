@@ -161,20 +161,26 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		logger = log.NewLogger()
 	}
 
-	// TODO: Add filtering to zerolog
+	// set filter level or keys for the logger if any
 	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
 	logLvl, err := zerolog.ParseLevel(logLvlStr)
 	if err != nil {
-		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
-	}
+		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
+		filterFunc, err := log.ParseLogLevel(logLvlStr, zerolog.InfoLevel.String())
+		if err != nil {
+			return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
+		}
 
-	zl := logger.Impl().(*zerolog.Logger)
-	logger = log.NewCustomLogger(zl.Level(logLvl))
-
-	// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
-	// Note it overrides log level passed in `log_levels`.
-	if serverCtx.Viper.GetBool(cmtcli.TraceFlag) {
-		logger = log.NewCustomLogger(zl.Level(zerolog.TraceLevel))
+		logger = log.FilterKeys(logger, filterFunc)
+	} else {
+		zl := logger.Impl().(*zerolog.Logger)
+		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
+		// Note it overrides log level passed in `log_levels`.
+		if serverCtx.Viper.GetBool(cmtcli.TraceFlag) {
+			logger = log.NewCustomLogger(zl.Level(zerolog.TraceLevel))
+		} else {
+			logger = log.NewCustomLogger(zl.Level(logLvl))
+		}
 	}
 
 	serverCtx.Logger = logger.With("module", "server")

@@ -399,7 +399,7 @@ proto-lint:
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(PR_TARGET_REPO)#branch=$(PR_TARGET_BRANCH)
 
-TM_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.34.27-alpha.2/proto/tendermint
+TM_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.34.27/proto/tendermint
 
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci

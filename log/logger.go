@@ -98,9 +98,14 @@ func (l ZeroLogWrapper) Impl() interface{} {
 }
 
 // FilterKeys returns a new logger that filters out all key/value pairs that do not match the filter
-// NOTE: this is going significantly slow down the logger
+// This functions assumes that the logger is a zerolog.Logger, which is the case for the logger returned by log.NewLogger()
+// NOTE: filtering has a performance impact on the logger
 func FilterKeys(logger Logger, filter func(key, level string) bool) Logger {
-	zl := logger.Impl().(*zerolog.Logger)
+	zl, ok := logger.Impl().(*zerolog.Logger)
+	if !ok {
+		panic("logger is not a zerolog.Logger")
+	}
+
 	filteredLogger := zl.Hook(zerolog.HookFunc(func(e *zerolog.Event, lvl zerolog.Level, _ string) {
 		// TODO wait for https://github.com/rs/zerolog/pull/527 to be merged
 		// keys := e.GetKeys()

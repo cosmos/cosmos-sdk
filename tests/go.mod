@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/protobuf v1.28.2-0.20230208135220-49eaa78c6c9c
 	gotest.tools/v3 v3.4.0
-	pgregory.net/rapid v0.5.3
+	pgregory.net/rapid v0.5.5
 )
 
 require (
@@ -47,7 +47,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0-alpha4 // indirect

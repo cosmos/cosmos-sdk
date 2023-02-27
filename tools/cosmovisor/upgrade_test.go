@@ -94,7 +94,7 @@ func (s *upgradeTestSuite) assertCurrentLink(cfg cosmovisor.Config, target strin
 func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
-	logger := log.NewZeroLogger(log.ModuleKey, "cosmovisor")
+	logger := log.NewLoggerWithKV(log.ModuleKey, "cosmovisor")
 
 	currentBin, err := cfg.CurrentBin()
 	s.Require().NoError(err)
@@ -127,7 +127,7 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 }
 
 func (s *upgradeTestSuite) TestUpgradeBinary() {
-	logger := log.NewZeroLogger(log.ModuleKey, "cosmovisor")
+	logger := log.NewLoggerWithKV(log.ModuleKey, "cosmovisor")
 
 	cases := map[string]struct {
 		url         string

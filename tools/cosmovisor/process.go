@@ -14,19 +14,19 @@ import (
 	"time"
 
 	"github.com/otiai10/copy"
-	"github.com/rs/zerolog"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 type Launcher struct {
-	logger *zerolog.Logger
+	logger log.Logger
 	cfg    *Config
 	fw     *fileWatcher
 }
 
-func NewLauncher(logger *zerolog.Logger, cfg *Config) (Launcher, error) {
+func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	fw, err := newUpgradeFileWatcher(logger, cfg.UpgradeInfoFilePath(), cfg.PollInterval)
 	if err != nil {
 		return Launcher{}, err
@@ -48,7 +48,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
 
-	l.logger.Info().Str("path", bin).Strs("args", args).Msg("running app")
+	l.logger.Impl().Info().Str("path", bin).Strs("args", args).Msg("running app")
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -61,7 +61,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	go func() {
 		sig := <-sigs
 		if err := cmd.Process.Signal(sig); err != nil {
-			l.logger.Fatal().Err(err).Str("bin", bin).Msg("terminated")
+			l.logger.Impl().Fatal().Err(err).Str("bin", bin).Msg("terminated")
 		}
 	}()
 
@@ -100,7 +100,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {
-		l.logger.Error().Err(err)
+		l.logger.Impl().Error().Err(err)
 	}
 
 	cmdDone := make(chan error)
@@ -111,7 +111,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
-		l.logger.Info().Msg("daemon shutting down in an attempt to restart")
+		l.logger.Info("daemon shutting down in an attempt to restart")
 		_ = cmd.Process.Kill()
 	case err := <-cmdDone:
 		l.fw.Stop()
@@ -151,7 +151,7 @@ func (l Launcher) doBackup() error {
 		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
 		dst := filepath.Join(l.cfg.DataBackupPath, fmt.Sprintf("data"+"-backup-%s", stStr))
 
-		l.logger.Info().Time("backup start time", st).Msg("starting to take backup of data directory")
+		l.logger.Impl().Info().Time("backup start time", st).Msg("starting to take backup of data directory")
 
 		// copy the $DAEMON_HOME/data to a backup dir
 		if err = copy.Copy(filepath.Join(l.cfg.Home, "data"), dst); err != nil {
@@ -160,7 +160,7 @@ func (l Launcher) doBackup() error {
 
 		// backup is done, lets check endtime to calculate total time taken for backup process
 		et := time.Now()
-		l.logger.Info().Str("backup saved at", dst).Time("backup completion time", et).TimeDiff("time taken to complete backup", et, st).Msg("backup completed")
+		l.logger.Impl().Info().Str("backup saved at", dst).Time("backup completion time", et).TimeDiff("time taken to complete backup", et, st).Msg("backup completed")
 	}
 
 	return nil
@@ -181,17 +181,17 @@ func (l *Launcher) doPreUpgrade() error {
 
 			switch err.(*exec.ExitError).ProcessState.ExitCode() {
 			case 1:
-				l.logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
+				l.logger.Info("pre-upgrade command does not exist. continuing the upgrade.")
 				return nil
 			case 30:
 				return fmt.Errorf("pre-upgrade command failed : %w", err)
 			case 31:
-				l.logger.Error().Err(err).Int("attempt", counter).Msg("pre-upgrade command failed. retrying")
+				l.logger.Impl().Error().Err(err).Int("attempt", counter).Msg("pre-upgrade command failed. retrying")
 				continue
 			}
 		}
 
-		l.logger.Info().Msg("pre-upgrade successful. continuing the upgrade.")
+		l.logger.Info("pre-upgrade successful. continuing the upgrade.")
 		return nil
 	}
 }
@@ -209,7 +209,7 @@ func (l *Launcher) executePreUpgradeCmd() error {
 		return err
 	}
 
-	l.logger.Info().Bytes("result", result).Msg("pre-upgrade result")
+	l.logger.Impl().Info().Bytes("result", result).Msg("pre-upgrade result")
 	return nil
 }
 

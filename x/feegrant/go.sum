@@ -45,12 +45,12 @@ cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
-cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78 h1:Scox9JfANgkuAO0F9LMH0e0W5ijmp2BQbsok/U+jDUo=
-cosmossdk.io/log v0.0.0-20230219145338-9553bf1eec78/go.mod h1:MyvZ6k9eL0azI/yf8m5gqsM8PgbtFmqjire1OxUMkmc=
+cosmossdk.io/log v0.0.0-20230227110325-294ef34f396f h1:8qg6pvpG4+K2woMBGIPvMDKJ4tlKZjYU+eX9ITY5iuA=
+cosmossdk.io/log v0.0.0-20230227110325-294ef34f396f/go.mod h1:FZRNfYm6Jgp+toyDR8Ek1qrmNjdsDddEQnfATMbpGYg=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 h1:/jnzJ9zFsL7qkV8LCQ1JH3dYHh2EsKZ3k8Mr6AqqiOA=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
-cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7 h1:IwyDN/YaQmF+Pmuv8d7vRWMM/k2RjSmPBycMcmd3ICE=
-cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7/go.mod h1:1XOtuYs7jsfQkn7G3VQXB6I+2tHXKHZw2U/AafNbnlk=
+cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44 h1:/pKsj/ApzO4+zMwpgLiPG5iakoHxziGpMiJcz4S+r4w=
+cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44/go.mod h1:flrxUykloEW1asE9p+Q+d8LSuNI3fBRdzISg9HTpYlQ=
 cosmossdk.io/x/tx v0.2.0 h1:53f5TIXhpPYJGMm47SUslcV2i8JNBEN3eE08BmxE/Zg=
 cosmossdk.io/x/tx v0.2.0/go.mod h1:CTko7wgt7aBdbxOesZ+Wo1uO/03ueKzIQ0iI323Rqgk=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -184,8 +184,8 @@ github.com/cosmos/cosmos-db v1.0.0-rc.1 h1:SjnT8B6WKMW9WEIX32qMhnEEKcI7ZP0+G1Sa9
 github.com/cosmos/cosmos-db v1.0.0-rc.1/go.mod h1:Dnmk3flSf5lkwCqvvjNpoxjpXzhxnCAFzKHlbaForso=
 github.com/cosmos/cosmos-proto v1.0.0-beta.2 h1:X3OKvWgK9Gsejo0F1qs5l8Qn6xJV/AzgIWR2wZ8Nua8=
 github.com/cosmos/cosmos-proto v1.0.0-beta.2/go.mod h1:+XRCLJ14pr5HFEHIUcn51IKXD1Fy3rkEQqt4WqmN4V0=
-github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230221204830-dbc4d104b26f h1:0dg1YgRfdt+jJeBn9NpDG2VzmxfEKJua07k3ZRPnVOk=
-github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230221204830-dbc4d104b26f/go.mod h1:98LtWwEA3hlse0sIke1NHjJh/rAlQ14bduB10UPni3c=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230227103508-bbe7f8a11b44 h1:f/1mkLVwoZmpT22ELVrb0YeBXJO4ZlRGGJcKs/ngaVc=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230227103508-bbe7f8a11b44/go.mod h1:6Ae8ntx/GVYjXesQGolH5PB5IJszNWXjACaJMfu83a4=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
@@ -997,6 +997,7 @@ golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20201207232520-09787c993a3a/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.1.0 h1:wsuoTGHzEhffawBOhz5CYhcrV4IdKZbEyZjBMuTp12o=
+golang.org/x/sync v0.1.0/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20180823144017-11551d06cbcc/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180830151530-49385e6e1522/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180905080454-ebe1bf3edb33/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

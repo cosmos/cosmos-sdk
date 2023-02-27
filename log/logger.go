@@ -33,8 +33,9 @@ type Logger interface {
 	// With returns a new wrapped logger with additional context provided by a set
 	With(keyVals ...interface{}) Logger
 
-	// Impl returns the underlying zerolog logger
-	Impl() *zerolog.Logger
+	// Impl returns the underlying logger implementation
+	// It is used to access the full functionality of the underlying logger
+	Impl() interface{}
 }
 
 type ZeroLogWrapper struct {
@@ -92,6 +93,6 @@ func (l ZeroLogWrapper) With(keyVals ...interface{}) Logger {
 
 // Impl returns the underlying zerolog logger
 // It can be used to used zerolog structured API directly instead of the wrapper
-func (l ZeroLogWrapper) Impl() *zerolog.Logger {
+func (l ZeroLogWrapper) Impl() interface{} {
 	return l.Logger
 }

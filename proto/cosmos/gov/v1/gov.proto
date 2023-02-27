@@ -242,6 +242,5 @@ message Params {
   string expedited_threshold = 11 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
   //  Minimum expedited deposit for a proposal to enter voting period.
-  repeated cosmos.base.v1beta1.Coin expedited_min_deposit = 12
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated cosmos.base.v1beta1.Coin expedited_min_deposit = 12 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

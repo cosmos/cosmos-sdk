@@ -37,7 +37,8 @@ service Service {
   // GetBlockWithTxs fetches a block with decoded txs.
   //
   // Since: cosmos-sdk 0.45.2
-  rpc GetBlockWithTxs(GetBlockWithTxsRequest) returns (GetBlockWithTxsResponse) {
+  rpc GetBlockWithTxs(GetBlockWithTxsRequest)
+      returns (GetBlockWithTxsResponse) {
     option (google.api.http).get = "/cosmos/tx/v1beta1/txs/block/{height}";
   }
   // TxDecode decodes the transaction.

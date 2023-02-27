@@ -400,7 +400,6 @@ message ValidatorUpdates {
 // ConsPubKeyRotationHistory contains a validator's consensus public key rotation history.
 message ConsPubKeyRotationHistory {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
 
   // operator_address defines the address of the validator's operator; bech encoded in JSON.

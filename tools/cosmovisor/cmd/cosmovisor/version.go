@@ -24,7 +24,7 @@ var versionCmd = &cobra.Command{
 	Short:        "Prints the version of Cosmovisor.",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(log.ContextKey).(*zerolog.Logger)
+		logger := cmd.Context().Value(log.ContextKey).(log.Logger)
 
 		if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
 			return printVersionJSON(logger, args)
@@ -43,7 +43,7 @@ func getVersion() string {
 	return strings.TrimSpace(version.Main.Version)
 }
 
-func printVersion(logger *zerolog.Logger, args []string) error {
+func printVersion(logger log.Logger, args []string) error {
 	fmt.Printf("cosmovisor version: %s\n", getVersion())
 
 	if err := Run(logger, append([]string{"version"}, args...)); err != nil {
@@ -53,12 +53,12 @@ func printVersion(logger *zerolog.Logger, args []string) error {
 	return nil
 }
 
-func printVersionJSON(logger *zerolog.Logger, args []string) error {
+func printVersionJSON(logger log.Logger, args []string) error {
 	buf := new(strings.Builder)
 
 	// disable logger
-	l := logger.Level(zerolog.Disabled)
-	logger = &l
+	zl := logger.Impl().(*zerolog.Logger)
+	logger = log.NewCustomLogger(zl.Level(zerolog.Disabled))
 
 	if err := Run(
 		logger,
@@ -76,8 +76,6 @@ func printVersionJSON(logger *zerolog.Logger, args []string) error {
 		AppVersion: json.RawMessage(buf.String()),
 	})
 	if err != nil {
-		l := logger.Level(zerolog.TraceLevel)
-		logger = &l
 		return fmt.Errorf("can't print version output, expected valid json from APP, got: %s - %w", buf.String(), err)
 	}
 

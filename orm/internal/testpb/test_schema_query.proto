@@ -18,7 +18,7 @@ service TestSchemaQueryService {
   // ExampleTableByU64Str queries the ExampleTable table by its U64Str index
   rpc ExampleTableByU64Str(ExampleTableByU64StrRequest) returns (ExampleTableByU64StrResponse) {
     option (google.api.http) = {
-      get: "/testpb/example_tables.u64-str/{u64}/{str}"
+      get: "/testpb/example_tables-by-u64-str/{u64}/{str}"
     };
   }
   // ExampleTables queries the ExampleTable table using the primary key index.
@@ -54,7 +54,7 @@ service TestSchemaQueryService {
   // ExampleAutoIncrementTableByX queries the ExampleAutoIncrementTable table by its X index
   rpc ExampleAutoIncrementTableByX(ExampleAutoIncrementTableByXRequest) returns (ExampleAutoIncrementTableByXResponse) {
     option (google.api.http) = {
-      get: "/testpb/example_auto_increment_tables.x/{x}"
+      get: "/testpb/example_auto_increment_tables-by-x/{x}"
     };
   }
   // ExampleAutoIncrementTables queries the ExampleAutoIncrementTable table using the primary key index.
@@ -98,7 +98,7 @@ service TestSchemaQueryService {
   // SimpleExampleByUnique queries the SimpleExample table by its Unique index
   rpc SimpleExampleByUnique(SimpleExampleByUniqueRequest) returns (SimpleExampleByUniqueResponse) {
     option (google.api.http) = {
-      get: "/testpb/simple_examples.unique/{unique}"
+      get: "/testpb/simple_examples-by-unique/{unique}"
     };
   }
   // SimpleExamples queries the SimpleExample table using the primary key index.

@@ -146,7 +146,7 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 		for _, fieldName := range fieldNames.Names() {
 			pathSegments = append(pathSegments, fmt.Sprintf("{%s}", fieldName))
 		}
-		g.svc.F(`get: "/%s.%s/%s"`, restPath,
+		g.svc.F(`get: "/%s-by-%s/%s"`, restPath,
 			fieldsToKebabCase(idx.Fields),
 			strings.Join(pathSegments, "/"))
 		g.svc.Dedent()

@@ -45,6 +45,11 @@ service Msg {
   // parameters.
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // RotateConsPubKey defines an operation for rotating the consensus keys
+  // of a validator.
+  // Since: cosmos-sdk 0.48
+  rpc RotateConsPubKey(MsgRotateConsPubKey) returns (MsgRotateConsPubKeyResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.

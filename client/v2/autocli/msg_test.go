@@ -95,12 +95,13 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
-func testMsgBuildError(t *testing.T, args ...string) *testClientConn {
+func testMsgExec(t *testing.T, args ...string) *testClientConn {
 	server := grpc.NewServer()
 	defer server.GracefulStop()
 	testpb.RegisterMsgServer(server, &testMessageServer{})
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	defer listener.Close()
+
 	assert.NilError(t, err)
 	go func() {
 		err := server.Serve(listener)
@@ -138,57 +139,9 @@ func testMsgBuildError(t *testing.T, args ...string) *testClientConn {
 	cmd, err := buildModuleMsgCommand("test", testCmdMsgDesc)
 	assert.NilError(t, err)
 	cmd.SetArgs(args)
+	cmd.SetOut(conn.out)
 	cmd.SetErr(conn.errorOut)
-	cmd.SetOut(conn.out)
 	cmd.Execute()
-	return conn
-}
-
-func testMsgExec(t *testing.T, args ...string) *testClientConn {
-	server := grpc.NewServer()
-	defer server.GracefulStop()
-	testpb.RegisterMsgServer(server, &testMessageServer{})
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	defer listener.Close()
-
-	assert.NilError(t, err)
-	go func() {
-		err := server.Serve(listener)
-		if err != nil {
-			panic(err)
-		}
-	}()
-	defer server.GracefulStop()
-	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.NilError(t, err)
-	defer func() {
-		err := clientConn.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	conn := &testClientConn{
-		ClientConn: clientConn,
-		t:          t,
-		out:        &bytes.Buffer{},
-	}
-	b := &Builder{
-		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
-			return conn, nil
-		},
-	}
-	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
-
-		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
-		return cmd, err
-	}
-	cmd, err := buildModuleMsgCommand("test", testCmdMsgDesc)
-	assert.NilError(t, err)
-	cmd.SetArgs(args)
-	cmd.SetOut(conn.out)
-	assert.NilError(t, cmd.Execute())
 	return conn
 }
 
@@ -208,7 +161,7 @@ func TestMsgOptions(t *testing.T) {
 }
 
 func TestMsgOptionsError(t *testing.T) {
-	conn := testMsgBuildError(t,
+	conn := testMsgExec(t,
 		"send", "5",
 		"--uint32", "7",
 		"--u64", "8",
@@ -216,7 +169,7 @@ func TestMsgOptionsError(t *testing.T) {
 
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "requires at least 3 arg"))
 
-	conn = testMsgBuildError(t,
+	conn = testMsgExec(t,
 		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--uint32", "7",
 		"--u64", "abc",

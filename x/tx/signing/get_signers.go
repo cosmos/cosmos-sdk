@@ -29,7 +29,7 @@ func (*MsgContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor)
 		return nil, err
 	}
 
-	fieldGetters := make([]func(proto.Message) string, len(signersFields))
+	fieldGetters := make([]func(proto.Message, []string) []string, len(signersFields))
 	for i, fieldName := range signersFields {
 		field := descriptor.Fields().ByName(protoreflect.Name(fieldName))
 		if field == nil {
@@ -42,14 +42,22 @@ func (*MsgContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor)
 
 		switch field.Kind() {
 		case protoreflect.StringKind:
-			if field.IsList() || field.IsMap() || field.HasOptionalKeyword() {
-				return nil, fmt.Errorf("cosmos.msg.v1.signer field %s in message %s must not be a list", fieldName, descriptor.FullName())
-			}
-
-			fieldGetters[i] = func(msg proto.Message) string {
-				return msg.ProtoReflect().Get(field).String()
+			if field.IsList() {
+				fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+					signers := msg.ProtoReflect().Get(field).List()
+					n := signers.Len()
+					for i := 0; i < n; i++ {
+						arr = append(arr, signers.Get(i).String())
+					}
+					return arr
+				}
+			} else {
+				fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+					return append(arr, msg.ProtoReflect().Get(field).String())
+				}
 			}
 		case protoreflect.MessageKind:
+			isList := field.IsList()
 			nestedMessage := field.Message()
 			nestedSignersFields, err := getSignersFieldNames(nestedMessage)
 			if err != nil {
@@ -62,27 +70,66 @@ func (*MsgContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor)
 
 			nestedFieldName := nestedSignersFields[0]
 			nestedField := nestedMessage.Fields().ByName(protoreflect.Name(nestedFieldName))
+			nestedIsList := nestedField.IsList()
 			if nestedField == nil {
 				return nil, fmt.Errorf("field %s not found in message %s", nestedFieldName, nestedMessage.FullName())
 			}
 
-			if nestedField.Kind() != protoreflect.StringKind || nestedField.IsList() || nestedField.IsMap() || nestedField.HasOptionalKeyword() {
+			if nestedField.Kind() != protoreflect.StringKind || nestedField.IsMap() || nestedField.HasOptionalKeyword() {
 				return nil, fmt.Errorf("nested signer field %s in message %s must be a simple string", nestedFieldName, nestedMessage.FullName())
 			}
 
-			fieldGetters[i] = func(msg proto.Message) string {
-				return msg.ProtoReflect().Get(field).Message().Get(nestedField).String()
+			if isList {
+				if nestedIsList {
+					fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+						msgs := msg.ProtoReflect().Get(field).List()
+						m := msgs.Len()
+						for i := 0; i < m; i++ {
+							signers := msgs.Get(i).Message().Get(nestedField).List()
+							n := signers.Len()
+							for j := 0; j < n; j++ {
+								arr = append(arr, signers.Get(j).String())
+							}
+						}
+						return arr
+					}
+				} else {
+					fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+						msgs := msg.ProtoReflect().Get(field).List()
+						m := msgs.Len()
+						for i := 0; i < m; i++ {
+							arr = append(arr, msgs.Get(i).Message().Get(nestedField).String())
+						}
+						return arr
+					}
+				}
+			} else {
+				if nestedIsList {
+					fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+						nestedMsg := msg.ProtoReflect().Get(field).Message()
+						signers := nestedMsg.Get(nestedField).List()
+						n := signers.Len()
+						for j := 0; j < n; j++ {
+							arr = append(arr, signers.Get(j).String())
+						}
+						return arr
+					}
+				} else {
+					fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+						return append(arr, msg.ProtoReflect().Get(field).Message().Get(nestedField).String())
+					}
+				}
 			}
+
 		default:
 			return nil, fmt.Errorf("unexpected field type %s for field %s in message %s", field.Kind(), fieldName, descriptor.FullName())
 		}
 	}
 
-	n := len(fieldGetters)
 	return func(message proto.Message) []string {
-		signers := make([]string, n)
-		for i, getter := range fieldGetters {
-			signers[i] = getter(message)
+		var signers []string
+		for _, getter := range fieldGetters {
+			signers = getter(message, signers)
 		}
 		return signers
 	}, nil

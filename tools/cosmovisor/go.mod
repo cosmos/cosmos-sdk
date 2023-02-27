@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.20
 
 require (
-	cosmossdk.io/log v0.0.0-20230227120745-e8f244012ae0
+	cosmossdk.io/log v0.0.0-20230227204852-3535ee51c728
 	cosmossdk.io/x/upgrade v0.0.0-20230227110325-294ef34f396f
 	github.com/otiai10/copy v1.9.0
 	github.com/rs/zerolog v1.29.0

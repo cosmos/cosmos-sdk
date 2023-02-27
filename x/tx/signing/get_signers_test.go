@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
@@ -20,11 +21,25 @@ func TestGetSigners(t *testing.T) {
 	}{
 		{
 			name: "MsgSend",
+			msg: &bankv1beta1.MsgSend{
+				FromAddress: "foo",
+			},
+			want: []string{"foo"},
+		},
+		{
+			name: "MsgMultiSend",
 			msg: &bankv1beta1.MsgMultiSend{
 				Inputs: []*bankv1beta1.Input{
 					{Address: "foo"},
 					{Address: "bar"},
 				},
+			},
+			want: []string{"foo", "bar"},
+		},
+		{
+			name: "MsgSubmitProposal",
+			msg: &groupv1.MsgSubmitProposal{
+				Proposers: []string{"foo", "bar"},
 			},
 			want: []string{"foo", "bar"},
 		},

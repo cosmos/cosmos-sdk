@@ -161,6 +161,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		logger = log.NewLogger()
 	}
 
+	// TODO: Add filtering to zerolog
 	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
 	logLvl, err := zerolog.ParseLevel(logLvlStr)
 	if err != nil {

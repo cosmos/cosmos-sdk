@@ -9,7 +9,6 @@ import (
 
 	log "cosmossdk.io/log"
 	gomock "github.com/golang/mock/gomock"
-	zerolog "github.com/rs/zerolog"
 )
 
 // MockLogger is a mock of Logger interface.
@@ -70,10 +69,10 @@ func (mr *MockLoggerMockRecorder) Error(arg0 interface{}, arg1 ...interface{}) *
 }
 
 // Impl mocks base method.
-func (m *MockLogger) Impl() *zerolog.Logger {
+func (m *MockLogger) Impl() interface{} {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Impl")
-	ret0, _ := ret[0].(*zerolog.Logger)
+	ret0, _ := ret[0].(interface{})
 	return ret0
 }
 

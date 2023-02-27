@@ -400,14 +400,26 @@ const config = {
       },
     ],
     [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "swagger",
+        path: "swagger",
+        routeBasePath: "swagger",
+        sidebarPath: require.resolve("./sidebars.js"),
+        include: ["**/*.md", "**/*.mdx"],
+        docLayoutComponent: "@theme/DocPage",
+        docItemComponent: "@theme/ApiItem",
+      },
+    ],
+    [
       "docusaurus-plugin-openapi-docs",
       {
-        id: "apiDocs",
-        docsPluginId: "classic",
+        id: "openapi",
+        docsPluginId: "swagger",
         config: {
-          sdk: {
-            specPath: "swagger/swagger.yml", // Path to designated spec file
-            outputDir: "api/next", // Output directory for generated .mdx docs
+          next: {
+            specPath: "swagger/swagger.yaml",
+            outputDir: "swagger",
             sidebarOptions: {
               groupPathsBy: "tag",
             },

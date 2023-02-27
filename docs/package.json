@@ -4,18 +4,20 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "prestart": "./pre.sh",
+    "prestart": "./pre.sh && npm run genapi",
     "start": "docusaurus start",
-    "poststart": "./post.sh",
-    "prebuild": "./pre.sh",
+    "poststart": "./post.sh && npm run cleanapi",
+    "prebuild": "./pre.sh && npm run genapi",
     "build": "docusaurus build",
-    "postbuild": "./post.sh",
+    "postbuild": "./post.sh && npm run cleanapi",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids"
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "genapi": "docusaurus gen-api-docs all",
+    "cleanapi": "docusaurus clean-api-docs all"
   },
   "dependencies": {
     "@docusaurus/core": "2.3.1",

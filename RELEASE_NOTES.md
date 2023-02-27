@@ -1,6 +1,6 @@
 # Cosmos SDK v0.45.15 Release Notes
 
-This release includes the migration to CometBFT. This migration should be not breaking.
+This release includes the migration to [CometBFT](https://github.com/cometbft/cometbft/blob/v0.34.27/CHANGELOG.md#v03427). This migration should be not breaking.
 From `v0.45.15`+, the following replace is *mandatory* in the `go.mod` of your application:
 
 ```go

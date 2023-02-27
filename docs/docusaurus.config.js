@@ -186,7 +186,7 @@ const config = {
         contextualSearch: false,
       },
     }),
-  themes: ["@you54f/theme-github-codeblock"],
+  themes: ["@you54f/theme-github-codeblock", "docusaurus-theme-openapi-docs"],
   plugins: [
     async function myPlugin(context, options) {
       return {
@@ -397,6 +397,22 @@ const config = {
             to: "/main/tooling/cosmovisor",
           },
         ],
+      },
+    ],
+    [
+      "docusaurus-plugin-openapi-docs",
+      {
+        id: "apiDocs",
+        docsPluginId: "classic",
+        config: {
+          sdk: {
+            specPath: "swagger/swagger.yml", // Path to designated spec file
+            outputDir: "api/next", // Output directory for generated .mdx docs
+            sidebarOptions: {
+              groupPathsBy: "tag",
+            },
+          },
+        },
       },
     ],
   ],

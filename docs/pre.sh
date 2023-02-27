@@ -31,3 +31,6 @@ cp -r ./architecture ./docs
 
 ## Add spec documentation
 cp -r ./spec ./docs
+
+## Add swagger documentation
+cp -r ../client/docs/swagger-ui/swagger.yml ./swagger/

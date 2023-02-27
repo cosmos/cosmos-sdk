@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/log v0.0.0-20230227110325-294ef34f396f
+	cosmossdk.io/log v0.0.0-20230227115928-12b8dd75e45f
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	github.com/armon/go-metrics v0.4.1
 	github.com/cometbft/cometbft v0.37.0-alpha.3
@@ -75,5 +75,3 @@ require (
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
-
-replace cosmossdk.io/log => ../log

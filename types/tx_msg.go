@@ -6,7 +6,6 @@ import (
 	strings "strings"
 
 	"github.com/cosmos/gogoproto/proto"
-	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -20,15 +19,6 @@ type (
 		// ValidateBasic does a simple validation check that
 		// doesn't require access to any other information.
 		ValidateBasic() error
-
-		// GetSigners returns the addrs of signers that must sign.
-		// CONTRACT: All signatures must be present to be valid.
-		// CONTRACT: Returns addrs in some deterministic order.
-		GetSigners() []AccAddress
-	}
-
-	LegacyTx interface {
-		Msg
 
 		// GetSigners returns the addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
@@ -124,20 +114,4 @@ func GetModuleNameFromTypeURL(input string) string {
 	}
 
 	return ""
-}
-
-func GetSigners(msg interface{}) ([]string, error) {
-	if msg, ok := msg.(LegacyTx); ok {
-		signers := msg.GetSigners()
-		strSigners := make([]string, len(signers))
-		for i, signer := range signers {
-			strSigners[i] = signer.String()
-		}
-		return strSigners, nil
-	} else if msg, ok := msg.(protov2.Message); ok {
-
-	} else if _, ok := msg.(proto.Message); ok {
-		panic("TODO")
-	}
-	panic("TODO")
 }

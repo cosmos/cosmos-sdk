@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetSigners(t *testing.T) {
-	ctx := MsgContextOptions{}.Build()
+	ctx := GetSignersOptions{}.CreateContext()
 	tests := []struct {
 		name    string
 		msg     proto.Message
@@ -80,7 +80,7 @@ func TestGetSigners(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			signers, err := ctx.GetSignersForMessage(test.msg)
+			signers, err := ctx.GetSigners(test.msg)
 			if test.wantErr {
 				require.Error(t, err)
 			} else {

@@ -2,15 +2,49 @@ package signing
 
 import (
 	"fmt"
-	"strings"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/types/dynamicpb"
-	"google.golang.org/protobuf/types/known/anypb"
 )
+
+// GetSignersContext is a context for retrieving the list of signers from a
+// message where signers are specified by the cosmos.msg.v1.signer protobuf
+// option.
+type GetSignersContext struct {
+	protoFiles      *protoregistry.Files
+	protoTypes      protoregistry.MessageTypeResolver
+	getSignersFuncs map[protoreflect.FullName]getSignersFunc
+}
+
+// GetSignersOptions are options for creating GetSignersContext.
+type GetSignersOptions struct {
+	// ProtoFiles are the protobuf files to use for resolving message descriptors.
+	ProtoFiles *protoregistry.Files
+
+	// ProtoTypes are the protobuf types to use for resolving message types.
+	ProtoTypes protoregistry.MessageTypeResolver
+}
+
+// CreateContext creates a GetSignersContext from the given options.
+func (c GetSignersOptions) CreateContext() *GetSignersContext {
+	protoFiles := c.ProtoFiles
+	if protoFiles == nil {
+		protoFiles = protoregistry.GlobalFiles
+	}
+
+	protoTypes := c.ProtoTypes
+	if protoTypes == nil {
+		protoTypes = protoregistry.GlobalTypes
+	}
+
+	return &GetSignersContext{
+		protoFiles:      protoFiles,
+		protoTypes:      protoTypes,
+		getSignersFuncs: map[protoreflect.FullName]getSignersFunc{},
+	}
+}
 
 type getSignersFunc func(proto.Message) []string
 
@@ -23,7 +57,7 @@ func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, 
 	return signersFields, nil
 }
 
-func (*MsgContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+func (*GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
 	signersFields, err := getSignersFieldNames(descriptor)
 	if err != nil {
 		return nil, err
@@ -135,32 +169,8 @@ func (*MsgContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor)
 	}, nil
 }
 
-func (c *MsgContext) GetSignersForAny(msg *anypb.Any) ([]string, error) {
-	messageType, err := c.protoTypes.FindMessageByURL(msg.TypeUrl)
-	if err == protoregistry.NotFound {
-		messageName := protoreflect.FullName(msg.TypeUrl)
-		if i := strings.LastIndexByte(string(messageName), '/'); i >= 0 {
-			messageName = messageName[i+1:]
-		}
-
-		messageDesc, err := c.protoFiles.FindDescriptorByName(messageName)
-		if err != nil {
-			return nil, err
-		}
-		messageType = dynamicpb.NewMessageType(messageDesc.(protoreflect.MessageDescriptor))
-	} else if err != nil {
-		return nil, err
-	}
-
-	message := messageType.New().Interface()
-	if err := msg.UnmarshalTo(message); err != nil {
-		return nil, err
-	}
-
-	return c.GetSignersForMessage(message)
-}
-
-func (c *MsgContext) GetSignersForMessage(msg proto.Message) ([]string, error) {
+// GetSigners returns the signers for a given message.
+func (c *GetSignersContext) GetSigners(msg proto.Message) ([]string, error) {
 	messageDescriptor := msg.ProtoReflect().Descriptor()
 	f, ok := c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {

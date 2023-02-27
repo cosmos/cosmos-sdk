@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -99,4 +100,37 @@ func TestIteratePermissions(t *testing.T) {
 
 	// Assert that the returned permissions match the set mock permissions
 	require.Equal(t, mockPerms, returnedPerms)
+}
+func TestIterateDisabledList(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	mockPerms := []types.Permissions{
+		{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{"url1", "url2"}},
+		{Level: types.Permissions_LEVEL_ALL_MSGS},
+		{Level: types.Permissions_LEVEL_NONE_UNSPECIFIED},
+	}
+
+	// Set the permissions for a set of mock addresses
+	mockAddrs := []string{
+		"mock_address_1",
+		"mock_address_2",
+		"mock_address_3",
+	}
+
+	for i, addr := range mockAddrs {
+		f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])
+	}
+
+	// Define a variable to store the returned disabled URLs
+	var returnedDisabled []types.Permissions
+
+	f.keeper.IterateDisableLists(f.ctx, func(address []byte, perms types.Permissions) bool {
+		fmt.Print(perms)
+		returnedDisabled = append(returnedDisabled, perms)
+		return false
+	})
+
+	// Assert that the returned disabled URLs match the set mock disabled URLs
+	require.Equal(t, mockPerms[0].LimitTypeUrls, returnedDisabled)
 }

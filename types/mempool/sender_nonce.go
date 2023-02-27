@@ -37,7 +37,7 @@ type SenderNonceMempool struct {
 	existingTx map[txKey]bool
 }
 
-type SenderNonceOptions func(mp *SenderNonceMempool)
+type SenderNonceOptions func(*SenderNonceMempool)
 
 type txKey struct {
 	address string

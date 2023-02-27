@@ -27,7 +27,7 @@ var (
 	DefaultMinInitialDepositRatio    = sdk.ZeroDec()
 	DefaultProposalCancelRatio       = sdk.MustNewDecFromStr("0.5")
 	DefaultProposalCancelDestAddress = ""
-	DefaultBurnProposal              = false // set to false to replicate behavior of when this change was made (0.47)
+	DefaultBurnProposalPrevote       = false // set to false to replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteQuorom            = false // set to false to  replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteVeto              = true  // set to true to replicate behavior of when this change was made (0.47)
 )
@@ -95,7 +95,7 @@ func DefaultParams() Params {
 		DefaultMinInitialDepositRatio.String(),
 		DefaultProposalCancelRatio.String(),
 		DefaultProposalCancelDestAddress,
-		DefaultBurnProposal,
+		DefaultBurnProposalPrevote,
 		DefaultBurnVoteQuorom,
 		DefaultBurnVoteVeto,
 	)

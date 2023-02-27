@@ -320,8 +320,8 @@ message Params {
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
-  // max_cons_pub_key_rotations is maximum number of consensus pubkey rotations
-  uint64 max_cons_pub_key_rotations = 7;
+  // max_cons_pubkey_rotations is maximum number of consensus pubkey rotations
+  uint64 max_cons_pubkey_rotations = 7;
   // cons_pubkey_rotation_fee is fee to be spent when rotating validator's consensus pubkey
   cosmos.base.v1beta1.Coin cons_pubkey_rotation_fee = 8 [(gogoproto.nullable) = false];
 }

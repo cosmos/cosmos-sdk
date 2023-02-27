@@ -9,9 +9,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/cometbft/cometbft/libs/log"
-
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	xp "cosmossdk.io/x/upgrade/exported"

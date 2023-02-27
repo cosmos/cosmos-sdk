@@ -11,13 +11,13 @@ import (
 
 func main() {
 	var (
-		logger            = log.NewZeroLogger(log.ModuleKey, "rosetta")
+		logger            = log.NewLoggerWithKV(log.ModuleKey, "rosetta")
 		interfaceRegistry = codectypes.NewInterfaceRegistry()
 		cdc               = codec.NewProtoCodec(interfaceRegistry)
 	)
 
 	if err := rosettaCmd.RosettaCommand(interfaceRegistry, cdc).Execute(); err != nil {
-		logger.Err(err).Msg("failed to run rosetta")
+		logger.Error("failed to run rosetta", "error", err)
 		os.Exit(1)
 	}
 }

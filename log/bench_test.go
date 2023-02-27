@@ -2,6 +2,7 @@ package log_test
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"testing"
 	"time"
@@ -9,6 +10,8 @@ import (
 	"cosmossdk.io/log"
 	"github.com/rs/zerolog"
 )
+
+const message = "test message"
 
 func BenchmarkLoggers(b *testing.B) {
 	b.ReportAllocs()
@@ -61,14 +64,13 @@ func BenchmarkLoggers(b *testing.B) {
 		},
 	}...)
 
-	const message = "test message"
-
 	// If running with "go test -v", print out the log messages as a sanity check.
 	if testing.Verbose() {
 		checkBuf := new(bytes.Buffer)
 		for _, bc := range benchCases {
 			checkBuf.Reset()
-			logger := log.ZeroLogWrapper{Logger: zerolog.New(checkBuf)}
+			zl := zerolog.New(checkBuf)
+			logger := log.NewCustomLogger(zl)
 			logger.Info(message, bc.keyVals...)
 
 			b.Logf("zero logger output for %s: %s", bc.name, checkBuf.String())
@@ -82,23 +84,8 @@ func BenchmarkLoggers(b *testing.B) {
 		for _, bc := range benchCases {
 			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
-				logger := log.ZeroLogWrapper{Logger: zerolog.New(io.Discard)}
-
-				for i := 0; i < b.N; i++ {
-					logger.Info(message, bc.keyVals...)
-				}
-			})
-		}
-	})
-
-	// zerolog offers a no-op writer.
-	// It appears to be slower than our custom NopLogger,
-	// so include it in the nop benchmarks as a point of reference.
-	b.Run("zerolog nop", func(b *testing.B) {
-		for _, bc := range nopCases {
-			bc := bc
-			b.Run(bc.name, func(b *testing.B) {
-				logger := log.ZeroLogWrapper{Logger: zerolog.Nop()}
+				zl := zerolog.New(io.Discard)
+				logger := log.NewCustomLogger(zl)
 
 				for i := 0; i < b.N; i++ {
 					logger.Info(message, bc.keyVals...)
@@ -119,6 +106,36 @@ func BenchmarkLoggers(b *testing.B) {
 					logger.Info(message, bc.keyVals...)
 				}
 			})
+		}
+	})
+}
+
+func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
+	b.ReportAllocs()
+
+	b.Run("logger structured", func(b *testing.B) {
+		zl := zerolog.New(io.Discard)
+		var logger log.Logger = log.NewCustomLogger(zl)
+		zerolog := logger.Impl().(*zerolog.Logger)
+		for i := 0; i < b.N; i++ {
+			zerolog.Info().Int64("foo", 100000).Msg(message)
+			zerolog.Info().Str("foo", "foo").Msg(message)
+			zerolog.Error().
+				Int64("foo", 100000).
+				Str("bar", "foo").
+				Bytes("other", []byte{0xde, 0xad, 0xbe, 0xef}).
+				Err(errors.New("error")).
+				Msg(message)
+		}
+	})
+
+	b.Run("logger", func(b *testing.B) {
+		zl := zerolog.New(io.Discard)
+		var logger log.Logger = log.NewCustomLogger(zl)
+		for i := 0; i < b.N; i++ {
+			logger.Info(message, "foo", 100000)
+			logger.Info(message, "foo", "foo")
+			logger.Error(message, "foo", 100000, "bar", "foo", "other", []byte{0xde, 0xad, 0xbe, 0xef}, "error", errors.New("error"))
 		}
 	})
 }

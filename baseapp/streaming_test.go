@@ -109,3 +109,39 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 		require.Equal(t, expectedChangeSet, mockListener2.ChangeSet, "should contain the same changeSet")
 	}
 }
+
+func Test_Ctx_with_StreamingManager(t *testing.T) {
+	mockListener1 := NewMockABCIListener("lis_1")
+	mockListener2 := NewMockABCIListener("lis_2")
+	listeners := []storetypes.ABCIListener{&mockListener1, &mockListener2}
+	streamingManager := storetypes.StreamingManager{ABCIListeners: listeners, StopNodeOnErr: true}
+	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
+	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
+	suite := NewBaseAppSuite(t, streamingManagerOpt, addListenerOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	ctx := getDeliverStateCtx(suite.baseApp)
+	sm := ctx.StreamingManager()
+	require.NotNil(t, sm, fmt.Sprintf("nil StreamingManager: %v", sm))
+	require.Equal(t, listeners, sm.ABCIListeners, fmt.Sprintf("should contain same listeners: %v", listeners))
+	require.Equal(t, true, sm.StopNodeOnErr, "should contain StopNodeOnErr = true")
+
+	nBlocks := 2
+
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		header := tmproto.Header{Height: int64(blockN) + 1}
+		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		ctx := getDeliverStateCtx(suite.baseApp)
+		sm := ctx.StreamingManager()
+		require.NotNil(t, sm, fmt.Sprintf("nil StreamingManager: %v", sm))
+		require.Equal(t, listeners, sm.ABCIListeners, fmt.Sprintf("should contain same listeners: %v", listeners))
+		require.Equal(t, true, sm.StopNodeOnErr, "should contain StopNodeOnErr = true")
+
+		suite.baseApp.EndBlock(abci.RequestEndBlock{})
+		suite.baseApp.Commit()
+	}
+}

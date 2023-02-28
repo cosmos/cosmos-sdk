@@ -21,7 +21,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.Id)
 
-		if !keeper.GetParams(ctx).BurnProposalDepositPrevote {
+		params := keeper.GetParams(ctx)
+		if !params.BurnProposalDepositPrevote {
 			keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 		} else {
 			keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
@@ -43,7 +44,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			"proposal", proposal.Id,
 			"expedited", proposal.Expedited,
 			"title", proposal.Title,
-			"min_deposit", sdk.NewCoins(proposal.GetMinDepositFromParams(keeper.GetParams(ctx))...).String(),
+			"min_deposit", sdk.NewCoins(proposal.GetMinDepositFromParams(params)...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 

@@ -25,6 +25,9 @@ service Msg {
   //
   // Since: cosmos-sdk 0.46
   rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
+  // DonateAllVestingTokens defines a method that enables donating all vesting 
+  // tokens to community pool
+  rpc DonateAllVestingTokens(MsgDonateAllVestingTokens) returns (MsgDonateAllVestingTokensResponse);
 }
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
@@ -64,7 +67,7 @@ message MsgCreatePermanentLockedAccount {
 // Since: cosmos-sdk 0.46
 message MsgCreatePermanentLockedAccountResponse {}
 
-// MsgCreateVestingAccount defines a message that enables creating a vesting
+// MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
 // account.
 //
 // Since: cosmos-sdk 0.46
@@ -79,8 +82,20 @@ message MsgCreatePeriodicVestingAccount {
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false];
 }
 
-// MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+// MsgCreatePeriodicVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
 //
 // Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccountResponse {}
+
+// MsgDonateAllVestingTokens defines a message that enables donating all vesting
+// token to community pool.
+message MsgDonateAllVestingTokens {
+  option (gogoproto.equal) = false;
+
+  string from_address = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+}
+
+// MsgDonateAllVestingTokensResponse defines the Msg/MsgDonateAllVestingTokens
+// response type.
+message MsgDonateAllVestingTokensResponse {}

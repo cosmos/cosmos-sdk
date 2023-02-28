@@ -21,7 +21,12 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.Id)
-		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+
+		if !keeper.GetParams(ctx).BurnProposalDepositPrevote {
+			keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+		} else {
+			keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
+		}
 
 		// called when proposal become inactive
 		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
@@ -50,10 +55,23 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
 
+<<<<<<< HEAD
 		if burnDeposits {
 			keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 		} else {
 			keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+=======
+		// If an expedited proposal fails, we do not want to update
+		// the deposit at this point since the proposal is converted to regular.
+		// As a result, the deposits are either deleted or refunded in all cases
+		// EXCEPT when an expedited proposal fails.
+		if !(proposal.Expedited && !passes) {
+			if burnDeposits {
+				keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
+			} else {
+				keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+			}
+>>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 		}
 
 		if passes {

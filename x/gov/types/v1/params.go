@@ -16,11 +16,26 @@ const (
 
 // Default governance params
 var (
+<<<<<<< HEAD
 	DefaultMinDepositTokens       = sdk.NewInt(10000000)
 	DefaultQuorum                 = sdk.NewDecWithPrec(334, 3)
 	DefaultThreshold              = sdk.NewDecWithPrec(5, 1)
 	DefaultVetoThreshold          = sdk.NewDecWithPrec(334, 3)
 	DefaultMinInitialDepositRatio = sdk.ZeroDec()
+=======
+	DefaultMinDepositTokens          = sdk.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens = DefaultMinDepositTokens.Mul(math.NewInt(DefaultMinExpeditedDepositTokensRatio))
+	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
+	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio    = sdk.ZeroDec()
+	DefaultProposalCancelRatio       = sdk.MustNewDecFromStr("0.5")
+	DefaultProposalCancelDestAddress = ""
+	DefaultBurnProposalPrevote       = false // set to false to replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteQuorom            = false // set to false to  replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteVeto              = true  // set to true to replicate behavior of when this change was made (0.47)
+>>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -49,6 +64,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 
 // NewParams creates a new Params instance with given values.
 func NewParams(
+<<<<<<< HEAD
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
 	quorum string, threshold string, vetoThreshold string, minInitialDepositRatio string,
 ) Params {
@@ -60,6 +76,27 @@ func NewParams(
 		Threshold:              threshold,
 		VetoThreshold:          vetoThreshold,
 		MinInitialDepositRatio: minInitialDepositRatio,
+=======
+	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
+	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
+) Params {
+	return Params{
+		MinDeposit:                 minDeposit,
+		ExpeditedMinDeposit:        expeditedminDeposit,
+		MaxDepositPeriod:           &maxDepositPeriod,
+		VotingPeriod:               &votingPeriod,
+		ExpeditedVotingPeriod:      &expeditedVotingPeriod,
+		Quorum:                     quorum,
+		Threshold:                  threshold,
+		ExpeditedThreshold:         expeditedThreshold,
+		VetoThreshold:              vetoThreshold,
+		MinInitialDepositRatio:     minInitialDepositRatio,
+		ProposalCancelRatio:        proposalCancelRatio,
+		ProposalCancelDest:         proposalCancelDest,
+		BurnProposalDepositPrevote: burnProposalDeposit,
+		BurnVoteQuorum:             burnVoteQuorum,
+		BurnVoteVeto:               burnVoteVeto,
+>>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 	}
 }
 
@@ -73,6 +110,14 @@ func DefaultParams() Params {
 		DefaultThreshold.String(),
 		DefaultVetoThreshold.String(),
 		DefaultMinInitialDepositRatio.String(),
+<<<<<<< HEAD
+=======
+		DefaultProposalCancelRatio.String(),
+		DefaultProposalCancelDestAddress,
+		DefaultBurnProposalPrevote,
+		DefaultBurnVoteQuorom,
+		DefaultBurnVoteVeto,
+>>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 	)
 }
 

@@ -54,7 +54,6 @@ staking token of the chain.
     * [EndBlocker](#endblocker)
     * [Handlers](#handlers)
 * [Parameters](#parameters)
-    * [SubKeys](#subkeys)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -255,8 +254,54 @@ new version of the software.
 
 Validators and full nodes can use an automation tool, such as [Cosmovisor](https://docs.cosmos.network/main/tooling/cosmovisor), for automatically switching version of the chain.
 
+#### Burnable Params
+
+There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors. 
+
+* `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed. 
+* `BurnVoteQuorum` burns the proposal deposit if the proposal deposit if the vote does not reach quorum.
+* `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase. 
+
+> Note: These parameters are modifiable via governance. 
+
 ## State
 
+<<<<<<< HEAD
+=======
+### Constitution
+
+`Constitution` is found in the genesis state.  It is a string field intended to be used to descibe the purpose of a particular blockchain, and its expected norms.  A few examples of how the constitution field can be used:
+
+* define the purpose of the chain, laying a foundation for its future development
+* set expectations for delegators
+* set expectations for validators
+* define the chain's relationship to "meatspace" entities, like a foundation or corporation
+
+Since this is more of a social feature than a technical feature, we'll now get into some items that may have been useful to have in a genesis constitution:
+
+* What limitations on governance exist, if any?
+    * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
+    * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
+    * In the event of an economic emergency, what should validators do?
+        * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
+* What is the purpose of the chain, specifically?
+    * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
+
+This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating thier nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
+
+This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
+
+**Ideal use scenario for a cosmos chain constitution**
+
+As a chain developer, you decide that you'd like to provide clarity to your key user groups:
+
+* validators
+* token holders
+* developers (yourself)
+
+You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constutituon can provide guidance to the community.
+
+>>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 ### Proposals
 
 `Proposal` objects are used to tally votes and generally track the proposal's state.
@@ -678,7 +723,7 @@ The governance module emits the following events:
 ### EndBlocker
 
 | Type              | Attribute Key   | Attribute Value  |
-| ----------------- | --------------- | ---------------- |
+|-------------------|-----------------|------------------|
 | inactive_proposal | proposal_id     | {proposalID}     |
 | inactive_proposal | proposal_result | {proposalResult} |
 | active_proposal   | proposal_id     | {proposalID}     |
@@ -689,7 +734,7 @@ The governance module emits the following events:
 #### MsgSubmitProposal
 
 | Type                | Attribute Key       | Attribute Value |
-| ------------------- | ------------------- | --------------- |
+|---------------------|---------------------|-----------------|
 | submit_proposal     | proposal_id         | {proposalID}    |
 | submit_proposal [0] | voting_period_start | {proposalID}    |
 | proposal_deposit    | amount              | {depositAmount} |
@@ -703,7 +748,7 @@ The governance module emits the following events:
 #### MsgVote
 
 | Type          | Attribute Key | Attribute Value |
-| ------------- | ------------- | --------------- |
+|---------------|---------------|-----------------|
 | proposal_vote | option        | {voteOption}    |
 | proposal_vote | proposal_id   | {proposalID}    |
 | message       | module        | governance      |
@@ -712,6 +757,7 @@ The governance module emits the following events:
 
 #### MsgVoteWeighted
 
+<<<<<<< HEAD
 | Type          | Attribute Key | Attribute Value          |
 | ------------- | ------------- | ------------------------ |
 | proposal_vote | option        | {weightedVoteOptions}    |
@@ -719,11 +765,20 @@ The governance module emits the following events:
 | message       | module        | governance               |
 | message       | action        | vote                     |
 | message       | sender        | {senderAddress}          |
+=======
+| Type          | Attribute Key | Attribute Value       |
+|---------------|---------------|-----------------------|
+| proposal_vote | option        | {weightedVoteOptions} |
+| proposal_vote | proposal_id   | {proposalID}          |
+| message       | module        | governance            |
+| message       | action        | vote                  |
+| message       | sender        | {senderAddress}       |
+>>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 
 #### MsgDeposit
 
 | Type                 | Attribute Key       | Attribute Value |
-| -------------------- | ------------------- | --------------- |
+|----------------------|---------------------|-----------------|
 | proposal_deposit     | amount              | {depositAmount} |
 | proposal_deposit     | proposal_id         | {proposalID}    |
 | proposal_deposit [0] | voting_period_start | {proposalID}    |
@@ -737,6 +792,7 @@ The governance module emits the following events:
 
 The governance module contains the following parameters:
 
+<<<<<<< HEAD
 | Key           | Type   | Example                                                                                            |
 |---------------|--------|----------------------------------------------------------------------------------------------------|
 | depositparams | object | {"min_deposit":[{"denom":"uatom","amount":"10000000"}],"max_deposit_period":"172800000000000"}     |
@@ -753,6 +809,22 @@ The governance module contains the following parameters:
 | quorum             | string (dec)     | "0.334000000000000000"                  |
 | threshold          | string (dec)     | "0.500000000000000000"                  |
 | veto               | string (dec)     | "0.334000000000000000"                  |
+=======
+| Key                           | Type             | Example                                 |
+|-------------------------------|------------------|-----------------------------------------|
+| min_deposit                   | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
+| max_deposit_period            | string (time ns) | "172800000000000" (17280s)              |
+| voting_period                 | string (time ns) | "172800000000000" (17280s)              |
+| quorum                        | string (dec)     | "0.334000000000000000"                  |
+| threshold                     | string (dec)     | "0.500000000000000000"                  |
+| veto                          | string (dec)     | "0.334000000000000000"                  |
+| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
+| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
+| expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
+| burn_proposal_deposit_prevote | bool             | false                                    |
+| burn_vote_quorum              | bool             | false                                   |
+| burn_vote_veto                | bool             | true                                    |
+>>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

@@ -111,7 +111,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,
+<<<<<<< HEAD
 		v1.NewParams(minDeposit, depositPeriod, votingPeriod, quorum.String(), threshold.String(), veto.String(), minInitialDepositRatio.String()),
+=======
+		v1.NewParams(minDeposit, expeditedMinDeposit, depositPeriod, votingPeriod, expeditedVotingPeriod, quorum.String(), threshold.String(), expitedVotingThreshold.String(), veto.String(), minInitialDepositRatio.String(), proposalCancelRate.String(), "", simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0),
+>>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")

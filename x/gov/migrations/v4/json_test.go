@@ -59,20 +59,9 @@ func TestMigrateJSON(t *testing.T) {
 	"deposit_params": null,
 	"deposits": [],
 	"params": {
-<<<<<<< HEAD
-=======
 		"burn_proposal_deposit_prevote": false,
 		"burn_vote_quorum": false,
 		"burn_vote_veto": true,
-		"expedited_min_deposit": [
-			{
-				"amount": "50000000",
-				"denom": "stake"
-			}
-		],
-		"expedited_threshold": "0.667000000000000000",
-		"expedited_voting_period": "86400s",
->>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 		"max_deposit_period": "172800s",
 		"min_deposit": [
 			{

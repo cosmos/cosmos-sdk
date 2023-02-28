@@ -3,6 +3,7 @@ package textual
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -21,7 +22,22 @@ type decValueRenderer struct{}
 var _ ValueRenderer = decValueRenderer{}
 
 func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
-	formatted, err := math.FormatDec(v.String())
+	decStr := v.String()
+
+	// If the decimal doesn't contain a point, we assume it's a value formatted using the legacy
+	// `sdk.Dec`. So we try to parse it as an integer and then convert it to a
+	// decimal.
+	if !strings.Contains(decStr, ".") {
+		parsedInt, ok := new(big.Int).SetString(decStr, 10)
+		if !ok {
+			return nil, fmt.Errorf("invalid decimal: %s", decStr)
+		}
+
+		// We assume the decimal has 18 digits of precision.
+		decStr = math.LegacyNewDecFromBigIntWithPrec(parsedInt, math.LegacyPrecision).String()
+	}
+
+	formatted, err := math.FormatDec(decStr)
 	if err != nil {
 		return nil, err
 	}

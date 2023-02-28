@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -148,9 +149,9 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), s.logger, cmtCfg)
+			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), servercmtlog.CometZeroLogWrapper{Logger: s.logger}, cmtCfg)
 		} else {
-			errCh <- tmrpcserver.Serve(s.listener, s.Router, s.logger, cmtCfg)
+			errCh <- tmrpcserver.Serve(s.listener, s.Router, servercmtlog.CometZeroLogWrapper{Logger: s.logger}, cmtCfg)
 		}
 	}(cfg.API.EnableUnsafeCORS)
 

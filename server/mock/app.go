@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"

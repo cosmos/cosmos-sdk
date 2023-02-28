@@ -3,19 +3,18 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"testing"
 
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/upgrade"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -41,7 +40,7 @@ import (
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	db := dbm.NewMemDB()
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger := log.NewLogger()
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  logger,
 		DB:      db,
@@ -66,7 +65,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	app.Commit()
 
-	logger2 := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger2 := log.NewLogger()
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger2, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	_, err := app2.ExportAppStateAndValidators(false, []string{}, []string{})
@@ -75,7 +74,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger := log.NewLogger()
 	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
 	// Create a new baseapp and configurator for the purpose of this test.
@@ -209,7 +208,7 @@ func TestRunMigrations(t *testing.T) {
 
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger := log.NewLogger()
 	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	ctx := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
@@ -252,7 +251,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	db := dbm.NewMemDB()
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger := log.NewLogger()
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  logger,
 		DB:      db,

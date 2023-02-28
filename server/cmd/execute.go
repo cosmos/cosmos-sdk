@@ -5,6 +5,7 @@ import (
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,7 +26,7 @@ func Execute(rootCmd *cobra.Command, envPrefix string, defaultHome string) error
 	// https://github.com/spf13/cobra/pull/1118.
 	ctx := CreateExecuteContext(context.Background())
 
-	rootCmd.PersistentFlags().String(flags.FlagLogLevel, cmtcfg.DefaultLogLevel, "The logging level (trace|debug|info|warn|error|fatal|panic)")
+	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, cmtcfg.LogFormatPlain, "The logging format (json|plain)")
 
 	executor := cmtcli.PrepareBaseCmd(rootCmd, envPrefix, defaultHome)

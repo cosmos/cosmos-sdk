@@ -6,13 +6,13 @@ import (
 	"io"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/confio/ics23/go"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"

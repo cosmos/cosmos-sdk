@@ -30,3 +30,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+## [v1.0.0] - 2022-03-01
+
+* Introducing a standalone SDK logger package ( `comossdk.io/log`).
+  It replaces CometBFT logger and provides a common interface for all SDK components.
+  The default logger (`NewLogger`) is using [zerolog](https://github.com/rs/zerolog),
+  but it can be easily replaced with any implementation that implements the `log.Logger` interface.

@@ -13,8 +13,6 @@ There is something changed.Due to the import changes, this is a breaking change.
 * Verify `github.com/cometbft/cometbft/libs/bytes` is not an indirect or direct dependency
 * Run `make proto-gen`
 
-### Client
-
 ### Protobuf
 
 The SDK is in the process of removing all `(gogoproto.casttype) = "github.com/cometbft/cometbft/libs/bytes.HexBytes"`.

@@ -31,7 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v1.0.0] - 2022-03-01
+## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.0.0) - 2022-03-01
 
 * Introducing a standalone SDK logger package ( `comossdk.io/log`).
   It replaces CometBFT logger and provides a common interface for all SDK components.

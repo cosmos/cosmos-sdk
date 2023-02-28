@@ -100,7 +100,7 @@ func (l zeroLogWrapper) Impl() interface{} {
 // FilterKeys returns a new logger that filters out all key/value pairs that do not match the filter
 // This functions assumes that the logger is a zerolog.Logger, which is the case for the logger returned by log.NewLogger()
 // NOTE: filtering has a performance impact on the logger
-func FilterKeys(logger Logger, filter func(key, level string) bool) Logger {
+func FilterKeys(logger Logger, filter FilterFunc) Logger {
 	zl, ok := logger.Impl().(*zerolog.Logger)
 	if !ok {
 		panic("logger is not a zerolog.Logger")

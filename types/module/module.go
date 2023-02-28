@@ -375,7 +375,10 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 		}
 
 		if module, ok := module.(appmodule.HasServices); ok {
-			module.RegisterServices(cfg)
+			err := module.RegisterServices(cfg)
+			if err != nil {
+				return err
+			}
 		}
 
 		if cfg.Error() != nil {

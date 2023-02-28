@@ -490,10 +490,11 @@ func TestCoreAPIManager_EndBlock(t *testing.T) {
 type MockCoreAppModule struct{}
 
 // RegisterServices implements appmodule.HasServices
-func (MockCoreAppModule) RegisterServices(reg grpc.ServiceRegistrar) {
+func (MockCoreAppModule) RegisterServices(reg grpc.ServiceRegistrar) error {
 	// Use Auth's service definitions as a placeholder
 	authtypes.RegisterQueryServer(reg, &authtypes.UnimplementedQueryServer{})
 	authtypes.RegisterMsgServer(reg, &authtypes.UnimplementedMsgServer{})
+	return nil
 }
 
 func (MockCoreAppModule) IsOnePerModuleType() {}

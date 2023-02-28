@@ -30,7 +30,7 @@ use `[]byte("xxx")` instead of `bytes.HexBytes([]byte("xxx"))`
 All the bank removed `github.com/cometbft/cometbft/libs/bytes`
 All the bank functions or params are now renamed to use `[]byte` instead of `cmtbytes.HexBytes` or `bytes.HexBytes` across the SDK.
 
-#### `evidence`
+#### `x/evidence`
 
 All the evidence removed `github.com/cometbft/cometbft/libs/bytes`
 All the evidence functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK
@@ -65,7 +65,7 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 }
 ```
 
-#### `simulation`
+#### `x/simulation`
 
 All the simulation removed `github.com/cometbft/cometbft/libs/bytes`
 All the simulation functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK

@@ -16,7 +16,6 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,7 +81,7 @@ func getIBCDenom(path string, baseDenom string) string {
 	return fmt.Sprintf("%s/%s", "ibc", getIBCHash(path, baseDenom))
 }
 
-func getIBCHash(path string, baseDenom string) cmtbytes.HexBytes {
+func getIBCHash(path string, baseDenom string) []byte {
 	hash := sha256.Sum256([]byte(path + "/" + baseDenom))
 	return hash[:]
 }

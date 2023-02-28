@@ -54,7 +54,7 @@ type Evidence interface {
 
 	Route() string
 	String() string
-	Hash() cmtbytes.HexBytes
+	Hash() []byte
 	ValidateBasic() error
 
 	// Height at which the infraction occurred

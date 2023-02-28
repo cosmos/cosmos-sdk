@@ -8,7 +8,6 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/bytes"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/stretchr/testify/require"
@@ -81,7 +80,7 @@ func (s *resultTestSuite) TestResponseResultTx() {
 		GasUsed:   90,
 	}
 	resultTx := &coretypes.ResultTx{
-		Hash:     bytes.HexBytes([]byte("test")),
+		Hash:     []byte("test"),
 		Height:   10,
 		TxResult: deliverTxResult,
 	}
@@ -128,7 +127,7 @@ txhash: "74657374"
 		Codespace: "codespace",
 		Data:      []byte("data"),
 		Log:       `[]`,
-		Hash:      bytes.HexBytes([]byte("test")),
+		Hash:      []byte("test"),
 	}
 
 	s.Require().Equal(&sdk.TxResponse{

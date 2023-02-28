@@ -1,6 +1,70 @@
 # Upgrading Cosmos SDK
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
+## [Unreleased]
+
+### Refactor:remove bytes/HexBytes
+
+The Cosmos SDK has removed the import of cmtbytes "github.com/cometbft/cometbft/libs/bytes".
+There is something changed.Due to the import changes, this is a breaking change. Chains need to remove **entirely** their imports in their codebase, from direct and indirects imports.
+
+* Remove `github.com/cometbft/cometbft/libs/bytes`
+* Replace All `cmtbytes.HexBytes` by `[]byte` except `*pb.go`files
+* Verify `github.com/cometbft/cometbft/libs/bytes` is not an indirect or direct dependency
+* Run `make proto-gen`
+
+### Client
+
+### Protobuf
+
+The SDK is in the process of removing all `(gogoproto.casttype) = "github.com/cometbft/cometbft/libs/bytes.HexBytes"`.
+
+### Modules
+
+#### `x/bank`
+
+All the bank removed `github.com/cometbft/cometbft/libs/bytes`
+All the bank functions or params are now renamed to use `[]byte` instead of `cmtbytes.HexBytes` or `bytes.HexBytes` across the SDK.
+
+#### `evidence`
+
+All the evidence removed `github.com/cometbft/cometbft/libs/bytes`
+All the evidence functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK
+
+renamed to use `strings.ToUpper(hex.EncodeToString(evidence.Hash()))` instead of `evidence.Hash().String()`
+
+as follows:
+
+```go
+func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
+	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
+		return errors.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
+	}
+	if !k.router.HasRoute(evidence.Route()) {
+		return errors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
+	}
+
+	handler := k.router.GetRoute(evidence.Route())
+	if err := handler(ctx, evidence); err != nil {
+		return errors.Wrap(types.ErrInvalidEvidence, err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSubmitEvidence,
+			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
+		),
+	)
+
+	k.SetEvidence(ctx, evidence)
+	return nil
+}
+```
+
+#### `simulation`
+
+All the simulation removed `github.com/cometbft/cometbft/libs/bytes`
+All the simulation functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK
 
 ## [Unreleased]
 

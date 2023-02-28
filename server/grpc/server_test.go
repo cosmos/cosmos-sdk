@@ -239,7 +239,7 @@ func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 }
 
 // mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.
-func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder { //nolint:govet
+func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 

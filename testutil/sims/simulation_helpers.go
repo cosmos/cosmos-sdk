@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,7 +29,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 	var logger log.Logger
 	if verbose {
-		logger = log.TestingLogger()
+		logger = log.NewLogger()
 	} else {
 		logger = log.NewNopLogger()
 	}

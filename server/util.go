@@ -15,21 +15,21 @@ import (
 	"syscall"
 	"time"
 
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
-	cmtflags "github.com/cometbft/cometbft/libs/cli/flags"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -48,7 +48,7 @@ const ServerContextKey = sdk.ContextKey("server.context")
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
-	Logger cmtlog.Logger
+	Logger log.Logger
 }
 
 // ErrorCode contains the exit code for server exit.
@@ -64,11 +64,11 @@ func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
 		cmtcfg.DefaultConfig(),
-		cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout)),
+		log.NewLogger(),
 	)
 }
 
-func NewContext(v *viper.Viper, config *cmtcfg.Config, logger cmtlog.Logger) *Context {
+func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Context {
 	return &Context{v, config, logger}
 }
 
@@ -153,21 +153,34 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		return err
 	}
 
-	var logger cmtlog.Logger
+	var logger log.Logger
 	if serverCtx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
-		logger = cmtlog.NewTMJSONLogger(cmtlog.NewSyncWriter(os.Stdout))
+		zl := zerolog.New(os.Stdout).With().Timestamp().Logger()
+		logger = log.NewCustomLogger(zl)
 	} else {
-		logger = cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
-	}
-	logger, err = cmtflags.ParseLogLevel(config.LogLevel, logger, cmtcfg.DefaultLogLevel)
-	if err != nil {
-		return err
+		logger = log.NewLogger()
 	}
 
-	// Check if the CometBFT flag for trace logging is set if it is then setup
-	// a tracing logger in this app as well.
-	if serverCtx.Viper.GetBool(cmtcli.TraceFlag) {
-		logger = cmtlog.NewTracingLogger(logger)
+	// set filter level or keys for the logger if any
+	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
+	logLvl, err := zerolog.ParseLevel(logLvlStr)
+	if err != nil {
+		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
+		filterFunc, err := log.ParseLogLevel(logLvlStr, zerolog.InfoLevel.String())
+		if err != nil {
+			return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
+		}
+
+		logger = log.FilterKeys(logger, filterFunc)
+	} else {
+		zl := logger.Impl().(*zerolog.Logger)
+		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
+		// Note it overrides log level passed in `log_levels`.
+		if serverCtx.Viper.GetBool(cmtcli.TraceFlag) {
+			logger = log.NewCustomLogger(zl.Level(zerolog.TraceLevel))
+		} else {
+			logger = log.NewCustomLogger(zl.Level(logLvl))
+		}
 	}
 
 	serverCtx.Logger = logger.With("module", "server")

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/core/appmodule"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 
@@ -36,6 +37,33 @@ func ExtractAutoCLIOptions(appModules map[string]interface{}) map[string]*autocl
 		}); ok {
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
 		} else if mod, ok := mod.(module.HasServices); ok {
+			// try to auto-discover options based on the last msg and query
+			// services registered for the module
+			cfg := &autocliConfigurator{}
+			mod.RegisterServices(cfg)
+			modOptions := &autocliv1.ModuleOptions{}
+			haveServices := false
+
+			if cfg.msgServer.serviceName != "" {
+				haveServices = true
+				modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
+					Service: cfg.msgServer.serviceName,
+				}
+			}
+
+			if cfg.queryServer.serviceName != "" {
+				haveServices = true
+				modOptions.Query = &autocliv1.ServiceCommandDescriptor{
+					Service: cfg.queryServer.serviceName,
+				}
+			}
+
+			if haveServices {
+				moduleOptions[modName] = modOptions
+			}
+		}
+
+		if mod, ok := mod.(appmodule.HasServices); ok {
 			// try to auto-discover options based on the last msg and query
 			// services registered for the module
 			cfg := &autocliConfigurator{}

@@ -1,6 +1,7 @@
 # Upgrading Cosmos SDK
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
+
 ## [Unreleased]
 
 ### Refactor:remove bytes/HexBytes

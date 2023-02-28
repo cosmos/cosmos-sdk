@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
@@ -78,7 +79,7 @@ func newIbcCoin(amt int64) sdk.Coin {
 }
 
 func getIBCDenom(path string, baseDenom string) string {
-	return fmt.Sprintf("%s/%s", "ibc", getIBCHash(path, baseDenom))
+	return fmt.Sprintf("%s/%s", "ibc", hex.EncodeToString(getIBCHash(path, baseDenom)))
 }
 
 func getIBCHash(path string, baseDenom string) []byte {

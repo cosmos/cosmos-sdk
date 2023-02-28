@@ -433,7 +433,7 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:           ms,
-		ctx:          sdk.NewContext(ms, header, false, app.logger),
+		ctx:          sdk.NewContext(ms, header, false, app.logger).WithStreamingManager(app.streamingManager),
 		eventHistory: []abci.Event{},
 	}
 }

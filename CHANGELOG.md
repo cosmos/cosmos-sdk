@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Bug Fixes
+
+* [PR 562](https://github.com/provenance-io/cosmos-sdk/pull/562) Fix `stopNodeOnErr` always false in State Listening Plugin system
 
 ---
 

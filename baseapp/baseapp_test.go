@@ -2344,3 +2344,32 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 		require.Equal(t, expectedChangeSet, mockListener2.ChangeSet, "should contain the same changeSet")
 	}
 }
+
+func TestSetDeliverStateWithStreamingManager(t *testing.T) {
+	mockListener1 := NewMockABCIListener("lis_1")
+	mockListener2 := NewMockABCIListener("lis_2")
+	listeners := []storetypes.ABCIListener{&mockListener1, &mockListener2}
+	streamingManager := storetypes.StreamingManager{AbciListeners: listeners, StopNodeOnErr: true}
+	streamingManagerOpt := func(bapp *BaseApp) { bapp.SetStreamingManager(streamingManager) }
+	addListenerOpt := func(bapp *BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
+
+	app := setupBaseApp(t, streamingManagerOpt, addListenerOpt)
+	app.InitChain(abci.RequestInitChain{})
+
+	nBlocks := 2
+
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		header := tmproto.Header{Height: int64(blockN) + 1}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+		ctx := app.getState(runTxModeDeliver).ctx
+		sm := ctx.StreamingManager()
+
+		require.NotNil(t, sm, "should contain a non-nil StreamingManager")
+		require.Equal(t, listeners, sm.AbciListeners, fmt.Sprintf("should contain same listeners: %v", listeners))
+		require.Equal(t, true, sm.StopNodeOnErr, "should contain StopNodeOnErr = true")
+
+		app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
+	}
+
+}

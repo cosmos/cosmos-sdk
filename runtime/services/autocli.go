@@ -67,7 +67,10 @@ func ExtractAutoCLIOptions(appModules map[string]interface{}) map[string]*autocl
 			// try to auto-discover options based on the last msg and query
 			// services registered for the module
 			cfg := &autocliConfigurator{}
-			mod.RegisterServices(cfg)
+			err := mod.RegisterServices(cfg)
+			if err != nil {
+				panic(err)
+			}
 			modOptions := &autocliv1.ModuleOptions{}
 			haveServices := false
 

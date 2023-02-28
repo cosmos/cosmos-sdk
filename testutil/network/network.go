@@ -20,7 +20,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/node"
 	cmtclient "github.com/cometbft/cometbft/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
@@ -119,7 +118,7 @@ type Config struct {
 	StakingTokens    sdkmath.Int                // the amount of tokens each validator has available to stake
 	BondedTokens     sdkmath.Int                // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
-	EnableTMLogging  bool                       // enable CometBFT logging to STDOUT
+	EnableLogging    bool                       // enable logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
 	SigningAlgo      string                     // signing algorithm for keys
 	KeyringOptions   []keyring.Option           // keyring configuration options
@@ -406,8 +405,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		logger := log.NewNopLogger()
-		if cfg.EnableTMLogging {
-			logger = cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
+		if cfg.EnableLogging {
+			logger = log.NewLogger()
 		}
 
 		ctx.Logger = logger

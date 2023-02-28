@@ -24,9 +24,6 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	params.ExpeditedMinDeposit = defaultParams.ExpeditedMinDeposit
 	params.ExpeditedVotingPeriod = defaultParams.ExpeditedVotingPeriod
 	params.ExpeditedThreshold = defaultParams.ExpeditedThreshold
-	params.BurnProposalDepositPrevote = defaultParams.BurnProposalDepositPrevote
-	params.BurnVoteQuorum = defaultParams.BurnVoteQuorum
-	params.BurnVoteVeto = defaultParams.BurnVoteVeto
 
 	bz, err := cdc.Marshal(&params)
 	if err != nil {

@@ -17,6 +17,11 @@ There is something changed.Due to the import changes, this is a breaking change.
 
 The SDK is in the process of removing all `(gogoproto.casttype) = "github.com/cometbft/cometbft/libs/bytes.HexBytes"`.
 
+### test
+
+use `ctx.HeaderHash()` in `context_test.go` instead of `ctx.HeaderHash().Bytes()`
+use `[]byte("xxx")` instead of `bytes.HexBytes([]byte("xxx"))`
+
 ### Modules
 
 #### `x/bank`

@@ -55,23 +55,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
 
-<<<<<<< HEAD
 		if burnDeposits {
 			keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 		} else {
 			keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
-=======
-		// If an expedited proposal fails, we do not want to update
-		// the deposit at this point since the proposal is converted to regular.
-		// As a result, the deposits are either deleted or refunded in all cases
-		// EXCEPT when an expedited proposal fails.
-		if !(proposal.Expedited && !passes) {
-			if burnDeposits {
-				keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
-			} else {
-				keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
-			}
->>>>>>> 44495e7a7 (refactor: add burnable params to governance  (#15151))
 		}
 
 		if passes {

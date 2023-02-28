@@ -274,6 +274,7 @@ func (s msgServer) DonateAllVestingTokens(goCtx context.Context, msg *types.MsgD
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, vestingCoins.String()),
 		),
 	)
 

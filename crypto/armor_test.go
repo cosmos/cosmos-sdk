@@ -2,15 +2,18 @@ package crypto_test
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
 	"testing"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/armor"
 	"github.com/cometbft/cometbft/crypto/xsalsa20symmetric"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	pdkdf2 "golang.org/x/crypto/pbkdf2"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -167,17 +170,16 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 	require.Nil(t, unarmoredBytes)
 }
 
-func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
+func BenchmarkBcryptPdkdf2(b *testing.B) {
 	passphrase := []byte("passphrase")
 	for securityParam := uint32(9); securityParam < 16; securityParam++ {
-		param := securityParam
-		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
+		b.Run(fmt.Sprintf("benchmark-security-param-%d", securityParam), func(b *testing.B) {
 			b.ReportAllocs()
 			saltBytes := cmtcrypto.CRandBytes(16)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				_, err := bcrypt.GenerateFromPassword(saltBytes, passphrase, param)
-				require.Nil(b, err)
+				key := pdkdf2.Key(passphrase, saltBytes, int(securityParam), 60, sha256.New)
+				require.NotNil(b, key)
 			}
 		})
 	}
@@ -193,4 +195,37 @@ func TestArmor(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 	assert.Equal(t, blockType, blockType2)
 	assert.Equal(t, data, data2)
+}
+
+func TestBcryptLegacyEncryption(t *testing.T) {
+	privKey := secp256k1.GenPrivKey()
+	saltBytes := cmtcrypto.CRandBytes(16)
+	passphrase := "passphrase"
+
+	// Old encryption method
+	key, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // Legacy Ley gemeratopm
+	key = cmtcrypto.Sha256(key)                                              // get 32 bytes
+	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
+	encBytes := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
+	header := map[string]string{
+		"kdf":  "bcrypt",
+		"salt": fmt.Sprintf("%X", saltBytes),
+	}
+	armorString := armor.EncodeArmor("TENDERMINT PRIVATE KEY", header, encBytes)
+
+	_, _, err := crypto.UnarmorDecryptPrivKey(armorString, "wrongpassphrase")
+	require.Error(t, err)
+	decrypted, algo, err := crypto.UnarmorDecryptPrivKey(armorString, passphrase)
+	require.NoError(t, err)
+	require.Equal(t, string(hd.Secp256k1Type), algo)
+	require.True(t, privKey.Equals(decrypted))
+
+	// Latest encryption method
+	armored := crypto.EncryptArmorPrivKey(privKey, passphrase, "")
+	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
+	require.Error(t, err)
+	decrypted, algo, err = crypto.UnarmorDecryptPrivKey(armored, passphrase)
+	require.NoError(t, err)
+	require.Equal(t, string(hd.Secp256k1Type), algo)
+	require.True(t, privKey.Equals(decrypted))
 }

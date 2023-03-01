@@ -115,7 +115,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
 	// so that we can always assert that given a reflection server it is
 	// possible to fully query all the methods, without having any context
 	// on the proto registry
-	rc := grpcreflect.NewClient(ctx, stub)
+	rc := grpcreflect.NewClientV1Alpha(ctx, stub)
 
 	services, err := rc.ListServices()
 	s.Require().NoError(err)

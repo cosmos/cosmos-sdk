@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -87,18 +88,15 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 				}
 			}
 
-			// TODO: Change to TOML
-			// TODO: Change default node home
-			// homeFilePath := filepath.Join(simapp.DefaultNodeHome, "config", "home.txt")
-			homeDir, err := os.UserHomeDir()
-			if err != nil {
-				return fmt.Errorf("could not query user home directory: %v", err)
-			}
-			homeFilePath := filepath.Join(homeDir, ".simapp", "config", "home.txt")
 			fmt.Println("selected node configuration at", value)
-			err = writeHomeDirToFile(homeFilePath, value)
+			err = writeHomeDirToFile(clientCtx.HomeFilePath, value)
 			if err != nil {
-				return fmt.Errorf("could not write new home directory to the configuration file at %s", homeFilePath)
+				logstring := fmt.Sprintf("could not write new home directory to the configuration file at: %s: %s", clientCtx.HomeFilePath, err.Error())
+				if strings.Contains(err.Error(), "permission denied") {
+					fmt.Println(logstring)
+				} else {
+					return fmt.Errorf(logstring)
+				}
 			}
 
 			return nil

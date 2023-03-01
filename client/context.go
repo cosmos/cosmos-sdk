@@ -36,6 +36,9 @@ type Context struct {
 	Output            io.Writer
 	OutputFormat      string
 	Height            int64
+	// HomeFilePath contains the path to the configuration file of the
+	// home directory.
+	HomeFilePath      string
 	HomeDir           string
 	KeyringDir        string
 	From              string
@@ -150,6 +153,15 @@ func (ctx Context) WithUseLedger(useLedger bool) Context {
 // WithChainID returns a copy of the context with an updated chain ID.
 func (ctx Context) WithChainID(chainID string) Context {
 	ctx.ChainID = chainID
+	return ctx
+}
+
+// WithHomeFilePath returns a copy of the Context with HomeFilePath set.
+func (ctx Context) WithHomeFilePath(fp string) Context {
+	fmt.Println("returning context with home file path: ", fp)
+	if fp != "" {
+		ctx.HomeFilePath = fp
+	}
 	return ctx
 }
 

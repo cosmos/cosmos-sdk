@@ -4,78 +4,11 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
-### Refactor:remove bytes/HexBytes
-
-The Cosmos SDK has removed the import of cmtbytes "github.com/cometbft/cometbft/libs/bytes".
-There is something changed.Due to the import changes, this is a breaking change. Chains need to remove **entirely** their imports in their codebase, from direct and indirects imports.
-
-* Remove `github.com/cometbft/cometbft/libs/bytes`
-* Replace All `cmtbytes.HexBytes` by `[]byte` except `*pb.go`files
-* Verify `github.com/cometbft/cometbft/libs/bytes` is not an indirect or direct dependency
-* Run `make proto-gen`
-
-### Protobuf
-
-The SDK is in the process of removing all `(gogoproto.casttype) = "github.com/cometbft/cometbft/libs/bytes.HexBytes"`.
-
-### test
-
-use `ctx.HeaderHash()` in `context_test.go` instead of `ctx.HeaderHash().Bytes()`
-use `[]byte("xxx")` instead of `bytes.HexBytes([]byte("xxx"))`
-
-### Modules
-
-#### `x/bank`
-
-All the bank removed `github.com/cometbft/cometbft/libs/bytes`
-All the bank functions or params are now renamed to use `[]byte` instead of `cmtbytes.HexBytes` or `bytes.HexBytes` across the SDK.
-
-#### `x/evidence`
-
-All the evidence removed `github.com/cometbft/cometbft/libs/bytes`
-All the evidence functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK
-
-renamed to use `strings.ToUpper(hex.EncodeToString(evidence.Hash()))` instead of `evidence.Hash().String()`
-
-as follows:
-
-```go
-func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
-	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
-		return errors.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
-	}
-	if !k.router.HasRoute(evidence.Route()) {
-		return errors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
-	}
-
-	handler := k.router.GetRoute(evidence.Route())
-	if err := handler(ctx, evidence); err != nil {
-		return errors.Wrap(types.ErrInvalidEvidence, err.Error())
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSubmitEvidence,
-			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
-		),
-	)
-
-	k.SetEvidence(ctx, evidence)
-	return nil
-}
-```
-
-#### `x/simulation`
-
-All the simulation removed `github.com/cometbft/cometbft/libs/bytes`
-All the simulation functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK
-
-## [Unreleased]
-
 ### Migration to CometBFT (Part 2)
 
 The Cosmos SDK has migrated in, its previous versions, to CometBFT.
-Some functions have been renamed to reflect the naming change.
+Some functions have been renamed to reflect the naming change. And the Cosmos SDK has removed the import of cmtbytes "github.com/cometbft/cometbft/libs/bytes".
+There is something changed.Due to the import changes, this is a breaking change. Chains need to remove **entirely** their imports in their codebase, from direct and indirects imports.
 
 Following an exhaustive list:
 
@@ -83,6 +16,9 @@ Following an exhaustive list:
 * `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
 * `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
+* Remove `github.com/cometbft/cometbft/libs/bytes` & Replace All `cmtbytes.HexBytes` by `[]byte` except `*pb.go`files
+* Verify `github.com/cometbft/cometbft/libs/bytes` is not an indirect or direct dependency
+* Run `make proto-gen`
 
 Additionally, the commands and flags mentionning `tendermint` have been renamed to `comet`.
 However, these commands and flags is still supported for backward compatibility.
@@ -120,6 +56,7 @@ See related issues:
 ### Protobuf
 
 The SDK is in the process of removing all `gogoproto` annotations.
+The SDK is in the process of removing all `(gogoproto.casttype) = "github.com/cometbft/cometbft/libs/bytes.HexBytes"`.
 
 #### Stringer
 
@@ -169,6 +106,18 @@ By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migrati
 
 The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
+All the evidence removed `github.com/cometbft/cometbft/libs/bytes`
+All the evidence functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK
+
+#### `x/bank`
+
+All the bank removed `github.com/cometbft/cometbft/libs/bytes`
+All the bank functions or params are now renamed to use `[]byte` instead of `cmtbytes.HexBytes` or `bytes.HexBytes` across the SDK.
+
+#### `x/simulation`
+
+All the simulation removed `github.com/cometbft/cometbft/libs/bytes`
+All the simulation functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK.
 
 #### `x/nft`
 

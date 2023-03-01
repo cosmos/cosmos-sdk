@@ -21,7 +21,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.Id)
-		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+
+		params := keeper.GetParams(ctx)
+		if !params.BurnProposalDepositPrevote {
+			keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+		} else {
+			keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
+		}
 
 		// called when proposal become inactive
 		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
@@ -37,7 +43,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
-			"min_deposit", sdk.NewCoins(keeper.GetParams(ctx).MinDeposit...).String(),
+			"min_deposit", sdk.NewCoins(params.MinDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 

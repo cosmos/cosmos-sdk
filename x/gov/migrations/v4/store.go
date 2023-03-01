@@ -24,6 +24,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 	legacySubspace.Get(ctx, govv1.ParamStoreKeyVotingParams, &vp)
 	legacySubspace.Get(ctx, govv1.ParamStoreKeyTallyParams, &tp)
 
+	defaultParams := govv1.DefaultParams()
 	params := govv1.NewParams(
 		dp.MinDeposit,
 		*dp.MaxDepositPeriod,
@@ -31,7 +32,10 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 		tp.Quorum,
 		tp.Threshold,
 		tp.VetoThreshold,
-		sdk.ZeroDec().String(),
+		defaultParams.MinInitialDepositRatio,
+		defaultParams.BurnProposalDepositPrevote,
+		defaultParams.BurnVoteQuorum,
+		defaultParams.BurnVoteVeto,
 	)
 
 	bz, err := cdc.Marshal(&params)

@@ -208,4 +208,13 @@ message Params {
 
   //  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
   string min_initial_deposit_ratio = 7 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // burn deposits if a proposal does not meet quorum
+  bool burn_vote_quorum = 13;
+
+  // burn deposits if the proposal does not enter voting period
+  bool burn_proposal_deposit_prevote = 14;
+  
+  // burn deposits if quorum with vote type no_veto is met
+  bool burn_vote_veto = 15;
 }

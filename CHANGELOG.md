@@ -37,7 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.47.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc3) - 2023-02-22
+## [v0.47.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc3) - 2023-03-01
+
+### Features
+
+* (x/gov) [#15151](https://github.com/cosmos/cosmos-sdk/pull/15151) Add `burn_vote_quorum`, `burn_proposal_deposit_prevote` and `burn_vote_veto` params to allow applications to decide if they would like to burn deposits
 
 ### Improvements
 

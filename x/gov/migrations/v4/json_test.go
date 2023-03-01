@@ -59,6 +59,9 @@ func TestMigrateJSON(t *testing.T) {
 	"deposit_params": null,
 	"deposits": [],
 	"params": {
+		"burn_proposal_deposit_prevote": false,
+		"burn_vote_quorum": false,
+		"burn_vote_veto": true,
 		"max_deposit_period": "172800s",
 		"min_deposit": [
 			{

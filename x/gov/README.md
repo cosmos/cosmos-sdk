@@ -54,7 +54,6 @@ staking token of the chain.
     * [EndBlocker](#endblocker)
     * [Handlers](#handlers)
 * [Parameters](#parameters)
-    * [SubKeys](#subkeys)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -254,6 +253,16 @@ nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
 Validators and full nodes can use an automation tool, such as [Cosmovisor](https://docs.cosmos.network/main/tooling/cosmovisor), for automatically switching version of the chain.
+
+#### Burnable Params
+
+There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors. 
+
+* `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed. 
+* `BurnVoteQuorum` burns the proposal deposit if the proposal deposit if the vote does not reach quorum.
+* `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase. 
+
+> Note: These parameters are modifiable via governance. 
 
 ## State
 
@@ -678,7 +687,7 @@ The governance module emits the following events:
 ### EndBlocker
 
 | Type              | Attribute Key   | Attribute Value  |
-| ----------------- | --------------- | ---------------- |
+|-------------------|-----------------|------------------|
 | inactive_proposal | proposal_id     | {proposalID}     |
 | inactive_proposal | proposal_result | {proposalResult} |
 | active_proposal   | proposal_id     | {proposalID}     |
@@ -689,7 +698,7 @@ The governance module emits the following events:
 #### MsgSubmitProposal
 
 | Type                | Attribute Key       | Attribute Value |
-| ------------------- | ------------------- | --------------- |
+|---------------------|---------------------|-----------------|
 | submit_proposal     | proposal_id         | {proposalID}    |
 | submit_proposal [0] | voting_period_start | {proposalID}    |
 | proposal_deposit    | amount              | {depositAmount} |
@@ -703,7 +712,7 @@ The governance module emits the following events:
 #### MsgVote
 
 | Type          | Attribute Key | Attribute Value |
-| ------------- | ------------- | --------------- |
+|---------------|---------------|-----------------|
 | proposal_vote | option        | {voteOption}    |
 | proposal_vote | proposal_id   | {proposalID}    |
 | message       | module        | governance      |
@@ -723,7 +732,7 @@ The governance module emits the following events:
 #### MsgDeposit
 
 | Type                 | Attribute Key       | Attribute Value |
-| -------------------- | ------------------- | --------------- |
+|----------------------|---------------------|-----------------|
 | proposal_deposit     | amount              | {depositAmount} |
 | proposal_deposit     | proposal_id         | {proposalID}    |
 | proposal_deposit [0] | voting_period_start | {proposalID}    |
@@ -737,22 +746,17 @@ The governance module emits the following events:
 
 The governance module contains the following parameters:
 
-| Key           | Type   | Example                                                                                            |
-|---------------|--------|----------------------------------------------------------------------------------------------------|
-| depositparams | object | {"min_deposit":[{"denom":"uatom","amount":"10000000"}],"max_deposit_period":"172800000000000"}     |
-| votingparams  | object | {"voting_period":"172800000000000"}                                                                |
-| tallyparams   | object | {"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto":"0.334000000000000000"} |
-
-### SubKeys
-
-| Key                | Type             | Example                                 |
-|--------------------|------------------|-----------------------------------------|
-| min_deposit        | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
-| max_deposit_period | string (time ns) | "172800000000000"                       |
-| voting_period      | string (time ns) | "172800000000000"                       |
-| quorum             | string (dec)     | "0.334000000000000000"                  |
-| threshold          | string (dec)     | "0.500000000000000000"                  |
-| veto               | string (dec)     | "0.334000000000000000"                  |
+| Key                           | Type             | Example                                 |
+|-------------------------------|------------------|-----------------------------------------|
+| min_deposit                   | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
+| max_deposit_period            | string (time ns) | "172800000000000" (17280s)              |
+| voting_period                 | string (time ns) | "172800000000000" (17280s)              |
+| quorum                        | string (dec)     | "0.334000000000000000"                  |
+| threshold                     | string (dec)     | "0.500000000000000000"                  |
+| veto                          | string (dec)     | "0.334000000000000000"                  |
+| burn_proposal_deposit_prevote | bool             | false                                   |
+| burn_vote_quorum              | bool             | false                                   |
+| burn_vote_veto                | bool             | true                                    |
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

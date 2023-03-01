@@ -32,7 +32,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 		tp.Quorum,
 		tp.Threshold,
 		tp.VetoThreshold,
-		sdk.ZeroDec().String(),
+		defaultParams.MinInitialDepositRatio,
 		defaultParams.BurnProposalDepositPrevote,
 		defaultParams.BurnVoteQuorum,
 		defaultParams.BurnVoteVeto,

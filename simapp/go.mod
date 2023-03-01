@@ -6,28 +6,11 @@ require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
-<<<<<<< HEAD
 	cosmossdk.io/math v1.0.0-beta.6
 	cosmossdk.io/tools/rosetta v0.2.1
-	github.com/cometbft/cometbft v0.37.0-alpha.3
+	github.com/cometbft/cometbft v0.37.0-rc3
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
-=======
-	cosmossdk.io/log v0.0.0-20230227204852-3535ee51c728
-	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
-	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44
-	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
-	cosmossdk.io/tools/rosetta v0.2.0
-	cosmossdk.io/x/evidence v0.1.0
-	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
-	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
-	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
-	github.com/cometbft/cometbft v0.37.0-rc3
-	github.com/cosmos/cosmos-db v1.0.0-rc.1
-	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.48.0
-	github.com/cosmos/gogoproto v1.4.6
->>>>>>> 41c8529ff (chore: bump cometbft to v0.37.0-rc3 (#15220))
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1

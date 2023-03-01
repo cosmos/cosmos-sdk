@@ -7,23 +7,9 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.6
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-<<<<<<< HEAD
-	github.com/cometbft/cometbft v0.37.0-alpha.3
+	github.com/cometbft/cometbft v0.37.0-rc3
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
-=======
-	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44
-	cosmossdk.io/x/evidence v0.1.0
-	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
-	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
-	cosmossdk.io/x/tx v0.2.0
-	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
-	github.com/cometbft/cometbft v0.37.0-rc3
-	github.com/cosmos/cosmos-db v1.0.0-rc.1
-	github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.48.0
->>>>>>> 41c8529ff (chore: bump cometbft to v0.37.0-rc3 (#15220))
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
@@ -174,24 +160,6 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-<<<<<<< HEAD
-// TODO remove after CometBFT fix
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-=======
-// Here are the short-lived replace for tests
-// Replace here are pending PRs, or version to be tagged.
-// It must be in sync with SimApp temporary replaces
-replace (
-	// TODO tag all extracted modules after SDK refactor
-	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/x/evidence => ../x/evidence
-	cosmossdk.io/x/feegrant => ../x/feegrant
-	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/tx => ../x/tx
-	cosmossdk.io/x/upgrade => ../x/upgrade
-)
->>>>>>> 41c8529ff (chore: bump cometbft to v0.37.0-rc3 (#15220))
 
 replace (
 	// We always want to test against the latest version of the simapp.

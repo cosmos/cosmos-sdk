@@ -358,11 +358,7 @@ benchmark:
 ###############################################################################
 
 golangci_lint_cmd=golangci-lint
-<<<<<<< HEAD
-golangci_version=v1.50.0
-=======
 golangci_version=v1.51.2
->>>>>>> 41c8529ff (chore: bump cometbft to v0.37.0-rc3 (#15220))
 
 lint:
 	@echo "--> Running linter"
@@ -437,11 +433,7 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-<<<<<<< HEAD
-TM_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.37.0-alpha.3/proto/tendermint
-=======
 CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.37.0-rc3/proto/tendermint
->>>>>>> 41c8529ff (chore: bump cometbft to v0.37.0-rc3 (#15220))
 
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci

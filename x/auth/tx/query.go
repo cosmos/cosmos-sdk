@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+<<<<<<< HEAD
 // QueryTxsByEvents performs a search for transactions for a given set of events
 // via the Tendermint RPC. An event takes the form of:
 // "{eventAttribute}.{attributeKey} = '{attributeValue}'". Each event is
@@ -26,6 +27,22 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 		return nil, errors.New("must declare at least one event to search")
 	}
 
+=======
+// QueryTxsByEvents retrieves a list of paginated transactions from CometBFT's
+// TxSearch RPC method given a set of pagination criteria and an events query.
+// Note, the events query must be valid based on CometBFT's query semantics.
+// An error is returned if the query or parsing fails or if the query is empty.
+//
+// Note, if an empty orderBy is provided, the default behavior is ascending. If
+// negative values are provided for page or limit, defaults will be used.
+func QueryTxsByEvents(clientCtx client.Context, page, limit int, query, orderBy string) (*sdk.SearchTxsResult, error) {
+	if len(query) == 0 {
+		return nil, errors.New("query cannot be empty")
+	}
+
+	// CometBFT node.TxSearch that is used for querying txs defines pages
+	// starting from 1, so we default to 1 if not provided in the request.
+>>>>>>> 41c8529ff (chore: bump cometbft to v0.37.0-rc3 (#15220))
 	if page <= 0 {
 		return nil, errors.New("page must be greater than 0")
 	}

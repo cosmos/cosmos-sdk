@@ -3,6 +3,7 @@ package autocli
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"strings"
@@ -129,6 +130,7 @@ func testMsgExec(t *testing.T, args ...string) *testClientConn {
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
 		},
+		AddTxConnFlags: flags.AddTxFlagsToCmd,
 	}
 	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))

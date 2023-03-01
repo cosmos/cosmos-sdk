@@ -65,6 +65,10 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		b.AddQueryConnFlags(cmd)
 	}
 
+	if b.AddTxConnFlags != nil {
+		b.AddTxConnFlags(cmd)
+	}
+
 	return cmd, nil
 }
 
@@ -116,7 +120,8 @@ func (b *Builder) printOutput(cmd *cobra.Command, out []byte) error {
 	var err error
 	outputType := cmd.Flag(flags.FlagOutput)
 	if outputType == nil {
-		fmt.Println(outputType)
+		return fmt.Errorf("output flag not found")
+
 	}
 	if outputType.Value.String() == "text" {
 		out, err = yaml.JSONToYAML(out)

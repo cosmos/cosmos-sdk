@@ -4,19 +4,20 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"net"
 	"strings"
 	"testing"
 
+	"gotest.tools/v3/golden"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/internal/testpb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
-	"gotest.tools/v3/golden"
-
-	"cosmossdk.io/client/v2/internal/testpb"
 )
 
 var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
@@ -123,6 +124,7 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
 		},
+		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 	}
 	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))

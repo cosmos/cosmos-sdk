@@ -17,4 +17,5 @@ type Builder struct {
 	GetClientConn func(*cobra.Command) (grpc.ClientConnInterface, error)
 
 	AddQueryConnFlags func(*cobra.Command)
+	AddTxConnFlags    func(*cobra.Command)
 }

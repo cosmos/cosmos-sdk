@@ -223,7 +223,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privK
 func decryptSymmetric(encBytes []byte, key []byte) (privKeyBytes []byte, err error) {
 	key = crypto.Sha256(key)
 	privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
-	if err != nil && err.Error() == "Ciphertext decryption failed" {
+	if err != nil && err.Error() == "ciphertext decryption failed" {
 		return privKeyBytes, sdkerrors.ErrWrongPassword
 	} else if err != nil {
 		return privKeyBytes, err

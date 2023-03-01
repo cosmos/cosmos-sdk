@@ -6,7 +6,7 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ### Migration to CometBFT (Part 2)
 
-The Cosmos SDK has migrated in, its previous versions, to CometBFT.
+The Cosmos SDK has migrated in its previous versions, to CometBFT.
 Some functions have been renamed to reflect the naming change.
 
 Following an exhaustive list:
@@ -20,6 +20,11 @@ Additionally, the commands and flags mentionning `tendermint` have been renamed 
 However, these commands and flags is still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
+
+Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
+
+* The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
+* The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
 ### Configuration
 
@@ -37,17 +42,9 @@ gRPC-Web is now listening to the same address as the gRPC Gateway API server (de
 The possibility to listen to a different address has been removed, as well as its settings.
 Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
 
-#### Database
+#### Database Support
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
-
-#### GoLevelDB
-
-GoLevelDB version has been pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7`, following versions might cause unexpected behavior.
-See related issues:
-
-* [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
-* [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
 
 ### Protobuf
 
@@ -58,7 +55,20 @@ The SDK is in the process of removing all `gogoproto` annotations.
 The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
 [Verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the modified `String()` methods and double-check that they are not used in state-machine code.
 
-### Types
+### SimApp
+
+#### Module Assertions
+
+Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
+This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+
+#### Replaces
+
+* `GoLevelDB` version has been pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7`, following versions might cause unexpected behavior.
+    * [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
+    * [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
+
+### Packages
 
 #### Store
 
@@ -68,13 +78,6 @@ References to `types/store.go` which contained aliases for store types have been
 
 The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
-
-### SimApp
-
-#### Module Assertions
-
-Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
-This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
 
 ### Modules
 
@@ -497,7 +500,5 @@ message MsgSetWithdrawAddress {
   string withdraw_address  = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 ```
-
-<!-- todo: cosmos.scalar types -->
 
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

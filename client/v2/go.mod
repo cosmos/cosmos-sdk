@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/api v0.3.1
-	cosmossdk.io/core v0.3.2
+	cosmossdk.io/core v0.6.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/iancoleman/strcase v0.2.0
 	github.com/spf13/cobra v1.6.1
@@ -21,7 +21,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/exp v0.0.0-20230131160201-f062dba9d201 // indirect
+	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect

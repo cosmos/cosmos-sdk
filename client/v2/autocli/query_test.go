@@ -198,6 +198,22 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
+func TestOutputFormat(t *testing.T) {
+	conn := testExec(t,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--output", "json",
+	)
+	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
+	conn = testExec(t,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--output", "text",
+	)
+	assert.Assert(t, strings.Contains(conn.out.String(), "request:"))
+
+}
+
 func TestHelp(t *testing.T) {
 	conn := testExec(t, "-h")
 	golden.Assert(t, conn.out.String(), "help-toplevel.golden")

@@ -203,8 +203,8 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privK
 	decryptedPrivBytes, err := decryptSymmetric(encBytes, key)
 	if err == nil && len(decryptedPrivBytes) > 32 {
 		privBytes := decryptedPrivBytes[:len(decryptedPrivBytes)-32]
-		privBytesHash := decryptedPrivBytes[len(decryptedPrivBytes)-32:] //SHA-256 hash is 32 bytes
-		//If the decrypted hash doesn't match the privateBytes hash, then we are working with the old bcrypt algorithm
+		privBytesHash := decryptedPrivBytes[len(decryptedPrivBytes)-32:] // SHA-256 hash is 32 bytes
+		// If the decrypted hash doesn't match the privateBytes hash, then we are working with the old bcrypt algorithm
 		if !bytes.Equal(crypto.Sha256(privBytes), privBytesHash) {
 			privBytes, err = legacyDecryptPrivKey(saltBytes, encBytes, passphrase)
 		}

@@ -173,13 +173,13 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 func BenchmarkBcryptPdkdf2(b *testing.B) {
 	passphrase := []byte("passphrase")
 	for securityParam := uint32(9); securityParam < 16; securityParam++ {
-		param := securityParam
+		var param int = int(securityParam)
 		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
 			b.ReportAllocs()
 			saltBytes := cmtcrypto.CRandBytes(16)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				key := pdkdf2.Key([]byte(passphrase), saltBytes, int(param), 60, sha256.New)
+				key := pdkdf2.Key([]byte(passphrase), saltBytes, param, 60, sha256.New)
 				require.NotNil(b, key)
 			}
 		})
@@ -203,8 +203,8 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 	saltBytes := cmtcrypto.CRandBytes(16)
 	passphrase := "passphrase"
 
-	//Old encryption method
-	key, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) //Legacy Ley gemeratopm
+	// Old encryption method
+	key, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // Legacy Ley gemeratopm
 	key = cmtcrypto.Sha256(key)                                              // get 32 bytes
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 	encBytes := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)

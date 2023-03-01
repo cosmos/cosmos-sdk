@@ -47,7 +47,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesP
 	for len(votes) < totalLimit {
 		// Search for both (legacy) votes and weighted votes.
 		q := fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID)
-		searchResult, err := authtx.QueryTxsByEvents(clientCtx, nextTxPage, defaultLimit, q, "")
+		searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{q}, nextTxPage, defaultLimit, "")
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +109,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]
 	q1 := fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID)
 	q2 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter.String())
 	q3 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter)
-	searchResult, err := authtx.QueryTxsByEvents(clientCtx, defaultPage, defaultLimit, fmt.Sprintf("%s AND (%s OR %s)", q1, q2, q3), "")
+	searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{fmt.Sprintf("%s AND (%s OR %s)", q1, q2, q3)}, defaultPage, defaultLimit, "")
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]
 // QueryProposerByTxQuery will query for a proposer of a governance proposal by ID.
 func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
 	q := fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID)
-	searchResult, err := authtx.QueryTxsByEvents(clientCtx, defaultPage, defaultLimit, q, "")
+	searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{q}, defaultPage, defaultLimit, "")
 	if err != nil {
 		return Proposer{}, err
 	}
@@ -183,96 +183,6 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 	return Proposer{}, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
 }
 
-<<<<<<< HEAD
-// QueryProposalByID takes a proposalID and returns a proposal
-func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute string) ([]byte, error) {
-	params := v1.NewQueryProposalParams(proposalID)
-	bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
-	if err != nil {
-		return nil, err
-	}
-
-	res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, err
-}
-
-// combineEvents queries txs by events with all events from each event group,
-// and combines all those events together.
-//
-// Tx are indexed in tendermint via their Msgs `Type()`, which can be:
-// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
-// - via ADR-031 proto msgs, their `Type()` is the protobuf FQ method name.
-// In searching for events, we search for both `Type()`s, and we use the
-// `combineEvents` function here to merge events.
-func combineEvents(clientCtx client.Context, page int, eventGroups ...[]string) (*sdk.SearchTxsResult, error) {
-	// Only the Txs field will be populated in the final SearchTxsResult.
-	allTxs := []*sdk.TxResponse{}
-	for _, events := range eventGroups {
-		res, err := authtx.QueryTxsByEvents(clientCtx, events, page, defaultLimit, "")
-		if err != nil {
-			return nil, err
-		}
-		allTxs = append(allTxs, res.Txs...)
-	}
-
-	return &sdk.SearchTxsResult{Txs: allTxs}, nil
-}
-
-// queryInitialDepositByTxQuery will query for a initial deposit of a governance proposal by
-// ID.
-func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (v1.Deposit, error) {
-	searchResult, err := combineEvents(
-		clientCtx, defaultPage,
-		// Query legacy Msgs event action
-		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgSubmitProposal),
-			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
-		},
-		// Query proto Msgs event action v1beta1
-		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{})),
-			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
-		},
-		// Query proto Msgs event action v1
-		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgSubmitProposal{})),
-			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
-		},
-	)
-	if err != nil {
-		return v1.Deposit{}, err
-	}
-
-	for _, info := range searchResult.Txs {
-		for _, msg := range info.GetTx().GetMsgs() {
-			// there should only be a single proposal under the given conditions
-			if subMsg, ok := msg.(*v1beta1.MsgSubmitProposal); ok {
-				return v1.Deposit{
-					ProposalId: proposalID,
-					Depositor:  subMsg.Proposer,
-					Amount:     subMsg.InitialDeposit,
-				}, nil
-			}
-
-			if subMsg, ok := msg.(*v1.MsgSubmitProposal); ok {
-				return v1.Deposit{
-					ProposalId: proposalID,
-					Depositor:  subMsg.Proposer,
-					Amount:     subMsg.InitialDeposit,
-				}, nil
-			}
-		}
-	}
-
-	return v1.Deposit{}, sdkerrors.ErrNotFound.Wrapf("failed to find the initial deposit for proposalID %d", proposalID)
-}
-
-=======
->>>>>>> 41c8529ff (chore: bump cometbft to v0.37.0-rc3 (#15220))
 // convertVote converts a MsgVoteWeighted into a *v1.Vote.
 func convertVote(v *v1beta1.MsgVoteWeighted) *v1.Vote {
 	opts := make([]*v1.WeightedVoteOption, len(v.Options))

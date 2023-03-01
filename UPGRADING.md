@@ -7,8 +7,7 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 ### Migration to CometBFT (Part 2)
 
 The Cosmos SDK has migrated in, its previous versions, to CometBFT.
-Some functions have been renamed to reflect the naming change. And the Cosmos SDK has removed the import of cmtbytes "github.com/cometbft/cometbft/libs/bytes".
-There is something changed.Due to the import changes, this is a breaking change. Chains need to remove **entirely** their imports in their codebase, from direct and indirects imports.
+Some functions have been renamed to reflect the naming change.
 
 Following an exhaustive list:
 
@@ -16,9 +15,6 @@ Following an exhaustive list:
 * `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
 * `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
-* Remove `github.com/cometbft/cometbft/libs/bytes` & Replace All `cmtbytes.HexBytes` by `[]byte` except `*pb.go`files
-* Verify `github.com/cometbft/cometbft/libs/bytes` is not an indirect or direct dependency
-* Run `make proto-gen`
 
 Additionally, the commands and flags mentionning `tendermint` have been renamed to `comet`.
 However, these commands and flags is still supported for backward compatibility.
@@ -56,7 +52,6 @@ See related issues:
 ### Protobuf
 
 The SDK is in the process of removing all `gogoproto` annotations.
-The SDK is in the process of removing all `(gogoproto.casttype) = "github.com/cometbft/cometbft/libs/bytes.HexBytes"`.
 
 #### Stringer
 
@@ -106,18 +101,6 @@ By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migrati
 
 The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
-All the evidence removed `github.com/cometbft/cometbft/libs/bytes`.
-All the evidence functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK.
-
-#### `x/bank`
-
-All the bank removed `github.com/cometbft/cometbft/libs/bytes`.
-All the bank functions or params are now renamed to use `[]byte` instead of `cmtbytes.HexBytes` or `bytes.HexBytes` across the SDK.
-
-#### `x/simulation`
-
-All the simulation removed `github.com/cometbft/cometbft/libs/bytes`
-All the simulation functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK.
 
 #### `x/nft`
 
@@ -518,4 +501,3 @@ message MsgSetWithdrawAddress {
 <!-- todo: cosmos.scalar types -->
 
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
-

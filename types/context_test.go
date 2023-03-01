@@ -121,7 +121,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(meter, ctx.GasMeter())
 	s.Require().Equal(minGasPrices, ctx.MinGasPrices())
 	s.Require().Equal(blockGasMeter, ctx.BlockGasMeter())
-	s.Require().Equal(headerHash, ctx.HeaderHash().Bytes())
+	s.Require().Equal(headerHash, ctx.HeaderHash())
 	s.Require().False(ctx.WithIsCheckTx(false).IsCheckTx())
 	s.Require().Equal(zeroGasCfg, ctx.KVGasConfig())
 	s.Require().Equal(zeroGasCfg, ctx.TransientKVGasConfig())

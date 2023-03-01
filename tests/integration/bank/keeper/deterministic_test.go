@@ -155,12 +155,13 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
-		numCoins := rapid.IntRange(1, 10).Draw(rt, "num-count")
-		coins := make(sdk.Coins, 0, numCoins)
 
-		for i := 0; i < numCoins; i++ {
+		// Denoms must be unique, otherwise sdk.NewCoins will panic.
+		denoms := rapid.SliceOfNDistinct(rapid.StringMatching(denomRegex), 1, 10, rapid.ID[string]).Draw(rt, "denoms")
+		coins := make(sdk.Coins, 0, len(denoms))
+		for _, denom := range denoms {
 			coin := sdk.NewCoin(
-				rapid.StringMatching(denomRegex).Draw(rt, "denom"),
+				denom,
 				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
@@ -171,7 +172,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 		err := banktestutil.FundAccount(f.bankKeeper, f.ctx, addr, coins)
 		assert.NilError(t, err)
 
-		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"))
+		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(len(denoms))).Draw(rt, "pagination"))
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SpendableBalances, 0, true)
 	})
 

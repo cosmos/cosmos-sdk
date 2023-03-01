@@ -776,16 +776,10 @@ type Params struct {
 	// Minimum expedited deposit for a proposal to enter voting period.
 	ExpeditedMinDeposit []types.Coin `protobuf:"bytes,12,rep,name=expedited_min_deposit,json=expeditedMinDeposit,proto3" json:"expedited_min_deposit"`
 	// burn deposits if a proposal does not meet quorum
-	//
-	// Since: cosmos-sdk 0.47
 	BurnVoteQuorum bool `protobuf:"varint,13,opt,name=burn_vote_quorum,json=burnVoteQuorum,proto3" json:"burn_vote_quorum,omitempty"`
 	// burn deposits if the proposal does not enter voting period
-	//
-	// Since: cosmos-sdk 0.47
 	BurnProposalDepositPrevote bool `protobuf:"varint,14,opt,name=burn_proposal_deposit_prevote,json=burnProposalDepositPrevote,proto3" json:"burn_proposal_deposit_prevote,omitempty"`
 	// burn deposits if quorum with vote type no_veto is met
-	//
-	// Since: cosmos-sdk 0.47
 	BurnVoteVeto bool `protobuf:"varint,15,opt,name=burn_vote_veto,json=burnVoteVeto,proto3" json:"burn_vote_veto,omitempty"`
 }
 

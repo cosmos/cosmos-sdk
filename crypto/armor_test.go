@@ -173,13 +173,12 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 func BenchmarkBcryptPdkdf2(b *testing.B) {
 	passphrase := []byte("passphrase")
 	for securityParam := uint32(9); securityParam < 16; securityParam++ {
-		var param int = int(securityParam)
-		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
+		b.Run(fmt.Sprintf("benchmark-security-param-%d", securityParam), func(b *testing.B) {
 			b.ReportAllocs()
 			saltBytes := cmtcrypto.CRandBytes(16)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				key := pdkdf2.Key([]byte(passphrase), saltBytes, param, 60, sha256.New)
+				key := pdkdf2.Key(passphrase, saltBytes, int(securityParam), 60, sha256.New)
 				require.NotNil(b, key)
 			}
 		})
@@ -221,7 +220,7 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, privKey.Equals(decrypted))
 
-	//Latest encryption method
+	// Latest encryption method
 	armored := crypto.EncryptArmorPrivKey(privKey, passphrase, "")
 	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
 	require.Error(t, err)

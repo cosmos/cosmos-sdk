@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -16,6 +17,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	pdkdf2 "golang.org/x/crypto/pbkdf2"
 )
 
 const (
@@ -149,13 +152,12 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 // encrypted priv key.
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-	if err != nil {
-		panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
-	}
-
+	key := pdkdf2.Key([]byte(passphrase), saltBytes, int(BcryptSecurityParameter), 60, sha256.New)
 	key = crypto.Sha256(key) // get 32 bytes
+
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
+	privKeyBytesHash := crypto.Sha256(privKeyBytes)
+	privKeyBytes = append(privKeyBytes, privKeyBytesHash...) // Add own hash to differentiate it from old implementation
 
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
@@ -194,21 +196,47 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 }
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey cryptotypes.PrivKey, err error) {
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-	if err != nil {
-		return privKey, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")
+	key := pdkdf2.Key([]byte(passphrase), saltBytes, int(BcryptSecurityParameter), 60, sha256.New)
+
+	var privKeyBytes []byte
+
+	decryptedPrivBytes, err := decryptSymmetric(encBytes, key)
+	if err == nil && len(decryptedPrivBytes) > 32 {
+		privBytes := decryptedPrivBytes[:len(decryptedPrivBytes)-32]
+		privBytesHash := decryptedPrivBytes[len(decryptedPrivBytes)-32:] //SHA-256 hash is 32 bytes
+		//If the decrypted hash doesn't match the privateBytes hash, then we are working with the old bcrypt algorithm
+		if !bytes.Equal(crypto.Sha256(privBytes), privBytesHash) {
+			privBytes, err = legacyDecryptPrivKey(saltBytes, encBytes, passphrase)
+		}
+		privKeyBytes = privBytes
+	} else {
+		privKeyBytes, err = legacyDecryptPrivKey(saltBytes, encBytes, passphrase)
 	}
 
-	key = crypto.Sha256(key) // Get 32 bytes
-
-	privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
-	if err != nil && err == xsalsa20symmetric.ErrCiphertextDecrypt {
-		return privKey, sdkerrors.ErrWrongPassword
-	} else if err != nil {
+	if err != nil {
 		return privKey, err
 	}
 
 	return legacy.PrivKeyFromBytes(privKeyBytes)
+}
+
+func decryptSymmetric(encBytes []byte, key []byte) (privKeyBytes []byte, err error) {
+	key = crypto.Sha256(key)
+	privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
+	if err != nil && err.Error() == "Ciphertext decryption failed" {
+		return privKeyBytes, sdkerrors.ErrWrongPassword
+	} else if err != nil {
+		return privKeyBytes, err
+	}
+	return privKeyBytes, nil
+}
+
+func legacyDecryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (decryptedBytes []byte, err error) {
+	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
+	if err != nil {
+		return decryptedBytes, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")
+	}
+	return decryptSymmetric(encBytes, key)
 }
 
 //-----------------------------------------------------------------

@@ -18,7 +18,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.9.1
-	github.com/cometbft/cometbft v0.37.0-alpha.3
+	github.com/cometbft/cometbft v0.37.0-rc3
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
@@ -45,7 +45,6 @@ require (
 	github.com/mattn/go-isatty v0.0.17
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common v0.40.0
-	github.com/rakyll/statik v0.1.7
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1

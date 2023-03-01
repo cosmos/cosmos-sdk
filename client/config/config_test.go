@@ -28,8 +28,10 @@ const (
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
+	homeFilePath := filepath.Join(home, "home.txt")
 	chainId := "test-chain" //nolint:revive
 	clientCtx := client.Context{}.
+		WithHomeFilePath(homeFilePath).
 		WithHomeDir(home).
 		WithViper("").
 		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
@@ -61,15 +63,27 @@ func TestConfigHomeCmd(t *testing.T) {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(t, err)
 
-	// TODO: replace use of user home dir
-	userHomeDir, err := os.UserHomeDir()
-	require.NoErrorf(t, err, "could not get user home directory")
-
-	homeConfig := filepath.Join(userHomeDir, ".simapp", "config", "home.txt")
-	homeDirBz, err := os.ReadFile(homeConfig)
+	homeDirBz, err := os.ReadFile(clientCtx.HomeFilePath)
 	require.NoError(t, err)
 
-	require.Equal(t, string(homeDirBz), newHome, "expected contents of home config file to be equal to new home")
+	require.Equal(t, string(homeDirBz), newHome,
+		"expected contents of home config file to be equal to new home",
+	)
+
+	// permission error should not return error
+	err = os.Chmod(clientCtx.HomeFilePath, 0)
+	require.NoError(t, err,
+		"expected no error while changing file permissions to home configuration file.",
+	)
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	require.NoError(t, err)
+
+	// invalid filepath should return error
+	clientCtx = clientCtx.WithHomeFilePath("/invalid-filepath-for-testing/abc")
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	require.ErrorContains(t, err, "no such file or directory",
+		"expected error to indicate file not found.",
+	)
 }
 
 func TestConfigCmd(t *testing.T) {

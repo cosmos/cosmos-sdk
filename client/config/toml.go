@@ -53,7 +53,7 @@ func writeHomeDirToFile(filepath, homedir string) error {
 	var buffer bytes.Buffer
 	buffer.WriteString(homedir)
 
-	err := os.WriteFile(filepath, buffer.Bytes(), 0)
+	err := os.WriteFile(filepath, buffer.Bytes(), 0o600)
 	return err
 }
 

@@ -131,7 +131,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 			return err
 		}
 
-		err = b.printOutput(cmd, bz)
+		err = b.outOrStdoutFormat(cmd, bz)
 
 		//_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
 		return err

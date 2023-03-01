@@ -116,7 +116,7 @@ func (b *Builder) enhanceCommandCommon(cmd *cobra.Command, moduleOptions map[str
 	return nil
 }
 
-func (b *Builder) printOutput(cmd *cobra.Command, out []byte) error {
+func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	var err error
 	outputType := cmd.Flag(flags.FlagOutput)
 	if outputType == nil {

@@ -111,7 +111,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		}
 
 		//_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
-		err = b.printOutput(cmd, bz)
+		err = b.outOrStdoutFormat(cmd, bz)
 		return err
 	})
 }

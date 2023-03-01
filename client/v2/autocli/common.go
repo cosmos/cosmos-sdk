@@ -2,8 +2,11 @@ package autocli
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/client/v2/internal/util"
 )
@@ -105,6 +108,23 @@ func (b *Builder) enhanceCommandCommon(cmd *cobra.Command, moduleOptions map[str
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (b *Builder) printOutput(cmd *cobra.Command, out []byte) error {
+	var err error
+	outputType := cmd.Flag(flags.FlagOutput)
+	if outputType == nil {
+		fmt.Println(outputType)
+	}
+	if outputType.Value.String() == "text" {
+		out, err = yaml.JSONToYAML(out)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
 
 	return nil
 }

@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/x/circuit
 
-go 1.19
+go 1.20
 
 require (
 	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44

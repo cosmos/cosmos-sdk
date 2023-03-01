@@ -1,6 +1,6 @@
 module cosmossdk.io/tools/rosetta
 
-go 1.19
+go 1.20
 
 require (
 	cosmossdk.io/log v0.0.0-20230227204852-3535ee51c728

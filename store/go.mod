@@ -1,6 +1,6 @@
 module cosmossdk.io/store
 
-go 1.19
+go 1.20
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7

@@ -106,12 +106,12 @@ By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migrati
 
 The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
-All the evidence removed `github.com/cometbft/cometbft/libs/bytes`
-All the evidence functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK
+All the evidence removed `github.com/cometbft/cometbft/libs/bytes`.
+All the evidence functions or params are now renamed to use `cmtbytes.HexBytes` or `bytes.HexBytes` instead of `[]byte` across the SDK.
 
 #### `x/bank`
 
-All the bank removed `github.com/cometbft/cometbft/libs/bytes`
+All the bank removed `github.com/cometbft/cometbft/libs/bytes`.
 All the bank functions or params are now renamed to use `[]byte` instead of `cmtbytes.HexBytes` or `bytes.HexBytes` across the SDK.
 
 #### `x/simulation`

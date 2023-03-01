@@ -3,7 +3,7 @@ module cosmossdk.io/collections
 go 1.20
 
 require (
-	cosmossdk.io/core v0.5.1
+	cosmossdk.io/core v0.6.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/hashicorp/go-multierror v1.1.1 // TODO: remove with go 1.20 release
 	github.com/stretchr/testify v1.8.2

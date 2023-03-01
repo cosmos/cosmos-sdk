@@ -210,7 +210,7 @@ func TestOutputFormat(t *testing.T) {
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"--output", "text",
 	)
-	assert.Assert(t, strings.Contains(conn.out.String(), "request:"))
+	assert.Assert(t, strings.Contains(conn.out.String(), "  positional1: 1"))
 
 }
 

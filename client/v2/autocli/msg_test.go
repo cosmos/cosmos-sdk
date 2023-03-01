@@ -162,6 +162,20 @@ func TestMsgOptions(t *testing.T) {
 	assert.Equal(t, output.GetPositional2(), "6")
 }
 
+func TestMsgOutputFormat(t *testing.T) {
+	conn := testMsgExec(t,
+		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"--output", "json",
+	)
+	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
+	conn = testMsgExec(t,
+		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"--output", "text",
+	)
+	assert.Assert(t, strings.Contains(conn.out.String(), "positional1: 5"))
+
+}
+
 func TestMsgOptionsError(t *testing.T) {
 	conn := testMsgExec(t,
 		"send", "5",

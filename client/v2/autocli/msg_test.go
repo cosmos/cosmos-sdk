@@ -120,13 +120,11 @@ func TestMsgOutputFormat(t *testing.T) {
 		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--output", "json",
 	)
-	fmt.Println(conn.out.String())
 	assert.Assert(t, strings.Contains(conn.out.String(), `  "positional1": 5`))
 	conn = testExecCommon(t, buildModuleMsgCommand,
 		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--output", "text",
 	)
-	fmt.Println(conn.out.String())
 
 	assert.Assert(t, strings.Contains(conn.out.String(), "positional1: 5"))
 

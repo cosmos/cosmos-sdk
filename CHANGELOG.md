@@ -434,6 +434,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 
 ### Improvements
 
+* (store/cache) [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) Optimize iteration on nested cached KV stores and other operations in general.
 * (x/gov) [#14347](https://github.com/cosmos/cosmos-sdk/pull/14347) Support `v1.Proposal` message in `v1beta1.Proposal.Content`.
 * (deps) Use Informal System fork of Tendermint version to [v0.34.24](https://github.com/informalsystems/tendermint/releases/tag/v0.34.24).
 
@@ -938,9 +939,18 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 ### API Breaking Changes
 
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Update State Streaming APIs:
+    * Add method `ListenCommit` to `ABCIListener`
+    * Move `ListeningEnabled` and  `AddListener` methods to `CommitMultiStore`
+    * Remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces
+    * Remove listening APIs from the caching layer (it should only listen to the `rootmulti.Store`)
+    * Add three new options to file streaming service constructor.
+    * Modify `ABCIListener` such that any error from any method will always halt the app via `panic`
+
 ### Bug Fixes
 
 * (store) [#12945](https://github.com/cosmos/cosmos-sdk/pull/12945) Fix nil end semantics in store/cachekv/iterator when iterating a dirty cache.
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Fix state listener that was observing writes at wrong time.
 
 ## v0.45.11 - 2022-11-09
 

@@ -207,7 +207,7 @@ type GroupInputs struct {
 	AccountKeeper    group.AccountKeeper
 	BankKeeper       group.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter baseapp.MessageRouter
 }
 
 type GroupOutputs struct {

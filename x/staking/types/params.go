@@ -121,6 +121,14 @@ func (p Params) Validate() error {
 		return err
 	}
 
+	if err := validateMaxConsPubkey(p.MaxConsPubkeyRotations); err != nil {
+		return err
+	}
+
+	if err := validateConsPubkeyRotationFee(p.ConsPubkeyRotationFee); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -216,6 +224,35 @@ func validateMinCommissionRate(i interface{}) error {
 	}
 	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
+	}
+
+	return nil
+}
+
+func validateMaxConsPubkey(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max cons pubkey rotations must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateConsPubkeyRotationFee(i interface{}) error {
+	v, ok := i.(sdk.Coin)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNil() {
+		return fmt.Errorf("cons pubkey rotation fee cannot be nil: %s", v)
+	}
+	if v.IsLTE(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))) {
+		return fmt.Errorf("cons pubkey rotation fee cannot be negative or zero: %s", v)
 	}
 
 	return nil

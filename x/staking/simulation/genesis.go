@@ -34,14 +34,26 @@ func getHistEntries(r *rand.Rand) uint32 {
 	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
 }
 
+// getConsPubKeyRotationFee returns randomized consPubKeyRotationFee between 10000-100000.
+func getConsPubKeyRotationFee(r *rand.Rand) sdk.Coin {
+	return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(r.Int63n(types.DefaultConsPubKeyRotationFee.Amount.Int64()-10000)+10000))
+}
+
+// getMaxConsPubKeyRotations returns randomized maxConsPubKeyRotations between 0-100.
+func getMaxConsPubKeyRotations(r *rand.Rand) uint64 {
+	return uint64(r.Intn(int(types.DefaultMaxConsPubKeyRotations + 1)))
+}
+
 // RandomizedGenState generates a random GenesisState for staking
 func RandomizedGenState(simState *module.SimulationState) {
 	// params
 	var (
-		unbondTime        time.Duration
-		maxVals           uint32
-		histEntries       uint32
-		minCommissionRate sdk.Dec
+		unbondTime             time.Duration
+		maxVals                uint32
+		histEntries            uint32
+		minCommissionRate      sdk.Dec
+		maxConsPubKeyRotations uint64
+		consPubKeyRotationFee  sdk.Coin
 	)
 
 	simState.AppParams.GetOrGenerate(
@@ -59,10 +71,20 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { histEntries = getHistEntries(r) },
 	)
 
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, historicalEntries, &histEntries, simState.Rand,
+		func(r *rand.Rand) { maxConsPubKeyRotations = getMaxConsPubKeyRotations(r) },
+	)
+
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, historicalEntries, &histEntries, simState.Rand,
+		func(r *rand.Rand) { consPubKeyRotationFee = getConsPubKeyRotationFee(r) },
+	)
+
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, simState.BondDenom, minCommissionRate, 10, sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)) // TODO: randomize
+	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, simState.BondDenom, minCommissionRate, maxConsPubKeyRotations, consPubKeyRotationFee)
 
 	// validators & delegations
 	var (

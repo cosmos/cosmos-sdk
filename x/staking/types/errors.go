@@ -52,6 +52,6 @@ var (
 	ErrUnbondingOnHoldRefCountNegative = errors.Register(ModuleName, 42, "cannot un-hold unbonding operation that is not on hold")
 
 	// consensus key errors
-	ErrConsensusPubKeyAlreadyUsedForAValidator = errors.Register(ModuleName, 41, "consensus pubkey is already used for a validator")
-	ErrExceedingMaxConsPubKeyRotations         = errors.Register(ModuleName, 42, "exceeding maximum consensus pubkey rotations")
+	ErrConsensusPubKeyAlreadyUsedForAValidator = errors.Register(ModuleName, 43, "consensus pubkey is already used for a validator")
+	ErrExceedingMaxConsPubKeyRotations         = errors.Register(ModuleName, 44, "exceeding maximum consensus pubkey rotations")
 )

@@ -11,6 +11,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -416,4 +417,62 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(found)
 	require.Equal(stakingtypes.Unbonded, validator.Status)
+}
+
+func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
+	ctx, keeper, msgServer, bk := s.ctx, s.stakingKeeper, s.msgServer, s.bankKeeper
+	require := s.Require()
+
+	powers := []int64{10, 20}
+	var validators [2]stakingtypes.Validator
+
+	for i, power := range powers {
+		valAddr := sdk.ValAddress(PKs[i].Address().Bytes())
+		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
+		tokens := keeper.TokensFromConsensusPower(ctx, power)
+
+		validators[i], _ = validators[i].AddTokensFromDel(tokens)
+		keeper.SetValidator(ctx, validators[i])
+		keeper.SetValidatorByPowerIndex(ctx, validators[i])
+		keeper.SetValidatorByConsAddr(ctx, validators[i])
+
+		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
+		updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
+		validator, found := keeper.GetValidator(ctx, valAddr)
+		require.True(found)
+		require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
+	}
+
+	params := keeper.GetParams(ctx)
+	params.ConsPubkeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	keeper.SetParams(ctx, params)
+
+	valAddr1 := sdk.ValAddress(PKs[0].Address().Bytes())
+
+	msg, err := types.NewMsgRotateConsPubKey(
+		valAddr1,
+		PKs[499], // taking the last element from PKs
+	)
+
+	require.NoError(err)
+
+	bk.EXPECT().SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr1), gomock.Any(), gomock.Any()).AnyTimes()
+	_, err = msgServer.RotateConsPubKey(ctx, msg)
+	require.NoError(err)
+
+	updates := s.applyValidatorSetUpdates(ctx, keeper, 2)
+
+	originalPubKey, err := validators[0].CmtConsPublicKey()
+	require.NoError(err)
+
+	validator, found := keeper.GetValidator(ctx, valAddr1)
+	require.True(found)
+
+	newPubKey, err := validator.CmtConsPublicKey()
+	require.NoError(err)
+
+	require.Equal(int64(0), updates[0].Power)
+	require.Equal(originalPubKey, updates[0].PubKey)
+	require.Equal(int64(10), updates[1].Power)
+	require.Equal(newPubKey, updates[1].PubKey)
 }

@@ -3,9 +3,11 @@ package keeper_test
 import (
 	"time"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -90,4 +92,45 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitArray() {
 			require.Equal(missedBlocks[ind].Missed, tc.missed)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
+	ctx, slashingKeeper := s.ctx, s.slashingKeeper
+
+	require := s.Require()
+
+	pks := simtestutil.CreateTestPubKeys(500)
+
+	oldConsAddr := sdk.ConsAddress(pks[0].Address())
+	newConsAddr := sdk.ConsAddress(pks[1].Address())
+	newInfo := types.NewValidatorSigningInfo(
+		sdk.ConsAddress(oldConsAddr),
+		int64(4),
+		int64(3),
+		time.Unix(2, 0).UTC(),
+		false,
+		int64(10),
+	)
+	slashingKeeper.SetValidatorSigningInfo(ctx, oldConsAddr, newInfo)
+	slashingKeeper.SetValidatorMissedBlockBitArray(ctx, oldConsAddr, 10, true)
+	err := slashingKeeper.PerformConsensusPubKeyUpdate(ctx, pks[0], pks[1])
+	require.NoError(err)
+
+	// check pubkey relation is set properly
+	savedPubKey, err := slashingKeeper.GetPubkey(ctx, newConsAddr.Bytes())
+	require.NoError(err)
+	require.Equal(savedPubKey, pks[1])
+
+	// check validator SigningInfo is set properly to new consensus pubkey
+	signingInfo, found := slashingKeeper.GetValidatorSigningInfo(ctx, newConsAddr)
+	require.True(found)
+	require.Equal(signingInfo, newInfo)
+
+	// check missed blocks array is removed on old consensus pubkey
+	missedBlocks := slashingKeeper.GetValidatorMissedBlocks(ctx, oldConsAddr)
+	require.Len(missedBlocks, 0)
+
+	// check missed blocks are set correctly for new pubkey
+	missedBlocks = slashingKeeper.GetValidatorMissedBlocks(ctx, newConsAddr)
+	require.Len(missedBlocks, 1)
 }

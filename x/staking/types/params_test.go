@@ -29,10 +29,21 @@ func TestValidateParams(t *testing.T) {
 	// default params have no error
 	require.NoError(t, params.Validate())
 
-	// validate mincommission
+	// validate min commission rate
 	params.MinCommissionRate = math.LegacyNewDec(-1)
 	require.Error(t, params.Validate())
 
 	params.MinCommissionRate = math.LegacyNewDec(2)
+	require.Error(t, params.Validate())
+
+	// reset params to default
+	params = types.DefaultParams()
+
+	// check MaxConsPubKeyRotations
+	params.MaxConsPubkeyRotations = 0
+	require.Error(t, params.Validate())
+
+	// check ConsPubkeyRotationFee
+	params.ConsPubkeyRotationFee = coinZero
 	require.Error(t, params.Validate())
 }

@@ -50,7 +50,7 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 
 	// Unclear why we have to create the config directory ourselves,
 	// but tests fail without this.
-	if err := os.MkdirAll(filepath.Join(homeDir, "config"), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Join(homeDir, "config"), 0o700); err != nil {
 		t.Fatal(err)
 	}
 

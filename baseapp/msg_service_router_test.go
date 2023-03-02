@@ -1,16 +1,15 @@
 package baseapp_test
 
 import (
-	"os"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -29,7 +28,7 @@ func TestRegisterMsgService(t *testing.T) {
 	)
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
 	require.NoError(t, err)
-	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), dbm.NewMemDB(), nil)
+	app := appBuilder.Build(log.NewLogger(), dbm.NewMemDB(), nil)
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -58,7 +57,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil)
+	app := appBuilder.Build(log.NewLogger(), db, nil)
 	testdata.RegisterInterfaces(registry)
 
 	// First time registering service shouldn't panic.

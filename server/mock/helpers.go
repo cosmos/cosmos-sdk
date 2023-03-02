@@ -3,22 +3,15 @@ package mock
 import (
 	"fmt"
 	"os"
-	"testing"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
 )
 
 // SetupApp returns an application as well as a clean-up function to be used to
 // quickly setup a test case with an app.
 func SetupApp() (abci.Application, func(), error) {
-	var logger cmtlog.Logger
-	if testing.Verbose() {
-		logger = cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout)).With("module", "mock")
-	} else {
-		logger = cmtlog.NewNopLogger()
-	}
-
+	logger := log.NewTestingLogger()
 	rootDir, err := os.MkdirTemp("", "mock-sdk")
 	if err != nil {
 		return nil, nil, err

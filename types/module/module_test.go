@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"

@@ -169,7 +169,7 @@ type GovInputs struct {
 	Cdc              codec.Codec
 	Key              *store.KVStoreKey
 	ModuleKey        depinject.OwnModuleKey
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter baseapp.MessageRouter
 
 	AccountKeeper      govtypes.AccountKeeper
 	BankKeeper         govtypes.BankKeeper

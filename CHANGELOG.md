@@ -81,10 +81,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto/keyring) [#14151](https://github.com/cosmos/cosmos-sdk/pull/14151) Move keys presentation from `crypto/keyring` to `client/keys`
 * (signing) [#14087](https://github.com/cosmos/cosmos-sdk/pull/14087) Add SignModeHandlerWithContext interface with a new `GetSignBytesWithContext` to get the sign bytes using `context.Context` as an argument to access state.
 * (server) [#14062](https://github.com/cosmos/cosmos-sdk/pull/14062) Remove rosetta from server start.
-* [#13619](https://github.com/cosmos/cosmos-sdk/pull/13619) Add new function called LogDeferred to report errors in defers. Use the function in x/bank files.
-* [#12952](https://github.com/cosmos/cosmos-sdk/pull/12952) Replace keyring module to Cosmos fork.
-* [#12876](https://github.com/cosmos/cosmos-sdk/pull/12876) Remove proposer-based rewards.
-* [#13236](https://github.com/cosmos/cosmos-sdk/pull/13236) Integrate Filter Logging
 * (baseapp) [#14417](https://github.com/cosmos/cosmos-sdk/pull/14417) `SetStreamingService` accepts appOptions, AppCodec and Storekeys needed to set streamers.  
     * Store pacakge no longer has a dependency on baseapp. 
 * (store) [#14438](https://github.com/cosmos/cosmos-sdk/pull/14438)  Pass logger from baseapp to store. 
@@ -164,7 +160,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#14567](https://github.com/cosmos/cosmos-sdk/pull/14567) The `delegator_address` field of `MsgCreateValidator` has been deprecated.
    The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
 
-
 ## [v0.47.0-rc3]
 
 ### Features
@@ -192,6 +187,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#13236](https://github.com/cosmos/cosmos-sdk/pull/13236) Integrate Filter Logging
 * (tools) [#14793](https://github.com/cosmos/cosmos-sdk/pull/14793) Dockerfile optimization.
 * (x/gov) [#13010](https://github.com/cosmos/cosmos-sdk/pull/13010) Partial cherry-pick of this issue for adding proposer migration.
 * (events) [#14691](https://github.com/cosmos/cosmos-sdk/pull/14691) Change behavior of `sdk.StringifyEvents` to not flatten events attributes by events type.

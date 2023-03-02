@@ -61,7 +61,7 @@ func (k Keeper) GetAuthority() string {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrkeeper types.DistributionKeeper,
-	router *baseapp.MsgServiceRouter, config types.Config, authority string,
+	router baseapp.MessageRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {

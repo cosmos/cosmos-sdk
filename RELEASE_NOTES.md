@@ -40,4 +40,4 @@ Refer to the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/release/v0
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.47.x/CHANGELOG.md) for an exhaustive list of changes.
 
 Full Commit History (previous version): https://github.com/cosmos/cosmos-sdk/compare/release/v0.46.x...release/v0.47.x
-Full Commit History (`rc1..rc2`): https://github.com/cosmos/cosmos-sdk/compare/v0.47.0-rc1...v0.47.0-rc2
+Full Commit History (`rc2..rc3`): https://github.com/cosmos/cosmos-sdk/compare/v0.47.0-rc2...v0.47.0-rc3

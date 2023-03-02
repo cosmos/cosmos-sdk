@@ -19,6 +19,13 @@ import (
 	"cosmossdk.io/client/v2/internal/testpb"
 )
 
+var buildModuleMsgCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+
+	err := b.AddMsgServiceCommands(cmd, testCmdMsgDesc)
+	return cmd, err
+}
+
 var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 	Service: testpb.Msg_ServiceDesc.ServiceName,
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
@@ -146,7 +153,8 @@ func testMsgExec(t *testing.T, args ...string) *testClientConn {
 }
 
 func TestMsgOptions(t *testing.T) {
-	conn := testMsgExec(t,
+	conn := testExecCommon(t,
+		buildModuleMsgCommand,
 		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--uint32", "7",
 		"--u64", "8",
@@ -161,7 +169,7 @@ func TestMsgOptions(t *testing.T) {
 }
 
 func TestMsgOptionsError(t *testing.T) {
-	conn := testMsgExec(t,
+	conn := testExecCommon(t, buildModuleMsgCommand,
 		"send", "5",
 		"--uint32", "7",
 		"--u64", "8",
@@ -169,7 +177,7 @@ func TestMsgOptionsError(t *testing.T) {
 
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "requires at least 3 arg"))
 
-	conn = testMsgExec(t,
+	conn = testExecCommon(t, buildModuleMsgCommand,
 		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--uint32", "7",
 		"--u64", "abc",
@@ -179,19 +187,19 @@ func TestMsgOptionsError(t *testing.T) {
 }
 
 func TestDeprecatedMsg(t *testing.T) {
-	conn := testMsgExec(t, "send",
+	conn := testExecCommon(t, buildModuleMsgCommand, "send",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"--deprecated-field", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--deprecated-field has been deprecated"))
 
-	conn = testMsgExec(t, "send",
+	conn = testExecCommon(t, buildModuleMsgCommand, "send",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"-d", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--shorthand-deprecated-field has been deprecated"))
 }
 
 func TestEverythingMsg(t *testing.T) {
-	conn := testMsgExec(t,
+	conn := testExecCommon(t, buildModuleMsgCommand,
 		"send",
 		"1",
 		"abc",
@@ -245,13 +253,13 @@ func TestEverythingMsg(t *testing.T) {
 }
 
 func TestHelpMsg(t *testing.T) {
-	conn := testMsgExec(t, "-h")
+	conn := testExecCommon(t, buildModuleMsgCommand, "-h")
 	golden.Assert(t, conn.out.String(), "help-toplevel-msg.golden")
 
-	conn = testMsgExec(t, "send", "-h")
+	conn = testExecCommon(t, buildModuleMsgCommand, "send", "-h")
 	golden.Assert(t, conn.out.String(), "help-echo-msg.golden")
 
-	conn = testMsgExec(t, "deprecatedmsg", "send", "-h")
+	conn = testExecCommon(t, buildModuleMsgCommand, "deprecatedmsg", "send", "-h")
 	golden.Assert(t, conn.out.String(), "help-deprecated-msg.golden")
 }
 

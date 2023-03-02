@@ -19,6 +19,14 @@ import (
 	"cosmossdk.io/client/v2/internal/testpb"
 )
 
+var buildModuleQueryCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
+
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+
+	err := b.AddQueryServiceCommands(cmd, testCmdDesc)
+	return cmd, err
+}
+
 var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	Service: testpb.Query_ServiceDesc.ServiceName,
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
@@ -139,7 +147,7 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 }
 
 func TestEverything(t *testing.T) {
-	conn := testExec(t,
+	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1",
 		"abc",
@@ -184,7 +192,7 @@ func TestEverything(t *testing.T) {
 }
 
 func TestOptions(t *testing.T) {
-	conn := testExec(t,
+	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"-u", "27", // shorthand
@@ -197,26 +205,26 @@ func TestOptions(t *testing.T) {
 }
 
 func TestHelp(t *testing.T) {
-	conn := testExec(t, "-h")
+	conn := testExecCommon(t, buildModuleQueryCommand, "-h")
 	golden.Assert(t, conn.out.String(), "help-toplevel.golden")
 
-	conn = testExec(t, "echo", "-h")
+	conn = testExecCommon(t, buildModuleQueryCommand, "echo", "-h")
 	golden.Assert(t, conn.out.String(), "help-echo.golden")
 
-	conn = testExec(t, "deprecatedecho", "echo", "-h")
+	conn = testExecCommon(t, buildModuleQueryCommand, "deprecatedecho", "echo", "-h")
 	golden.Assert(t, conn.out.String(), "help-deprecated.golden")
 
-	conn = testExec(t, "skipecho", "-h")
+	conn = testExecCommon(t, buildModuleQueryCommand, "skipecho", "-h")
 	golden.Assert(t, conn.out.String(), "help-skip.golden")
 }
 
 func TestDeprecated(t *testing.T) {
-	conn := testExec(t, "echo",
+	conn := testExecCommon(t, buildModuleQueryCommand, "echo",
 		"1", "abc", `{}`,
 		"--deprecated-field", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--deprecated-field has been deprecated"))
 
-	conn = testExec(t, "echo",
+	conn = testExecCommon(t, buildModuleQueryCommand, "echo",
 		"1", "abc", `{}`,
 		"-s", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--shorthand-deprecated-field has been deprecated"))

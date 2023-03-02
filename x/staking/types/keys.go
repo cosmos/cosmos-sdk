@@ -392,7 +392,7 @@ func GetValidatorConsPubKeyRotationHistoryKey(history ConsPubKeyRotationHistory)
 func GetBlockConsPubKeyRotationHistoryKey(history ConsPubKeyRotationHistory) []byte {
 	return append(append(
 		BlockConsPubKeyRotationHistoryKey,
-		sdk.Uint64ToBigEndian(uint64(history.Height))...),
+		sdk.Uint64ToBigEndian(history.Height)...),
 		[]byte(history.OperatorAddress)...)
 }
 

@@ -113,13 +113,8 @@ access patterns or behavior. In other words, the entire collection of existing
 IAVL-backed module `KVStore`s will act as the SC layer.
 
 However, in order for the SC layer to remain lightweight and not duplicate a
-majority of the data held in the SS layer, we need to have an aggressive pruning
-strategy. A pruning strategy could be enforced programmatically or through
-default values. Given that different networks have different unbonding periods and
-different average block times, default values might be difficult. However, forcing
-a pruning strategy might be too limiting. So we propose to have a configurable
-pruning strategy, height retention and interval, with a default height retention
-of 2,592,000 (1s block time over a month).
+majority of the data held in the SS layer, we encourage node operators to keep
+tight pruning strategies.
 
 #### State Storage (SS)
 

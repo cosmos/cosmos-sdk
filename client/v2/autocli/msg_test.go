@@ -1,10 +1,8 @@
 package autocli
 
 import (
-	"bytes"
 	"fmt"
 	"google.golang.org/protobuf/encoding/protojson"
-	"net"
 	"strings"
 	"testing"
 
@@ -12,8 +10,6 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/client/v2/internal/testpb"
@@ -100,56 +96,6 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 			},
 		},
 	},
-}
-
-func testMsgExec(t *testing.T, args ...string) *testClientConn {
-	server := grpc.NewServer()
-	defer server.GracefulStop()
-	testpb.RegisterMsgServer(server, &testMessageServer{})
-	listener, err := net.Listen("tcp", "0.0.0.0:0")
-	defer listener.Close()
-
-	assert.NilError(t, err)
-	go func() {
-		err := server.Serve(listener)
-		if err != nil {
-			panic(err)
-		}
-	}()
-	defer server.GracefulStop()
-	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.NilError(t, err)
-	defer func() {
-		err := clientConn.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	conn := &testClientConn{
-		ClientConn: clientConn,
-		t:          t,
-		out:        &bytes.Buffer{},
-		errorOut:   &bytes.Buffer{},
-	}
-	b := &Builder{
-		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
-			return conn, nil
-		},
-	}
-	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
-
-		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
-		return cmd, err
-	}
-	cmd, err := buildModuleMsgCommand("test", testCmdMsgDesc)
-	assert.NilError(t, err)
-	cmd.SetArgs(args)
-	cmd.SetOut(conn.out)
-	cmd.SetErr(conn.errorOut)
-	cmd.Execute()
-	return conn
 }
 
 func TestMsgOptions(t *testing.T) {

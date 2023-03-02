@@ -34,12 +34,12 @@ func getHistEntries(r *rand.Rand) uint32 {
 	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
 }
 
-// getConsPubKeyRotationFee returns randomized consPubKeyRotationFee between 10000-100000.
+// getConsPubKeyRotationFee returns randomized consPubKeyRotationFee between 10000-1000000.
 func getConsPubKeyRotationFee(r *rand.Rand) sdk.Coin {
 	return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(r.Int63n(types.DefaultConsPubKeyRotationFee.Amount.Int64()-10000)+10000))
 }
 
-// getMaxConsPubKeyRotations returns randomized maxConsPubKeyRotations between 0-100.
+// getMaxConsPubKeyRotations returns randomized maxConsPubKeyRotations between 1-10.
 func getMaxConsPubKeyRotations(r *rand.Rand) uint64 {
 	return uint64(r.Intn(int(types.DefaultMaxConsPubKeyRotations + 1)))
 }

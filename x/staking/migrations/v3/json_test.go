@@ -42,7 +42,12 @@ func TestMigrateJSON(t *testing.T) {
 	"last_validator_powers": [],
 	"params": {
 		"bond_denom": "stake",
+		"cons_pubkey_rotation_fee": {
+			"amount": "1000000",
+			"denom": "stake"
+		},
 		"historical_entries": 10000,
+		"max_cons_pubkey_rotations": "10",
 		"max_entries": 7,
 		"max_validators": 100,
 		"min_commission_rate": "0.000000000000000000",

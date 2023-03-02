@@ -1,13 +1,13 @@
-echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments
+send msg the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments
 
 Usage:
-  test echo [pos1] [pos2] [pos3...] [flags]
+  test send [pos1] [pos2] [pos3...] [flags]
 
 Aliases:
-  echo, e
+  send, s
 
 Examples:
-echo 1 abc {}
+send 1 abc {}
 
 Flags:
       --a-bool                                                               
@@ -21,7 +21,7 @@ Flags:
       --duration duration                                                    
       --durations duration (repeated)                                        
       --enums Enum (unspecified | one | two | five | neg-three) (repeated)   
-  -h, --help                                                                 help for echo
+  -h, --help                                                                 help for send
       --i32 int32                                                            some random int32
       --i64 int                                                              
       --page-count-total                                                     
@@ -29,7 +29,7 @@ Flags:
       --page-limit uint                                                      
       --page-offset uint                                                     
       --page-reverse                                                         
-  -s, --shorthand-deprecated-field string                                     (DEPRECATED: bad idea)
+  -d, --shorthand-deprecated-field string                                     (DEPRECATED: bad idea)
       --some-messages testpb.AMessage (json) (repeated)                      
       --str string                                                           
       --strings strings                                                      
@@ -37,4 +37,4 @@ Flags:
       --u64 uint                                                             some random uint64
   -u, --uint32 uint32                                                        some random uint32
       --uints uints                                                           (default [])
-  -v, --version                                                              version for echo
+  -v, --version                                                              version for send

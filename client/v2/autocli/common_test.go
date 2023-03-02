@@ -45,6 +45,7 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 			return conn, nil
 		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
+		AddTxConnFlags:    flags.AddTxFlagsToCmd,
 	}
 
 	cmd, err := buildModuleCommand("test", b)

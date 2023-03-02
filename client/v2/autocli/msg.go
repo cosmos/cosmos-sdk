@@ -104,7 +104,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		Resolver:        b.TypeResolver,
 	}
 
-	return b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
+	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
 		bz, err := jsonMarshalOptions.Marshal(input.Interface())
 		if err != nil {
 			return err
@@ -113,4 +113,8 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		err = b.outOrStdoutFormat(cmd, bz)
 		return err
 	})
+	if cmd != nil && b.AddTxConnFlags != nil {
+		b.AddTxConnFlags(cmd)
+	}
+	return cmd, err
 }

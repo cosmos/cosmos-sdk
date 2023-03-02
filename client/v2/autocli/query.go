@@ -138,5 +138,9 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 		return nil, err
 	}
 
+	if cmd != nil && b.AddQueryConnFlags != nil {
+		b.AddQueryConnFlags(cmd)
+	}
+
 	return cmd, nil
 }

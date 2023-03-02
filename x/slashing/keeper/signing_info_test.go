@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -103,8 +102,8 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 
 	oldConsAddr := sdk.ConsAddress(pks[0].Address())
 	newConsAddr := sdk.ConsAddress(pks[1].Address())
-	newInfo := types.NewValidatorSigningInfo(
-		sdk.ConsAddress(oldConsAddr),
+	newInfo := slashingtypes.NewValidatorSigningInfo(
+		oldConsAddr,
 		int64(4),
 		int64(3),
 		time.Unix(2, 0).UTC(),

@@ -11,7 +11,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -449,7 +448,7 @@ func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
 
 	valAddr1 := sdk.ValAddress(PKs[0].Address().Bytes())
 
-	msg, err := types.NewMsgRotateConsPubKey(
+	msg, err := stakingtypes.NewMsgRotateConsPubKey(
 		valAddr1,
 		PKs[499], // taking the last element from PKs
 	)

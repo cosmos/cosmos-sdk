@@ -19,7 +19,7 @@ func (k Keeper) SetConsPubKeyRotationHistory(ctx sdk.Context, history types.Cons
 func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, operatorAddress sdk.ValAddress) (historyObjects []types.ConsPubKeyRotationHistory) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := storetypes.KVStorePrefixIterator(store, types.GetValdiatorConsPubKeyRotationHistoryPrefix(operatorAddress.String()))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetValidatorConsPubKeyRotationHistoryPrefix(operatorAddress.String()))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

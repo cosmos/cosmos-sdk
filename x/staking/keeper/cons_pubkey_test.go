@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/golang/mock/gomock"
 )
@@ -43,7 +42,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	newConsPub2, err := codectypes.NewAnyWithValue(PKs[2])
 	s.Require().NoError(err)
 
-	stakingKeeper.SetConsPubKeyRotationHistory(ctx, types.ConsPubKeyRotationHistory{
+	stakingKeeper.SetConsPubKeyRotationHistory(ctx, stakingtypes.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr.String(),
 		OldConsPubkey:   validator.ConsensusPubkey,
 		NewConsPubkey:   newConsPub,
@@ -56,7 +55,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	historyObjects = stakingKeeper.GetBlockConsPubKeyRotationHistory(ctx, ctx.BlockHeight())
 	s.Require().Len(historyObjects, 1)
 
-	stakingKeeper.SetConsPubKeyRotationHistory(ctx, types.ConsPubKeyRotationHistory{
+	stakingKeeper.SetConsPubKeyRotationHistory(ctx, stakingtypes.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr.String(),
 		OldConsPubkey:   newConsPub,
 		NewConsPubkey:   newConsPub2,

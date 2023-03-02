@@ -25,19 +25,14 @@ func convertHeader(h tmprototypes.Header) Header {
 	}
 }
 
-<<<<<<< HEAD:client/grpc/tmservice/util.go
 // convertBlock converts tendermint block to sdk block
 func convertBlock(tmblock *tmprototypes.Block) *Block {
-=======
-// convertBlock converts CometBFT block to sdk block
-func convertBlock(cmtblock *cmtprototypes.Block) *Block {
->>>>>>> 07dc5e70e (fix: Change proposer address cast for `sdk_block` conversion (#15243)):client/grpc/cmtservice/util.go
 	b := new(Block)
 
-	b.Header = convertHeader(cmtblock.Header)
-	b.LastCommit = cmtblock.LastCommit
-	b.Data = cmtblock.Data
-	b.Evidence = cmtblock.Evidence
+	b.Header = convertHeader(tmblock.Header)
+	b.LastCommit = tmblock.LastCommit
+	b.Data = tmblock.Data
+	b.Evidence = tmblock.Evidence
 
 	return b
 }

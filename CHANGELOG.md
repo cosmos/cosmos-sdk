@@ -414,6 +414,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 
 ### Improvements
 
+* [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) Optimize iteration on nested cached KV stores and other operations in general.
 * (deps) [#14846](https://github.com/cosmos/cosmos-sdk/pull/14846) Bump btcd.
 * (deps) Bump Tendermint version to [v0.34.26](https://github.com/informalsystems/tendermint/releases/tag/v0.34.26).
 * (store) [#14189](https://github.com/cosmos/cosmos-sdk/pull/14189) Add config `iavl-lazy-loading` to enable lazy loading of iavl store, to improve start up time of archive nodes, add method `SetLazyLoading` to `CommitMultiStore` interface.

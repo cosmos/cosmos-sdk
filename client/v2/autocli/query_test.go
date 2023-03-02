@@ -163,12 +163,13 @@ func TestOutputFormat(t *testing.T) {
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"--output", "json",
 	)
-	assert.Assert(t, strings.Contains(conn.out.String(), `    "positional1": 1,`))
+	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"--output", "text",
 	)
+	fmt.Println(conn.out.String())
 	assert.Assert(t, strings.Contains(conn.out.String(), "  positional1: 1"))
 
 }

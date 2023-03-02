@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -26,7 +25,7 @@ type Context struct {
 	baseCtx              context.Context
 	ms                   storetypes.MultiStore
 	header               cmtproto.Header
-	headerHash           cmtbytes.HexBytes
+	headerHash           []byte
 	chainID              string
 	txBytes              []byte
 	logger               log.Logger
@@ -72,7 +71,7 @@ func (c Context) BlockHeader() cmtproto.Header {
 }
 
 // HeaderHash returns a copy of the header hash obtained during abci.RequestBeginBlock
-func (c Context) HeaderHash() cmtbytes.HexBytes {
+func (c Context) HeaderHash() []byte {
 	hash := make([]byte, len(c.headerHash))
 	copy(hash, c.headerHash)
 	return hash

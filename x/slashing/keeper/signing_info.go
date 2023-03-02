@@ -168,7 +168,9 @@ func (k Keeper) RemoveValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddr
 
 func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey) error {
 	// Connect new consensus address with PubKey
-	k.AddPubkey(ctx, newPubKey)
+	if err := k.AddPubkey(ctx, newPubKey); err != nil {
+		return err
+	}
 
 	// Migrate ValidatorSigningInfo from oldPubKey to newPubKey
 	signingInfo, found := k.GetValidatorSigningInfo(ctx, sdk.ConsAddress(oldPubKey.Address()))

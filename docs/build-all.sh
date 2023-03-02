@@ -16,6 +16,7 @@ echo "building docusaurus main docs"
 (git clean -fdx && git reset --hard && git checkout $COMMIT)
 mv ~/versioned_docs ~/versioned_sidebars .
 npm ci && npm run build
+mv swagger ~/output/swagger
 mv build ~/output
 while read -r branch path_prefix; do
     echo "building vuepress $branch docs"

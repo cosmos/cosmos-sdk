@@ -21,7 +21,7 @@ func convertHeader(h tmprototypes.Header) Header {
 		EvidenceHash:       h.EvidenceHash,
 		LastResultsHash:    h.LastResultsHash,
 		LastCommitHash:     h.LastCommitHash,
-		ProposerAddress:    sdk.ValAddress(h.ProposerAddress).String(),
+		ProposerAddress:    sdk.ConsAddress(h.ProposerAddress).String(),
 	}
 }
 

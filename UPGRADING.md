@@ -16,7 +16,7 @@ Following an exhaustive list:
 * `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
 
-Additionally, the commands and flags mentionning `tendermint` have been renamed to `comet`.
+Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
 However, these commands and flags is still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.

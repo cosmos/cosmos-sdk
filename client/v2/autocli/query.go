@@ -131,15 +131,11 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 			return err
 		}
 
-		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
+		err = b.outOrStdoutFormat(cmd, bz)
 		return err
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	if b.AddQueryConnFlags != nil {
-		b.AddQueryConnFlags(cmd)
 	}
 
 	return cmd, nil

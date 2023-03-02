@@ -157,6 +157,24 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
+func TestOutputFormat(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--output", "json",
+	)
+	fmt.Println(conn.out.String())
+	assert.Assert(t, strings.Contains(conn.out.String(), `    "positional1": 1,`))
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--output", "text",
+	)
+	fmt.Println(conn.out.String())
+	assert.Assert(t, strings.Contains(conn.out.String(), "  positional1: 1"))
+
+}
+
 func TestHelp(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand, "-h")
 	golden.Assert(t, conn.out.String(), "help-toplevel.golden")

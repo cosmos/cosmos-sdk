@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/p2p"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
@@ -18,7 +17,7 @@ import (
 // ValidatorInfo is info about the node's validator, same as CometBFT,
 // except that we use our own PubKey.
 type validatorInfo struct {
-	Address     bytes.HexBytes
+	Address     []byte
 	PubKey      cryptotypes.PubKey
 	VotingPower int64
 }

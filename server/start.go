@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -229,7 +230,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
 
-	svr.SetLogger(svrCtx.Logger.With("module", "abci-server"))
+	svr.SetLogger(servercmtlog.CometZeroLogWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
@@ -324,7 +325,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 			genDocProvider,
 			node.DefaultDBProvider,
 			node.DefaultMetricsProvider(cfg.Instrumentation),
-			svrCtx.Logger,
+			servercmtlog.CometZeroLogWrapper{Logger: svrCtx.Logger},
 		)
 		if err != nil {
 			return err

@@ -190,6 +190,9 @@ require (
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 replace (
+	// Short-lived replace for an outstanding PR to log.
+	cosmossdk.io/log => ../log
+
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta

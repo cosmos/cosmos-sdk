@@ -1,20 +1,26 @@
 package log
 
-import "testing"
+import "github.com/rs/zerolog"
 
-// reuse the same logger across all tests
-var _testingLogger Logger
+// TestingT is the interface required for logging in tests.
+// It is a subset of testing.T to avoid a direct dependency on the testing package.
+type TestingT zerolog.TestingLog
 
-func NewTestingLogger() Logger {
-	if _testingLogger != nil {
-		return _testingLogger
+// NewTestLogger returns a logger that calls t.Log to write entries.
+//
+// If the logs may help debug a test failure,
+// you may want to use NewTestLogger(t) in your test.
+// Otherwise, use NewNopLogger().
+func NewTestLogger(t TestingT) Logger {
+	cw := zerolog.NewConsoleWriter()
+	cw.Out = zerolog.TestWriter{
+		T: t,
+		// Normally one would use zerolog.ConsoleTestWriter
+		// to set the option on NewConsoleWriter,
+		// but the zerolog source for that is hardcoded to Frame=6.
+		// With Frame=6, all source locations are printed as "logger.go",
+		// but Frame=7 prints correct source locations.
+		Frame: 7,
 	}
-
-	if testing.Verbose() {
-		_testingLogger = NewLoggerWithKV(ModuleKey, "test")
-	} else {
-		_testingLogger = NewNopLogger()
-	}
-
-	return _testingLogger
+	return NewCustomLogger(zerolog.New(cw))
 }

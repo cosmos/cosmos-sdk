@@ -1,6 +1,7 @@
 package log
 
 import (
+	"io"
 	"os"
 	"time"
 
@@ -48,18 +49,27 @@ func NewNopLogger() Logger {
 	return nopLogger{}
 }
 
-// NewLogger returns a new logger that writes to stdout.
-func NewLogger() Logger {
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
+// NewLogger returns a new logger that writes to the given destination.
+//
+// Typical usage from a main function is:
+//    logger := log.NewLogger(os.Stderr)
+//
+// Stderr is the typical destination for logs,
+// so that any output from your application can still be piped to other processes.
+func NewLogger(dst io.Writer) Logger {
+	output := zerolog.ConsoleWriter{Out: dst, TimeFormat: time.Kitchen}
 	logger := zerolog.New(output).With().Timestamp().Logger()
 	return zeroLogWrapper{&logger}
 }
 
-// NewLoggerWithKV returns a new logger with the given key/value pair
-func NewLoggerWithKV(key, value string) Logger {
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
-	logger := zerolog.New(output).With().Str(key, value).Timestamp().Logger()
-	return zeroLogWrapper{&logger}
+// NewLoggerWithKV is shorthand for NewLogger(dst).With(key, value).
+func NewLoggerWithKV(dst io.Writer, key, value string) Logger {
+	return NewLogger(dst).With(key, value)
+}
+
+// NewLoggerToStdout is a temporary function while refactoring NewLogger.
+func NewLoggerToStdout() Logger {
+	return NewLogger(os.Stdout)
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.

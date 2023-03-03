@@ -29,7 +29,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 	var logger log.Logger
 	if verbose {
-		logger = log.NewLogger()
+		logger = log.NewLoggerToStdout() // TODO(mr): enable selection of log destination.
 	} else {
 		logger = log.NewNopLogger()
 	}

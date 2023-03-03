@@ -175,6 +175,9 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+// Short-lived replacement for an outstanding log PR.
+replace cosmossdk.io/log => ../../log
+
 // Below are the long-lived replace of the Cosmos SDK
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

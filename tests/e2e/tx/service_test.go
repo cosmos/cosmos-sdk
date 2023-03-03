@@ -147,7 +147,7 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	s.Require().Equal(res.Txs[0].Signatures[0], sig.Signature)
 }
 
-func (s E2ETestSuite) TestSimulateTx_GRPC() {
+func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
@@ -194,7 +194,7 @@ func (s E2ETestSuite) TestSimulateTx_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestSimulateTx_GRPCGateway() {
+func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
@@ -236,7 +236,7 @@ func (s E2ETestSuite) TestSimulateTx_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestGetTxEvents_GRPC() {
+func (s *E2ETestSuite) TestGetTxEvents_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetTxsEventRequest
@@ -328,7 +328,7 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
+func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -405,7 +405,7 @@ func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestGetTx_GRPC() {
+func (s *E2ETestSuite) TestGetTx_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetTxRequest
@@ -432,7 +432,7 @@ func (s E2ETestSuite) TestGetTx_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestGetTx_GRPCGateway() {
+func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -479,7 +479,7 @@ func (s E2ETestSuite) TestGetTx_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestBroadcastTx_GRPC() {
+func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -517,7 +517,7 @@ func (s E2ETestSuite) TestBroadcastTx_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestBroadcastTx_GRPCGateway() {
+func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -662,7 +662,7 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
 }
 
-func (s E2ETestSuite) TestGetBlockWithTxs_GRPC() {
+func (s *E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetBlockWithTxsRequest
@@ -700,7 +700,7 @@ func (s E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
+func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -741,7 +741,7 @@ func (s E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestTxEncode_GRPC() {
+func (s *E2ETestSuite) TestTxEncode_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	protoTx, err := txBuilderToProtoTx(txBuilder)
@@ -816,7 +816,7 @@ func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestTxDecode_GRPC() {
+func (s *E2ETestSuite) TestTxDecode_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -858,7 +858,7 @@ func (s E2ETestSuite) TestTxDecode_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestTxDecode_GRPCGateway() {
+func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -901,7 +901,7 @@ func (s E2ETestSuite) TestTxDecode_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestTxEncodeAmino_GRPC() {
+func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
@@ -984,7 +984,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestTxDecodeAmino_GRPC() {
+func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -1029,7 +1029,7 @@ func (s E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
+func (s *E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -1078,7 +1078,7 @@ func TestE2ETestSuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))
 }
 
-func (s E2ETestSuite) mkTxBuilder() client.TxBuilder {
+func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 

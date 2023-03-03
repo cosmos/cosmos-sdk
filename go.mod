@@ -154,6 +154,9 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
+// Short-lived replace for an outstanding PR of log.
+replace cosmossdk.io/log => ./log
+
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring

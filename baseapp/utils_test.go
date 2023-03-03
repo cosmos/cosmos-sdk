@@ -25,7 +25,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -51,14 +50,6 @@ import (
 )
 
 var ParamStoreKey = []byte("paramstore")
-
-func defaultLogger() log.Logger {
-	if testing.Verbose() {
-		return log.NewLoggerWithKV("module", "baseapp/test")
-	}
-
-	return log.NewNopLogger()
-}
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.

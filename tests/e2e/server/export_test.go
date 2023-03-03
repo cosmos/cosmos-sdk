@@ -154,10 +154,10 @@ func TestExportCmd_Output(t *testing.T) {
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, genutiltypes.AppGenesis, *cobra.Command) {
 	t.Helper()
 
+	logger := log.NewTestLogger(t)
 	err := createConfigFolder(tempDir)
 	assert.NilError(t, err)
 
-	logger := log.NewLogger()
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 

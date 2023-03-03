@@ -2,7 +2,6 @@ package log
 
 import (
 	"io"
-	"os"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -65,11 +64,6 @@ func NewLogger(dst io.Writer) Logger {
 // NewLoggerWithKV is shorthand for NewLogger(dst).With(key, value).
 func NewLoggerWithKV(dst io.Writer, key, value string) Logger {
 	return NewLogger(dst).With(key, value)
-}
-
-// NewLoggerToStdout is a temporary function while refactoring NewLogger.
-func NewLoggerToStdout() Logger {
-	return NewLogger(os.Stdout)
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.

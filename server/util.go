@@ -64,7 +64,7 @@ func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
 		cmtcfg.DefaultConfig(),
-		log.NewLoggerToStdout(), // TODO(mr): update NewDefaultContext to accept log destination.
+		log.NewLogger(os.Stdout), // TODO(mr): update NewDefaultContext to accept log destination.
 	)
 }
 
@@ -155,10 +155,10 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	var logger log.Logger
 	if serverCtx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
-		zl := zerolog.New(os.Stdout).With().Timestamp().Logger()
+		zl := zerolog.New(cmd.OutOrStdout()).With().Timestamp().Logger()
 		logger = log.NewCustomLogger(zl)
 	} else {
-		logger = log.NewLoggerToStdout() // TODO(mr): log to cmd.OutOrStdout() instead.
+		logger = log.NewLogger(cmd.OutOrStdout())
 	}
 
 	// set filter level or keys for the logger if any

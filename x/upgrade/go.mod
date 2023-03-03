@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.6.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/log v0.0.0-20230227204852-3535ee51c728
+	cosmossdk.io/log v0.0.0-20230303183710-74c894f12720
 	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44
 	github.com/cometbft/cometbft v0.37.0-rc4
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
@@ -174,9 +174,6 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Short-lived replacement for an outstanding log PR.
-replace cosmossdk.io/log => ../../log
 
 // Below are the long-lived replace of the Cosmos SDK
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

@@ -3,8 +3,8 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.20
 
 require (
-	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230227103508-bbe7f8a11b44
+	cosmossdk.io/store v0.0.0-20230302163046-da238c555585
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230302163046-da238c555585
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.53.0
@@ -69,7 +69,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect

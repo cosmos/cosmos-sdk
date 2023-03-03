@@ -94,13 +94,29 @@ func BenchmarkLoggers(b *testing.B) {
 		}
 	})
 
-	// The nop logger we use in tests,
+	// The nop logger we use expose in the public API,
 	// also useful as a reference for how expensive zerolog is.
-	b.Run("nop logger", func(b *testing.B) {
+	b.Run("specialized nop logger", func(b *testing.B) {
 		for _, bc := range nopCases {
 			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
 				logger := log.NewNopLogger()
+
+				for i := 0; i < b.N; i++ {
+					logger.Info(message, bc.keyVals...)
+				}
+			})
+		}
+	})
+
+	// To compare with the custom nop logger.
+	// The zerolog wrapper is about 1/3 the speed of the specialized nop logger,
+	// so we offer the specialized version in the exported API.
+	b.Run("zerolog nop logger", func(b *testing.B) {
+		for _, bc := range nopCases {
+			bc := bc
+			b.Run(bc.name, func(b *testing.B) {
+				logger := log.NewCustomLogger(zerolog.Nop())
 
 				for i := 0; i < b.N; i++ {
 					logger.Info(message, bc.keyVals...)
@@ -113,6 +129,9 @@ func BenchmarkLoggers(b *testing.B) {
 func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 	b.ReportAllocs()
 
+	errorToLog := errors.New("error")
+	byteSliceToLog := []byte{0xde, 0xad, 0xbe, 0xef}
+
 	b.Run("logger structured", func(b *testing.B) {
 		zl := zerolog.New(io.Discard)
 		var logger log.Logger = log.NewCustomLogger(zl)
@@ -123,8 +142,8 @@ func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 			zerolog.Error().
 				Int64("foo", 100000).
 				Str("bar", "foo").
-				Bytes("other", []byte{0xde, 0xad, 0xbe, 0xef}).
-				Err(errors.New("error")).
+				Bytes("other", byteSliceToLog).
+				Err(errorToLog).
 				Msg(message)
 		}
 	})
@@ -135,7 +154,7 @@ func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			logger.Info(message, "foo", 100000)
 			logger.Info(message, "foo", "foo")
-			logger.Error(message, "foo", 100000, "bar", "foo", "other", []byte{0xde, 0xad, 0xbe, 0xef}, "error", errors.New("error"))
+			logger.Error(message, "foo", 100000, "bar", "foo", "other", byteSliceToLog, "error", errorToLog)
 		}
 	})
 }

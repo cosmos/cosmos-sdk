@@ -17,10 +17,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		options = &autocliv1.RpcCommandOptions{}
 	}
 
-	if options.Skip {
-		return nil, nil
-	}
-
 	long := options.Long
 	if long == "" {
 		long = util.DescriptorDocs(descriptor)

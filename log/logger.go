@@ -21,11 +21,11 @@ type Logger interface {
 	// The key of the tuple must be a string.
 	Info(msg string, keyVals ...any)
 
-	// Error takes a message and a set of key/value pairs and logs with level DEBUG.
+	// Error takes a message and a set of key/value pairs and logs with level ERR.
 	// The key of the tuple must be a string.
 	Error(msg string, keyVals ...any)
 
-	// Debug takes a message and a set of key/value pairs and logs with level ERR.
+	// Debug takes a message and a set of key/value pairs and logs with level DEBUG.
 	// The key of the tuple must be a string.
 	Debug(msg string, keyVals ...any)
 
@@ -42,13 +42,13 @@ type zeroLogWrapper struct {
 	*zerolog.Logger
 }
 
-// NewNopLogger returns a new logger that does nothing
+// NewNopLogger returns a new logger that does nothing.
 func NewNopLogger() Logger {
-	logger := zerolog.Nop()
-	return zeroLogWrapper{&logger}
+	// The custom nopLogger is about 3x faster than a zeroLogWrapper with zerolog.Nop().
+	return nopLogger{}
 }
 
-// NewLogger returns a new logger
+// NewLogger returns a new logger that writes to stdout.
 func NewLogger() Logger {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
 	logger := zerolog.New(output).With().Timestamp().Logger()
@@ -62,7 +62,7 @@ func NewLoggerWithKV(key, value string) Logger {
 	return zeroLogWrapper{&logger}
 }
 
-// NewCustomLogger returns a new logger with the given zerolog logger
+// NewCustomLogger returns a new logger with the given zerolog logger.
 func NewCustomLogger(logger zerolog.Logger) Logger {
 	return zeroLogWrapper{&logger}
 }
@@ -85,19 +85,19 @@ func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 	l.Logger.Debug().Fields(keyVals).Msg(msg)
 }
 
-// With returns a new wrapped logger with additional context provided by a set
+// With returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
 	return zeroLogWrapper{&logger}
 }
 
-// Impl returns the underlying zerolog logger
-// It can be used to used zerolog structured API directly instead of the wrapper
+// Impl returns the underlying zerolog logger.
+// It can be used to used zerolog structured API directly instead of the wrapper.
 func (l zeroLogWrapper) Impl() interface{} {
 	return l.Logger
 }
 
-// FilterKeys returns a new logger that filters out all key/value pairs that do not match the filter
+// FilterKeys returns a new logger that filters out all key/value pairs that do not match the filter.
 // This functions assumes that the logger is a zerolog.Logger, which is the case for the logger returned by log.NewLogger()
 // NOTE: filtering has a performance impact on the logger
 func FilterKeys(logger Logger, filter func(key, level string) bool) Logger {
@@ -120,3 +120,14 @@ func FilterKeys(logger Logger, filter func(key, level string) bool) Logger {
 
 	return NewCustomLogger(filteredLogger)
 }
+
+// nopLogger is a Logger that does nothing when called.
+// See the "specialized nop logger" benchmark and compare with the "zerolog nop logger" benchmark.
+// The custom implementation is about 3x faster.
+type nopLogger struct{}
+
+func (nopLogger) Info(string, ...any)  {}
+func (nopLogger) Error(string, ...any) {}
+func (nopLogger) Debug(string, ...any) {}
+func (nopLogger) With(...any) Logger   { return nopLogger{} }
+func (nopLogger) Impl() any            { return nopLogger{} }

@@ -104,6 +104,7 @@ func TestMsgOptions(t *testing.T) {
 		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--uint32", "7",
 		"--u64", "8",
+		"--output", "json",
 	)
 	response := conn.out.String()
 	var output testpb.MsgRequest
@@ -112,6 +113,21 @@ func TestMsgOptions(t *testing.T) {
 	assert.Equal(t, output.GetU32(), uint32(7))
 	assert.Equal(t, output.GetPositional1(), int32(5))
 	assert.Equal(t, output.GetPositional2(), "6")
+}
+
+func TestMsgOutputFormat(t *testing.T) {
+	conn := testExecCommon(t, buildModuleMsgCommand,
+		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"--output", "json",
+	)
+	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
+	conn = testExecCommon(t, buildModuleMsgCommand,
+		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"--output", "text",
+	)
+
+	assert.Assert(t, strings.Contains(conn.out.String(), "positional1: 5"))
+
 }
 
 func TestMsgOptionsError(t *testing.T) {
@@ -151,6 +167,7 @@ func TestEverythingMsg(t *testing.T) {
 		"abc",
 		`{"denom":"foo","amount":"1234"}`,
 		`{"denom":"bar","amount":"4321"}`,
+		"--output", "json",
 		"--a-bool",
 		"--an-enum", "two",
 		"--a-message", `{"bar":"abc", "baz":-3}`,

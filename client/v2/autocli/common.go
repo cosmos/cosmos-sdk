@@ -2,8 +2,11 @@ package autocli
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/client/v2/internal/util"
 )
@@ -12,10 +15,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	if options == nil {
 		// use the defaults
 		options = &autocliv1.RpcCommandOptions{}
-	}
-
-	if options.Skip {
-		return nil, nil
 	}
 
 	long := options.Long
@@ -56,10 +55,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		}
 
 		return exec(cmd, input)
-	}
-
-	if b.AddQueryConnFlags != nil {
-		b.AddQueryConnFlags(cmd)
 	}
 
 	return cmd, nil
@@ -105,6 +100,25 @@ func (b *Builder) enhanceCommandCommon(cmd *cobra.Command, moduleOptions map[str
 			return err
 		}
 	}
+
+	return nil
+}
+
+// outOrStdoutFormat formats the output based on the output flag and writes it to the command's output stream.
+func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
+	var err error
+	outputType := cmd.Flag(flags.FlagOutput)
+	if outputType == nil {
+		return fmt.Errorf("output flag not found")
+
+	}
+	if outputType.Value.String() == "text" {
+		out, err = yaml.JSONToYAML(out)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
 
 	return nil
 }

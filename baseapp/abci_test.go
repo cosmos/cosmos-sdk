@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -46,7 +47,7 @@ func TestABCI_Info(t *testing.T) {
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
+	logger := log.NewTestLogger(t)
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	capKey := storetypes.NewKVStoreKey("main")
@@ -126,8 +127,7 @@ func TestABCI_InitChain(t *testing.T) {
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -142,8 +142,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -566,7 +565,6 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 func TestABCI_EndBlock(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := defaultLogger()
 
 	cp := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
@@ -574,7 +572,7 @@ func TestABCI_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,
@@ -1211,7 +1209,7 @@ func TestABCI_Query(t *testing.T) {
 }
 
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
-	logger := defaultLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 

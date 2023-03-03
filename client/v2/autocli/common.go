@@ -61,14 +61,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		return exec(cmd, input)
 	}
 
-	//if b.AddQueryConnFlags != nil {
-	//	b.AddQueryConnFlags(cmd)
-	//}
-	//
-	//if b.AddTxConnFlags != nil {
-	//	b.AddTxConnFlags(cmd)
-	//}
-
 	return cmd, nil
 }
 

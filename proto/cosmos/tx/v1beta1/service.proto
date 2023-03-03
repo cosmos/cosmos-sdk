@@ -23,6 +23,10 @@ service Service {
   rpc GetTx(GetTxRequest) returns (GetTxResponse) {
     option (google.api.http).get = "/cosmos/tx/v1beta1/txs/{hash}";
   }
+  // GetTx fetches unconfirmed txs in the mempool
+  rpc GetMemTxs(GetMemTxsRequest) returns (GetMemTxsResponse) {
+    option (google.api.http).get = "/cosmos/tx/v1beta1/unconfirmed_txs/{limit}";
+  }
   // BroadcastTx broadcast transaction.
   rpc BroadcastTx(BroadcastTxRequest) returns (BroadcastTxResponse) {
     option (google.api.http) = {
@@ -196,6 +200,22 @@ message GetTxRequest {
 message GetTxResponse {
   // tx is the queried transaction.
   cosmos.tx.v1beta1.Tx tx = 1;
+  // tx_response is the queried TxResponses.
+  cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
+}
+
+// GetMemTxsRequest is the request type for the Service.GetMemTxs
+//RPC method.
+message GetMemTxsRequest {
+  // limit is the total number of results to be returned in the result page, max 100.
+  // If left empty it will default to a value to be set, default 30.
+  uint64 limit = 1;
+}
+
+// GetMemTxsResponse is the response type for the Service.GetMemTxs
+message GetMemTxsResponse {
+  // txs is the list of queried transactions.
+  repeated cosmos.tx.v1beta1.Tx txs = 1;
   // tx_response is the queried TxResponses.
   cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
 }

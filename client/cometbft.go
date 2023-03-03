@@ -32,4 +32,8 @@ type CometRPC interface {
 		page, perPage *int,
 		orderBy string,
 	) (*coretypes.ResultBlockSearch, error)
+	UnconfirmedTxs(
+		ctx context.Context,
+		limit *int,
+	) (*coretypes.ResultUnconfirmedTxs, error)
 }

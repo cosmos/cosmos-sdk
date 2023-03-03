@@ -34,7 +34,7 @@ Flags:
       --str string                                                           
       --strings strings                                                      
       --timestamp timestamp (RFC 3339)                                       
-      --u64 uint[=5]                                                         some random uint64
+      --u64 uint                                                             some random uint64
   -u, --uint32 uint32                                                        some random uint32
       --uints uints                                                           (default [])
   -v, --version                                                              version for echo

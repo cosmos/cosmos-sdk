@@ -92,8 +92,8 @@ func (s *E2ETestSuite) TestQueryLatestBlock() {
 	s.Require().NoError(err)
 	var blockInfoRes cmtservice.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
-	s.Require().Equal(types.ValAddress(blockInfoRes.Block.Header.ProposerAddress).String(), blockInfoRes.SdkBlock.Header.ProposerAddress)
-	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvaloper")
+	s.Require().Equal(types.ConsAddress(blockInfoRes.Block.Header.ProposerAddress).String(), blockInfoRes.SdkBlock.Header.ProposerAddress)
+	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 }
 
 func (s *E2ETestSuite) TestQueryBlockByHeight() {
@@ -105,7 +105,7 @@ func (s *E2ETestSuite) TestQueryBlockByHeight() {
 	s.Require().NoError(err)
 	var blockInfoRes cmtservice.GetBlockByHeightResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
-	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvaloper")
+	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 }
 
 func (s *E2ETestSuite) TestQueryLatestValidatorSet() {

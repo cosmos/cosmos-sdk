@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -97,6 +98,13 @@ func TestRunMigrations(t *testing.T) {
 		if mod, ok := mod.(module.HasServices); ok {
 			mod.RegisterServices(configurator)
 		}
+
+		if mod, ok := mod.(appmodule.HasServices); ok {
+			err := mod.RegisterServices(configurator)
+			require.NoError(t, err)
+		}
+
+		require.NoError(t, configurator.Error())
 	}
 
 	// Initialize the chain

@@ -62,6 +62,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			return client.GetClientQueryContext(cmd)
 		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
+		AddTxConnFlags:    flags.AddTxFlagsToCmd,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)

@@ -82,7 +82,14 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	methodsLength := methods.Len()
 	for i := 0; i < methodsLength; i++ {
 		methodDescriptor := methods.Get(i)
-		methodOpts := rpcOptMap[methodDescriptor.Name()]
+		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
+		if !ok {
+			methodOpts = &autocliv1.RpcCommandOptions{}
+		}
+
+		if methodOpts.Skip {
+			continue
+		}
 		methodCmd, err := b.BuildMsgMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
@@ -104,13 +111,17 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		Resolver:        b.TypeResolver,
 	}
 
-	return b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
+	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
 		bz, err := jsonMarshalOptions.Marshal(input.Interface())
 		if err != nil {
 			return err
 		}
 
-		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
+		err = b.outOrStdoutFormat(cmd, bz)
 		return err
 	})
+	if b.AddTxConnFlags != nil {
+		b.AddTxConnFlags(cmd)
+	}
+	return cmd, err
 }

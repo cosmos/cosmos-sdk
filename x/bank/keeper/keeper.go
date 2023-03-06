@@ -36,6 +36,7 @@ type Keeper interface {
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	HasDenomMetaData(ctx sdk.Context, denom string) bool
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
+	GetAllDenomMetaData(ctx sdk.Context) []types.Metadata
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
@@ -426,7 +427,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 	}
 
 	logger := k.Logger(ctx)
-	logger.Info("minted coins from module account", "amount", amounts.String(), "from", moduleName)
+	logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
 	// emit mint event
 	ctx.EventManager().EmitEvent(
@@ -460,7 +461,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 	}
 
 	logger := k.Logger(ctx)
-	logger.Info("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
+	logger.Debug("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
 
 	// emit burn event
 	ctx.EventManager().EmitEvent(

@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/version"
 	"strings"
 
 	"cosmossdk.io/math"
@@ -33,43 +35,38 @@ func NewTxCmd() *cobra.Command {
 // AuthorizeCircuitBreakerCmd returns a CLI command handler for creating a MsgAuthorizeCircuitBreaker transaction.
 func AuthorizeCircuitBreakerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "authorize [granter] [grantee] [permission_level] [limit_type_urls]",
+		Use:   "authorize [grantee] [permission_level] [limit_type_urls] --from [granter]",
 		Short: "Authorize an account to trip the circuit breaker.",
 		Long: `Authorize an account to trip the circuit breaker.
 		"SOME_MSGS" =     1,
 		"ALL_MSGS" =      2,
-		"SUPER_ADMIN" =   3,
-
-		Example: 
-
-		<app> circuit authorize [address] [address] 0 "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"
-		`,
-		Args: cobra.RangeArgs(3, 4),
+		"SUPER_ADMIN" =   3,`,
+		Example: fmt.Sprintf(`%s circuit authorize [address] 0 "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+		Args:    cobra.RangeArgs(3, 4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			grantee, err := sdk.AccAddressFromBech32(args[1])
+			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			lvl, err := math.ParseUint(args[2])
+			lvl, err := math.ParseUint(args[1])
 			if err != nil {
 				return err
 			}
 
 			var typeUrls []string
 			if len(args) == 4 {
-				typeUrls = strings.Split(args[3], ",")
+				typeUrls = strings.Split(args[2], ",")
 			}
 
 			permission := types.Permissions{Level: types.Permissions_Level(lvl.Uint64()), LimitTypeUrls: typeUrls}
 
-			msg := types.NewMsgAuthorizeCircuitBreaker(string(clientCtx.GetFromAddress()), string(grantee), &permission)
+			msg := types.NewMsgAuthorizeCircuitBreaker(clientCtx.GetFromAddress().String(), grantee.String(), &permission)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -84,7 +81,7 @@ func AuthorizeCircuitBreakerCmd() *cobra.Command {
 func TripCircuitBreakerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "Disable [type_url]",
-		Short: "Disable a message from being executed ",
+		Short: "Disable a message from being executed",
 		Long: `Disable a message  from entering the mempool and/or being executed
 		
 		Example: 
@@ -119,7 +116,7 @@ func TripCircuitBreakerCmd() *cobra.Command {
 func ResetCircuitBreakerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "reset [type_url]",
-		Short: "Enable a message to be executed ",
+		Short: "Enable a message to be executed",
 		Long: `Enable a message  that was disabled from entering the mempool and/or being executed
 		
 		Example: 

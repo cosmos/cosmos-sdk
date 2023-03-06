@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.9.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230221204830-dbc4d104b26f
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230306142707-cb9492111062
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.53.0
@@ -22,7 +22,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/log v0.0.0-20230306142207-421c1e8873a3 // indirect
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 // indirect
-	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7 // indirect
+	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect

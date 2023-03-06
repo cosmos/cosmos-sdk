@@ -5,6 +5,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	signing2 "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -68,8 +69,8 @@ func (w *wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
 }
 
-func (w *wrapper) ValidateBasic() error {
-	return w.tx.ValidateBasic()
+func (w *wrapper) ValidateBasic(ctx *signing2.GetSignersContext) error {
+	return w.tx.ValidateBasic(ctx)
 }
 
 func (w *wrapper) getBodyBytes() []byte {
@@ -104,8 +105,8 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 	return w.authInfoBz
 }
 
-func (w *wrapper) GetSigners() []sdk.AccAddress {
-	return w.tx.GetSigners()
+func (w *wrapper) GetSigners(ctx *signing2.GetSignersContext) []string {
+	return w.tx.GetSigners(ctx)
 }
 
 func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {

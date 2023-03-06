@@ -151,7 +151,7 @@ performant.
 
 The state machine will continue to query state through it's own dedicated `KVStore`
 using the relevant `KVStoreKey`. However, the query will be invoked against the
-SC layer as it is today. Client queries, on the other hand, will be routed through
+SS layer. Client queries, on the other hand, will be routed through
 the `MultiStore` set in `BaseApp` via a `abci.RequestQuery`. This in effect will
 route the query to the RMS and the RMS will use the SS layer to perform a direct
 key lookup. If a version is specified the `abci.RequestQuery` object, the SS `KVStore`
@@ -170,6 +170,14 @@ SC layer.
 
 Since the SS layer is naturally a storage layer only, without any commitments
 to (key, value) pairs, it cannot provide Merkle proofs to clients during queries.
+
+Since the pruning strategy against the SC layer is configured by the operator,
+we can therefore have the RMS route the query SC layer if the version exists and
+`prove: true`. Otherwise, the query will fall back to the SS layer without a proof.
+
+We could explore the idea of using state snapshots to rebuild an in-memory IAVL
+tree in real time against a version closest to the one provided in the query.
+However, it is not clear what the performance implications will be of this approach.
 
 ### Atomic Commitment
 

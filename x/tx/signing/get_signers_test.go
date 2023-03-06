@@ -92,6 +92,11 @@ func TestGetSigners(t *testing.T) {
 			msg:     &testpb.BadSigner{},
 			wantErr: true,
 		},
+		{
+			name:    "no signer",
+			msg:     &testpb.NoSignerOption{},
+			wantErr: true,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

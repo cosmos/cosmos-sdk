@@ -1,11 +1,8 @@
-# Cosmos SDK v0.47.0-rc3 Release Notes
-
-Cosmos SDK `v0.47.0-rc3` contains all the features and changes that are planned for the final v0.47.0 release.
-This release candidate is intended to give application developers and validator operators a chance to test the release candidate before the final release.
+# Cosmos SDK v0.47.0 Release Notes
 
 The main changes in this release are:
 
-* Upgrade to CometBFT [v0.37.0](https://github.com/cometbft/cometbft/blob/v0.37.0-alpha.3/CHANGELOG.md).
+* Upgrade to CometBFT [v0.37.0](https://github.com/cometbft/cometbft/blob/v0.37.0/CHANGELOG.md).
     * With the notable introduction of [ABCI 1.0](https://medium.com/the-interchain-foundation/tendermints-new-application-blockchain-interface-abci-86d46bd6f987).
     * Changes of events keys and values from `[]byte` to `string`.
 
@@ -40,4 +37,3 @@ Refer to the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/release/v0
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.47.x/CHANGELOG.md) for an exhaustive list of changes.
 
 Full Commit History (previous version): https://github.com/cosmos/cosmos-sdk/compare/release/v0.46.x...release/v0.47.x
-Full Commit History (`rc2..rc3`): https://github.com/cosmos/cosmos-sdk/compare/v0.47.0-rc2...v0.47.0-rc3

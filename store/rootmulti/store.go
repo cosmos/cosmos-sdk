@@ -1,7 +1,6 @@
 package rootmulti
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -250,7 +249,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	for _, key := range storesKeys {
 		storeParams := rs.storesParams[key]
 		commitID := rs.getCommitID(infos, key.Name())
-		rs.logger.Debug("loadVersion commitID", "key", key, "ver", ver, "hash", hex.EncodeToString(commitID.Hash))
+		rs.logger.Debug("loadVersion commitID", "key", key, "ver", ver, "hash", fmt.Sprintf("%x", commitID.Hash))
 
 		// If it has been added, set the initial version
 		if upgrades.IsAdded(key.Name()) || upgrades.RenamedFrom(key.Name()) != "" {

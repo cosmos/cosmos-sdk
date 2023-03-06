@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.6
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-	github.com/cometbft/cometbft v0.37.0-rc3
+	github.com/cometbft/cometbft v0.37.0
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-sdk v0.47.0
 	github.com/cosmos/gogoproto v1.4.6

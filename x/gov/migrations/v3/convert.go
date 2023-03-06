@@ -3,8 +3,6 @@ package v3
 import (
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -66,7 +64,7 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 	// this is to support clients that have not yet (properly) use gov/v1 endpoints
 	// https://github.com/cosmos/cosmos-sdk/issues/14334
 	// VerifyBasic assures that we have at least one message.
-	legacyProposal.Content, err = codectypes.NewAnyWithValue(msgs[0].(proto.Message))
+	legacyProposal.Content, err = codectypes.NewAnyWithValue(msgs[0])
 
 	return legacyProposal, err
 }

@@ -16,17 +16,19 @@ import (
 )
 
 type (
-	// Msg is an empty tag interface for transaction messages.
-	Msg interface{}
-
-	// LegacyMsg defines the interface a transaction message needed to fulfill up through
-	// v0.47.
-	LegacyMsg interface {
+	// Msg defines the interface a transaction message needed to fulfill.
+	Msg interface {
 		proto.Message
 
 		// ValidateBasic does a simple validation check that
 		// doesn't require access to any other information.
 		ValidateBasic() error
+	}
+
+	// LegacyMsg defines the interface a transaction message needed to fulfill up through
+	// v0.47.
+	LegacyMsg interface {
+		Msg
 
 		// GetSigners returns the addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
@@ -130,17 +132,6 @@ func GetModuleNameFromTypeURL(input string) string {
 	return ""
 }
 
-func ValidateBasic(msg Msg) error {
-	if validateBasic, ok := msg.(interface{ ValidateBasic() error }); ok {
-		err := validateBasic.ValidateBasic()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func GetSigners(msg Msg, getSignersCtx *signing.GetSignersContext) ([]string, error) {
 	if legacyMsg, ok := msg.(LegacyMsg); ok {
 		var signers []string
@@ -151,17 +142,15 @@ func GetSigners(msg Msg, getSignersCtx *signing.GetSignersContext) ([]string, er
 		return signers, nil
 	} else if msgv2, ok := msg.(protov2.Message); ok {
 		return getSignersCtx.GetSigners(msgv2)
-	} else if msgv1, ok := msg.(proto.Message); ok {
-		bz, err := proto.Marshal(msgv1)
+	} else {
+		bz, err := proto.Marshal(msg)
 		if err != nil {
 			return nil, err
 		}
 
 		return getSignersCtx.GetSignersForAny(&anypb.Any{
-			TypeUrl: MsgTypeURL(msgv1),
+			TypeUrl: MsgTypeURL(msg),
 			Value:   bz,
 		})
-	} else {
-		return nil, fmt.Errorf("%T is not a proto message", msg)
 	}
 }

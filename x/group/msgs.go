@@ -588,7 +588,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	}
 
 	for i, msg := range msgs {
-		if err := sdk.ValidateBasic(msg); err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			return errorsmod.Wrapf(err, "msg %d", i)
 		}
 	}

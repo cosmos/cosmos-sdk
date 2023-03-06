@@ -109,7 +109,7 @@ func DefaultMessageValidator(msgs []sdk.Msg) error {
 	if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
 		return fmt.Errorf("unexpected GenTx message type; expected: MsgCreateValidator, got: %T", msgs[0])
 	}
-	if err := sdk.ValidateBasic(msgs[0]); err != nil {
+	if err := msgs[0].ValidateBasic(); err != nil {
 		return fmt.Errorf("invalid GenTx '%s': %w", msgs[0], err)
 	}
 

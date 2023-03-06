@@ -3,8 +3,6 @@ package tx
 import (
 	fmt "fmt"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,11 +21,7 @@ func SetMsgs(msgs []sdk.Msg) ([]*types.Any, error) {
 	anys := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
 		var err error
-		msgProto, ok := msg.(proto.Message)
-		if !ok {
-			return nil, fmt.Errorf("%T is not a proto message", msg)
-		}
-		anys[i], err = types.NewAnyWithValue(msgProto)
+		anys[i], err = types.NewAnyWithValue(msg)
 		if err != nil {
 			return nil, err
 		}

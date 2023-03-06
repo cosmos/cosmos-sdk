@@ -122,7 +122,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				return handler(goCtx, req)
 			}
 
-			if err := sdk.ValidateBasic(req); err != nil {
+			if err := req.ValidateBasic(); err != nil {
 				return nil, err
 			}
 			// Call the method handler from the service description with the handler object.

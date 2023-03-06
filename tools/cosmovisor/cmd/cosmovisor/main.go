@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	logger := log.NewLoggerWithKV(log.ModuleKey, "cosmovisor")
+	logger := log.NewLoggerWithKV(os.Stdout, log.ModuleKey, "cosmovisor")
 	ctx := context.WithValue(context.Background(), log.ContextKey, logger)
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {

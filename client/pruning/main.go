@@ -61,7 +61,7 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 				return err
 			}
 
-			logger := log.NewLogger()
+			logger := log.NewLogger(cmd.OutOrStdout())
 			app := appCreator(logger, db, nil, vp)
 			cms := app.CommitMultiStore()
 

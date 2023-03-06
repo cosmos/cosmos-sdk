@@ -135,7 +135,9 @@ type Screen struct {
   Expert bool
 }
 
-type SignDocTextual = []Screen
+type SignDocTextual struct {
+  Screens []Screen
+}
 ```
 
 We do not plan to use protobuf serialization to form the sequence of bytes
@@ -147,8 +149,13 @@ The encoding is defined by the following CDDL ([RFC 8610](https://www.rfc-editor
 ;;; CDDL (RFC 8610) Specification of SignDoc for SIGN_MODE_TEXTUAL.
 ;;; Must be encoded using CBOR deterministic encoding (RFC 8949, section 4.2.1).
 
-;; A Textual document is an array of screens.
-screens = [* screen]
+;; A Textual document is a struct containing one field: an array of screens.
+sign_doc = {
+  screens_key: [* screen],
+}
+
+;; The key is an integer to keep the encoding small.
+screens_key = 1
 
 ;; A screen consists of a text string, an indentation, and the expert flag,
 ;; represented as an integer-keyed map. All entries are optional

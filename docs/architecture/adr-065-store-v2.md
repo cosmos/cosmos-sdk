@@ -159,11 +159,17 @@ will set the appropriate value for the timestamp. If no height is provided, the
 SS layer will assume the latest height. The SS layer will store a reverse index
 to lookup `LatestVersion -> timestamp(version)` which is set on `Commit`.
 
-<!-- TODO: Insert section on pruning. -->
+Since operators might want pruning strategies to differ in SS compared to SC,
+e.g. having a very tight pruning strategy in SC while having a looser pruning
+strategy for SS, we propose to introduce an additional pruning configuration,
+with parameters that are identical to what exists in the SDK today, and allow
+operators to control the pruning strategy of the SS layer independently of the
+SC layer.
 
 #### Proofs
 
-<!-- TODO: Insert section on pruning. -->
+Since the SS layer is naturally a storage layer only, without any commitments
+to (key, value) pairs, it cannot provide Merkle proofs to clients during queries.
 
 ### Atomic Commitment
 
@@ -186,38 +192,57 @@ being present during `SaveVersion`.
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All
-> consequences should be listed here, not just the "positive" ones. A particular
-> decision may have positive, negative, and neutral consequences, but all of them
-> affect the team and project in the future.
+As a result of a new store V2 package, we should expect to see improved performance
+for queries and transactions due to the separation of concerns. We should also
+expect to see improved developer UX around experimentation of committment schemes
+and storage backends for further performance, in addition to a reduced amount of
+abstraction around KVStores making operations such as caching and state branching
+more intuitive.
+
+However, due to the proposed design, there are drawbacks around providing state
+proofs for historical queries.
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section
-> describing these incompatibilities and their severity. The ADR must explain
-> how the author proposes to deal with these incompatibilities. ADR submissions
-> without a sufficient backwards compatibility treatise may be rejected outright.
+This ADR proposes changes to the storage implementation in the Cosmos SDK through
+an entirely new package. Interfaces may be borrowed and extended from existing
+types that exist in `store`, but no existing implementations or interfaces will
+be broken or modified.
 
 ### Positive
 
-> {positive consequences}
+* Improved performance of independent SS and SC layers
+* Reduced layers of abstraction making storage primitives easier to understand
+* Atomic commitments for SC
+* Redesign of storage types and interfaces will allow for greater experimentation
+  such as different physical storage backends and different committment schemes
+  for different application modules
 
 ### Negative
 
-> {negative consequences}
+* Providing proofs for historical state is challenging
 
 ### Neutral
 
-> {neutral consequences}
+* Keeping IAVL as the primary committment data structure, although drastic
+  performance improvements are being made
 
 ## Further Discussions
 
-> While an ADR is in the DRAFT or PROPOSED stage, this section should contain a
-> summary of issues to be solved in future iterations (usually referencing comments
-> from a pull-request discussion).
-> 
-> Later, this section can optionally list ideas or improvements the author or
-> reviewers found during the analysis of this ADR.
+### Historical State Proofs
+
+It is not clear what the importance or demand is within the community of providing
+committment proofs for historical state. While solutions can be devised such as
+rebuilding trees on the fly based on state snapshots, it is not clear what the
+performance implications are for such solutions.
+
+### Physical DB Backends
+
+This ADR proposes usage of RocksDB to utilize user-defined timestamps as a
+versioning mechanism. However, other physical DB backends are available that may
+offer alternative ways to implement versioning while also providing performance
+improvements over RocksDB. E.g. PebbleDB supports MVCC timestamps as well, but
+we'll need to explore how PebbleDB handles compaction and state growth over time.
 
 ## References
 

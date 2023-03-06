@@ -100,7 +100,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	}
 
 	for idx, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
+		if err := sdk.ValidateBasic(msg); err != nil {
 			return errorsmod.Wrap(types.ErrInvalidProposalMsg,
 				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
 		}

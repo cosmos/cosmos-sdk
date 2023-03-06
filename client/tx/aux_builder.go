@@ -57,7 +57,7 @@ func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*codectypes.Any, len(msgs))
 	for i, msg := range msgs {
 		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg)
+		anys[i], err = codectypes.NewAnyWithValue(msg.(proto.Message))
 		if err != nil {
 			return err
 		}

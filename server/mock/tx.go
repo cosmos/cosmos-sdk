@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	signing2 "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -105,7 +106,7 @@ func (msg *KVStoreTx) GetSignBytes() []byte {
 }
 
 // Should the app be calling this? Or only handlers?
-func (msg *KVStoreTx) ValidateBasic() error {
+func (msg *KVStoreTx) ValidateBasic(*signing2.GetSignersContext) error {
 	return nil
 }
 

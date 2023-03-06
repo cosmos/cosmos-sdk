@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	signing2 "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -91,7 +93,7 @@ func TestDirectModeHandler(t *testing.T) {
 
 	for i, msg := range msgs {
 		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg)
+		anys[i], err = codectypes.NewAnyWithValue(msg.(proto.Message))
 		if err != nil {
 			panic(err)
 		}
@@ -151,8 +153,8 @@ func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
 
 type nonProtoTx int
 
-func (npt *nonProtoTx) GetMsgs() []sdk.Msg   { return nil }
-func (npt *nonProtoTx) ValidateBasic() error { return nil }
+func (npt *nonProtoTx) GetMsgs() []sdk.Msg                              { return nil }
+func (npt *nonProtoTx) ValidateBasic(*signing2.GetSignersContext) error { return nil }
 
 var _ sdk.Tx = (*nonProtoTx)(nil)
 

@@ -2,9 +2,12 @@ package ante
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	errorsmod "cosmossdk.io/errors"
 
+	signing2 "cosmossdk.io/x/tx/signing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -21,6 +24,7 @@ type HandlerOptions struct {
 	SignModeHandler        authsigning.SignModeHandler
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker           TxFeeChecker
+	ProtoFiles             *protoregistry.Files
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -39,10 +43,21 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
 	}
 
+	protoFiles := options.ProtoFiles
+	if protoFiles == nil {
+		var err error
+		protoFiles, err = proto.MergedRegistry()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	anteDecorators := []sdk.AnteDecorator{
 		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
-		NewValidateBasicDecorator(),
+		NewValidateBasicDecorator(signing2.NewGetSignersContext(signing2.GetSignersOptions{
+			ProtoFiles: protoFiles,
+		})),
 		NewTxTimeoutHeightDecorator(),
 		NewValidateMemoDecorator(options.AccountKeeper),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),

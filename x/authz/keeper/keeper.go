@@ -12,6 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,10 +27,11 @@ import (
 const gasCostPerIteration = uint64(20)
 
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	router     baseapp.MessageRouter
-	authKeeper authz.AccountKeeper
+	storeKey          storetypes.StoreKey
+	cdc               codec.BinaryCodec
+	router            baseapp.MessageRouter
+	authKeeper        authz.AccountKeeper
+	getSignersContext *signing.GetSignersContext
 }
 
 // NewKeeper constructs a message authorization Keeper
@@ -89,12 +91,19 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	now := ctx.BlockTime()
 
 	for i, msg := range msgs {
-		signers := msg.GetSigners()
+		signers, err := sdk.GetSigners(msg, k.getSignersContext)
+		if err != nil {
+			return nil, err
+		}
+
 		if len(signers) != 1 {
 			return nil, authz.ErrAuthorizationNumOfSigners
 		}
 
-		granter := signers[0]
+		granter, err := sdk.AccAddressFromBech32(signers[0])
+		if err != nil {
+			return nil, err
+		}
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.

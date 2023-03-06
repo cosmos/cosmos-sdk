@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log v0.0.0-20230305202224-89c956f8ed3a
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44
-	cosmossdk.io/x/tx v0.2.0
+	cosmossdk.io/x/tx v0.2.1
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -153,6 +153,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )
+
+replace cosmossdk.io/x/tx => ./x/tx
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

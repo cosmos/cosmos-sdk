@@ -5,6 +5,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"cosmossdk.io/x/tx/signing"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +37,7 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 }
 
 // ValidateBasic implements the ValidateBasic method on sdk.Tx.
-func (t *Tx) ValidateBasic() error {
+func (t *Tx) ValidateBasic(getSignersContext *signing.GetSignersContext) error {
 	if t == nil {
 		return fmt.Errorf("bad Tx")
 	}
@@ -89,10 +91,11 @@ func (t *Tx) ValidateBasic() error {
 		return sdkerrors.ErrNoSignatures
 	}
 
-	if len(sigs) != len(t.GetSigners()) {
+	signers := t.GetSigners(getSignersContext)
+	if len(sigs) != len(signers) {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", len(t.GetSigners()), len(sigs),
+			"wrong number of signers; expected %d, got %d", len(signers), len(sigs),
 		)
 	}
 
@@ -102,15 +105,20 @@ func (t *Tx) ValidateBasic() error {
 // GetSigners retrieves all the signers of a tx.
 // This includes all unique signers of the messages (in order),
 // as well as the FeePayer (if specified and not already included).
-func (t *Tx) GetSigners() []sdk.AccAddress {
-	var signers []sdk.AccAddress
+func (t *Tx) GetSigners(ctx *signing.GetSignersContext) []string {
+	var signers []string
 	seen := map[string]bool{}
 
 	for _, msg := range t.GetMsgs() {
-		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
+		signers, err := sdk.GetSigners(msg, ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, signer := range signers {
+			if !seen[signer] {
+				signers = append(signers, signer)
+				seen[signer] = true
 			}
 		}
 	}
@@ -118,7 +126,7 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 	// ensure any specified fee payer is included in the required signers (at the end)
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" && !seen[feePayer] {
-		payerAddr := sdk.MustAccAddressFromBech32(feePayer)
+		payerAddr := feePayer
 		signers = append(signers, payerAddr)
 		seen[feePayer] = true
 	}
@@ -134,13 +142,13 @@ func (t *Tx) GetFee() sdk.Coins {
 	return t.AuthInfo.Fee.Amount
 }
 
-func (t *Tx) FeePayer() sdk.AccAddress {
+func (t *Tx) FeePayer(ctx *signing.GetSignersContext) string {
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		return sdk.MustAccAddressFromBech32(feePayer)
+		return feePayer
 	}
 	// use first signer as default if no payer specified
-	return t.GetSigners()[0]
+	return t.GetSigners(ctx)[0]
 }
 
 func (t *Tx) FeeGranter() sdk.AccAddress {

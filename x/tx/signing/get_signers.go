@@ -2,11 +2,14 @@ package signing
 
 import (
 	"fmt"
+	"strings"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // GetSignersContext is a context for retrieving the list of signers from a
@@ -14,6 +17,7 @@ import (
 // option.
 type GetSignersContext struct {
 	protoFiles      *protoregistry.Files
+	protoTypes      protoregistry.MessageTypeResolver
 	getSignersFuncs map[protoreflect.FullName]getSignersFunc
 }
 
@@ -22,6 +26,8 @@ type GetSignersOptions struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
 	ProtoFiles *protoregistry.Files
+
+	ProtoTypes protoregistry.MessageTypeResolver
 }
 
 // NewGetSignersContext creates a new GetSignersContext using the provided options.
@@ -31,8 +37,14 @@ func NewGetSignersContext(options GetSignersOptions) *GetSignersContext {
 		protoFiles = protoregistry.GlobalFiles
 	}
 
+	protoTypes := options.ProtoTypes
+	if protoTypes == nil {
+		protoTypes = protoregistry.GlobalTypes
+	}
+
 	return &GetSignersContext{
 		protoFiles:      protoFiles,
+		protoTypes:      protoTypes,
 		getSignersFuncs: map[protoreflect.FullName]getSignersFunc{},
 	}
 }
@@ -174,4 +186,32 @@ func (c *GetSignersContext) GetSigners(msg proto.Message) ([]string, error) {
 	}
 
 	return f(msg), nil
+}
+
+func (c *GetSignersContext) GetSignersForAny(any *anypb.Any) ([]string, error) {
+	url := any.TypeUrl
+	typ, err := c.protoTypes.FindMessageByURL(url)
+	if err != nil {
+		if err == protoregistry.NotFound {
+			msgName := protoreflect.FullName(url)
+			if i := strings.LastIndexByte(url, '/'); i >= 0 {
+				msgName = msgName[i+len("/"):]
+			}
+			msgDesc, err := c.protoFiles.FindDescriptorByName(msgName)
+			if err != nil {
+				return nil, err
+			}
+
+			typ = dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor))
+		}
+		return nil, err
+	}
+
+	msg := typ.New().Interface()
+	err = any.UnmarshalTo(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.GetSigners(msg)
 }

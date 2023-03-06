@@ -211,6 +211,7 @@ func (rs *Store) LoadVersion(ver int64) error {
 func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	infos := make(map[string]types.StoreInfo)
 
+	rs.logger.Debug("loadVersion", "ver", ver)
 	cInfo := &types.CommitInfo{}
 
 	// load old data if we are not version 0
@@ -248,12 +249,13 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	for _, key := range storesKeys {
 		storeParams := rs.storesParams[key]
 		commitID := rs.getCommitID(infos, key.Name())
+		rs.logger.Debug("loadVersion commitID", "key", key, "ver", ver, "hash", fmt.Sprintf("%x", commitID.Hash))
 
 		// If it has been added, set the initial version
 		if upgrades.IsAdded(key.Name()) || upgrades.RenamedFrom(key.Name()) != "" {
 			storeParams.initialVersion = uint64(ver) + 1
 		} else if commitID.Version != ver && storeParams.typ == types.StoreTypeIAVL {
-			return fmt.Errorf("version of store %s mismatch root store's version; expected %d got %d", key.Name(), ver, commitID.Version)
+			return fmt.Errorf("version of store %s mismatch root store's version; expected %d got %d; new stores should be added using StoreUpgrades", key.Name(), ver, commitID.Version)
 		}
 
 		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
@@ -605,9 +607,11 @@ func (rs *Store) PruneStores(clearPruningManager bool, pruningHeights []int64) (
 		return nil
 	}
 
-	rs.logger.Debug("pruning heights", "heights", pruningHeights)
+	rs.logger.Debug("pruning store", "heights", pruningHeights)
 
 	for key, store := range rs.stores {
+		rs.logger.Debug("pruning store", "key", key) // Also log store.name (a private variable)?
+
 		// If the store is wrapped with an inter-block cache, we must first unwrap
 		// it to get the underlying IAVL store.
 		if store.GetStoreType() != types.StoreTypeIAVL {
@@ -773,8 +777,14 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	// and the following messages contain a SnapshotNode (i.e. an ExportNode). Store changes
 	// are demarcated by new SnapshotStore items.
 	for _, store := range stores {
+		rs.logger.Debug("starting snapshot", "store", store.name, "height", height)
 		exporter, err := store.Export(int64(height))
+		if exporter == nil {
+			rs.logger.Error("snapshot failed; exporter is nil", "store", store.name)
+			return err
+		}
 		if err != nil {
+			rs.logger.Error("snapshot failed; exporter error", "store", store.name, "err", err)
 			return err
 		}
 
@@ -789,12 +799,16 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 				},
 			})
 			if err != nil {
+				rs.logger.Error("snapshot failed; item store write failed", "store", store.name, "err", err)
 				return err
 			}
 
+			nodeCount := 0
 			for {
 				node, err := exporter.Next()
 				if err == iavltree.ErrorExportDone {
+					rs.logger.Debug("Snapshot Done", "store", store.name, "nodeCount", nodeCount)
+					nodeCount = 0
 					break
 				} else if err != nil {
 					return err
@@ -812,6 +826,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 				if err != nil {
 					return err
 				}
+				nodeCount++
 			}
 
 			return nil
@@ -863,9 +878,12 @@ loop:
 				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "import failed")
 			}
 			defer importer.Close()
+			// Importer height must reflect the node height (which usually matches the block height, but not always)
+			rs.logger.Debug("restoring snapshot", "store", item.Store.Name)
 
 		case *snapshottypes.SnapshotItem_IAVL:
 			if importer == nil {
+				rs.logger.Error("failed to restore; received IAVL node item before store item")
 				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(types.ErrLogic, "received IAVL node item before store item")
 			}
 			if item.IAVL.Height > math.MaxInt8 {

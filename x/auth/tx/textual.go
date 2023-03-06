@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 

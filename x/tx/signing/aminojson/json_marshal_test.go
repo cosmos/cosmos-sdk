@@ -13,9 +13,9 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/x/tx/aminojson"
+	"cosmossdk.io/x/tx/signing/aminojson"
 
-	"cosmossdk.io/x/tx/aminojson/internal/testpb"
+	"cosmossdk.io/x/tx/signing/aminojson/internal/testpb"
 )
 
 func marshalLegacy(msg proto.Message) ([]byte, error) {

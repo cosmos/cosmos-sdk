@@ -48,7 +48,8 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 	}
 
 	// The Any value renderer suppresses emission of the object header
-	if subscreens[0].Content == fmt.Sprintf("%s object", internalMsg.ProtoReflect().Descriptor().Name()) {
+	_, isMsgRender := vr.(*messageValueRenderer)
+	if isMsgRender && subscreens[0].Content == fmt.Sprintf("%s object", internalMsg.ProtoReflect().Descriptor().Name()) {
 		omitHeader = 1
 	}
 

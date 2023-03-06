@@ -13,6 +13,7 @@ import (
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -32,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use
@@ -225,40 +225,40 @@ func TestModuleDB(t *testing.T) {
 	}
 
 	// check JSON
-	target := ormjson.NewRawMessageTarget()
-	assert.NilError(t, db.DefaultJSON(target))
+	target := genesis.RawJSONTarget{}
+	assert.NilError(t, db.GenesisHandler().DefaultGenesis(target.Target()))
 	rawJson, err := target.JSON()
 	assert.NilError(t, err)
 	golden.Assert(t, string(rawJson), "default_json.golden")
 
-	target = ormjson.NewRawMessageTarget()
-	assert.NilError(t, db.ExportJSON(ctx, target))
+	target = genesis.RawJSONTarget{}
+	assert.NilError(t, db.GenesisHandler().ExportGenesis(ctx, target.Target()))
 	rawJson, err = target.JSON()
 	assert.NilError(t, err)
 
 	goodJSON := `{
   "testpb.Supply": []
 }`
-	source, err := ormjson.NewRawMessageSource(json.RawMessage(goodJSON))
+	source, err := genesis.SourceFromRawJSON(json.RawMessage(goodJSON))
 	assert.NilError(t, err)
-	assert.NilError(t, db.ValidateJSON(source))
-	assert.NilError(t, db.ImportJSON(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
+	assert.NilError(t, db.GenesisHandler().ValidateGenesis(source))
+	assert.NilError(t, db.GenesisHandler().InitGenesis(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
 
 	badJSON := `{
   "testpb.Balance": 5,
   "testpb.Supply": {}
 }
 `
-	source, err = ormjson.NewRawMessageSource(json.RawMessage(badJSON))
+	source, err = genesis.SourceFromRawJSON(json.RawMessage(badJSON))
 	assert.NilError(t, err)
-	assert.ErrorIs(t, db.ValidateJSON(source), ormerrors.JSONValidationError)
+	assert.ErrorIs(t, db.GenesisHandler().ValidateGenesis(source), ormerrors.JSONValidationError)
 
 	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)
-	source, err = ormjson.NewRawMessageSource(rawJson)
+	source, err = genesis.SourceFromRawJSON(rawJson)
 	assert.NilError(t, err)
-	assert.NilError(t, db.ValidateJSON(source))
-	assert.NilError(t, db.ImportJSON(ctx2, source))
+	assert.NilError(t, db.GenesisHandler().ValidateGenesis(source))
+	assert.NilError(t, db.GenesisHandler().InitGenesis(ctx2, source))
 	testkv.AssertBackendsEqual(t, backend, backend2)
 }
 
@@ -278,6 +278,7 @@ func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
 	// send coins
 	acct2 := "sally"
 	err = k.Send(ctx, acct1, acct2, denom, 30)
+	assert.NilError(t, err)
 	bal, err = k.Balance(ctx, acct1, denom)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(70), bal)
@@ -287,6 +288,7 @@ func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
 
 	// burn coins
 	err = k.Burn(ctx, acct2, denom, 3)
+	assert.NilError(t, err)
 	bal, err = k.Balance(ctx, acct2, denom)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(27), bal)

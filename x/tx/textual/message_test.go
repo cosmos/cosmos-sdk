@@ -11,9 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	"cosmossdk.io/x/tx/textual"
 	"cosmossdk.io/x/tx/textual/internal/testpb"
-	"google.golang.org/protobuf/reflect/protoreflect"
+
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -34,10 +36,10 @@ func TestMessageJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	tr := textual.NewTextual(EmptyCoinMetadataQuerier)
+	tr := textual.NewSignModeHandler(EmptyCoinMetadataQuerier)
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			rend := textual.NewMessageValueRenderer(&tr, (&testpb.Foo{}).ProtoReflect().Descriptor())
+			rend := textual.NewMessageValueRenderer(tr, (&testpb.Foo{}).ProtoReflect().Descriptor())
 
 			screens, err := rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 			require.NoError(t, err)

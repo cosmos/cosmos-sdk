@@ -4,6 +4,28 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Migration to CometBFT (Part 2)
+
+The Cosmos SDK has migrated in its previous versions, to CometBFT.
+Some functions have been renamed to reflect the naming change.
+
+Following an exhaustive list:
+
+* `client.TendermintRPC` -> `client.CometRPC`
+* `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+* `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
+* Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
+
+Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
+However, these commands and flags is still supported for backward compatibility.
+
+For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
+
+Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
+
+* The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
+* The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
@@ -20,11 +42,9 @@ gRPC-Web is now listening to the same address as the gRPC Gateway API server (de
 The possibility to listen to a different address has been removed, as well as its settings.
 Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
 
-#### Database
+#### Database Support
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
-
-<!-- TODO: write database migration tool -->
 
 ### Protobuf
 
@@ -35,7 +55,20 @@ The SDK is in the process of removing all `gogoproto` annotations.
 The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
 [Verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the modified `String()` methods and double-check that they are not used in state-machine code.
 
-### Types
+### SimApp
+
+#### Module Assertions
+
+Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
+This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+
+#### Replaces
+
+* `GoLevelDB` version has been pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7`, following versions might cause unexpected behavior.
+    * [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
+    * [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
+
+### Packages
 
 #### Store
 
@@ -45,13 +78,6 @@ References to `types/store.go` which contained aliases for store types have been
 
 The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
-
-### SimApp
-
-#### Module Assertions
-
-Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
-This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
 
 ### Modules
 
@@ -100,6 +126,20 @@ The `x/upgrade` module is extracted to have a separate go.mod file which allows 
 All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
+
+### Migration to CometBFT (Part 1)
+
+The Cosmos SDK has migrated to CometBFT, as its default consensus engine.
+CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
+Due to the import changes, this is a breaking change. Chains need to remove **entirely** their imports of Tendermint Core in their codebase, from direct and indirects imports in their `go.mod`.
+
+* Replace `github.com/tendermint/tendermint` by `github.com/cometbft/cometbft`
+* Replace `github.com/tendermint/tm-db` by `github.com/cometbft/cometbft-db`
+* Verify `github.com/tendermint/tendermint` is not an indirect or direct dependency
+* Run `make proto-gen`
+
+Other than that, the migration should be seamless.
+On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.48 (part 2).
 
 ### Simulation
 
@@ -242,6 +282,15 @@ The module name is assumed by `baseapp` to be the second element of the message 
 In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
 `Baseapp` only emits that event if the module have not already done so.
 
+#### `x/params`
+
+The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
+Cosmos SDK modules now store their parameters directly in its repective modules.
+The `params` module will be removed in `v0.48`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.48`.
+
+When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
+Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
+
 #### `x/gov`
 
 ##### Minimum Proposal Deposit At Time of Submission
@@ -312,20 +361,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 The old params module is required to still be imported in your app.go in order to handle this migration. 
 
-##### App.go Changes
+##### `app.go` changes
 
-Previous:
+When using an `app.go` without App Wiring, the following changes are required:
 
-```go
-bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+```diff
+- bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
++ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamstypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
++ bApp.SetParamStore(&app.ConsensusParamsKeeper)
 ```
 
-After:
-
-```go
-app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
-bApp.SetParamStore(&app.ConsensusParamsKeeper)
-```
+When using App Wiring, the paramater store is automatically set for you.
 
 #### `x/nft`
 
@@ -418,7 +464,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
+* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`
@@ -455,7 +501,4 @@ message MsgSetWithdrawAddress {
 }
 ```
 
-<!-- todo: cosmos.scalar types -->
-
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
-

@@ -3,8 +3,8 @@ package proofs
 import (
 	"sort"
 
-	"github.com/cometbft/cometbft/libs/rand"
-	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	"cosmossdk.io/math/unsafe"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"golang.org/x/exp/maps"
 
 	sdkmaps "cosmossdk.io/store/internal/maps"
@@ -14,7 +14,7 @@ import (
 type SimpleResult struct {
 	Key      []byte
 	Value    []byte
-	Proof    *tmcrypto.Proof
+	Proof    *cmtprotocrypto.Proof
 	RootHash []byte
 }
 
@@ -66,7 +66,7 @@ func GetKey(allkeys []string, loc Where) string {
 		return allkeys[len(allkeys)-1]
 	}
 	// select a random index between 1 and allkeys-2
-	idx := rand.NewRand().Int()%(len(allkeys)-2) + 1
+	idx := unsafe.NewRand().Int()%(len(allkeys)-2) + 1
 	return allkeys[idx]
 }
 
@@ -94,7 +94,7 @@ func BuildMap(size int) map[string][]byte {
 	data := make(map[string][]byte)
 	// insert lots of info and store the bytes
 	for i := 0; i < size; i++ {
-		key := rand.Str(20)
+		key := unsafe.Str(20)
 		data[key] = toValue(key)
 	}
 	return data

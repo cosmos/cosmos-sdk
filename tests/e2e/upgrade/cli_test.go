@@ -6,7 +6,7 @@ package upgrade
 import (
 	"testing"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/simapp"
@@ -18,7 +18,7 @@ func TestE2ETestSuite(t *testing.T) {
 	cfg.NumValidators = 1
 
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())

@@ -13,7 +13,7 @@ const (
 )
 
 // In rosetta all state transitions must be represented as transactions
-// since in tendermint begin block and end block are state transitions
+// since in CometBFT begin block and end block are state transitions
 // which are not represented as transactions we mock only the balance changes
 // happening at those levels as transactions. (check BeginBlockTxHash for more info)
 const (

@@ -104,7 +104,9 @@ func (cdc *KeyCodec) EncodeKey(values []protoreflect.Value) ([]byte, error) {
 func (cdc *KeyCodec) GetKeyValues(message protoreflect.Message) []protoreflect.Value {
 	res := make([]protoreflect.Value, len(cdc.fieldDescriptors))
 	for i, f := range cdc.fieldDescriptors {
-		res[i] = message.Get(f)
+		if message.Has(f) {
+			res[i] = message.Get(f)
+		}
 	}
 	return res
 }
@@ -209,7 +211,10 @@ func (cdc KeyCodec) ComputeKeyBufferSize(values []protoreflect.Value) (int, erro
 // supported.
 func (cdc *KeyCodec) SetKeyValues(message protoreflect.Message, values []protoreflect.Value) {
 	for i, f := range cdc.fieldDescriptors {
-		message.Set(f, values[i])
+		value := values[i]
+		if value.IsValid() {
+			message.Set(f, value)
+		}
 	}
 }
 

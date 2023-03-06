@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -150,7 +151,7 @@ func TestStdSignBytes(t *testing.T) {
 }
 
 func TestTxValidateBasic(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -169,7 +170,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err := tx.ValidateBasic()
 	require.Error(t, err)
-	_, code, _ := sdkerrors.ABCIInfo(err, false)
+	_, code, _ := errorsmod.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrInsufficientFee.ABCICode(), code)
 
 	// require to fail validation when no signatures exist
@@ -178,7 +179,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
-	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	_, code, _ = errorsmod.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrNoSignatures.ABCICode(), code)
 
 	// require to fail validation when signatures do not match expected signers
@@ -187,7 +188,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
-	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	_, code, _ = errorsmod.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
 
 	// require to fail with invalid gas supplied
@@ -197,7 +198,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
-	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	_, code, _ = errorsmod.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), code)
 
 	// require to pass when above criteria are matched

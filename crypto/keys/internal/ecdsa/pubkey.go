@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"math/big"
 
-	tmcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,13 +34,13 @@ type PubKey struct {
 	ecdsa.PublicKey
 
 	// cache
-	address tmcrypto.Address
+	address cmtcrypto.Address
 }
 
 // Address gets the address associated with a pubkey. If no address exists, it returns a newly created ADR-28 address
 // for ECDSA keys.
 // protoName is a concrete proto structure id.
-func (pk *PubKey) Address(protoName string) tmcrypto.Address {
+func (pk *PubKey) Address(protoName string) cmtcrypto.Address {
 	if pk.address == nil {
 		pk.address = address.Hash(protoName, pk.Bytes())
 	}
@@ -95,12 +97,12 @@ func (pk *PubKey) MarshalTo(dAtA []byte) (int, error) {
 // Unmarshal implements proto.Marshaler interface.
 func (pk *PubKey) Unmarshal(bz []byte, curve elliptic.Curve, expectedSize int) error {
 	if len(bz) != expectedSize {
-		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, expecting %d bytes, got %d", expectedSize, len(bz))
+		return errorsmod.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, expecting %d bytes, got %d", expectedSize, len(bz))
 	}
 	cpk := ecdsa.PublicKey{Curve: curve}
 	cpk.X, cpk.Y = elliptic.UnmarshalCompressed(curve, bz)
 	if cpk.X == nil || cpk.Y == nil {
-		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, unknown curve type: %d", bz[0])
+		return errorsmod.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, unknown curve type: %d", bz[0])
 	}
 	pk.PublicKey = cpk
 	return nil

@@ -14,12 +14,12 @@ import (
 )
 
 type messageValueRenderer struct {
-	tr      *Textual
+	tr      *SignModeHandler
 	msgDesc protoreflect.MessageDescriptor
 	fds     []protoreflect.FieldDescriptor
 }
 
-func NewMessageValueRenderer(t *Textual, msgDesc protoreflect.MessageDescriptor) ValueRenderer {
+func NewMessageValueRenderer(t *SignModeHandler, msgDesc protoreflect.MessageDescriptor) ValueRenderer {
 	fields := msgDesc.Fields()
 	fds := make([]protoreflect.FieldDescriptor, 0, fields.Len())
 	for i := 0; i < fields.Len(); i++ {
@@ -54,7 +54,7 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 			return nil, err
 		}
 
-		subscreens := make([]Screen, 0)
+		var subscreens []Screen
 		if fd.IsList() {
 			if r, ok := vr.(RepeatedValueRenderer); ok {
 				// If the field is a list, and handles its own repeated rendering
@@ -242,7 +242,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 			} else {
 				err = mr.parseRepeated(ctx, subscreens, nf.List(), vr)
 
-				//Skip List Terminator
+				// Skip List Terminator
 				idx++
 			}
 			if err != nil {
@@ -272,7 +272,6 @@ func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Scr
 
 	lengthStr := res[0][1]
 	length, err := strconv.Atoi(lengthStr)
-
 	if err != nil {
 		return fmt.Errorf("malformed length: %q with error: %w", lengthStr, err)
 	}

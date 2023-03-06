@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -73,13 +73,13 @@ func (s *GRPCWebTestSuite) Test_Latest_Validators() {
 		headers, trailers, responses, err := s.makeGrpcRequest(
 			"/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet",
 			headerWithFlag(),
-			serializeProtoMessages([]proto.Message{&tmservice.GetLatestValidatorSetRequest{}}), false)
+			serializeProtoMessages([]proto.Message{&cmtservice.GetLatestValidatorSetRequest{}}), false)
 
 		s.Require().NoError(err)
 		s.Require().Equal(1, len(responses))
 		s.assertTrailerGrpcCode(trailers, codes.OK, "")
 		s.assertContentTypeSet(headers, contentType)
-		var valsSet tmservice.GetLatestValidatorSetResponse
+		var valsSet cmtservice.GetLatestValidatorSetResponse
 		err = s.protoCdc.Unmarshal(responses[0], &valsSet)
 		s.Require().NoError(err)
 		pubKey, ok := valsSet.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)

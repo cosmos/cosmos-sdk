@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/log"
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/rs/zerolog"
 )
 
 // environment variable names
@@ -209,16 +209,16 @@ func parseEnvDuration(input string) (time.Duration, error) {
 }
 
 // LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger *zerolog.Logger, cfg *Config, err error) {
+func LogConfigOrError(logger log.Logger, cfg *Config, err error) {
 	if cfg == nil && err == nil {
 		return
 	}
-	logger.Info().Msg("configuration:")
+	logger.Info("configuration:")
 	switch {
 	case err != nil:
 		cverrors.LogErrors(logger, "configuration errors found", err)
 	case cfg != nil:
-		logger.Info().Msg(cfg.DetailString())
+		logger.Info(cfg.DetailString())
 	}
 }
 
@@ -249,7 +249,7 @@ func (cfg *Config) validate() []error {
 	}
 
 	// check the DataBackupPath
-	if cfg.UnsafeSkipBackup == true {
+	if cfg.UnsafeSkipBackup {
 		return errs
 	}
 
@@ -364,8 +364,8 @@ func (cfg Config) DetailString() string {
 		{EnvName, cfg.Name},
 		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
-		{EnvRestartDelay, fmt.Sprintf("%s", cfg.RestartDelay)},
-		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
+		{EnvRestartDelay, cfg.RestartDelay.String()},
+		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},

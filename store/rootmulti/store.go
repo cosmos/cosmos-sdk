@@ -779,10 +779,6 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	for _, store := range stores {
 		rs.logger.Debug("starting snapshot", "store", store.name, "height", height)
 		exporter, err := store.Export(int64(height))
-		if exporter == nil {
-			rs.logger.Error("snapshot failed; exporter is nil", "store", store.name)
-			return err
-		}
 		if err != nil {
 			rs.logger.Error("snapshot failed; exporter error", "store", store.name, "err", err)
 			return err

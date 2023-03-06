@@ -865,7 +865,7 @@ loop:
 		case *snapshottypes.SnapshotItem_IAVL:
 			if importer == nil {
 				rs.logger.Error("failed to restore; received IAVL node item before store item")
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(types.ErrLogic, "received IAVL node item before store item")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received IAVL node item before store item")
 			}
 			if item.IAVL.Height > math.MaxInt8 {
 				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "node height %v cannot exceed %v",

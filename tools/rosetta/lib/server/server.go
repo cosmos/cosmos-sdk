@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -60,7 +61,7 @@ func NewServer(settings Settings) (Server, error) {
 		return Server{}, fmt.Errorf("cannot build asserter: %w", err)
 	}
 
-	logger := log.NewLoggerWithKV(log.ModuleKey, "rosetta")
+	logger := log.NewLoggerWithKV(os.Stdout, log.ModuleKey, "rosetta")
 
 	var adapter crgtypes.API
 	switch settings.Offline {

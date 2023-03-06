@@ -20,6 +20,8 @@ import (
 	"cosmossdk.io/x/tx/textual/internal/textualpb"
 )
 
+const specVersion = 1
+
 // CoinMetadataQueryFn defines a function that queries state for the coin denom
 // metadata. It is meant to be passed as an argument into `NewSignModeHandler`.
 type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error)
@@ -51,6 +53,12 @@ func NewSignModeHandler(q CoinMetadataQueryFn) *SignModeHandler {
 	t := &SignModeHandler{coinMetadataQuerier: q}
 	t.init()
 	return t
+}
+
+// SpecVersion returns the spec version this SignModeHandler implementation
+// is following.
+func (r *SignModeHandler) SpecVersion() uint64 {
+	return specVersion
 }
 
 // GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.

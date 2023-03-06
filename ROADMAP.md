@@ -30,7 +30,7 @@ Welcome to the Cosmos SDK's team roadmap.
     * Add metadata support to latest version of Cosmos SDK and, if possible, backport to older versions
 * [x] Multi-chain command **(Done)**
     * Release a cmd line tool that can be pointed a grpc endpoint which then can produce cmd lines to interact with the chain
-* Auto-cli tx support 
+* [x] Auto-cli tx support 
     * Tx support for auto-cli/hubl
         * This would fully remove the need for application developers to write cli commands for their modules
 * [Consensus Key Rotation](https://github.com/cosmos/cosmos-sdk/issues/5231)
@@ -62,7 +62,7 @@ Welcome to the Cosmos SDK's team roadmap.
 * [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
 * [Auth module](https://github.com/cosmos/cosmos-sdk/issues/14900)
     * Produce a spec/ADR on a proposed new auth module. 
-* [Implement Amino Json encoder](https://github.com/cosmos/cosmos-sdk/issues/10993)
+* [x] [Implement Amino Json encoder](https://github.com/cosmos/cosmos-sdk/issues/10993)
 
 ### Testing
 

@@ -18,8 +18,8 @@ import (
 	_ "cosmossdk.io/api/cosmos/gov/v1"
 
 	"cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/tx/textual"
-	"cosmossdk.io/x/tx/textual/internal/textualpb"
+	"cosmossdk.io/x/tx/signing/textual"
+	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
 
 type e2eJsonTest struct {

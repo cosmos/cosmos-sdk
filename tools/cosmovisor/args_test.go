@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 )
@@ -624,10 +625,10 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 	}
 	errMulti := errors.FlattenErrors(errs...)
 
-	makeTestLogger := func(testName string, out io.Writer) *zerolog.Logger {
+	makeTestLogger := func(testName string, out io.Writer) log.Logger {
 		output := zerolog.ConsoleWriter{Out: out, TimeFormat: time.Kitchen, NoColor: true}
 		logger := zerolog.New(output).With().Str("test", testName).Timestamp().Logger()
-		return &logger
+		return log.NewCustomLogger(logger)
 	}
 
 	tests := []struct {

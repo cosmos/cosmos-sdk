@@ -7,11 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	errorsmod "cosmossdk.io/errors"
+
 	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -90,6 +91,8 @@ func (s *E2ETestSuite) SetupSuite() {
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s", flags.FlagOffline),
+		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),
 		fmt.Sprintf("--%s=2", flags.FlagSequence),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -133,7 +136,7 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	b64Sig := base64.StdEncoding.EncodeToString(sig.Signature)
 	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, b64Sig)
 	res, err := s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{
-		Events:  []string{sigFormatted},
+		Query:   sigFormatted,
 		OrderBy: 0,
 		Page:    0,
 		Limit:   10,
@@ -142,56 +145,9 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	s.Require().Len(res.Txs, 1)
 	s.Require().Len(res.Txs[0].Signatures, 1)
 	s.Require().Equal(res.Txs[0].Signatures[0], sig.Signature)
-
-	// bad format should error
-	_, err = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{Events: []string{"tx.foo.bar='baz'"}})
-	s.Require().ErrorContains(err, "invalid event;")
 }
 
-func TestEventRegex(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name  string
-		event string
-		match bool
-	}{
-		{
-			name:  "valid: with quotes",
-			event: "tx.message='something'",
-			match: true,
-		},
-		{
-			name:  "valid: with underscores",
-			event: "claim_reward.message_action='something'",
-			match: true,
-		},
-		{
-			name:  "valid: no quotes",
-			event: "tx.message=something",
-			match: true,
-		},
-		{
-			name:  "invalid: too many separators",
-			event: "tx.message.foo='bar'",
-			match: false,
-		},
-		{
-			name:  "valid: symbols ok",
-			event: "tx.signature='foobar/baz123=='",
-			match: true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			match := authtx.EventRegex.Match([]byte(tc.event))
-			require.Equal(t, tc.match, match)
-		})
-	}
-}
-
-func (s E2ETestSuite) TestSimulateTx_GRPC() {
+func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
@@ -238,7 +194,7 @@ func (s E2ETestSuite) TestSimulateTx_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestSimulateTx_GRPCGateway() {
+func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
@@ -280,7 +236,7 @@ func (s E2ETestSuite) TestSimulateTx_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestGetTxEvents_GRPC() {
+func (s *E2ETestSuite) TestGetTxEvents_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetTxsEventRequest
@@ -291,48 +247,62 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 		{
 			"nil request",
 			nil,
-			true, "request cannot be nil", 0,
+			true,
+			"request cannot be nil",
+			0,
 		},
 		{
 			"empty request",
 			&tx.GetTxsEventRequest{},
-			true, "must declare at least one event to search", 0,
+			true,
+			"query cannot be empty",
+			0,
 		},
 		{
 			"request with dummy event",
-			&tx.GetTxsEventRequest{Events: []string{"foobar"}},
-			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}", 0,
+			&tx.GetTxsEventRequest{Query: "foobar"},
+			true,
+			"failed to search for txs",
+			0,
 		},
 		{
 			"request with order-by",
 			&tx.GetTxsEventRequest{
-				Events:  []string{bankMsgSendEventAction},
+				Query:   bankMsgSendEventAction,
 				OrderBy: tx.OrderBy_ORDER_BY_ASC,
 			},
-			false, "", 3,
+			false,
+			"",
+			3,
 		},
 		{
 			"without pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{bankMsgSendEventAction},
+				Query: bankMsgSendEventAction,
 			},
-			false, "", 3,
+			false,
+			"",
+			3,
 		},
 		{
 			"with pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{bankMsgSendEventAction},
-				Page:   2,
-				Limit:  2,
+				Query: bankMsgSendEventAction,
+				Page:  2,
+				Limit: 2,
 			},
-			false, "", 1,
+			false,
+			"",
+			1,
 		},
 		{
 			"with multi events",
 			&tx.GetTxsEventRequest{
-				Events: []string{bankMsgSendEventAction, "message.module='bank'"},
+				Query: fmt.Sprintf("%s AND message.module='bank'", bankMsgSendEventAction),
 			},
-			false, "", 3,
+			false,
+			"",
+			3,
 		},
 	}
 	for _, tc := range testCases {
@@ -347,6 +317,7 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 				s.Require().Equal(len(grpcRes.Txs), tc.expLen)
+
 				// Make sure fields are populated.
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
@@ -357,7 +328,7 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
+func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -370,47 +341,47 @@ func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 			"empty params",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
 			true,
-			"must declare at least one event to search", 0,
+			"query cannot be empty", 0,
 		},
 		{
 			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, bankMsgSendEventAction),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, bankMsgSendEventAction),
 			false,
 			"", 3,
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 2),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 2),
 			false,
 			"", 1,
 		},
 		{
 			"valid request: order by asc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"valid request: order by desc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"invalid request: invalid order by",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			true,
 			"is not a valid tx.OrderBy", 0,
 		},
 		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"expect pass with escape event",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
 			false,
 			"", 3,
 		},
@@ -424,17 +395,17 @@ func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 			} else {
 				var result tx.GetTxsEventResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "failed to unmarshal JSON: %s", res)
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
 				s.Require().NotZero(result.TxResponses[0].Height)
-				s.Require().Equal(len(result.Txs), tc.expLen)
+				s.Require().Equal(tc.expLen, len(result.Txs))
 			}
 		})
 	}
 }
 
-func (s E2ETestSuite) TestGetTx_GRPC() {
+func (s *E2ETestSuite) TestGetTx_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetTxRequest
@@ -461,7 +432,7 @@ func (s E2ETestSuite) TestGetTx_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestGetTx_GRPCGateway() {
+func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -508,7 +479,7 @@ func (s E2ETestSuite) TestGetTx_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestBroadcastTx_GRPC() {
+func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -546,7 +517,7 @@ func (s E2ETestSuite) TestBroadcastTx_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestBroadcastTx_GRPCGateway() {
+func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -691,7 +662,7 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
 }
 
-func (s E2ETestSuite) TestGetBlockWithTxs_GRPC() {
+func (s *E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetBlockWithTxsRequest
@@ -729,7 +700,7 @@ func (s E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
+func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -770,7 +741,7 @@ func (s E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestTxEncode_GRPC() {
+func (s *E2ETestSuite) TestTxEncode_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	protoTx, err := txBuilderToProtoTx(txBuilder)
@@ -845,7 +816,7 @@ func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestTxDecode_GRPC() {
+func (s *E2ETestSuite) TestTxDecode_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -887,7 +858,7 @@ func (s E2ETestSuite) TestTxDecode_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestTxDecode_GRPCGateway() {
+func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -930,7 +901,7 @@ func (s E2ETestSuite) TestTxDecode_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestTxEncodeAmino_GRPC() {
+func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
@@ -1013,7 +984,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 	}
 }
 
-func (s E2ETestSuite) TestTxDecodeAmino_GRPC() {
+func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -1058,7 +1029,7 @@ func (s E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	}
 }
 
-func (s E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
+func (s *E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -1107,7 +1078,7 @@ func TestE2ETestSuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))
 }
 
-func (s E2ETestSuite) mkTxBuilder() client.TxBuilder {
+func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 

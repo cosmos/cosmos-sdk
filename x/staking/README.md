@@ -1565,28 +1565,38 @@ The command `create-validator` allows users to create new validator initialized 
 Usage:
 
 ```bash
-simd tx staking create-validator [flags]
+simd tx staking create-validator [path/to/validator.json] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx staking create-validator \
-  --amount=1000000stake \
-  --pubkey=$(simd tendermint show-validator) \
-  --moniker="my-moniker" \
-  --website="https://myweb.site" \
-  --details="description of your validator" \
+simd tx staking create-validator /path/to/validator.json \
   --chain-id="name_of_chain_id" \
-  --commission-rate="0.10" \
-  --commission-max-rate="0.20" \
-  --commission-max-change-rate="0.01" \
-  --min-self-delegation="1" \
   --gas="auto" \
   --gas-adjustment="1.2" \
   --gas-prices="0.025stake" \
   --from=mykey
 ```
+
+where `validator.json` contains:
+
+```json
+{
+  "pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"BnbwFpeONLqvWqJb3qaUbL5aoIcW3fSuAp9nT3z5f20="},
+  "amount": "1000000stake",
+  "moniker": "my-moniker",
+  "website": "https://myweb.site",
+  "security": "security-contact@gmail.com",
+  "details": "description of your validator",
+  "commission-rate": "0.10",
+  "commission-max-rate": "0.20",
+  "commission-max-change-rate": "0.01",
+  "min-self-delegation": "1"
+}
+```
+
+and pubkey can be obtained by using `simd tendermint show-validator` command.
 
 ##### delegate
 

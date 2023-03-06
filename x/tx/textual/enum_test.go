@@ -13,8 +13,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
 
+	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/textual"
-	"cosmossdk.io/x/tx/textual/internal/testpb"
 )
 
 type enumTest struct {

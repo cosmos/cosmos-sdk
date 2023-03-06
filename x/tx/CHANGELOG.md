@@ -30,3 +30,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+## API Breaking
+
+* [#TODO](https://github.com/cosmos/cosmos-sdk/pull/TODO) Move `x/tx/{textual,aminojson}` into `x/tx/signing`.

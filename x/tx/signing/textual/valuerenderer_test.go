@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/x/tx/internal/testpb"
-	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 func TestDispatcher(t *testing.T) {

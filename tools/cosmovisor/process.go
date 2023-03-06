@@ -16,6 +16,7 @@ import (
 	"github.com/otiai10/copy"
 	"github.com/rs/zerolog"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -26,13 +27,14 @@ type Launcher struct {
 	fw     *fileWatcher
 }
 
-func NewLauncher(logger *zerolog.Logger, cfg *Config) (Launcher, error) {
+func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	fw, err := newUpgradeFileWatcher(logger, cfg.UpgradeInfoFilePath(), cfg.PollInterval)
 	if err != nil {
 		return Launcher{}, err
 	}
 
-	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
+	zl := logger.Impl().(*zerolog.Logger)
+	return Launcher{logger: zl, cfg: cfg, fw: fw}, nil
 }
 
 // Run launches the app in a subprocess and returns when the subprocess (app)

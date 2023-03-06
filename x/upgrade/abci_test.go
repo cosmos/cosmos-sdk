@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
-	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -41,7 +41,7 @@ type TestSuite struct {
 
 var s TestSuite
 
-func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
+func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
@@ -60,7 +60,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 
 	s.module = upgrade.NewAppModule(s.keeper)
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
-	return s //nolint:govet // this is a test, we can copy locks
+	return &s
 }
 
 func TestRequireName(t *testing.T) {

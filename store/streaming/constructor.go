@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/streaming/file"
 	"cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/spf13/cast"
 )

@@ -789,9 +789,12 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 			return err
 		}
 
+		nodeCount := 0
 		for {
 			node, err := exporter.Next()
 			if err == iavltree.ErrorExportDone {
+				rs.logger.Debug("Snapshot Done", "store", store.name, "nodeCount", nodeCount)
+				nodeCount = 0
 				break
 			} else if err != nil {
 				return err
@@ -810,41 +813,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 				rs.logger.Error("snapshot failed; item store write failed", "store", store.name, "err", err)
 				return err
 			}
-<<<<<<< HEAD
-=======
-
-			nodeCount := 0
-			for {
-				node, err := exporter.Next()
-				if err == iavltree.ErrorExportDone {
-					rs.logger.Debug("Snapshot Done", "store", store.name, "nodeCount", nodeCount)
-					nodeCount = 0
-					break
-				} else if err != nil {
-					return err
-				}
-				err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-					Item: &snapshottypes.SnapshotItem_IAVL{
-						IAVL: &snapshottypes.SnapshotIAVLItem{
-							Key:     node.Key,
-							Value:   node.Value,
-							Height:  int32(node.Height),
-							Version: node.Version,
-						},
-					},
-				})
-				if err != nil {
-					return err
-				}
-				nodeCount++
-			}
-
-			return nil
-		}()
-
-		if err != nil {
-			return err
->>>>>>> 183dde8d0 (fix: snapshot recover from exporter error (#13935))
+			nodeCount++
 		}
 		exporter.Close()
 	}
@@ -895,12 +864,8 @@ loop:
 
 		case *snapshottypes.SnapshotItem_IAVL:
 			if importer == nil {
-<<<<<<< HEAD
-				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received IAVL node item before store item")
-=======
 				rs.logger.Error("failed to restore; received IAVL node item before store item")
 				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(types.ErrLogic, "received IAVL node item before store item")
->>>>>>> 183dde8d0 (fix: snapshot recover from exporter error (#13935))
 			}
 			if item.IAVL.Height > math.MaxInt8 {
 				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "node height %v cannot exceed %v",

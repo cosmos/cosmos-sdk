@@ -206,8 +206,6 @@ cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 h1:/jnzJ9zFsL7qkV8
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
 cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44 h1:/pKsj/ApzO4+zMwpgLiPG5iakoHxziGpMiJcz4S+r4w=
 cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44/go.mod h1:flrxUykloEW1asE9p+Q+d8LSuNI3fBRdzISg9HTpYlQ=
-cosmossdk.io/x/tx v0.2.0 h1:53f5TIXhpPYJGMm47SUslcV2i8JNBEN3eE08BmxE/Zg=
-cosmossdk.io/x/tx v0.2.0/go.mod h1:CTko7wgt7aBdbxOesZ+Wo1uO/03ueKzIQ0iI323Rqgk=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=

@@ -58,7 +58,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.NewLogger(), db, nil)
+	app := appBuilder.Build(log.NewTestLogger(t), db, nil)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {

@@ -5,7 +5,6 @@ go 1.20
 require (
 	cosmossdk.io/core v0.6.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
-	github.com/hashicorp/go-multierror v1.1.1 // TODO: remove with go 1.20 release
 	github.com/stretchr/testify v1.8.2
 	pgregory.net/rapid v0.5.5
 )
@@ -28,7 +27,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect

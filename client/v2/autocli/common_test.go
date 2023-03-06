@@ -3,6 +3,7 @@ package autocli
 import (
 	"bytes"
 	"cosmossdk.io/client/v2/internal/testpb"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"gotest.tools/v3/assert"
@@ -43,6 +44,8 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
 		},
+		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
+		AddTxConnFlags:    flags.AddTxFlagsToCmd,
 	}
 
 	cmd, err := buildModuleCommand("test", b)

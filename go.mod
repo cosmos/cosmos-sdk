@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v0.6.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/log v0.0.0-20230303212045-184cf7f0c8c2
+	cosmossdk.io/log v0.0.0-20230305202224-89c956f8ed3a
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
 	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44
 	cosmossdk.io/x/tx v0.2.0
@@ -153,9 +153,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )
-
-// Short-lived replace for an outstanding PR of log.
-replace cosmossdk.io/log => ./log
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

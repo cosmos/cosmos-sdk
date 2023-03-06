@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/stretchr/testify/require"
 
 	"google.golang.org/protobuf/proto"

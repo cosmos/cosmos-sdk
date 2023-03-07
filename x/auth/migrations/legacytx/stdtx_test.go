@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -21,14 +22,17 @@ var (
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
+func init() {
+	amino := codec.NewLegacyAmino()
+	RegisterLegacyAminoCodec(amino)
+}
+
 // Deprecated: use fee amount and gas limit separately on TxBuilder.
 func NewTestStdFee() StdFee {
 	return NewStdFee(100000,
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
 	)
 }
-
-// Deprecated: use TxBuilder.
 
 func TestStdSignBytes(t *testing.T) {
 	type args struct {
@@ -160,4 +164,27 @@ func TestSignatureV2Conversions(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, multiPK, sigV2.PubKey)
 	require.Equal(t, msigData, sigV2.Data)
+}
+
+func TestGetSignaturesV2(t *testing.T) {
+	_, pubKey, _ := testdata.KeyTestPubAddr()
+	dummy := []byte("dummySig")
+
+	cdc := codec.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(cdc)
+	cryptocodec.RegisterCrypto(cdc)
+
+	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	sig := StdSignature{PubKey: pubKey, Signature: dummy}
+	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
+
+	sigs, err := stdTx.GetSignaturesV2()
+	require.Nil(t, err)
+	require.Equal(t, len(sigs), 1)
+
+	require.Equal(t, cdc.MustMarshal(sigs[0].PubKey), cdc.MustMarshal(sig.GetPubKey()))
+	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		Signature: sig.GetSignature(),
+	})
 }

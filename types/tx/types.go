@@ -1,8 +1,6 @@
 package tx
 
 import (
-	"cosmossdk.io/x/tx/signing"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,12 +31,12 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 // GetSigners retrieves all the signers of a tx.
 // This includes all unique signers of the messages (in order),
 // as well as the FeePayer (if specified and not already included).
-func (t *Tx) GetSigners(ctx *signing.GetSignersContext) []string {
+func (t *Tx) GetSigners(codec sdk.MsgCodec) []string {
 	var signers []string
 	seen := map[string]bool{}
 
 	for _, msg := range t.GetMsgs() {
-		signers, err := sdk.GetSigners(msg, ctx)
+		signers, err := codec.GetMsgSigners(msg)
 		if err != nil {
 			panic(err)
 		}
@@ -70,13 +68,13 @@ func (t *Tx) GetFee() sdk.Coins {
 	return t.AuthInfo.Fee.Amount
 }
 
-func (t *Tx) FeePayer(ctx *signing.GetSignersContext) string {
+func (t *Tx) FeePayer(codec sdk.MsgCodec) string {
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" {
 		return feePayer
 	}
 	// use first signer as default if no payer specified
-	return t.GetSigners(ctx)[0]
+	return t.GetSigners(codec)[0]
 }
 
 func (t *Tx) FeeGranter() sdk.AccAddress {
@@ -142,7 +140,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(msgResponseInterfaceProtoName, (*MsgResponse)(nil))
 
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
-	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
 
 	registry.RegisterInterface("cosmos.tx.v1beta1.TxExtensionOptionI", (*ExtensionOptionI)(nil))
 }

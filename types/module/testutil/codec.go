@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
@@ -23,7 +24,7 @@ type TestEncodingConfig struct {
 func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig {
 	cdc := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
-	codec := codec.NewProtoCodec(interfaceRegistry)
+	codec := sdk.NewMsgCodec(codec.NewProtoCodec(interfaceRegistry))
 
 	encCfg := TestEncodingConfig{
 		InterfaceRegistry: interfaceRegistry,

@@ -54,6 +54,8 @@ type (
 		UnmarshalInterface(bz []byte, ptr interface{}) error
 
 		types.AnyUnpacker
+
+		private()
 	}
 
 	JSONCodec interface {
@@ -74,6 +76,8 @@ type (
 		UnmarshalJSON(bz []byte, ptr proto.Message) error
 		// MustUnmarshalJSON calls Unmarshal and panics if error is returned.
 		MustUnmarshalJSON(bz []byte, ptr proto.Message)
+
+		private()
 	}
 
 	// ProtoMarshaler defines an interface a type must implement to serialize itself

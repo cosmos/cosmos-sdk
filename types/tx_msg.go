@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -152,5 +153,31 @@ func GetSigners(msg Msg, getSignersCtx *signing.GetSignersContext) ([]string, er
 			TypeUrl: MsgTypeURL(msg),
 			Value:   bz,
 		})
+	}
+}
+
+type MsgCodec interface {
+	codec.ProtoCodecMarshaler
+
+	GetMsgSigners(Msg) ([]string, error)
+
+	private()
+}
+
+type msgCodec struct {
+	codec.ProtoCodecMarshaler
+	getSignersCtx *signing.GetSignersContext
+}
+
+func (m msgCodec) GetMsgSigners(msg Msg) ([]string, error) {
+	return GetSigners(msg, m.getSignersCtx)
+}
+
+func (m msgCodec) private() {}
+
+func NewMsgCodec(ir types.InterfaceRegistry) MsgCodec {
+	return &msgCodec{
+		ProtoCodecMarshaler: codec.NewProtoCodec(ir),
+		getSignersCtx:       signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: ir.ProtoFiles()}),
 	}
 }

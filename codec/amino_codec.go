@@ -1,6 +1,8 @@
 package codec
 
 import (
+	"fmt"
+
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -124,3 +126,9 @@ func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
 func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
+
+func (ac *AminoCodec) GetMsgSigners(msg interface{}) ([]string, error) {
+	return nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) private() {}

@@ -7,9 +7,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	signing2 "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,8 +21,7 @@ import (
 // wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
 type wrapper struct {
-	cdc           codec.Codec
-	getSignersCtx *signing2.GetSignersContext
+	cdc sdk.MsgCodec
 
 	tx *tx.Tx
 
@@ -58,10 +55,9 @@ type ExtensionOptionsTxBuilder interface {
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
 }
 
-func newBuilder(cdc codec.Codec, getSignersCtx *signing2.GetSignersContext) *wrapper {
+func newBuilder(cdc sdk.MsgCodec) *wrapper {
 	return &wrapper{
-		getSignersCtx: getSignersCtx,
-		cdc:           cdc,
+		cdc: cdc,
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
 			AuthInfo: &tx.AuthInfo{
@@ -174,7 +170,7 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 
 func (w *wrapper) GetSigners() []sdk.AccAddress {
 	if w.signers == nil {
-		signers := w.tx.GetSigners(w.getSignersCtx)
+		signers := w.tx.GetSigners(w.cdc)
 		for _, signer := range signers {
 			signerBz := sdk.MustAccAddressFromBech32(signer)
 			w.signers = append(w.signers, signerBz)

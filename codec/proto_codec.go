@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/cosmos/gogoproto/jsonpb"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-
+	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -26,6 +26,7 @@ type ProtoCodecMarshaler interface {
 // encoding.
 type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
+	getSignersCtx     *signing.GetSignersContext
 }
 
 var (
@@ -35,7 +36,10 @@ var (
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
-	return &ProtoCodec{interfaceRegistry: interfaceRegistry}
+	return &ProtoCodec{
+		interfaceRegistry: interfaceRegistry,
+		getSignersCtx:     signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: interfaceRegistry.ProtoFiles()}),
+	}
 }
 
 // Marshal implements BinaryMarshaler.Marshal method.
@@ -269,6 +273,8 @@ func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
 	return &grpcProtoCodec{cdc: pc}
 }
+
+func (pc *ProtoCodec) private() {}
 
 var errUnknownProtoType = errors.New("codec: unknown proto type") // sentinel error
 

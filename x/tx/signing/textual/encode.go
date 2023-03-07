@@ -3,7 +3,7 @@ package textual
 import (
 	"io"
 
-	"cosmossdk.io/x/tx/textual/internal/cbor"
+	"cosmossdk.io/x/tx/signing/textual/internal/cbor"
 )
 
 var (

@@ -12,7 +12,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 func TestIntJsonTestcases(t *testing.T) {

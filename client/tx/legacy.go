@@ -1,9 +1,35 @@
 package tx
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
+
+// ConvertTxToStdTx converts a transaction to the legacy StdTx format
+func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (legacytx.StdTx, error) {
+	if stdTx, ok := tx.(legacytx.StdTx); ok {
+		return stdTx, nil
+	}
+
+	aminoTxConfig := legacytx.StdTxConfig{Cdc: codec}
+	builder := aminoTxConfig.NewTxBuilder()
+
+	err := CopyTx(tx, builder, true)
+	if err != nil {
+		return legacytx.StdTx{}, err
+	}
+
+	stdTx, ok := builder.GetTx().(legacytx.StdTx)
+	if !ok {
+		return legacytx.StdTx{}, fmt.Errorf("expected %T, got %+v", legacytx.StdTx{}, builder.GetTx())
+	}
+
+	return stdTx, nil
+}
 
 // CopyTx copies a Tx to a new TxBuilder, allowing conversion between
 // different transaction formats. If ignoreSignatureError is true, copying will continue

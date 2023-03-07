@@ -9,6 +9,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	signing2 "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -79,6 +80,8 @@ type Keeper struct {
 	router baseapp.MessageRouter
 
 	config group.Config
+
+	getSignersCtx *signing2.GetSignersContext
 }
 
 // NewKeeper creates a new group keeper.

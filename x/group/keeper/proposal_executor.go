@@ -5,6 +5,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -37,7 +38,7 @@ func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, pro
 	}
 
 	results := make([]sdk.Result, len(msgs))
-	if err := ensureMsgAuthZ(msgs, groupPolicyAcc); err != nil {
+	if err := ensureMsgAuthZ(msgs, groupPolicyAcc, s.getSignersCtx); err != nil {
 		return nil, err
 	}
 	for i, msg := range msgs {
@@ -61,15 +62,20 @@ func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, pro
 
 // ensureMsgAuthZ checks that if a message requires signers that all of them
 // are equal to the given account address of group policy.
-func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress) error {
+func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, getSignersCtx *signing.GetSignersContext) error {
 	for i := range msgs {
 		// In practice, GetSigners() should return a non-empty array without
 		// duplicates, so the code below is equivalent to:
 		// `msgs[i].GetSigners()[0] == groupPolicyAcc`
 		// but we prefer to loop through all GetSigners just to be sure.
-		for _, acct := range msgs[i].GetSigners() {
-			if !groupPolicyAcc.Equals(acct) {
-				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), acct.String())
+		signers, err := sdk.GetSigners(msgs[i], getSignersCtx)
+		if err != nil {
+			return err
+		}
+
+		for _, acct := range signers {
+			if groupPolicyAcc.String() != acct {
+				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), acct)
 			}
 		}
 	}

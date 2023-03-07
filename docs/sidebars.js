@@ -35,7 +35,7 @@ const sidebars = {
         {
           type: "link",
           label: "REST API Spec",
-          href: "https://v1.cosmos.network/rpc/v0.45.1",
+          href: "https://docs.cosmos.network/swagger/",
         },
         {
           type: "link",

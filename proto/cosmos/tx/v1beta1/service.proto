@@ -214,10 +214,14 @@ message GetMemTxsRequest {
 
 // GetMemTxsResponse is the response type for the Service.GetMemTxs
 message GetMemTxsResponse {
+  // Count of txs in current page
+  uint64 count = 1;
+  // Count of all txs in mempool
+  uint64 total_count = 2;
+  // Count bytes of all txs in mempool
+  uint64 TotalBytes = 3;
   // txs is the list of queried transactions.
-  repeated cosmos.tx.v1beta1.Tx txs = 1;
-  // tx_response is the queried TxResponses.
-  cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
+  repeated cosmos.tx.v1beta1.Tx txs = 4;
 }
 
 // GetBlockWithTxsRequest is the request type for the Service.GetBlockWithTxs

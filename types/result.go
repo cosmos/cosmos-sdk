@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
+
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -139,6 +140,16 @@ func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse
 		PageNumber: page,
 		PageTotal:  uint64(totalPages),
 		Limit:      limit,
+		Txs:        txs,
+	}
+}
+
+func NewUnconfirmedTxsResult(count, totalCount, totalBytes uint64, txs []*codectypes.Any) *UnconfirmedTxsResult {
+
+	return &UnconfirmedTxsResult{
+		Count:      count,
+		TotalCount: totalCount,
+		TotalBytes: totalBytes,
 		Txs:        txs,
 	}
 }

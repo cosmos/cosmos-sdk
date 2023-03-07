@@ -93,6 +93,32 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 	return out, nil
 }
 
+func QueryMemTxs(clientCtx client.Context, limit int) (*sdk.UnconfirmedTxsResult, error) {
+	node, err := clientCtx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	resTx, err := node.UnconfirmedTxs(context.Background(), &limit)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*codectypes.Any, len(resTx.Txs))
+	for i, tx := range resTx.Txs {
+		txb, err := clientCtx.TxConfig.TxDecoder()(tx)
+		if err != nil {
+			return nil, err
+		}
+		p, ok := txb.(intoAny)
+		if !ok {
+			return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
+		}
+		any := p.AsAny()
+		out[i] = any
+	}
+	return sdk.NewUnconfirmedTxsResult(uint64(resTx.Count), uint64(resTx.Total), uint64(resTx.TotalBytes), out), nil
+}
+
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
 func formatTxResults(txConfig client.TxConfig, resTxs []*coretypes.ResultTx, resBlocks map[int64]*coretypes.ResultBlock) ([]*sdk.TxResponse, error) {
 	var err error

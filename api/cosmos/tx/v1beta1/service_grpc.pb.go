@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Service_Simulate_FullMethodName        = "/cosmos.tx.v1beta1.Service/Simulate"
 	Service_GetTx_FullMethodName           = "/cosmos.tx.v1beta1.Service/GetTx"
+	Service_GetMemTxs_FullMethodName       = "/cosmos.tx.v1beta1.Service/GetMemTxs"
 	Service_BroadcastTx_FullMethodName     = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 	Service_GetTxsEvent_FullMethodName     = "/cosmos.tx.v1beta1.Service/GetTxsEvent"
 	Service_GetBlockWithTxs_FullMethodName = "/cosmos.tx.v1beta1.Service/GetBlockWithTxs"
@@ -38,6 +39,8 @@ type ServiceClient interface {
 	Simulate(ctx context.Context, in *SimulateRequest, opts ...grpc.CallOption) (*SimulateResponse, error)
 	// GetTx fetches a tx by hash.
 	GetTx(ctx context.Context, in *GetTxRequest, opts ...grpc.CallOption) (*GetTxResponse, error)
+	// GetTx fetches unconfirmed txs in the mempool
+	GetMemTxs(ctx context.Context, in *GetMemTxsRequest, opts ...grpc.CallOption) (*GetMemTxsResponse, error)
 	// BroadcastTx broadcast transaction.
 	BroadcastTx(ctx context.Context, in *BroadcastTxRequest, opts ...grpc.CallOption) (*BroadcastTxResponse, error)
 	// GetTxsEvent fetches txs by event.
@@ -84,6 +87,15 @@ func (c *serviceClient) Simulate(ctx context.Context, in *SimulateRequest, opts 
 func (c *serviceClient) GetTx(ctx context.Context, in *GetTxRequest, opts ...grpc.CallOption) (*GetTxResponse, error) {
 	out := new(GetTxResponse)
 	err := c.cc.Invoke(ctx, Service_GetTx_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) GetMemTxs(ctx context.Context, in *GetMemTxsRequest, opts ...grpc.CallOption) (*GetMemTxsResponse, error) {
+	out := new(GetMemTxsResponse)
+	err := c.cc.Invoke(ctx, Service_GetMemTxs_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +173,8 @@ type ServiceServer interface {
 	Simulate(context.Context, *SimulateRequest) (*SimulateResponse, error)
 	// GetTx fetches a tx by hash.
 	GetTx(context.Context, *GetTxRequest) (*GetTxResponse, error)
+	// GetTx fetches unconfirmed txs in the mempool
+	GetMemTxs(context.Context, *GetMemTxsRequest) (*GetMemTxsResponse, error)
 	// BroadcastTx broadcast transaction.
 	BroadcastTx(context.Context, *BroadcastTxRequest) (*BroadcastTxResponse, error)
 	// GetTxsEvent fetches txs by event.
@@ -197,6 +211,9 @@ func (UnimplementedServiceServer) Simulate(context.Context, *SimulateRequest) (*
 }
 func (UnimplementedServiceServer) GetTx(context.Context, *GetTxRequest) (*GetTxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTx not implemented")
+}
+func (UnimplementedServiceServer) GetMemTxs(context.Context, *GetMemTxsRequest) (*GetMemTxsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMemTxs not implemented")
 }
 func (UnimplementedServiceServer) BroadcastTx(context.Context, *BroadcastTxRequest) (*BroadcastTxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BroadcastTx not implemented")
@@ -264,6 +281,24 @@ func _Service_GetTx_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ServiceServer).GetTx(ctx, req.(*GetTxRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_GetMemTxs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMemTxsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).GetMemTxs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_GetMemTxs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).GetMemTxs(ctx, req.(*GetMemTxsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -408,6 +443,10 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTx",
 			Handler:    _Service_GetTx_Handler,
+		},
+		{
+			MethodName: "GetMemTxs",
+			Handler:    _Service_GetMemTxs_Handler,
 		},
 		{
 			MethodName: "BroadcastTx",

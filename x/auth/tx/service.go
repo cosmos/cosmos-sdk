@@ -138,6 +138,35 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	}, nil
 }
 
+// GetMemTxs implements the ServiceServer.GetMemTxs RPC method.
+func (s txServer) GetMemTxs(ctx context.Context, req *txtypes.GetMemTxsRequest) (*txtypes.GetMemTxsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	result, err := QueryMemTxs(s.clientCtx, int(req.Limit))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	txsList := make([]*txtypes.Tx, len(result.Txs))
+	for i, tx := range result.Txs {
+		protoTx, ok := tx.GetCachedValue().(*txtypes.Tx)
+		if !ok {
+			return nil, status.Errorf(codes.Internal, "expected %T, got %T", txtypes.Tx{}, tx.GetCachedValue())
+		}
+
+		txsList[i] = protoTx
+	}
+
+	return &txtypes.GetMemTxsResponse{
+		Count:      result.Count,
+		TotalCount: result.TotalCount,
+		TotalBytes: result.TotalBytes,
+		Txs:        txsList,
+	}, nil
+}
+
 // protoTxProvider is a type which can provide a proto transaction. It is a
 // workaround to get access to the wrapper TxBuilder's method GetProtoTx().
 // ref: https://github.com/cosmos/cosmos-sdk/issues/10347

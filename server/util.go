@@ -352,30 +352,6 @@ func ExternalIP() (string, error) {
 	return "", errors.New("are you connected to the network?")
 }
 
-// TrapSignal traps SIGINT and SIGTERM and terminates the server correctly.
-func TrapSignal(cleanupFunc func()) {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		sig := <-sigs
-
-		if cleanupFunc != nil {
-			cleanupFunc()
-		}
-		exitCode := 128
-
-		switch sig {
-		case syscall.SIGINT:
-			exitCode += int(syscall.SIGINT)
-		case syscall.SIGTERM:
-			exitCode += int(syscall.SIGTERM)
-		}
-
-		os.Exit(exitCode)
-	}()
-}
-
 // ListenForQuitSignals listens for SIGINT and SIGTERM. When a signal is received,
 // the cleanup function is called, indicating the caller can gracefully exit or
 // return.

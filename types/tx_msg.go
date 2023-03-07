@@ -57,7 +57,7 @@ type (
 
 		// ValidateBasic does a simple and lightweight validation check that doesn't
 		// require access to any other information.
-		ValidateBasic(getSignersCtx *signing.GetSignersContext) error
+		ValidateBasic() error
 	}
 
 	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators

@@ -5,7 +5,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	signing2 "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -20,14 +19,10 @@ import (
 // If ValidateBasic passes, decorator calls next AnteHandler in chain. Note,
 // ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
 // is not dependent on application state.
-type ValidateBasicDecorator struct {
-	getSignersContext *signing2.GetSignersContext
-}
+type ValidateBasicDecorator struct{}
 
-func NewValidateBasicDecorator(getSignersContext *signing2.GetSignersContext) ValidateBasicDecorator {
-	return ValidateBasicDecorator{
-		getSignersContext: getSignersContext,
-	}
+func NewValidateBasicDecorator() ValidateBasicDecorator {
+	return ValidateBasicDecorator{}
 }
 
 func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
@@ -36,7 +31,7 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 		return next(ctx, tx, simulate)
 	}
 
-	if err := tx.ValidateBasic(vbd.getSignersContext); err != nil {
+	if err := tx.ValidateBasic(); err != nil {
 		return ctx, err
 	}
 

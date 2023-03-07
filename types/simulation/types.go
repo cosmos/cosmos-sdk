@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -101,7 +99,7 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 		return NewOperationMsgBasic(moduleName, msgType, comment, ok, legacyMsg.GetSignBytes())
 	}
 
-	return NewOperationMsgBasic(moduleName, msgType, comment, ok, cdc.MustMarshalJSON(msg.(proto.Message)))
+	return NewOperationMsgBasic(moduleName, msgType, comment, ok, cdc.MustMarshalJSON(msg))
 }
 
 // NoOpMsg - create a no-operation message

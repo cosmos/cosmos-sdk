@@ -1,6 +1,8 @@
 package tx
 
 import (
+	"fmt"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	errorsmod "cosmossdk.io/errors"
@@ -21,7 +23,8 @@ import (
 // wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
 type wrapper struct {
-	cdc codec.Codec
+	cdc           codec.Codec
+	getSignersCtx *signing2.GetSignersContext
 
 	tx *tx.Tx
 
@@ -34,6 +37,8 @@ type wrapper struct {
 	authInfoBz []byte
 
 	txBodyHasUnknownNonCriticals bool
+
+	signers []sdk.AccAddress
 }
 
 var (
@@ -53,9 +58,10 @@ type ExtensionOptionsTxBuilder interface {
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
 }
 
-func newBuilder(cdc codec.Codec) *wrapper {
+func newBuilder(cdc codec.Codec, getSignersCtx *signing2.GetSignersContext) *wrapper {
 	return &wrapper{
-		cdc: cdc,
+		getSignersCtx: getSignersCtx,
+		cdc:           cdc,
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
 			AuthInfo: &tx.AuthInfo{
@@ -69,8 +75,69 @@ func (w *wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
 }
 
-func (w *wrapper) ValidateBasic(ctx *signing2.GetSignersContext) error {
-	return w.tx.ValidateBasic(ctx)
+func (w *wrapper) ValidateBasic() error {
+	if w.tx == nil {
+		return fmt.Errorf("bad Tx")
+	}
+
+	body := w.tx.Body
+	if body == nil {
+		return fmt.Errorf("missing TxBody")
+	}
+
+	authInfo := w.tx.AuthInfo
+	if authInfo == nil {
+		return fmt.Errorf("missing AuthInfo")
+	}
+
+	fee := authInfo.Fee
+	if fee == nil {
+		return fmt.Errorf("missing fee")
+	}
+
+	if fee.GasLimit > tx.MaxGasWanted {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"invalid gas supplied; %d > %d", fee.GasLimit, tx.MaxGasWanted,
+		)
+	}
+
+	if fee.Amount.IsAnyNil() {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInsufficientFee,
+			"invalid fee provided: null",
+		)
+	}
+
+	if fee.Amount.IsAnyNegative() {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInsufficientFee,
+			"invalid fee provided: %s", fee.Amount,
+		)
+	}
+
+	if fee.Payer != "" {
+		_, err := sdk.AccAddressFromBech32(fee.Payer)
+		if err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
+		}
+	}
+
+	sigs := w.tx.Signatures
+
+	if len(sigs) == 0 {
+		return sdkerrors.ErrNoSignatures
+	}
+
+	signers := w.GetSigners()
+	if len(sigs) != len(signers) {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrUnauthorized,
+			"wrong number of signers; expected %d, got %d", len(signers), len(sigs),
+		)
+	}
+
+	return nil
 }
 
 func (w *wrapper) getBodyBytes() []byte {
@@ -105,8 +172,15 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 	return w.authInfoBz
 }
 
-func (w *wrapper) GetSigners(ctx *signing2.GetSignersContext) []string {
-	return w.tx.GetSigners(ctx)
+func (w *wrapper) GetSigners() []sdk.AccAddress {
+	if w.signers == nil {
+		signers := w.tx.GetSigners(w.getSignersCtx)
+		for _, signer := range signers {
+			signerBz := sdk.MustAccAddressFromBech32(signer)
+			w.signers = append(w.signers, signerBz)
+		}
+	}
+	return w.signers
 }
 
 func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
@@ -294,12 +368,12 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	for i, sig := range signatures {
 		var modeInfo *tx.ModeInfo
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-		any, err := codectypes.NewAnyWithValue(sig.PubKey)
+		a, err := codectypes.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return err
 		}
 		signerInfos[i] = &tx.SignerInfo{
-			PublicKey: any,
+			PublicKey: a,
 			ModeInfo:  modeInfo,
 			Sequence:  sig.Sequence,
 		}
@@ -445,7 +519,10 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	for i, msgAny := range body.Messages {
 		msgs[i] = msgAny.GetCachedValue().(sdk.Msg)
 	}
-	w.SetMsgs(msgs...)
+	err = w.SetMsgs(msgs...)
+	if err != nil {
+		return err
+	}
 	w.SetTip(data.GetSignDoc().GetTip())
 
 	// Get the aux signer's index in GetSigners.

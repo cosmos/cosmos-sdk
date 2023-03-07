@@ -192,9 +192,9 @@ func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	return simRes, nil
 }
 
-func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
+func isTxSigner(user sdk.AccAddress, signers []string) bool {
 	for _, s := range signers {
-		if bytes.Equal(user.Bytes(), s.Bytes()) {
+		if user.String() == s {
 			return true
 		}
 	}

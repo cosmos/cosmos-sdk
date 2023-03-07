@@ -93,7 +93,7 @@ func TestDirectModeHandler(t *testing.T) {
 
 	for i, msg := range msgs {
 		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg.(proto.Message))
+		anys[i], err = codectypes.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
@@ -153,8 +153,8 @@ func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
 
 type nonProtoTx int
 
-func (npt *nonProtoTx) GetMsgs() []sdk.Msg                              { return nil }
-func (npt *nonProtoTx) ValidateBasic(*signing2.GetSignersContext) error { return nil }
+func (npt *nonProtoTx) GetMsgs() []sdk.Msg   { return nil }
+func (npt *nonProtoTx) ValidateBasic() error { return nil }
 
 var _ sdk.Tx = (*nonProtoTx)(nil)
 

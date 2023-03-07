@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	signing2 "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -13,12 +14,13 @@ import (
 )
 
 type config struct {
-	handler     signing.SignModeHandler
-	decoder     sdk.TxDecoder
-	encoder     sdk.TxEncoder
-	jsonDecoder sdk.TxDecoder
-	jsonEncoder sdk.TxEncoder
-	protoCodec  codec.ProtoCodecMarshaler
+	handler       signing.SignModeHandler
+	decoder       sdk.TxDecoder
+	encoder       sdk.TxEncoder
+	jsonDecoder   sdk.TxDecoder
+	jsonEncoder   sdk.TxEncoder
+	protoCodec    codec.ProtoCodecMarshaler
+	getSignersCtx *signing2.GetSignersContext
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
@@ -57,7 +59,7 @@ func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler signin
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {
-	return newBuilder(g.protoCodec)
+	return newBuilder(g.protoCodec, g.getSignersCtx)
 }
 
 // WrapTxBuilder returns a builder from provided transaction

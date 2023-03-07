@@ -8559,7 +8559,7 @@ func (x *SearchTxsResult) GetTxs() []*TxResponse {
 	return nil
 }
 
-// SearchTxsResult defines a structure for querying txs pageable
+// UnconfirmedTxsResult defines a structure for querying mempool txs
 type UnconfirmedTxsResult struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

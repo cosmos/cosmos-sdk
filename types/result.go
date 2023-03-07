@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
-
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"

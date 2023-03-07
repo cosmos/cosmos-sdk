@@ -158,7 +158,7 @@ message SearchTxsResult {
   repeated TxResponse txs = 6;
 }
 
-// SearchTxsResult defines a structure for querying txs pageable
+// UnconfirmedTxsResult defines a structure for querying mempool txs
 message UnconfirmedTxsResult {
   option (gogoproto.stringer) = true;
 

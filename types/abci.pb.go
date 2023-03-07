@@ -620,7 +620,7 @@ func (m *SearchTxsResult) GetTxs() []*TxResponse {
 	return nil
 }
 
-// SearchTxsResult defines a structure for querying txs pageable
+// UnconfirmedTxsResult defines a structure for querying mempool txs
 type UnconfirmedTxsResult struct {
 	// Count of txs in current page
 	Count uint64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`

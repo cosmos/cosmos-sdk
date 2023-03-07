@@ -181,12 +181,14 @@ func NewBaseApp(
 		app.SetMempool(mempool.NoOpMempool{})
 	}
 
-	if app.processProposal == nil {
-		app.SetProcessProposal(app.DefaultProcessProposal())
-	}
+	abciProposalHandler := NewDefaultProposalHandler(app.mempool, app)
 
 	if app.prepareProposal == nil {
-		app.SetPrepareProposal(app.DefaultPrepareProposal())
+		app.SetPrepareProposal(abciProposalHandler.PrepareProposalHandler())
+	}
+
+	if app.processProposal == nil {
+		app.SetProcessProposal(abciProposalHandler.ProcessProposalHandler())
 	}
 
 	if app.interBlockCache != nil {
@@ -877,7 +879,46 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 	return bz, err
 }
 
-// DefaultPrepareProposal returns the default implementation for processing an
+// ProcessProposalVerifyTx performs transaction verification when receiving a
+// block proposal during ProcessProposal. Any state committed to the
+// ProcessProposal state internally will be discarded. <nil, err> will be
+// returned if the transaction cannot be decoded. <Tx, nil> will be returned if
+// the transaction is valid, otherwise <Tx, err> will be returned.
+func (bapp *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
+	tx, err := bapp.txDecoder(txBz)
+	if err != nil {
+		return nil, errors.WithSecondaryError(ErrTxDecode, err)
+	}
+
+	_, _, _, _, err = bapp.runTx(runTxProcessProposal, txBz)
+	return tx, err
+}
+
+type (
+	// ProposalTxVerifier defines the interface that is implemented by BaseApp,
+	// that any custom ABCI PrepareProposal and ProcessProposal handler can use
+	// to verify a transaction.
+	ProposalTxVerifier interface {
+		PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error)
+		ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error)
+	}
+
+	// DefaultProposalHandler defines the default ABCI PrepareProposal and
+	// ProcessProposal handlers.
+	DefaultProposalHandler struct {
+		mempool    mempool.Mempool
+		txVerifier ProposalTxVerifier
+	}
+)
+
+func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) DefaultProposalHandler {
+	return DefaultProposalHandler{
+		mempool:    mp,
+		txVerifier: txVerifier,
+	}
+}
+
+// PrepareProposalHandler returns the default implementation for processing an
 // ABCI proposal. The application's mempool is enumerated and all valid
 // transactions are added to the proposal. Transactions are valid if they:
 //
@@ -897,12 +938,12 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 // - If no mempool is set or if the mempool is a no-op mempool, the transactions
 // requested from CometBFT will simply be returned, which, by default, are in
 // FIFO order.
-func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
+func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		// If the mempool is nil or a no-op mempool, we simply return the transactions
 		// requested from CometBFT, which, by default, should be in FIFO order.
-		_, isNoOp := app.mempool.(mempool.NoOpMempool)
-		if app.mempool == nil || isNoOp {
+		_, isNoOp := h.mempool.(mempool.NoOpMempool)
+		if h.mempool == nil || isNoOp {
 			return abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 
@@ -911,18 +952,18 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 			byteCount int64
 		)
 
-		iterator := app.mempool.Select(ctx, req.Txs)
+		iterator := h.mempool.Select(ctx, req.Txs)
 		for iterator != nil {
 			memTx := iterator.Tx()
 
-			bz, err := app.PrepareProposalVerifyTx(memTx)
+			bz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			txSize := int64(len(bz))
 			switch {
 			case bz == nil && errors.Is(err, ErrTxEncode):
 				panic(err)
 
 			case bz != nil && err != nil:
-				err := app.mempool.Remove(memTx)
+				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					panic(err)
 				}
@@ -945,34 +986,21 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 	}
 }
 
-// ProcessProposalVerifyTx performs transaction verification when receiving a
-// block proposal during ProcessProposal. Any state committed to the
-// ProcessProposal state internally will be discarded. <nil, err> will be
-// returned if the transaction cannot be decoded. <Tx, nil> will be returned if
-// the transaction is valid, otherwise <Tx, err> will be returned.
-func (bapp *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
-	tx, err := bapp.txDecoder(txBz)
-	if err != nil {
-		return nil, errors.WithSecondaryError(ErrTxDecode, err)
-	}
-
-	_, _, _, _, err = bapp.runTx(runTxProcessProposal, txBz)
-	return tx, err
-}
-
-// DefaultProcessProposal returns the default implementation for processing an ABCI proposal.
-// Every transaction in the proposal must pass 2 conditions:
+// ProcessProposalHandler returns the default implementation for processing an
+// ABCI proposal. Every transaction in the proposal must pass 2 conditions:
 //
 // 1. The transaction bytes must decode to a valid transaction.
 // 2. The transaction must be valid (i.e. pass runTx, AnteHandler only)
 //
-// If any transaction fails to pass either condition, the proposal is rejected.  Note that step (2) is identical to the
-// validation step performed in DefaultPrepareProposal.  It is very important that the same validation logic is used
-// in both steps, and applications must ensure that this is the case in non-default handlers.
-func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
+// If any transaction fails to pass either condition, the proposal is rejected.
+// Note that step (2) is identical to the validation step performed in
+// DefaultPrepareProposal. It is very important that the same validation logic
+// is used in both steps, and applications must ensure that this is the case in
+// non-default handlers.
+func (h DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		for _, txBytes := range req.Txs {
-			_, err := app.ProcessProposalVerifyTx(txBytes)
+			_, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}

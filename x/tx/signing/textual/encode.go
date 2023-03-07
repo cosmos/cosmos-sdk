@@ -23,8 +23,7 @@ var (
 //	sign_doc = {
 //	  screens_key: [* screen],
 //	}
-//
-// screens_key = 1
+//	screens_key = 1
 //
 //	screen = {
 //	  ? title_key: tstr,

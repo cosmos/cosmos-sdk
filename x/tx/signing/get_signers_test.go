@@ -7,6 +7,9 @@ import (
 	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	anyutil "github.com/cosmos/cosmos-proto/any"
 
 	"cosmossdk.io/x/tx/internal/testpb"
 )
@@ -110,4 +113,30 @@ func TestGetSigners(t *testing.T) {
 
 		})
 	}
+}
+
+func TestGetSignersForAny(t *testing.T) {
+	ctx := NewGetSignersContext(GetSignersOptions{})
+	msg := &bankv1beta1.MsgSend{
+		FromAddress: "foo",
+	}
+	a, err := anyutil.New(msg)
+	require.NoError(t, err)
+	signers, err := ctx.GetSignersForAny(a)
+	require.NoError(t, err)
+	require.Equal(t, []string{"foo"}, signers)
+}
+
+func TestGetSignersForAnyDynamicPB(t *testing.T) {
+	ctx := NewGetSignersContext(GetSignersOptions{
+		ProtoTypes: &protoregistry.Types{}, // we instantiate a new empty types instance to force usage of dynamicpb
+	})
+	msg := &bankv1beta1.MsgSend{
+		FromAddress: "foo",
+	}
+	a, err := anyutil.New(msg)
+	require.NoError(t, err)
+	signers, err := ctx.GetSignersForAny(a)
+	require.NoError(t, err)
+	require.Equal(t, []string{"foo"}, signers)
 }

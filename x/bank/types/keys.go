@@ -32,7 +32,7 @@ var (
 	BalancesPrefix = []byte{0x02}
 
 	// SendEnabledPrefix is the prefix for the SendDisabled flags for a Denom.
-	SendEnabledPrefix = []byte{0x04}
+	SendEnabledPrefix = collections.NewPrefix(4)
 
 	// ParamsKey is the prefix for x/bank parameters
 	ParamsKey = collections.NewPrefix(5)
@@ -78,13 +78,5 @@ func CreateDenomAddressPrefix(denom string) []byte {
 	key := make([]byte, len(DenomAddressPrefix)+len(denom)+1)
 	copy(key, DenomAddressPrefix)
 	copy(key[len(DenomAddressPrefix):], denom)
-	return key
-}
-
-// CreateSendEnabledKey creates the key of the SendDisabled flag for a denom.
-func CreateSendEnabledKey(denom string) []byte {
-	key := make([]byte, len(SendEnabledPrefix)+len(denom))
-	copy(key, SendEnabledPrefix)
-	copy(key[len(SendEnabledPrefix):], denom)
 	return key
 }

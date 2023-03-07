@@ -92,20 +92,13 @@ func (k BaseSendKeeper) GetAuthority() string {
 
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return params
-	}
-
-	k.cdc.MustUnmarshal(bz, &params)
-	return params
+	p, _ := k.Params.Get(ctx)
+	return p
 }
 
 // SetParams sets the total set of bank parameters.
 //
 // Note: params.SendEnabled is deprecated but it should be here regardless.
-
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 	// Normally SendEnabled is deprecated but we still support it for backwards
 	// compatibility. Using params.Validate() would fail due to the SendEnabled
@@ -116,15 +109,7 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 		// override params without SendEnabled
 		params = types.NewParams(params.DefaultSendEnabled)
 	}
-
-	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.Marshal(&params)
-	if err != nil {
-		return err
-	}
-
-	store.Set(types.ParamsKey, bz)
-	return nil
+	return k.Params.Set(ctx, params)
 }
 
 // InputOutputCoins performs multi-send functionality. It accepts a series of

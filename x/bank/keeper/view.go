@@ -43,18 +43,22 @@ type BaseViewKeeper struct {
 	storeKey storetypes.StoreKey
 	ak       types.AccountKeeper
 
-	Schema collections.Schema
-	Supply collections.Map[string, math.Int]
+	Schema        collections.Schema
+	Supply        collections.Map[string, math.Int]
+	DenomMetadata collections.Map[string, types.Metadata]
+	Params        collections.Item[types.Params]
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
 func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)))
 	k := BaseViewKeeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		ak:       ak,
-		Supply:   collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		cdc:           cdc,
+		storeKey:      storeKey,
+		ak:            ak,
+		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
+		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()

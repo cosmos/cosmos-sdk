@@ -24,7 +24,7 @@ const (
 // KVStore keys
 var (
 	SupplyKey           = collections.NewPrefix(0)
-	DenomMetadataPrefix = []byte{0x1}
+	DenomMetadataPrefix = collections.NewPrefix(1)
 	DenomAddressPrefix  = []byte{0x03}
 
 	// BalancesPrefix is the prefix for the account balances store. We use a byte
@@ -35,7 +35,7 @@ var (
 	SendEnabledPrefix = []byte{0x04}
 
 	// ParamsKey is the prefix for x/bank parameters
-	ParamsKey = []byte{0x05}
+	ParamsKey = collections.NewPrefix(5)
 )
 
 // AddressAndDenomFromBalancesStore returns an account address and denom from a balances prefix

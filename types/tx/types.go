@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +32,7 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 // GetSigners retrieves all the signers of a tx.
 // This includes all unique signers of the messages (in order),
 // as well as the FeePayer (if specified and not already included).
-func (t *Tx) GetSigners(codec sdk.MsgCodec) []string {
+func (t *Tx) GetSigners(codec codec.Codec) []string {
 	var signers []string
 	seen := map[string]bool{}
 
@@ -68,7 +69,7 @@ func (t *Tx) GetFee() sdk.Coins {
 	return t.AuthInfo.Fee.Amount
 }
 
-func (t *Tx) FeePayer(codec sdk.MsgCodec) string {
+func (t *Tx) FeePayer(codec codec.Codec) string {
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" {
 		return feePayer

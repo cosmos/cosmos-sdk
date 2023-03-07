@@ -166,7 +166,7 @@ type GovInputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
-	Cdc              codec.ProtoCodecMarshaler
+	Cdc              codec.Codec
 	Key              *store.KVStoreKey
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter baseapp.MessageRouter

@@ -20,7 +20,7 @@ import (
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 
-	"cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -147,7 +147,7 @@ type BaseApp struct { //nolint: maligned
 	// and exposing the requests and responses to external consumers
 	abciListeners []storetypes.ABCIListener
 
-	getSignersCtx *signing.GetSignersContext
+	cdc codec.Codec
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -191,16 +191,6 @@ func NewBaseApp(
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
-
-	mergedProtoRegistry, err := proto.MergedRegistry()
-	if err != nil {
-		panic(err)
-	}
-	app.getSignersCtx = signing.NewGetSignersContext(
-		signing.GetSignersOptions{
-			ProtoFiles: mergedProtoRegistry,
-		},
-	)
 
 	return app
 }
@@ -808,7 +798,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		// create message events
-		msgEvents := createEvents(app.getSignersCtx, msgResult.GetEvents(), msg)
+		msgEvents := createEvents(app.cdc, msgResult.GetEvents(), msg)
 
 		// append message events, data and logs
 		//
@@ -850,12 +840,12 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(getSignersCtx *signing.GetSignersContext, events sdk.Events, msg sdk.Msg) sdk.Events {
+func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg) sdk.Events {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
 	// we set the signer attribute as the sender
-	signers, err := sdk.GetSigners(msg, getSignersCtx)
+	signers, err := cdc.GetMsgSigners(msg)
 	if err != nil {
 		panic(err)
 	}

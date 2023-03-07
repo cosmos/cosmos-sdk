@@ -244,7 +244,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateGroup generates a MsgCreateGroup with random values
-func SimulateMsgCreateGroup(cdc sdk.MsgCodec, ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
+func SimulateMsgCreateGroup(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -287,7 +287,7 @@ func SimulateMsgCreateGroup(cdc sdk.MsgCodec, ak group.AccountKeeper, bk group.B
 }
 
 // SimulateMsgCreateGroupWithPolicy generates a MsgCreateGroupWithPolicy with random values
-func SimulateMsgCreateGroupWithPolicy(cdc sdk.MsgCodec, ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
+func SimulateMsgCreateGroupWithPolicy(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -347,7 +347,7 @@ func SimulateMsgCreateGroupWithPolicy(cdc sdk.MsgCodec, ak group.AccountKeeper, 
 }
 
 // SimulateMsgCreateGroupPolicy generates a NewMsgCreateGroupPolicy with random values
-func SimulateMsgCreateGroupPolicy(cdc sdk.MsgCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgCreateGroupPolicy(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -408,7 +408,7 @@ func SimulateMsgCreateGroupPolicy(cdc sdk.MsgCodec, ak group.AccountKeeper, bk g
 }
 
 // SimulateMsgSubmitProposal generates a NewMsgSubmitProposal with random values
-func SimulateMsgSubmitProposal(cdc sdk.MsgCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgSubmitProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -484,7 +484,7 @@ func SimulateMsgSubmitProposal(cdc sdk.MsgCodec, ak group.AccountKeeper, bk grou
 }
 
 // SimulateMsgUpdateGroupAdmin generates a MsgUpdateGroupAdmin with random values
-func SimulateMsgUpdateGroupAdmin(cdc sdk.MsgCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgUpdateGroupAdmin(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -544,7 +544,7 @@ func SimulateMsgUpdateGroupAdmin(cdc sdk.MsgCodec, ak group.AccountKeeper, bk gr
 }
 
 // SimulateMsgUpdateGroupMetadata generates a MsgUpdateGroupMetadata with random values
-func SimulateMsgUpdateGroupMetadata(cdc sdk.MsgCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgUpdateGroupMetadata(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -595,7 +595,7 @@ func SimulateMsgUpdateGroupMetadata(cdc sdk.MsgCodec, ak group.AccountKeeper, bk
 }
 
 // SimulateMsgUpdateGroupMembers generates a MsgUpdateGroupMembers with random values
-func SimulateMsgUpdateGroupMembers(cdc sdk.MsgCodec, ak group.AccountKeeper,
+func SimulateMsgUpdateGroupMembers(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
@@ -675,7 +675,7 @@ func SimulateMsgUpdateGroupMembers(cdc sdk.MsgCodec, ak group.AccountKeeper,
 }
 
 // SimulateMsgUpdateGroupPolicyAdmin generates a MsgUpdateGroupPolicyAdmin with random values
-func SimulateMsgUpdateGroupPolicyAdmin(cdc sdk.MsgCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgUpdateGroupPolicyAdmin(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -735,7 +735,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(cdc sdk.MsgCodec, ak group.AccountKeeper,
 }
 
 // // SimulateMsgUpdateGroupPolicyDecisionPolicy generates a NewMsgUpdateGroupPolicyDecisionPolicy with random values
-func SimulateMsgUpdateGroupPolicyDecisionPolicy(cdc sdk.MsgCodec, ak group.AccountKeeper,
+func SimulateMsgUpdateGroupPolicyDecisionPolicy(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
@@ -796,7 +796,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(cdc sdk.MsgCodec, ak group.Accou
 }
 
 // // SimulateMsgUpdateGroupPolicyMetadata generates a MsgUpdateGroupPolicyMetadata with random values
-func SimulateMsgUpdateGroupPolicyMetadata(cdc sdk.MsgCodec, ak group.AccountKeeper,
+func SimulateMsgUpdateGroupPolicyMetadata(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
@@ -849,7 +849,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(cdc sdk.MsgCodec, ak group.AccountKeep
 }
 
 // SimulateMsgWithdrawProposal generates a MsgWithdrawProposal with random values
-func SimulateMsgWithdrawProposal(cdc sdk.MsgCodec, ak group.AccountKeeper,
+func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
@@ -954,7 +954,7 @@ func SimulateMsgWithdrawProposal(cdc sdk.MsgCodec, ak group.AccountKeeper,
 }
 
 // SimulateMsgVote generates a MsgVote with random values
-func SimulateMsgVote(cdc sdk.MsgCodec, ak group.AccountKeeper,
+func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
@@ -1059,7 +1059,7 @@ func SimulateMsgVote(cdc sdk.MsgCodec, ak group.AccountKeeper,
 }
 
 // // SimulateMsgExec generates a MsgExec with random values
-func SimulateMsgExec(cdc sdk.MsgCodec, ak group.AccountKeeper,
+func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
@@ -1136,7 +1136,7 @@ func SimulateMsgExec(cdc sdk.MsgCodec, ak group.AccountKeeper,
 }
 
 // SimulateMsgLeaveGroup generates a MsgLeaveGroup with random values
-func SimulateMsgLeaveGroup(cdc sdk.MsgCodec, k keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
+func SimulateMsgLeaveGroup(cdc *codec.ProtoCodec, k keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

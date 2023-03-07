@@ -18,6 +18,8 @@ type (
 	Codec interface {
 		BinaryCodec
 		JSONCodec
+
+		GetMsgSigners(msg any) ([]string, error)
 	}
 
 	BinaryCodec interface {

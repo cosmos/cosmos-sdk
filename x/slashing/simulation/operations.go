@@ -41,13 +41,13 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgUnjail,
-			SimulateMsgUnjail(sdk.NewMsgCodec(interfaceRegistry), ak, bk, k, sk),
+			SimulateMsgUnjail(codec.NewProtoCodec(interfaceRegistry), ak, bk, k, sk),
 		),
 	}
 }
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
-func SimulateMsgUnjail(cdc sdk.MsgCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
+func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,

@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
-	signing2 "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,7 +31,7 @@ type Keeper struct {
 	storeKey storetypes.StoreKey
 
 	// The codec for binary encoding/decoding.
-	cdc codec.BinaryCodec
+	cdc codec.Codec
 
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
@@ -45,8 +44,6 @@ type Keeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
-
-	getSignersCtx *signing2.GetSignersContext
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -62,7 +59,7 @@ func (k Keeper) GetAuthority() string {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.ProtoCodecMarshaler, key storetypes.StoreKey, authKeeper types.AccountKeeper,
+	cdc codec.Codec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrkeeper types.DistributionKeeper,
 	router baseapp.MessageRouter, config types.Config, authority string,
 ) *Keeper {
@@ -90,9 +87,6 @@ func NewKeeper(
 		router:      router,
 		config:      config,
 		authority:   authority,
-		getSignersCtx: signing2.NewGetSignersContext(signing2.GetSignersOptions{
-			ProtoFiles: cdc.InterfaceRegistry().ProtoFiles(),
-		}),
 	}
 }
 

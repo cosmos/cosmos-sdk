@@ -127,7 +127,7 @@ func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
 
-func (ac *AminoCodec) GetMsgSigners(msg interface{}) ([]string, error) {
+func (ac *AminoCodec) GetMsgSigners(msg any) ([]string, error) {
 	return nil, fmt.Errorf("amino codec does not support getting msg signers")
 }
 

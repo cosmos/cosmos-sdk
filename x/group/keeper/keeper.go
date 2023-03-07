@@ -9,7 +9,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	signing2 "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,15 +80,16 @@ type Keeper struct {
 
 	config group.Config
 
-	getSignersCtx *signing2.GetSignersContext
+	cdc codec.Codec
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.ProtoCodecMarshaler, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
 		accKeeper: accKeeper,
+		cdc:       cdc,
 	}
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
@@ -213,10 +213,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.ProtoCodecMarshaler, rout
 		config.MaxExecutionPeriod = group.DefaultConfig().MaxExecutionPeriod
 	}
 	k.config = config
-
-	k.getSignersCtx = signing2.NewGetSignersContext(signing2.GetSignersOptions{
-		ProtoFiles: cdc.InterfaceRegistry().ProtoFiles(),
-	})
 
 	return k
 }

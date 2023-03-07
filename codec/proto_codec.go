@@ -10,6 +10,8 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -267,6 +269,24 @@ func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
 // InterfaceRegistry returns InterfaceRegistry
 func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
+}
+
+func (pc ProtoCodec) GetMsgSigners(msg any) ([]string, error) {
+	if msgv2, ok := msg.(protov2.Message); ok {
+		return pc.getSignersCtx.GetSigners(msgv2)
+	} else if msgv1, ok := msg.(proto.Message); ok {
+		bz, err := proto.Marshal(msgv1)
+		if err != nil {
+			return nil, err
+		}
+
+		return pc.getSignersCtx.GetSignersForAny(&anypb.Any{
+			TypeUrl: string("/" + proto.MessageName(msgv1)),
+			Value:   bz,
+		})
+	} else {
+		return nil, fmt.Errorf("%T is not a proto.Message", msg)
+	}
 }
 
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec

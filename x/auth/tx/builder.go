@@ -8,6 +8,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +22,7 @@ import (
 // wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
 type wrapper struct {
-	cdc sdk.MsgCodec
+	cdc codec.Codec
 
 	tx *tx.Tx
 
@@ -55,7 +56,7 @@ type ExtensionOptionsTxBuilder interface {
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
 }
 
-func newBuilder(cdc sdk.MsgCodec) *wrapper {
+func newBuilder(cdc codec.Codec) *wrapper {
 	return &wrapper{
 		cdc: cdc,
 		tx: &tx.Tx{

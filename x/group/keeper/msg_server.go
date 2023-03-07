@@ -502,7 +502,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	}
 
 	// Check that if the messages require signers, they are all equal to the given account address of group policy.
-	if err := ensureMsgAuthZ(msgs, groupPolicyAddr, k.getSignersCtx); err != nil {
+	if err := ensureMsgAuthZ(msgs, groupPolicyAddr, k.cdc); err != nil {
 		return nil, err
 	}
 

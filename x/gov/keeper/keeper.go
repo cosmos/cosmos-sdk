@@ -62,7 +62,7 @@ func (k Keeper) GetAuthority() string {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
+	cdc codec.ProtoCodecMarshaler, key storetypes.StoreKey, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrkeeper types.DistributionKeeper,
 	router baseapp.MessageRouter, config types.Config, authority string,
 ) *Keeper {
@@ -90,6 +90,9 @@ func NewKeeper(
 		router:      router,
 		config:      config,
 		authority:   authority,
+		getSignersCtx: signing2.NewGetSignersContext(signing2.GetSignersOptions{
+			ProtoFiles: cdc.InterfaceRegistry().ProtoFiles(),
+		}),
 	}
 }
 

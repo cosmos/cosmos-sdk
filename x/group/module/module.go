@@ -203,7 +203,7 @@ type GroupInputs struct {
 
 	Config           *modulev1.Module
 	Key              *store.KVStoreKey
-	Cdc              codec.Codec
+	Cdc              codec.ProtoCodecMarshaler
 	AccountKeeper    group.AccountKeeper
 	BankKeeper       group.BankKeeper
 	Registry         cdctypes.InterfaceRegistry

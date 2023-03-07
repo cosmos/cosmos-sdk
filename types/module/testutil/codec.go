@@ -15,7 +15,7 @@ import (
 // dependencies.
 type TestEncodingConfig struct {
 	InterfaceRegistry types.InterfaceRegistry
-	Codec             codec.Codec
+	Codec             codec.ProtoCodecMarshaler
 	TxConfig          client.TxConfig
 	Amino             *codec.LegacyAmino
 }

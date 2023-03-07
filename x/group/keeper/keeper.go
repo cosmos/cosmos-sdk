@@ -85,7 +85,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.ProtoCodecMarshaler, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
@@ -213,6 +213,10 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		config.MaxExecutionPeriod = group.DefaultConfig().MaxExecutionPeriod
 	}
 	k.config = config
+
+	k.getSignersCtx = signing2.NewGetSignersContext(signing2.GetSignersOptions{
+		ProtoFiles: cdc.InterfaceRegistry().ProtoFiles(),
+	})
 
 	return k
 }

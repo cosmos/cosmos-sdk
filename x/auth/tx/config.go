@@ -55,6 +55,9 @@ func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler signin
 		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
 		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
 		protoCodec:  protoCodec,
+		getSignersCtx: signing2.NewGetSignersContext(
+			signing2.GetSignersOptions{ProtoFiles: protoCodec.InterfaceRegistry().ProtoFiles()},
+		),
 	}
 }
 

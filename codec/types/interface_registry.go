@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -54,6 +55,10 @@ type InterfaceRegistry interface {
 
 	// EnsureRegistered ensures there is a registered interface for the given concrete type.
 	EnsureRegistered(iface interface{}) error
+
+	ProtoFiles() *protoregistry.Files
+
+	private()
 }
 
 // UnpackInterfacesMessage is meant to extend protobuf types (which implement
@@ -85,17 +90,28 @@ type interfaceRegistry struct {
 	interfaceImpls map[reflect.Type]interfaceMap
 	implInterfaces map[reflect.Type]reflect.Type
 	typeURLMap     map[string]reflect.Type
+	protoFiles     *protoregistry.Files
 }
 
 type interfaceMap = map[string]reflect.Type
 
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
+	protoFiles, err := proto.MergedRegistry()
+	if err != nil {
+		panic(err)
+	}
+	return NewInterfaceRegistryWithProtoFiles(protoFiles)
+}
+
+// NewInterfaceRegistry returns a new InterfaceRegistry with the specified *protoregistry.Files instance.
+func NewInterfaceRegistryWithProtoFiles(files *protoregistry.Files) InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
 		interfaceImpls: map[reflect.Type]interfaceMap{},
 		implInterfaces: map[reflect.Type]reflect.Type{},
 		typeURLMap:     map[string]reflect.Type{},
+		protoFiles:     files,
 	}
 }
 
@@ -287,6 +303,12 @@ func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error
 
 	return msg, nil
 }
+
+func (registry *interfaceRegistry) ProtoFiles() *protoregistry.Files {
+	return registry.protoFiles
+}
+
+func (registry *interfaceRegistry) private() {}
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces
 // on x if x implements UnpackInterfacesMessage

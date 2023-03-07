@@ -219,7 +219,7 @@ message GetMemTxsResponse {
   // Count of all txs in mempool
   uint64 total_count = 2;
   // Count bytes of all txs in mempool
-  uint64 TotalBytes = 3;
+  uint64 total_bytes = 3;
   // txs is the list of queried transactions.
   repeated cosmos.tx.v1beta1.Tx txs = 4;
 }

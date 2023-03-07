@@ -463,8 +463,7 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 // with the balance of each coin.
 // The iteration stops if the callback returns true.
 func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool) {
-	err := k.Supply.Walk(ctx, nil, func(s string, m math.Int) bool { return cb(sdk.NewCoin(s, m)) })
-	if err != nil {
-		panic(err)
-	}
+	_ = k.Supply.Walk(ctx, nil, func(s string, m math.Int) bool {
+		return cb(sdk.NewCoin(s, m))
+	})
 }

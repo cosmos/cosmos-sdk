@@ -24,10 +24,12 @@ service Query {
   rpc QuarantinedFunds(QueryQuarantinedFundsRequest) returns (QueryQuarantinedFundsResponse) {
     option (google.api.http) = {
       get: "/cosmos/quarantine/v1beta1/funds"
-      additional_bindings: [
-        {get: "/cosmos/quarantine/v1beta1/funds/{to_address}"},
-        {get: "/cosmos/quarantine/v1beta1/funds/{to_address}/{from_address}"}
-      ]
+      additional_bindings: {
+        get: "/cosmos/quarantine/v1beta1/funds/{to_address}"
+      }
+      additional_bindings: {
+        get: "/cosmos/quarantine/v1beta1/funds/{to_address}/{from_address}"
+      }
     };
   }
 
@@ -38,7 +40,9 @@ service Query {
   rpc AutoResponses(QueryAutoResponsesRequest) returns (QueryAutoResponsesResponse) {
     option (google.api.http) = {
       get: "/cosmos/quarantine/v1beta1/auto/{to_address}"
-      additional_bindings: [{get: "/cosmos/quarantine/v1beta1/auto/{to_address}/{from_address}"}]
+      additional_bindings: {
+        get: "/cosmos/quarantine/v1beta1/auto/{to_address}/{from_address}"
+      }
     };
   }
 }

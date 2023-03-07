@@ -13,6 +13,7 @@
 * Dec 06, 2022: Re-ordering of envelope screens.
 * Dec 14, 2022: Mention exceptions for invertability.
 * Jan 23, 2022: Switch Screen.Text to Title+Content.
+* Mar 07, 2023: Change SignDoc from array to struct containing array.
 
 ## Status
 
@@ -175,6 +176,8 @@ content_key = 2
 indent_key = 3
 expert_key = 4
 ```
+
+Defining the sign_doc as directly an array of screens has also been considered. However, given the possibility of future iterations of this specification, using a single-keyed struct has been chosen over the former proposal, as structs allow for easier backwards-compatibility.
 
 ## Details
 

@@ -1,12 +1,17 @@
 package baseapp
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/snapshots"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -14,28 +19,11 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
-
-const (
-	runTxModeCheck       runTxMode = iota // Check a transaction
-	runTxModeReCheck                      // Recheck a (pending) transaction after a commit
-	runTxModeSimulate                     // Simulate a transaction
-	runTxModeDeliver                      // Deliver a transaction
-	runTxPrepareProposal                  // Prepare a TM block proposal
-	runTxProcessProposal                  // Process a TM block proposal
-)
-
-var _ abci.Application = (*BaseApp)(nil)
 
 type (
 	// Enum mode for app.runTx
@@ -47,6 +35,24 @@ type (
 	// (or removed a substore) between two versions of the software.
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
+
+const (
+	runTxModeCheck       runTxMode = iota // Check a transaction
+	runTxModeReCheck                      // Recheck a (pending) transaction after a commit
+	runTxModeSimulate                     // Simulate a transaction
+	runTxModeDeliver                      // Deliver a transaction
+	runTxPrepareProposal                  // Prepare a TM block proposal
+	runTxProcessProposal                  // Process a TM block proposal
+)
+
+var (
+	// ErrTxDecode is returned when decoding a transaction fails.
+	ErrTxDecode = errors.New("failed to decode transaction")
+	// ErrTxEncode is returned when encoding a transaction fails.
+	ErrTxEncode = errors.New("failed to encode transaction")
+)
+
+var _ abci.Application = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { //nolint: maligned
@@ -856,6 +862,21 @@ func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 	return sdk.Events{msgEvent}.AppendEvents(events)
 }
 
+// PrepareProposalVerifyTx performs transaction verification when a proposer is
+// creating a block proposal during PrepareProposal. Any state committed to the
+// PrepareProposal state internally will be discarded. <nil, err> will be
+// returned if the transaction cannot be encoded. <bz, nil> will be returned if
+// the transaction is valid, otherwise <bz, err> will be returned.
+func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
+	bz, err := app.txEncoder(tx)
+	if err != nil {
+		return nil, errors.WithSecondaryError(ErrTxEncode, err)
+	}
+
+	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+	return bz, err
+}
+
 // DefaultPrepareProposal returns the default implementation for processing an
 // ABCI proposal. The application's mempool is enumerated and all valid
 // transactions are added to the proposal. Transactions are valid if they:
@@ -894,18 +915,13 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 		for iterator != nil {
 			memTx := iterator.Tx()
 
-			bz, err := app.txEncoder(memTx)
-			if err != nil {
-				panic(err)
-			}
-
+			bz, err := app.PrepareProposalVerifyTx(memTx)
 			txSize := int64(len(bz))
+			switch {
+			case bz == nil && errors.Is(err, ErrTxEncode):
+				panic(err)
 
-			// NOTE: Since runTx was already executed in CheckTx, which calls
-			// mempool.Insert, ideally everything in the pool should be valid. But
-			// some mempool implementations may insert invalid txs, so we check again.
-			_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
-			if err != nil {
+			case bz != nil && err != nil:
 				err := app.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					panic(err)
@@ -913,10 +929,13 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 
 				iterator = iterator.Next()
 				continue
-			} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
-				txsBytes = append(txsBytes, bz)
-			} else {
-				break
+
+			default:
+				if byteCount += txSize; byteCount <= req.MaxTxBytes {
+					txsBytes = append(txsBytes, bz)
+				} else {
+					break
+				}
 			}
 
 			iterator = iterator.Next()
@@ -924,6 +943,21 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 
 		return abci.ResponsePrepareProposal{Txs: txsBytes}
 	}
+}
+
+// ProcessProposalVerifyTx performs transaction verification when receiving a
+// block proposal during ProcessProposal. Any state committed to the
+// ProcessProposal state internally will be discarded. <nil, err> will be
+// returned if the transaction cannot be decoded. <Tx, nil> will be returned if
+// the transaction is valid, otherwise <Tx, err> will be returned.
+func (bapp *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
+	tx, err := bapp.txDecoder(txBz)
+	if err != nil {
+		return nil, errors.WithSecondaryError(ErrTxDecode, err)
+	}
+
+	_, _, _, _, err = bapp.runTx(runTxProcessProposal, txBz)
+	return tx, err
 }
 
 // DefaultProcessProposal returns the default implementation for processing an ABCI proposal.
@@ -938,12 +972,7 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		for _, txBytes := range req.Txs {
-			_, err := app.txDecoder(txBytes)
-			if err != nil {
-				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
-			}
-
-			_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
+			_, err := app.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}

@@ -332,6 +332,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions[flags.ChainID] = SimAppChainID
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()

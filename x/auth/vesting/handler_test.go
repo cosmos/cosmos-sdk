@@ -266,8 +266,10 @@ func (suite *HandlerTestSuite) TestMsgCreateClawbackVestingAccount() {
 
 	lockupPeriods := []types.Period{{Length: 5000, Amount: balances}}
 	vestingPeriods := []types.Period{
-		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
-		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter},
 	}
 
 	testCases := []struct {
@@ -395,8 +397,10 @@ func (suite *HandlerTestSuite) TestMsgClawback() {
 
 	lockupPeriods := []types.Period{{Length: 5000, Amount: balances}}
 	vestingPeriods := []types.Period{
-		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
-		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter},
 	}
 
 	createMsg := types.NewMsgCreateClawbackVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false)
@@ -460,7 +464,6 @@ func (suite *HandlerTestSuite) TestMsgClawback() {
 	clawbackMsg = types.NewMsgClawback(addr4, addr2, addr3)
 	_, err = suite.handler(ctx, clawbackMsg)
 	suite.Require().Error(err)
-
 }
 
 func TestHandlerTestSuite(t *testing.T) {

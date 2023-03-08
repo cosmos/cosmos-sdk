@@ -832,6 +832,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
+			// nolint:gosec // ignore gosec G306: Expect WriteFile permissions to be 0600 or less
 			if err := os.WriteFile(dir+"/keyhash", passwordHash, 0o555); err != nil {
 				return "", err
 			}

@@ -879,7 +879,51 @@ func (k Keeper) Delegate(
 		return newShares, err
 	}
 
-	return newShares, nil
+			if sharesToSend.IsZero() {
+				// Leave the entry here
+				entriesRemaining = true
+				continue
+			}
+			if sharesToKeep.IsZero() {
+				// Transfer the whole entry, delete locally
+				toRed := k.SetRedelegationEntry(
+					ctx, toAddr, sdk.ValAddress(redelegation.ValidatorSrcAddress),
+					sdk.ValAddress(redelegation.ValidatorDstAddress),
+					entry.CreationHeight, entry.CompletionTime, entry.InitialBalance, sdk.ZeroDec(), sharesToSend,
+				)
+				k.InsertRedelegationQueue(ctx, toRed, entry.CompletionTime)
+				redelegation.RemoveEntry(int64(i))
+				i--
+				// okay to leave an obsolete entry in the queue for the removed entry
+				redelegationModified = true
+			} else {
+				// Proportionally divide the entry
+				fracSending := sharesToSend.Quo(entry.SharesDst)
+				balanceToSend := fracSending.MulInt(entry.InitialBalance).TruncateInt()
+				balanceToKeep := entry.InitialBalance.Sub(balanceToSend)
+				toRed := k.SetRedelegationEntry(
+					ctx, toAddr, sdk.ValAddress(redelegation.ValidatorSrcAddress),
+					sdk.ValAddress(redelegation.ValidatorDstAddress),
+					entry.CreationHeight, entry.CompletionTime, balanceToSend, sdk.ZeroDec(), sharesToSend,
+				)
+				k.InsertRedelegationQueue(ctx, toRed, entry.CompletionTime)
+				entry.InitialBalance = balanceToKeep
+				entry.SharesDst = sharesToKeep
+				redelegation.Entries[i] = entry
+				// not modifying the completion time, so no need to change the queue
+				redelegationModified = true
+				entriesRemaining = true
+			}
+		}
+		if redelegationModified {
+			if entriesRemaining {
+				k.SetRedelegation(ctx, redelegation)
+			} else {
+				k.RemoveRedelegation(ctx, redelegation)
+			}
+		}
+	}
+	return transferred
 }
 
 // Unbond unbonds a particular delegation and perform associated store operations.

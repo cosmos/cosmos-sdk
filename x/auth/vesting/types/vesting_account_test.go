@@ -960,7 +960,8 @@ func TestGetVestedCoinsClawbackVestingAcc(t *testing.T) {
 	vestedCoins = va.GetVestedCoins(now.Add(18 * time.Hour))
 	require.Equal(t,
 		sdk.Coins{
-			sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75)}, vestedCoins)
+			sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75),
+		}, vestedCoins)
 
 	// require 100% of coins vested
 	vestedCoins = va.GetVestedCoins(now.Add(48 * time.Hour))

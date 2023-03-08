@@ -22,8 +22,15 @@ func TestReadSchedule(t *testing.T) {
 		time int64
 		want int64
 	}{
-		{0, 0}, {100, 0}, {105, 0}, {110, 10}, {120, 10}, {130, 30},
-		{150, 30}, {170, 70}, {180, 70},
+		{0, 0},
+		{100, 0},
+		{105, 0},
+		{110, 10},
+		{120, 10},
+		{130, 30},
+		{150, 30},
+		{170, 70},
+		{180, 70},
 	} {
 		gotCoins := ReadSchedule(100, 170, periods, total, tt.time)
 		got := gotCoins.AmountOf("test").Int64()

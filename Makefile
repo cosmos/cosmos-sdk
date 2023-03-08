@@ -314,7 +314,7 @@ containerMarkdownLintImage=tmknom/markdownlint
 containerMarkdownLint=cosmos-sdk-markdownlint
 containerMarkdownLintFix=cosmos-sdk-markdownlint-fix
 
-golangci_lint_cmd=go run github.com/golangci/golangci-lint/cmd/golangci-lint
+golangci_lint_cmd=go run github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 lint: lint-go
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi

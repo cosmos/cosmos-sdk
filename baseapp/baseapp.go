@@ -868,7 +868,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 		return nil, err
 	}
 
-	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz) //nolint:dogsled
 	return bz, err
 }
 
@@ -883,7 +883,7 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 
-	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz)
+	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz) //nolint:dogsled
 	return tx, err
 }
 

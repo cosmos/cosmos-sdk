@@ -57,51 +57,59 @@ func DownloadBinary(cfg *Config, info *UpgradeInfo) error {
 	// download into the bin dir (works for one file)
 	binPath := cfg.UpgradeBin(info.Name)
 	err = getter.GetFile(binPath, url)
-
-	// if this fails, let's see if it is a zipped directory
-	if err != nil {
-		dirPath := cfg.UpgradeDir(info.Name)
-		err = getter.Get(dirPath, url)
-		if err != nil {
-			return err
-		}
-		err = EnsureBinary(binPath)
-		// copy binary to binPath from dirPath if zipped directory don't contain bin directory to wrap the binary
-		if err != nil {
-			err = copy.Copy(filepath.Join(dirPath, cfg.Name), binPath)
-		}
-		if err != nil {
-			// If there is only one entry in dirPath, then promote it to the upgradedir
-
-			// Clean up an empty bin directory.
-			os.Remove(filepath.Join(dirPath, "bin"))
-
-			var childName string
-			childName, err = GetOnlyChildName(dirPath)
-			if err != nil {
-				return err
-			}
-
-			// move aside the old dir and move the child to the old dir
-			var tmpPath string
-			tmpPath, err = os.MkdirTemp(filepath.Join(dirPath, ".."), "tmp*")
-			if err != nil {
-				return err
-			}
-			asidePath := filepath.Join(tmpPath, "old")
-			err = os.Rename(dirPath, asidePath)
-			if err == nil {
-				err = os.Rename(filepath.Join(asidePath, childName), dirPath)
-			}
-			os.RemoveAll(tmpPath)
-		}
-		if err != nil {
-			return err
-		}
+	if err == nil {
+		return MarkExecutable(binPath)
 	}
 
-	// if it is successful, let's ensure the binary is executable
-	return MarkExecutable(binPath)
+	// if this fails, let's see if it is a zipped directory
+	dirPath := cfg.UpgradeDir(info.Name)
+	err = getter.Get(dirPath, url)
+	if err != nil {
+		return err
+	}
+	err = EnsureBinary(binPath)
+	if err == nil {
+		return nil // no need to MarkExecutable
+	}
+
+	// copy binary to binPath from dirPath if zipped directory
+	// doesn't contain bin directory to wrap the binary
+	err = copy.Copy(filepath.Join(dirPath, cfg.Name), binPath)
+	if err == nil {
+		return MarkExecutable(binPath)
+	}
+
+	// If there is only one entry in dirPath, then promote it to the upgradedir
+
+	// Clean up an empty bin directory.
+	_ = os.Remove(filepath.Join(dirPath, "bin"))
+
+	childName, err := GetOnlyChildName(dirPath)
+	if err != nil {
+		return err
+	}
+
+	// move aside the old dir and move the child to the old dir
+	tmpPath, err := os.MkdirTemp(filepath.Join(dirPath, ".."), "tmp*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpPath)
+	asidePath := filepath.Join(tmpPath, "old")
+	err = os.Rename(dirPath, asidePath)
+	if err != nil {
+		return err
+	}
+	err = os.Rename(filepath.Join(asidePath, childName), dirPath)
+	if err != nil {
+		return err
+	}
+	err = copy.Copy(filepath.Join(dirPath, cfg.Name), binPath)
+	if err == nil {
+		return MarkExecutable(binPath)
+	}
+	// future fallback attempts can be added here
+	return err
 }
 
 func GetOnlyChildName(path string) (string, error) {
@@ -114,11 +122,10 @@ func GetOnlyChildName(path string) (string, error) {
 		if dent.Name() == "." || dent.Name() == ".." {
 			continue
 		}
-		if childName == "" {
-			childName = dent.Name()
-			continue
+		if childName != "" {
+			return "", fmt.Errorf("more than one child entry in %s", path)
 		}
-		return "", fmt.Errorf("more than one child entry in %s", path)
+		childName = dent.Name()
 	}
 
 	if childName == "" {

@@ -245,7 +245,7 @@ func NewSimApp(
 	// app.App.BaseApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
 	//
 	// Alternatively, you can construct BaseApp options, append those to
-	// baseAppOptions and pass them to NewBaseApp.
+	// baseAppOptions and pass them to the appBuilder.
 	//
 	// Example:
 	//

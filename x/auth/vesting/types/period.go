@@ -175,11 +175,12 @@ func DisjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (int64, 
 	for iP < lenP && iQ < lenQ {
 		nextP := timeP + periodsP[iP].Length // next p event in absolute time
 		nextQ := timeQ + periodsQ[iQ].Length // next q event in absolute time
-		if nextP < nextQ {
+		switch {
+		case nextP < nextQ:
 			consumeP(nextP)
-		} else if nextP > nextQ {
+		case nextP > nextQ:
 			consumeQ(nextQ)
-		} else {
+		default: // nextP == nextQ
 			consumeBoth(nextP)
 		}
 	}
@@ -197,16 +198,17 @@ func DisjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (int64, 
 }
 
 // ConjunctPeriods returns the combination of two period schedules where the result is the minimum of the two schedules.
-func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (startTime int64, endTime int64, merged []Period) {
+func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (int64, int64, []Period) {
+	startTime := min64(startP, startQ)
+	time := startTime
+
 	timeP := startP
 	timeQ := startQ
 	iP := 0
 	iQ := 0
 	lenP := len(periodsP)
 	lenQ := len(periodsQ)
-	startTime = min64(startP, startQ)
-	time := startTime
-	merged = []Period{}
+	merged := []Period{}
 	amount := sdk.NewCoins()
 	amountP := amount
 	amountQ := amount
@@ -253,7 +255,7 @@ func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (startTi
 	}
 
 	// consumeBoth processes simultaneous events in P and Q and emits an
-	// event if the minumum of P and Q changes
+	// event if the minimum of P and Q changes
 	consumeBoth := func(nextTime int64) {
 		amountP = amountP.Add(periodsP[iP].Amount...)
 		amountQ = amountQ.Add(periodsQ[iQ].Amount...)
@@ -274,11 +276,12 @@ func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (startTi
 	for iP < lenP && iQ < lenQ {
 		nextP := timeP + periodsP[iP].Length // next p event in absolute time
 		nextQ := timeQ + periodsQ[iQ].Length // next q event in absolute time
-		if nextP < nextQ {
+		switch {
+		case nextP < nextQ:
 			consumeP(nextP)
-		} else if nextP > nextQ {
+		case nextP > nextQ:
 			consumeQ(nextQ)
-		} else {
+		default: // nextP == nextQ
 			consumeBoth(nextP)
 		}
 	}
@@ -295,8 +298,7 @@ func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (startTi
 		consumeQ(nextQ)
 	}
 
-	endTime = time
-	return
+	return startTime, time, merged
 }
 
 // AlignSchedules rewrites the first period length to align the two arguments to the same start time.

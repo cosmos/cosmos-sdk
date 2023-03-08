@@ -23,8 +23,13 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.MsgAuthorizeCircuitBreaker) (*types.MsgAuthorizeCircuitBreakerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	granter, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check that the authorizer has the permission level of "super admin"
-	perms, err := srv.GetPermissions(ctx, msg.Granter)
+	perms, err := srv.GetPermissions(ctx, string(granter))
 	if err != nil {
 		return nil, err
 	}
@@ -33,8 +38,13 @@ func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.M
 		return nil, fmt.Errorf("only super admins can authorize circuit breakers")
 	}
 
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return nil, err
+	}
+
 	// Append the account in the msg to the store's set of authorized super admins
-	if err = srv.SetPermissions(ctx, msg.Grantee, msg.Permissions); err != nil {
+	if err = srv.SetPermissions(ctx, string(grantee), msg.Permissions); err != nil {
 		return nil, err
 	}
 

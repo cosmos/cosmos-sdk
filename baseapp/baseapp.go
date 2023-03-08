@@ -955,27 +955,21 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 
 		iterator := h.mempool.Select(ctx, req.Txs)
 
-	selectTxLoop:
 		for iterator != nil {
 			memTx := iterator.Tx()
 
 			bz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
-			txSize := int64(len(bz))
-			switch {
-			case txSize == 0 && err != nil:
-				panic(err)
-
-			case txSize > 0 && err != nil:
+			if err != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					panic(err)
 				}
-
-			default:
+			} else {
+				txSize := int64(len(bz))
 				if totalTxBytes += txSize; totalTxBytes <= req.MaxTxBytes {
 					txsBytes = append(txsBytes, bz)
 				} else {
-					break selectTxLoop
+					break
 				}
 			}
 

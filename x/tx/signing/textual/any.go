@@ -87,8 +87,22 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		return nilValue, fmt.Errorf("bad indentation: want 0, got %d", screens[0].Indent)
 	}
 
-	msgType, err := protoregistry.GlobalTypes.FindMessageByURL(screens[0].Content)
-	if err != nil {
+	typeURL := screens[0].Content
+	msgType, err := ar.tr.protoTypes.FindMessageByURL(typeURL)
+	if err == protoregistry.NotFound {
+		// If the proto v2 registry doesn't have this message, then we use
+		// protoFiles (which can e.g. be initialized to gogo's MergedRegistry)
+		// to retrieve the message descriptor, and then use dynamicpb on that
+		// message descriptor to create a proto.Message
+		typeURL := strings.TrimPrefix(typeURL, "/")
+
+		msgDesc, err := ar.tr.protoFiles.FindDescriptorByName(protoreflect.FullName(typeURL))
+		if err != nil {
+			return nilValue, fmt.Errorf("textual protoFiles does not have descriptor %s: %w", typeURL, err)
+		}
+
+		msgType = dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor))
+	} else if err != nil {
 		return nilValue, err
 	}
 	vr, err := ar.tr.GetMessageValueRenderer(msgType.Descriptor())

@@ -1,8 +1,9 @@
 package codec
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections/colltest"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

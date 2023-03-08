@@ -2,18 +2,18 @@ package codec
 
 import (
 	"bytes"
+	"fmt"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"fmt"
+
 	"github.com/cosmos/gogoproto/proto"
 )
 
-var (
-	// BoolValue implements a ValueCodec that saves the bool value
-	// as if it was a prototypes.BoolValue. Required for backwards
-	// compatibility of state.
-	BoolValue collcodec.ValueCodec[bool] = boolValue{}
-)
+// BoolValue implements a ValueCodec that saves the bool value
+// as if it was a prototypes.BoolValue. Required for backwards
+// compatibility of state.
+var BoolValue collcodec.ValueCodec[bool] = boolValue{}
 
 var (
 	boolValueTrueBytes  = []byte{0x8, 0x1}

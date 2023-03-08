@@ -1,8 +1,10 @@
 package keeper
 
 import (
-	"cosmossdk.io/collections"
 	"fmt"
+
+	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 
 	"cosmossdk.io/log"

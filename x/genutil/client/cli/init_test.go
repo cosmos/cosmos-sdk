@@ -11,15 +11,17 @@ import (
 
 	abci_server "github.com/cometbft/cometbft/abci/server"
 	"github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -28,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -193,7 +196,7 @@ func TestEmptyState(t *testing.T) {
 
 	require.Contains(t, out, "genesis_time")
 	require.Contains(t, out, "chain_id")
-	require.Contains(t, out, "consensus_params")
+	require.Contains(t, out, "consensus")
 	require.Contains(t, out, "app_hash")
 	require.Contains(t, out, "app_state")
 }
@@ -216,7 +219,7 @@ func TestStartStandAlone(t *testing.T) {
 	svr, err := abci_server.NewServer(svrAddr, "socket", app)
 	require.NoError(t, err, "error creating listener")
 
-	svr.SetLogger(logger.With("module", "abci-server"))
+	svr.SetLogger(servercmtlog.CometZeroLogWrapper{Logger: logger.With("module", "abci-server")})
 	err = svr.Start()
 	require.NoError(t, err)
 
@@ -283,6 +286,70 @@ func TestInitConfig(t *testing.T) {
 	out := <-outC
 
 	require.Contains(t, out, "\"chain_id\": \"foo\"")
+}
+
+func TestInitWithHeight(t *testing.T) {
+	home := t.TempDir()
+	logger := log.NewNopLogger()
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithCodec(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithChainID("foo"). // add chain-id to clientCtx
+		WithHomeDir(home)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	testInitialHeight := int64(333)
+
+	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd.SetArgs([]string{"init-height-test", fmt.Sprintf("--%s=%d", flags.FlagInitHeight, testInitialHeight)})
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	appGenesis, importErr := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+	require.NoError(t, importErr)
+
+	require.Equal(t, testInitialHeight, appGenesis.InitialHeight)
+}
+
+func TestInitWithNegativeHeight(t *testing.T) {
+	home := t.TempDir()
+	logger := log.NewNopLogger()
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithCodec(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithChainID("foo"). // add chain-id to clientCtx
+		WithHomeDir(home)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	testInitialHeight := int64(-333)
+
+	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd.SetArgs([]string{"init-height-test", fmt.Sprintf("--%s=%d", flags.FlagInitHeight, testInitialHeight)})
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	appGenesis, importErr := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+	require.NoError(t, importErr)
+
+	require.Equal(t, int64(1), appGenesis.InitialHeight)
 }
 
 // custom tx codec

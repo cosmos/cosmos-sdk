@@ -3,27 +3,20 @@ package types
 import (
 	"encoding/json"
 	"io"
-	"time"
-
-	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
-
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 )
-
-// ServerStartTime defines the time duration that the server need to stay running after startup
-// for the startup be considered successful
-const ServerStartTime = 5 * time.Second
 
 type (
 	// AppOptions defines an interface that is passed into an application
@@ -85,5 +78,14 @@ type (
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.
-	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string, AppOptions, []string) (ExportedApp, error)
+	AppExporter func(
+		logger log.Logger,
+		db dbm.DB,
+		traceWriter io.Writer,
+		height int64,
+		forZeroHeight bool,
+		jailAllowedAddrs []string,
+		opts AppOptions,
+		modulesToExport []string,
+	) (ExportedApp, error)
 )

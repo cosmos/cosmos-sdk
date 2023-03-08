@@ -7,7 +7,6 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -25,7 +24,6 @@ type MessageRouter interface {
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
-	protoFiles        *protoregistry.Files
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 }
@@ -34,14 +32,8 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {
-	protoFiles, err := proto.MergedRegistry()
-	if err != nil {
-		panic(err)
-	}
-
 	return &MsgServiceRouter{
-		protoFiles: protoFiles,
-		routes:     map[string]MsgServiceHandler{},
+		routes: map[string]MsgServiceHandler{},
 	}
 }
 

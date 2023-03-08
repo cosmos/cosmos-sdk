@@ -26,13 +26,13 @@ func TestInfoTestSuite(t *testing.T) {
 
 // saveSrcTestFile saves a TestFile in this test's Home/src directory.
 // The full path to the saved file is returned.
-func (s InfoTestSuite) saveTestFile(f *TestFile) string { //nolint:govet // false positive
+func (s *InfoTestSuite) saveTestFile(f *TestFile) string {
 	fullName, err := f.SaveIn(s.Home)
 	s.Require().NoError(err, "saving test file %s", f.Name)
 	return fullName
 }
 
-func (s InfoTestSuite) TestParseInfo() { //nolint:govet // false positive
+func (s *InfoTestSuite) TestParseInfo() {
 	goodJSON := `{"binaries":{"os1/arch1":"url1","os2/arch2":"url2"}}`
 	binariesWrongJSON := `{"binaries":["foo","bar"]}`
 	binariesWrongValueJSON := `{"binaries":{"os1/arch1":1,"os2/arch2":2}}`
@@ -129,7 +129,7 @@ func (s InfoTestSuite) TestParseInfo() { //nolint:govet // false positive
 	}
 }
 
-func (s InfoTestSuite) TestInfoValidateFull() { //nolint:govet // this is a test, we can copy locks
+func (s *InfoTestSuite) TestInfoValidateFull() {
 	darwinAMD64File := NewTestFile("darwin_amd64", "#!/usr/bin\necho 'darwin/amd64'\n")
 	linux386File := NewTestFile("linux_386", "#!/usr/bin\necho 'darwin/amd64'\n")
 	darwinAMD64Path := s.saveTestFile(darwinAMD64File)
@@ -186,7 +186,7 @@ func (s InfoTestSuite) TestInfoValidateFull() { //nolint:govet // this is a test
 	}
 }
 
-func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() { //nolint:govet // this is a test, we can copy locks
+func (s *InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 	addDummyChecksum := func(url string) string {
 		return url + "?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"
 	}
@@ -282,7 +282,7 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() { //nolint:govet 
 	}
 }
 
-func (s InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() { //nolint:govet // this is a test, we can copy locks
+func (s *InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 	darwinAMD64File := NewTestFile("darwin_amd64", "#!/usr/bin\necho 'darwin/amd64'\n")
 	linux386File := NewTestFile("linux_386", "#!/usr/bin\necho 'darwin/amd64'\n")
 	darwinAMD64Path := s.saveTestFile(darwinAMD64File)

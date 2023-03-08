@@ -8,7 +8,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )

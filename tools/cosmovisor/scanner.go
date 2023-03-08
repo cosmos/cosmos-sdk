@@ -9,12 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/log"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/rs/zerolog"
 )
 
 type fileWatcher struct {
-	logger *zerolog.Logger
+	logger log.Logger
 
 	// full path to a watched file
 	filename string
@@ -29,7 +30,7 @@ type fileWatcher struct {
 	initialized bool
 }
 
-func newUpgradeFileWatcher(logger *zerolog.Logger, filename string, interval time.Duration) (*fileWatcher, error) {
+func newUpgradeFileWatcher(logger log.Logger, filename string, interval time.Duration) (*fileWatcher, error) {
 	if filename == "" {
 		return nil, errors.New("filename undefined")
 	}
@@ -110,7 +111,8 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 	info, err := parseUpgradeInfoFile(fw.filename)
 	if err != nil {
-		fw.logger.Fatal().Err(err).Msg("failed to parse upgrade info file")
+		zl := fw.logger.Impl().(*zerolog.Logger)
+		zl.Fatal().Err(err).Msg("failed to parse upgrade info file")
 		return false
 	}
 

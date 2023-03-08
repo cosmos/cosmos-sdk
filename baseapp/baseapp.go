@@ -946,6 +946,8 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 		)
 
 		iterator := h.mempool.Select(ctx, req.Txs)
+
+	selectTxLoop:
 		for iterator != nil {
 			memTx := iterator.Tx()
 
@@ -968,7 +970,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 				if byteCount += txSize; byteCount <= req.MaxTxBytes {
 					txsBytes = append(txsBytes, bz)
 				} else {
-					break
+					break selectTxLoop
 				}
 			}
 

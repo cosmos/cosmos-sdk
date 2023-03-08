@@ -57,8 +57,13 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// initialize states with a correct header
 	app.setState(runTxModeDeliver, initHeader)
 	app.setState(runTxModeCheck, initHeader)
-	app.setState(runTxPrepareProposal, initHeader)
-	app.setState(runTxProcessProposal, initHeader)
+
+	// Use an empty header for prepare and process proposal states. Although it
+	// doesn't matter what header we use here as they get overwritten for the
+	// first block (see getContextForProposal()) and cleaned up on every Commit().
+	emptyHeader := cmtproto.Header{}
+	app.setState(runTxPrepareProposal, emptyHeader)
+	app.setState(runTxProcessProposal, emptyHeader)
 
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted

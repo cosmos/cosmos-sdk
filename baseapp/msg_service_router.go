@@ -8,6 +8,7 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -26,6 +27,7 @@ type MessageRouter interface {
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
+	protoFiles        *protoregistry.Files
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 }
@@ -34,8 +36,14 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {
+	protoFiles, err := proto.MergedRegistry()
+	if err != nil {
+		panic(err)
+	}
+
 	return &MsgServiceRouter{
-		routes: map[string]MsgServiceHandler{},
+		protoFiles: protoFiles,
+		routes:     map[string]MsgServiceHandler{},
 	}
 }
 
@@ -61,13 +69,8 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 //     RegisterInterfaces,
 //   - or if a service is being registered twice.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
-	protoFiles, err := proto.MergedRegistry()
-	if err != nil {
-		panic(err)
-	}
-
 	// Make sure the Msg services has the `cosmos.msg.service` proto annotation.
-	err = msgservice.ValidateServiceAnnotations(protoFiles, sd.ServiceName)
+	err := msgservice.ValidateServiceAnnotations(msr.protoFiles, sd.ServiceName)
 	if err != nil {
 		// We might panic here in the future, instead of simply logging.
 		fmt.Fprintf(os.Stderr, "The SDK is requiring protobuf annotation on Msgs; %s\n", err)
@@ -93,7 +96,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			}
 
 			// Make sure Msg annotations are correct, like the `cosmos.msg.signer` one.
-			err := msgservice.ValidateMsgAnnotations(protoFiles, proto.MessageName(msg))
+			err := msgservice.ValidateMsgAnnotations(msr.protoFiles, proto.MessageName(msg))
 			if err != nil {
 				// We might panic here in the future, instead of logging.
 				fmt.Fprintf(os.Stderr, "The SDK is requiring protobuf annotation on Msgs; %s\n", err)

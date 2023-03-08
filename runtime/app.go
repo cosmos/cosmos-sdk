@@ -3,6 +3,7 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"golang.org/x/exp/slices"
@@ -121,7 +122,9 @@ func (a *App) Load(loadLatest bool) error {
 	}
 	err = msgservice.ValidateProtoAnnotations(protoFiles)
 	if err != nil {
-		panic(err)
+		// Once we switch to using protoreflect-based antehandlers, we might
+		// want to panic here instead of logging a warning.
+		fmt.Fprintln(os.Stderr, err.Error())
 	}
 
 	return nil

@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/cosmos/iavl v0.21.0-alpha.1
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/spf13/cast v1.5.0
 	github.com/stretchr/testify v1.8.2

@@ -958,6 +958,10 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 		for iterator != nil {
 			memTx := iterator.Tx()
 
+			// NOTE: Since transaction verification was already executed in CheckTx,
+			// which calls mempool.Insert, in theory everything in the pool should be
+			// valid. But some mempool implementations may insert invalid txs, so we
+			// check again.
 			bz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
 				err := h.mempool.Remove(memTx)

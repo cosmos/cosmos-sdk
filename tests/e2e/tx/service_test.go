@@ -508,15 +508,15 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
 		}, false, ""},
 		{"non-atomic request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
-			TxBytes: nonAtomicTx(&s),
+			TxBytes: nonAtomicTx(s),
 		}, false, ""},
 		{"non-atomic request one failure", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
-			TxBytes: nonAtomicTx(&s, true),
+			TxBytes: nonAtomicTx(s, true),
 		}, false, ""},
 		{"non-atomic request two failures", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
-			TxBytes: nonAtomicTx(&s, true, true),
+			TxBytes: nonAtomicTx(s, true, true),
 		}, true, "failed to execute all messages in a non-atomic multi-message: all messages failed"},
 	}
 

@@ -234,6 +234,8 @@ func NewSimApp(
 	// already set in the SDK's BaseApp, this shows an example of how to override
 	// them.
 	//
+	// Example:
+	//
 	// app.App = appBuilder.Build(...)
 	// nonceMempool := mempool.NewSenderNonceMempool()
 	// abciPropHandler := NewDefaultProposalHandler(nonceMempool, app.App.BaseApp)
@@ -241,6 +243,17 @@ func NewSimApp(
 	// app.App.BaseApp.SetMempool(nonceMempool)
 	// app.App.BaseApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
 	// app.App.BaseApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
+	//
+	// Alternatively, you can construct BaseApp options, append those to
+	// baseAppOptions and pass them to NewBaseApp.
+	//
+	// Example:
+	//
+	// prepareOpt = func(app *baseapp.BaseApp) {
+	// 	abciPropHandler := baseapp.NewDefaultProposalHandler(nonceMempool, app)
+	// 	app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
+	// }
+	// baseAppOptions = append(baseAppOptions, prepareOpt)
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 

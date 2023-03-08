@@ -949,8 +949,8 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 		}
 
 		var (
-			txsBytes  [][]byte
-			byteCount int64
+			txsBytes     [][]byte
+			totalTxBytes int64
 		)
 
 		iterator := h.mempool.Select(ctx, req.Txs)
@@ -971,11 +971,8 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 					panic(err)
 				}
 
-				iterator = iterator.Next()
-				continue
-
 			default:
-				if byteCount += txSize; byteCount <= req.MaxTxBytes {
+				if totalTxBytes += txSize; totalTxBytes <= req.MaxTxBytes {
 					txsBytes = append(txsBytes, bz)
 				} else {
 					break selectTxLoop

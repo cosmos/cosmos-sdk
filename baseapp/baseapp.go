@@ -973,6 +973,8 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 				if totalTxBytes += txSize; totalTxBytes <= req.MaxTxBytes {
 					selectedTxs = append(selectedTxs, bz)
 				} else {
+					// We've reached capacity per req.MaxTxBytes so we cannot select any
+					// more transactions.
 					break
 				}
 			}

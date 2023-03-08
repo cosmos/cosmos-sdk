@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/go-amino v0.16.0
-	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
+	google.golang.org/protobuf v1.29.0
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
 )

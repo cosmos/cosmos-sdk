@@ -211,6 +211,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 			nil,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+			baseapp.SetChainID(cfg.ChainID),
 		)
 
 		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})

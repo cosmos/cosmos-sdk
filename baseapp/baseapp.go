@@ -145,6 +145,8 @@ type BaseApp struct { //nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []storetypes.ABCIListener
+
+	chainID string
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

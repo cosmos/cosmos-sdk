@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/spf13/cobra"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // NewRollbackCmd creates a command to rollback CometBFT and multistore state by one height.
@@ -32,6 +34,17 @@ application.
 			if err != nil {
 				return err
 			}
+
+			appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+			if err != nil {
+				return err
+			}
+
+			// If the chain ID is not set, use the one from the genesis file
+			if !ctx.Viper.IsSet(flags.FlagChainID) {
+				ctx.Viper.Set(flags.FlagChainID, appGenesis.ChainID)
+			}
+
 			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 			// rollback CometBFT state
 			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)

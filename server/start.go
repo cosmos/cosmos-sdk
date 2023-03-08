@@ -214,6 +214,16 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return err
 	}
 
+	appGenesis, err := genutiltypes.AppGenesisFromFile(svrCtx.Config.GenesisFile())
+	if err != nil {
+		return err
+	}
+
+	// If the chain ID is not set, use the one from the genesis file
+	if !svrCtx.Viper.IsSet(flags.FlagChainID) {
+		svrCtx.Viper.Set(flags.FlagChainID, appGenesis.ChainID)
+	}
+
 	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 
 	config, err := serverconfig.GetConfig(svrCtx.Viper)
@@ -290,20 +300,25 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-
-	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
 	if err != nil {
 		return err
 	}
 
 	genDocProvider := func() (*cmttypes.GenesisDoc, error) {
-		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
-		if err != nil {
-			return nil, err
-		}
-
 		return appGenesis.ToGenesisDoc()
+	}
+
+	// If the chain ID is not set, use the one from the genesis file
+	if !svrCtx.Viper.IsSet(flags.FlagChainID) {
+		svrCtx.Viper.Set(flags.FlagChainID, appGenesis.ChainID)
+	}
+
+	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	if err != nil {
+		return err
 	}
 
 	var (

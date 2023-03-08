@@ -37,6 +37,11 @@ const (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+
+	if req.ChainId != app.chainID {
+		panic(fmt.Sprintf("ChainID on RequestInitChain {%s} does not match the app's ChainID {%s}", req.ChainId, app.chainID))
+	}
+
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
 	initHeader := cmtproto.Header{ChainID: req.ChainId, Time: req.Time}
@@ -277,7 +282,8 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
 		WithConsensusParams(app.GetConsensusParams(ctx)).
-		WithBlockGasMeter(gasMeter)
+		WithBlockGasMeter(gasMeter).
+		WithChainID(app.chainID)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -326,7 +332,8 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
 		WithConsensusParams(app.GetConsensusParams(ctx)).
-		WithBlockGasMeter(gasMeter)
+		WithBlockGasMeter(gasMeter).
+		WithChainID(app.chainID)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -979,7 +986,7 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 	if height == 1 {
 		ctx, _ = app.deliverState.ctx.CacheContext()
 		// TODO: clear all context data set during InitChain to avoid inconsistent behavior
-		ctx = ctx.WithBlockHeader(cmtproto.Header{}).WithChainID("")
+		ctx = ctx.WithBlockHeader(cmtproto.Header{})
 		return ctx
 	}
 	return ctx

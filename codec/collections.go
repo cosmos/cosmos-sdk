@@ -1,9 +1,61 @@
 package codec
 
 import (
+	"bytes"
+	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	"fmt"
 	"github.com/cosmos/gogoproto/proto"
 )
+
+var (
+	// BoolValue implements a ValueCodec that saves the bool value
+	// as if it was a prototypes.BoolValue. Required for backwards
+	// compatibility of state.
+	BoolValue collcodec.ValueCodec[bool] = boolValue{}
+)
+
+var (
+	boolValueTrueBytes  = []byte{0x8, 0x1}
+	boolValueFalseBytes = []byte{}
+)
+
+type boolValue struct{}
+
+func (boolValue) Encode(value bool) ([]byte, error) {
+	if value == true {
+		return boolValueTrueBytes, nil
+	} else {
+		return boolValueFalseBytes, nil
+	}
+}
+
+func (boolValue) Decode(b []byte) (bool, error) {
+	switch {
+	case bytes.Equal(b, boolValueFalseBytes):
+		return false, nil
+	case bytes.Equal(b, boolValueTrueBytes):
+		return true, nil
+	default:
+		return false, fmt.Errorf("%w: %s", collcodec.ErrEncoding, "invalid bool value bytes")
+	}
+}
+
+func (boolValue) EncodeJSON(value bool) ([]byte, error) {
+	return collections.BoolValue.EncodeJSON(value)
+}
+
+func (boolValue) DecodeJSON(b []byte) (bool, error) {
+	return collections.BoolValue.DecodeJSON(b)
+}
+
+func (boolValue) Stringify(value bool) string {
+	return collections.BoolValue.Stringify(value)
+}
+
+func (boolValue) ValueType() string {
+	return "protobuf/bool"
+}
 
 type protoMessage[T any] interface {
 	*T

@@ -869,7 +869,11 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 	}
 
 	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz) //nolint:dogsled
-	return bz, err
+	if err != nil {
+		return nil, err
+	}
+
+	return bz, nil
 }
 
 // ProcessProposalVerifyTx performs transaction verification when receiving a
@@ -884,7 +888,11 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 	}
 
 	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz) //nolint:dogsled
-	return tx, err
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
 
 type (

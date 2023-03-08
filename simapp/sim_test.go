@@ -82,6 +82,7 @@ func TestFullAppSimulation(t *testing.T) {
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions[flags.FlagChainID] = SimAppChainID
 
 	app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
@@ -127,6 +128,7 @@ func TestAppImportExport(t *testing.T) {
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions[flags.FlagChainID] = SimAppChainID
 
 	app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
@@ -244,6 +246,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions[flags.FlagChainID] = SimAppChainID
 
 	app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
@@ -332,7 +335,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
-	appOptions[flags.ChainID] = SimAppChainID
+	appOptions[flags.FlagChainID] = SimAppChainID
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()

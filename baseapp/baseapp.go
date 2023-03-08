@@ -954,10 +954,10 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			bz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			txSize := int64(len(bz))
 			switch {
-			case len(bz) == 0 && err != nil:
+			case txSize == 0 && err != nil:
 				panic(err)
 
-			case len(bz) > 0 && err != nil:
+			case txSize > 0 && err != nil:
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					panic(err)

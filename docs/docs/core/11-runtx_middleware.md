@@ -39,7 +39,7 @@ We have a module keeper that panics:
 func (k FooKeeper) Do(obj interface{}) {
     if obj == nil {
         // that shouldn't happen, we need to crash the app
-        err := sdkErrors.Wrap(fooTypes.InternalError, "obj is nil")
+        err := errorsmod.Wrap(fooTypes.InternalError, "obj is nil")
         panic(err)
     }
 }

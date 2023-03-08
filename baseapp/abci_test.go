@@ -14,6 +14,8 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -45,7 +47,7 @@ func TestABCI_Info(t *testing.T) {
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
+	logger := log.NewTestLogger(t)
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	capKey := storetypes.NewKVStoreKey("main")
@@ -125,8 +127,7 @@ func TestABCI_InitChain(t *testing.T) {
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -141,8 +142,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -565,7 +565,6 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 func TestABCI_EndBlock(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := defaultLogger()
 
 	cp := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
@@ -573,7 +572,7 @@ func TestABCI_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,
@@ -835,7 +834,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ := sdkerrors.ABCIInfo(err, false)
+		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrInvalidRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrInvalidRequest.ABCICode(), code, err)
 	}
@@ -863,7 +862,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 			if testCase.fail {
 				require.Error(t, err)
 
-				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				space, code, _ := errorsmod.ABCIInfo(err, false)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.ABCICode(), code, err)
 			} else {
@@ -883,7 +882,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ := sdkerrors.ABCIInfo(err, false)
+		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
@@ -896,7 +895,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, result)
 
-		space, code, _ = sdkerrors.ABCIInfo(err, false)
+		space, code, _ = errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 	}
@@ -930,7 +929,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case storetypes.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -992,7 +991,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 			require.Error(t, err)
 			require.Nil(t, result)
 
-			space, code, _ := sdkerrors.ABCIInfo(err, false)
+			space, code, _ := errorsmod.ABCIInfo(err, false)
 			require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
 			require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
 		}
@@ -1009,7 +1008,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case storetypes.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -1074,7 +1073,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 				require.Error(t, err, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
 				require.Nil(t, result, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
 
-				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				space, code, _ := errorsmod.ABCIInfo(err, false)
 				require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
 				require.True(t, ctx.BlockGasMeter().IsOutOfGas())
@@ -1105,7 +1104,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 					switch rType := r.(type) {
 					case storetypes.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+						err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 					default:
 						panic(r)
 					}
@@ -1115,7 +1114,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 			counter, failOnAnte := parseTxMemo(t, tx)
 			newCtx.GasMeter().ConsumeGas(uint64(counter), "counter-ante")
 			if failOnAnte {
-				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+				return newCtx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
 			return
@@ -1210,7 +1209,7 @@ func TestABCI_Query(t *testing.T) {
 }
 
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
-	logger := defaultLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 

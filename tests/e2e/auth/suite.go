@@ -708,8 +708,10 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 		{
 			"fee event happy case",
 			[]string{
-				fmt.Sprintf("--events=tx.fee=%s",
-					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf(
+					"--query=tx.fee='%s'",
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
@@ -717,8 +719,10 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 		{
 			"no matching fee event",
 			[]string{
-				fmt.Sprintf("--events=tx.fee=%s",
-					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String()),
+				fmt.Sprintf(
+					"--query=tx.fee='%s'",
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String(),
+				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
@@ -1213,9 +1217,20 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 	defer sign2File.Close()
 
-	// Does not work in offline mode.
-	_, err = authclitestutil.TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
-	s.Require().EqualError(err, fmt.Sprintf("couldn't verify signature for address %s", addr1))
+	// Work in offline mode.
+	multisigAccNum, multisigSeq, err := val1.ClientCtx.AccountRetriever.GetAccountNumberSequence(val1.ClientCtx, addr)
+	s.Require().NoError(err)
+	_, err = authclitestutil.TxMultiSignExec(
+		val1.ClientCtx,
+		multisigRecord.Name,
+		multiGeneratedTxFile.Name(),
+		fmt.Sprintf("--%s", flags.FlagOffline),
+		fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, multisigAccNum),
+		fmt.Sprintf("--%s=%d", flags.FlagSequence, multisigSeq),
+		sign1File.Name(),
+		sign2File.Name(),
+	)
+	s.Require().NoError(err)
 
 	val1.ClientCtx.Offline = false
 	multiSigWith2Signatures, err := authclitestutil.TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())

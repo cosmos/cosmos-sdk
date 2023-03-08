@@ -163,57 +163,26 @@ func TestIteratorRanging(t *testing.T) {
 	require.ErrorIs(t, err, ErrInvalidIterator)
 }
 
-/*
-func TestRange(t *testing.T) {
-	type test struct {
-		rng        *Range[string]
-		wantPrefix *string
-		wantStart  *Bound[string]
-		wantEnd    *Bound[string]
-		wantOrder  Order
-		wantErr    error
+func TestWalk(t *testing.T) {
+	sk, ctx := deps()
+	schemaBuilder := NewSchemaBuilder(sk)
+	m := NewMap(schemaBuilder, NewPrefix("cool"), "cool", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.NoError(t, err)
+
+	for i := uint64(0); i <= 7; i++ {
+		require.NoError(t, m.Set(ctx, i, i))
 	}
 
-	cases := map[string]test{
-		"ok - empty": {
-			rng: new(Range[string]),
-		},
-		"ok - start exclusive - end exclusive": {
-			rng:       new(Range[string]).SuffixStartExclusive("A").SuffixEndExclusive("B"),
-			wantStart: BoundExclusive("A"),
-			wantEnd:   BoundExclusive("B"),
-		},
-		"ok - start inclusive - end inclusive - descending": {
-			rng:       new(Range[string]).SuffixStartInclusive("A").SuffixEndInclusive("B").Descending(),
-			wantStart: BoundInclusive("A"),
-			wantEnd:   BoundInclusive("B"),
-			wantOrder: OrderDescending,
-		},
-		"ok - prefix": {
-			rng:        new(Range[string]).Prefix("A"),
-			wantPrefix: func() *string { p := "A"; return &p }(),
-		},
-
-		"err - prefix and start set": {
-			rng:     new(Range[string]).Prefix("A").SuffixStartExclusive("B"),
-			wantErr: errRange,
-		},
-		"err - prefix and end set": {
-			rng:     new(Range[string]).Prefix("A").SuffixStartInclusive("B"),
-			wantErr: errRange,
-		},
-	}
-
-	for name, tc := range cases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			gotPrefix, gotStart, gotEnd, gotOrder, gotErr := tc.rng.RangeValues()
-			require.ErrorIs(t, gotErr, tc.wantErr)
-			require.Equal(t, tc.wantPrefix, gotPrefix)
-			require.Equal(t, tc.wantStart, gotStart)
-			require.Equal(t, tc.wantEnd, gotEnd)
-			require.Equal(t, tc.wantOrder, gotOrder)
-		})
-	}
+	u := uint64(0)
+	err = m.Walk(ctx, nil, func(key uint64, value uint64) bool {
+		if key == 5 {
+			return true
+		}
+		require.Equal(t, u, key)
+		require.Equal(t, u, value)
+		u++
+		return false
+	})
+	require.NoError(t, err)
 }
-*/

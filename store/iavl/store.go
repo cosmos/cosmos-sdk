@@ -6,13 +6,13 @@ import (
 	"io"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/confio/ics23/go"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 
-	sdkerrors "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"
@@ -275,17 +275,13 @@ func (st *Store) SetInitialVersion(version int64) {
 func (st *Store) Export(version int64) (*iavl.Exporter, error) {
 	istore, err := st.GetImmutable(version)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "iavl export failed for version %v", version)
+		return nil, errorsmod.Wrapf(err, "iavl export failed for version %v", version)
 	}
 	tree, ok := istore.tree.(*immutableTree)
 	if !ok || tree == nil {
 		return nil, fmt.Errorf("iavl export failed: unable to fetch tree for version %v", version)
 	}
-	export, err := tree.Export()
-	if err != nil {
-		return nil, err
-	}
-	return export, nil
+	return tree.Export()
 }
 
 // Import imports an IAVL tree at the given version, returning an iavl.Importer for importing.
@@ -322,7 +318,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer st.metrics.MeasureSince("store", "iavl", "query")
 
 	if len(req.Data) == 0 {
-		return types.QueryResult(sdkerrors.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
+		return types.QueryResult(errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
 	}
 
 	tree := st.tree
@@ -387,7 +383,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.Value = bz
 
 	default:
-		return types.QueryResult(sdkerrors.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
+		return types.QueryResult(errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
 	}
 
 	return res

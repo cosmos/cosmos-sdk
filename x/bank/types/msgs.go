@@ -1,6 +1,8 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -34,11 +36,11 @@ func (msg MsgSend) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	return nil
@@ -103,11 +105,11 @@ func (in Input) ValidateBasic() error {
 	}
 
 	if !in.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
 
 	if !in.Coins.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
 
 	return nil
@@ -130,11 +132,11 @@ func (out Output) ValidateBasic() error {
 	}
 
 	if !out.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
 	}
 
 	if !out.Coins.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
 	}
 
 	return nil

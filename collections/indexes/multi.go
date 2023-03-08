@@ -2,7 +2,9 @@ package indexes
 
 import (
 	"context"
+
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/codec"
 )
 
 // Multi defines the most common index. It can be used to create a reference between
@@ -18,8 +20,8 @@ func NewMulti[ReferenceKey, PrimaryKey, Value any](
 	schema *collections.SchemaBuilder,
 	prefix collections.Prefix,
 	name string,
-	refCodec collections.KeyCodec[ReferenceKey],
-	pkCodec collections.KeyCodec[PrimaryKey],
+	refCodec codec.KeyCodec[ReferenceKey],
+	pkCodec codec.KeyCodec[PrimaryKey],
 	getRefKeyFunc func(pk PrimaryKey, value Value) (ReferenceKey, error),
 ) *Multi[ReferenceKey, PrimaryKey, Value] {
 	i := collections.NewGenericMultiIndex(
@@ -51,9 +53,21 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ra
 	return (MultiIterator[ReferenceKey, PrimaryKey])(iter), err
 }
 
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) Walk(
+	ctx context.Context,
+	ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]],
+	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool,
+) error {
+	return (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Walk(ctx, ranger, walkFunc)
+}
+
 // MatchExact returns a MultiIterator containing all the primary keys referenced by the provided reference key.
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context, refKey ReferenceKey) (MultiIterator[ReferenceKey, PrimaryKey], error) {
 	return m.Iterate(ctx, collections.NewPrefixedPairRange[ReferenceKey, PrimaryKey](refKey))
+}
+
+func (i *MultiPair[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K2, K1]] {
+	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).KeyCodec()
 }
 
 // MultiIterator is just a KeySetIterator with key as Pair[ReferenceKey, PrimaryKey].

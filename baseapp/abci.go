@@ -66,7 +66,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// Use an empty header for prepare and process proposal states. Although it
 	// doesn't matter what header we use here as they get overwritten for the
 	// first block (see getContextForProposal()) and cleaned up on every Commit().
-	emptyHeader := cmtproto.Header{}
+	emptyHeader := cmtproto.Header{ChainID: req.ChainId}
 	app.setState(runTxPrepareProposal, emptyHeader)
 	app.setState(runTxProcessProposal, emptyHeader)
 
@@ -282,8 +282,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
 		WithConsensusParams(app.GetConsensusParams(ctx)).
-		WithBlockGasMeter(gasMeter).
-		WithChainID(app.chainID)
+		WithBlockGasMeter(gasMeter)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -332,8 +331,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
 		WithConsensusParams(app.GetConsensusParams(ctx)).
-		WithBlockGasMeter(gasMeter).
-		WithChainID(app.chainID)
+		WithBlockGasMeter(gasMeter)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -465,7 +463,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	// Reset state to the latest committed but with an empty header to avoid
 	// leaking the header from the last block.
-	emptyHeader := cmtproto.Header{}
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 	app.setState(runTxPrepareProposal, emptyHeader)
 	app.setState(runTxProcessProposal, emptyHeader)
 

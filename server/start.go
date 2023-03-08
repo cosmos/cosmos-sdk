@@ -300,18 +300,22 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
-	if err != nil {
-		return err
-	}
-
 	genDocProvider := func() (*cmttypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
+
 		return appGenesis.ToGenesisDoc()
 	}
 
 	// If the chain ID is not set, use the one from the genesis file
 	if !svrCtx.Viper.IsSet(flags.FlagChainID) {
-		svrCtx.Viper.Set(flags.FlagChainID, appGenesis.ChainID)
+		gen, err := genDocProvider()
+		if err != nil {
+			return err
+		}
+		svrCtx.Viper.Set(flags.FlagChainID, gen.ChainID)
 	}
 
 	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)

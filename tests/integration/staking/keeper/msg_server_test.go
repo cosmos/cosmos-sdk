@@ -5,15 +5,19 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -45,7 +49,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	notBondedPool := stakingKeeper.GetNotBondedPool(ctx)
 	startTokens := stakingKeeper.TokensFromConsensusPower(ctx, 5)
 
-	assert.NilError(t, testutil.FundModuleAccount(bankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), startTokens))))
+	assert.NilError(t, banktestutil.FundModuleAccount(bankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), startTokens))))
 	accountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	moduleBalance := bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), stakingKeeper.BondDenom(ctx))
@@ -168,6 +172,118 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				balanceForNotBondedPool := bankKeeper.GetBalance(ctx, sdk.AccAddress(notBondedPool.GetAddress()), bondDenom)
 				assert.DeepEqual(t, balanceForNotBondedPool, moduleBalance.Sub(testCase.req.Amount))
 				moduleBalance = moduleBalance.Sub(testCase.req.Amount)
+			}
+		})
+	}
+}
+
+func TestRotateConsPubKey(t *testing.T) {
+	// setup the app
+	var (
+		stakingKeeper *keeper.Keeper
+		bankKeeper    bankkeeper.Keeper
+		accountKeeper authkeeper.AccountKeeper
+	)
+	app, err := simtestutil.SetupWithConfiguration(
+		configurator.NewAppConfig(
+			configurator.BankModule(),
+			configurator.TxModule(),
+			configurator.StakingModule(),
+			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
+			configurator.AuthModule(),
+		),
+		simtestutil.DefaultStartUpConfig(),
+		&accountKeeper, &bankKeeper, &stakingKeeper)
+	assert.NilError(t, err)
+
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
+	bondDenom := stakingKeeper.BondDenom(ctx)
+
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 300))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+	pks := []cryptotypes.PubKey{PKs[0], PKs[499]}
+
+	val1 := testutil.NewValidator(t, valAddrs[0], pks[0])
+	stakingKeeper.SetValidator(ctx, val1)
+	stakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	stakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
+
+	testCases := []struct {
+		Name          string
+		Pass          bool
+		sender        sdk.AccAddress
+		validator     sdk.ValAddress
+		newPubKey     cryptotypes.PubKey
+		rotationLimit uint64
+	}{
+		{
+			Name:          "not existing validator check",
+			sender:        addrs[1],
+			validator:     valAddrs[1],
+			newPubKey:     pks[1],
+			rotationLimit: 10,
+			Pass:          false,
+		},
+		{
+			Name:          "consensus pubkey rotation limit check",
+			sender:        addrs[0],
+			validator:     val1.GetOperator(),
+			newPubKey:     pks[1],
+			rotationLimit: 0,
+			Pass:          false,
+		},
+		{
+			Name:          "successful consensus pubkey rotation",
+			sender:        addrs[0],
+			validator:     val1.GetOperator(),
+			newPubKey:     pks[1],
+			rotationLimit: 10,
+			Pass:          true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			params := stakingKeeper.GetParams(ctx)
+			params.ConsPubkeyRotationFee = sdk.NewInt64Coin(bondDenom, 1000)
+			params.MaxConsPubkeyRotations = testCase.rotationLimit
+			err := stakingKeeper.SetParams(ctx, params)
+			require.NoError(t, err)
+
+			oldDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
+			msg, err := types.NewMsgRotateConsPubKey(
+				sdk.ValAddress(testCase.sender),
+				testCase.newPubKey,
+			)
+			require.NoError(t, err)
+
+			_, err = msgServer.RotateConsPubKey(ctx, msg)
+
+			if testCase.Pass {
+
+				require.NoError(t, err)
+
+				// rotation fee payment from sender to distrtypes
+				newDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
+				require.Equal(t, newDistrBalance, oldDistrBalance.Add(params.ConsPubkeyRotationFee))
+
+				// validator consensus pubkey update check
+				validator, found := stakingKeeper.GetValidator(ctx, testCase.validator)
+				require.True(t, found)
+
+				consAddr, err := validator.GetConsAddr()
+				require.NoError(t, err)
+				require.Equal(t, consAddr.String(), sdk.ConsAddress(testCase.newPubKey.Address()).String())
+
+				// consensus rotation history set check
+				historyObjects := stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, testCase.validator)
+				require.Len(t, historyObjects, 1)
+				historyObjects = stakingKeeper.GetBlockConsPubKeyRotationHistory(ctx, ctx.BlockHeight())
+				require.Len(t, historyObjects, 1)
+			} else {
+				require.Error(t, err)
 			}
 		})
 	}

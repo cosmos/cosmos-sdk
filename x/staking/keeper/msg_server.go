@@ -526,7 +526,7 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	rotationFee := k.ConsPubKeyRotationFee(ctx)
 	sender := sdk.AccAddress(valAddr)
 
-	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, sdk.Coins{rotationFee})
+	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, sdk.NewCoins(rotationFee))
 	if err != nil {
 		return nil, err
 	}

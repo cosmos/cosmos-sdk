@@ -1577,3 +1577,19 @@ func (s *E2ETestSuite) TestEditValidatorMoniker() {
 	require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &result))
 	require.Equal(result.GetMoniker(), moniker)
 }
+
+func (s *E2ETestSuite) TestRotateConsensusKey() {
+	val := s.network.Validators[0]
+	require := s.Require()
+
+	txCmd := cli.NewRotateConsensusKeyCmd()
+	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, txCmd, []string{
+		val.ValAddress.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", cli.FlagPubKey, `{"@type":"/cosmos.crypto.ed25519.PubKey","key":"/bjz9vxsyxzyTiGjG289dBn/4G4Bu6U1pI1dL17MbIY="}`),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	})
+	require.NoError(err)
+}

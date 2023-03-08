@@ -37,7 +37,6 @@ const (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-
 	if req.ChainId != app.chainID {
 		panic(fmt.Sprintf("ChainID on RequestInitChain {%s} does not match the app's ChainID {%s}", req.ChainId, app.chainID))
 	}

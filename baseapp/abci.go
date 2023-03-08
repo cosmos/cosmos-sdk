@@ -450,8 +450,12 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
-	app.setState(runTxPrepareProposal, header)
-	app.setState(runTxProcessProposal, header)
+
+	// Reset state to the latest committed but with an empty header to avoid
+	// leaking the header from the last block.
+	emptyHeader := cmtproto.Header{}
+	app.setState(runTxPrepareProposal, emptyHeader)
+	app.setState(runTxProcessProposal, emptyHeader)
 
 	// empty/reset the deliver state
 	app.deliverState = nil
@@ -969,6 +973,8 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
 	if height == 1 {
 		ctx, _ = app.deliverState.ctx.CacheContext()
+		// TODO: clear all context data set during InitChain to avoid inconsistent behavior
+		ctx = ctx.WithBlockHeader(cmtproto.Header{}).WithChainID("")
 		return ctx
 	}
 	return ctx

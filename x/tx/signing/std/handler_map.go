@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/direct"
-	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 // SignModeOptions are options for configuring the standard sign mode handler map.

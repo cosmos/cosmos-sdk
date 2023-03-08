@@ -1,3 +1,30 @@
+# Agoric enhancements to Cosmovisor
+
+This particular Cosmovisor accommodates download and building from URLs referencing one of:
+
+- as in upstream: single executable file
+- as in upstream: zip file extracted verbatim to `.`, with executable file found
+  at one of:
+  - `./bin/$DAEMON_NAME`
+  - `./$DAEMON_NAME`
+- new in this fork: zip file containing a single root directory, whose extracted
+  contents are moved to `.`, with executable file found at one of:
+  - `./bin/$DAEMON_NAME`
+  - `./$DAEMON_NAME`
+
+To install this fork of `cosmovisor`, run the following command:
+
+```
+go install github.com/agoric-sdk/cosmos-sdk/cosmovisor/cmd/cosmovisor@Agoric
+```
+
+Have fun,
+The team at [Agoric](https://github.com/Agoric).
+
+---
+
+We now return you to the regularly-scheduled README from https://github.com/cosmos/cosmos-sdk/tree/47f46643affd7ec7978329c42bac47275ac7e1cc/cosmovisor#readme:
+
 # Cosmosvisor Quick Start
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module via stdout for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
@@ -9,7 +36,7 @@
 To install `cosmovisor`, run the following command:
 
 ```
-go install github.com/Agoric/cosmos-sdk/cosmovisor/cmd/cosmovisor@Agoric
+go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
 ```
 
 ## Command Line Arguments And Environment Variables

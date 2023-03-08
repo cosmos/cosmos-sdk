@@ -115,6 +115,10 @@ func (msg *KVStoreTx) GetSigners() []sdk.AccAddress {
 
 func (msg *KVStoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
 
+func (msg *KVStoreTx) IsNonAtomic() bool {
+	return false
+}
+
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has
 // all the signatures and can be used to authenticate.
 func decodeTx(txBytes []byte) (sdk.Tx, error) {

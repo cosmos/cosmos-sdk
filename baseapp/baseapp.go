@@ -949,7 +949,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 		}
 
 		var (
-			txsBytes     [][]byte
+			selectedTxs  [][]byte
 			totalTxBytes int64
 		)
 
@@ -971,7 +971,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			} else {
 				txSize := int64(len(bz))
 				if totalTxBytes += txSize; totalTxBytes <= req.MaxTxBytes {
-					txsBytes = append(txsBytes, bz)
+					selectedTxs = append(selectedTxs, bz)
 				} else {
 					break
 				}
@@ -980,7 +980,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			iterator = iterator.Next()
 		}
 
-		return abci.ResponsePrepareProposal{Txs: txsBytes}
+		return abci.ResponsePrepareProposal{Txs: selectedTxs}
 	}
 }
 

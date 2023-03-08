@@ -5,24 +5,11 @@ import (
 	"sort"
 	"strings"
 
-<<<<<<< HEAD
 	dbm "github.com/cometbft/cometbft-db"
-=======
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
-	"github.com/cockroachdb/errors"
->>>>>>> 4932f115d (feat: Create ABCI++ Verfication Methods (#15298))
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -31,6 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/cosmos/gogoproto/proto"
+	"golang.org/x/exp/maps"
 )
 
 type (
@@ -55,20 +44,6 @@ const (
 
 var _ abci.Application = (*BaseApp)(nil)
 
-<<<<<<< HEAD
-type (
-	// Enum mode for app.runTx
-	runTxMode uint8
-
-	// StoreLoader defines a customizable function to control how we load the CommitMultiStore
-	// from disk. This is useful for state migration, when loading a datastore written with
-	// an older version of the software. In particular, if a module changed the substore key name
-	// (or removed a substore) between two versions of the software.
-	StoreLoader func(ms sdk.CommitMultiStore) error
-)
-
-=======
->>>>>>> 4932f115d (feat: Create ABCI++ Verfication Methods (#15298))
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { //nolint: maligned
 	// initialized on creation
@@ -967,15 +942,9 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		// If the mempool is nil or a no-op mempool, we simply return the transactions
-<<<<<<< HEAD
-		// requested from Tendermint, which, by default, should be in FIFO order.
-		_, isNoOp := app.mempool.(mempool.NoOpMempool)
-		if app.mempool == nil || isNoOp {
-=======
 		// requested from CometBFT, which, by default, should be in FIFO order.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
->>>>>>> 4932f115d (feat: Create ABCI++ Verfication Methods (#15298))
 			return abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 

@@ -1,11 +1,11 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/cockroachdb/errors"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"

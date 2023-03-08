@@ -884,13 +884,13 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 // ProcessProposal state internally will be discarded. <nil, err> will be
 // returned if the transaction cannot be decoded. <Tx, nil> will be returned if
 // the transaction is valid, otherwise <Tx, err> will be returned.
-func (bapp *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
-	tx, err := bapp.txDecoder(txBz)
+func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
+	tx, err := app.txDecoder(txBz)
 	if err != nil {
 		return nil, errors.WithSecondaryError(ErrTxDecode, err)
 	}
 
-	_, _, _, _, err = bapp.runTx(runTxProcessProposal, txBz)
+	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz)
 	return tx, err
 }
 

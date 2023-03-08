@@ -67,12 +67,12 @@ func (s *errorsTestSuite) TestErrorIs() {
 		},
 		"successful comparison to a wrapped error": {
 			a:      ErrUnauthorized,
-			b:      errors.Wrap(ErrUnauthorized, "gone"),
+			b:      Wrap(ErrUnauthorized, "gone"),
 			wantIs: true,
 		},
 		"unsuccessful comparison to a wrapped error": {
 			a:      ErrUnauthorized,
-			b:      errors.Wrap(ErrInsufficientFee, "too big"),
+			b:      Wrap(ErrInsufficientFee, "too big"),
 			wantIs: false,
 		},
 		"not equal to stdlib error": {
@@ -82,7 +82,7 @@ func (s *errorsTestSuite) TestErrorIs() {
 		},
 		"not equal to a wrapped stdlib error": {
 			a:      ErrUnauthorized,
-			b:      errors.Wrap(fmt.Errorf("stdlib error"), "wrapped"),
+			b:      Wrap(fmt.Errorf("stdlib error"), "wrapped"),
 			wantIs: false,
 		},
 		"nil is nil": {
@@ -222,26 +222,6 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 	status, ok = grpcstatus.FromError(ErrNotFound.Wrap("test"))
 	s.Require().True(ok)
 	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
-}
-
-func ExampleWrap() {
-	err1 := Wrap(ErrInsufficientFunds, "90 is smaller than 100")
-	err2 := errors.Wrap(ErrInsufficientFunds, "90 is smaller than 100")
-	fmt.Println(err1.Error())
-	fmt.Println(err2.Error())
-	// Output:
-	// 90 is smaller than 100: insufficient funds
-	// 90 is smaller than 100: insufficient funds
-}
-
-func ExampleWrapf() {
-	err1 := Wrap(ErrInsufficientFunds, "90 is smaller than 100")
-	err2 := errors.Wrap(ErrInsufficientFunds, "90 is smaller than 100")
-	fmt.Println(err1.Error())
-	fmt.Println(err2.Error())
-	// Output:
-	// 90 is smaller than 100: insufficient funds
-	// 90 is smaller than 100: insufficient funds
 }
 
 const testCodespace = "testtesttest"

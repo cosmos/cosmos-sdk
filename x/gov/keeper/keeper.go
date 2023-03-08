@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -37,7 +37,7 @@ type Keeper struct {
 	legacyRouter v1beta1.Router
 
 	// Msg server router
-	router *baseapp.MsgServiceRouter
+	router baseapp.MessageRouter
 
 	config types.Config
 
@@ -61,7 +61,7 @@ func (k Keeper) GetAuthority() string {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrkeeper types.DistributionKeeper,
-	router *baseapp.MsgServiceRouter, config types.Config, authority string,
+	router baseapp.MessageRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -126,7 +126,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Router returns the gov keeper's router
-func (k Keeper) Router() *baseapp.MsgServiceRouter {
+func (k Keeper) Router() baseapp.MessageRouter {
 	return k.router
 }
 

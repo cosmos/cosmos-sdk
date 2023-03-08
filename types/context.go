@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/store/gaskv"
@@ -26,7 +25,7 @@ type Context struct {
 	baseCtx              context.Context
 	ms                   storetypes.MultiStore
 	header               cmtproto.Header
-	headerHash           cmtbytes.HexBytes
+	headerHash           []byte
 	chainID              string
 	txBytes              []byte
 	logger               log.Logger
@@ -72,7 +71,7 @@ func (c Context) BlockHeader() cmtproto.Header {
 }
 
 // HeaderHash returns a copy of the header hash obtained during abci.RequestBeginBlock
-func (c Context) HeaderHash() cmtbytes.HexBytes {
+func (c Context) HeaderHash() []byte {
 	hash := make([]byte, len(c.headerHash))
 	copy(hash, c.headerHash)
 	return hash
@@ -142,11 +141,12 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 	return c
 }
 
-// WithBlockTime returns a Context with an updated CometBFT block header time in UTC time
+// WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
+// Stripping the monotonic component is for time equality.
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
-	newHeader.Time = newTime.UTC()
+	newHeader.Time = newTime.Round(0).UTC()
 	return c.WithBlockHeader(newHeader)
 }
 

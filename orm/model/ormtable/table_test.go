@@ -74,6 +74,7 @@ func TestPaginationLimitCountTotal(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
+	assert.NilError(t, err)
 	backend := testkv.NewSplitMemBackend()
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleTableTable(table)
@@ -100,11 +101,17 @@ func TestPaginationLimitCountTotal(t *testing.T) {
 	assert.Equal(t, uint64(3), pr.Total)
 }
 
-func TestImportedMessageIterator(t *testing.T) {
+func TestTimestampIndex(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleTimestamp{}).ProtoReflect().Type(),
 	})
-	backend := testkv.NewSplitMemBackend()
+	assert.NilError(t, err)
+	backend := testkv.NewDebugBackend(testkv.NewSplitMemBackend(), &testkv.EntryCodecDebugger{
+		EntryCodec: table,
+		Print: func(s string) {
+			t.Log(s)
+		},
+	})
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleTimestampTable(table)
 	assert.NilError(t, err)
@@ -117,7 +124,7 @@ func TestImportedMessageIterator(t *testing.T) {
 	assert.NilError(t, err)
 
 	pastPb, middlePb, futurePb := timestamppb.New(past), timestamppb.New(middle), timestamppb.New(future)
-	timeOrder := [3]*timestamppb.Timestamp{pastPb, middlePb, futurePb}
+	timeOrder := []*timestamppb.Timestamp{pastPb, middlePb, futurePb}
 
 	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTimestamp{
 		Name: "foo",
@@ -143,6 +150,47 @@ func TestImportedMessageIterator(t *testing.T) {
 		assert.Equal(t, timeOrder[i].String(), v.Ts.String())
 		i++
 	}
+
+	// insert a nil entry
+	id, err := store.InsertReturningId(ctx, &testpb.ExampleTimestamp{
+		Name: "nil",
+		Ts:   nil,
+	})
+	assert.NilError(t, err)
+
+	res, err := store.Get(ctx, id)
+	assert.NilError(t, err)
+	assert.Assert(t, res.Ts == nil)
+
+	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{})
+	assert.NilError(t, err)
+
+	// make sure nils are ordered last
+	timeOrder = append(timeOrder, nil)
+	i = 0
+	for it.Next() {
+		v, err := it.Value()
+		assert.NilError(t, err)
+		assert.Assert(t, v != nil)
+		x := timeOrder[i]
+		if x == nil {
+			assert.Assert(t, v.Ts == nil)
+		} else {
+			assert.Equal(t, x.String(), v.Ts.String())
+		}
+		i++
+	}
+	it.Close()
+
+	// try iterating over just nil timestamps
+	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{}.WithTs(nil))
+	assert.NilError(t, err)
+	assert.Assert(t, it.Next())
+	res, err = it.Value()
+	assert.NilError(t, err)
+	assert.Assert(t, res.Ts == nil)
+	assert.Assert(t, !it.Next())
+	it.Close()
 }
 
 // check that the ormkv.Entry's decode and encode to the same bytes
@@ -155,6 +203,7 @@ func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.Reado
 		entry, err := table.DecodeEntry(key, value)
 		assert.NilError(t, err)
 		k, v, err := table.EncodeEntry(entry)
+		assert.NilError(t, err)
 		assert.Assert(t, bytes.Equal(key, k), "%x %x %s", key, k, entry)
 		assert.Assert(t, bytes.Equal(value, v), "%x %x %s", value, v, entry)
 		it.Next()
@@ -164,6 +213,7 @@ func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.Reado
 func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backend) {
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleTableTable(table)
+	assert.NilError(t, err)
 
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{
@@ -195,6 +245,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// insert one record
 	err = store.Insert(ctx, data[0])
+	assert.NilError(t, err)
 	// trivial prefix query has one record
 	it, err := store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
@@ -202,6 +253,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// insert one record
 	err = store.Insert(ctx, data[1])
+	assert.NilError(t, err)
 	// trivial prefix query has two records
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
@@ -251,6 +303,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 		testpb.ExampleTableStrU32IndexKey{}.WithStr("abd"),
 		ormlist.Reverse(),
 	)
+	assert.NilError(t, err)
 	assertIteratorItems(it, 9, 3, 1, 8, 7, 2, 0)
 
 	// another prefix query forwards
@@ -258,12 +311,14 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	it, err = store.List(ctx,
 		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abe", 7),
 	)
+	assert.NilError(t, err)
 	assertIteratorItems(it, 5, 6)
 	// and backwards
 	it, err = store.List(ctx,
 		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abc", 4),
 		ormlist.Reverse(),
 	)
+	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 0)
 
 	// try filtering
@@ -793,6 +848,7 @@ func TestInsertReturningFieldName(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleAutoIncFieldName{}).ProtoReflect().Type(),
 	})
+	assert.NilError(t, err)
 	backend := testkv.NewSplitMemBackend()
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleAutoIncFieldNameTable(table)

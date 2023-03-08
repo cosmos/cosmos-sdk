@@ -12,7 +12,7 @@
 # TODO: demo connecting rest-server (or is this in server now?)
 
 # bullseye already comes with build dependencies, so we don't need anything extra to install
-FROM --platform=$BUILDPLATFORM golang:1.19-bullseye AS build-env
+FROM --platform=$BUILDPLATFORM golang:1.20-bullseye AS build-env
 
 # Set working directory for the build
 WORKDIR /go/src/github.com/cosmos/cosmos-sdk
@@ -21,6 +21,7 @@ WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 COPY go.mod go.sum ./
 COPY collections/go.mod collections/go.sum ./collections/
 COPY store/go.mod store/go.sum ./store/
+COPY log/go.mod log/go.sum ./log/
 
 RUN go mod download
 

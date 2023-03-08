@@ -556,7 +556,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// PublicKey defines the keys available for use with Tendermint Validators
+// PublicKey defines the keys available for use with Validators
 type PublicKey struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

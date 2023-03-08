@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -44,7 +44,10 @@ func (a *AppBuilder) Build(
 
 	a.app.BaseApp = bApp
 	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())
-	a.app.ModuleManager.RegisterServices(a.app.configurator)
+	err := a.app.ModuleManager.RegisterServices(a.app.configurator)
+	if err != nil {
+		panic(err)
+	}
 
 	return a.app
 }

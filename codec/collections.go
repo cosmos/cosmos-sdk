@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -11,7 +11,7 @@ type protoMessage[T any] interface {
 }
 
 // CollValue inits a collections.ValueCodec for a generic gogo protobuf message.
-func CollValue[T any, PT protoMessage[T]](cdc BinaryCodec) collections.ValueCodec[T] {
+func CollValue[T any, PT protoMessage[T]](cdc BinaryCodec) collcodec.ValueCodec[T] {
 	return &collValue[T, PT]{cdc.(Codec)}
 }
 

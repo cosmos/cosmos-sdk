@@ -2,9 +2,10 @@ package types_test
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"math/rand"
+	mathrand "math/rand"
 	"strings"
 	"testing"
 
@@ -211,7 +212,7 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyz"
 func RandString(n int) string {
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+		b[i] = letterBytes[mathrand.Intn(len(letterBytes))]
 	}
 	return string(b)
 }

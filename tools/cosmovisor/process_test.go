@@ -5,12 +5,14 @@ package cosmovisor_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -30,7 +32,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	require := s.Require()
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true}
-	logger := cosmovisor.NewLogger()
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
 	stdout, stderr := NewBuffer(), NewBuffer()
@@ -74,7 +76,7 @@ func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
 	require := s.Require()
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", RestartDelay: 5 * time.Second, PollInterval: 20, UnsafeSkipBackup: true}
-	logger := cosmovisor.NewLogger()
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
 	stdout, stderr := NewBuffer(), NewBuffer()
@@ -110,7 +112,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
-	logger := cosmovisor.NewLogger()
+	logger := log.NewLoggerWithKV(os.Stdout, log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output

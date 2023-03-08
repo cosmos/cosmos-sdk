@@ -3,9 +3,9 @@ package streaming_test
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/streaming"
 	"cosmossdk.io/store/streaming/file"
 	"cosmossdk.io/store/types"

@@ -234,6 +234,7 @@ func NewSimApp(
 	// nonceMempool := mempool.NewSenderNonceMempool()
 	// abciPropHandler := NewDefaultProposalHandler(nonceMempool, bApp)
 	//
+	// bApp.SetMempool(nonceMempool)
 	// bApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
 	// bApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
 

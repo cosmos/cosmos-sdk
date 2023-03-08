@@ -191,6 +191,7 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace (
 	// TODO tag all extracted modules after SDK refactor
+	cosmossdk.io/api => ../api
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	cosmossdk.io/x/evidence => ../x/evidence

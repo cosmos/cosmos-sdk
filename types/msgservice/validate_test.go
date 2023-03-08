@@ -1,39 +1,45 @@
-package msgservice_test
+package msgservice
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
-	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
-	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 )
 
 func TestValidateServiceAnnotations(t *testing.T) {
-	// We didn't add the `msg.service = true` annotation on testdata's Msg.
-	err := msgservice.ValidateServiceAnnotations(nil, "testdata.Msg")
+	// Find an arbitrary query service that hasn't the service=true annotation.
+	sd, err := protoregistry.GlobalFiles.FindDescriptorByName("cosmos.bank.v1beta1.Query")
+	require.NoError(t, err)
+	err = validateMsgServiceAnnotations(nil, sd.(protoreflect.ServiceDescriptor))
 	require.Error(t, err)
 
-	err = msgservice.ValidateServiceAnnotations(nil, "cosmos.bank.v1beta1.Msg")
+	sd, err = protoregistry.GlobalFiles.FindDescriptorByName("cosmos.bank.v1beta1.Msg")
+	require.NoError(t, err)
+	err = validateMsgServiceAnnotations(nil, sd.(protoreflect.ServiceDescriptor))
 	require.NoError(t, err)
 }
 
 func TestValidateMsgAnnotations(t *testing.T) {
 	testcases := []struct {
 		name    string
-		typeURL string
+		message proto.Message
 		expErr  bool
 	}{
-		{"no signer annotation", "testdata.MsgCreateDog", true},
-		{"valid signer", "cosmos.bank.v1beta1.MsgSend", false},
-		{"valid signer as message", "cosmos.bank.v1beta1.MsgMultiSend", false},
+		{"no signer annotation", &testpb.Dog{}, true},
+		{"valid signer", &bankv1beta1.MsgSend{}, false},
+		{"valid signer as message", &bankv1beta1.MsgMultiSend{}, false},
 	}
 
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := msgservice.ValidateMsgAnnotations(nil, tc.typeURL)
+			err := validateMsgAnnotations(nil, tc.message.ProtoReflect().Descriptor())
 			if tc.expErr {
 				require.Error(t, err)
 			} else {

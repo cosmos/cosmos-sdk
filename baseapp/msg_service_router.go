@@ -3,7 +3,6 @@ package baseapp
 import (
 	"context"
 	"fmt"
-	"os"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
@@ -15,7 +14,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // MessageRouter ADR 031 request type routing
@@ -69,13 +67,6 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 //     RegisterInterfaces,
 //   - or if a service is being registered twice.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
-	// Make sure the Msg services has the `cosmos.msg.service` proto annotation.
-	err := msgservice.ValidateServiceAnnotations(msr.protoFiles, sd.ServiceName)
-	if err != nil {
-		// We might panic here in the future, instead of simply logging.
-		fmt.Fprintf(os.Stderr, "The SDK is requiring protobuf annotation on Msgs; %s\n", err)
-	}
-
 	// Adds a top-level query handler based on the gRPC service name.
 	for _, method := range sd.Methods {
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
@@ -93,13 +84,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				// this should only happen if there is a problem with code generation in which case the app won't
 				// work correctly anyway.
 				panic(fmt.Errorf("unable to register service method %s: %T does not implement sdk.Msg", fqMethod, i))
-			}
-
-			// Make sure Msg annotations are correct, like the `cosmos.msg.signer` one.
-			err := msgservice.ValidateMsgAnnotations(msr.protoFiles, proto.MessageName(msg))
-			if err != nil {
-				// We might panic here in the future, instead of logging.
-				fmt.Fprintf(os.Stderr, "The SDK is requiring protobuf annotation on Msgs; %s\n", err)
 			}
 
 			requestTypeName = sdk.MsgTypeURL(msg)

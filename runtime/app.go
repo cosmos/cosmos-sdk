@@ -23,7 +23,9 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
@@ -110,6 +112,16 @@ func (a *App) Load(loadLatest bool) error {
 		if err := a.LoadLatestVersion(); err != nil {
 			return err
 		}
+	}
+
+	// At startup, check that all proto annotations are correct.
+	protoFiles, err := proto.MergedRegistry()
+	if err != nil {
+		return err
+	}
+	err = msgservice.ValidateProtoAnnotations(protoFiles)
+	if err != nil {
+		panic(err)
 	}
 
 	return nil

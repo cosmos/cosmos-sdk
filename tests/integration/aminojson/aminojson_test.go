@@ -44,7 +44,7 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/tx/aminojson"
+	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

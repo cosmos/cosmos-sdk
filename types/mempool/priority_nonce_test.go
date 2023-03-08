@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

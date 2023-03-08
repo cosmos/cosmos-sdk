@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

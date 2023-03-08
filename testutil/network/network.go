@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -20,7 +22,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/node"
 	cmtclient "github.com/cometbft/cometbft/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
@@ -119,7 +120,7 @@ type Config struct {
 	StakingTokens    sdkmath.Int                // the amount of tokens each validator has available to stake
 	BondedTokens     sdkmath.Int                // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
-	EnableTMLogging  bool                       // enable CometBFT logging to STDOUT
+	EnableLogging    bool                       // enable logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
 	SigningAlgo      string                     // signing algorithm for keys
 	KeyringOptions   []keyring.Option           // keyring configuration options
@@ -406,8 +407,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		logger := log.NewNopLogger()
-		if cfg.EnableTMLogging {
-			logger = cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
+		if cfg.EnableLogging {
+			logger = log.NewLogger(os.Stdout) // TODO(mr): enable selection of log destination.
 		}
 
 		ctx.Logger = logger
@@ -613,9 +614,33 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
-	server.TrapSignal(network.Cleanup)
+	trapSignal(network.Cleanup)
 
 	return network, nil
+}
+
+// trapSignal traps SIGINT and SIGTERM and calls os.Exit once a signal is received.
+func trapSignal(cleanupFunc func()) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigs
+
+		if cleanupFunc != nil {
+			cleanupFunc()
+		}
+		exitCode := 128
+
+		switch sig {
+		case syscall.SIGINT:
+			exitCode += int(syscall.SIGINT)
+		case syscall.SIGTERM:
+			exitCode += int(syscall.SIGTERM)
+		}
+
+		os.Exit(exitCode)
+	}()
 }
 
 // LatestHeight returns the latest height of the network or an error if the

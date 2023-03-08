@@ -6,7 +6,7 @@
 
 ## Status
 
-PROPOSED
+DRAFT
 
 ## Abstract
 
@@ -430,7 +430,7 @@ Other downsides to this approach are:
 
 ## Decision
 
-Based on discussions within the team, the current draft consensus is the following:
+The latest **DRAFT** proposal is:
 
 1. we are alignment on adopting [ADR 033](./adr-033-protobuf-inter-module-comm.md) not just as an addition to the
    framework, but as a core replacement to the keeper paradigm entirely.

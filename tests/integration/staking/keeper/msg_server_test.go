@@ -217,6 +217,7 @@ func TestRotateConsPubKey(t *testing.T) {
 		validator     sdk.ValAddress
 		newPubKey     cryptotypes.PubKey
 		rotationLimit uint64
+		expErrMsg     string
 	}{
 		{
 			Name:          "not existing validator check",
@@ -225,66 +226,67 @@ func TestRotateConsPubKey(t *testing.T) {
 			newPubKey:     pks[1],
 			rotationLimit: 10,
 			Pass:          false,
-		},
-		{
-			Name:          "consensus pubkey rotation limit check",
-			sender:        addrs[0],
-			validator:     val1.GetOperator(),
-			newPubKey:     pks[1],
-			rotationLimit: 0,
-			Pass:          false,
+			expErrMsg:     "validator does not exist",
 		},
 		{
 			Name:          "successful consensus pubkey rotation",
 			sender:        addrs[0],
 			validator:     val1.GetOperator(),
 			newPubKey:     pks[1],
-			rotationLimit: 10,
+			rotationLimit: 1,
 			Pass:          true,
+		},
+		{
+			Name:          "consensus pubkey rotation limit check",
+			sender:        addrs[0],
+			validator:     val1.GetOperator(),
+			newPubKey:     PKs[498],
+			rotationLimit: 1,
+			Pass:          false,
+			expErrMsg:     "exceeding maximum consensus pubkey rotations",
 		},
 	}
 
 	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			params := stakingKeeper.GetParams(ctx)
-			params.ConsPubkeyRotationFee = sdk.NewInt64Coin(bondDenom, 1000)
-			params.MaxConsPubkeyRotations = testCase.rotationLimit
-			err := stakingKeeper.SetParams(ctx, params)
+		params := stakingKeeper.GetParams(ctx)
+		params.ConsPubkeyRotationFee = sdk.NewInt64Coin(bondDenom, 1000)
+		params.MaxConsPubkeyRotations = testCase.rotationLimit
+		err := stakingKeeper.SetParams(ctx, params)
+		require.NoError(t, err)
+
+		oldDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
+		msg, err := types.NewMsgRotateConsPubKey(
+			sdk.ValAddress(testCase.sender),
+			testCase.newPubKey,
+		)
+		require.NoError(t, err)
+
+		_, err = msgServer.RotateConsPubKey(ctx, msg)
+
+		if testCase.Pass {
+
 			require.NoError(t, err)
 
-			oldDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
-			msg, err := types.NewMsgRotateConsPubKey(
-				sdk.ValAddress(testCase.sender),
-				testCase.newPubKey,
-			)
+			// rotation fee payment from sender to distrtypes
+			newDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
+			require.Equal(t, newDistrBalance, oldDistrBalance.Add(params.ConsPubkeyRotationFee))
+
+			// validator consensus pubkey update check
+			validator, found := stakingKeeper.GetValidator(ctx, testCase.validator)
+			require.True(t, found)
+
+			consAddr, err := validator.GetConsAddr()
 			require.NoError(t, err)
+			require.Equal(t, consAddr.String(), sdk.ConsAddress(testCase.newPubKey.Address()).String())
 
-			_, err = msgServer.RotateConsPubKey(ctx, msg)
-
-			if testCase.Pass {
-
-				require.NoError(t, err)
-
-				// rotation fee payment from sender to distrtypes
-				newDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
-				require.Equal(t, newDistrBalance, oldDistrBalance.Add(params.ConsPubkeyRotationFee))
-
-				// validator consensus pubkey update check
-				validator, found := stakingKeeper.GetValidator(ctx, testCase.validator)
-				require.True(t, found)
-
-				consAddr, err := validator.GetConsAddr()
-				require.NoError(t, err)
-				require.Equal(t, consAddr.String(), sdk.ConsAddress(testCase.newPubKey.Address()).String())
-
-				// consensus rotation history set check
-				historyObjects := stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, testCase.validator)
-				require.Len(t, historyObjects, 1)
-				historyObjects = stakingKeeper.GetBlockConsPubKeyRotationHistory(ctx, ctx.BlockHeight())
-				require.Len(t, historyObjects, 1)
-			} else {
-				require.Error(t, err)
-			}
-		})
+			// consensus rotation history set check
+			historyObjects := stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, testCase.validator)
+			require.Len(t, historyObjects, 1)
+			historyObjects = stakingKeeper.GetBlockConsPubKeyRotationHistory(ctx, ctx.BlockHeight())
+			require.Len(t, historyObjects, 1)
+		} else {
+			require.Error(t, err)
+			require.Equal(t, err.Error(), testCase.expErrMsg)
+		}
 	}
 }

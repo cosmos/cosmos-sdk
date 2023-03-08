@@ -230,14 +230,14 @@ func validateMinCommissionRate(i interface{}) error {
 }
 
 func validateMaxConsPubkey(i interface{}) error {
-	_, ok := i.(uint64)
+	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	// if v == 0 {
-	// 	return fmt.Errorf("max cons pubkey rotations must be positive: %d", v)
-	// }
+	if v == 0 {
+		return fmt.Errorf("max cons pubkey rotations must be positive: %d", v)
+	}
 
 	return nil
 }

@@ -8,6 +8,7 @@ import (
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -27,13 +28,28 @@ type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.M
 // ValueRendererCreator is a function returning a textual.
 type ValueRendererCreator func(protoreflect.FieldDescriptor) ValueRenderer
 
-// SignModeHandler holds the configuration for dispatching
-// to specific value renderers for SIGN_MODE_TEXTUAL.
-type SignModeHandler struct {
+// SignModeOptions are options to be passed to Textual's sign mode handler.
+type SignModeOptions struct {
 	// coinMetadataQuerier defines a function to query the coin metadata from
 	// state. It should use bank module's `DenomsMetadata` gRPC query to fetch
 	// each denom's associated metadata, either using the bank keeper (for
 	// server-side code) or a gRPC query client (for client-side code).
+	CoinMetadataQuerier CoinMetadataQueryFn
+
+	// ProtoFiles are the protobuf files to use for resolving message
+	// descriptors. If it is nil, the global protobuf registry will be used.
+	ProtoFiles *protoregistry.Files
+
+	// ProtoTypes are the protobuf type resolvers to use for resolving message
+	// types. If it is nil, then a dynamicpb will be used on top of ProtoFiles.
+	ProtoTypes protoregistry.MessageTypeResolver
+}
+
+// SignModeHandler holds the configuration for dispatching
+// to specific value renderers for SIGN_MODE_TEXTUAL.
+type SignModeHandler struct {
+	protoFiles          *protoregistry.Files
+	protoTypes          protoregistry.MessageTypeResolver
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.
 	scalars map[string]ValueRendererCreator
@@ -47,10 +63,25 @@ type SignModeHandler struct {
 }
 
 // NewSignModeHandler returns a new SignModeHandler which generates sign bytes and provides  value renderers.
-func NewSignModeHandler(q CoinMetadataQueryFn) *SignModeHandler {
-	t := &SignModeHandler{coinMetadataQuerier: q}
+func NewSignModeHandler(o SignModeOptions) (*SignModeHandler, error) {
+	if o.CoinMetadataQuerier == nil {
+		return nil, fmt.Errorf("coinMetadataQuerier must be non-empty")
+	}
+	if o.ProtoFiles == nil {
+		o.ProtoFiles = protoregistry.GlobalFiles
+	}
+	if o.ProtoTypes == nil {
+		o.ProtoTypes = protoregistry.GlobalTypes
+	}
+
+	t := &SignModeHandler{
+		coinMetadataQuerier: o.CoinMetadataQuerier,
+		protoFiles:          o.ProtoFiles,
+		protoTypes:          o.ProtoTypes,
+	}
 	t.init()
-	return t
+
+	return t, nil
 }
 
 // GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.

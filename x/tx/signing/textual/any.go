@@ -3,10 +3,12 @@ package textual
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-proto/any"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -31,16 +33,37 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 		return nil, fmt.Errorf("expected Any, got %T", msg)
 	}
 
-	internalMsg, err := anymsg.UnmarshalNew()
-	if err != nil {
+	packedMsg, err := anymsg.UnmarshalNew()
+	if err == protoregistry.NotFound {
+		// If the proto v2 registry doesn't have this message, then we use
+		// protoFiles (which can e.g. be initialized to gogo's MergedRegistry)
+		// to retrieve the message descriptor, and then use dynamicpb on that
+		// message descriptor to create a proto.Message
+		typeURL := strings.TrimPrefix(anymsg.TypeUrl, "/")
+
+		msgDesc, err := ar.tr.protoFiles.FindDescriptorByName(protoreflect.FullName(typeURL))
+		if err != nil {
+			return nil, fmt.Errorf("textual protoFiles does not have descriptor %s: %w", anymsg.TypeUrl, err)
+		}
+
+		typ := dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor))
+		msg := typ.New().Interface()
+		err = anymsg.UnmarshalTo(msg)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal msg %s into dynamicpb generated type: %w", anymsg.TypeUrl, err)
+		}
+
+		packedMsg = msg
+	} else if err != nil {
 		return nil, fmt.Errorf("error unmarshalling any %s: %w", anymsg.TypeUrl, err)
 	}
-	vr, err := ar.tr.GetMessageValueRenderer(internalMsg.ProtoReflect().Descriptor())
+
+	vr, err := ar.tr.GetMessageValueRenderer(packedMsg.ProtoReflect().Descriptor())
 	if err != nil {
 		return nil, err
 	}
 
-	subscreens, err := vr.Format(ctx, protoreflect.ValueOfMessage(internalMsg.ProtoReflect()))
+	subscreens, err := vr.Format(ctx, protoreflect.ValueOfMessage(packedMsg.ProtoReflect()))
 	if err != nil {
 		return nil, err
 	}
@@ -82,12 +105,12 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		subscreens[i-1].Indent--
 	}
 
-	internalMsg, err := vr.Parse(ctx, subscreens)
+	packedMsg, err := vr.Parse(ctx, subscreens)
 	if err != nil {
 		return nilValue, err
 	}
 
-	anyMsg, err := any.New(internalMsg.Message().Interface())
+	anyMsg, err := any.New(packedMsg.Message().Interface())
 	if err != nil {
 		return nilValue, err
 	}

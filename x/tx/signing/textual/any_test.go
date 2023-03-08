@@ -31,7 +31,8 @@ func TestAny(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	tr := textual.NewSignModeHandler(EmptyCoinMetadataQuerier)
+	tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: EmptyCoinMetadataQuerier})
+	require.NoError(t, err)
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			anyMsg := anypb.Any{}
@@ -54,4 +55,8 @@ func TestAny(t *testing.T) {
 			require.Empty(t, diff)
 		})
 	}
+}
+
+func TestCustomProtoFiles(t *testing.T) {
+
 }

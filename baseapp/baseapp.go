@@ -45,13 +45,6 @@ const (
 	runTxProcessProposal                  // Process a TM block proposal
 )
 
-var (
-	// ErrTxDecode is returned when decoding a transaction fails.
-	ErrTxDecode = errors.New("failed to decode transaction")
-	// ErrTxEncode is returned when encoding a transaction fails.
-	ErrTxEncode = errors.New("failed to encode transaction")
-)
-
 var _ abci.Application = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
@@ -872,7 +865,7 @@ func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 	bz, err := app.txEncoder(tx)
 	if err != nil {
-		return nil, errors.WithSecondaryError(ErrTxEncode, err)
+		return nil, err
 	}
 
 	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
@@ -887,7 +880,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 	tx, err := app.txDecoder(txBz)
 	if err != nil {
-		return nil, errors.WithSecondaryError(ErrTxDecode, err)
+		return nil, err
 	}
 
 	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz)
@@ -959,10 +952,10 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			bz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			txSize := int64(len(bz))
 			switch {
-			case bz == nil && errors.Is(err, ErrTxEncode):
+			case len(bz) == 0 && err != nil:
 				panic(err)
 
-			case bz != nil && err != nil:
+			case len(bz) > 0 && err != nil:
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					panic(err)

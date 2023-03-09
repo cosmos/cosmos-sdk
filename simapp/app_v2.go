@@ -167,21 +167,6 @@ func NewSimApp(
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
-		// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
-		// handlers. These defaults are already set in the SDK's BaseApp, this shows an example of how to override
-		// them.
-		//
-		// nonceMempool = mempool.NewSenderNonceMempool()
-		// mempoolOpt   = baseapp.SetMempool(nonceMempool)
-		// prepareOpt   = func(app *baseapp.BaseApp) {
-		// 	app.SetPrepareProposal(app.DefaultPrepareProposal())
-		// }
-		// processOpt = func(app *baseapp.BaseApp) {
-		// 	app.SetProcessProposal(app.DefaultProcessProposal())
-		// }
-		//
-		// Further down we'd set the options in the AppBuilder like below.
-		// baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -243,6 +228,32 @@ func NewSimApp(
 	); err != nil {
 		panic(err)
 	}
+
+	// Below we could construct and set an application specific mempool and
+	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are
+	// already set in the SDK's BaseApp, this shows an example of how to override
+	// them.
+	//
+	// Example:
+	//
+	// app.App = appBuilder.Build(...)
+	// nonceMempool := mempool.NewSenderNonceMempool()
+	// abciPropHandler := NewDefaultProposalHandler(nonceMempool, app.App.BaseApp)
+	//
+	// app.App.BaseApp.SetMempool(nonceMempool)
+	// app.App.BaseApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
+	// app.App.BaseApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
+	//
+	// Alternatively, you can construct BaseApp options, append those to
+	// baseAppOptions and pass them to the appBuilder.
+	//
+	// Example:
+	//
+	// prepareOpt = func(app *baseapp.BaseApp) {
+	// 	abciPropHandler := baseapp.NewDefaultProposalHandler(nonceMempool, app)
+	// 	app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
+	// }
+	// baseAppOptions = append(baseAppOptions, prepareOpt)
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 

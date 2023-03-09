@@ -142,7 +142,7 @@ type Table interface {
 }
 
 // Schema is an interface for things that contain tables and can encode and
-// decode kv-store pairs. (uint64, error)
+// decode kv-store pairs.
 
 type Schema interface {
 	ormkv.EntryCodec

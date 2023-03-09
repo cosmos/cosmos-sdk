@@ -49,25 +49,25 @@ struct Bytes {
     arr: Array<u8>,
 }
 
-impl <'a> Deref for Bytes {
-    type Target = Option<&'a [u8]>;
+// impl <'a> Deref for Bytes {
+//     type Target = Option<&'a [u8]>;
+//
+//     fn deref(&self) -> &Self::Target {
+//         self.arr.deref()
+//     }
+// }
 
-    fn deref(&self) -> &Self::Target {
-        self.arr.deref()
-    }
-}
-
-struct String {
+pub struct String {
     arr: Bytes
 }
 
-impl <'a> Deref for String {
-    type Target = Option<&'a str>;
-
-    fn deref(&'a self) -> &Self::Target {
-        &self.arr.deref().map(|arr| unsafe { from_utf8_unchecked(arr) })
-    }
-}
+// impl <'a> Deref for String {
+//     type Target = Option<&'a str>;
+//
+//     fn deref(&'a self) -> &Self::Target {
+//         &self.arr.deref().map(|arr| unsafe { from_utf8_unchecked(arr) })
+//     }
+// }
 
 impl String {
     fn set(&mut self, buffer: &mut dyn Buf, value: &str) {
@@ -81,7 +81,7 @@ impl Bytes {
         unsafe {
             std::ptr::copy_nonoverlapping(value.as_ptr(), mem, value.len());
         }
-        self.rel_ptr.set(mem)
+        self.arr.rel_ptr.set(mem)
     }
 }
 
@@ -92,8 +92,8 @@ struct RawRelPtr {
 }
 
 impl RawRelPtr {
-    fn get(&self) -> *u8 {
-        (self as *u8) + self.offset
+    fn get(&self) -> *const u8 {
+        (self as *const u8) + self.offset
     }
 
     fn set(&mut self, value: *mut u8) {
@@ -104,21 +104,22 @@ impl RawRelPtr {
 #[repr(C)]
 struct Array<T> {
     ptr: RawRelPtr,
+    _phantom: PhantomData<[T]>,
 }
 
-impl <'a, T> Deref for Array<T> {
-    type Target = Option<&'a [T]>;
-
-    fn deref(&'a self) -> &Self::Target {
-        if self.rel_ptr.offset == 0 {
-            &None
-        } else {
-            let ptr = self.rel_ptr.get();
-            let len = unsafe{*(ptr as *u16)};
-            &Some(unsafe { std::slice::from_raw_parts(ptr + 2, len as usize) })
-        }
-    }
-}
+// impl <'a, T> Deref for Array<T> {
+//     type Target = Option<&'a [T]>;
+//
+//     fn deref(&'a self) -> &Self::Target {
+//         if self.rel_ptr.offset == 0 {
+//             &None
+//         } else {
+//             let ptr = self.rel_ptr.get();
+//             let len = unsafe{*(ptr as *const u16)};
+//             &Some(unsafe { std::slice::from_raw_parts(ptr + 2, len as usize) })
+//         }
+//     }
+// }
 
 #[repr(C)]
 struct RelPtr<T: ?Sized> {
@@ -127,7 +128,8 @@ struct RelPtr<T: ?Sized> {
 }
 
 struct Enum<T, const MaxValue: u8> {
-    value: u8
+    value: u8,
+    _phantom: PhantomData<T>,
 }
 
 impl <T, const MaxValue: u8> Enum<T, MaxValue> {

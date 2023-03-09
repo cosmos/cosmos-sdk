@@ -1,4 +1,5 @@
 mod cosmos_proto;
+mod module_abi;
 
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
@@ -33,16 +34,16 @@ impl<T> DerefMut for RelPtr<T> {
     }
 }
 
-impl<T> Deref for RelArray<T> {
-    type Target = Option<[T]>;
-
-    fn deref(&self) -> &Self::Target {
-        match self.offset {
-            0 => &None,
-            _ => unimplemented!(),
-        }
-    }
-}
+// impl<T> Deref for RelArray<T> {
+//     type Target = Option<[T]>;
+//
+//     fn deref(&self) -> &Self::Target {
+//         match self.offset {
+//             0 => &None,
+//             _ => unimplemented!(),
+//         }
+//     }
+// }
 
 struct Buffer {
     data: *mut u8,

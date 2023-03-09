@@ -982,7 +982,7 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
 	if height == 1 {
 		ctx, _ = app.deliverState.ctx.CacheContext()
-		// TODO: clear all context data set during InitChain to avoid inconsistent behavior
+		// clear all context data set during InitChain to avoid inconsistent behavior
 		ctx = ctx.WithBlockHeader(cmtproto.Header{})
 		return ctx
 	}

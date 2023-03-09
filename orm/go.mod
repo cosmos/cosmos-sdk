@@ -67,7 +67,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Here are the short-lived replace for tests
+// Here are the short-lived replace for orm
 replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/x/tx => ../x/tx

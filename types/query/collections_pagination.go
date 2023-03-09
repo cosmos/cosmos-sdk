@@ -168,10 +168,13 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 			count++
 		}
 	}
-	return results, &PageResponse{
+	resp := &PageResponse{
 		NextKey: nextKey,
-		Total:   count + offset,
-	}, nil
+	}
+	if countTotal {
+		resp.Total = count + offset
+	}
+	return results, resp, nil
 }
 
 func advanceIter[I interface {

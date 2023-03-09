@@ -3,6 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
@@ -40,15 +44,33 @@ type BaseViewKeeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 	ak       types.AccountKeeper
+
+	Schema        collections.Schema
+	Supply        collections.Map[string, math.Int]
+	DenomMetadata collections.Map[string, types.Metadata]
+	SendEnabled   collections.Map[string, bool]
+	Params        collections.Item[types.Params]
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
 func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
-	return BaseViewKeeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		ak:       ak,
+	sb := collections.NewSchemaBuilder(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)))
+	k := BaseViewKeeper{
+		cdc:           cdc,
+		storeKey:      storeKey,
+		ak:            ak,
+		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
+		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
+		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // Logger returns a module-specific logger.

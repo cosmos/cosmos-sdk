@@ -23,11 +23,10 @@ var (
 type boolValue struct{}
 
 func (boolValue) Encode(value bool) ([]byte, error) {
-	if value == true {
+	if value {
 		return boolValueTrueBytes, nil
-	} else {
-		return boolValueFalseBytes, nil
 	}
+	return boolValueFalseBytes, nil
 }
 
 func (boolValue) Decode(b []byte) (bool, error) {

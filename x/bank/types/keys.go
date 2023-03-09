@@ -16,9 +16,6 @@ const (
 
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName
-
-	// ModuleQueryPath defines the ABCI query path of the module
-	ModuleQueryPath = "store/bank/key"
 )
 
 // KVStore keys

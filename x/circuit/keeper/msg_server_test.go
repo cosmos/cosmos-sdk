@@ -35,7 +35,10 @@ func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
 	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
 	require.NoError(t, err)
 
-	perms, err = ft.Keeper.GetPermissions(ft.Ctx, addresses[2])
+	add2, err := ft.Keeper.addressCodec.StringToBytes(addresses[2])
+	require.NoError(t, err)
+
+	perms, err = ft.Keeper.GetPermissions(ft.Ctx, add2)
 	require.NoError(t, err)
 
 	require.Equal(t, allmsgs, perms, "admin perms are not the same")

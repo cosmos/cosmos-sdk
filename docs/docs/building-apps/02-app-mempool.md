@@ -25,19 +25,19 @@ Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI+
 
 `PrepareProposal` handles construction of the block, meaning that when a proposer
 is preparing to propose a block, it requests the application to evaluate a
-`RequestPrepareProposal`, which contains a series of transactions from Tendermint's
+`RequestPrepareProposal`, which contains a series of transactions from  CometBFT 's
 mempool. At this point, the application has complete control over the proposal.
 It can modify, delete, and inject transactions from it's own app-side mempool into
 the proposal or even ignore all the transactions altogether. What the application
 does with the transactions provided to it by `RequestPrepareProposal` have no
-effect on Tendermint's mempool.
+effect on CometBFT's mempool.
 
 Note, that the application defines the semantics of the `PrepareProposal` and it
 MAY be non-deterministic and is only executed by the current block proposer.
 
 Now, reading mempool twice in the previous sentence is confusing, lets break it down.
-Tendermint has a mempool that handles gossiping transactions to other nodes
-in the network. How these transactions are ordered is determined by Tendermint's
+CometBFT has a mempool that handles gossiping transactions to other nodes
+in the network. How these transactions are ordered is determined by CometBFT's
 mempool, typically FIFO. However, since the application is able to fully inspect
 all transactions, it can provide greater control over transaction ordering.
 Allowing the application to handle ordering enables the application to define how
@@ -71,7 +71,7 @@ transaction.
 
 Note, `ProcessProposal` MAY NOT be non-deterministic, i.e. it must be deterministic.
 This means if `ProcessProposal` panics or fails and we reject, all honest validator
-processes will prevote nil and the Tendermint round will proceed again until a valid
+processes will prevote nil and the CometBFT round will proceed again until a valid
 proposal is proposed.
 
 Here is the implementation of the default implementation:
@@ -113,7 +113,7 @@ baseAppOptions = append(baseAppOptions, mempoolOpt)
 ### No-op Mempool
 
 A no-op mempool is a mempool where transactions are completely discarded and ignored when BaseApp interacts with the mempool.
-When this mempool is used, it assumed that an application will rely on Tendermint's transaction ordering defined in `RequestPrepareProposal`,
+When this mempool is used, it assumed that an application will rely on CometBFT's transaction ordering defined in `RequestPrepareProposal`,
 which is FIFO-ordered by default.
 
 ### Sender Nonce Mempool

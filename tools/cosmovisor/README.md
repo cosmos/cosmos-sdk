@@ -6,20 +6,21 @@ sidebar_position: 1
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Design](#design)
-* [Contributing](#contributing)
-* [Setup](#setup)
-    * [Installation](#installation)
-    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-    * [Folder Layout](#folder-layout)
-* [Usage](#usage)
-    * [Initialization](#initialization)
-    * [Detecting Upgrades](#detecting-upgrades)
-    * [Auto-Download](#auto-download)
-* [Example: SimApp Upgrade](#example-simapp-upgrade)
-    * [Chain Setup](#chain-setup)
-        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-        * [Update App](#update-app)
+- [Cosmovisor](#cosmovisor)
+  - [Design](#design)
+  - [Contributing](#contributing)
+  - [Setup](#setup)
+    - [Installation](#installation)
+    - [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    - [Folder Layout](#folder-layout)
+  - [Usage](#usage)
+    - [Initialization](#initialization)
+    - [Detecting Upgrades](#detecting-upgrades)
+    - [Auto-Download](#auto-download)
+  - [Example: SimApp Upgrade](#example-simapp-upgrade)
+    - [Chain Setup](#chain-setup)
+      - [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+      - [Update App](#update-app)
 
 ## Design
 
@@ -145,7 +146,7 @@ The system administrator is responsible for:
 
 In order to support downloadable binaries, a tarball for each upgrade binary will need to be packaged up and made available through a canonical URL. Additionally, a tarball that includes the genesis binary and all available upgrade binaries can be packaged up and made available so that all the necessary binaries required to sync a fullnode from start can be easily downloaded.
 
-The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
+The `DAEMON` specific code and operations (e.g. CometBFT config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
 
 ### Initialization
 

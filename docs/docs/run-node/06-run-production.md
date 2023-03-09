@@ -48,9 +48,9 @@ In the past, validators [have had issues](https://github.com/cosmos/cosmos-sdk/i
 
 ### Firewall
 
-Nodes should not have all ports open to the public, this is a simple way to get DDOS'd. Secondly it is recommended by [Tendermint](github.com/tendermint/tendermint) to never expose ports that are not required to operate a node. 
+Nodes should not have all ports open to the public, this is a simple way to get DDOS'd. Secondly it is recommended by [CometBFT](github.com/tendermint/tendermint) to never expose ports that are not required to operate a node. 
 
-When setting up a firewall there are a few ports that can be open when operating a Cosmos SDK node. There is the Tendermint json-RPC, prometheus, p2p, remote signer and Cosmos SDK GRPC and REST. If the node is being operated as a node that does not offer endpoints to be used for submission or querying then a max of three endpoints are needed.
+When setting up a firewall there are a few ports that can be open when operating a Cosmos SDK node. There is the CometBFT json-RPC, prometheus, p2p, remote signer and Cosmos SDK GRPC and REST. If the node is being operated as a node that does not offer endpoints to be used for submission or querying then a max of three endpoints are needed.
 
 Most, if not all servers come equipped with [ufw](https://help.ubuntu.com/community/UFW). Ufw will be used in this tutorial. 
 
@@ -87,9 +87,9 @@ sudo ufw allow 26656/tcp
 sudo ufw allow 26660/tcp
 ```
 
-5. IF the node which is being setup would like to expose Tendermints jsonRPC and Cosmos SDK GRPC and REST then follow this step. (Optional)
+5. IF the node which is being setup would like to expose CometBFTs jsonRPC and Cosmos SDK GRPC and REST then follow this step. (Optional)
 
-##### Tendermint JsonRPC
+##### CometBFT JsonRPC
 
 ```bash
 sudo ufw allow 26657/tcp
@@ -205,7 +205,7 @@ vim $HOME/tmkms/config/tmkms.toml
 This example shows a configuration that could be used for soft signing. The example has an IP of `123.456.12.345` with a port of `26659` a chain_id of `test-chain-waSDSe`. These are items that most be modified for the usecase of tmkms and the network. 
 
 ```toml
-# Tendermint KMS configuration file
+# CometBFT KMS configuration file
 
 ## Chain Configuration
 

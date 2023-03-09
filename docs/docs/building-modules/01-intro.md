@@ -65,7 +65,7 @@ Cosmos SDK modules can be seen as little state-machines within the state-machine
                                                                   |
                                        +--------------------------+
                                        |
-                                       | Return result to the underlying consensus engine (e.g. Tendermint)
+                                       | Return result to the underlying consensus engine (e.g. CometBFT)
                                        | (0=Ok, 1=Err)
                                        v
 ```

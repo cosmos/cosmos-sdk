@@ -12,7 +12,7 @@ sidebar_position: 1
 ### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
-* [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events)
+* [CometBFT Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events)
 
 :::
 
@@ -111,7 +111,7 @@ view on how to typically implement Events and use the `EventManager` in modules.
 
 ## Subscribing to Events
 
-You can use Tendermint's [Websocket](https://docs.tendermint.com/master/tendermint-core/subscription.html#subscribing-to-events-via-websocket) to subscribe to Events by calling the `subscribe` RPC method:
+You can use CometBFT's [Websocket](https://docs.tendermint.com/master/tendermint-core/subscription.html#subscribing-to-events-via-websocket) to subscribe to Events by calling the `subscribe` RPC method:
 
 ```json
 {
@@ -131,7 +131,7 @@ The main `eventCategory` you can subscribe to are:
 * `ValidatorSetUpdates`: Contains validator set updates for the block.
 
 These Events are triggered from the `state` package after a block is committed. You can get the
-full list of Event categories [on the Tendermint Go documentation](https://pkg.go.dev/github.com/tendermint/tendermint/types#pkg-constants).
+full list of Event categories [on the CometBFT Go documentation](https://pkg.go.dev/github.com/tendermint/tendermint/types#pkg-constants).
 
 The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `Mint` transaction triggers an Event of type `EventMint` and has an `Id` and an `Owner` as `attributes` (as defined in the [`events.proto` file of the `NFT` module](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/nft/v1beta1/event.proto#L21-L31)).
 

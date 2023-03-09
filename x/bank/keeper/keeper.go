@@ -260,9 +260,11 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
 // It will panic if the module account does not exist. An error is returned if
 // the recipient address is black-listed or if sending the tokens fails.
-func (k BaseKeeper) SendCoinsFromModuleToAccount(
-	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
-) error {
+func (k BaseKeeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
+	if !amt.IsValid() || !amt.IsAllPositive() {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, amt.String())
+	}
+
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -277,9 +279,7 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 
 // SendCoinsFromModuleToModule transfers coins from a ModuleAccount to another.
 // It will panic if either module account does not exist.
-func (k BaseKeeper) SendCoinsFromModuleToModule(
-	ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins,
-) error {
+func (k BaseKeeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
 	if !amt.IsValid() || !amt.IsAllPositive() {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -299,9 +299,11 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 
 // SendCoinsFromAccountToModule transfers coins from an AccAddress to a ModuleAccount.
 // It will panic if the module account does not exist.
-func (k BaseKeeper) SendCoinsFromAccountToModule(
-	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
-) error {
+func (k BaseKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
+	if !amt.IsValid() || !amt.IsAllPositive() {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, amt.String())
+	}
+
 	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))

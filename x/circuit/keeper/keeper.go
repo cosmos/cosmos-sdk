@@ -21,8 +21,7 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a new Circuit Keeper instance
-func NewKeeper(storeKey storetypes.StoreKey, authority, bech32prefix string) Keeper {
-	addressCodec := newBech32Codec(bech32prefix)
+func NewKeeper(storeKey storetypes.StoreKey, authority string, addressCodec sdkaddress.Codec) Keeper {
 	return Keeper{
 		storekey:     storeKey,
 		authority:    authority,

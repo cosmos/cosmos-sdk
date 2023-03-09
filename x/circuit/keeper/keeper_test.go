@@ -26,7 +26,7 @@ type fixture struct {
 
 func initFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	keeperX := keeper.NewKeeper(mockStoreKey, "mock_address", "cosmos")
+	keeperX := keeper.NewKeeper(mockStoreKey, "mock_address", testutil.NewBech32Codec())
 	mockMsgURL := "mock_url"
 	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})

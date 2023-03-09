@@ -301,7 +301,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
-					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
+					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{val1.String()}},
 				},
 				MaxTokens:         &coin50,
 				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,

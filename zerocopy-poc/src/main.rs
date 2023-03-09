@@ -1,3 +1,5 @@
+mod cosmos_proto;
+
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 

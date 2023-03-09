@@ -1,8 +1,7 @@
 package codec
 
 import (
-	"bytes"
-	"fmt"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -15,29 +14,16 @@ import (
 // compatibility of state.
 var BoolValue collcodec.ValueCodec[bool] = boolValue{}
 
-var (
-	boolValueTrueBytes  = []byte{0x8, 0x1}
-	boolValueFalseBytes = []byte{}
-)
-
 type boolValue struct{}
 
 func (boolValue) Encode(value bool) ([]byte, error) {
-	if value {
-		return boolValueTrueBytes, nil
-	}
-	return boolValueFalseBytes, nil
+	return (&gogotypes.BoolValue{Value: value}).Marshal()
 }
 
 func (boolValue) Decode(b []byte) (bool, error) {
-	switch {
-	case bytes.Equal(b, boolValueFalseBytes):
-		return false, nil
-	case bytes.Equal(b, boolValueTrueBytes):
-		return true, nil
-	default:
-		return false, fmt.Errorf("%w: %s", collcodec.ErrEncoding, "invalid bool value bytes")
-	}
+	v := new(gogotypes.BoolValue)
+	err := v.Unmarshal(b)
+	return v.Value, err
 }
 
 func (boolValue) EncodeJSON(value bool) ([]byte, error) {

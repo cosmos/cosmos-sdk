@@ -23,19 +23,22 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.MsgAuthorizeCircuitBreaker) (*types.MsgAuthorizeCircuitBreakerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	granter, err := sdk.AccAddressFromBech32(msg.Grantee)
+	address, err := srv.addressCodec.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check that the authorizer has the permission level of "super admin"
-	perms, err := srv.GetPermissions(ctx, string(granter))
-	if err != nil {
-		return nil, err
-	}
+	// if the granter is the module authority no need to check perms
+	if fmt.Sprintf("%X", address) != srv.GetAuthority() {
+		// Check that the authorizer has the permission level of "super admin"
+		perms, err := srv.GetPermissions(ctx, address)
+		if err != nil {
+			return nil, err
+		}
 
-	if perms.Level != types.Permissions_LEVEL_SUPER_ADMIN {
-		return nil, fmt.Errorf("only super admins can authorize circuit breakers")
+		if perms.Level != types.Permissions_LEVEL_SUPER_ADMIN {
+			return nil, fmt.Errorf("only super admins can authorize circuit breakers")
+		}
 	}
 
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
@@ -44,7 +47,7 @@ func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.M
 	}
 
 	// Append the account in the msg to the store's set of authorized super admins
-	if err = srv.SetPermissions(ctx, string(grantee), msg.Permissions); err != nil {
+	if err = srv.SetPermissions(ctx, grantee, msg.Permissions); err != nil {
 		return nil, err
 	}
 
@@ -65,8 +68,13 @@ func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.M
 func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTripCircuitBreaker) (*types.MsgTripCircuitBreakerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	address, err := srv.addressCodec.StringToBytes(msg.Authority)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check that the account has the permissions
-	perms, err := srv.GetPermissions(ctx, msg.Authority)
+	perms, err := srv.GetPermissions(ctx, address)
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +125,13 @@ func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgRe
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	keeper := srv.Keeper
 
+	address, err := srv.addressCodec.StringToBytes(msg.Authority)
+	if err != nil {
+		return nil, err
+	}
+
 	// Get the permissions for the account specified in the msg.Authority field
-	accountPerms, err := keeper.GetPermissions(ctx, msg.Authority)
+	accountPerms, err := keeper.GetPermissions(ctx, address)
 	if err != nil {
 		return nil, err
 	}

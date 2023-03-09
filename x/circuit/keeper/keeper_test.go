@@ -19,15 +19,14 @@ type fixture struct {
 	cdc        codec.Codec
 	ctx        sdk.Context
 	keeper     keeper.Keeper
-	mockAddr   string
+	mockAddr   []byte
 	mockPerms  types.Permissions
 	mockMsgURL string
 }
 
 func initFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	mockAddr := "mock_address"
-	keeperX := keeper.NewKeeper(mockStoreKey, mockAddr)
+	keeperX := keeper.NewKeeper(mockStoreKey, "mock_address", "cosmos")
 	mockMsgURL := "mock_url"
 	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})
@@ -38,7 +37,7 @@ func initFixture(t *testing.T) *fixture {
 	return &fixture{
 		ctx:        ctx,
 		keeper:     keeperX,
-		mockAddr:   mockAddr,
+		mockAddr:   []byte("mock_address"),
 		mockPerms:  mockPerms,
 		mockMsgURL: mockMsgURL,
 	}
@@ -79,10 +78,10 @@ func TestIteratePermissions(t *testing.T) {
 	}
 
 	// Set the permissions for a set of mock addresses
-	mockAddrs := []string{
-		"mock_address_1",
-		"mock_address_2",
-		"mock_address_3",
+	mockAddrs := [][]byte{
+		[]byte("mock_address_1"),
+		[]byte("mock_address_2"),
+		[]byte("mock_address_3"),
 	}
 	for i, addr := range mockAddrs {
 		f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])
@@ -111,10 +110,10 @@ func TestIterateDisabledList(t *testing.T) {
 	}
 
 	// Set the permissions for a set of mock addresses
-	mockAddrs := []string{
-		"mock_address_1",
-		"mock_address_2",
-		"mock_address_3",
+	mockAddrs := [][]byte{
+		[]byte("mock_address_1"),
+		[]byte("mock_address_2"),
+		[]byte("mock_address_3"),
 	}
 
 	for i, addr := range mockAddrs {

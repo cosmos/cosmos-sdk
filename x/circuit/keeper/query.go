@@ -3,12 +3,13 @@ package keeper
 import (
 	context "context"
 
+	"strings"
+
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 	"github.com/cosmos/gogoproto/proto"
-	"strings"
 )
 
 var _ types.QueryServer = QueryServer{}
@@ -21,7 +22,12 @@ type QueryServer struct {
 func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest) (*types.AccountResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(c)
 
-	perms, err := qs.keeper.GetPermissions(sdkCtx, req.Address)
+	add, err := qs.keeper.addressCodec.StringToBytes(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	perms, err := qs.keeper.GetPermissions(sdkCtx, add)
 	if err != nil {
 		return nil, err
 	}

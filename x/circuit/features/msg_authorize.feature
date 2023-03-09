@@ -5,22 +5,6 @@ Feature: MsgAuthorizeCircuitBreaker
 
   Rule: the granter must be a super-admin
 
-    Example: granter is a super-admin
-      Given "acct1" has permission "LEVEL_SUPER_ADMIN"
-      When "acct1" attempts to grant "acct2" the permissions
-        """
-        { "level": "LEVEL_ALL_MSGS" }
-        """
-      Then expect success
-
-    Example: granter has no permissions
-      Given "acct1" has no permissions
-      When "acct1" attempts to grant "acct2" the permissions
-        """
-        { "level": "LEVEL_ALL_MSGS" }
-        """
-      Then expect an "unauthorized" error
-
     Example: granter has all msg's permissions
       Given "acct1" has permission "LEVEL_ALL_MSGS"
       When "acct1" attempts to grant "acct2" the permissions

@@ -10,25 +10,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
-var addresses = []string{
-	"cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
-	"cosmos1p8s0p6gqc6c9gt77lgr2qqujz49huhu6a80smx",
-	"cosmos1qasf9ehx8m7cnat39ndc74rx3fg7z66u8lw0fd",
-	"cosmos1uxrdj5zfuudhypsmmjxnj4gpu432ycht06a05a",
-}
+var (
+	admin     = "123EE4F34690982EA018DB05971052094CE03A80"
+	addresses = []string{
+		"cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
+		"cosmos1p8s0p6gqc6c9gt77lgr2qqujz49huhu6a80smx",
+		"cosmos1qasf9ehx8m7cnat39ndc74rx3fg7z66u8lw0fd",
+		"cosmos1uxrdj5zfuudhypsmmjxnj4gpu432ycht06a05a",
+	}
+)
 
 type fixture struct {
 	Ctx        sdk.Context
 	Keeper     Keeper
-	MockAddr   string
 	MockPerms  types.Permissions
 	MockMsgURL string
 }
 
 func SetupFixture(t *testing.T) *fixture {
-	mockStoreKey := storetypes.NewKVStoreKey("test")
-	mockAddr := "mock_address"
-	keeperX := NewKeeper(mockStoreKey, addresses[0])
+	mockStoreKey := storetypes.NewKVStoreKey("circuit")
+	keeperX := NewKeeper(mockStoreKey, admin, "cosmos")
 	mockMsgURL := "mock_url"
 	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})
@@ -40,7 +41,6 @@ func SetupFixture(t *testing.T) *fixture {
 	return &fixture{
 		Ctx:        ctx,
 		Keeper:     keeperX,
-		MockAddr:   mockAddr,
 		MockPerms:  mockPerms,
 		MockMsgURL: mockMsgURL,
 	}

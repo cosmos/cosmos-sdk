@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"fmt"
+
 	proto "github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
@@ -14,13 +16,17 @@ type Keeper struct {
 	storekey storetypes.StoreKey
 
 	authority string
+
+	addressCodec sdkaddress.Codec
 }
 
 // NewKeeper constructs a new Circuit Keeper instance
-func NewKeeper(storeKey storetypes.StoreKey, authority string) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, authority, bech32prefix string) Keeper {
+	addressCodec := newBech32Codec(bech32prefix)
 	return Keeper{
-		storekey:  storeKey,
-		authority: authority,
+		storekey:     storeKey,
+		authority:    authority,
+		addressCodec: addressCodec,
 	}
 }
 
@@ -28,7 +34,7 @@ func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
 
-func (k *Keeper) GetPermissions(ctx sdk.Context, address string) (*types.Permissions, error) {
+func (k *Keeper) GetPermissions(ctx sdk.Context, address []byte) (*types.Permissions, error) {
 	store := ctx.KVStore(k.storekey)
 
 	key := types.CreateAddressPrefix(address)
@@ -42,7 +48,7 @@ func (k *Keeper) GetPermissions(ctx sdk.Context, address string) (*types.Permiss
 	return perms, nil
 }
 
-func (k *Keeper) SetPermissions(ctx sdk.Context, address string, perms *types.Permissions) error {
+func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms *types.Permissions) error {
 	store := ctx.KVStore(k.storekey)
 
 	bz, err := proto.Marshal(perms)

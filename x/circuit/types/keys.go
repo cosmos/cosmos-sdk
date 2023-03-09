@@ -17,7 +17,7 @@ var (
 	DisableListPrefix       = []byte{0x02}
 )
 
-func CreateAddressPrefix(account string) []byte {
+func CreateAddressPrefix(account []byte) []byte {
 	key := make([]byte, len(AccountPermissionPrefix)+len(account)+1)
 	copy(key, AccountPermissionPrefix)
 	copy(key[len(AccountPermissionPrefix):], account)

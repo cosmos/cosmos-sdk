@@ -16,7 +16,7 @@ func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
 	}
 
 	// add a new super admin
-	adminPerms := &types.Permissions{Level: types.Permissions_LEVEL_SUPER_ADMIN, LimitTypeUrls: []string{}}
+	adminPerms := &types.Permissions{Level: types.Permissions_LEVEL_SUPER_ADMIN, LimitTypeUrls: []string{""}}
 	msg := &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[1], Permissions: adminPerms}
 	_, err := srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
 	require.NoError(t, err)
@@ -30,7 +30,7 @@ func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
 	require.Equal(t, adminPerms, perms, "admin perms are not the same")
 
 	// add a super user
-	allmsgs := &types.Permissions{Level: types.Permissions_LEVEL_ALL_MSGS, LimitTypeUrls: []string{}}
+	allmsgs := &types.Permissions{Level: types.Permissions_LEVEL_ALL_MSGS, LimitTypeUrls: []string{""}}
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[2], Permissions: allmsgs}
 	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
 	require.NoError(t, err)

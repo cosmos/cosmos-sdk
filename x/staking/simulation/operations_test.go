@@ -220,6 +220,30 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	require.Len(futureOperations, 0)
 }
 
+func (s *SimTestSuite) TestSimulateRotateConsPubKey() {
+	require := s.Require()
+	blockTime := time.Now().UTC()
+	ctx := s.ctx.WithBlockTime(blockTime)
+
+	_ = s.getTestingValidator0(ctx)
+
+	// begin a new block
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+
+	// execute operation
+	op := simulation.SimulateMsgRotateConsPubKey(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
+	require.NoError(err)
+
+	var msg types.MsgRotateConsPubKey
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	require.True(operationMsg.OK)
+	require.Equal(sdk.MsgTypeURL(&types.MsgRotateConsPubKey{}), sdk.MsgTypeURL(&msg))
+	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
+	require.Len(futureOperations, 0)
+}
+
 // TestSimulateMsgEditValidator tests the normal scenario of a valid message of type TypeMsgEditValidator.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgEditValidator() {

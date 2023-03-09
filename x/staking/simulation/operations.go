@@ -26,6 +26,7 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
+	DefaultWeightMsgRotateConsPubKey          int = 100
 
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
@@ -33,6 +34,7 @@ const (
 	OpWeightMsgUndelegate                = "op_weight_msg_undelegate"
 	OpWeightMsgBeginRedelegate           = "op_weight_msg_begin_redelegate"
 	OpWeightMsgCancelUnbondingDelegation = "op_weight_msg_cancel_unbonding_delegation"
+	OpWeightMsgRotateConsPubKey          = "op_weight_msg_rotate_cons_pubkey"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -47,6 +49,7 @@ func WeightedOperations(
 		weightMsgUndelegate                int
 		weightMsgBeginRedelegate           int
 		weightMsgCancelUnbondingDelegation int
+		weightMsgRotateConsPubKey          int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
@@ -82,6 +85,12 @@ func WeightedOperations(
 	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
 		func(_ *rand.Rand) {
 			weightMsgCancelUnbondingDelegation = DefaultWeightMsgCancelUnbondingDelegation
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgRotateConsPubKey, &weightMsgRotateConsPubKey, nil,
+		func(_ *rand.Rand) {
+			weightMsgRotateConsPubKey = DefaultWeightMsgRotateConsPubKey
 		},
 	)
 
@@ -561,6 +570,54 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 			delAddr, srcAddr, destAddr,
 			sdk.NewCoin(k.BondDenom(ctx), redAmt),
 		)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgRotateConsPubKey(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgRotateConsPubKey{})
+
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "number of validators equal zero"), nil, nil
+		}
+
+		val, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to pick a validator"), nil, nil
+		}
+
+		address := val.GetOperator()
+		acc := simtypes.RandomAccounts(r, 1)[0]
+
+		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
+		}
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		msg, err := types.NewMsgRotateConsPubKey(address, acc.PubKey)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable build msg"), nil, err
+		}
 
 		txCtx := simulation.OperationInput{
 			R:               r,

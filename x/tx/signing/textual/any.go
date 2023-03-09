@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-proto/any"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -87,7 +87,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		return nilValue, err
 	}
 
-	anyMsg, err := any.New(internalMsg.Message().Interface())
+	anyMsg, err := anyutil.New(internalMsg.Message().Interface())
 	if err != nil {
 		return nilValue, err
 	}

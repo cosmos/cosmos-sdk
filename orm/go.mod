@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
-	github.com/cosmos/cosmos-proto v1.0.0-beta.2
+	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/iancoleman/strcase v0.2.0
@@ -65,4 +65,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+// Here are the short-lived replace for tests
+replace (
+	cosmossdk.io/core => ../core
+	cosmossdk.io/x/tx => ../x/tx
 )

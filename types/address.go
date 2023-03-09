@@ -609,6 +609,8 @@ func (ca ConsAddress) String() string {
 	key := conv.UnsafeBytesToStr(ca)
 
 	if isCachingEnabled {
+		consAddrMu.Lock()
+		defer consAddrMu.Unlock()
 		addr, ok := consAddrCache.Get(key)
 		if ok {
 			return addr.(string)

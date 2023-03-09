@@ -78,5 +78,14 @@ type (
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.
-	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string, AppOptions, []string) (ExportedApp, error)
+	AppExporter func(
+		logger log.Logger,
+		db dbm.DB,
+		traceWriter io.Writer,
+		height int64,
+		forZeroHeight bool,
+		jailAllowedAddrs []string,
+		opts AppOptions,
+		modulesToExport []string,
+	) (ExportedApp, error)
 )

@@ -84,15 +84,22 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	n := methods.Len()
 	for i := 0; i < n; i++ {
 		methodDescriptor := methods.Get(i)
-		methodOpts := rpcOptMap[methodDescriptor.Name()]
+		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
+		if !ok {
+			methodOpts = &autocliv1.RpcCommandOptions{}
+		}
+
+		if methodOpts.Skip {
+			continue
+		}
+
 		methodCmd, err := b.BuildQueryMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
 		}
 
-		if methodCmd != nil {
-			cmd.AddCommand(methodCmd)
-		}
+		cmd.AddCommand(methodCmd)
+
 	}
 
 	return nil
@@ -131,7 +138,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 			return err
 		}
 
-		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
+		err = b.outOrStdoutFormat(cmd, bz)
 		return err
 	})
 	if err != nil {

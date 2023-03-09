@@ -26,10 +26,6 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 	}
 }
 
-func defaultLogger() log.Logger {
-	return log.NewLogger()
-}
-
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -121,7 +117,9 @@ func TestSetLoader(t *testing.T) {
 			// load the app with the existing db
 			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
 
-			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			logger := log.NewTestLogger(t)
+
+			origapp := baseapp.NewBaseApp(t.Name(), logger.With("instance", "orig"), db, nil, opts...)
 			origapp.MountStores(storetypes.NewKVStoreKey(tc.origStoreKey))
 			err := origapp.LoadLatestVersion()
 			require.Nil(t, err)
@@ -137,7 +135,7 @@ func TestSetLoader(t *testing.T) {
 			}
 
 			// load the new app with the original app db
-			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			app := baseapp.NewBaseApp(t.Name(), logger.With("instance", "new"), db, nil, opts...)
 			app.MountStores(storetypes.NewKVStoreKey(tc.loadStoreKey))
 			err = app.LoadLatestVersion()
 			require.Nil(t, err)

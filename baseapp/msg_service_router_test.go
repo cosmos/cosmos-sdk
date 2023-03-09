@@ -28,7 +28,7 @@ func TestRegisterMsgService(t *testing.T) {
 	)
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
 	require.NoError(t, err)
-	app := appBuilder.Build(log.NewLogger(), dbm.NewMemDB(), nil)
+	app := appBuilder.Build(log.NewTestLogger(t), dbm.NewMemDB(), nil)
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -57,7 +57,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.NewLogger(), db, nil)
+	app := appBuilder.Build(log.NewTestLogger(t), db, nil)
 	testdata.RegisterInterfaces(registry)
 
 	// First time registering service shouldn't panic.

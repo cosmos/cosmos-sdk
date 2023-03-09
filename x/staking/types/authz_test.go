@@ -50,6 +50,10 @@ func TestAuthzAuthorizations(t *testing.T) {
 	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, &coin100)
 	require.Equal(t, beginRedelAuth.MsgTypeURL(), sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}))
 
+	// verify MethodName for CancelUnbondingDelegation
+	cancelUnbondAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION, &coin100)
+	require.Equal(t, cancelUnbondAuth.MsgTypeURL(), sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}))
+
 	validators1_2 := []string{val1.String(), val2.String()}
 
 	testCases := []struct {
@@ -301,7 +305,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
-					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
+					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{val1.String()}},
 				},
 				MaxTokens:         &coin50,
 				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,

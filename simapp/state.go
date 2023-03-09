@@ -26,6 +26,14 @@ import (
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
+	return AppStateFnWithExtendedCb(cdc, simManager, nil)
+}
+
+// AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
+// It panics if the user provides files for both of them.
+// If a file is not given for the genesis or the sim params, it creates a randomized one.
+// cb is the callback function to extend rawState.
+func AppStateFnWithExtendedCb(cdc codec.JSONCodec, simManager *module.SimulationManager, cb func(rawState map[string]json.RawMessage)) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if FlagGenesisTimeValue == 0 {
@@ -125,6 +133,11 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		// change appState back
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+
+		// extend state from callback function
+		if cb != nil {
+			cb(rawState)
+		}
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)

@@ -103,6 +103,12 @@ func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
 
+// GetAddressCodec returns the x/auth module's address.
+// x/auth is tied to bech32 encoded user accounts
+func (ak AccountKeeper) GetAddressCodec() address.Codec {
+	return ak.addressCdc
+}
+
 // Logger returns a module-specific logger.
 func (ak AccountKeeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)

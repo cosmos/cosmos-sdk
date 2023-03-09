@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 
 	"cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
@@ -233,6 +235,23 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	// TODO(tip): remove me
+	addressAndDenomFromBalanceStore := func(key []byte) (sdk.AccAddress, string, error) {
+		if len(key) == 0 {
+			return nil, "", fmt.Errorf("invalid key")
+		}
+
+		kv.AssertKeyAtLeastLength(key, 1)
+
+		addrBound := int(key[0])
+
+		if len(key)-1 < addrBound {
+			return nil, "", fmt.Errorf("invalid key")
+		}
+
+		return key[1 : addrBound+1], string(key[addrBound+1:]), nil
+	}
+
 	if err := sdk.ValidateDenom(req.Denom); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -246,7 +265,7 @@ func (k BaseKeeper) DenomOwners(
 		req.Pagination,
 		func(key []byte, _ []byte, accumulate bool) (bool, error) {
 			if accumulate {
-				address, _, err := types.AddressAndDenomFromBalancesStore(key)
+				address, _, err := addressAndDenomFromBalanceStore(key)
 				if err != nil {
 					return false, err
 				}

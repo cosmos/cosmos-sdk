@@ -62,7 +62,7 @@ func (t tableGen) getTableInterface() {
 	t.P("Insert(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	if t.table.PrimaryKey.AutoIncrement {
 		t.P("InsertReturning", fieldsToCamelCase(t.table.PrimaryKey.Fields), "(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") (uint64, error)")
-		t.P("CurrentSequence(ctx ", contextPkg.Ident("Context"), ") (uint64, error)")
+		t.P("LastInsertedSequence(ctx ", contextPkg.Ident("Context"), ") (uint64, error)")
 	}
 	t.P("Update(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Save(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
@@ -186,8 +186,8 @@ func (t tableGen) genTableImpl() {
 		t.P("}")
 		t.P()
 
-		t.P(receiver, "CurrentSequence(ctx ", contextPkg.Ident("Context"), ") (uint64, error) {")
-		t.P("return ", receiverVar, ".table.CurrentSequence(ctx)")
+		t.P(receiver, "LastInsertedSequence(ctx ", contextPkg.Ident("Context"), ") (uint64, error) {")
+		t.P("return ", receiverVar, ".table.LastInsertedSequence(ctx)")
 		t.P("}")
 		t.P()
 	}

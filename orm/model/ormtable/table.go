@@ -158,6 +158,6 @@ type AutoIncrementTable interface {
 	// generated primary key for the message or an error.
 	InsertReturningPKey(ctx context.Context, message proto.Message) (newPK uint64, err error)
 
-	// CurrentSequence retrieves the current sequence (i.e last) of the table.
-	CurrentSequence(ctx context.Context) (uint64, error)
+	// LastInsertedSequence retrieves the last inserted sequence in the table.
+	LastInsertedSequence(ctx context.Context) (uint64, error)
 }

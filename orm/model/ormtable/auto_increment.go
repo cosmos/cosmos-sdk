@@ -61,7 +61,7 @@ func (t autoIncrementTable) Update(ctx context.Context, message proto.Message) e
 	return err
 }
 
-func (t autoIncrementTable) CurrentSequence(ctx context.Context) (uint64, error) {
+func (t autoIncrementTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
 	backend, err := t.getBackend(ctx)
 	if err != nil {
 		return 0, err

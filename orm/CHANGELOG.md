@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Feature
 
-* [#15320](https://github.com/cosmos/cosmos-sdk/pull/15320) Add current sequence getter (`CurrentSequence`) for auto increment tables.
+* [#15320](https://github.com/cosmos/cosmos-sdk/pull/15320) Add current sequence getter (`LastInsertedSequence`) for auto increment tables.
 
 ### API Breaking Changes
 

@@ -183,11 +183,12 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	// call the BeforeSend hooks
-	err := k.BeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
+	err := k.BlockBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+	k.TrackBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
 
 	balances := sdk.NewCoins()
 
@@ -237,11 +238,13 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	// call the BeforeSend hooks
-	err := k.BeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+	err := k.BlockBeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
 	if err != nil {
 		return err
 	}
+
+	k.TrackBeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
 
 	err = k.subUnlockedCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
@@ -441,6 +444,8 @@ func (k BaseKeeper) SendCoinsFromModuleToManyAccounts(
 
 // SendCoinsFromModuleToModule transfers coins from a ModuleAccount to another.
 // It will panic if either module account does not exist.
+// SendCoinsFromModuleToModule is the only send method that does not call both BlockBeforeSend and TrackBeforeSend hook.
+// It only calls the TrackBeforeSend hook.
 func (k BaseKeeper) SendCoinsFromModuleToModule(
 	ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins,
 ) error {
@@ -455,7 +460,7 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
-	return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+	return k.SendCoinsWithoutBlockHook(ctx, senderAddr, recipientAcc.GetAddress(), amt)
 }
 
 // SendCoinsFromAccountToModule transfers coins from an AccAddress to a ModuleAccount.

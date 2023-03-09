@@ -143,16 +143,29 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 	return nil
 }
 
+// SendCoinsWithoutBlockHook calls sendCoins without calling the `BlockBeforeSend` hook.
+func (k BaseSendKeeper) SendCoinsWithoutBlockHook(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	return k.sendCoins(ctx, fromAddr, toAddr, amt)
+}
+
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	// call the BeforeSend hooks
-	err := k.BeforeSend(ctx, fromAddr, toAddr, amt)
+	// BlockBeforeSend hook should always be called before the TrackBeforeSend hook.
+	err := k.BlockBeforeSend(ctx, fromAddr, toAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, fromAddr, amt)
+	return k.sendCoins(ctx, fromAddr, toAddr, amt)
+}
+
+// sendCoins has the internal logic for sending coins.
+func (k BaseSendKeeper) sendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	// call the TrackBeforeSend hooks
+	k.TrackBeforeSend(ctx, fromAddr, toAddr, amt)
+
+	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -198,10 +211,13 @@ func (k BaseSendKeeper) SendManyCoins(ctx sdk.Context, fromAddr sdk.AccAddress, 
 	totalAmt := sdk.Coins{}
 	for i, amt := range amts {
 		// make sure to trigger the BeforeSend hooks for all the sends that are about to occur
-		err := k.BeforeSend(ctx, fromAddr, toAddrs[i], amts[i])
+		k.TrackBeforeSend(ctx, fromAddr, toAddrs[i], amts[i])
+
+		err := k.BlockBeforeSend(ctx, fromAddr, toAddrs[i], amts[i])
 		if err != nil {
 			return err
 		}
+
 		totalAmt = sdk.Coins.Add(totalAmt, amt...)
 	}
 

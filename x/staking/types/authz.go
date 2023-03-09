@@ -70,7 +70,10 @@ func (a StakeAuthorization) ValidateBasic() error {
 	return nil
 }
 
-// Accept implements Authorization.Accept. It checks if the validator
+// Accept implements Authorization.Accept. It checks, that the validator is not in the denied list,
+// and, should the allowed list not be empty, if the validator is in the allowed list.
+// If these conditions are met, the authorization amount is validated and if successful, the
+// corresponding AcceptResponse is returned.
 func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	var (
 		validatorAddress string

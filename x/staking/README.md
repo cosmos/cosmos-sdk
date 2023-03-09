@@ -741,7 +741,7 @@ changes are specified to execute.
 
 The staking validator set is updated during this process by state transitions
 that run at the end of every block. As a part of this process any updated
-validators are also returned back to CometBFT for inclusion in the Tendermint
+validators are also returned back to CometBFT for inclusion in the CometBFT
 validator set which is responsible for validating CometBFT messages at the
 consensus layer. Operations are as following:
 
@@ -755,7 +755,7 @@ consensus layer. Operations are as following:
 
 In all cases, any validators leaving or entering the bonded validator set or
 changing balances and staying within the bonded validator set incur an update
-message reporting their new consensus power which is passed back to Tendermint.
+message reporting their new consensus power which is passed back to CometBFT.
 
 The `LastTotalPower` and `LastValidatorsPower` hold the state of the total power
 and validator power from the end of the last block, and are used to check for

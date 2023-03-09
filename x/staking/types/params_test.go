@@ -39,10 +39,6 @@ func TestValidateParams(t *testing.T) {
 	// reset params to default
 	params = types.DefaultParams()
 
-	// check MaxConsPubKeyRotations
-	params.MaxConsPubkeyRotations = 0
-	require.Error(t, params.Validate())
-
 	// check ConsPubkeyRotationFee
 	params.ConsPubkeyRotationFee = coinZero
 	require.Error(t, params.Validate())

@@ -121,7 +121,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateMaxConsPubkey(p.MaxConsPubkeyRotations); err != nil {
+	if err := validateMaxConsPubkeyRotations(p.MaxConsPubkeyRotations); err != nil {
 		return err
 	}
 
@@ -229,7 +229,7 @@ func validateMinCommissionRate(i interface{}) error {
 	return nil
 }
 
-func validateMaxConsPubkey(i interface{}) error {
+func validateMaxConsPubkeyRotations(i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

@@ -200,20 +200,8 @@ cosmossdk.io/log v0.0.0-20230306220716-5e55f56d39d5 h1:r2R2nHYi6BIE0C5ZV4b/r3Rho
 cosmossdk.io/log v0.0.0-20230306220716-5e55f56d39d5/go.mod h1:ilL9YXutMQo36MS9CD1cFNUqqHadAtyf8+A2b2EqO5A=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 h1:/jnzJ9zFsL7qkV8LCQ1JH3dYHh2EsKZ3k8Mr6AqqiOA=
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
-<<<<<<< HEAD
-cosmossdk.io/store v0.0.0-20230220120340-067ee92d4d1f h1:35sAQtwPdzvQhTGz6SwGQO0LPcJjkJWcbc2Olpnpprc=
-cosmossdk.io/store v0.0.0-20230220120340-067ee92d4d1f/go.mod h1:MrrSzGa9eNZAHePmW4h5pPdnsmtQQCgJEztq9hVUKFI=
-cosmossdk.io/x/tx v0.2.0 h1:53f5TIXhpPYJGMm47SUslcV2i8JNBEN3eE08BmxE/Zg=
-cosmossdk.io/x/tx v0.2.0/go.mod h1:CTko7wgt7aBdbxOesZ+Wo1uO/03ueKzIQ0iI323Rqgk=
-||||||| 2928fa4e1c
 cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44 h1:/pKsj/ApzO4+zMwpgLiPG5iakoHxziGpMiJcz4S+r4w=
 cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44/go.mod h1:flrxUykloEW1asE9p+Q+d8LSuNI3fBRdzISg9HTpYlQ=
-cosmossdk.io/x/tx v0.2.2 h1:pD4TEbzOOerVQNI+M9anQIncl+4wFELpGds3N7RzPiQ=
-cosmossdk.io/x/tx v0.2.2/go.mod h1:cur19OSg8P6ifrZ00yJOyY6HT75FEhLBX2Ir3Sl0ubY=
-=======
-cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44 h1:/pKsj/ApzO4+zMwpgLiPG5iakoHxziGpMiJcz4S+r4w=
-cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44/go.mod h1:flrxUykloEW1asE9p+Q+d8LSuNI3fBRdzISg9HTpYlQ=
->>>>>>> main
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=

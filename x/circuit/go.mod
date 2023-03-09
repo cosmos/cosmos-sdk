@@ -11,7 +11,7 @@ require (
 	github.com/cometbft/cometbft v0.37.0
 	github.com/cosmos/cosmos-sdk v0.46.10
 	github.com/cosmos/gogoproto v1.4.6
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
@@ -22,7 +22,7 @@ require (
 
 require (
 	cosmossdk.io/api v0.3.1 // indirect
-	cosmossdk.io/collections v0.0.0-20230214153846-b6c6e4e99177 // indirect
+	cosmossdk.io/collections v0.0.0-20230309135546-112d07159809 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/log v0.0.0-20230306220716-5e55f56d39d5 // indirect
 	cosmossdk.io/x/tx v0.2.2 // indirect
@@ -45,7 +45,7 @@ require (
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.2 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v0.21.0-alpha.1 // indirect
@@ -69,14 +69,6 @@ require (
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-<<<<<<< HEAD
-	github.com/golang/glog v1.0.0 // indirect
-	github.com/golang/mock v1.6.0 // indirect
-||||||| 2928fa4e1c
-	github.com/golang/protobuf v1.5.2 // indirect
-=======
-	github.com/golang/protobuf v1.5.3 // indirect
->>>>>>> main
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
@@ -145,15 +137,7 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-<<<<<<< HEAD
-	google.golang.org/protobuf v1.28.2-0.20230222093303-bc1253ad3743 // indirect
-||||||| 2928fa4e1c
-	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
-	google.golang.org/protobuf v1.28.2-0.20230222093303-bc1253ad3743 // indirect
-=======
-	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
 	google.golang.org/protobuf v1.29.0 // indirect
->>>>>>> main
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

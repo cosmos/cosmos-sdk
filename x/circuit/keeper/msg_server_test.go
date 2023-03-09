@@ -55,6 +55,26 @@ func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
 	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
 	require.Error(t, err, "user[2] does not have permission to grant others permission")
 
+	// user successfully grants another user perms to a specific permission
+
+	somemsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{"cosmos.bank.v1beta1.MsgSend"}}
+	msg = &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[3], Permissions: somemsgs}
+	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
+	require.NoError(t, err)
+
+	add3, err := ft.Keeper.addressCodec.StringToBytes(addresses[3])
+	require.NoError(t, err)
+
+	perms, err = ft.Keeper.GetPermissions(ft.Ctx, add3)
+	require.NoError(t, err)
+
+	require.Equal(t, somemsgs, perms, "admin perms are not the same")
+
+	// admin tries grants another user permission ALL_MSGS with limited urls populated
+	invalidmsgs := &types.Permissions{Level: types.Permissions_LEVEL_ALL_MSGS, LimitTypeUrls: []string{"cosmos.bank.v1beta1.MsgSend"}}
+	msg = &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[4], Permissions: invalidmsgs}
+	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
+	require.Error(t, err)
 }
 
 // func Test_msgServer_TripCircuitBreaker(t *testing.T) {

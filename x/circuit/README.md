@@ -87,7 +87,6 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#
 This message is expected to fail if:
 
 * the granter is not an account with permission level `LEVEL_SUPER_ADMIN` or the module authority
-* if the type urls does not exist <!-- TODO: is this possible?-->
 
 ### MsgTripCircuitBreaker
 
@@ -98,7 +97,6 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#
 This message is expected to fail if:
 
 * if the signer does not have a permission level with the ability to disable the specified type url message
-* if the type urls does not exist <!-- TODO: is this possible?-->
 
 ### MsgResetCircuitBreaker
 
@@ -108,7 +106,6 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#
 
 This message is expected to fail if:
 
-* if the type urls does not exist <!-- TODO: is this possible?-->
 * if the type url is not disabled
 
 * `## Events` - list and describe event tags used

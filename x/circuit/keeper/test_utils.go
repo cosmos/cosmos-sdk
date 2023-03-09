@@ -17,6 +17,7 @@ var (
 		"cosmos1p8s0p6gqc6c9gt77lgr2qqujz49huhu6a80smx",
 		"cosmos1qasf9ehx8m7cnat39ndc74rx3fg7z66u8lw0fd",
 		"cosmos1uxrdj5zfuudhypsmmjxnj4gpu432ycht06a05a",
+		"cosmos1uxrdj5zfuudhypsmmjxnj4gpu432ycht06a04b",
 	}
 )
 

@@ -613,6 +613,7 @@ func (ca ConsAddress) String() string {
 	if isCachingEnabled {
 		consAddrMu.Lock()
 		defer consAddrMu.Unlock()
+
 		addr, ok := consAddrCache.Get(key)
 		if ok {
 			return addr.(string)

@@ -172,7 +172,7 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 		NextKey: nextKey,
 	}
 	if countTotal {
-		resp.Total = count
+		resp.Total = count + offset
 	}
 	return results, resp, nil
 }

@@ -12,7 +12,7 @@ sidebar_position: 1
 ### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
-* [CometBFT Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events)
+* [CometBFT Documentation on Events](https://docs.cometbft.com/v0.37/spec/abci/abci++_basic_concepts#events)
 
 :::
 
@@ -111,7 +111,7 @@ view on how to typically implement Events and use the `EventManager` in modules.
 
 ## Subscribing to Events
 
-You can use CometBFT's [Websocket](https://docs.tendermint.com/master/tendermint-core/subscription.html#subscribing-to-events-via-websocket) to subscribe to Events by calling the `subscribe` RPC method:
+You can use CometBFT's [Websocket](https://docs.cometbft.com/master/tendermint-core/subscription.html#subscribing-to-events-via-websocket) to subscribe to Events by calling the `subscribe` RPC method:
 
 ```json
 {

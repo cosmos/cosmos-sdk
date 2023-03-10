@@ -163,6 +163,10 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	if req.Header.ChainID != app.chainID {
+		panic(fmt.Sprintf("ChainID on RequestInitChain {%s} does not match the app's ChainID {%s}", req.ChainId, app.chainID))
+	}
+
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(storetypes.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
@@ -273,15 +277,16 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal called with invalid height")
 	}
 
-	gasMeter := app.getBlockGasMeter(app.prepareProposalState.ctx)
-	ctx := app.getContextForProposal(app.prepareProposalState.ctx, req.Height)
-
-	ctx = ctx.WithVoteInfos(app.voteInfos).
+	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
+		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx)).
-		WithBlockGasMeter(gasMeter)
+		WithProposer(req.ProposerAddress)
+
+	// TODO: I think that if I chain these 2 setters they won't be getting the right ctx. Is this correct?
+	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
+		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
+		WithBlockGasMeter(app.getBlockGasMeter(app.prepareProposalState.ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -296,7 +301,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		}
 	}()
 
-	resp = app.prepareProposal(ctx, req)
+	resp = app.prepareProposal(app.prepareProposalState.ctx, req)
 	return resp
 }
 
@@ -320,17 +325,16 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	gasMeter := app.getBlockGasMeter(app.processProposalState.ctx)
-	ctx := app.getContextForProposal(app.processProposalState.ctx, req.Height)
-
-	ctx = ctx.
+	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx)).
-		WithBlockGasMeter(gasMeter)
+		WithProposer(req.ProposerAddress)
+
+	app.processProposalState.ctx = app.processProposalState.ctx.
+		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
+		WithBlockGasMeter(app.getBlockGasMeter(app.processProposalState.ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -345,7 +349,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		}
 	}()
 
-	resp = app.processProposal(ctx, req)
+	resp = app.processProposal(app.processProposalState.ctx, req)
 	return resp
 }
 

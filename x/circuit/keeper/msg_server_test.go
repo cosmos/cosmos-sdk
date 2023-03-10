@@ -77,10 +77,30 @@ func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
 	require.Error(t, err)
 }
 
-// func Test_msgServer_TripCircuitBreaker(t *testing.T) {
+func Test_msgServer_TripCircuitBreaker(t *testing.T) {
 
-// }
+	// admin trips circuit breaker
 
-// func Test_msgServer_ResetCircuitBreaker(t *testing.T) {
+	// user with all messages trips circuit breaker
 
-// }
+	// user with no permission attempts to trips circuit breaker
+
+	// user has permission to trip circuit breaker for two messages but only has permission for one
+
+	// user tries to trip an already tripped circuit breaker
+
+}
+
+func Test_msgServer_ResetCircuitBreaker(t *testing.T) {
+
+	// admin resets circuit breaker
+
+	// user has no  permission to reset circuit breaker
+
+	// user with all messages resets circuit breaker
+
+	// user tries to reset an message they dont have permission to reset
+
+	// user tries to reset an already reset circuit breaker
+
+}

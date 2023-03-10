@@ -151,33 +151,43 @@ func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgRe
 	}
 
 	// Get the permissions for the account specified in the msg.Authority field
-	accountPerms, err := keeper.GetPermissions(ctx, address)
+	perms, err := keeper.GetPermissions(ctx, address)
 	if err != nil {
 		return nil, err
 	}
 
-	// check that the account has permission to reset the circuit breaker
-	if accountPerms.Level != types.Permissions_LEVEL_ALL_MSGS && accountPerms.Level != types.Permissions_LEVEL_SOME_MSGS {
-		return nil, fmt.Errorf("account does not have permission to reset the circuit breaker")
-	}
+	store := ctx.KVStore(srv.storekey)
 
-	// check that the account has permission to reset the specific msgTypeURLs, if any were provided
-	if accountPerms.Level == types.Permissions_LEVEL_SOME_MSGS {
-		for _, msgTypeURL := range msg.MsgTypeUrls {
-			if !stringInSlice(msgTypeURL, accountPerms.LimitTypeUrls) {
-				return nil, fmt.Errorf("account does not have permission to reset the specific msgTypeURL %s", msgTypeURL)
+	switch {
+	case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || bytes.Equal(address, srv.GetAuthority()):
+		// add all msg type urls to the disable list
+		for _, msgTypeUrl := range msg.MsgTypeUrls {
+			if srv.IsAllowed(ctx, msgTypeUrl) {
+				return nil, fmt.Errorf("message %s is not disabled", msgTypeUrl)
 			}
-			// Remove the type URL from the disable list
-			keeper.EnableMsg(ctx, msgTypeURL)
+			store.Delete(types.CreateDisableMsgPrefix(msgTypeUrl))
 		}
-	} else if accountPerms.Level == types.Permissions_LEVEL_ALL_MSGS {
-		for _, msgTypeURL := range msg.MsgTypeUrls {
-			if !keeper.IsAllowed(ctx, msgTypeURL) {
-				return nil, fmt.Errorf("msgTypeURL %s is not disabled", msgTypeURL)
+	case perms.Level == types.Permissions_LEVEL_ALL_MSGS:
+		// iterate over the msg type urls
+		for _, msgTypeUrl := range msg.MsgTypeUrls {
+			// check if the message is in the list of allowed messages
+			if srv.IsAllowed(ctx, msgTypeUrl) {
+				return nil, fmt.Errorf("message %s is not disabled", msgTypeUrl)
 			}
-			// Remove the type URL from the disable list
-			keeper.EnableMsg(ctx, msgTypeURL)
+			store.Delete(types.CreateDisableMsgPrefix(msgTypeUrl))
 		}
+	case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
+		for _, msgTypeUrl := range msg.MsgTypeUrls {
+			// check if the message is in the list of allowed messages
+			if srv.IsAllowed(ctx, msgTypeUrl) {
+				return nil, fmt.Errorf("message %s is not disabled", msgTypeUrl)
+			}
+			// allow user with limited permissions to reset circuit breaker for any message
+			store.Delete(types.CreateDisableMsgPrefix(msgTypeUrl))
+
+		}
+	default:
+		return nil, fmt.Errorf("account does not have permission to reset circuit breaker")
 	}
 
 	var msg_urls string

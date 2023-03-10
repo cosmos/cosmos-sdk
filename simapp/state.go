@@ -169,6 +169,7 @@ func AppStateRandomizedFn(
 // AppStateRandomizedFnWithState creates calls each module's GenesisState generator function
 // and creates the simulation params
 // genesisState is the genesis state of the app.
+// This function will not exist in v0.47, but be replaced by AppStateRandomizedFn with an extra genesisState argument.
 func AppStateRandomizedFnWithState(
 	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,

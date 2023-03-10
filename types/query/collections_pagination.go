@@ -2,13 +2,21 @@ package query
 
 import (
 	"context"
-	"errors"
-	"fmt"
-
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	storetypes "cosmossdk.io/store/types"
+	"errors"
+	"fmt"
 )
+
+// WithCollectionPaginationPairPrefix applies a prefix to a collection, whose key is a collection.Pair,
+// being paginated that needs prefixing.
+func WithCollectionPaginationPairPrefix[K1, K2 any](prefix K1) func(o *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
+	return func(o *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
+		prefix := collections.PairPrefix[K1, K2](prefix)
+		o.Prefix = &prefix
+	}
+}
 
 // CollectionsPaginateOptions provides extra options for pagination in collections.
 type CollectionsPaginateOptions[K any] struct {
@@ -137,12 +145,11 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 			// if no predicate function is specified then we just include the result
 			if predicateFunc == nil {
 				results = append(results, kv)
-				count++
 				// if predicate function is defined we check if the result matches the filtering criteria
 			} else if predicateFunc(kv.Key, kv.Value) {
 				results = append(results, kv)
-				count++
 			}
+			count++
 		// second case, we found all the objects specified within the limit
 		case count == limit:
 			key, err := iterator.Key()
@@ -237,13 +244,12 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 		// if no predicate is specified then we just append the result
 		if predicateFunc == nil {
 			results = append(results, kv)
-			count++
 			// if predicate is applied we execute the predicate function
 			// and append only if predicateFunc yields true.
 		} else if predicateFunc(kv.Key, kv.Value) {
 			results = append(results, kv)
-			count++
 		}
+		count++
 	}
 
 	return results, &PageResponse{

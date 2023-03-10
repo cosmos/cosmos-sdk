@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/collections"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
@@ -53,29 +54,17 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	balances := sdk.NewCoins()
-	accountStore := k.getAccountStore(sdkCtx, addr)
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		denom := string(key)
-
-		// IBC denom metadata will be registered in ibc-go after first mint
-		//
-		// Since: ibc-go v7
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], value math.Int) (include bool) {
+		denom := key.K2()
 		if req.ResolveDenom {
 			if metadata, ok := k.GetDenomMetaData(sdkCtx, denom); ok {
 				denom = metadata.Display
 			}
 		}
-		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
-		if err != nil {
-			return err
-		}
-		balances = append(balances, balance)
-		return nil
-	})
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
-	}
+		balances = append(balances, sdk.NewCoin(denom, value))
+		return false // we don't include results because we're appending them here.
+	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
 }

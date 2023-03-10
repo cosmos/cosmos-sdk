@@ -9,14 +9,16 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 func TestMsgGrantAllowance(t *testing.T) {
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-	addr, _ := sdk.AccAddressFromBech32("cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr")
-	addr2, _ := sdk.AccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
+	addressCodec := testutil.NewBech32Codec()
+	addr, _ := addressCodec.StringToBytes("cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr")
+	addr2, _ := addressCodec.StringToBytes("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	threeHours := time.Now().Add(3 * time.Hour)
 	basic := &feegrant.BasicAllowance{

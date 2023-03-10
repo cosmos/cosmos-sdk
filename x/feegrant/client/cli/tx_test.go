@@ -436,10 +436,12 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 	}
 
+	addressCodec := testutil.NewBech32Codec()
 	// Create new fee grant specifically to test amino.
-	aminoGrantee, err := sdk.AccAddressFromBech32("cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00")
+	encodedGrantee := "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00"
+	aminoGrantee, err := addressCodec.StringToBytes(encodedGrantee)
 	s.Require().NoError(err)
-	s.createGrant(granter, aminoGrantee)
+	s.createGrant(granter, sdk.AccAddress(aminoGrantee))
 
 	testCases := []struct {
 		name         string
@@ -489,7 +491,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 			append(
 				[]string{
 					granter.String(),
-					aminoGrantee.String(),
+					encodedGrantee,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},

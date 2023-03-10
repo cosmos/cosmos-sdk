@@ -40,7 +40,7 @@ func TestFeegrantPruning(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter2).Return(authtypes.NewBaseAccountWithAddress(granter2)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter3).Return(authtypes.NewBaseAccountWithAddress(granter3)).AnyTimes()
 
-	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, key, accountKeeper)
+	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, key, accountKeeper, testutil.NewBech32Codec())
 
 	feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,

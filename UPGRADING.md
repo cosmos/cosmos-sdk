@@ -83,6 +83,14 @@ This means you can replace your usage of `simapp.MakeTestEncodingConfig` in test
 `ExportAppStateAndValidators` takes an extra argument, `modulesToExport`, which is a list of module names to export.
 That argument should be passed to the module maanager `ExportGenesisFromModules` method.
 
+#### Replaces
+
+The `GoLevelDB` version must pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7` in the application, following versions might cause unexpected behavior.
+This can be done adding `replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7` to the `go.mod` file.
+
+* [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
+* [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
+
 ### Protobuf
 
 The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to our own maintained fork, [`cosmos/gogoproto`](https://github.com/cosmos/gogoproto).

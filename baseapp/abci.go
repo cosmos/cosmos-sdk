@@ -38,7 +38,7 @@ const (
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	if req.ChainId != app.chainID {
-		panic(fmt.Sprintf("ChainID on RequestInitChain {%s} does not match the app's ChainID {%s}", req.ChainId, app.chainID))
+		panic(fmt.Sprintf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId))
 	}
 
 	// On a new chain, we consider the init chain block height as 0, even though
@@ -165,7 +165,7 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if req.Header.ChainID != app.chainID {
-		panic(fmt.Sprintf("ChainID on RequestBeginBlock {%s} does not match the app's ChainID {%s}", req.Header.ChainID, app.chainID))
+		panic(fmt.Sprintf("invalid chain-id on BeginBlock; expected: %s, got: %s", app.chainID, req.Header.ChainID))
 	}
 
 	if app.cms.TracingEnabled() {

@@ -8,7 +8,6 @@ import (
 )
 
 func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
-
 	ft := SetupFixture(t)
 
 	srv := msgServer{
@@ -70,28 +69,84 @@ func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
 
 	require.Equal(t, somemsgs, perms, "admin perms are not the same")
 
+	add4, err := ft.Keeper.addressCodec.StringToBytes(addresses[4])
+	require.NoError(t, err)
+
+	perms, err = ft.Keeper.GetPermissions(ft.Ctx, add4)
+	require.NoError(t, err)
+
+	require.Equal(t, &types.Permissions{Level: types.Permissions_LEVEL_NONE_UNSPECIFIED, LimitTypeUrls: nil}, perms, "user should have no perms by default")
+
 	// admin tries grants another user permission ALL_MSGS with limited urls populated
-	invalidmsgs := &types.Permissions{Level: types.Permissions_LEVEL_ALL_MSGS, LimitTypeUrls: []string{"cosmos.bank.v1beta1.MsgSend"}}
+	invalidmsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{"cosmos.bank.v1beta1.MsgSend"}}
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[4], Permissions: invalidmsgs}
 	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
-	require.Error(t, err)
+	require.NoError(t, err)
 }
 
 func Test_msgServer_TripCircuitBreaker(t *testing.T) {
+	ft := SetupFixture(t)
 
+	srv := msgServer{
+		Keeper: ft.Keeper,
+	}
+	url := "cosmos.bank.v1beta1.MsgSend"
 	// admin trips circuit breaker
+	admintrip := &types.MsgTripCircuitBreaker{Authority: addresses[0], MsgTypeUrls: []string{url}}
+	_, err := srv.TripCircuitBreaker(ft.Ctx, admintrip)
+	require.NoError(t, err)
+
+	allowed := ft.Keeper.IsAllowed(ft.Ctx, url)
+	require.False(t, allowed, "circuit breaker should be tripped")
 
 	// user with all messages trips circuit breaker
 
+	// add a super user
+	allmsgs := &types.Permissions{Level: types.Permissions_LEVEL_ALL_MSGS, LimitTypeUrls: []string{""}}
+	msg := &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[1], Permissions: allmsgs}
+	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
+	require.NoError(t, err)
+
+	// try to trip the circuit breaker
+	url2 := "cosmos.staking.v1beta1.MsgDelegate"
+	superTrip := &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url2}}
+	_, err = srv.TripCircuitBreaker(ft.Ctx, superTrip)
+	require.NoError(t, err)
+
+	allowed = ft.Keeper.IsAllowed(ft.Ctx, url2)
+	require.False(t, allowed, "circuit breaker should be tripped")
+
 	// user with no permission attempts to trips circuit breaker
+	unknownTrip := &types.MsgTripCircuitBreaker{Authority: addresses[4], MsgTypeUrls: []string{url}}
+	_, err = srv.TripCircuitBreaker(ft.Ctx, unknownTrip)
+	require.Error(t, err)
 
 	// user has permission to trip circuit breaker for two messages but only has permission for one
+	url, url2 = "cosmos.staking.v1beta1.MsgCreateValidator", "cosmos.staking.v1beta1.MsgEditValidator"
+	somemsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{url}}
+	msg = &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[2], Permissions: somemsgs}
+	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
+	require.NoError(t, err)
+
+	// try to trip two messages but user only has permission for one
+	someTrip := &types.MsgTripCircuitBreaker{Authority: addresses[2], MsgTypeUrls: []string{url, url2}}
+	_, err = srv.TripCircuitBreaker(ft.Ctx, someTrip)
+	require.ErrorContains(t, err, "MsgEditValidator")
 
 	// user tries to trip an already tripped circuit breaker
+	alreadyTripped := "cosmos.bank.v1beta1.MsgSend"
+	twoTrip := &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{alreadyTripped}}
+	_, err = srv.TripCircuitBreaker(ft.Ctx, twoTrip)
+	require.Error(t, err)
 
 }
 
 func Test_msgServer_ResetCircuitBreaker(t *testing.T) {
+	// ft := SetupFixture(t)
+
+	// srv := msgServer{
+	// 	Keeper: ft.Keeper,
+	// }
 
 	// admin resets circuit breaker
 

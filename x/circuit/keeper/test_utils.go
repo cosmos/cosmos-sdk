@@ -10,16 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
-var (
-	admin     = "123EE4F34690982EA018DB05971052094CE03A80"
-	addresses = []string{
-		"cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
-		"cosmos1p8s0p6gqc6c9gt77lgr2qqujz49huhu6a80smx",
-		"cosmos1qasf9ehx8m7cnat39ndc74rx3fg7z66u8lw0fd",
-		"cosmos1uxrdj5zfuudhypsmmjxnj4gpu432ycht06a05a",
-		"cosmos1uxrdj5zfuudhypsmmjxnj4gpu432ycht06a04b",
-	}
-)
+var addresses = []string{
+	"cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
+	"cosmos1p8s0p6gqc6c9gt77lgr2qqujz49huhu6a80smx",
+	"cosmos1qasf9ehx8m7cnat39ndc74rx3fg7z66u8lw0fd",
+	"cosmos1uxrdj5zfuudhypsmmjxnj4gpu432ycht06a05a",
+	"cosmos1wn7k8a7fwpmrwnm94ndj0germfnxnhl6hs8spj",
+}
 
 type fixture struct {
 	Ctx        sdk.Context
@@ -30,7 +27,7 @@ type fixture struct {
 
 func SetupFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("circuit")
-	keeperX := NewKeeper(mockStoreKey, admin, testutil.NewBech32Codec())
+	keeperX := NewKeeper(mockStoreKey, addresses[0], testutil.NewBech32Codec())
 	mockMsgURL := "mock_url"
 	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	context "context"
 	fmt "fmt"
 
@@ -29,7 +30,7 @@ func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.M
 	}
 
 	// if the granter is the module authority no need to check perms
-	if fmt.Sprintf("%X", address) != srv.GetAuthority() {
+	if !bytes.Equal(address, srv.GetAuthority()) {
 		// Check that the authorizer has the permission level of "super admin"
 		perms, err := srv.GetPermissions(ctx, address)
 		if err != nil {
@@ -37,11 +38,11 @@ func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.M
 		}
 
 		if perms.Level != types.Permissions_LEVEL_SUPER_ADMIN {
-			return nil, fmt.Errorf("only super admins can authorize circuit breakers")
+			return nil, fmt.Errorf("only super admins can authorize users")
 		}
 	}
 
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	grantee, err := srv.addressCodec.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -73,29 +74,48 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 		return nil, err
 	}
 
+	store := ctx.KVStore(srv.storekey)
+
 	// Check that the account has the permissions
 	perms, err := srv.GetPermissions(ctx, address)
 	if err != nil {
 		return nil, err
 	}
 
-	store := ctx.KVStore(srv.storekey)
-
-	switch perms.Level {
-	case types.Permissions_LEVEL_SUPER_ADMIN:
+	switch {
+	case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || bytes.Equal(address, srv.GetAuthority()):
 		// add all msg type urls to the disable list
 		for _, msgTypeUrl := range msg.MsgTypeUrls {
-			store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
-		}
-	case types.Permissions_LEVEL_SOME_MSGS:
-		// iterate over the msg type urls
-		for _, msgTypeUrl := range msg.MsgTypeUrls {
-			// check if the message is in the list of allowed messages
-			if !store.Has(types.CreateDisableMsgPrefix(msgTypeUrl)) {
-				return nil, fmt.Errorf("account does not have permission to trip circuit breaker for message %s", msgTypeUrl)
+			if !srv.IsAllowed(ctx, msgTypeUrl) {
+				return nil, fmt.Errorf("message %s is already disabled", msgTypeUrl)
 			}
 			store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
 		}
+	case perms.Level == types.Permissions_LEVEL_ALL_MSGS:
+		// iterate over the msg type urls
+		for _, msgTypeUrl := range msg.MsgTypeUrls {
+			// check if the message is in the list of allowed messages
+			if !srv.IsAllowed(ctx, msgTypeUrl) {
+				return nil, fmt.Errorf("message %s is already disabled", msgTypeUrl)
+			}
+			store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
+		}
+	case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
+		for _, msgTypeUrl := range msg.MsgTypeUrls {
+			// check if the message is in the list of allowed messages
+			if !srv.IsAllowed(ctx, msgTypeUrl) {
+				return nil, fmt.Errorf("message %s is already disabled", msgTypeUrl)
+			}
+			for _, msgurl := range perms.LimitTypeUrls {
+				if msgTypeUrl == msgurl {
+					store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
+				} else {
+					return nil, fmt.Errorf("account does not have permission to trip circuit breaker for message %s", msgTypeUrl)
+				}
+			}
+		}
+	default:
+		return nil, fmt.Errorf("account does not have permission to trip circuit breaker")
 	}
 
 	var msg_urls string

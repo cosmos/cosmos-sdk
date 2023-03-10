@@ -15,21 +15,26 @@ import (
 type Keeper struct {
 	storekey storetypes.StoreKey
 
-	authority string
+	authority []byte
 
 	addressCodec sdkaddress.Codec
 }
 
 // NewKeeper constructs a new Circuit Keeper instance
 func NewKeeper(storeKey storetypes.StoreKey, authority string, addressCodec sdkaddress.Codec) Keeper {
+	auth, err := addressCodec.StringToBytes(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	return Keeper{
 		storekey:     storeKey,
-		authority:    authority,
+		authority:    auth,
 		addressCodec: addressCodec,
 	}
 }
 
-func (k *Keeper) GetAuthority() string {
+func (k *Keeper) GetAuthority() []byte {
 	return k.authority
 }
 
@@ -63,7 +68,7 @@ func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms *types.Pe
 
 func (k *Keeper) IsAllowed(ctx sdk.Context, msgURL string) bool {
 	store := ctx.KVStore(k.storekey)
-	return store.Has(types.CreateDisableMsgPrefix(msgURL))
+	return !store.Has(types.CreateDisableMsgPrefix(msgURL))
 }
 
 func (k *Keeper) DisableMsg(ctx sdk.Context, msgURL string) {

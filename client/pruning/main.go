@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const FlagAppDBBackend = "app-db-backend"
@@ -63,17 +62,6 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 			}
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-
-			ctx := server.GetServerContextFromCmd(cmd)
-			appGenesis, err := genutiltypes.AppGenesisFromFile(ctx.Config.GenesisFile())
-			if err != nil {
-				return err
-			}
-
-			// If the chain ID is not set, use the one from the genesis file
-			if !vp.IsSet(flags.FlagChainID) {
-				vp.Set(flags.FlagChainID, appGenesis.ChainID)
-			}
 
 			app := appCreator(logger, db, nil, vp)
 			cms := app.CommitMultiStore()

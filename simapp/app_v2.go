@@ -206,7 +206,6 @@ func NewSimApp(
 		&app.autoCliOpts,
 		&app.AccountKeeper,
 		&app.BankKeeper,
-		&app.CapabilityKeeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,

@@ -164,7 +164,7 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if req.Header.ChainID != app.chainID {
-		panic(fmt.Sprintf("ChainID on RequestInitChain {%s} does not match the app's ChainID {%s}", req.ChainId, app.chainID))
+		panic(fmt.Sprintf("ChainID on RequestBeginBlock {%s} does not match the app's ChainID {%s}", req.Header.ChainID, app.chainID))
 	}
 
 	if app.cms.TracingEnabled() {

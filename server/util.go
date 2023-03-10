@@ -444,7 +444,8 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	}
 
 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
-	if chainID := cast.ToString(appOpts.Get(flags.FlagChainID)); chainID == "" {
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
 		// fallback to genesis chain-id
 		appGenesis, err := genutiltypes.AppGenesisFromFile(filepath.Join(homeDir, "config", "genesis.json"))
 		if err != nil {
@@ -491,6 +492,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 			),
 		),
 		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
-		baseapp.SetChainID(cast.ToString(appOpts.Get(flags.FlagChainID))),
+		baseapp.SetChainID(chainID),
 	}
 }

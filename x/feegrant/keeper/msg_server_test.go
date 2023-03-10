@@ -4,8 +4,9 @@ import (
 	"time"
 
 	"cosmossdk.io/x/feegrant"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/golang/mock/gomock"
 )
@@ -14,6 +15,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 	ctx := suite.ctx.WithBlockTime(time.Now())
 	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 	yesterday := ctx.BlockTime().AddDate(0, 0, -1)
+
+	addressCodec := testutil.NewBech32Codec()
 
 	testCases := []struct {
 		name      string
@@ -53,7 +56,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 			"valid: grantee account doesn't exist",
 			func() *feegrant.MsgGrantAllowance {
 				grantee := "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"
-				granteeAccAddr := types.MustAccAddressFromBech32(grantee)
+				granteeAccAddr, err := addressCodec.StringToBytes(grantee)
+				suite.Require().NoError(err)
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
@@ -62,7 +66,10 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAccAddr).Return(nil).AnyTimes()
 
 				acc := authtypes.NewBaseAccountWithAddress(granteeAccAddr)
-				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), types.MustAccAddressFromBech32(grantee)).Return(acc).AnyTimes()
+				add, err := addressCodec.StringToBytes(grantee)
+				suite.Require().NoError(err)
+
+				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), add).Return(acc).AnyTimes()
 				suite.accountKeeper.EXPECT().SetAccount(gomock.Any(), acc).Return()
 
 				suite.Require().NoError(err)

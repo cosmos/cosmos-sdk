@@ -62,12 +62,6 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
 This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
 
-#### Replaces
-
-* `GoLevelDB` version has been pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7`, following versions might cause unexpected behavior.
-    * [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
-    * [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
-
 ### Packages
 
 #### Store
@@ -80,6 +74,10 @@ The `store` module is extracted to have a separate go.mod file which allows it b
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
 
 ### Modules
+
+#### `x/capability`
+
+Capability was moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC V8 will contain the necessary changes to incorporate the new module location
 
 #### `x/gov`
 
@@ -205,6 +203,14 @@ This means you can replace your usage of `simapp.MakeTestEncodingConfig` in test
 
 `ExportAppStateAndValidators` takes an extra argument, `modulesToExport`, which is a list of module names to export.
 That argument should be passed to the module maanager `ExportGenesisFromModules` method.
+
+#### Replaces
+
+The `GoLevelDB` version must pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7` in the application, following versions might cause unexpected behavior.
+This can be done adding `replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7` to the `go.mod` file.
+
+* [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
+* [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
 
 ### Protobuf
 

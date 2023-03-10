@@ -37,8 +37,10 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 cosmossdk.io/api v0.3.1 h1:NNiOclKRR0AOlO4KIqeaG6PS6kswOMhHD0ir0SscNXE=
 cosmossdk.io/api v0.3.1/go.mod h1:DfHfMkiNA2Uhy8fj0JJlOCYOBp4eWUUJ1te5zBGNyIw=
-cosmossdk.io/collections v0.0.0-20230306161821-d6240a43e6e8 h1:TmhLZxHM/TlyiF1bS7ObHBzMdXW0nEJC3i+nQ/nt4Zs=
-cosmossdk.io/collections v0.0.0-20230306161821-d6240a43e6e8/go.mod h1:RoEzMOLLsorYvlNTm1wzYzlI5yQ0QSWeJqkMdfDVgHE=
+cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba h1:S4PYij/tX3Op/hwenVEN9D+M27JRcwSwVqE3UA0BnwM=
+cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba/go.mod h1:lpS+G8bGC2anqzWdndTzjnQnuMO/qAcgZUkGJp4i3rc=
+cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba h1:kSnaDzbwMInpQYwz8ESgvi6ceUQWcXAJdEVZW454dX0=
+cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba/go.mod h1:WiFk9ZQbFVBHk9AqQIkLFqyj30NPQB6C45CIeAZxDcw=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
@@ -49,6 +51,8 @@ cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 h1:/jnzJ9zFsL7qkV8
 cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
 cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44 h1:/pKsj/ApzO4+zMwpgLiPG5iakoHxziGpMiJcz4S+r4w=
 cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44/go.mod h1:flrxUykloEW1asE9p+Q+d8LSuNI3fBRdzISg9HTpYlQ=
+cosmossdk.io/x/tx v0.2.3-0.20230309163709-87da587416ba h1:NmWXkl0voj3dN96Qmk4rfrze6dLLLxB4qTCxXZTXBpM=
+cosmossdk.io/x/tx v0.2.3-0.20230309163709-87da587416ba/go.mod h1:dhIxZhZF2glIA9hkkildy/JmSqVH3FIU/OhSU8is7PM=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=

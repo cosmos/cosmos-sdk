@@ -8,12 +8,12 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v0.0.0-20230306220716-5e55f56d39d5
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4
-	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44
+	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
+	cosmossdk.io/store v0.0.0-20230309163709-87da587416ba
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
-	cosmossdk.io/x/tx v0.2.2
+	cosmossdk.io/x/tx v0.2.3-0.20230309163709-87da587416ba
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cometbft/cometbft v0.37.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
@@ -36,9 +36,9 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.11.0 // indirect
 	cloud.google.com/go/storage v1.29.0 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20230220152935-67f04e629623 // indirect
-	cosmossdk.io/collections v0.0.0-20230306161821-d6240a43e6e8 // indirect
-	cosmossdk.io/core v0.6.0 // indirect
+	cosmossdk.io/client/v2 v2.0.0-20230309163709-87da587416ba // indirect
+	cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba // indirect
+	cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -185,13 +185,10 @@ require (
 // Replace here are pending PRs, or version to be tagged.
 // It must be in sync with SimApp temporary replaces
 replace (
-	cosmossdk.io/client/v2 => ../client/v2
 	// TODO tag all extracted modules after SDK refactor
-	cosmossdk.io/core => ../core
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/tx => ../x/tx
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

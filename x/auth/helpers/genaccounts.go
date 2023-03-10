@@ -119,8 +119,6 @@ func AddGenesisAccount(
 
 	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
-	bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
-
 	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
 	if err != nil {
 		return fmt.Errorf("failed to marshal bank genesis state: %w", err)

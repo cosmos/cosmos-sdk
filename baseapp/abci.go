@@ -284,7 +284,6 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress)
 
-	// TODO: I think that if I chain these 2 setters they won't be getting the right ctx. Is this correct?
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
 		WithBlockGasMeter(app.getBlockGasMeter(app.prepareProposalState.ctx))

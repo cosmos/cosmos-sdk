@@ -79,11 +79,11 @@ func AppStateFnWithExtendedCb(
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
+			appState, simAccs = AppStateRandomizedFnWithState(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
+			appState, simAccs = AppStateRandomizedFnWithState(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -159,6 +159,17 @@ func AppStateFnWithExtendedCb(
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates the simulation params
 func AppStateRandomizedFn(
+	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
+	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
+) (json.RawMessage, []simtypes.Account) {
+	genesisState := NewDefaultGenesisState(cdc)
+	return AppStateRandomizedFnWithState(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
+}
+
+// AppStateRandomizedFnWithState creates calls each module's GenesisState generator function
+// and creates the simulation params
+// genesisState is the genesis state of the app.
+func AppStateRandomizedFnWithState(
 	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 	genesisState map[string]json.RawMessage,

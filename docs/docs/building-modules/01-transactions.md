@@ -196,4 +196,4 @@ An example can be seen [here](../run-node/03-txs.md#using-rest)
 
 #### CometBFT RPC
 
-The three methods presented above are actually higher abstractions over the CometBFT RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.cometbft.com/v0.37/core/rpc). This means that you can use the CometBFT RPC endpoints directly to broadcast the transaction, if you wish so.
+The three methods presented above are actually higher abstractions over the CometBFT RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.cometbft.com/master/rpc/#/Tx). This means that you can use the CometBFT RPC endpoints directly to broadcast the transaction, if you wish so.

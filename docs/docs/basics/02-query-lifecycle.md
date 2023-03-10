@@ -124,7 +124,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/query.go#L79-L113
 
 With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../core/05-encoding.md) which then processes the request. Note that, while the RPC is made to the consensus engine (e.g. CometBFT Core) of a full-node, queries are not part of consensus and so are not broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
 
-Read more about ABCI Clients and CometBFT RPC in the [ CometBFT  documentation](https://docs.tendermint.com/master/rpc/).
+Read more about ABCI Clients and CometBFT RPC in the [CometBFT documentation](https://docs.cometbft.com/v0.37/spec/rpc/).
 
 ## Application Query Handling
 
@@ -136,7 +136,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.tendermint.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.cometbft.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
 
 ### CLI Response
 

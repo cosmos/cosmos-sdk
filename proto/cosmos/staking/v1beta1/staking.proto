@@ -323,7 +323,10 @@ message Params {
   // max_cons_pubkey_rotations is maximum number of consensus pubkey rotations
   uint64 max_cons_pubkey_rotations = 7;
   // cons_pubkey_rotation_fee is fee to be spent when rotating validator's consensus pubkey
-  cosmos.base.v1beta1.Coin cons_pubkey_rotation_fee = 8 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin cons_pubkey_rotation_fee = 8 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+  ];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

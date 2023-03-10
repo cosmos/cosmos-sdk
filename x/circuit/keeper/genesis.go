@@ -46,7 +46,9 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		}
 
 		// Set the permissions for the account
-		k.SetPermissions(ctx, add, accounts.Permissions)
+		if err := k.SetPermissions(ctx, add, accounts.Permissions); err != nil {
+			panic(err)
+		}
 	}
 	for _, url := range genState.DisabledTypeUrls {
 		// Set the disabled type urls

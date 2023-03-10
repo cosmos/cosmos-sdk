@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/version"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -90,7 +91,10 @@ func TripCircuitBreakerCmd() *cobra.Command {
 		`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
+			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
+				return err
+			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -125,7 +129,10 @@ func ResetCircuitBreakerCmd() *cobra.Command {
 		`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
+			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
+				return err
+			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

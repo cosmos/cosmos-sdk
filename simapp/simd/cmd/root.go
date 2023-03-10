@@ -99,7 +99,20 @@ func NewRootCmd() *cobra.Command {
 			customAppTemplate, customAppConfig := initAppConfig()
 			customCMTConfig := initCometBFTConfig()
 
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
+			serverCtx, err := server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
+			if err != nil {
+				return err
+			}
+
+			// overwrite default server logger
+			logger, err := server.CreateSDKLogger(serverCtx, cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+			serverCtx.Logger = logger
+
+			// save context
+			return server.SetCmdServerContext(cmd, serverCtx)
 		},
 	}
 

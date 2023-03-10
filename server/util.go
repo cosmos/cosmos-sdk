@@ -51,6 +51,18 @@ type Context struct {
 	Logger log.Logger
 }
 
+func NewDefaultContext() *Context {
+	return NewContext(
+		viper.New(),
+		cmtcfg.DefaultConfig(),
+		log.NewLogger(os.Stdout),
+	)
+}
+
+func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Context {
+	return &Context{v, config, logger}
+}
+
 // ErrorCode contains the exit code for server exit.
 type ErrorCode struct {
 	Code int
@@ -58,18 +70,6 @@ type ErrorCode struct {
 
 func (e ErrorCode) Error() string {
 	return strconv.Itoa(e.Code)
-}
-
-func NewDefaultContext() *Context {
-	return NewContext(
-		viper.New(),
-		cmtcfg.DefaultConfig(),
-		log.NewLogger(os.Stdout), // TODO(mr): update NewDefaultContext to accept log destination.
-	)
-}
-
-func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Context {
-	return &Context{v, config, logger}
 }
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
@@ -116,7 +116,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 // is used to read and parse the application configuration. Command handlers can
 // fetch the server Context to get the CometBFT configuration or to get access
 // to Viper.
-func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
+func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*Context, error) {
 	serverCtx := NewDefaultContext()
 
 	// Get the executable name and configure the viper instance so that environmental
@@ -124,17 +124,17 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	// as a separator.
 	executableName, err := os.Executable()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	basename := path.Base(executableName)
 
 	// configure the viper instance
 	if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
-		return err
+		return nil, err
 	}
 	if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
-		return err
+		return nil, err
 	}
 
 	serverCtx.Viper.SetEnvPrefix(basename)
@@ -144,31 +144,36 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	// intercept configuration files, using both Viper instances separately
 	config, err := interceptConfigs(serverCtx.Viper, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// return value is a CometBFT configuration object
 	serverCtx.Config = config
 	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
-		return err
+		return nil, err
 	}
 
+	return serverCtx, nil
+}
+
+// CreateSDKLogger creates a the default SDK logger.
+func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var logger log.Logger
-	if serverCtx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
-		zl := zerolog.New(cmd.OutOrStdout()).With().Timestamp().Logger()
+	if ctx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
+		zl := zerolog.New(out).With().Timestamp().Logger()
 		logger = log.NewCustomLogger(zl)
 	} else {
-		logger = log.NewLogger(cmd.OutOrStdout())
+		logger = log.NewLogger(out)
 	}
 
 	// set filter level or keys for the logger if any
-	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
+	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
 	logLvl, err := zerolog.ParseLevel(logLvlStr)
 	if err != nil {
 		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
 		filterFunc, err := log.ParseLogLevel(logLvlStr, zerolog.InfoLevel.String())
 		if err != nil {
-			return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
+			return nil, fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
 		}
 
 		logger = log.FilterKeys(logger, filterFunc)
@@ -176,16 +181,14 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		zl := logger.Impl().(*zerolog.Logger)
 		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
 		// Note it overrides log level passed in `log_levels`.
-		if serverCtx.Viper.GetBool(cmtcli.TraceFlag) {
+		if ctx.Viper.GetBool(cmtcli.TraceFlag) {
 			logger = log.NewCustomLogger(zl.Level(zerolog.TraceLevel))
 		} else {
 			logger = log.NewCustomLogger(zl.Level(logLvl))
 		}
 	}
 
-	serverCtx.Logger = logger.With("module", "server")
-
-	return SetCmdServerContext(cmd, serverCtx)
+	return logger, nil
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context

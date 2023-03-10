@@ -46,7 +46,10 @@ func (qs QueryServer) Accounts(c context.Context, req *types.QueryAccountsReques
 
 	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
 		perm := &types.Permissions{}
-		proto.Unmarshal(value, perm)
+		if err := proto.Unmarshal(value, perm); err != nil {
+			return err
+		}
+
 		trim := strings.TrimRight(string(key), "\x00")
 		accounts = append(accounts, &types.GenesisAccountPermissions{
 			Address:     string(trim),

@@ -27,14 +27,21 @@ import (
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
-	return AppStateFnWithExtendedCb(cdc, simManager, nil)
+	genesisState := NewDefaultGenesisState(cdc)
+	return AppStateFnWithExtendedCb(cdc, simManager, genesisState, nil)
 }
 
 // AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
+// genesisState is the genesis state of the app.
 // cb is the callback function to extend rawState.
-func AppStateFnWithExtendedCb(cdc codec.JSONCodec, simManager *module.SimulationManager, cb func(rawState map[string]json.RawMessage)) simtypes.AppStateFn {
+func AppStateFnWithExtendedCb(
+	cdc codec.JSONCodec,
+	simManager *module.SimulationManager,
+	genesisState map[string]json.RawMessage,
+	cb func(rawState map[string]json.RawMessage),
+) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if FlagGenesisTimeValue == 0 {
@@ -72,11 +79,11 @@ func AppStateFnWithExtendedCb(cdc codec.JSONCodec, simManager *module.Simulation
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -154,9 +161,9 @@ func AppStateFnWithExtendedCb(cdc codec.JSONCodec, simManager *module.Simulation
 func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
+	genesisState map[string]json.RawMessage,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
-	genesisState := NewDefaultGenesisState(cdc)
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts

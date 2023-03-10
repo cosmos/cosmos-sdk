@@ -26,6 +26,7 @@ const (
 	Msg_Undelegate_FullMethodName                = "/cosmos.staking.v1beta1.Msg/Undelegate"
 	Msg_CancelUnbondingDelegation_FullMethodName = "/cosmos.staking.v1beta1.Msg/CancelUnbondingDelegation"
 	Msg_UpdateParams_FullMethodName              = "/cosmos.staking.v1beta1.Msg/UpdateParams"
+	Msg_RotateConsPubKey_FullMethodName          = "/cosmos.staking.v1beta1.Msg/RotateConsPubKey"
 )
 
 // MsgClient is the client API for Msg service.
@@ -133,7 +134,7 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 
 func (c *msgClient) RotateConsPubKey(ctx context.Context, in *MsgRotateConsPubKey, opts ...grpc.CallOption) (*MsgRotateConsPubKeyResponse, error) {
 	out := new(MsgRotateConsPubKeyResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/RotateConsPubKey", in, out, opts...)
+	err := c.cc.Invoke(ctx, Msg_RotateConsPubKey_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +351,7 @@ func _Msg_RotateConsPubKey_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.staking.v1beta1.Msg/RotateConsPubKey",
+		FullMethod: Msg_RotateConsPubKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).RotateConsPubKey(ctx, req.(*MsgRotateConsPubKey))

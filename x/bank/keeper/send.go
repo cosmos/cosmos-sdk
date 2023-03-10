@@ -60,6 +60,8 @@ type BaseSendKeeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+
+	addressCodec address.Codec
 }
 
 func NewBaseSendKeeper(
@@ -68,8 +70,9 @@ func NewBaseSendKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
+	addressCodec address.Codec,
 ) BaseSendKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := addressCodec.StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
@@ -80,6 +83,7 @@ func NewBaseSendKeeper(
 		storeKey:       storeKey,
 		blockedAddrs:   blockedAddrs,
 		authority:      authority,
+		addressCodec:   addressCodec,
 	}
 }
 
@@ -121,7 +125,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 	}
 
 	for _, in := range inputs {
-		inAddress, err := sdk.AccAddressFromBech32(in.Address)
+		inAddress, err := k.addressCodec.StringToBytes(in.Address)
 		if err != nil {
 			return err
 		}
@@ -140,7 +144,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 	}
 
 	for _, out := range outputs {
-		outAddress, err := sdk.AccAddressFromBech32(out.Address)
+		outAddress, err := k.addressCodec.StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -48,6 +49,11 @@ type Keeper interface {
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
+	// StringToBytes decodes text to bytes
+	StringToBytes(text string) ([]byte, error)
+	// BytesToString encodes bytes to text
+	BytesToString(bz []byte) (string, error)
+
 	types.QueryServer
 }
 
@@ -59,6 +65,8 @@ type BaseKeeper struct {
 	cdc                    codec.BinaryCodec
 	storeKey               storetypes.StoreKey
 	mintCoinsRestrictionFn MintingRestrictionFn
+
+	addressCodec address.Codec
 }
 
 type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
@@ -89,17 +97,19 @@ func NewBaseKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
+	addressCodec address.Codec,
 ) BaseKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := addressCodec.StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority),
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority, addressCodec),
 		ak:                     ak,
 		cdc:                    cdc,
 		storeKey:               storeKey,
 		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
+		addressCodec:           addressCodec,
 	}
 }
 
@@ -466,4 +476,14 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	_ = k.Supply.Walk(ctx, nil, func(s string, m math.Int) bool {
 		return cb(sdk.NewCoin(s, m))
 	})
+}
+
+// StringToBytes encodes text to bytes
+func (k BaseKeeper) StringToBytes(text string) ([]byte, error) {
+	return k.addressCodec.StringToBytes(text)
+}
+
+// BytesToString decodes bytes to text
+func (k BaseKeeper) BytesToString(bz []byte) (string, error) {
+	return k.addressCodec.BytesToString(bz)
 }

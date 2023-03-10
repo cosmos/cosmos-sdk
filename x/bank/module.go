@@ -20,6 +20,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -215,6 +216,7 @@ type BankInputs struct {
 	Key    *store.KVStoreKey
 
 	AccountKeeper types.AccountKeeper
+	AddressCodec  address.Codec
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -256,6 +258,7 @@ func ProvideModule(in BankInputs) BankOutputs {
 		in.AccountKeeper,
 		blockedAddresses,
 		authority.String(),
+		in.AddressCodec,
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 

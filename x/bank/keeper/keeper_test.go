@@ -139,6 +139,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		testutil.NewBech32Codec(),
 	)
 
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -240,6 +241,7 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 			nil,
 			nil,
 			authority,
+			testutil.NewBech32Codec(),
 		)
 	}
 
@@ -1246,16 +1248,16 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 		case banktypes.EventTypeCoinSpent:
 			coinsSpent, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			require.NoError(err)
-			spender, err := sdk.AccAddressFromBech32(e.Attributes[0].Value)
+			spender, err := suite.bankKeeper.StringToBytes(e.Attributes[0].Value)
 			require.NoError(err)
-			balances[spender.String()] = balances[spender.String()].Sub(coinsSpent...)
+			balances[fmt.Sprintf("%X", spender)] = balances[fmt.Sprintf("%X", spender)].Sub(coinsSpent...)
 
 		case banktypes.EventTypeCoinReceived:
 			coinsRecv, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			require.NoError(err)
-			receiver, err := sdk.AccAddressFromBech32(e.Attributes[0].Value)
+			receiver, err := suite.bankKeeper.StringToBytes(e.Attributes[0].Value)
 			require.NoError(err)
-			balances[receiver.String()] = balances[receiver.String()].Add(coinsRecv...)
+			balances[fmt.Sprintf("%X", receiver)] = balances[fmt.Sprintf("%X", receiver)].Add(coinsRecv...)
 		}
 	}
 

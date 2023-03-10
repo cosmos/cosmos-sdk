@@ -84,7 +84,6 @@ var (
 					// there is nothing left over in the validator fee pool, so as to keep the
 					// CanWithdrawInvariant invariant.
 					// NOTE: staking module is required if HistoricalEntries param > 0
-					// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 					BeginBlockers: []string{
 						upgradetypes.ModuleName,
 						minttypes.ModuleName,
@@ -112,9 +111,6 @@ var (
 					// NOTE: The genutils module must occur after staking so that pools are
 					// properly initialized with tokens from genesis accounts.
 					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
-					// NOTE: Capability module must occur first so that it can initialize any capabilities
-					// so that other modules that want to create or claim capabilities afterwards in InitChain
-					// can do so safely.
 					InitGenesis: []string{
 						authtypes.ModuleName,
 						banktypes.ModuleName,

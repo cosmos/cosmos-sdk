@@ -109,7 +109,7 @@ func NewRootCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			serverCtx.Logger = logger
+			serverCtx.Logger = logger.With(log.ModuleKey, "server")
 
 			// save context
 			return server.SetCmdServerContext(cmd, serverCtx)

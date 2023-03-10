@@ -62,9 +62,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.setState(runTxModeDeliver, initHeader)
 	app.setState(runTxModeCheck, initHeader)
 
-	// Use an empty header for prepare and process proposal states. Although it
-	// doesn't matter what header we use here as they get overwritten for the
-	// first block (see getContextForProposal()) and cleaned up on every Commit().
+	// Use an empty header for prepare and process proposal states. The header
+	// will be overwritten for the first block (see getContextForProposal()) and
+	// cleaned up on every Commit(). Only the ChainID is needed so it's set in
+	// the context.
 	emptyHeader := cmtproto.Header{ChainID: req.ChainId}
 	app.setState(runTxPrepareProposal, emptyHeader)
 	app.setState(runTxProcessProposal, emptyHeader)

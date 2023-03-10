@@ -105,7 +105,7 @@ func TripCircuitBreakerCmd() *cobra.Command {
 				msgTypeUrls = strings.Split(args[0], ",")
 			}
 
-			msg := types.NewMsgTripCircuitBreaker(string(clientCtx.GetFromAddress()), msgTypeUrls)
+			msg := types.NewMsgTripCircuitBreaker(clientCtx.GetFromAddress().String(), msgTypeUrls)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -143,7 +143,7 @@ func ResetCircuitBreakerCmd() *cobra.Command {
 				msgTypeUrls = strings.Split(args[0], ",")
 			}
 
-			msg := types.NewMsgResetCircuitBreaker(string(clientCtx.GetFromAddress()), msgTypeUrls)
+			msg := types.NewMsgResetCircuitBreaker(clientCtx.GetFromAddress().String(), msgTypeUrls)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

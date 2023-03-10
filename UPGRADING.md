@@ -135,6 +135,8 @@ Due to the import changes, this is a breaking change. Chains need to remove **en
 Other than that, the migration should be seamless.
 On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.48 (part 2).
 
+Note: It is possible that these steps must first be performed by your dependencies before you can perform them on your own codebase.
+
 ### Simulation
 
 Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.

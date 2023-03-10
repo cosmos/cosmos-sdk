@@ -105,6 +105,11 @@ func (g genericAddressIndexKey[T]) KeyType() string { return "index_key/" + g.Ke
 // for addresses.
 // The status quo in the SDK is that address keys are length prefixed even when they're the
 // last part of a composite key. This should never be used unless to retain state compatibility.
+// For example, a composite key composed of `[string, address]` in theory would need you only to
+// define a way to understand when the string part finishes, we usually do this by appending a null
+// byte to the string, then when you know when the string part finishes, it's logical that the
+// part which remains is the address key. In the SDK instead we prepend to the address key its
+// length too.
 func AddressKeyAsIndexKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) collcodec.KeyCodec[T] {
 	return genericAddressIndexKey[T]{
 		keyCodec,

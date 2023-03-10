@@ -1,8 +1,22 @@
-# AutoCLI
+# Module Interfaces Continued
+
+:::note Synopsis
+This document details how to build CLI and REST interfaces for a module. Examples from various Cosmos SDK modules are included.
+:::
+
+:::note
+
+### Pre-requisite Readings
+
+* [Building Modules Intro](./01-intro.md)
+
+:::
+
+## AutoCLI
 
 The `autocli` package is a Go library for generating CLI (command line interface) interfaces for Cosmos SDK-based applications. It provides a simple way to add CLI commands to your application by generating them automatically based on your gRPC service definitions. Autocli generates CLI commands and flags directly from your Protocol Buffer messages, including options, input parameters, and output parameters. This means that you can easily add a CLI interface to your application without having to manually create and manage commands.
 
-## Getting Started
+### Getting Started
 
 Here are the steps to use the `autocli` package:
 
@@ -37,7 +51,7 @@ if err := rootCmd.Execute(); err != nil {
 
 By following these steps, you can quickly and easily add a CLI interface to your application using `autocli`.
 
-## Flags
+### Flags
 
 `autocli` generates flags for each field in a Protocol Buffer message. By default, the names of the flags are generated based on the names of the fields in the message. You can customise the flag names using the `namingOptions` parameter of the `Builder.AddMessageFlags()` method.
 
@@ -57,7 +71,7 @@ The `binder` variable returned by the `AddMessageFlags()` method is used to bind
 
 You can also customise the behavior of the flags using the `namingOptions` parameter of the `Builder.AddMessageFlags()` method. This parameter allows you to specify a custom prefix for the flags, and to specify whether to generate flags for repeated fields and whether to generate flags for fields with default values.
 
-## Commands and Queries
+### Commands and Queries
 
 The `autocli` package generates CLI commands and flags for each method defined in your gRPC service. By default, it generates commands for each RPC method that does not return a stream of messages. The commands are named based on the name of the service method.
 
@@ -77,9 +91,9 @@ Similarly, you can define a custom query by implementing the `autocli.Query` int
 
 To add a custom command or query, you can use the `Builder.AddCustomCommand` or `Builder.AddCustomQuery` methods, respectively. These methods take a `cobra.Command` or `cobra.Command` instance, respectively, which can be used to define the behavior of the command or query.
 
-## Advanced Usage
+### Advanced Usage
 
-### Specifying Subcommands
+#### Specifying Subcommands
 
 By default, `autocli` generates a command for each method in your gRPC service. However, you can specify subcommands to group related commands together. To specify subcommands, you can use the `autocliv1.ServiceCommandDescriptor` struct.
 
@@ -106,7 +120,7 @@ autoCliOpts := &autocliv1.ModuleOptions{
 
 With this configuration, you can invoke the `GetTest` method by running `./app tx myservice get test`, and you can invoke the `GetTest2` method by running `./app tx myservice get test2`.
 
-### Adding Custom Commands
+#### Adding Custom Commands
 
 Although `autocli` can automatically generate CLI commands and flags based on your Protocol Buffer messages, you may want to add custom commands to your CLI application. To add a custom command, you can use the `AddCommand()` method provided by `cobra`. For instance, to add a custom `test` command to your CLI application, you can use the following code:
 
@@ -139,6 +153,6 @@ options := autocliv1.RpcCommandOptions{
 
 With these naming options, the generated flags for the `test` and `test1` fields will have custom names `--custom-name` and `--other-name`, respectively.
 
-## Conclusion
+### Conclusion
 
 `autocli` is a powerful tool for adding CLI interfaces to your Cosmos SDK-based applications. It allows you to easily generate CLI commands and flags from your Protocol Buffer messages, and provides many options for customising the behavior of your CLI application. With `autocli`, you can quickly create powerful CLI interfaces for your applications with minimal effort.

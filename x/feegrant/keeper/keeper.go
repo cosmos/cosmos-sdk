@@ -18,19 +18,21 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc        codec.BinaryCodec
-	storeKey   storetypes.StoreKey
-	authKeeper feegrant.AccountKeeper
+	cdc          codec.BinaryCodec
+	storeKey     storetypes.StoreKey
+	authKeeper   feegrant.AccountKeeper
+	addressCodec feegrant.AddressCodec
 }
 
 var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak feegrant.AccountKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak feegrant.AccountKeeper, addressCodec feegrant.AddressCodec) Keeper {
 	return Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		authKeeper: ak,
+		cdc:          cdc,
+		storeKey:     storeKey,
+		authKeeper:   ak,
+		addressCodec: addressCodec,
 	}
 }
 

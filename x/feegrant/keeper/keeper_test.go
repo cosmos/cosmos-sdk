@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper)
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper, testutil.NewBech32Codec())
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(555)))

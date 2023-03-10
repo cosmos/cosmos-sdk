@@ -19,3 +19,10 @@ type BankKeeper interface {
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
+
+type AddressCodec interface {
+	// StringToBytes decodes text to bytes
+	StringToBytes(text string) ([]byte, error)
+	// BytesToString encodes bytes to text
+	BytesToString(bz []byte) (string, error)
+}

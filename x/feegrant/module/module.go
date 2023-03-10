@@ -191,12 +191,13 @@ type FeegrantInputs struct {
 	Key           *store.KVStoreKey
 	Cdc           codec.Codec
 	AccountKeeper feegrant.AccountKeeper
+	AddressCodec  feegrant.AddressCodec
 	BankKeeper    feegrant.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper)
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.AddressCodec)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
 	return k, m
 }

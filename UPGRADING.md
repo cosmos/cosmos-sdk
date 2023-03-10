@@ -75,6 +75,10 @@ All the store imports are now renamed to use `cosmossdk.io/store` instead of `gi
 
 ### Modules
 
+#### `x/capability`
+
+Capability was moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC V8 will contain the necessary changes to incorporate the new module location
+
 #### `x/gov`
 
 ##### Expedited Proposals

@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/depinject"
 
 	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 
@@ -200,8 +201,15 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(ProvideAddressCodec),
 		appmodule.Provide(ProvideModule),
 	)
+}
+
+// ProvideAddressCodec provides an address.Codec to the container for any
+// modules that want to do address string <> bytes conversion.
+func ProvideAddressCodec(config *modulev1.Module) address.Codec {
+	return keeper.NewBech32Codec(config.Bech32Prefix)
 }
 
 //nolint:revive

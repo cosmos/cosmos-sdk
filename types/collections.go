@@ -85,6 +85,32 @@ func (a genericAddressKey[T]) SizeNonTerminal(key T) int {
 	return collections.BytesKey.SizeNonTerminal(key)
 }
 
+type genericAddressIndexKey[T addressUnion] struct {
+	collcodec.KeyCodec[T]
+}
+
+func (g genericAddressIndexKey[T]) Encode(buffer []byte, key T) (int, error) {
+	return g.EncodeNonTerminal(buffer, key)
+}
+
+func (g genericAddressIndexKey[T]) Decode(buffer []byte) (int, T, error) {
+	return g.DecodeNonTerminal(buffer)
+}
+
+func (g genericAddressIndexKey[T]) Size(key T) int { return g.SizeNonTerminal(key) }
+
+func (g genericAddressIndexKey[T]) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
+
+// Deprecated: AddressKeyAsIndexKey implements an SDK backwards compatible indexing key encoder
+// for addresses.
+// The status quo in the SDK is that address keys are length prefixed even when they're the
+// last part of a composite key. This should never be used unless to retain state compatibility.
+func AddressKeyAsIndexKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) collcodec.KeyCodec[T] {
+	return genericAddressIndexKey[T]{
+		keyCodec,
+	}
+}
+
 // Collection Codecs
 
 type intValueCodec struct{}

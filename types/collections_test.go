@@ -18,4 +18,8 @@ func TestCollectionsCorrectness(t *testing.T) {
 	t.Run("ConsAddress", func(t *testing.T) {
 		colltest.TestKeyCodec(t, ConsAddressKey, ConsAddress{0x32, 0x0, 0x0, 0x3})
 	})
+
+	t.Run("AddressIndexingKey", func(t *testing.T) {
+		colltest.TestKeyCodec(t, AddressKeyAsIndexKey(AccAddressKey), AccAddress{0x2, 0x5, 0x8})
+	})
 }

@@ -246,7 +246,7 @@ func (k BaseKeeper) DenomOwners(
 		addrBound := int(key[0])
 
 		if len(key)-1 < addrBound {
-			return nil, "", fmt.Errorf("invalid key")
+			return nil, "", fmt.Errorf("invalid key, wanted %d, got %d", len(key)-1, addrBound)
 		}
 
 		return key[1 : addrBound+1], string(key[addrBound+1:]), nil

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/collections"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -323,30 +324,15 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}
 
-	accountStore := k.getAccountStore(ctx, addr)
-	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, balance.Denom)
-
 	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
-		accountStore.Delete([]byte(balance.Denom))
-		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
-	} else {
-		amount, err := balance.Amount.Marshal()
+		err := k.Balances.Remove(ctx, collections.Join(addr, balance.Denom))
 		if err != nil {
 			return err
 		}
-
-		accountStore.Set([]byte(balance.Denom), amount)
-
-		// Store a reverse index from denomination to account address with a
-		// sentinel value.
-		denomAddrKey := address.MustLengthPrefix(addr)
-		if !denomPrefixStore.Has(denomAddrKey) {
-			denomPrefixStore.Set(denomAddrKey, []byte{0})
-		}
+		return nil
 	}
-
-	return nil
+	return k.Balances.Set(ctx, collections.Join(addr, balance.Denom), balance.Amount)
 }
 
 // IsSendEnabledCoins checks the coins provided and returns an ErrSendDisabled

@@ -168,4 +168,28 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/simd/cmd/root.go#L6
 
 The `SetCmdClientContextHandler` call reads persistent flags via `ReadPersistentCommandFlags` which creates a `client.Context` and sets that on the root command's `Context`.
 
-The `InterceptConfigsPreRunHandler` call creates a viper literal, default `server.Context`, and a logger and sets that on the root command's `Context`. The `server.Context` will be modified and saved to disk via the internal `interceptConfigs` call, which either reads or creates a Tendermint configuration based on the home path provided. In addition, `interceptConfigs` also reads and loads the application configuration, `app.toml`, and binds that to the `server.Context` viper literal. This is vital so the application can get access to not only the CLI flags, but also to the application configuration values provided by this file.
+The `InterceptConfigsPreRunHandler` call creates a viper literal, default `server.Context`, and a logger and sets that on the root command's `Context`. The `server.Context` will be modified and saved to disk. The internal `interceptConfigs` call reads or creates a Tendermint configuration based on the home path provided. In addition, `interceptConfigs` also reads and loads the application configuration, `app.toml`, and binds that to the `server.Context` viper literal. This is vital so the application can get access to not only the CLI flags, but also to the application configuration values provided by this file.
+
+:::tip
+When willing to configure which logger is used, do not to use `InterceptConfigsPreRunHandler`, which sets the default SDK logger, but instead use `CreateServerContextFromConfig` and set the server context and the logger manually:
+
+```diff
+-return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
+
++serverCtx, err := server.CreateServerContextFromConfig(cmd, customAppTemplate, customAppConfig, customCMTConfig)
++if err != nil {
++	return err
++}
+
++// overwrite default server logger
++logger, err := server.CreateSDKLogger(serverCtx, cmd.OutOrStdout())
++if err != nil {
++	return err
++}
++serverCtx.Logger = logger.With(log.ModuleKey, "server")
+
++// set server context
++return server.SetCmdServerContext(cmd, serverCtx)
+```
+
+:::

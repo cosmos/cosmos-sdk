@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -63,15 +62,6 @@ func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Conte
 	return &Context{v, config, logger}
 }
 
-// ErrorCode contains the exit code for server exit.
-type ErrorCode struct {
-	Code int
-}
-
-func (e ErrorCode) Error() string {
-	return strconv.Itoa(e.Code)
-}
-
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -106,7 +96,26 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 	return err
 }
 
-// InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
+// InterceptConfigsPreRunHandler is identical to CreateServerContextFromConfig
+// except it also sets the server context on the command and the server logger.
+func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
+	serverCtx, err := CreateServerContextFromConfig(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
+	if err != nil {
+		return err
+	}
+
+	// overwrite default server logger
+	logger, err := CreateSDKLogger(serverCtx, cmd.OutOrStdout())
+	if err != nil {
+		return err
+	}
+	serverCtx.Logger = logger.With(log.ModuleKey, "server")
+
+	// set server context
+	return SetCmdServerContext(cmd, serverCtx)
+}
+
+// CreateServerContextFromConfig performs a pre-run function for the root daemon
 // application command. It will create a Viper literal and a default server
 // Context. The server CometBFT configuration will either be read and parsed
 // or created and saved to disk, where the server Context is updated to reflect
@@ -116,7 +125,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 // is used to read and parse the application configuration. Command handlers can
 // fetch the server Context to get the CometBFT configuration or to get access
 // to Viper.
-func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*Context, error) {
+func CreateServerContextFromConfig(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*Context, error) {
 	serverCtx := NewDefaultContext()
 
 	// Get the executable name and configure the viper instance so that environmental

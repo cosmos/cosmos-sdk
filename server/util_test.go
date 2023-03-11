@@ -30,12 +30,7 @@ var errCanceledInPreRun = errors.New("canceled in prerun")
 // Used in each test to run the function under test via Cobra
 // but to always halt the command
 func preRunETestImpl(cmd *cobra.Command, args []string) error {
-	ctx, err := server.InterceptConfigsPreRunHandler(cmd, "", nil, cmtcfg.DefaultConfig())
-	if err != nil {
-		return err
-	}
-
-	if err := server.SetCmdServerContext(cmd, ctx); err != nil {
+	if err := server.InterceptConfigsPreRunHandler(cmd, "", nil, cmtcfg.DefaultConfig()); err != nil {
 		return err
 	}
 
@@ -439,7 +434,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run StartCmd.
 	cmd = server.StartCmd(nil, tempDir)
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		ctx, err := server.InterceptConfigsPreRunHandler(cmd, "", nil, cmtcfg.DefaultConfig())
+		ctx, err := server.CreateServerContextFromConfig(cmd, "", nil, cmtcfg.DefaultConfig())
 		if err != nil {
 			return err
 		}

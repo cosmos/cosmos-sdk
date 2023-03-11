@@ -57,6 +57,33 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 
 ### SimApp
 
+#### Commands
+
+The `simapp` `NewRootCmd()` function has been updated due to changes of behavior of `server.InterceptConfigsPreRunHandler`.
+Previously, the `server.InterceptConfigsPreRunHandler` was setting the server context and the logger.
+Applications can now customize their application's logger, after having run the `server.InterceptConfigsPreRunHandler` function.
+
+To keep the same behavior, add the following lines to the root command (usually `NewRootCmd()`) of your application:
+
+```diff
+-return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
+
++serverCtx, err := server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
++if err != nil {
++	return err
++}
+
++// overwrite default server logger
++logger, err := server.CreateSDKLogger(serverCtx, cmd.OutOrStdout())
++if err != nil {
++	return err
++}
++serverCtx.Logger = logger.With(log.ModuleKey, "server")
+
++// set server context
++return server.SetCmdServerContext(cmd, serverCtx)
+```
+
 #### Module Assertions
 
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.

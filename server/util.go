@@ -157,6 +157,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 }
 
 // CreateSDKLogger creates a the default SDK logger.
+// It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var logger log.Logger
 	if ctx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {

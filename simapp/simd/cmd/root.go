@@ -111,7 +111,7 @@ func NewRootCmd() *cobra.Command {
 			}
 			serverCtx.Logger = logger.With(log.ModuleKey, "server")
 
-			// save context
+			// set server context
 			return server.SetCmdServerContext(cmd, serverCtx)
 		},
 	}

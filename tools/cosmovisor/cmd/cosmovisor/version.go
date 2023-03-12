@@ -9,25 +9,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	versionCmd.Flags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
-	rootCmd.AddCommand(versionCmd)
-}
-
 // OutputFlag defines the output format flag
 var OutputFlag = "output"
 
-var versionCmd = &cobra.Command{
-	Use:          "version",
-	Short:        "Prints the version of Cosmovisor.",
-	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
-			return printVersionJSON(cmd, args)
-		}
+func NewVersionCmd() *cobra.Command {
+	versionCmd := &cobra.Command{
+		Use:          "version",
+		Short:        "Display cosmovisor and APP version.",
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
+				return printVersionJSON(cmd, args)
+			}
 
-		return printVersion(cmd, args)
-	},
+			return printVersion(cmd, args)
+		},
+	}
+
+	versionCmd.Flags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
+
+	return versionCmd
 }
 
 func getVersion() string {

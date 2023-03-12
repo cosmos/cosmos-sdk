@@ -28,7 +28,7 @@ const (
 	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
-	EnvDisableLogs          = "DAEMON_DISABLE_LOGS"
+	EnvDisableLogs          = "COSMOVISOR_DISABLE_LOGS"
 )
 
 const (

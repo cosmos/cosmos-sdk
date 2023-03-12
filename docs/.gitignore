@@ -13,6 +13,7 @@ docs/node_modules
 docs/docs/modules
 docs/docs/spec
 docs/docs/architecture
+docs/docs/rfc
 docs/docs/tooling/01-cosmovisor.md
 docs/docs/tooling/02-depinject.md
 docs/docs/tooling/03-confix.md

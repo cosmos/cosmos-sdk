@@ -9,7 +9,7 @@ import (
 
 var configCmd = &cobra.Command{
 	Use:          "config",
-	Short:        "Prints the Cosmovisor config (display environment variable used by cosmovisor).",
+	Short:        "Display cosmovisor config (prints environment variables used by cosmovisor).",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := cosmovisor.GetConfigFromEnv()

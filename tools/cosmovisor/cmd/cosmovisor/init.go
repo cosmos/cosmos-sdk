@@ -18,7 +18,7 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init <path to executable>",
-	Short: "Initializes a cosmovisor daemon home directory.",
+	Short: "Initialize a cosmovisor daemon home directory.",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := cmd.Context().Value(log.ContextKey).(*zerolog.Logger)

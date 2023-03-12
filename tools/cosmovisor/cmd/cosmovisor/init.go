@@ -16,10 +16,6 @@ import (
 	"cosmossdk.io/x/upgrade/plan"
 )
 
-func init() {
-	rootCmd.AddCommand(initCmd)
-}
-
 var initCmd = &cobra.Command{
 	Use:   "init <path to executable>",
 	Short: "Initializes a cosmovisor daemon home directory.",

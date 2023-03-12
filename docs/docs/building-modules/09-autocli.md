@@ -29,7 +29,7 @@ Here are the steps to use the `autocli` package:
 
 Here's an example of how to use `autocli`:
 
-```
+``` go
 // Define your app's modules
 testModules := map[string]appmodule.AppModule{
     "testModule": &TestModule{},
@@ -134,7 +134,7 @@ With this configuration, you can invoke the `GetTest` method by running `./app t
 
 Although `autocli` can automatically generate CLI commands and flags based on your protobuf messages, you may want to add custom commands to your CLI application. To add a custom command, you can use the `AddCommand()` method provided by `cobra`. For instance, to add a custom `test` command to your CLI application, you can use the following code:
 
-```
+``` go
 rootCmd := autocli.RootCmd(appOptions)
 rootCmd.AddCommand(&cobra.Command{
     Use:   "test",
@@ -152,7 +152,8 @@ This will add a new `test` command to your CLI application that can be invoked b
 ## Customising Flag Names
 
 By default, `autocli` generates flag names based on the names of the fields in your protobuf message. However, you can customise the flag names by providing a `FlagOptions` parameter to the `Builder.AddMessageFlags()` method. This parameter allows you to specify custom names for flags based on the names of the message fields. For example, if you have a message with the fields `test` and `test1`, you can use the following naming options to customise the flags
-```
+
+``` go
 options := autocliv1.RpcCommandOptions{ 
     FlagOptions: map[string]*autocliv1.FlagOptions{ 
         "test": { Name: "custom_name", }, 

@@ -374,6 +374,7 @@ func (cfg Config) DetailString() string {
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
+		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
 	}
 
 	derivedEntries := []struct{ name, value string }{

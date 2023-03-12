@@ -28,6 +28,7 @@ const (
 	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvDisableLogs          = "DAEMON_DISABLE_LOGS"
 )
 
 const (
@@ -51,6 +52,7 @@ type Config struct {
 	UnsafeSkipBackup      bool
 	DataBackupPath        string
 	PreupgradeMaxRetries  int
+	DisableLogs           bool
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -156,6 +158,9 @@ func GetConfigFromEnv() (*Config, error) {
 		errs = append(errs, err)
 	}
 	if cfg.UnsafeSkipBackup, err = booleanOption(EnvSkipBackup, false); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.DisableLogs, err = booleanOption(EnvDisableLogs, false); err != nil {
 		errs = append(errs, err)
 	}
 

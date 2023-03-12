@@ -6,7 +6,7 @@
 
 ## Abstract
 
-Transaction validation in the Cosmos SDK is broken into two flows, one is in `ValidateBasic` and the other is in the message server. This RFC describes a conversation in which the `ValidateBasic` method on messages is deprecated and all validation is moved to the message server. 
+Transaction validation in the Cosmos SDK is broken into two flows, `ValidateBasic` and the other is in the message server. This RFC describes a conversation in which the `ValidateBasic` method on messages is deprecated and all validation is moved to the message server. 
 
 With the deprecation of [`GetSigners`](https://github.com/cosmos/cosmos-sdk/issues/11275) we have the optionality to remove [sdk.Msg](https://github.com/cosmos/cosmos-sdk/blob/16a5404f8e00ddcf8857c8a55dca2f7c109c29bc/types/tx_msg.go#L16) and the `ValidateBasic` function. 
 

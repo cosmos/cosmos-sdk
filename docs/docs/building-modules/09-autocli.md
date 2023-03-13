@@ -23,11 +23,10 @@ The `autocli` package is a [Go library](https://pkg.go.dev/cosmossdk.io/client/v
 
 Here are the steps to use the `autocli` package:
 
-1. Import the `autocli` package in your project.
-2. Define your app's modules that implement the `appmodule.AppModule` interface.
-3. Create an instance of the `autocli.AppOptions` struct that specifies the modules you defined. If you are using the `depinject` package to manage your app's dependencies, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration. The `autocli.AppOptions` struct can be found in the `client/v2/autocli/app.go` file.
-4. Implement the `AutoCLIOptions()` method on each module to specify the service and sub-commands to be mapped. This method `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` returns a pointer to an instance of `autocliv1.ModuleOptions`, which contains the configuration for mapping the service and sub-commands.
-5. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command and can also be found in the `client/v2/autocli/app.go` file. Additionally, this method adds the `autocli` functionality to your app's root command. This method is additive only, meaning that it does not create commands if they are already registered for a module. Instead, it adds any missing commands to the root command.
+1. Define your app's modules that implement the `appmodule.AppModule` interface.
+2. (optional) When willing to configure how behave `autocli` command generation, implement the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module. Learn more [here](#advanced-usage).
+3. Use the `autocli.AppOptions` struct to specifies the modules you defined. If you are using the `depinject` package to manage your app's dependencies, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
+4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command and can also be found in the `client/v2/autocli/app.go` file. Additionally, this method adds the `autocli` functionality to your app's root command. This method is additive only, meaning that it does not create commands if they are already registered for a module. Instead, it adds any missing commands to the root command.
 
 Here's an example of how to use `autocli`:
 
@@ -102,7 +101,7 @@ This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to
 https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689fd/x/gov/autocli.go#L9-L27
 ```
 
-With this configuration, you can invoke the `GetTest` method by running `./app tx myservice get test`, and you can invoke the `GetTest2` method by running `./app tx myservice get test2`.
+The `AutoCLIOptions()` method in the autocli package allows you to specify the services and sub-commands to be mapped for your app. In the example code, an instance of the `autocliv1.ModuleOptions` struct is defined in the `appmodule.AppModule` implementation located in the `x/gov/autocli.go` file. This configuration groups related commands together and specifies subcommands for each service.
 
 ## Customising Flag Names
 

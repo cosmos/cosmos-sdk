@@ -111,11 +111,12 @@ func FilterKeys(logger Logger, filter FilterFunc) Logger {
 	}
 
 	filteredLogger := zl.Hook(zerolog.HookFunc(func(e *zerolog.Event, lvl zerolog.Level, _ string) {
-		// TODO wait for https://github.com/rs/zerolog/pull/527 to be merged
+		// TODO(@julienrbrt) wait for https://github.com/rs/zerolog/pull/527 to be merged
 		// keys, err := e.GetKeys()
 		// if err != nil {
 		// 	panic(err)
 		// }
+
 		keys := []string{}
 
 		for _, key := range keys {

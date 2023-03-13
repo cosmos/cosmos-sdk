@@ -4,17 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/circuit/client/cli"
 	"time"
 
+	modulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	store "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit/client/cli"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -136,4 +141,40 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
+}
+
+type CircuitInputs struct {
+	depinject.In
+
+	Config *modulev1.Module
+	Cdc    codec.Codec
+	Key    *store.KVStoreKey
+
+	AddressCodec address.Codec
+}
+
+//nolint:revive
+type CircuitOutputs struct {
+	depinject.Out
+
+	CircuitKeeper keeper.Keeper
+	Module        appmodule.AppModule
+}
+
+func ProvideModule(in CircuitInputs) CircuitOutputs {
+
+	// default to governance authority if not provided
+	if in.Config.Authority != "" {
+		panic("Authority must be set")
+	}
+	authority := authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+
+	circuitkeeper := keeper.NewKeeper(
+		in.Key,
+		authority.String(),
+		in.AddressCodec,
+	)
+	m := NewAppModule(in.Cdc, circuitkeeper)
+
+	return CircuitOutputs{CircuitKeeper: circuitkeeper, Module: m}
 }

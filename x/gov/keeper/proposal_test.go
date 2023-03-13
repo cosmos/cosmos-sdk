@@ -98,6 +98,49 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
+	testCases := []struct {
+		name      string
+		expedited bool
+	}{
+		{name: "regular proposal"},
+		{name: "expedited proposal", expedited: true},
+	}
+
+	for _, tc := range testCases {
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), tc.expedited)
+		suite.Require().NoError(err)
+
+		suite.Require().Nil(proposal.VotingStartTime)
+
+		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+
+		proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
+		suite.Require().True(ok)
+		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+
+		activeIterator := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
+		suite.Require().True(activeIterator.Valid())
+
+		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
+		suite.Require().Equal(proposalID, proposal.Id)
+		activeIterator.Close()
+
+		// add vote
+		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), []*v1.WeightedVoteOption{{v1.OptionYes, "1.0"}}, "")
+		suite.Require().NoError(err)
+
+		suite.Require().NotPanics(func() {
+			suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+		}, "")
+
+		// add vote but proposal is deleted along with its VotingPeriodProposalKey
+		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), []*v1.WeightedVoteOption{{v1.OptionYes, "1.0"}}, "")
+		suite.Require().ErrorContains(err, ": inactive proposal")
+	}
+}
+
 type invalidProposalRoute struct{ v1beta1.TextProposal }
 
 func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }

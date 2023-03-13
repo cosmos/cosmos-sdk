@@ -63,7 +63,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// will be overwritten for the first block (see getContextForProposal()) and
 	// cleaned up on every Commit(). Only the ChainID is needed so it's set in
 	// the context.
-	emptyHeader := cmtproto.Header{ChainID: req.ChainId}
+	emptyHeader := tmproto.Header{ChainID: req.ChainId}
 	app.setState(runTxPrepareProposal, emptyHeader)
 	app.setState(runTxProcessProposal, emptyHeader)
 
@@ -452,7 +452,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	// Reset state to the latest committed but with an empty header to avoid
 	// leaking the header from the last block.
-	emptyHeader := cmtproto.Header{ChainID: app.chainID}
+	emptyHeader := tmproto.Header{ChainID: app.chainID}
 	app.setState(runTxPrepareProposal, emptyHeader)
 	app.setState(runTxProcessProposal, emptyHeader)
 
@@ -973,7 +973,7 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 	if height == 1 {
 		ctx, _ = app.deliverState.ctx.CacheContext()
 		// clear all context data set during InitChain to avoid inconsistent behavior
-		ctx = ctx.WithBlockHeader(cmtproto.Header{})
+		ctx = ctx.WithBlockHeader(tmproto.Header{})
 		return ctx
 	}
 	return ctx

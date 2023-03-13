@@ -23,9 +23,11 @@ The `autocli` package is a [Go library](https://pkg.go.dev/cosmossdk.io/client/v
 
 Here are the steps to use the `autocli` package:
 
-1.  Define your app's modules that implement the `appmodule.AppModule` interface.
-2.  Create an instance of the `autocli.AppOptions` struct that specifies the modules you defined. 
-3. Use the EnhanceRootCommand() method provided by autocli to add the CLI commands for the specified modules to your root command.
+1. Import the `autocli` package in your project.
+2. Define your app's modules that implement the `appmodule.AppModule` interface.
+3. Create an instance of the `autocli.AppOptions` struct that specifies the modules you defined. If you are using the `depinject` package to manage your app's dependencies, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration. The `autocli.AppOptions` struct can be found in the `client/v2/autocli/app.go` file.
+4. Implement the `AutoCLIOptions()` method on each module to specify the service and sub-commands to be mapped. This method `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` returns a pointer to an instance of `autocliv1.ModuleOptions`, which contains the configuration for mapping the service and sub-commands.
+5. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command and can also be found in the `client/v2/autocli/app.go` file. Additionally, this method adds the `autocli` functionality to your app's root command. This method is additive only, meaning that it does not create commands if they are already registered for a module. Instead, it adds any missing commands to the root command.
 
 Here's an example of how to use `autocli`:
 
@@ -53,8 +55,6 @@ if err := rootCmd.Execute(); err != nil {
     fmt.Println(err)
 }
 ```
-
-To use the autocli package, import it in your project and reference it in your code. For example, the `autocli.AppOptions` struct and `EnhanceRootCommand()` method can be found in the app.go file located in the `client/v2/autocli directory`.
 
 ## Flags
 
@@ -96,7 +96,7 @@ To add a custom command or query, you can use the `Builder.AddCustomCommand` or 
 
 By default, `autocli` generates a command for each method in your gRPC service. However, you can specify subcommands to group related commands together. To specify subcommands, you can use the `autocliv1.ServiceCommandDescriptor` struct.
 
-This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to group related commands together and specify subcommands in your gRPC service by defining an instance of `autocliv1.ModuleOptions` in your appmodule.AppModule implementation.
+This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to group related commands together and specify subcommands in your gRPC service by defining an instance of `autocliv1.ModuleOptions` in your `autocli.go` file.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689fd/x/gov/autocli.go#L9-L27
@@ -118,6 +118,7 @@ options := autocliv1.RpcCommandOptions{
 
 builder.AddMessageFlags(message, options)
 ```
+
 Note that `autocliv1.RpcCommandOptions` is a field of the `autocliv1.ServiceCommandDescriptor` struct, which is defined in the `autocliv1` package. To use this option, you can define an instance of `autocliv1.ModuleOptions` in your `appmodule.AppModule` implementation and specify the `FlagOptions` for the relevant service command descriptor.
 
 ## Conclusion

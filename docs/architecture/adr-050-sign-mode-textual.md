@@ -19,7 +19,7 @@
 
 Accepted. Implementation started. Small value renderers details still need to be polished.
 
-Spec version: 1.
+Spec version: 0.
 
 ## Abstract
 

@@ -20,7 +20,7 @@ import (
 	"cosmossdk.io/x/tx/textual/internal/textualpb"
 )
 
-const specVersion = 1
+const specVersion = 0
 
 // CoinMetadataQueryFn defines a function that queries state for the coin denom
 // metadata. It is meant to be passed as an argument into `NewSignModeHandler`.

@@ -31,7 +31,7 @@ func GetQueryCmd() *cobra.Command {
 
 func GetDisabeListCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "disabled_list ",
+		Use:   "disabled_list",
 		Short: "Query for all disabled message types",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -90,7 +90,7 @@ func GetAccountCmd() *cobra.Command {
 
 func GetAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "accounts ",
+		Use:   "accounts",
 		Short: "Query for all account permissions",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

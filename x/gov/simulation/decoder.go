@@ -58,6 +58,9 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &voteB)
 			return fmt.Sprintf("%v\n%v", voteA, voteB)
 
+		case bytes.Equal(kvA.Key[:1], types.VotingPeriodProposalKeyPrefix):
+			return fmt.Sprintf("%v\n%v", kvA.Value, kvB.Value)
+
 		default:
 			panic(fmt.Sprintf("invalid governance key prefix %X", kvA.Key[:1]))
 		}

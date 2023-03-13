@@ -164,7 +164,7 @@ func TestSigVerification(t *testing.T) {
 	gasLimit := testdata.NewTestGasLimit()
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-	txt, err = txmodule.NewTextualWithGRPCConn(suite.clientCtx)
+	txt, err = txmodule.NewTextualWithBankKeeper(suite.txBankKeeper)
 	require.NoError(t, err)
 	anteTxConfig := authtx.NewTxConfigWithTextual(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),

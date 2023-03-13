@@ -158,13 +158,25 @@ func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req ab
 	}
 
 	if err := ValidatePrices(h.state, req, prices); err != nil {
-		log("failed to validate vote extension", "err", err)
+		log("failed to validate vote extension", "prices", prices, "err", err)
 		return abci.ResponseVerifyVoteExtension{Status: REJECT}
 	}
 
 	return abci.ResponseVerifyVoteExtension{Status: ACCEPT}
 }
 ```
+
+#### Vote Extension Propagation
+
+As mentioned previously, vote extensions for height `H` are only made available
+to the proposer at height `H+1` during `PrepareProposal`. However, in order to
+make vote extensions useful, all validators should have access to the agreed upon
+vote extensions at height `H` during `H+1`.
+
+Since CometBFT includes all the vote extension signatures in `RequestPrepareProposal`,
+we propose that the proposing validator "inject" the vote extensions along with
+their respective signatures via a special transaction, `VoteExtTx`, into the
+block proposal during `PrepareProposal`.
 
 ### `FinalizeBlock`
 

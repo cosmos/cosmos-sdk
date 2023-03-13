@@ -15,7 +15,7 @@ type bech32Codec struct {
 
 var _ address.Codec = &bech32Codec{}
 
-func newBech32Codec(prefix string) bech32Codec {
+func NewBech32Codec(prefix string) address.Codec {
 	return bech32Codec{prefix}
 }
 

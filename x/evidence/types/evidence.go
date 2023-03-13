@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/x/evidence/exported"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -21,7 +20,7 @@ var _ exported.Evidence = &Equivocation{}
 func (e *Equivocation) Route() string { return RouteEquivocation }
 
 // Hash returns the hash of an Equivocation object.
-func (e *Equivocation) Hash() cmtbytes.HexBytes {
+func (e *Equivocation) Hash() []byte {
 	bz, err := e.Marshal()
 	if err != nil {
 		panic(err)

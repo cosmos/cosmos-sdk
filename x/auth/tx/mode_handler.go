@@ -3,7 +3,7 @@ package tx
 import (
 	"fmt"
 
-	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -24,13 +24,14 @@ var DefaultSignModes = []signingtypes.SignMode{
 
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
 // SIGN_MODE_DIRECT, SIGN_MODE_DIRECT_AUX and SIGN_MODE_LEGACY_AMINO_JSON.
-func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHandler) signing.SignModeHandler {
+func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHandler, customSignModes ...signing.SignModeHandler) signing.SignModeHandler {
 	if len(modes) < 1 {
 		panic(fmt.Errorf("no sign modes enabled"))
 	}
 
-	handlers := make([]signing.SignModeHandler, len(modes))
+	handlers := make([]signing.SignModeHandler, len(modes)+len(customSignModes))
 
+	// handle cosmos-sdk defined sign modes
 	for i, mode := range modes {
 		switch mode {
 		case signingtypes.SignMode_SIGN_MODE_DIRECT:
@@ -44,6 +45,11 @@ func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHan
 		default:
 			panic(fmt.Errorf("unsupported sign mode %+v", mode))
 		}
+	}
+
+	// add custom sign modes
+	for i, handler := range customSignModes {
+		handlers[i+len(modes)] = handler
 	}
 
 	return signing.NewSignModeHandlerMap(

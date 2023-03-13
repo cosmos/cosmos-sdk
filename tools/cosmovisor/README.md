@@ -6,20 +6,21 @@ sidebar_position: 1
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Design](#design)
-* [Contributing](#contributing)
-* [Setup](#setup)
-    * [Installation](#installation)
-    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-    * [Folder Layout](#folder-layout)
-* [Usage](#usage)
-    * [Initialization](#initialization)
-    * [Detecting Upgrades](#detecting-upgrades)
-    * [Auto-Download](#auto-download)
-* [Example: SimApp Upgrade](#example-simapp-upgrade)
-    * [Chain Setup](#chain-setup)
-        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-        * [Update App](#update-app)
+* [Cosmovisor](#cosmovisor)
+    * [Design](#design)
+    * [Contributing](#contributing)
+    * [Setup](#setup)
+        * [Installation](#installation)
+        * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+        * [Folder Layout](#folder-layout)
+    * [Usage](#usage)
+        * [Initialization](#initialization)
+        * [Detecting Upgrades](#detecting-upgrades)
+        * [Auto-Download](#auto-download)
+    * [Example: SimApp Upgrade](#example-simapp-upgrade)
+        * [Chain Setup](#chain-setup)
+            * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+            * [Update App](#update-app)
 
 ## Design
 
@@ -60,22 +61,11 @@ go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 
 Run `cosmovisor version` to check the cosmovisor version.
 
-You can also install from source by pulling the cosmos-sdk repository and switching to the correct version and building as follows:
+Alternatively, for building from source, simply run `make cosmovisor`. The binary will be located in `tools/cosmovisor`.
 
-```shell
-git clone git@github.com:cosmos/cosmos-sdk
-cd cosmos-sdk
-git checkout cosmovisor/vx.x.x
-make cosmovisor
-```
-
-This will build cosmovisor in `/cosmovisor` directory. Afterwards you may want to put it into your machine's PATH like as follows:
-
-```shell
-cp cosmovisor/cosmovisor ~/go/bin/cosmovisor
-```
-
-*Note: If you are using go `v1.15` or earlier, you will need to use `go get`, and you may want to run the command outside a project directory.*
+:::warning
+Building from source using `make cosmovisor` won't display the correct `cosmovisor` version.
+:::
 
 ### Command Line Arguments And Environment Variables
 
@@ -99,7 +89,8 @@ All arguments passed to `cosmovisor run` will be passed to the application binar
 * `DAEMON_POLL_INTERVAL` (*optional*, default 300 milliseconds), is the interval length for polling the upgrade plan file. The value must be a duration (e.g. `1s`).
 * `DAEMON_DATA_BACKUP_DIR` option to set a custom backup directory. If not set, `DAEMON_HOME` is used.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `true`, upgrades directly without performing a backup. Otherwise (`false`, default) backs up the data before trying the upgrade. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
-* `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, cosmovisor fails the upgrade.
+* `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, Cosmovisor fails the upgrade.
+* `COSMOVISOR_DISABLE_LOGS` (defaults to `false`). If set to true, this will disable Cosmovisor logs (but not the underlying process) completely. This may be useful, for example, when a Cosmovisor subcommand you are executing returns a valid JSON you are then parsing, as logs added by Cosmovisor make this output not a valid JSON.
 
 ### Folder Layout
 

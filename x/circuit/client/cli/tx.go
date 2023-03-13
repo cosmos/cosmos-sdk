@@ -117,8 +117,7 @@ func ResetCircuitBreakerCmd() *cobra.Command {
 		Use:     "reset [type_url]",
 		Short:   "Enable a message to be executed",
 		Example: fmt.Sprintf(`%s circuit authorize reset "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
-
-		Args: cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
 				return err
@@ -130,9 +129,7 @@ func ResetCircuitBreakerCmd() *cobra.Command {
 			}
 
 			var msgTypeUrls []string
-			if len(args) == 4 {
-				msgTypeUrls = strings.Split(args[0], ",")
-			}
+			msgTypeUrls = strings.Split(args[0], ",")
 
 			msg := types.NewMsgResetCircuitBreaker(clientCtx.GetFromAddress().String(), msgTypeUrls)
 

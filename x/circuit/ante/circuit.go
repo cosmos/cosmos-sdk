@@ -16,7 +16,6 @@ type CircuitBreakerDecorator struct {
 }
 
 func NewCircuitBreakerDecorator(ck CircuitBreaker) CircuitBreakerDecorator {
-
 	return CircuitBreakerDecorator{
 		circuitKeeper: ck,
 	}

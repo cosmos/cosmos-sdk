@@ -28,9 +28,8 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/protobuf v1.29.0
+	github.com/cosmos/cosmos-sdk/x/circuit v0.0.0-20230220112800-f69b9ff58fbe
 )
-
-require github.com/cosmos/cosmos-sdk/x/circuit v0.0.0-20230220112800-f69b9ff58fbe
 
 require (
 	cloud.google.com/go v0.110.0 // indirect
@@ -197,8 +196,6 @@ replace (
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/upgrade => ../x/upgrade
-	// TODO update/remove after v0.37.x tag of CometBFT
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	github.com/cosmos/cosmos-sdk/x/circuit => ../x/circuit
 )
 

@@ -74,7 +74,7 @@ func GetAccountCmd() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.Account(cmd.Context(), &types.QueryAccountRequest{Address: string(addr)}) // avoid calling .String() as it sets the besch32 prefix
+			res, err := queryClient.Account(cmd.Context(), &types.QueryAccountRequest{Address: addr.String()}) // avoid calling .String() as it sets the besch32 prefix
 			if err != nil {
 				return err
 			}

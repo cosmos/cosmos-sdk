@@ -1,6 +1,8 @@
 package ante_test
 
 import (
+	"testing"
+
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -12,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	cbtypes "github.com/cosmos/cosmos-sdk/x/circuit/types"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/circuit/ante"
@@ -33,11 +34,7 @@ type MockCircuitBreaker struct {
 }
 
 func (m MockCircuitBreaker) IsAllowed(ctx sdk.Context, typeURL string) bool {
-	if typeURL == "/cosmos.circuit.v1.MsgAuthorizeCircuitBreaker" {
-		return true
-	} else {
-		return false
-	}
+	return typeURL == "/cosmos.circuit.v1.MsgAuthorizeCircuitBreaker"
 }
 
 func initFixture(t *testing.T) *fixture {

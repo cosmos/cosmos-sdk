@@ -164,10 +164,10 @@ type CircuitOutputs struct {
 func ProvideModule(in CircuitInputs) CircuitOutputs {
 
 	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress("gov")
 	if in.Config.Authority != "" {
-		panic("Authority must be set")
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
-	authority := authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 
 	circuitkeeper := keeper.NewKeeper(
 		in.Key,

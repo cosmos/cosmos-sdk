@@ -6,32 +6,29 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"cosmossdk.io/log"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
-
-func init() {
-	versionCmd.Flags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
-	rootCmd.AddCommand(versionCmd)
-}
 
 // OutputFlag defines the output format flag
 var OutputFlag = "output"
 
-var versionCmd = &cobra.Command{
-	Use:          "version",
-	Short:        "Prints the version of Cosmovisor.",
-	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(log.ContextKey).(log.Logger)
+func NewVersionCmd() *cobra.Command {
+	versionCmd := &cobra.Command{
+		Use:          "version",
+		Short:        "Display cosmovisor and APP version.",
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
+				return printVersionJSON(cmd, args)
+			}
 
-		if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
-			return printVersionJSON(logger, args)
-		}
+			return printVersion(cmd, args)
+		},
+	}
 
-		return printVersion(logger, args)
-	},
+	versionCmd.Flags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
+
+	return versionCmd
 }
 
 func getVersion() string {
@@ -43,25 +40,21 @@ func getVersion() string {
 	return strings.TrimSpace(version.Main.Version)
 }
 
-func printVersion(logger log.Logger, args []string) error {
+func printVersion(cmd *cobra.Command, args []string) error {
 	fmt.Printf("cosmovisor version: %s\n", getVersion())
 
-	if err := Run(logger, append([]string{"version"}, args...)); err != nil {
+	if err := Run(cmd, append([]string{"version"}, args...)); err != nil {
 		return fmt.Errorf("failed to run version command: %w", err)
 	}
 
 	return nil
 }
 
-func printVersionJSON(logger log.Logger, args []string) error {
+func printVersionJSON(cmd *cobra.Command, args []string) error {
 	buf := new(strings.Builder)
 
-	// disable logger
-	zl := logger.Impl().(*zerolog.Logger)
-	logger = log.NewCustomLogger(zl.Level(zerolog.Disabled))
-
 	if err := Run(
-		logger,
+		cmd,
 		[]string{"version", "--long", "--output", "json"},
 		StdOutRunOption(buf),
 	); err != nil {

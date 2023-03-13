@@ -29,7 +29,7 @@ type coinsJsonTest struct {
 
 func TestFormatCoin(t *testing.T) {
 	var testcases []coinJsonTest
-	raw, err := os.ReadFile("../../x/tx/textual/internal/testdata/coin.json")
+	raw, err := os.ReadFile("../../x/tx/signing/textual/internal/testdata/coin.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -53,7 +53,7 @@ func TestFormatCoin(t *testing.T) {
 
 func TestFormatCoins(t *testing.T) {
 	var testcases []coinsJsonTest
-	raw, err := os.ReadFile("../../x/tx/textual/internal/testdata/coins.json")
+	raw, err := os.ReadFile("../../x/tx/signing/textual/internal/testdata/coins.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)

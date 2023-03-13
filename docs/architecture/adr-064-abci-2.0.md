@@ -103,6 +103,69 @@ type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseEx
 type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
 ```
 
+A new execution state, `voteExtensionState`, will be introduced and provided as
+the `Context` that is supplied to both handlers. It will contain relevant metadata
+such as the block height and block hash. Note, `voteExtensionState` is never
+committed and will exist as ephemeral state only in the context of a single block.
+
+If an application decides to implement `ExtendVoteHandler`, it must return a
+non-nil `ResponseExtendVote.VoteExtension`.
+
+Recall, an implementation of `ExtendVoteHandler` does NOT need to be deterministic,
+however, given a set of vote extensions, `VerifyVoteExtensionHandler` must be
+deterministic, otherwise the chain may suffer from liveness faults.
+
+Given the broad scope of potential implementations and use-cases of vote extensions,
+and how to verify them, most applications should choose to implement the handlers
+through a single handler type, which can have any number of dependencies injected
+such as keepers. In addition, this handler type could contain some notion of
+volatile vote extension state management which would assist in vote extension
+verification. This state management could be ephemeral or could be some form of
+on-disk persistence.
+
+Example:
+
+```go
+// VoteExtensionHandler implements an Oracle vote extension handler.
+type VoteExtensionHandler struct {
+	mk    MyKeeper
+	state VoteExtState // This could be a map or a DB connection object
+}
+
+// ExtendVoteHandler can do something with h.mk and possibly h.state to create
+// a vote extension, such as fetching a series of prices for supported assets.
+func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.RequestExtendVote) abci.ResponseExtendVote {
+	prices := GetPrices(ctx, h.mk.Assets())
+	bz, err := EncodePrices(prices)
+	if err != nil {
+		panic(fmt.Errorf("failed to encode prices for vote extension: %w", err))
+	}
+
+	// store our vote extension at the given height
+	SetPrices(h.state, req, bz)
+
+	return abci.ResponseExtendVote{VoteExtension: bz}
+}
+
+// VerifyVoteExtensionHandler can do something with h.state and req to verify
+// the req.VoteExtension field, such as ensuring the provided oracle prices are
+// within some valid range of our prices.
+func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension {
+	prices, err := DecodePrices(req.VoteExtension)
+	if err != nil {
+		log("failed to decode vote extension", "err", err)
+		return abci.ResponseVerifyVoteExtension{Status: REJECT}
+	}
+
+	if err := ValidatePrices(h.state, req, prices); err != nil {
+		log("failed to validate vote extension", "err", err)
+		return abci.ResponseVerifyVoteExtension{Status: REJECT}
+	}
+
+	return abci.ResponseVerifyVoteExtension{Status: ACCEPT}
+}
+```
+
 ### `FinalizeBlock`
 
 The existing ABCI methods `BeginBlock`, `DeliverTx`, and `EndBlock` have existed

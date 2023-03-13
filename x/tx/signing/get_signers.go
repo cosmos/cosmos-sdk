@@ -1,12 +1,14 @@
 package signing
 
 import (
+	"errors"
 	"fmt"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 // GetSignersContext is a context for retrieving the list of signers from a
@@ -25,16 +27,20 @@ type GetSignersOptions struct {
 }
 
 // NewGetSignersContext creates a new GetSignersContext using the provided options.
-func NewGetSignersContext(options GetSignersOptions) *GetSignersContext {
+func NewGetSignersContext(options GetSignersOptions) (*GetSignersContext, error) {
 	protoFiles := options.ProtoFiles
 	if protoFiles == nil {
 		protoFiles = protoregistry.GlobalFiles
 	}
 
-	return &GetSignersContext{
+	c := &GetSignersContext{
 		protoFiles:      protoFiles,
 		getSignersFuncs: map[protoreflect.FullName]getSignersFunc{},
 	}
+
+	err := c.init()
+
+	return c, err
 }
 
 type getSignersFunc func(proto.Message) []string
@@ -46,6 +52,38 @@ func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, 
 	}
 
 	return signersFields, nil
+}
+
+// init performs a dry run of getting all msg's signers. This has 2 benefits:
+// - it will error if any Msg has forgotten the "cosmos.msg.v1.signer"
+// annotation
+// - it will pre-populate the context's internal cache for getSignersFuncs
+// so that calling it in antehandlers will be faster.
+func (c *GetSignersContext) init() error {
+	var errs []error
+	c.protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
+		for i := 0; i < fd.Services().Len(); i++ {
+			sd := fd.Services().Get(i)
+			// We use the heuristic that services named "Msg" are exactly the
+			// ones that need the proto annotation check.
+			if sd.Name() != "Msg" {
+				continue
+			}
+
+			for j := 0; j < sd.Methods().Len(); j++ {
+				md := sd.Methods().Get(j).Input()
+				msg := dynamicpb.NewMessage(md)
+				_, err := c.GetSigners(msg)
+				if err != nil {
+					errs = append(errs, err)
+				}
+			}
+		}
+
+		return true
+	})
+
+	return errors.Join(errs...)
 }
 
 func (*GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {

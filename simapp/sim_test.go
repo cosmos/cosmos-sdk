@@ -293,6 +293,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
+		ChainId:       SimAppChainID,
 	})
 
 	_, _, err = simulation.SimulateFromSeed(

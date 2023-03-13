@@ -74,7 +74,7 @@ CometBFT passes transactions to the application through an interface called the 
               +--------+---+--------+
               |                     |
               |                     |
-              |     CometBFT      |
+              |    CometBFT         |
               |                     |
               |                     |
               +---------------------+

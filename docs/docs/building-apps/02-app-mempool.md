@@ -25,7 +25,7 @@ Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI+
 
 `PrepareProposal` handles construction of the block, meaning that when a proposer
 is preparing to propose a block, it requests the application to evaluate a
-`RequestPrepareProposal`, which contains a series of transactions from  CometBFT 's
+`RequestPrepareProposal`, which contains a series of transactions from CometBFT's
 mempool. At this point, the application has complete control over the proposal.
 It can modify, delete, and inject transactions from it's own app-side mempool into
 the proposal or even ignore all the transactions altogether. What the application

@@ -43,7 +43,7 @@ Here is a simplified view of how a transaction is processed by the application o
                                       +
                                       |
                                       |  Transaction relayed from the full-node's
-                                      |  CometBFT engine to the node's application
+                                      | CometBFT engine to the node's application
                                       |  via DeliverTx
                                       |
                                       |

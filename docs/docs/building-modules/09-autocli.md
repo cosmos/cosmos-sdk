@@ -52,10 +52,9 @@ autocli.EnhanceRootCommand(rootCmd, autoCliOpts)
 if err := rootCmd.Execute(); err != nil {
     fmt.Println(err)
 }
-
 ```
 
-To use the autocli package, import it in your project and reference it in your code. For example, the autocli.AppOptions struct and EnhanceRootCommand() method can be found in the app.go file located in the `client/v2/autocli directory`.
+To use the autocli package, import it in your project and reference it in your code. For example, the `autocli.AppOptions` struct and `EnhanceRootCommand()` method can be found in the app.go file located in the `client/v2/autocli directory`.
 
 ## Flags
 
@@ -63,14 +62,8 @@ To use the autocli package, import it in your project and reference it in your c
 
 To define flags for a message, you can use the `Builder.AddMessageFlags()` method. This method takes the `cobra.Command` instance and the message type as input, and generates flags for each field in the message.
 
-``` go reference
-binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
-if err != nil {
-    return nil, err
-}
-
-cmd.Args = binder.CobraArgs
-
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/main/client/v2/autocli/common.go#L44-L49
 ```
 
 The `binder` variable returned by the `AddMessageFlags()` method is used to bind the command-line arguments to the fields in the message.
@@ -87,7 +80,6 @@ For example, given the following protobuf definition for a service:
 service MyService {
   rpc MyMethod(MyRequest) returns (MyResponse) {}
 }
-
 ```
 
 `autocli` will generate a command named `my-method` for the `MyMethod` method. The command will have flags for each field in the `MyRequest` message.
@@ -104,28 +96,10 @@ To add a custom command or query, you can use the `Builder.AddCustomCommand` or 
 
 By default, `autocli` generates a command for each method in your gRPC service. However, you can specify subcommands to group related commands together. To specify subcommands, you can use the `autocliv1.ServiceCommandDescriptor` struct.
 
-For example, suppose you have a service with two methods: `GetTest` and `GetTest2`. You can group these methods together under a `get` subcommand using the following code
+This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to group related commands together and specify subcommands in your gRPC service by defining an instance of `autocliv1.ModuleOptions` in your appmodule.AppModule implementation.
 
 ```go reference
- // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface. 
- func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions { 
- 	return &autocliv1.ModuleOptions{ 
- 		Tx: &autocliv1.ServiceCommandDescriptor{ 
- 			Service: govv1.Msg_ServiceDesc.ServiceName, 
- 			// map v1beta1 as a sub-command 
- 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{ 
- 				"v1beta1": {Service: govv1beta1.Msg_ServiceDesc.ServiceName}, 
- 			}, 
- 		}, 
- 		Query: &autocliv1.ServiceCommandDescriptor{ 
- 			Service: govv1.Query_ServiceDesc.ServiceName, 
- 			// map v1beta1 as a sub-command 
- 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{ 
- 				"v1beta1": {Service: govv1beta1.Query_ServiceDesc.ServiceName}, 
- 			}, 
- 		}, 
- 	} 
- }
+https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689fd/x/gov/autocli.go#L9-L27
 ```
 
 With this configuration, you can invoke the `GetTest` method by running `./app tx myservice get test`, and you can invoke the `GetTest2` method by running `./app tx myservice get test2`.

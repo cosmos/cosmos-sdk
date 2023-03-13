@@ -2,13 +2,17 @@
 
 >TODO: Replace with valid ICS number and possibly move to new location.
 
-* [Changelog](#changelog)
-* [Abstract](#abstract)
-* [Preliminary](#preliminary)
-* [Specification](#specification)
-* [Future Adaptations](#future-adaptations)
-* [API](#api)
-* [References](#references)
+- [ICS 030: Cosmos Signed Messages](#ics-030-cosmos-signed-messages)
+  - [Status](#status)
+  - [Changelog](#changelog)
+  - [Abstract](#abstract)
+  - [Preliminary](#preliminary)
+  - [Specification](#specification)
+  - [Future Adaptations](#future-adaptations)
+  - [API](#api)
+    - [**cosmosSignBytes**](#cosmossignbytes)
+    - [Examples](#examples)
+  - [References](#references)
 
 ## Status
 
@@ -87,7 +91,7 @@ to the Cosmos chain identifier. The user-agent should **refuse** signing if the
 `@chain_id` field does not match the currently active chain! The `@type` field
 must equal the constant `"message"`. The `@type` field corresponds to the type of
 structure the user will be signing in an application. For now, a user is only
-allowed to sign bytes of valid ASCII text ([see here](https://github.com/tendermint/tendermint/blob/master/libs/common/string.go#L61-L74)).
+allowed to sign bytes of valid ASCII text ([see here](https://github.com/tendermint/tendermint/blob/master/libs/common/string.go#L61-L74)). <!-- this is a dead link -->
 However, this will change and evolve to support additional application-specific
 structures that are human-readable and machine-verifiable ([see Future Adaptations](#futureadaptations)).
 

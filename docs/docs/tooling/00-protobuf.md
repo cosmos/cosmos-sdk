@@ -47,7 +47,7 @@ Next is the `proto/` directory where all of our protobuf files live. In here the
 ├── buf.md
 ├── buf.yaml
 ├── cosmos
-└── tendermint
+└── cometbft
 ```
 
 The above diagram all the files and directories within the Cosmos SDK `proto/` directory. 

@@ -13,7 +13,7 @@
 * Dec 06, 2022: Re-ordering of envelope screens.
 * Dec 14, 2022: Mention exceptions for invertability.
 * Jan 23, 2023: Switch Screen.Text to Title+Content.
-* Mar 06, 2023: Introduce a spec version initialized to 1.
+* Mar 06, 2023: Introduce a spec version initialized to 0.
 
 ## Status
 

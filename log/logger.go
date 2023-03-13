@@ -51,7 +51,7 @@ func NewNopLogger() Logger {
 // NewLogger returns a new logger that writes to the given destination.
 //
 // Typical usage from a main function is:
-//    logger := log.NewLogger(os.Stderr)
+// logger := log.NewLogger(os.Stderr)
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
@@ -111,10 +111,12 @@ func FilterKeys(logger Logger, filter FilterFunc) Logger {
 	}
 
 	filteredLogger := zl.Hook(zerolog.HookFunc(func(e *zerolog.Event, lvl zerolog.Level, _ string) {
-		keys, err := e.GetKeys()
-		if err != nil {
-			panic(err)
-		}
+		// TODO wait for https://github.com/rs/zerolog/pull/527 to be merged
+		// keys, err := e.GetKeys()
+		// if err != nil {
+		// 	panic(err)
+		// }
+		keys := []string{}
 
 		for _, key := range keys {
 			if filter(key, lvl.String()) {

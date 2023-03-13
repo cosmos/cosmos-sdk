@@ -9,7 +9,7 @@ import (
 )
 
 // FilterFunc is a function that returns true if the log level is filtered for the given key
-// When the filter returns true, the log entry is discarded
+// When the filter returns true, the log entry is discarded.
 type FilterFunc func(key, level string) bool
 
 const defaultLogLevelKey = "*"

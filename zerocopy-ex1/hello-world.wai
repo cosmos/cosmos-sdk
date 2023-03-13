@@ -1,0 +1,5 @@
+// hello-world.wai
+
+/// Add two numbers
+add: func(a: u32, b: u32) -> u32
+register: func(f: func() -> i32) -> i32

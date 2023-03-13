@@ -107,3 +107,8 @@ enum SendResult {
 }
 
 type ClientSendFn = extern fn(SendPacket) -> Result<SendResult>;
+
+
+type UnaryFn = extern fn(ctx: *const u8, req: *const u8, res: *mut u8) -> i32;
+
+type StreamingFn = extern fn(ctx: *const u8, req: *const u8, res: *mut u8, send_recv: extern fn() -> i32) -> i32;

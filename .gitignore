@@ -59,3 +59,7 @@ debug_container.log
 *.synctex.gz
 /x/genutil/config/priv_validator_key.json
 /x/genutil/data/priv_validator_state.json
+/zerocopy-ex1/target/
+/zerocopy-poc/target/debug/.fingerprint/
+/zerocopy-poc/target/debug/deps/
+/zerocopy-poc/target/debug/incremental/zerocopy_poc-18wgvaacle1d3/

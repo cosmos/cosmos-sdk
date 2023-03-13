@@ -63,7 +63,7 @@ To use the autocli package, import it in your project and reference it in your c
 To define flags for a message, you can use the `Builder.AddMessageFlags()` method. This method takes the `cobra.Command` instance and the message type as input, and generates flags for each field in the message.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/client/v2/autocli/common.go#L44-L49
+https://github.com/cosmos/cosmos-sdk/blob/1ac260cb1c6f05666f47e67f8b2cfd6229a55c3b/client/v2/autocli/common.go#L44-L49
 ```
 
 The `binder` variable returned by the `AddMessageFlags()` method is used to bind the command-line arguments to the fields in the message.

@@ -12,6 +12,7 @@ import (
 func TestVersionCommand_Error(t *testing.T) {
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmovisor")
 
+	rootCmd := NewRootCmd()
 	rootCmd.SetArgs([]string{"version"})
 
 	out := bytes.NewBufferString("")

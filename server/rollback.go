@@ -33,7 +33,6 @@ application.
 			if err != nil {
 				return err
 			}
-
 			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 			// rollback CometBFT state
 			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)

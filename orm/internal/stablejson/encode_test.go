@@ -10,12 +10,12 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"github.com/cosmos/cosmos-proto/any"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
 )
 
 func TestStableJSON(t *testing.T) {
-	msg, err := any.New(&bankv1beta1.MsgSend{
+	msg, err := anyutil.New(&bankv1beta1.MsgSend{
 		FromAddress: "foo213325",
 		ToAddress:   "foo32t5sdfh",
 		Amount: []*basev1beta1.Coin{

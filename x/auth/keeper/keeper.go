@@ -86,7 +86,7 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	bech32Codec := newBech32Codec(bech32Prefix)
+	bech32Codec := NewBech32Codec(bech32Prefix)
 
 	return AccountKeeper{
 		storeKey:   storeKey,
@@ -101,6 +101,12 @@ func NewAccountKeeper(
 // GetAuthority returns the x/auth module's authority.
 func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
+}
+
+// GetAddressCodec returns the x/auth module's address.
+// x/auth is tied to bech32 encoded user accounts
+func (ak AccountKeeper) GetAddressCodec() address.Codec {
+	return ak.addressCdc
 }
 
 // Logger returns a module-specific logger.

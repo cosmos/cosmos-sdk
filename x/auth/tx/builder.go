@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -37,6 +38,7 @@ type wrapper struct {
 	txBodyHasUnknownNonCriticals bool
 
 	signers []sdk.AccAddress
+	msgsV2  []protov2.Message
 }
 
 var (
@@ -70,6 +72,10 @@ func newBuilder(cdc codec.Codec) *wrapper {
 
 func (w *wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
+}
+
+func (w *wrapper) GetMsgsV2() []protov2.Message {
+	return w.msgsV2
 }
 
 func (w *wrapper) ValidateBasic() error {
@@ -171,7 +177,13 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 
 func (w *wrapper) GetSigners() []sdk.AccAddress {
 	if w.signers == nil {
-		signers := w.tx.GetSigners(w.cdc)
+		signers, msgV2, err := w.tx.GetSigners(w.cdc)
+		if err != nil {
+			panic(err)
+		}
+
+		w.msgsV2 = msgV2
+
 		for _, signer := range signers {
 			signerBz := sdk.MustAccAddressFromBech32(signer)
 			w.signers = append(w.signers, signerBz)

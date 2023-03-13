@@ -89,7 +89,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	now := ctx.BlockTime()
 
 	for i, msg := range msgs {
-		signers, err := k.cdc.GetMsgSigners(msg)
+		signers, _, err := k.cdc.GetMsgAnySigners(msg)
 		if err != nil {
 			return nil, err
 		}

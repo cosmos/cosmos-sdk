@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -129,7 +130,11 @@ func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
 
-func (ac *AminoCodec) GetMsgSigners(*types.Any) ([]string, error) {
+func (ac *AminoCodec) GetMsgAnySigners(*types.Any) ([]string, protov2.Message, error) {
+	return nil, nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) GetMsgSigners(protov2.Message) ([]string, error) {
 	return nil, fmt.Errorf("amino codec does not support getting msg signers")
 }
 

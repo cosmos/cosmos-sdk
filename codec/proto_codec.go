@@ -272,31 +272,21 @@ func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
 }
 
-func (pc ProtoCodec) GetMsgSigners(msg *types.Any) ([]string, error) {
-	//if msgv2, ok := msg.(protov2.Message); ok {
-	//	return pc.getSignersCtx.GetSigners(msgv2)
-	//} else if msgv1, ok := msg.(proto.Message); ok {
-	//	bz, err := proto.Marshal(msgv1)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	return pc.getSignersCtx.GetSignersForAny(&anypb.Any{
-	//		TypeUrl: string("/" + proto.MessageName(msgv1)),
-	//		Value:   bz,
-	//	})
-	//} else {
-	//	return nil, fmt.Errorf("%T is not a proto.Message", msg)
-	//}
+func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]string, proto.Message, error) {
 	msgv2, err := anyutil.Unpack(&anypb.Any{
 		TypeUrl: msg.TypeUrl,
 		Value:   msg.Value,
 	}, pc.interfaceRegistry, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return pc.getSignersCtx.GetSigners(msgv2)
+	signers, err := pc.getSignersCtx.GetSigners(msgv2)
+	return signers, msgv2, err
+}
+
+func (pc *ProtoCodec) GetMsgSigners(msg proto.Message) ([]string, error) {
+	return pc.getSignersCtx.GetSigners(msg)
 }
 
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec

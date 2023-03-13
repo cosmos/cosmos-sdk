@@ -1,6 +1,8 @@
 package tx
 
 import (
+	protov2 "google.golang.org/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -32,15 +34,18 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 // GetSigners retrieves all the signers of a tx.
 // This includes all unique signers of the messages (in order),
 // as well as the FeePayer (if specified and not already included).
-func (t *Tx) GetSigners(codec codec.Codec) []string {
+func (t *Tx) GetSigners(codec codec.Codec) ([]string, []protov2.Message, error) {
 	var signers []string
 	seen := map[string]bool{}
 
+	var msgsv2 []protov2.Message
 	for _, msg := range t.Body.Messages {
-		signers, err := codec.GetMsgSigners(msg)
+		signers, msgv2, err := codec.GetMsgAnySigners(msg)
 		if err != nil {
-			panic(err)
+			return nil, nil, err
 		}
+
+		msgsv2 = append(msgsv2, msgv2)
 
 		for _, signer := range signers {
 			if !seen[signer] {
@@ -58,7 +63,7 @@ func (t *Tx) GetSigners(codec codec.Codec) []string {
 		seen[feePayer] = true
 	}
 
-	return signers
+	return signers, msgsv2, nil
 }
 
 func (t *Tx) GetGas() uint64 {
@@ -75,7 +80,12 @@ func (t *Tx) FeePayer(codec codec.Codec) string {
 		return feePayer
 	}
 	// use first signer as default if no payer specified
-	return t.GetSigners(codec)[0]
+	signers, _, err := t.GetSigners(codec)
+	if err != nil {
+		panic(err)
+	}
+
+	return signers[0]
 }
 
 func (t *Tx) FeeGranter() sdk.AccAddress {

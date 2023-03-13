@@ -46,7 +46,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, err.Error())
 		}
 
-		signers, err := keeper.cdc.GetMsgSigners(msg)
+		signers, _, err := keeper.cdc.GetMsgAnySigners(msg)
 		if err != nil {
 			return v1.Proposal{}, err
 		}

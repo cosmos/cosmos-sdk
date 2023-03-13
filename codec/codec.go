@@ -3,6 +3,7 @@ package codec
 import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -19,7 +20,11 @@ type (
 		BinaryCodec
 		JSONCodec
 
-		GetMsgSigners(msg *types.Any) ([]string, error)
+		// GetMsgAnySigners returns the signers of a given message as well as the
+		// decoded google.golang.org/protobuf/proto.Message that was used to
+		// extract the signers so that this can be used in other contexts.
+		GetMsgAnySigners(msg *types.Any) ([]string, protov2.Message, error)
+		GetMsgSigners(msg protov2.Message) ([]string, error)
 
 		private()
 	}

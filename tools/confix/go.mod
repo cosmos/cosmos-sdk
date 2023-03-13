@@ -8,7 +8,7 @@ require (
 	github.com/creachadair/tomledit v0.0.24
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
+	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0
 	gotest.tools/v3 v3.4.0
 )
 
@@ -18,8 +18,8 @@ require (
 	cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/log v0.0.0-20230313123454-0fe816b71a62 // indirect
-	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 // indirect
+	cosmossdk.io/log v0.1.0 // indirect
+	cosmossdk.io/math v1.0.0-rc.0 // indirect
 	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44 // indirect
 	cosmossdk.io/x/tx v0.2.3-0.20230309163709-87da587416ba // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect

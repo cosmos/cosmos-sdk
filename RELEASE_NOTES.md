@@ -4,13 +4,13 @@
 
 💬 [**Release Discussion**](https://github.com/cosmos/community)
 
-# 📝 Changelog
+## 📝 Changelog
 
 Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.47.x/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/release/v0.46.x...release/v0.47.x) from last release.
 
 Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release/v0.47.x/UPGRADING.md) when migrating from `v0.46.x` to `v0.47.0`.
 
-# 🚀 Highlights
+## 🚀 Highlights
 
 * Upgrade to CometBFT [v0.37.0](https://github.com/cometbft/cometbft/blob/v0.37.0/CHANGELOG.md).
     * With the notable introduction of [ABCI 1.0](https://medium.com/the-interchain-foundation/tendermints-new-application-blockchain-interface-abci-86d46bd6f987).
@@ -43,7 +43,7 @@ Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release
 * Refactoring of tests in the SDK and addition of the [`simtestutil` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/testutil/sims), for facilitating testing without depending on simapp.
     * Any dependencies on `simapp` in an application must be removed going forward.
 
-# ❤️ Contributors
+## ❤️ Contributors
 
 * Binary Builders ([@binary_builders](https://twitter.com/binary_builders))
 * Crypto.com ([@cronos_chain](https://twitter.com/cronos_chain))
@@ -52,4 +52,5 @@ Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release
 * Osmosis ([@osmosiszone](https://twitter.com/osmosiszone))
 * Regen Network ([@regen_network](https://twitter.com/RegenNetworkDev))
 
-This list is non exhaustive and ordered alphabetically.
+This list is non exhaustive and ordered alphabetically.  
+Thank you to everyone who contributed to this release!

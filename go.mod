@@ -152,9 +152,6 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
-// Here are the short-lived replace for the Cosmos SDK
-replace cosmossdk.io/api => ./api
-
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring

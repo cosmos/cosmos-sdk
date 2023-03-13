@@ -64,7 +64,7 @@ func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
 		cmtcfg.DefaultConfig(),
-		log.NewLogger(),
+		log.NewLogger(os.Stdout), // TODO(mr): update NewDefaultContext to accept log destination.
 	)
 }
 
@@ -155,10 +155,10 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	var logger log.Logger
 	if serverCtx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
-		zl := zerolog.New(os.Stdout).With().Timestamp().Logger()
+		zl := zerolog.New(cmd.OutOrStdout()).With().Timestamp().Logger()
 		logger = log.NewCustomLogger(zl)
 	} else {
-		logger = log.NewLogger()
+		logger = log.NewLogger(cmd.OutOrStdout())
 	}
 
 	// set filter level or keys for the logger if any
@@ -350,30 +350,6 @@ func ExternalIP() (string, error) {
 		}
 	}
 	return "", errors.New("are you connected to the network?")
-}
-
-// TrapSignal traps SIGINT and SIGTERM and terminates the server correctly.
-func TrapSignal(cleanupFunc func()) {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		sig := <-sigs
-
-		if cleanupFunc != nil {
-			cleanupFunc()
-		}
-		exitCode := 128
-
-		switch sig {
-		case syscall.SIGINT:
-			exitCode += int(syscall.SIGINT)
-		case syscall.SIGTERM:
-			exitCode += int(syscall.SIGTERM)
-		}
-
-		os.Exit(exitCode)
-	}()
 }
 
 // ListenForQuitSignals listens for SIGINT and SIGTERM. When a signal is received,

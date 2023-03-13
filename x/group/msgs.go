@@ -25,13 +25,6 @@ func (m MsgCreateGroup) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgCreateGroup.
-func (m MsgCreateGroup) GetSigners() []sdk.AccAddress {
-	admin := sdk.MustAccAddressFromBech32(m.Admin)
-
-	return []sdk.AccAddress{admin}
-}
-
 // ValidateBasic does a sanity check on the provided data
 func (m MsgCreateGroup) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
@@ -68,13 +61,6 @@ var (
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupAdmin) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
-}
-
-// GetSigners returns the expected signers for a MsgUpdateGroupAdmin.
-func (m MsgUpdateGroupAdmin) GetSigners() []sdk.AccAddress {
-	admin := sdk.MustAccAddressFromBech32(m.Admin)
-
-	return []sdk.AccAddress{admin}
 }
 
 // ValidateBasic does a sanity check on the provided data.
@@ -114,13 +100,6 @@ func (m MsgUpdateGroupMetadata) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgUpdateGroupMetadata.
-func (m MsgUpdateGroupMetadata) GetSigners() []sdk.AccAddress {
-	admin := sdk.MustAccAddressFromBech32(m.Admin)
-
-	return []sdk.AccAddress{admin}
-}
-
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupMetadata) ValidateBasic() error {
 	if m.GroupId == 0 {
@@ -150,13 +129,6 @@ func (m MsgUpdateGroupMembers) GetSignBytes() []byte {
 }
 
 var _ sdk.Msg = &MsgUpdateGroupMembers{}
-
-// GetSigners returns the expected signers for a MsgUpdateGroupMembers.
-func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
-	admin := sdk.MustAccAddressFromBech32(m.Admin)
-
-	return []sdk.AccAddress{admin}
-}
 
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupMembers) ValidateBasic() error {
@@ -236,12 +208,6 @@ func (m MsgCreateGroupWithPolicy) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgCreateGroupWithPolicy.
-func (m MsgCreateGroupWithPolicy) GetSigners() []sdk.AccAddress {
-	admin := sdk.MustAccAddressFromBech32(m.Admin)
-	return []sdk.AccAddress{admin}
-}
-
 // ValidateBasic does a sanity check on the provided data
 func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
@@ -267,12 +233,6 @@ var (
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
-}
-
-// GetSigners returns the expected signers for a MsgCreateGroupPolicy.
-func (m MsgCreateGroupPolicy) GetSigners() []sdk.AccAddress {
-	admin := sdk.MustAccAddressFromBech32(m.Admin)
-	return []sdk.AccAddress{admin}
 }
 
 // ValidateBasic does a sanity check on the provided data
@@ -542,16 +502,6 @@ func (m MsgSubmitProposal) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgSubmitProposal.
-func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	addrs, err := m.getProposerAccAddresses()
-	if err != nil {
-		panic(err)
-	}
-
-	return addrs
-}
-
 // ValidateBasic does a sanity check on the provided proposal, such as
 // verifying proposer addresses, and performing ValidateBasic on each
 // individual `sdk.Msg`.
@@ -705,13 +655,6 @@ func (m MsgExec) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgExec.
-func (m MsgExec) GetSigners() []sdk.AccAddress {
-	signer := sdk.MustAccAddressFromBech32(m.Executor)
-
-	return []sdk.AccAddress{signer}
-}
-
 // ValidateBasic does a sanity check on the provided data
 func (m MsgExec) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Executor)
@@ -732,13 +675,6 @@ var (
 // GetSignBytes Implements Msg
 func (m MsgLeaveGroup) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
-}
-
-// GetSigners returns the expected signers for a MsgLeaveGroup
-func (m MsgLeaveGroup) GetSigners() []sdk.AccAddress {
-	signer := sdk.MustAccAddressFromBech32(m.Address)
-
-	return []sdk.AccAddress{signer}
 }
 
 // ValidateBasic does a sanity check on the provided data

@@ -115,12 +115,6 @@ func (m MsgSubmitProposal) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSigners returns the expected signers for a MsgSubmitProposal.
-func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
-	return []sdk.AccAddress{proposer}
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)
@@ -153,12 +147,6 @@ func (msg MsgDeposit) ValidateBasic() error {
 func (msg MsgDeposit) GetSignBytes() []byte {
 	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
-}
-
-// GetSigners returns the expected signers for a MsgDeposit.
-func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
-	return []sdk.AccAddress{depositor}
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
@@ -264,12 +252,6 @@ func (c MsgExecLegacyContent) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSigners returns the expected signers for a MsgExecLegacyContent.
-func (c MsgExecLegacyContent) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(c.Authority)
-	return []sdk.AccAddress{authority}
-}
-
 // ValidateBasic implements the sdk.Msg interface.
 func (c MsgExecLegacyContent) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(c.Authority)
@@ -330,10 +312,4 @@ func (msg MsgCancelProposal) ValidateBasic() error {
 func (msg MsgCancelProposal) GetSignBytes() []byte {
 	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
-}
-
-// GetSigners implements Msg
-func (msg MsgCancelProposal) GetSigners() []sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(msg.Proposer)
-	return []sdk.AccAddress{proposer}
 }

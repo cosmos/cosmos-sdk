@@ -51,12 +51,6 @@ func (msg MsgSend) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-// GetSigners Implements Msg.
-func (msg MsgSend) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{fromAddress}
-}
-
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
 func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
 	return &MsgMultiSend{Inputs: in, Outputs: out}
@@ -85,17 +79,6 @@ func (msg MsgMultiSend) ValidateBasic() error {
 // GetSignBytes Implements Msg.
 func (msg MsgMultiSend) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// GetSigners Implements Msg.
-func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
-	addrs := make([]sdk.AccAddress, len(msg.Inputs))
-	for i, in := range msg.Inputs {
-		inAddr, _ := sdk.AccAddressFromBech32(in.Address)
-		addrs[i] = inAddr
-	}
-
-	return addrs
 }
 
 // ValidateBasic - validate transaction input
@@ -211,12 +194,6 @@ func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefau
 // GetSignBytes implements the LegacyMsg interface.
 func (msg MsgSetSendEnabled) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// GetSigners returns the expected signers for MsgSoftwareUpgrade.
-func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
 }
 
 // ValidateBasic runs basic validation on this MsgSetSendEnabled.

@@ -120,12 +120,6 @@ func (m MsgSubmitProposal) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSigners returns the expected signers for a MsgSubmitProposal.
-func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
-	return []sdk.AccAddress{proposer}
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content Content
@@ -158,12 +152,6 @@ func (msg MsgDeposit) ValidateBasic() error {
 func (msg MsgDeposit) GetSignBytes() []byte {
 	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
-}
-
-// GetSigners returns the expected signers for a MsgDeposit.
-func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
-	return []sdk.AccAddress{depositor}
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal

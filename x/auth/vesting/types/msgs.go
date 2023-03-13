@@ -63,12 +63,6 @@ func (msg MsgCreateVestingAccount) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-// GetSigners returns the expected signers for a MsgCreateVestingAccount.
-func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{addr}
-}
-
 // NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
 //
 //nolint:interfacer
@@ -106,12 +100,6 @@ func (msg MsgCreatePermanentLockedAccount) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-// GetSigners returns the expected signers for a MsgCreatePermanentLockedAccount.
-func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
-	from, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{from}
-}
-
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
 //
 //nolint:interfacer
@@ -122,15 +110,6 @@ func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTi
 		StartTime:      startTime,
 		VestingPeriods: periods,
 	}
-}
-
-// GetSigners returns the expected signers for a MsgCreatePeriodicVestingAccount.
-func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{from}
 }
 
 // GetSignBytes returns the bytes all expected signers must sign over for a

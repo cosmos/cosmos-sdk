@@ -26,12 +26,6 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
 	}
 }
 
-// GetSigners returns the expected signers for MsgUnjail.
-func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
-	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddr)
-	return []sdk.AccAddress{sdk.AccAddress(valAddr)}
-}
-
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgUnjail) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)

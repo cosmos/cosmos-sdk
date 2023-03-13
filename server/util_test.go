@@ -434,7 +434,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run StartCmd.
 	cmd = server.StartCmd(nil, tempDir)
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		ctx, err := server.CreateServerContextFromConfig(cmd, "", nil, cmtcfg.DefaultConfig())
+		ctx, err := server.InterceptConfigsAndCreateContext(cmd, "", nil, cmtcfg.DefaultConfig())
 		if err != nil {
 			return err
 		}

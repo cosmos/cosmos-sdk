@@ -24,17 +24,15 @@ import (
 
 	"cosmossdk.io/math"
 	tmlog "github.com/cometbft/cometbft/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-<<<<<<< HEAD
-=======
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
->>>>>>> 6a0358607 (fix: remove previous header in Prepare/Process Proposal + provide chain id in baseapp + fix context for verifying txs (#15303))
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

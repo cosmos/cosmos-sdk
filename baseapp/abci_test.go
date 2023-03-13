@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -42,13 +43,8 @@ func TestABCI_Info(t *testing.T) {
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-<<<<<<< HEAD
-	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
-=======
 	logger := log.NewTestLogger(t)
 	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
->>>>>>> 6a0358607 (fix: remove previous header in Prepare/Process Proposal + provide chain id in baseapp + fix context for verifying txs (#15303))
 
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")

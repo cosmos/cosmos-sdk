@@ -11,6 +11,9 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/gogoproto/proto"
+	"golang.org/x/exp/maps"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -19,8 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
-	"github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 )
 
 type (
@@ -141,13 +142,9 @@ type BaseApp struct { //nolint: maligned
 
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
-<<<<<<< HEAD
 	abciListeners []ABCIListener
-=======
-	abciListeners []storetypes.ABCIListener
 
 	chainID string
->>>>>>> 6a0358607 (fix: remove previous header in Prepare/Process Proposal + provide chain id in baseapp + fix context for verifying txs (#15303))
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -355,11 +352,7 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
-<<<<<<< HEAD
-	emptyHeader := tmproto.Header{}
-=======
-	emptyHeader := cmtproto.Header{ChainID: app.chainID}
->>>>>>> 6a0358607 (fix: remove previous header in Prepare/Process Proposal + provide chain id in baseapp + fix context for verifying txs (#15303))
+	emptyHeader := tmproto.Header{ChainID: app.chainID}
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(runTxModeCheck, emptyHeader)

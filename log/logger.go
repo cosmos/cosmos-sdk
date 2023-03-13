@@ -7,15 +7,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Defines commons keys for logging
+// Defines commons keys for logging.
 const ModuleKey = "module"
 
-// ContextKey is used to store the logger in the context
+// ContextKey is used to store the logger in the context.
 var ContextKey struct{}
 
-// Logger is the Cosmos SDK logger interface
-// It maintains as much backward compatibility with the CometBFT logger as possible
-// All functionalities of the logger are available through the Impl() method
+// Logger is the Cosmos SDK logger interface.
+// It maintains as much backward compatibility with the CometBFT logger as possible.
+// All functionalities of the logger are available through the Impl() method.
 type Logger interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.
 	// The key of the tuple must be a string.
@@ -29,12 +29,12 @@ type Logger interface {
 	// The key of the tuple must be a string.
 	Debug(msg string, keyVals ...any)
 
-	// With returns a new wrapped logger with additional context provided by a set
+	// With returns a new wrapped logger with additional context provided by a set.
 	With(keyVals ...any) Logger
 
-	// Impl returns the underlying logger implementation
-	// It is used to access the full functionalities of the underlying logger
-	// Advanced users can type cast the returned value to the actual logger
+	// Impl returns the underlying logger implementation.
+	// It is used to access the full functionalities of the underlying logger.
+	// Advanced users can type cast the returned value to the actual logger.
 	Impl() any
 }
 
@@ -51,7 +51,7 @@ func NewNopLogger() Logger {
 // NewLogger returns a new logger that writes to the given destination.
 //
 // Typical usage from a main function is:
-//    logger := log.NewLogger(os.Stderr)
+// logger := log.NewLogger(os.Stderr)
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
@@ -102,18 +102,23 @@ func (l zeroLogWrapper) Impl() interface{} {
 }
 
 // FilterKeys returns a new logger that filters out all key/value pairs that do not match the filter.
-// This functions assumes that the logger is a zerolog.Logger, which is the case for the logger returned by log.NewLogger()
-// NOTE: filtering has a performance impact on the logger
-func FilterKeys(logger Logger, filter func(key, level string) bool) Logger {
+// This functions assumes that the logger is a zerolog.Logger, which is the case for the logger returned by log.NewLogger().
+// NOTE: filtering has a performance impact on the logger.
+func FilterKeys(logger Logger, filter FilterFunc) Logger {
 	zl, ok := logger.Impl().(*zerolog.Logger)
 	if !ok {
 		panic("logger is not a zerolog.Logger")
 	}
 
 	filteredLogger := zl.Hook(zerolog.HookFunc(func(e *zerolog.Event, lvl zerolog.Level, _ string) {
-		// TODO wait for https://github.com/rs/zerolog/pull/527 to be merged
-		// keys := e.GetKeys()
+		// TODO(@julienrbrt) wait for https://github.com/rs/zerolog/pull/527 to be merged
+		// keys, err := e.GetKeys()
+		// if err != nil {
+		// 	panic(err)
+		// }
+
 		keys := []string{}
+
 		for _, key := range keys {
 			if filter(key, lvl.String()) {
 				e.Discard()

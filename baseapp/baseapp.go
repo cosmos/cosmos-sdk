@@ -854,7 +854,7 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
 	// we set the signer attribute as the sender
-	signers, err := cdc.GetMsgSigners(msgV2)
+	signers, err := cdc.GetMsgV2Signers(msgV2)
 	if err != nil {
 		panic(err)
 	}

@@ -134,7 +134,11 @@ func (ac *AminoCodec) GetMsgAnySigners(*types.Any) ([]string, protov2.Message, e
 	return nil, nil, fmt.Errorf("amino codec does not support getting msg signers")
 }
 
-func (ac *AminoCodec) GetMsgSigners(protov2.Message) ([]string, error) {
+func (ac *AminoCodec) GetMsgV1Signers(proto.Message) ([]string, protov2.Message, error) {
+	return nil, nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) GetMsgV2Signers(protov2.Message) ([]string, error) {
 	return nil, fmt.Errorf("amino codec does not support getting msg signers")
 }
 

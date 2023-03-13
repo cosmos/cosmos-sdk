@@ -68,7 +68,7 @@ func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Cod
 		// duplicates, so the code below is equivalent to:
 		// `msgs[i].GetSigners()[0] == groupPolicyAcc`
 		// but we prefer to loop through all GetSigners just to be sure.
-		signers, _, err := cdc.GetMsgAnySigners(msgs[i])
+		signers, _, err := cdc.GetMsgV1Signers(msgs[i])
 		if err != nil {
 			return err
 		}

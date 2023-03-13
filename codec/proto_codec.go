@@ -285,8 +285,21 @@ func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]string, proto.Message, 
 	return signers, msgv2, err
 }
 
-func (pc *ProtoCodec) GetMsgSigners(msg proto.Message) ([]string, error) {
+func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([]string, error) {
 	return pc.getSignersCtx.GetSigners(msg)
+}
+
+func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([]string, proto.Message, error) {
+	if msgV2, ok := msg.(proto.Message); ok {
+		signers, err := pc.getSignersCtx.GetSigners(msgV2)
+		return signers, msgV2, err
+	} else {
+		a, err := types.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, nil, err
+		}
+		return pc.GetMsgAnySigners(a)
+	}
 }
 
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec

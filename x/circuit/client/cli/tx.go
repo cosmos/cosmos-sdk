@@ -81,15 +81,10 @@ func AuthorizeCircuitBreakerCmd() *cobra.Command {
 // TripCircuitBreakerCmd returns a CLI command handler for creating a MsgTripCircuitBreaker transaction.
 func TripCircuitBreakerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "Disable [type_url]",
-		Short: "Disable a message from being executed",
-		Long: `Disable a message  from entering the mempool and/or being executed
-		
-		Example: 
-
-		<app> circuit authorize trip "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"
-		`,
-		Args: cobra.ExactArgs(1),
+		Use:     "disable [type_url]",
+		Short:   "disable a message from being executed",
+		Example: fmt.Sprintf(`%s circuit authorize trip "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
 				return err
@@ -119,14 +114,10 @@ func TripCircuitBreakerCmd() *cobra.Command {
 // ResetCircuitBreakerCmd returns a CLI command handler for creating a MsgRestCircuitBreaker transaction.
 func ResetCircuitBreakerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "reset [type_url]",
-		Short: "Enable a message to be executed",
-		Long: `Enable a message  that was disabled from entering the mempool and/or being executed
-		
-		Example: 
+		Use:     "reset [type_url]",
+		Short:   "Enable a message to be executed",
+		Example: fmt.Sprintf(`%s circuit authorize reset "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 
-		<app> circuit authorize reset "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"
-		`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {

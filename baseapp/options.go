@@ -91,6 +91,11 @@ func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetMempool(mempool) }
 }
 
+// SetChainID sets the chain ID in BaseApp.
+func SetChainID(chainID string) func(*BaseApp) {
+	return func(app *BaseApp) { app.chainID = chainID }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

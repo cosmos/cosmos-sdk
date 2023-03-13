@@ -42,8 +42,13 @@ func TestABCI_Info(t *testing.T) {
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
+<<<<<<< HEAD
 	logger := defaultLogger()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
+=======
+	logger := log.NewTestLogger(t)
+	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
+>>>>>>> 6a0358607 (fix: remove previous header in Prepare/Process Proposal + provide chain id in baseapp + fix context for verifying txs (#15303))
 
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
@@ -62,8 +67,13 @@ func TestABCI_InitChain(t *testing.T) {
 		Data: key,
 	}
 
+	// initChain is nil and chain ID is wrong - panics
+	require.Panics(t, func() {
+		app.InitChain(abci.RequestInitChain{ChainId: "wrong-chain-id"})
+	})
+
 	// initChain is nil - nothing happens
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{ChainId: "test-chain-id"})
 	res := app.Query(query)
 	require.Equal(t, 0, len(res.Value))
 

@@ -141,7 +141,13 @@ type BaseApp struct { //nolint: maligned
 
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
+<<<<<<< HEAD
 	abciListeners []ABCIListener
+=======
+	abciListeners []storetypes.ABCIListener
+
+	chainID string
+>>>>>>> 6a0358607 (fix: remove previous header in Prepare/Process Proposal + provide chain id in baseapp + fix context for verifying txs (#15303))
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -349,7 +355,11 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
+<<<<<<< HEAD
 	emptyHeader := tmproto.Header{}
+=======
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
+>>>>>>> 6a0358607 (fix: remove previous header in Prepare/Process Proposal + provide chain id in baseapp + fix context for verifying txs (#15303))
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(runTxModeCheck, emptyHeader)

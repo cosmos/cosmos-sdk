@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/simapp"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -25,7 +27,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	appOptions[flags.FlagHome] = simapp.DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = 5
 
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, appOptions, baseapp.SetChainID("test-chain-id"))
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 	stateBytes, err := tmjson.Marshal(genesisState)

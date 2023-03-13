@@ -43,7 +43,7 @@ func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
 
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
@@ -62,8 +62,13 @@ func TestABCI_InitChain(t *testing.T) {
 		Data: key,
 	}
 
+	// initChain is nil and chain ID is wrong - panics
+	require.Panics(t, func() {
+		app.InitChain(abci.RequestInitChain{ChainId: "wrong-chain-id"})
+	})
+
 	// initChain is nil - nothing happens
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{ChainId: "test-chain-id"})
 	res := app.Query(query)
 	require.Equal(t, 0, len(res.Value))
 

@@ -19,7 +19,9 @@ type (
 		BinaryCodec
 		JSONCodec
 
-		GetMsgSigners(msg any) ([]string, error)
+		GetMsgSigners(msg *types.Any) ([]string, error)
+
+		private()
 	}
 
 	BinaryCodec interface {

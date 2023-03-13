@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -144,6 +145,8 @@ type BaseApp struct { //nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []storetypes.ABCIListener
+
+	cdc codec.Codec
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -796,7 +799,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		// create message events
-		msgEvents := createEvents(msgResult.GetEvents(), msg)
+		msgEvents := createEvents(app.cdc, msgResult.GetEvents(), msg)
 
 		// append message events, data and logs
 		//
@@ -838,13 +841,17 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
+func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg) sdk.Events {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
 	// we set the signer attribute as the sender
-	if len(msg.GetSigners()) > 0 && !msg.GetSigners()[0].Empty() {
-		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
+	signers, err := cdc.GetMsgSigners(msg)
+	if err != nil {
+		panic(err)
+	}
+	if len(signers) > 0 && signers[0] != "" {
+		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, signers[0]))
 	}
 
 	// verify that events have no module attribute set

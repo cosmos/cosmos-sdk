@@ -6,6 +6,8 @@ import (
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
@@ -56,7 +58,8 @@ type InterfaceRegistry interface {
 	// EnsureRegistered ensures there is a registered interface for the given concrete type.
 	EnsureRegistered(iface interface{}) error
 
-	ProtoFiles() *protoregistry.Files
+	protodesc.Resolver
+	RangeFiles(f func(protoreflect.FileDescriptor) bool)
 
 	private()
 }
@@ -86,11 +89,11 @@ type UnpackInterfacesMessage interface {
 }
 
 type interfaceRegistry struct {
+	*protoregistry.Files
 	interfaceNames map[string]reflect.Type
 	interfaceImpls map[reflect.Type]interfaceMap
 	implInterfaces map[reflect.Type]reflect.Type
 	typeURLMap     map[string]reflect.Type
-	protoFiles     *protoregistry.Files
 }
 
 type interfaceMap = map[string]reflect.Type
@@ -111,7 +114,7 @@ func NewInterfaceRegistryWithProtoFiles(files *protoregistry.Files) InterfaceReg
 		interfaceImpls: map[reflect.Type]interfaceMap{},
 		implInterfaces: map[reflect.Type]reflect.Type{},
 		typeURLMap:     map[string]reflect.Type{},
-		protoFiles:     files,
+		Files:          files,
 	}
 }
 
@@ -302,10 +305,6 @@ func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error
 	}
 
 	return msg, nil
-}
-
-func (registry *interfaceRegistry) ProtoFiles() *protoregistry.Files {
-	return registry.protoFiles
 }
 
 func (registry *interfaceRegistry) private() {}

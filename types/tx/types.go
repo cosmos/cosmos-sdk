@@ -36,7 +36,7 @@ func (t *Tx) GetSigners(codec codec.Codec) []string {
 	var signers []string
 	seen := map[string]bool{}
 
-	for _, msg := range t.GetMsgs() {
+	for _, msg := range t.Body.Messages {
 		signers, err := codec.GetMsgSigners(msg)
 		if err != nil {
 			panic(err)

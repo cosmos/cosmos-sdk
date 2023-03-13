@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // AminoCodec defines a codec that utilizes Codec for both binary and JSON
@@ -127,7 +129,7 @@ func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
 
-func (ac *AminoCodec) GetMsgSigners(msg any) ([]string, error) {
+func (ac *AminoCodec) GetMsgSigners(*types.Any) ([]string, error) {
 	return nil, fmt.Errorf("amino codec does not support getting msg signers")
 }
 

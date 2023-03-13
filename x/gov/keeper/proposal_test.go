@@ -128,7 +128,8 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 		activeIterator.Close()
 
 		// add vote
-		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), []*v1.WeightedVoteOption{{v1.OptionYes, "1.0"}}, "")
+		voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
+		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), voteOptions, "")
 		suite.Require().NoError(err)
 
 		suite.Require().NotPanics(func() {
@@ -136,7 +137,7 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 		}, "")
 
 		// add vote but proposal is deleted along with its VotingPeriodProposalKey
-		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), []*v1.WeightedVoteOption{{v1.OptionYes, "1.0"}}, "")
+		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), voteOptions, "")
 		suite.Require().ErrorContains(err, ": inactive proposal")
 	}
 }

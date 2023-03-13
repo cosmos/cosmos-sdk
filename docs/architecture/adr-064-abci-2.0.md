@@ -26,17 +26,17 @@ that previously not possible. We describe these three new methods below:
 ### `ExtendVote`
 
 This method allows each validator process to extend the pre-commit phase of the
-Tendermint consensus process. Specifically, it allows the application to perform
+CometBFT consensus process. Specifically, it allows the application to perform
 custom business logic that extends the pre-commit vote and supply additional data
-as part of the vote.
+as part of the vote, although they are signed separately by the same key.
 
 The data, called vote extension, will be broadcast and received together with the
 vote it is extending, and will be made available to the application in the next
 height. Specifically, the proposer of the next block will receive the vote extensions
 in `RequestPrepareProposal.local_last_commit.votes`.
 
-If the application does not have vote extension information to provide,
-it returns a 0-length byte array as its vote extension.
+If the application does not have vote extension information to provide, it
+returns a 0-length byte array as its vote extension.
 
 **NOTE**: 
 
@@ -45,30 +45,30 @@ it returns a 0-length byte array as its vote extension.
   pre-commit phase of the previous block. This means only the proposer will
   implicitly have access to all the vote extensions, via `RequestPrepareProposal`,
   and that not all vote extensions may be included, since a validator does not
-  have to wait for all pre-commits.
+  have to wait for all pre-commits, only 2/3.
 * The pre-commit vote is signed independently from the vote extension.
 
 ### `VerifyVoteExtension`
 
 This method allows validators to validate the vote extension data attached to
 each pre-commit message it receives. If the validation fails, the whole pre-commit
-message will be deemed invalid and ignored by Tendermint.
+message will be deemed invalid and ignored by CometBFT.
 
-Tendermint uses `VerifyVoteExtension` when validating a pre-commit vote. Specifically,
-for a pre-commit, Tendermint will:
+CometBFT uses `VerifyVoteExtension` when validating a pre-commit vote. Specifically,
+for a pre-commit, CometBFT will:
 
 * Reject the message if it doesn't contain a signed vote AND a signed vote extension
 * Reject the message if the vote's signature OR the vote extension's signature fails to verify
 * Reject the message if `VerifyVoteExtension` was rejected by the app
 
-Otherwise, Tendermint will accept the pre-commit message.
+Otherwise, CometBFT will accept the pre-commit message.
 
 Note, this has important consequences on liveness, i.e., if vote extensions repeatedly
-cannot be verified by correct validators, Tendermint may not be able to finalize
+cannot be verified by correct validators, CometBFT may not be able to finalize
 a block even if sufficiently many (+2/3) validators send pre-commit votes for
 that block. Thus, `VerifyVoteExtension` should be used with special care.
 
-Tendermint recommends that an application that detects an invalid vote extension
+CometBFT recommends that an application that detects an invalid vote extension
 SHOULD accept it in `ResponseVerifyVoteExtension` and ignore it in its own logic.
 
 ### `FinalizeBlock`
@@ -77,12 +77,12 @@ This method delivers a decided block to the application. The application must
 execute the transactions in the block deterministically and update its state
 accordingly. Cryptographic commitments to the block and transaction results,
 returned via the corresponding parameters in `ResponseFinalizeBlock`, are
-included in the header of the next block. Tendermint calls it when a new block
+included in the header of the next block. CometBFT calls it when a new block
 is decided.
 
 In other words, `FinalizeBlock` encapsulates the current ABCI execution flow of
 `BeginBlock`, one or more `DeliverTx`, and `EndBlock` into a single ABCI method.
-Tendermint will no longer execute requests for these legacy methods and instead
+CometBFT will no longer execute requests for these legacy methods and instead
 will just simply call `FinalizeBlock`.
 
 ## Decision
@@ -91,6 +91,17 @@ We will discuss changes to the Cosmos SDK to implement ABCI 2.0 in two distinct
 phases, `VoteExtensions` and `FinalizeBlock`.
 
 ### `VoteExtensions`
+
+Similarly for `PrepareProposal` and `ProcessProposal`, we propose to introduce
+two new handlers that an application can implement in order to provide and verify
+vote extensions.
+
+We propose the following new handlers for applications to implement:
+
+```go
+type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseExtendVote
+type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
+```
 
 ### `FinalizeBlock`
 
@@ -107,13 +118,13 @@ interfaces only so application developers can continue to build against existing
 execution flows. However, we will remove `BeginBlock`, `DeliverTx` and `EndBlock`
 from the SDK's `BaseApp` implementation and thus the ABCI surface area.
 
-What will exist is a single `FinalizeBlock` execution flow. Specifically, in
+What will then exist is a single `FinalizeBlock` execution flow. Specifically, in
 `FinalizeBlock` we will execute the application's `BeginBlock`, followed by
 execution of all the transactions, finally followed by execution of the application's
 `EndBlock`.
 
 Note, we will still keep the existing transaction execution mechanics within
-`BaseApp`, but all notion of `DeliverTx` will be removed, i.e. `deliverState`
+`BaseApp`, but all notions of `DeliverTx` will be removed, i.e. `deliverState`
 will be replace with `finalizeState`, which will be committed on `Commit`.
 
 However, there are current parameters and fields that exist in the existing
@@ -156,7 +167,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 ### Backwards Compatibility
 
 ABCI 2.0 is naturally not backwards compatible with prior versions of the Cosmos SDK
-and Tendermint. For example, an application that requests `RequestFinalizeBlock`
+and CometBFT. For example, an application that requests `RequestFinalizeBlock`
 to the same application that does not speak ABCI 2.0 will naturally fail.
 
 In addition, `BeginBlock`, `DeliverTx` and `EndBlock` will be removed from the
@@ -170,8 +181,12 @@ in the module interfaces.
 * Less communication overhead as multiple ABCI requests are condensed into a single
   request.
 * Sets the groundwork for optimistic execution.
+* Vote extensions allow for an entirely new set of application primitives to be
+  developed, such as in-process price oracles and encrypted mempools.
 
 ### Negative
+
+* Some existing Cosmos SDK core APIs may need to be modified and thus broken.
 
 ### Neutral
 

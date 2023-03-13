@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/log v0.0.0-20230306220716-5e55f56d39d5 // indirect
+	cosmossdk.io/log v0.0.0-20230313123454-0fe816b71a62 // indirect
 	cosmossdk.io/math v1.0.0-beta.6.0.20230216172121-959ce49135e4 // indirect
 	cosmossdk.io/x/tx v0.2.3-0.20230309163709-87da587416ba // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect

@@ -181,7 +181,7 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	logLvl, err := zerolog.ParseLevel(logLvlStr)
 	if err != nil {
 		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
-		filterFunc, err := log.ParseLogLevel(logLvlStr, zerolog.InfoLevel.String())
+		filterFunc, err := log.ParseLogLevel(logLvlStr)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
 		}

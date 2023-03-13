@@ -22,7 +22,6 @@ import (
 
 var beginBlockOrder = []string{
 	"upgrade",
-	"capability",
 	"mint",
 	"distribution",
 	"slashing",
@@ -46,7 +45,6 @@ var endBlockersOrder = []string{
 	"crisis",
 	"gov",
 	"staking",
-	"capability",
 	"auth",
 	"bank",
 	"distribution",
@@ -65,7 +63,6 @@ var endBlockersOrder = []string{
 }
 
 var initGenesisOrder = []string{
-	"capability",
 	"auth",
 	"bank",
 	"distribution",

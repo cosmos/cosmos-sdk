@@ -91,6 +91,7 @@ of the `ABCIListener` plugin written in Go.
 The `BaseApp` `ABCIListener` interface will be what will define the plugins capabilities.
 
 Boilerplate RPC implementation example of the `ABCIListener` interface. ([store/streaming/abci/grpc.go](grpc.go))
+
 ```go
 ...
 
@@ -175,6 +176,7 @@ func (m GRPCServer) ListenCommit(ctx context.Context, request *ListenCommitReque
 ```
 
 Our `ABCIlistener` service plugin. ([store/streaming/plugins/abci/v1/interface.go](interface.go))
+
 ```go
 ...
 
@@ -286,6 +288,7 @@ the `ABCIListener` service plugin but other protocol services as well. You can t
 at how plugins are loaded by the SDK in [store/streaming/streaming.go](https://github.com/cosmos/cosmos-sdk/blob/main/store/streaming/streaming.go)
 
 You'll need to add this in your `app.go`
+
 ```go
 // app.go
 
@@ -302,10 +305,10 @@ func NewApp(...) *App {
             logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
             plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
             if err != nil {
-                cmtos.Exit(err.Error())
+                tmos.Exit(err.Error())
             }
             if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
-                cmtos.Exit(err.Error())
+                tmos.Exit(err.Error())
             }
         }
     }
@@ -317,6 +320,7 @@ func NewApp(...) *App {
 ## Configuration
 
 Update the streaming section in `app.toml`
+
 ```toml
 # Streaming allows nodes to stream state to external systems
 [streaming]
@@ -346,12 +350,14 @@ just trying the examples, you can skip ahead to the [Testing](#testing) section.
 make proto-gen 
 ```
 
-- stdout plugin; from inside the `store/` dir, run:
+* stdout plugin; from inside the `store/` dir, run:
+
 ```shell
 go build -o streaming/abci/examples/stdout/stdout streaming/abci/examples/stdout/stdout.go
 ```
 
-- file plugin (writes to `~/`); from inside the `store/` dir, run:
+* file plugin (writes to `~/`); from inside the `store/` dir, run:
+
 ```shell
 go build -o streaming/abci/examples/file/file streaming/abci/examples/file/file.go
 ```
@@ -360,17 +366,22 @@ go build -o streaming/abci/examples/file/file streaming/abci/examples/file/file.
 
 Export a plugin from one of the Go or Python examples.
 
-- stdout plugin
+* stdout plugin
+
 ```shell
 export COSMOS_SDK_ABCI="{path to}/cosmos-sdk/store/streaming/abci/examples/stdout/stdout"
 ```
-- file plugin (writes to ~/)
+
+* file plugin (writes to ~/)
+
 ```shell
 export COSMOS_SDK_ABCI="{path to}/cosmos-sdk/store/streaming/abci/examples/file/file"
 ```
+
 where `{path to}` is the parent path to the `cosmos-sdk` repo on you system.
 
 Test:
+
 ```shell
 make test-sim-nondeterminism-streaming
 ```

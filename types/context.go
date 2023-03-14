@@ -40,29 +40,31 @@ type Context struct {
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
+	streamingManager     storetypes.StreamingManager
 }
 
 // Proposed rename, not done to avoid API breakage
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context                   { return c.baseCtx }
-func (c Context) MultiStore() storetypes.MultiStore          { return c.ms }
-func (c Context) BlockHeight() int64                         { return c.header.Height }
-func (c Context) BlockTime() time.Time                       { return c.header.Time }
-func (c Context) ChainID() string                            { return c.chainID }
-func (c Context) TxBytes() []byte                            { return c.txBytes }
-func (c Context) Logger() log.Logger                         { return c.logger }
-func (c Context) VoteInfos() []abci.VoteInfo                 { return c.voteInfo }
-func (c Context) GasMeter() storetypes.GasMeter              { return c.gasMeter }
-func (c Context) BlockGasMeter() storetypes.GasMeter         { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool                            { return c.checkTx }
-func (c Context) IsReCheckTx() bool                          { return c.recheckTx }
-func (c Context) MinGasPrices() DecCoins                     { return c.minGasPrice }
-func (c Context) EventManager() EventManagerI                { return c.eventManager }
-func (c Context) Priority() int64                            { return c.priority }
-func (c Context) KVGasConfig() storetypes.GasConfig          { return c.kvGasConfig }
-func (c Context) TransientKVGasConfig() storetypes.GasConfig { return c.transientKVGasConfig }
+func (c Context) Context() context.Context                      { return c.baseCtx }
+func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
+func (c Context) BlockHeight() int64                            { return c.header.Height }
+func (c Context) BlockTime() time.Time                          { return c.header.Time }
+func (c Context) ChainID() string                               { return c.chainID }
+func (c Context) TxBytes() []byte                               { return c.txBytes }
+func (c Context) Logger() log.Logger                            { return c.logger }
+func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
+func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
+func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
+func (c Context) IsCheckTx() bool                               { return c.checkTx }
+func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
+func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
+func (c Context) EventManager() EventManagerI                   { return c.eventManager }
+func (c Context) Priority() int64                               { return c.priority }
+func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
+func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
+func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
 
 // clone the header before returning
 func (c Context) BlockHeader() cmtproto.Header {
@@ -254,6 +256,12 @@ func (c Context) WithPriority(p int64) Context {
 	return c
 }
 
+// WithStreamingManager returns a Context with an updated streaming manager
+func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
+	c.streamingManager = sm
+	return c
+}
+
 // TODO: remove???
 func (c Context) IsZero() bool {
 	return c.ms == nil
@@ -302,7 +310,10 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, writeCache
 }
 
-var _ context.Context = Context{}
+var (
+	_ context.Context    = Context{}
+	_ storetypes.Context = Context{}
+)
 
 // ContextKey defines a type alias for a stdlib Context key.
 type ContextKey string

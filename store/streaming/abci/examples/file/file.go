@@ -1,0 +1,106 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/hashicorp/go-plugin"
+
+	streamingabci "cosmossdk.io/store/streaming/abci"
+	store "cosmossdk.io/store/types"
+)
+
+// FilePlugin is the implementation of the baseapp.ABCIListener interface
+// For Go plugins this is all that is required to process data sent over gRPC.
+type FilePlugin struct {
+	BlockHeight int64
+}
+
+func (a *FilePlugin) writeToFile(file string, data []byte) error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
+	filename := fmt.Sprintf("%s/%s.txt", home, file)
+	f, err := os.OpenFile(filepath.Clean(filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+
+	if _, err := f.Write(data); err != nil {
+		f.Close() // ignore error; Write error takes precedence
+		return err
+	}
+
+	if err := f.Close(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *FilePlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+	a.BlockHeight = req.Header.Height
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
+	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
+	if err := a.writeToFile("begin-block-req", d1); err != nil {
+		return err
+	}
+	if err := a.writeToFile("begin-block-res", d2); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *FilePlugin) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
+	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
+	if err := a.writeToFile("end-block-req", d1); err != nil {
+		return err
+	}
+	if err := a.writeToFile("end-block-res", d2); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *FilePlugin) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
+	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
+	if err := a.writeToFile("deliver-tx-req", d1); err != nil {
+		return err
+	}
+	if err := a.writeToFile("deliver-tx-res", d2); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *FilePlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error {
+	fmt.Printf("listen-commit: block_height=%d data=%v", res.RetainHeight, changeSet)
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
+	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, changeSet))
+	if err := a.writeToFile("commit-res", d1); err != nil {
+		return err
+	}
+	if err := a.writeToFile("state-change", d2); err != nil {
+		return err
+	}
+	return nil
+}
+
+func main() {
+	plugin.Serve(&plugin.ServeConfig{
+		HandshakeConfig: streamingabci.Handshake,
+		Plugins: map[string]plugin.Plugin{
+			"abci": &streamingabci.ListenerGRPCPlugin{Impl: &FilePlugin{}},
+		},
+
+		// A non-nil value here enables gRPC serving for this streaming...
+		GRPCServer: plugin.DefaultGRPCServer,
+	})
+}

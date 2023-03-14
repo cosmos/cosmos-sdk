@@ -3,7 +3,7 @@ module cosmossdk.io/tools/confix
 go 1.20
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230313124132-b4d769a8a87d
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230314215525-ba8de97d1af8
 	github.com/creachadair/atomicfile v0.2.8
 	github.com/creachadair/tomledit v0.0.24
 	github.com/spf13/cobra v1.6.1
@@ -20,7 +20,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/log v0.1.0 // indirect
 	cosmossdk.io/math v1.0.0-rc.0 // indirect
-	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44 // indirect
+	cosmossdk.io/store v0.0.0-20230314205129-d50cb1ef349f // indirect
 	cosmossdk.io/x/tx v0.2.3-0.20230309163709-87da587416ba // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
-	github.com/fatih/color v1.13.0 // indirect
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
@@ -84,12 +84,12 @@ require (
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/gtank/merlin v0.1.1 // indirect
 	github.com/gtank/ristretto255 v0.1.2 // indirect
-	github.com/hashicorp/go-hclog v1.2.0 // indirect
+	github.com/hashicorp/go-hclog v1.4.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-plugin v1.4.8 // indirect
+	github.com/hashicorp/go-plugin v1.4.9 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
+	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
@@ -107,10 +107,10 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
-	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
+	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/oklog/run v1.0.0 // indirect
+	github.com/oklog/run v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -143,7 +143,7 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
+	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
 	google.golang.org/grpc v1.53.0 // indirect
 	google.golang.org/protobuf v1.29.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
@@ -152,14 +152,6 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
-)
-
-// Here are the short-lived replace of Confix
-// Replace here are pending PRs, or version to be tagged
-replace (
-	cosmossdk.io/store => ../../store
-	// TODO use instead a tagged version of the SDK (with CometBFT) when available
-	github.com/cosmos/cosmos-sdk => ../..
 )
 
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

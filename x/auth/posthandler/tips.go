@@ -1,8 +1,6 @@
 package posthandler
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -49,10 +47,5 @@ func (d tipDecorator) transferTip(ctx sdk.Context, sdkTx sdk.Tx) error {
 		return err
 	}
 
-	coins := tipTx.GetTip().Amount
-	if err := d.bankKeeper.IsSendEnabledCoins(ctx, coins...); err != nil {
-		return fmt.Errorf("cannot tip these coins: %w", err)
-	}
-
-	return d.bankKeeper.SendCoins(ctx, tipper, tipTx.FeePayer(), coins)
+	return d.bankKeeper.SendCoins(ctx, tipper, tipTx.FeePayer(), tipTx.GetTip().Amount)
 }

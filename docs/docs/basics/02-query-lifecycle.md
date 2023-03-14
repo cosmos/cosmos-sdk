@@ -122,7 +122,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/query.go#L79-L113
 
 ## RPC
 
-With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../core/05-encoding.md) which then processes the request. Note that, while the RPC is made to the consensus engine (e.g. CometBFT Core) of a full-node, queries are not part of consensus and so are not broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
+With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../core/05-encoding.md) which then processes the request. Note that, while the RPC is made to the consensus engine (e.g. CometBFT) of a full-node, queries are not part of consensus and so are not broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
 
 Read more about ABCI Clients and CometBFT RPC in the [CometBFT documentation](https://docs.cometbft.com/v0.37/spec/rpc/).
 

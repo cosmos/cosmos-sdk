@@ -60,8 +60,8 @@ The Cosmos SDK team uses the following disclosure process:
 1. If it is determined that a CVE-ID is required, we request a CVE through a CVE Numbering Authority.
 1. We notify the community that a security release is coming to give users time to prepare their systems for the update. Notifications can include forum posts, tweets, and emails to partners and validators.
 1. 24 hours after the notification, fixes are applied publicly and new releases are issued.
-1. The Gaia team updates their CometBFT Core and Cosmos SDK dependencies to use these releases and then issues new Gaia releases.
-1. After releases are available for CometBFT Core, Cosmos SDK, and Gaia, we notify the community again through the same channels. We also publish a Security Advisory on Github and publish the CVE, as long as the Security Advisory and the CVE do not include information on how to exploit these vulnerabilities beyond the information that is available in the patch.
+1. The Gaia team updates their CometBFT and Cosmos SDK dependencies to use these releases and then issues new Gaia releases.
+1. After releases are available for CometBFT, Cosmos SDK, and Gaia, we notify the community again through the same channels. We also publish a Security Advisory on Github and publish the CVE, as long as the Security Advisory and the CVE do not include information on how to exploit these vulnerabilities beyond the information that is available in the patch.
 1. After the community is notified, CometBFT pays out any relevant bug bounties to submitters.
 1. One week after the releases go out, we publish a post with details and our response to the vulnerability.
 

@@ -26,6 +26,7 @@ const (
 	Msg_Undelegate_FullMethodName                = "/cosmos.staking.v1beta1.Msg/Undelegate"
 	Msg_CancelUnbondingDelegation_FullMethodName = "/cosmos.staking.v1beta1.Msg/CancelUnbondingDelegation"
 	Msg_UpdateParams_FullMethodName              = "/cosmos.staking.v1beta1.Msg/UpdateParams"
+	Msg_RotateOperatorKey_FullMethodName         = "/cosmos.staking.v1beta1.Msg/RotateOperatorKey"
 )
 
 // MsgClient is the client API for Msg service.
@@ -54,6 +55,11 @@ type MsgClient interface {
 	// parameters.
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// RotateOperatorKey defines an operation for rotating the operator key
+	// of a validator.
+	//
+	// Since: cosmos-sdk 0.48
+	RotateOperatorKey(ctx context.Context, in *MsgRotateOperatorKey, opts ...grpc.CallOption) (*MsgRotateOperatorKeyResponse, error)
 }
 
 type msgClient struct {
@@ -127,6 +133,15 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) RotateOperatorKey(ctx context.Context, in *MsgRotateOperatorKey, opts ...grpc.CallOption) (*MsgRotateOperatorKeyResponse, error) {
+	out := new(MsgRotateOperatorKeyResponse)
+	err := c.cc.Invoke(ctx, Msg_RotateOperatorKey_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -153,6 +168,11 @@ type MsgServer interface {
 	// parameters.
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// RotateOperatorKey defines an operation for rotating the operator key
+	// of a validator.
+	//
+	// Since: cosmos-sdk 0.48
+	RotateOperatorKey(context.Context, *MsgRotateOperatorKey) (*MsgRotateOperatorKeyResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -180,6 +200,9 @@ func (UnimplementedMsgServer) CancelUnbondingDelegation(context.Context, *MsgCan
 }
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) RotateOperatorKey(context.Context, *MsgRotateOperatorKey) (*MsgRotateOperatorKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RotateOperatorKey not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -320,6 +343,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RotateOperatorKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRotateOperatorKey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RotateOperatorKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RotateOperatorKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RotateOperatorKey(ctx, req.(*MsgRotateOperatorKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -354,6 +395,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "RotateOperatorKey",
+			Handler:    _Msg_RotateOperatorKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

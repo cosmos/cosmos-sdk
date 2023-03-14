@@ -4,6 +4,7 @@ package cosmos.gov.v1beta1;
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/gov/v1beta1/gov.proto";
 import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
@@ -29,6 +30,8 @@ service Msg {
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
 // proposal Content.
 message MsgSubmitProposal {
+  option (amino.name) = "cosmos-sdk/v1/MsgSubmitProposal";
+
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -38,7 +41,8 @@ message MsgSubmitProposal {
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"initial_deposit\""
+    (gogoproto.moretags)     = "yaml:\"initial_deposit\"",
+    (amino.dont_omitempty)   = true
   ];
   string proposer     = 3;
   bool   is_expedited = 4;
@@ -51,14 +55,20 @@ message MsgSubmitProposalResponse {
 
 // MsgVote defines a message to cast a vote.
 message MsgVote {
+  option (amino.name) = "cosmos-sdk/v1/MsgVote";
+
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string     voter       = 2;
-  VoteOption option      = 3;
+  uint64 proposal_id = 1 [
+    (gogoproto.jsontag)    = "proposal_id",
+    (gogoproto.moretags)   = "yaml:\"proposal_id\"",
+    (amino.dont_omitempty) = true
+  ];
+  string     voter  = 2;
+  VoteOption option = 3;
 }
 
 // MsgVoteResponse defines the Msg/Vote response type.
@@ -68,14 +78,16 @@ message MsgVoteResponse {}
 //
 // Since: cosmos-sdk 0.43
 message MsgVoteWeighted {
+  option (amino.name) = "cosmos-sdk/v1/MsgVoteWeighted";
+
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64                      proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string                      voter       = 2;
-  repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
+  uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\"", (amino.dont_omitempty) = true];
+  string voter       = 2;
+  repeated WeightedVoteOption options = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
@@ -85,15 +97,24 @@ message MsgVoteWeightedResponse {}
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 message MsgDeposit {
+  option (amino.name) = "cosmos-sdk/v1/MsgDeposit";
+
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string   depositor   = 2;
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  uint64 proposal_id = 1 [
+    (gogoproto.jsontag)    = "proposal_id",
+    (gogoproto.moretags)   = "yaml:\"proposal_id\"",
+    (amino.dont_omitempty) = true
+  ];
+  string   depositor                       = 2;
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true
+  ];
 }
 
 // MsgDepositResponse defines the Msg/Deposit response type.

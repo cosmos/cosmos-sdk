@@ -4,6 +4,7 @@ package cosmos.capability.v1beta1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/capability/types";
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 
 // Capability defines an implementation of an object capability. The index
 // provided to a Capability must be globally unique.
@@ -26,5 +27,5 @@ message Owner {
 // CapabilityOwners defines a set of owners of a single Capability. The set of
 // owners must be unique.
 message CapabilityOwners {
-  repeated Owner owners = 1 [(gogoproto.nullable) = false];
+  repeated Owner owners = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

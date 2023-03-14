@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.base.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -15,7 +16,7 @@ message Coin {
   option (gogoproto.equal) = true;
 
   string denom  = 1;
-  string amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
+  string amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // DecCoin defines a token with a denomination and a decimal amount.

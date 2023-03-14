@@ -4,6 +4,7 @@ package cosmos.bank.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -23,11 +24,15 @@ service Msg {
 message MsgSend {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
+  option (amino.name)                = "cosmos-sdk/MsgSend";
 
   string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
   string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // MsgSendResponse defines the Msg/Send response type.
@@ -36,9 +41,10 @@ message MsgSendResponse {}
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 message MsgMultiSend {
   option (gogoproto.equal) = false;
+  option (amino.name)      = "cosmos-sdk/MsgMultiSend";
 
-  repeated Input  inputs  = 1 [(gogoproto.nullable) = false];
-  repeated Output outputs = 2 [(gogoproto.nullable) = false];
+  repeated Input  inputs  = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Output outputs = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.

@@ -6,9 +6,11 @@ option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "amino/amino.proto";
 
 // Params defines the set of params for the distribution module.
 message Params {
+  option (amino.name)                 = "cosmos-sdk/x/distribution/Params";
   option (gogoproto.goproto_stringer) = false;
   string community_tax                = 1 [
     (gogoproto.moretags)   = "yaml:\"community_tax\"",
@@ -44,7 +46,8 @@ message ValidatorHistoricalRewards {
   repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
     (gogoproto.moretags)     = "yaml:\"cumulative_reward_ratio\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
   ];
   uint32 reference_count = 2 [(gogoproto.moretags) = "yaml:\"reference_count\""];
 }
@@ -53,8 +56,11 @@ message ValidatorHistoricalRewards {
 // period for a validator kept as a running counter and incremented
 // each block as long as the validator's tokens remain constant.
 message ValidatorCurrentRewards {
-  repeated cosmos.base.v1beta1.DecCoin rewards = 1
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
+  ];
   uint64 period = 2;
 }
 
@@ -71,7 +77,8 @@ message ValidatorOutstandingRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
     (gogoproto.moretags)     = "yaml:\"rewards\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
   ];
 }
 
@@ -87,14 +94,18 @@ message ValidatorSlashEvent {
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
 message ValidatorSlashEvents {
   option (gogoproto.goproto_stringer)                 = false;
-  repeated ValidatorSlashEvent validator_slash_events = 1
-      [(gogoproto.moretags) = "yaml:\"validator_slash_events\"", (gogoproto.nullable) = false];
+  repeated ValidatorSlashEvent validator_slash_events = 1 [
+    (gogoproto.moretags)   = "yaml:\"validator_slash_events\"",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
 }
 
 // FeePool is the global fee pool for distribution.
 message FeePool {
   repeated cosmos.base.v1beta1.DecCoin community_pool = 1 [
     (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.moretags)     = "yaml:\"community_pool\""
   ];
@@ -111,8 +122,11 @@ message CommunityPoolSpendProposal {
   string   title                           = 1;
   string   description                     = 2;
   string   recipient                       = 3;
-  repeated cosmos.base.v1beta1.Coin amount = 4
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 4 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // DelegatorStartingInfo represents the starting info for a delegator reward
@@ -128,7 +142,11 @@ message DelegatorStartingInfo {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  uint64 height = 3 [(gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height"];
+  uint64 height = 3 [
+    (gogoproto.moretags)   = "yaml:\"creation_height\"",
+    (gogoproto.jsontag)    = "creation_height",
+    (amino.dont_omitempty) = true
+  ];
 }
 
 // DelegationDelegatorReward represents the properties
@@ -139,8 +157,11 @@ message DelegationDelegatorReward {
 
   string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 
-  repeated cosmos.base.v1beta1.DecCoin reward = 2
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin reward = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
+  ];
 }
 
 // CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal

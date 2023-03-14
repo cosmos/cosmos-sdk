@@ -4,12 +4,14 @@ package cosmos.upgrade.v1beta1;
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "amino/amino.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // Plan specifies information about a planned upgrade and when it should occur.
 message Plan {
+  option (amino.name)                 = "cosmos-sdk/Plan";
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -25,7 +27,8 @@ message Plan {
   // Deprecated: Time based upgrades have been deprecated. Time based upgrade logic
   // has been removed from the SDK.
   // If this field is not empty, an error will be thrown.
-  google.protobuf.Timestamp time = 2 [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp time = 2
+      [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // The height at which the upgrade must be performed.
   // Only used if Time is not set.
@@ -47,10 +50,11 @@ message Plan {
 message SoftwareUpgradeProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
+  option (amino.name)                 = "cosmos-sdk/SoftwareUpgradeProposal";
 
   string title       = 1;
   string description = 2;
-  Plan   plan        = 3 [(gogoproto.nullable) = false];
+  Plan   plan        = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
@@ -58,6 +62,7 @@ message SoftwareUpgradeProposal {
 message CancelSoftwareUpgradeProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
+  option (amino.name)                 = "cosmos-sdk/CancelSoftwareUpgradeProposal";
 
   string title       = 1;
   string description = 2;

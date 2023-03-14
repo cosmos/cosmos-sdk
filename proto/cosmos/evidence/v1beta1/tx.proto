@@ -7,6 +7,7 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 
 // Msg defines the evidence Msg service.
 service Msg {
@@ -18,6 +19,8 @@ service Msg {
 // MsgSubmitEvidence represents a message that supports submitting arbitrary
 // Evidence of misbehavior such as equivocation or counterfactual signing.
 message MsgSubmitEvidence {
+  option (amino.name) = "cosmos-sdk/MsgSubmitEvidence";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

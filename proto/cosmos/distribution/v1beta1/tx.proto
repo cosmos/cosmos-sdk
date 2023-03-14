@@ -6,6 +6,7 @@ option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "amino/amino.proto";
 
 // Msg defines the distribution Msg service.
 service Msg {
@@ -31,6 +32,7 @@ service Msg {
 message MsgSetWithdrawAddress {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
+  option (amino.name)                = "cosmos-sdk/MsgModifyWithdrawAddress";
 
   string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string withdraw_address  = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
@@ -42,6 +44,8 @@ message MsgSetWithdrawAddressResponse {}
 // MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
 // from a single validator.
 message MsgWithdrawDelegatorReward {
+  option (amino.name) = "cosmos-sdk/MsgWithdrawDelegationReward";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -55,6 +59,8 @@ message MsgWithdrawDelegatorRewardResponse {}
 // MsgWithdrawValidatorCommission withdraws the full commission to the validator
 // address.
 message MsgWithdrawValidatorCommission {
+  option (amino.name) = "cosmos-sdk/MsgWithdrawValCommission";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -70,8 +76,11 @@ message MsgFundCommunityPool {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (amino.dont_omitempty)   = true,
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
   string depositor = 2;
 }
 

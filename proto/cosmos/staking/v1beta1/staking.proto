@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "amino/amino.proto";
 import "tendermint/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
@@ -17,8 +18,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).
 message HistoricalInfo {
-  tendermint.types.Header header = 1 [(gogoproto.nullable) = false];
-  repeated Validator      valset = 2 [(gogoproto.nullable) = false];
+  tendermint.types.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // CommissionRates defines the initial commission rates to be used for creating
@@ -49,10 +50,15 @@ message Commission {
   option (gogoproto.goproto_stringer) = false;
 
   // commission_rates defines the initial commission rates to be used for creating a validator.
-  CommissionRates commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  CommissionRates commission_rates = 1
+      [(gogoproto.embed) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // update_time is the last time the commission rate was changed.
-  google.protobuf.Timestamp update_time = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"update_time\""];
+  google.protobuf.Timestamp update_time = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.stdtime)    = true,
+    (gogoproto.moretags)   = "yaml:\"update_time\"",
+    (amino.dont_omitempty) = true
+  ];
 }
 
 // Description defines a validator description.
@@ -103,14 +109,18 @@ message Validator {
     (gogoproto.nullable)   = false
   ];
   // description defines the description terms for the validator.
-  Description description = 7 [(gogoproto.nullable) = false];
+  Description description = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
   int64 unbonding_height = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
   // unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
-  google.protobuf.Timestamp unbonding_time = 9
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
+  google.protobuf.Timestamp unbonding_time = 9 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.stdtime)    = true,
+    (gogoproto.moretags)   = "yaml:\"unbonding_time\"",
+    (amino.dont_omitempty) = true
+  ];
   // commission defines the commission parameters.
-  Commission commission = 10 [(gogoproto.nullable) = false];
+  Commission commission = 10 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // min_self_delegation is the validator's self declared minimum self delegation.
   string min_self_delegation = 11 [
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
@@ -155,7 +165,7 @@ message DVPair {
 
 // DVPairs defines an array of DVPair objects.
 message DVPairs {
-  repeated DVPair pairs = 1 [(gogoproto.nullable) = false];
+  repeated DVPair pairs = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // DVVTriplet is struct that just has a delegator-validator-validator triplet
@@ -174,7 +184,7 @@ message DVVTriplet {
 
 // DVVTriplets defines an array of DVVTriplet objects.
 message DVVTriplets {
-  repeated DVVTriplet triplets = 1 [(gogoproto.nullable) = false];
+  repeated DVVTriplet triplets = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // Delegation represents the bond with tokens held by an account. It is
@@ -205,7 +215,8 @@ message UnbondingDelegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // entries are the unbonding delegation entries.
-  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
+  repeated UnbondingDelegationEntry entries = 3
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -216,8 +227,12 @@ message UnbondingDelegationEntry {
   // creation_height is the height which the unbonding took place.
   int64 creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
   // completion_time is the unix time for unbonding completion.
-  google.protobuf.Timestamp completion_time = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"completion_time\""];
+  google.protobuf.Timestamp completion_time = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.stdtime)    = true,
+    (gogoproto.moretags)   = "yaml:\"completion_time\"",
+    (amino.dont_omitempty) = true
+  ];
   // initial_balance defines the tokens initially scheduled to receive at completion.
   string initial_balance = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -236,8 +251,12 @@ message RedelegationEntry {
   // creation_height  defines the height which the redelegation took place.
   int64 creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
   // completion_time defines the unix time for redelegation completion.
-  google.protobuf.Timestamp completion_time = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"completion_time\""];
+  google.protobuf.Timestamp completion_time = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.stdtime)    = true,
+    (gogoproto.moretags)   = "yaml:\"completion_time\"",
+    (amino.dont_omitempty) = true
+  ];
   // initial_balance defines the initial balance when redelegation started.
   string initial_balance = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -263,17 +282,23 @@ message Redelegation {
   // validator_dst_address is the validator redelegation destination operator address.
   string validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
   // entries are the redelegation entries.
-  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
+  repeated RedelegationEntry entries = 4
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // redelegation entries
 }
 
 // Params defines the parameters for the staking module.
 message Params {
+  option (amino.name)                 = "cosmos-sdk/x/staking/Params";
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   // unbonding_time is the time duration of unbonding.
-  google.protobuf.Duration unbonding_time = 1
-      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
+  google.protobuf.Duration unbonding_time = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"unbonding_time\"",
+    (amino.dont_omitempty)  = true
+  ];
   // max_validators is the maximum number of validators.
   uint32 max_validators = 2 [(gogoproto.moretags) = "yaml:\"max_validators\""];
   // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
@@ -302,9 +327,9 @@ message DelegationResponse {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
 
-  Delegation delegation = 1 [(gogoproto.nullable) = false];
+  Delegation delegation = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
-  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
@@ -313,7 +338,7 @@ message DelegationResponse {
 message RedelegationEntryResponse {
   option (gogoproto.equal) = true;
 
-  RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false];
+  RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   string balance = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
@@ -323,8 +348,8 @@ message RedelegationEntryResponse {
 message RedelegationResponse {
   option (gogoproto.equal) = false;
 
-  Redelegation                       redelegation = 1 [(gogoproto.nullable) = false];
-  repeated RedelegationEntryResponse entries      = 2 [(gogoproto.nullable) = false];
+  Redelegation                       redelegation = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated RedelegationEntryResponse entries      = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // Pool is used for tracking bonded and not-bonded token supply of the bond
@@ -335,12 +360,14 @@ message Pool {
   string not_bonded_tokens       = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.jsontag)    = "not_bonded_tokens",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
   string bonded_tokens = 2 [
     (gogoproto.jsontag)    = "bonded_tokens",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false,
-    (gogoproto.moretags)   = "yaml:\"bonded_tokens\""
+    (gogoproto.moretags)   = "yaml:\"bonded_tokens\"",
+    (amino.dont_omitempty) = true
   ];
 }

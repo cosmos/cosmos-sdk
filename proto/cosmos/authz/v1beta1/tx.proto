@@ -6,6 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos/authz/v1beta1/authz.proto";
+import "amino/amino.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/x/authz";
 option (gogoproto.goproto_getters_all) = false;
@@ -31,10 +32,12 @@ service Msg {
 // MsgGrant is a request type for Grant method. It declares authorization to the grantee
 // on behalf of the granter with the provided expiration time.
 message MsgGrant {
+  option (amino.name) = "cosmos-sdk/MsgGrant";
+
   string granter = 1;
   string grantee = 2;
 
-  cosmos.authz.v1beta1.Grant grant = 3 [(gogoproto.nullable) = false];
+  cosmos.authz.v1beta1.Grant grant = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgExecResponse defines the Msg/MsgExecResponse response type.
@@ -46,6 +49,8 @@ message MsgExecResponse {
 // authorizations granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the authorization.
 message MsgExec {
+  option (amino.name) = "cosmos-sdk/MsgExec";
+
   string grantee = 1;
   // Authorization Msg requests to execute. Each msg must implement Authorization interface
   // The x/authz will try to find a grant matching (msg.signers[0], grantee, MsgTypeURL(msg))
@@ -59,6 +64,8 @@ message MsgGrantResponse {}
 // MsgRevoke revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
 message MsgRevoke {
+  option (amino.name) = "cosmos-sdk/MsgRevoke";
+
   string granter      = 1;
   string grantee      = 2;
   string msg_type_url = 3;

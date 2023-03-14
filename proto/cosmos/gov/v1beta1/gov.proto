@@ -7,6 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
+import "amino/amino.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -45,6 +46,7 @@ message WeightedVoteOption {
 // manually updated in case of approval.
 message TextProposal {
   option (cosmos_proto.implements_interface) = "Content";
+  option (amino.name)                        = "cosmos-sdk/TextProposal";
 
   option (gogoproto.equal) = true;
 
@@ -60,8 +62,11 @@ message Deposit {
 
   uint64   proposal_id                     = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
   string   depositor                       = 2;
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true
+  ];
 }
 
 // Proposal defines the core field members of a governance proposal.
@@ -71,21 +76,41 @@ message Proposal {
   uint64              proposal_id        = 1 [(gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
   google.protobuf.Any content            = 2 [(cosmos_proto.accepts_interface) = "Content"];
   ProposalStatus      status             = 3 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
-  TallyResult         final_tally_result = 4
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"final_tally_result\""];
-  google.protobuf.Timestamp submit_time = 5
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"submit_time\""];
-  google.protobuf.Timestamp deposit_end_time = 6
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"deposit_end_time\""];
+  TallyResult         final_tally_result = 4 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"final_tally_result\"",
+    (amino.dont_omitempty) = true
+  ];
+  google.protobuf.Timestamp submit_time = 5 [
+    (gogoproto.stdtime)    = true,
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"submit_time\"",
+    (amino.dont_omitempty) = true
+  ];
+  google.protobuf.Timestamp deposit_end_time = 6 [
+    (gogoproto.stdtime)    = true,
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"deposit_end_time\"",
+    (amino.dont_omitempty) = true
+  ];
   repeated cosmos.base.v1beta1.Coin total_deposit = 7 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"total_deposit\""
+    (gogoproto.moretags)     = "yaml:\"total_deposit\"",
+    (amino.dont_omitempty)   = true
   ];
-  google.protobuf.Timestamp voting_start_time = 8
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_start_time\""];
-  google.protobuf.Timestamp voting_end_time = 9
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_end_time\""];
+  google.protobuf.Timestamp voting_start_time = 8 [
+    (gogoproto.stdtime)    = true,
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"voting_start_time\"",
+    (amino.dont_omitempty) = true
+  ];
+  google.protobuf.Timestamp voting_end_time = 9 [
+    (gogoproto.stdtime)    = true,
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"voting_end_time\"",
+    (amino.dont_omitempty) = true
+  ];
   bool is_expedited = 10;
 }
 
@@ -132,14 +157,14 @@ message Vote {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.equal)            = false;
 
-  uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\"", (amino.dont_omitempty) = true];
   string voter       = 2;
   // Deprecated: Prefer to use `options` instead. This field is set in queries
   // if and only if `len(options) == 1` and that option has weight 1. In all
   // other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
   VoteOption option = 3 [deprecated = true];
   // Since: cosmos-sdk 0.43
-  repeated WeightedVoteOption options = 4 [(gogoproto.nullable) = false];
+  repeated WeightedVoteOption options = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // DepositParams defines the params for deposits on governance proposals.

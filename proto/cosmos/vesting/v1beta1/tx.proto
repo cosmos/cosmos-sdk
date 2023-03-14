@@ -4,6 +4,7 @@ package cosmos.vesting.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/vesting/v1beta1/vesting.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
@@ -23,11 +24,15 @@ service Msg {
 // account.
 message MsgCreateVestingAccount {
   option (gogoproto.equal) = true;
+  option (amino.name)      = "cosmos-sdk/MsgCreateVestingAccount";
 
   string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
   string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 
   int64 end_time = 4 [(gogoproto.moretags) = "yaml:\"end_time\""];
   bool  delayed  = 5;
@@ -48,9 +53,11 @@ message MsgCreateClawbackVestingAccount {
   // start_time defines the time at which the vesting period begins
   int64 start_time = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
   // lockup_periods defines the unlocking schedule relative to the start_time
-  repeated cosmos.vesting.v1beta1.Period lockup_periods = 4 [(gogoproto.nullable) = false];
+  repeated cosmos.vesting.v1beta1.Period lockup_periods = 4
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // vesting_periods defines the vesting schedule relative to the start_time
-  repeated cosmos.vesting.v1beta1.Period vesting_periods = 5 [(gogoproto.nullable) = false];
+  repeated cosmos.vesting.v1beta1.Period vesting_periods = 5
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // merge specifies a creation mechanism for existing
   // ClawbackVestingAccounts. If true, merge this new grant into an existing
   // ClawbackVestingAccount, or create it if it does not exist. If false,

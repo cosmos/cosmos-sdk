@@ -4,28 +4,33 @@ package cosmos.bank.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // GenesisState defines the bank module's genesis state.
 message GenesisState {
   // params defines all the paramaters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // balances is an array containing the balances of all the accounts.
-  repeated Balance balances = 2 [(gogoproto.nullable) = false];
+  repeated Balance balances = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // supply represents the total supply. If it is left empty, then supply will be calculated based on the provided
   // balances. Otherwise, it will be used to validate that the sum of the balances equals this amount.
-  repeated cosmos.base.v1beta1.Coin supply = 3
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin supply = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
+  ];
 
   // denom_metadata defines the metadata of the differents coins.
-  repeated Metadata denom_metadata = 4 [(gogoproto.moretags) = "yaml:\"denom_metadata\"", (gogoproto.nullable) = false];
+  repeated Metadata denom_metadata = 4
+      [(gogoproto.moretags) = "yaml:\"denom_metadata\"", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // supply_offsets defines the amount of supply offset.
   repeated GenesisSupplyOffset supply_offsets = 5
-      [(gogoproto.moretags) = "yaml:\"supply_offsets\"", (gogoproto.nullable) = false];
+      [(gogoproto.moretags) = "yaml:\"supply_offsets\"", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // Balance defines an account address and balance pair used in the bank module's
@@ -38,8 +43,11 @@ message Balance {
   string address = 1;
 
   // coins defines the different coins this balance holds.
-  repeated cosmos.base.v1beta1.Coin coins = 2
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
+  ];
 }
 
 // GenesisSupplyOffset encodes the supply offsets, just for genesis.

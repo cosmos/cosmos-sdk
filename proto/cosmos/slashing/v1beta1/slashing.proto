@@ -7,6 +7,7 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "amino/amino.proto";
 
 // ValidatorSigningInfo defines a validator's signing info for monitoring their
 // liveness activity.
@@ -22,8 +23,12 @@ message ValidatorSigningInfo {
   // `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
   int64 index_offset = 3 [(gogoproto.moretags) = "yaml:\"index_offset\""];
   // Timestamp until which the validator is jailed due to liveness downtime.
-  google.protobuf.Timestamp jailed_until = 4
-      [(gogoproto.moretags) = "yaml:\"jailed_until\"", (gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp jailed_until = 4 [
+    (gogoproto.moretags)   = "yaml:\"jailed_until\"",
+    (gogoproto.stdtime)    = true,
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
   // Whether or not a validator has been tombstoned (killed out of validator set). It is set
   // once the validator commits an equivocation or for any other configured misbehiavor.
   bool tombstoned = 5;
@@ -34,25 +39,31 @@ message ValidatorSigningInfo {
 
 // Params represents the parameters used for by the slashing module.
 message Params {
+  option (amino.name) = "cosmos-sdk/x/slashing/Params";
+
   int64 signed_blocks_window  = 1 [(gogoproto.moretags) = "yaml:\"signed_blocks_window\""];
   bytes min_signed_per_window = 2 [
     (gogoproto.moretags)   = "yaml:\"min_signed_per_window\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
   google.protobuf.Duration downtime_jail_duration = 3 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
-    (gogoproto.moretags)    = "yaml:\"downtime_jail_duration\""
+    (gogoproto.moretags)    = "yaml:\"downtime_jail_duration\"",
+    (amino.dont_omitempty)  = true
   ];
   bytes slash_fraction_double_sign = 4 [
     (gogoproto.moretags)   = "yaml:\"slash_fraction_double_sign\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
   bytes slash_fraction_downtime = 5 [
     (gogoproto.moretags)   = "yaml:\"slash_fraction_downtime\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
 }

@@ -166,17 +166,11 @@ When writing documentation, follow the [Documentation Writing Guidelines](./docs
 
 ### RFC & ADR
 
-Within the Cosmos SDK we have two forms of documenting descisions, Request For Comment (RFC) & Architecture Design Record (ADR). They perform two different functions. To better illustrate when an RFC or ADR should be written please refer to this diagram. 
+Within the Cosmos SDK we have two forms of documenting descisions, Request For Comment (RFC) & Architecture Design Record (ADR). They perform two different functions. The process for assessing if something needs an RFC is located in the respective folders: 
 
-![Contributing flow](./docs/static/img/contributing.png)
+* [RFC Process](./docs/rfc/process.md)
+* [ADR Process](./docs/adr/process.md) 
 
-#### RFC 
-
-An RFC is written when there is an ongoing conversation on a specific item and it needs to be captured within the repository for future contributors and if the design of how to implement something is not yet clear. When a design or code change is not clear to many, an RFC should be written to come to consensus on what changes are being proposed. Through this process and potentially a proof of concept the design will come and can be captured in an ADR. 
-
-#### ADR
-
-An ADR is meant to capture how something will be implemented. This is specific to how the proposed change will be incorporated into the software. At this point the author has a good understanding of the proposed changes and is proposing specific changes to the software to move towards the end goal of implementing the changes.
 
 ## Dependencies
 

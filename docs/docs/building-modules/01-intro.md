@@ -91,4 +91,4 @@ Modules are by convention defined in the `./x/` subfolder (e.g. the `bank` modul
 
 In addition to these components, modules implement the `AppModule` interface in order to be managed by the [`module manager`](./01-module-manager.md).
 
-Please refer to the [structure document](./10-structure.md) to learn about the recommended structure of a module's directory.
+Please refer to the [structure document](./11-structure.md) to learn about the recommended structure of a module's directory.

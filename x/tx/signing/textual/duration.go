@@ -187,7 +187,7 @@ func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (prot
 	return protoreflect.ValueOfMessage(msg), nil
 }
 
-// toDurations converts the proto Message to a durationpb.Duration.
+// toDuration converts the proto Message to a durationpb.Duration.
 // The input msg can be:
 // - either a durationpb.Duration already (in which case there's nothing to do),
 // - or a dynamicpb.Message.

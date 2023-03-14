@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -28,11 +29,9 @@ func NewAnyValueRenderer(t *SignModeHandler) ValueRenderer {
 // Format implements the ValueRenderer interface.
 func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	msg := v.Message().Interface()
-	omitHeader := 0
-
-	anymsg, ok := msg.(*anypb.Any)
-	if !ok {
-		return nil, fmt.Errorf("expected Any, got %T", msg)
+	anymsg, err := toAny(msg)
+	if err != nil {
+		return nil, err
 	}
 
 	internalMsg, err := anyutil.Unpack(anymsg, ar.tr.protoFiles, ar.tr.protoTypes)
@@ -51,6 +50,7 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 	}
 
 	// The Any value renderer suppresses emission of the object header
+	omitHeader := 0
 	_, isMsgRenderer := vr.(*messageValueRenderer)
 	if isMsgRenderer && subscreens[0].Content == fmt.Sprintf("%s object", internalMsg.ProtoReflect().Descriptor().Name()) {
 		omitHeader = 1
@@ -129,4 +129,20 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 	}
 
 	return protoreflect.ValueOfMessage(anyMsg.ProtoReflect()), nil
+}
+
+// toAny converts the proto Message to a anypb.Any.
+// The input msg can be:
+// - either a durationpb.Duration already (in which case there's nothing to do),
+// - or a dynamicpb.Message.
+func toAny(msg proto.Message) (*anypb.Any, error) {
+	switch msg := msg.(type) {
+	case *anypb.Any:
+		return msg, nil
+	case *dynamicpb.Message:
+		t, v := getFieldValue(msg, "type_url").String(), getFieldValue(msg, "v").Bytes()
+		return &anypb.Any{TypeUrl: t, Value: v}, nil
+	default:
+		return nil, fmt.Errorf("expected dpb.Duration or dynamicpb.Message, got %T", msg)
+	}
 }

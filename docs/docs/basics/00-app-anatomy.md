@@ -23,7 +23,7 @@ The Daemon, or [Full-Node Client](../core/03-node.md), is the core process of a 
                 |  |                               |  |
 Blockchain Node |  |           Consensus           |  |
                 |  |                               |  |
-                |  +-------------------------------+  |   CometBFT Core
+                |  +-------------------------------+  |   CometBFT
                 |  |                               |  |
                 |  |           Networking          |  |
                 |  |                               |  |

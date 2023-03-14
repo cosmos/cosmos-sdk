@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -903,10 +904,18 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 
 func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 	val := s.network.Validators[0]
-	txBuilder := s.mkTxBuilder()
-	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	//txBuilder := s.mkTxBuilder()
+	//stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	//s.Require().NoError(err)
+	//txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
+	//s.Require().NoError(err)
+	//err = os.WriteFile("testdata/tx_amino1.json", txJSONBytes, 0644)
+	//s.Require().NoError(err)
+
+	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.json")
 	s.Require().NoError(err)
-	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
+	var stdTx legacytx.StdTx
+	err = val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSONBytes, &stdTx)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -936,6 +945,8 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 				var tx legacytx.StdTx
 				stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
 				stdTxConfig.Cdc.Unmarshal(res.AminoBinary, &tx)
+				//err = os.WriteFile("testdata/tx_amino1.bin", res.AminoBinary, 0644)
+				//s.Require().NoError(err)
 				s.Require().Equal(tx.GetMsgs(), stdTx.GetMsgs())
 			}
 		})

@@ -89,7 +89,7 @@ func TestDirectAuxHandler(t *testing.T) {
 		AuthInfoBytes: authInfoBz,
 		BodyBytes:     bodyBz,
 	}
-	modeHandler := direct_aux.SignModeHandler{}
+	modeHandler := direct_aux.NewSignModeHandler(signing.NewGetSignersContext(signing.GetSignersOptions{}))
 
 	t.Log("verify fee payer cannot use SIGN_MODE_DIRECT_AUX")
 	_, err = modeHandler.GetSignBytes(context.Background(), feePayerSigningData, txData)

@@ -12,27 +12,45 @@ import (
 )
 
 // SignModeHandler is the SIGN_MODE_DIRECT_AUX implementation of signing.SignModeHandler.
-type SignModeHandler struct{}
+type signModeHandler struct {
+	signersContext *signing.GetSignersContext
+}
 
-var _ signing.SignModeHandler = SignModeHandler{}
+// NewSignModeHandler returns a new SignModeHandler.
+func NewSignModeHandler(signersContext *signing.GetSignersContext) signModeHandler {
+	return signModeHandler{signersContext: signersContext}
+}
+
+var _ signing.SignModeHandler = signModeHandler{}
 
 // Mode implements signing.SignModeHandler.Mode.
-func (h SignModeHandler) Mode() signingv1beta1.SignMode {
+func (h signModeHandler) Mode() signingv1beta1.SignMode {
 	return signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX
 }
 
+func (h signModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
+	for _, msg := range txData.Body.Messages {
+		signer, err := h.signersContext.GetSigners(msg)
+		if err != nil {
+			return "", err
+		}
+		return signer[0], nil
+	}
+	return "", fmt.Errorf("no signer found")
+}
+
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.
-func (SignModeHandler) GetSignBytes(
+func (h signModeHandler) GetSignBytes(
 	_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 
 	// replicate https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L142
 	feePayer := txData.AuthInfo.Fee.Payer
 	if feePayer == "" {
-		signers, err := signing.NewGetSignersContext(signing.GetSignersOptions{}).GetSigners(txData.Body)
+		fp, err := h.getFirstSigner(txData)
 		if err != nil {
 			return nil, err
 		}
-		feePayer = signers[0]
+		feePayer = fp
 	}
 	if feePayer == signerData.Address {
 		return nil, fmt.Errorf("fee payer %s cannot sign with %s: unauthorized",

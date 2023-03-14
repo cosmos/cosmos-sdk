@@ -2,17 +2,13 @@
 
 >TODO: Replace with valid ICS number and possibly move to new location.
 
-- [ICS 030: Cosmos Signed Messages](#ics-030-cosmos-signed-messages)
-  - [Status](#status)
-  - [Changelog](#changelog)
-  - [Abstract](#abstract)
-  - [Preliminary](#preliminary)
-  - [Specification](#specification)
-  - [Future Adaptations](#future-adaptations)
-  - [API](#api)
-    - [**cosmosSignBytes**](#cosmossignbytes)
-    - [Examples](#examples)
-  - [References](#references)
+* [Changelog](#changelog)
+* [Abstract](#abstract)
+* [Preliminary](#preliminary)
+* [Specification](#specification)
+* [Future Adaptations](#future-adaptations)
+* [API](#api)
+* [References](#references)  
 
 ## Status
 

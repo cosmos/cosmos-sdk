@@ -103,7 +103,7 @@ https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689
 
 The `AutoCLIOptions()` method in the autocli package allows you to specify the services and sub-commands to be mapped for your app. In the example code, an instance of the `autocliv1.ModuleOptions` struct is defined in the `appmodule.AppModule` implementation located in the `x/gov/autocli.go` file. This configuration groups related commands together and specifies subcommands for each service.
 
-# Positional Arguments
+### Positional Arguments
 
 Positional arguments are arguments that are passed to a command without being specified as a flag. They are typically used for providing additional context to a command, such as a filename or search query.
 
@@ -128,6 +128,7 @@ To query an account address by account number:
 ```bash
 `./app query auth address-by-acc-num 1`
 ```
+
 In both of these commands, the `auth` service is being queried with the `query` subcommand, followed by the specific method being called (`account` or `address-by-acc-num`). The positional argument is included at the end of the command (`cosmos1abcd...xyz` or `1`) to specify the address or account number, respectively.
 
 ## Customising Flag Names

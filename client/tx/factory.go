@@ -144,12 +144,6 @@ func (f Factory) WithGas(gas uint64) Factory {
 
 // WithFees returns a copy of the Factory with an updated fee.
 func (f Factory) WithFees(fees string) Factory {
-	// When using the FeesFlagAuto, if not provided,
-	// simulate Tx to get the tx gas
-	if fees == flags.FlagAuto {
-		f.simulateAndExecute = true
-		return f
-	}
 	parsedFees, err := sdk.ParseCoinsNormalized(fees)
 	if err != nil {
 		panic(err)

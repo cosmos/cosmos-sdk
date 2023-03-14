@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unrealeased
+
+### Bug Fixes
+
+* (cli) [#22](https://github.com/evmos/cosmos-sdk/pull/22) Rollback `--fees auto` flag
+
 ## v0.46.11-ledger - 2023-02-24
 
 ### Bug Fixes

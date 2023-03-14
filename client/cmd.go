@@ -308,20 +308,6 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		}
 	}
 
-	feesStr, _ := flagSet.GetString(flags.FlagFees)
-	gasStr, _ := flagSet.GetString(flags.FlagGas)
-	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
-
-	// if used --gas=auto, then don't accept any other flag related to fees (e.g. --fees, --gas-price)
-	if gasStr == flags.FlagAuto && (feesStr != "" || gasPricesStr != "") {
-		return clientCtx, fmt.Errorf("you are using the --gas %q flag. It is not allowed to specify other flags (e.g. --fees and/or --gas-prices)", flags.FlagAuto)
-	}
-
-	// ditto for --fees=auto
-	if feesStr == flags.FlagAuto && (gasStr != "" || gasPricesStr != "") {
-		return clientCtx, fmt.Errorf("you are using the --fees %q flag. It is not allowed to specify other flags (e.g. --gas and/or --gas-prices)", flags.FlagAuto)
-	}
-
 	return clientCtx, nil
 }
 

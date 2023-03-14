@@ -35,3 +35,26 @@ Status has two components:
 ```text
 {CONSENSUS STATUS}
 ```
+
+#### Consensus Status
+
+```text
+DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEDED by ADR-xxx
+                  \        |
+                   \       |
+                    v      v
+                     ABANDONED
+```
+
+* `DRAFT`: [optional] an ADR which is work in progress, not being ready for a general review. This is to present an early work and get an early feedback in a Draft Pull Request form.
+* `PROPOSED`: an ADR covering a full solution architecture and still in the review - project stakeholders haven't reached an agreed yet.
+* `LAST CALL <date for the last call>`: [optional] clear notify that we are close to accept updates. Changing a status to `LAST CALL` means that social consensus (of Cosmos SDK maintainers) has been reached and we still want to give it a time to let the community react or analyze.
+* `ACCEPTED`: ADR which will represent a currently implemented or to be implemented architecture design.
+* `REJECTED`: ADR can go from PROPOSED or ACCEPTED to rejected if the consensus among project stakeholders will decide so.
+* `SUPERSEEDED by ADR-xxx`: ADR which has been superseded by a new ADR.
+* `ABANDONED`: the ADR is no longer pursued by the original authors.
+
+## Language used in RFC
+
+* The background/goal should be written in the present tense.
+* Avoid using a first, personal form.

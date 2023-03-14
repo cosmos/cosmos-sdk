@@ -6,6 +6,10 @@
 4. Add an entry to a list in the [README](./README.md) file.
 5. Create a Pull Request to propose a new ADR.
 
+## What is an ADR? 
+
+An ADR is a document to document an implementation and design that may or may not have been discussed in an RFC. While an RFC is meant to replace synchoronus communication in a distributed environment, an ADR is meant to document an already made descision. An ADR wont come with much of a communication overhead because the discussion was recorded in an RFC or a synchoronus discussion. If the consensus came from a synchoronus discussion then a short excerpt should be added to the ADR to explain the goals. 
+
 ## ADR life cycle
 
 ADR creation is an **iterative** process. Instead of trying to solve all decisions in a single ADR pull request, we MUST firstly understand the problem and collect feedback through a GitHub Issue.

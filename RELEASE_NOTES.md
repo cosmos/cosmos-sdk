@@ -47,10 +47,11 @@ Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release
 
 * Binary Builders ([@binary_builders](https://twitter.com/binary_builders))
 * Crypto.com ([@cronos_chain](https://twitter.com/cronos_chain))
-* Interchain GmbH ([@interchainio](https://twitter.com/interchainio))
+* Interchain GmbH ([@interchain_io](https://twitter.com/interchain_io))
 * Notional ([@notionaldao](https://twitter.com/notionaldao))
 * Osmosis ([@osmosiszone](https://twitter.com/osmosiszone))
 * Regen Network ([@regen_network](https://twitter.com/RegenNetworkDev))
+* VitWit ([@vitwit_](https://twitter.com/vitwit_))
 
 This list is non exhaustive and ordered alphabetically.  
 Thank you to everyone who contributed to this release!

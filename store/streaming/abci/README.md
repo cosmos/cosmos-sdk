@@ -302,10 +302,10 @@ func NewApp(...) *App {
             logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
             plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
             if err != nil {
-                tmos.Exit(err.Error())
+                cmtos.Exit(err.Error())
             }
             if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
-                tmos.Exit(err.Error())
+                cmtos.Exit(err.Error())
             }
         }
     }

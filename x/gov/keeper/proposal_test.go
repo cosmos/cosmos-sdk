@@ -95,6 +95,55 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
 		suite.Require().Equal(proposalID, proposal.Id)
 		activeIterator.Close()
+
+		// delete the proposal to avoid issues with other tests
+		suite.Require().NotPanics(func() {
+			suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+		}, "")
+	}
+}
+
+func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
+	testCases := []struct {
+		name      string
+		expedited bool
+	}{
+		{name: "regular proposal"},
+		{name: "expedited proposal", expedited: true},
+	}
+
+	for _, tc := range testCases {
+		suite.reset()
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), tc.expedited)
+		suite.Require().NoError(err)
+		suite.Require().Nil(proposal.VotingStartTime)
+
+		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+
+		proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
+		suite.Require().True(ok)
+		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+
+		activeIterator := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
+		suite.Require().True(activeIterator.Valid())
+
+		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
+		suite.Require().Equal(proposalID, proposal.Id)
+		activeIterator.Close()
+
+		// add vote
+		voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
+		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), voteOptions, "")
+		suite.Require().NoError(err)
+
+		suite.Require().NotPanics(func() {
+			suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+		}, "")
+
+		// add vote but proposal is deleted along with its VotingPeriodProposalKey
+		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), voteOptions, "")
+		suite.Require().ErrorContains(err, ": inactive proposal")
 	}
 }
 

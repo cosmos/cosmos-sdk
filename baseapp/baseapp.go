@@ -143,6 +143,8 @@ type BaseApp struct { //nolint: maligned
 
 	// streamingManager for managing instances and configuration of ABCIListener services
 	streamingManager storetypes.StreamingManager
+
+	chainID string
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -350,7 +352,7 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
-	emptyHeader := cmtproto.Header{}
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(runTxModeCheck, emptyHeader)

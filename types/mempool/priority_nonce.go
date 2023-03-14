@@ -73,8 +73,8 @@ type (
 		// comparable via Compare.
 		GetTxPriority func(ctx context.Context, tx sdk.Tx) C
 
-		// CompareTxPriority compares two transaction priorities. The result should be
-		// 0 if a == b, -1 if a < b, and +1 if a > b.
+		// Compare compares two transaction priorities. The result must be 0 if
+		// a == b, -1 if a < b, and +1 if a > b.
 		Compare func(a, b C) int
 
 		// MinValue defines the minimum priority value, e.g. MinInt64. This value is
@@ -450,7 +450,7 @@ func IsEmpty[C comparable](mempool Mempool) error {
 		return fmt.Errorf("priorityIndex not empty")
 	}
 
-	var countKeys []C
+	countKeys := make([]C, 0, len(mp.priorityCounts))
 	for k := range mp.priorityCounts {
 		countKeys = append(countKeys, k)
 	}
@@ -461,7 +461,7 @@ func IsEmpty[C comparable](mempool Mempool) error {
 		}
 	}
 
-	var senderKeys []string
+	senderKeys := make([]string, 0, len(mp.senderIndices))
 	for k := range mp.senderIndices {
 		senderKeys = append(senderKeys, k)
 	}

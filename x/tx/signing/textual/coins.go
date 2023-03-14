@@ -66,7 +66,10 @@ func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.
 	coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
 	var err error
 	for i := 0; i < protoCoins.Len(); i++ {
-		coin := protoCoins.Get(i).Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin)
+		coin, err := toCoin(protoCoins.Get(i).Interface().(protoreflect.Message).Interface())
+		if err != nil {
+			return nil, err
+		}
 		coins[i] = coin
 		metadatas[i], err = vr.coinMetadataQuerier(ctx, coin.Denom)
 		if err != nil {
@@ -225,7 +228,7 @@ func toCoin(msg proto.Message) (*basev1beta1.Coin, error) {
 	case *basev1beta1.Coin:
 		return msg, nil
 	case *dynamicpb.Message:
-		a, d := getFieldValue(msg, "amount").String(), getFieldValue(msg, "denom").String()
+		a, d := getValueFromFieldName(msg, "amount").String(), getValueFromFieldName(msg, "denom").String()
 		return &basev1beta1.Coin{Amount: a, Denom: d}, nil
 	default:
 		return nil, fmt.Errorf("expected timestamppb.Timestamp or dynamicpb.Message, got %T", msg)

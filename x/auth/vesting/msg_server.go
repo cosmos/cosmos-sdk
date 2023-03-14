@@ -81,8 +81,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		}
 	}()
 
-	err = bk.SendCoins(ctx, from, to, msg.Amount)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -135,8 +134,7 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 		}
 	}()
 
-	err = bk.SendCoins(ctx, from, to, msg.Amount)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -163,9 +161,12 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	}
 
 	var totalCoins sdk.Coins
-
 	for _, period := range msg.VestingPeriods {
 		totalCoins = totalCoins.Add(period.Amount...)
+	}
+
+	if err := bk.IsSendEnabledCoins(ctx, totalCoins...); err != nil {
+		return nil, err
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
@@ -188,8 +189,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		}
 	}()
 
-	err = bk.SendCoins(ctx, from, to, totalCoins)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, totalCoins); err != nil {
 		return nil, err
 	}
 

@@ -133,7 +133,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 
 // toAny converts the proto Message to a anypb.Any.
 // The input msg can be:
-// - either a durationpb.Duration already (in which case there's nothing to do),
+// - either a anypb.Any already (in which case there's nothing to do),
 // - or a dynamicpb.Message.
 func toAny(msg proto.Message) (*anypb.Any, error) {
 	switch msg := msg.(type) {

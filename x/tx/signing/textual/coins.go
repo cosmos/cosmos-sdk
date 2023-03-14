@@ -231,6 +231,6 @@ func toCoin(msg proto.Message) (*basev1beta1.Coin, error) {
 		a, d := getValueFromFieldName(msg, "amount").String(), getValueFromFieldName(msg, "denom").String()
 		return &basev1beta1.Coin{Amount: a, Denom: d}, nil
 	default:
-		return nil, fmt.Errorf("expected timestamppb.Timestamp or dynamicpb.Message, got %T", msg)
+		return nil, fmt.Errorf("expected Coin or dynamicpb.Message, got %T", msg)
 	}
 }

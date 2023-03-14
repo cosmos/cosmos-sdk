@@ -253,7 +253,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 				require.NoError(t, pool.Remove(tx))
 			}
 
-			require.NoError(t, mempool.IsEmpty(pool))
+			require.NoError(t, mempool.IsEmpty[int64](pool))
 		})
 	}
 }
@@ -374,7 +374,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	s.iterations = 0
 	s.mempool = mempool.NewPriorityMempool(
 		mempool.NewDefaultTxPriority(),
-		mempool.PriorityNonceWithOnRead(func(tx sdk.Tx) {
+		mempool.PriorityNonceWithOnRead[int64](func(tx sdk.Tx) {
 			s.iterations++
 		}),
 	)
@@ -636,7 +636,7 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	}
 
 	// unlimited
-	mp := mempool.NewPriorityMempool(mempool.NewDefaultTxPriority(), mempool.PriorityNonceWithMaxTx(0))
+	mp := mempool.NewPriorityMempool(mempool.NewDefaultTxPriority(), mempool.PriorityNonceWithMaxTx[int64](0))
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
 		require.NoError(t, mp.Insert(c, tx))
@@ -650,7 +650,7 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	}
 
 	// limit: 3
-	mp = mempool.NewPriorityMempool(mempool.NewDefaultTxPriority(), mempool.PriorityNonceWithMaxTx(3))
+	mp = mempool.NewPriorityMempool(mempool.NewDefaultTxPriority(), mempool.PriorityNonceWithMaxTx[int64](3))
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
@@ -664,7 +664,7 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	}
 
 	// disabled
-	mp = mempool.NewPriorityMempool(mempool.NewDefaultTxPriority(), mempool.PriorityNonceWithMaxTx(-1))
+	mp = mempool.NewPriorityMempool(mempool.NewDefaultTxPriority(), mempool.PriorityNonceWithMaxTx[int64](-1))
 	for _, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
@@ -702,9 +702,9 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	feeBump := 20
 	mp = mempool.NewPriorityMempool(
 		mempool.NewDefaultTxPriority(),
-		mempool.PriorityNonceWithTxReplacement(func(op, np any, oTx, nTx sdk.Tx) bool {
+		mempool.PriorityNonceWithTxReplacement(func(op, np int64, oTx, nTx sdk.Tx) bool {
 			threshold := int64(100 + feeBump)
-			return np.(int64) >= op.(int64)*threshold/100
+			return np >= op*threshold/100
 		}),
 	)
 

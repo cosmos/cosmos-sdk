@@ -96,7 +96,7 @@ At this point in the lifecycle, the user has created a CLI command with all of t
 
 #### Encoding
 
-In our case (querying an address's delegations), `MyQuery` contains an [address](./03-accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it is ultimately relayed to a consensus engine (e.g. CometBFT Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `client.Context` is used to marshal the address.
+In our case (querying an address's delegations), `MyQuery` contains an [address](./03-accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it is ultimately relayed to a consensus engine (e.g. CometBFT) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `client.Context` is used to marshal the address.
 
 Here is what the code looks like for the CLI command:
 

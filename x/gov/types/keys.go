@@ -31,6 +31,8 @@ const (
 //
 // - 0x03: nextProposalID
 //
+// - 0x04<proposalID_Bytes>: []byte{0x01} if proposalID is in the voting period
+//
 // - 0x10<proposalID_Bytes><depositorAddrLen (1 Byte)><depositorAddr_Bytes>: Deposit
 //
 // - 0x20<proposalID_Bytes><voterAddrLen (1 Byte)><voterAddr_Bytes>: Voter

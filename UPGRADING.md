@@ -75,6 +75,10 @@ All the store imports are now renamed to use `cosmossdk.io/store` instead of `gi
 
 ### Modules
 
+#### `x/capability`
+
+Capability was moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC V8 will contain the necessary changes to incorporate the new module location
+
 #### `x/gov`
 
 ##### Expedited Proposals
@@ -134,6 +138,8 @@ Due to the import changes, this is a breaking change. Chains need to remove **en
 
 Other than that, the migration should be seamless.
 On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.48 (part 2).
+
+Note: It is possible that these steps must first be performed by your dependencies before you can perform them on your own codebase.
 
 ### Simulation
 
@@ -268,7 +274,7 @@ the correct code.
 #### `**all**`
 
 `EventTypeMessage` events, with `sdk.AttributeKeyModule` and `sdk.AttributeKeySender` are now emitted directly at message excecution (in `baseapp`).
-This means that you can remove the following boilerplate from all your custom modules:
+This means that the following boilerplate should be removed from all your custom modules:
 
 ```go
 ctx.EventManager().EmitEvent(
@@ -282,7 +288,7 @@ ctx.EventManager().EmitEvent(
 
 The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
 In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
-`Baseapp` only emits that event if the module have not already done so.
+`Baseapp` only emits that event if the module has not already done so.
 
 #### `x/params`
 

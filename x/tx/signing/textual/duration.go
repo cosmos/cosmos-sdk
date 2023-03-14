@@ -196,7 +196,7 @@ func toDuration(msg proto.Message) (*dpb.Duration, error) {
 	case *dpb.Duration:
 		return msg, nil
 	case *dynamicpb.Message:
-		s, n := getFieldValue(msg, "seconds").Int(), getFieldValue(msg, "nanos").Int()
+		s, n := getValueFromFieldName(msg, "seconds").Int(), getValueFromFieldName(msg, "nanos").Int()
 		return &dpb.Duration{Seconds: s, Nanos: int32(n)}, nil
 	default:
 		return nil, fmt.Errorf("expected dpb.Duration or dynamicpb.Message, got %T", msg)

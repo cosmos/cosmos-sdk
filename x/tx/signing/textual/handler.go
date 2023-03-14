@@ -218,9 +218,9 @@ func (r *SignModeHandler) Mode() signingv1beta1.SignMode {
 
 var _ signing.SignModeHandler = &SignModeHandler{}
 
-// getFieldValue is an utility function to get the protoreflect.Value of a
+// getValueFromFieldName is an utility function to get the protoreflect.Value of a
 // proto Message from its field name.
-func getFieldValue(m proto.Message, fieldName string) protoreflect.Value {
+func getValueFromFieldName(m proto.Message, fieldName string) protoreflect.Value {
 	fd := m.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name(fieldName))
 
 	return m.ProtoReflect().Get(fd)

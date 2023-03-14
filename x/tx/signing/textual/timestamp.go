@@ -60,7 +60,7 @@ func toTimestamp(msg protoreflect.ProtoMessage) (*tspb.Timestamp, error) {
 	case *tspb.Timestamp:
 		return msg, nil
 	case *dynamicpb.Message:
-		s, n := getFieldValue(msg, "seconds").Int(), getFieldValue(msg, "nanos").Int()
+		s, n := getValueFromFieldName(msg, "seconds").Int(), getValueFromFieldName(msg, "nanos").Int()
 		return &tspb.Timestamp{Seconds: s, Nanos: int32(n)}, nil
 	default:
 		return nil, fmt.Errorf("expected timestamppb.Timestamp or dynamicpb.Message, got %T", msg)

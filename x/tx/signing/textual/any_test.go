@@ -6,18 +6,24 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/x/tx/signing/textual"
-
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/x/tx/internal/testpb"
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 type anyJsonTest struct {
@@ -59,22 +65,46 @@ func TestAny(t *testing.T) {
 	}
 }
 
-func TestCustomProtoFiles(t *testing.T) {
+func TestDynamicpb(t *testing.T) {
 	tr, err := textual.NewSignModeHandler(textual.SignModeOptions{
 		CoinMetadataQuerier: EmptyCoinMetadataQuerier,
 		ProtoTypes:          &protoregistry.Types{}, // Set to empty to force using dynamicpb
 	})
 	require.NoError(t, err)
 
-	msg := bankv1beta1.MsgSend{FromAddress: "foo"}
-	vr, err := tr.GetMessageValueRenderer(msg.ProtoReflect().Descriptor())
-	require.NoError(t, err)
-	screens, err := vr.Format(context.Background(), protoreflect.ValueOf(msg.ProtoReflect()))
+	testAny, err := anyutil.New(&testpb.Foo{FullName: "foobar"})
 	require.NoError(t, err)
 
-	expScreens := []textual.Screen{
-		{Content: "MsgSend object"},
-		{Title: "From address", Content: "foo", Indent: 1},
+	testcases := []struct {
+		name string
+		msg  proto.Message
+	}{
+		{"coin", &basev1beta1.Coin{Denom: "stake", Amount: "1"}},
+		{"nested coins", &bankv1beta1.MsgSend{Amount: []*basev1beta1.Coin{{Denom: "stake", Amount: "1"}}}},
+		{"any", testAny},
+		{"nested any", &testpb.A{ANY: testAny}},
+		{"duration", durationpb.New(time.Hour)},
+		{"timestamp", timestamppb.New(time.Now())},
 	}
-	require.Equal(t, expScreens, screens)
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			any, err := anyutil.New(tc.msg)
+			require.NoError(t, err)
+			val := &testpb.A{
+				ANY: any,
+			}
+			vr, err := tr.GetMessageValueRenderer(val.ProtoReflect().Descriptor())
+			require.NoError(t, err)
+
+			// Round trip.
+			screens, err := vr.Format(context.Background(), protoreflect.ValueOf(val.ProtoReflect()))
+			require.NoError(t, err)
+			parsedVal, err := vr.Parse(context.Background(), screens)
+			require.NoError(t, err)
+			diff := cmp.Diff(val, parsedVal.Message().Interface(), protocmp.Transform())
+			require.Empty(t, diff)
+		})
+	}
 }

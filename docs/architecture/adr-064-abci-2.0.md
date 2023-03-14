@@ -128,6 +128,7 @@ Example:
 ```go
 // VoteExtensionHandler implements an Oracle vote extension handler.
 type VoteExtensionHandler struct {
+	cdc   Codec
 	mk    MyKeeper
 	state VoteExtState // This could be a map or a DB connection object
 }
@@ -136,12 +137,14 @@ type VoteExtensionHandler struct {
 // a vote extension, such as fetching a series of prices for supported assets.
 func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.RequestExtendVote) abci.ResponseExtendVote {
 	prices := GetPrices(ctx, h.mk.Assets())
-	bz, err := EncodePrices(prices)
+	bz, err := EncodePrices(h.cdc, prices)
 	if err != nil {
 		panic(fmt.Errorf("failed to encode prices for vote extension: %w", err))
 	}
 
 	// store our vote extension at the given height
+	//
+	// NOTE: Vote extensions can be overridden since we can timeout in a round.
 	SetPrices(h.state, req, bz)
 
 	return abci.ResponseExtendVote{VoteExtension: bz}
@@ -151,7 +154,7 @@ func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.Reques
 // the req.VoteExtension field, such as ensuring the provided oracle prices are
 // within some valid range of our prices.
 func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension {
-	prices, err := DecodePrices(req.VoteExtension)
+	prices, err := DecodePrices(h.cdc, req.VoteExtension)
 	if err != nil {
 		log("failed to decode vote extension", "err", err)
 		return abci.ResponseVerifyVoteExtension{Status: REJECT}
@@ -174,9 +177,71 @@ make vote extensions useful, all validators should have access to the agreed upo
 vote extensions at height `H` during `H+1`.
 
 Since CometBFT includes all the vote extension signatures in `RequestPrepareProposal`,
-we propose that the proposing validator "inject" the vote extensions along with
-their respective signatures via a special transaction, `VoteExtTx`, into the
-block proposal during `PrepareProposal`.
+we propose that the proposing validator manually "inject" the vote extensions
+along with their respective signatures via a special transaction, `VoteExtsTx`,
+into the block proposal during `PrepareProposal`. The `VoteExtsTx` will be
+populated with a single `ExtendedCommitInfo` object which is received directly
+from `RequestPrepareProposal`.
+
+For convention, the `VoteExtsTx` transaction should be the first transaction in
+the block proposal, although chains can implement their own preferences. For
+safety purposes, we also propose that the proposer itself verify all the vote
+extension signatures it receives in `RequestPrepareProposal`.
+
+A validator, upon a `RequestProcessProposal`, will receive the injected `VoteExtsTx`
+which includes the vote extensions along with their signatures. If no such transaction
+exists, the validator MUST REJECT the proposal.
+
+When a validator inspects a `VoteExtsTx`, it will evaluate each `SignedVoteExtension`.
+For each signed vote extension, the validator will generate the signed bytes and
+verify the signature. At least 2/3 valid signatures, based on voting power, must
+be received in order for the block proposal to be valid, otherwise the validator
+MUST REJECT the proposal.
+
+In order to have the ability to validate signatures, `BaseApp` must have access
+to the `x/staking` module. However, we will avoid a direct dependency and instead
+rely on an interface. In addition, the Cosmos SDK will expose a signature verification
+method which applications can use:
+
+```go
+type ValidatorI interface {
+	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)
+}
+
+type StakingKeeper interface {
+	Validator(sdk.Context, sdk.ValAddress) ValidatorI 
+}
+
+func (app *BaseApp) ValidateVoteExtensions(currentHeight int64, extCommit abci.ExtendedCommitInfo) error {
+	for _, vote := range extCommit.Votes {
+		if !vote.SignedLastBlock || len(vote.VoteExtension) == 0 {
+			continue
+		}
+
+		if len(vote.ExtensionSignature) == 0 {
+			return 0, 0, fmt.Errorf("received a non-empty vote extension with empty signature for validator %X", vote.Validator)
+		}
+
+		cve := cmtproto.CanonicalVoteExtension{
+			Extension: vote.VoteExtension,
+			Height:    currentHeight - 1, // the vote extension was signed in the previous height
+			Round:     int64(extCommit.Round),
+			ChainId:   app.GetChainID(),
+		}
+
+		extSignBytes, err := cosmosio.MarshalDelimited(&cve)
+		if err != nil {
+			return fmt.Errorf("failed to encode CanonicalVoteExtension: %w", err)
+		}
+
+
+	}
+}
+```
+
+Once at least 2/3 signatures, by voting power, are received and verified, the
+validator can use the vote extensions to derive additional data or come to some
+decision based on the vote extension
 
 ### `FinalizeBlock`
 

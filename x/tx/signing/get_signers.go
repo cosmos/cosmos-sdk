@@ -38,9 +38,7 @@ func NewGetSignersContext(options GetSignersOptions) (*GetSignersContext, error)
 		getSignersFuncs: map[protoreflect.FullName]getSignersFunc{},
 	}
 
-	err := c.init()
-
-	return c, err
+	return c, c.init()
 }
 
 type getSignersFunc func(proto.Message) []string

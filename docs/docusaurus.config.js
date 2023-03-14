@@ -120,8 +120,8 @@ const config = {
                 href: "https://hub.cosmos.network",
               },
               {
-                label: "Tendermint Core",
-                href: "https://docs.tendermint.com",
+                label: "CometBFT",
+                href: "https://docs.cometbft.com",
               },
               {
                 label: "IBC Go",
@@ -251,13 +251,6 @@ const config = {
               "/main/modules/bank/06_client",
             ],
             to: "/main/modules/bank",
-          },
-          {
-            from: [
-              "/main/modules/capability/01_concepts",
-              "/main/modules/capability/02_state",
-            ],
-            to: "/main/modules/capability",
           },
           {
             from: [

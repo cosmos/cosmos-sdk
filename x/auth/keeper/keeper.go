@@ -86,7 +86,7 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	bech32Codec := newBech32Codec(bech32Prefix)
+	bech32Codec := NewBech32Codec(bech32Prefix)
 
 	return AccountKeeper{
 		storeKey:   storeKey,

@@ -40,7 +40,6 @@ For each block, two files are created and names `block-{N}-meta` and `block-{N}-
 
 The meta file contains the protobuf encoded message `BlockMetadata` which contains the abci event requests and responses of the block:
 
-<!-- Should these still refer to tendermint here or what package? -->
 ```protobuf
 message BlockMetadata {
     message DeliverTx {

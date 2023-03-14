@@ -119,3 +119,12 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+// Here are the short-lived replace of Hubl
+// Replace here are pending PRs, or version to be tagged
+replace (
+	// TODO tag after https://github.com/cosmos/cosmos-sdk/pull/14207 merge
+	cosmossdk.io/store => ../../store
+	// TODO this can be removed when client/v2 is released with CometBFT changes in the SDK
+	github.com/cosmos/cosmos-sdk => ../..
+)

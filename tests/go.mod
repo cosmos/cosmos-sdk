@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/log v0.1.0
 	cosmossdk.io/math v1.0.0-rc.0
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
-	cosmossdk.io/store v0.0.0-20230309163709-87da587416ba
+	cosmossdk.io/store v0.0.0-20230314205129-d50cb1ef349f
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc

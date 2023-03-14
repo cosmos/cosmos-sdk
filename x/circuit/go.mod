@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.20
 
 require (
-	cosmossdk.io/store v0.0.0-20230302163046-da238c555585
+	cosmossdk.io/store v0.0.0-20230314205129-d50cb1ef349f
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230313124132-b4d769a8a87d
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/regen-network/gocuke v0.6.2

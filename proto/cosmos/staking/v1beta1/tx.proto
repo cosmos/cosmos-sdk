@@ -45,6 +45,12 @@ service Msg {
   // parameters.
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // RotateOperatorKey defines an operation for rotating the operator key
+  // of a validator.
+  // 
+  // Since: cosmos-sdk 0.48
+  rpc RotateOperatorKey(MsgRotateOperatorKey) returns (MsgRotateOperatorKeyResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -204,3 +210,23 @@ message MsgUpdateParams {
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {};
+
+// MsgRotateOperatorKey is the Msg/RotateOperatorKey request type.
+//
+// Since: cosmos-sdk 0.48
+message MsgRotateOperatorKey {
+  option (cosmos.msg.v1.signer) = "validator_address";
+  option (amino.name)           = "cosmos-sdk/MsgRotateOperatorKey";
+
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
+
+  string validator_address        = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string new_operator_key = 3;
+}
+
+// MsgRotateOperatorKeyResponse defines the response structure for executing a 
+// MsgRotateOperatorKey message.
+//
+// Since: cosmos-sdk 0.48
+message MsgRotateOperatorKeyResponse {}

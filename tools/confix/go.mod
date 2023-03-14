@@ -154,14 +154,6 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Here are the short-lived replace of Confix
-// Replace here are pending PRs, or version to be tagged
-replace (
-	cosmossdk.io/store => ../../store
-	// TODO use instead a tagged version of the SDK (with CometBFT) when available
-	github.com/cosmos/cosmos-sdk => ../..
-)
-
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(

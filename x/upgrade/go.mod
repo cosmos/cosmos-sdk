@@ -177,15 +177,6 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Here are the short-lived replace from the module.
-// Replace here are pending PRs, or version to be tagged.
-replace (
-	// This can be removed after https://github.com/cosmos/cosmos-sdk/pull/14207 merge and tag
-	cosmossdk.io/store => ../../store
-	// TODO use instead a tagged version of the SDK (with CometBFT) when available
-	github.com/cosmos/cosmos-sdk => ../..
-)
-
 // Below are the long-lived replace of the Cosmos SDK
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

@@ -159,12 +159,3 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Here are the short-lived replace of Comosivosr
-// Replace here are pending PRs, or version to be tagged
-replace (
-	// This can be removed when https://github.com/cosmos/cosmos-sdk/pull/14207 is merged and /store is bumped
-	cosmossdk.io/store => ../../store
-	// This can be removed when x/upgrade is bumped
-	github.com/cosmos/cosmos-sdk => ../..
-)

@@ -12,11 +12,11 @@ An ADR is a document to document an implementation and design that may or may no
 
 ## ADR life cycle
 
-ADR creation is an **iterative** process. Instead of trying to solve all decisions in a single ADR pull request, we MUST firstly understand the problem and collect feedback through a GitHub Issue.
+ADR creation is an **iterative** process. Instead of having a high amount of communication overhead, an ADR is used when there is already a descision made and implementation details need to be added. The ADR should document what the collective consensus for the specific issue is and how to solve it. 
 
-1. Every proposal SHOULD start with a new GitHub Issue or be a result of existing Issues. The Issue should contain just a brief proposal summary.
+1. Every ADR should start with either an RFC or discussion where consensus has been met. 
 
-2. Once the motivation is validated, a GitHub Pull Request (PR) is created with a new document based on the `adr-template.md`.
+2. Once consensus is met, a GitHub Pull Request (PR) is created with a new document based on the `adr-template.md`.
 
 3. An ADR doesn't have to arrive to `main` with an _accepted_ status in a single PR. If the motivation is clear and the solution is sound, we SHOULD be able to merge it and keep a _proposed_ status. It's preferable to have an iterative approach rather than long, not merged Pull Requests.
 

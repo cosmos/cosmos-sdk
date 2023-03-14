@@ -55,14 +55,14 @@ the code.
 The Cosmos SDK team uses the following disclosure process:
 
 1. After a security report is received, the Cosmos SDK team works to verify the issue and confirm its severity level using Common Vulnerability Scoring System (CVSS).
-1. The Cosmos SDK team collaborates with the Tendermint and Gaia teams to determine the vulnerability’s potential impact on the Cosmos Hub and partners.
+1. The Cosmos SDK team collaborates with the CometBFT and Gaia teams to determine the vulnerability’s potential impact on the Cosmos Hub and partners.
 1. Patches are prepared in private repositories for eligible releases of Cosmos SDK. See [Stable Release Policy](https://github.com/cosmos/cosmos-sdk/blob/main/RELEASE_PROCESS.md#stable-release-policy) for a list of eligible releases.
 1. If it is determined that a CVE-ID is required, we request a CVE through a CVE Numbering Authority.
 1. We notify the community that a security release is coming to give users time to prepare their systems for the update. Notifications can include forum posts, tweets, and emails to partners and validators.
 1. 24 hours after the notification, fixes are applied publicly and new releases are issued.
-1. The Gaia team updates their Tendermint Core and Cosmos SDK dependencies to use these releases and then issues new Gaia releases.
-1. After releases are available for Tendermint Core, Cosmos SDK, and Gaia, we notify the community again through the same channels. We also publish a Security Advisory on Github and publish the CVE, as long as the Security Advisory and the CVE do not include information on how to exploit these vulnerabilities beyond the information that is available in the patch.
-1. After the community is notified, Tendermint pays out any relevant bug bounties to submitters.
+1. The Gaia team updates their CometBFT and Cosmos SDK dependencies to use these releases and then issues new Gaia releases.
+1. After releases are available for CometBFT, Cosmos SDK, and Gaia, we notify the community again through the same channels. We also publish a Security Advisory on Github and publish the CVE, as long as the Security Advisory and the CVE do not include information on how to exploit these vulnerabilities beyond the information that is available in the patch.
+1. After the community is notified, CometBFT pays out any relevant bug bounties to submitters.
 1. One week after the releases go out, we publish a post with details and our response to the vulnerability.
 
 This process can take some time. Every effort is made to handle the bug in as timely a manner as possible. However, it's important that we follow this security process to ensure that disclosures are handled consistently and to keep Cosmos SDK and its downstream dependent projects--including but not limited to Gaia and the Cosmos Hub--as secure as possible.

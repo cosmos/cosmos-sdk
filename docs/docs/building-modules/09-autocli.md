@@ -103,6 +103,33 @@ https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689
 
 The `AutoCLIOptions()` method in the autocli package allows you to specify the services and sub-commands to be mapped for your app. In the example code, an instance of the `autocliv1.ModuleOptions` struct is defined in the `appmodule.AppModule` implementation located in the `x/gov/autocli.go` file. This configuration groups related commands together and specifies subcommands for each service.
 
+# Positional Arguments
+
+Positional arguments are arguments that are passed to a command without being specified as a flag. They are typically used for providing additional context to a command, such as a filename or search query.
+
+To add positional arguments to a command, you can use the `autocliv1.PositionalArgDescriptor` struct, as seen in the example below. You need to specify the `ProtoField` parameter, which is the name of the protobuf field that should be used as the positional argument. In addition, if the parameter is a variable-length argument, you can specify the `Varargs` parameter as `true`. This can only be applied to the last positional parameter, and the `ProtoField` must be a repeated field.
+
+Here's an example of how to define a positional argument for the `Account` method of the `auth` service:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689fd/x/auth/autocli.go#L8-L32
+```
+
+Here are some example commands that use the positional arguments we defined above:
+
+To query an account by address:
+
+```bash
+`./app query auth account cosmos1abcd...xyz`
+```
+
+To query an account address by account number:
+
+```bash
+`./app query auth address-by-acc-num 1`
+```
+In both of these commands, the `auth` service is being queried with the `query` subcommand, followed by the specific method being called (`account` or `address-by-acc-num`). The positional argument is included at the end of the command (`cosmos1abcd...xyz` or `1`) to specify the address or account number, respectively.
+
 ## Customising Flag Names
 
 By default, `autocli` generates flag names based on the names of the fields in your protobuf message. However, you can customise the flag names by providing a `FlagOptions` parameter to the `Builder.AddMessageFlags()` method. This parameter allows you to specify custom names for flags based on the names of the message fields. For example, if you have a message with the fields `test` and `test1`, you can use the following naming options to customise the flags

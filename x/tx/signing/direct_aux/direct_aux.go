@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
@@ -12,24 +15,64 @@ import (
 )
 
 // SignModeHandler is the SIGN_MODE_DIRECT_AUX implementation of signing.SignModeHandler.
-type signModeHandler struct {
+type SignModeHandler struct {
 	signersContext *signing.GetSignersContext
+	fileResolver   protodesc.Resolver
+	typeResolver   protoregistry.MessageTypeResolver
+}
+
+// SignModeHandlerOptions are the options for the SignModeHandler.
+type SignModeHandlerOptions struct {
+	// FileResolver is the protodesc.Resolver to use for resolving proto files when unpacking any messages.
+	FileResolver protodesc.Resolver
+
+	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving proto types when unpacking any messages.
+	TypeResolver protoregistry.MessageTypeResolver
+
+	// SignersContext is the signing.GetSignersContext to use for getting signers.
+	SignersContext *signing.GetSignersContext
 }
 
 // NewSignModeHandler returns a new SignModeHandler.
-func NewSignModeHandler(signersContext *signing.GetSignersContext) signModeHandler {
-	return signModeHandler{signersContext: signersContext}
+func NewSignModeHandler(options SignModeHandlerOptions) SignModeHandler {
+	h := SignModeHandler{}
+
+	if options.FileResolver == nil {
+		h.fileResolver = protoregistry.GlobalFiles
+	} else {
+		h.fileResolver = options.FileResolver
+	}
+
+	if options.TypeResolver == nil {
+		h.typeResolver = protoregistry.GlobalTypes
+	} else {
+		h.typeResolver = options.TypeResolver
+	}
+
+	if options.SignersContext == nil {
+		h.signersContext = signing.NewGetSignersContext(signing.GetSignersOptions{})
+	} else {
+		h.signersContext = options.SignersContext
+	}
+
+	return h
 }
 
-var _ signing.SignModeHandler = signModeHandler{}
+var _ signing.SignModeHandler = SignModeHandler{}
 
 // Mode implements signing.SignModeHandler.Mode.
-func (h signModeHandler) Mode() signingv1beta1.SignMode {
+func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 	return signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX
 }
 
-func (h signModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
-	for _, msg := range txData.Body.Messages {
+// getFirstSigner returns the first signer from the first message in the tx. It replicates behavior in
+// https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L142
+func (h SignModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
+	for _, anyMsg := range txData.Body.Messages {
+		msg, err := anyutil.Unpack(anyMsg, h.fileResolver, h.typeResolver)
+		if err != nil {
+			return "", err
+		}
 		signer, err := h.signersContext.GetSigners(msg)
 		if err != nil {
 			return "", err
@@ -40,10 +83,9 @@ func (h signModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
 }
 
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.
-func (h signModeHandler) GetSignBytes(
+func (h SignModeHandler) GetSignBytes(
 	_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 
-	// replicate https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L142
 	feePayer := txData.AuthInfo.Fee.Payer
 	if feePayer == "" {
 		fp, err := h.getFirstSigner(txData)

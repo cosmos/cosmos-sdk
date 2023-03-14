@@ -50,7 +50,7 @@ func TestDirectAuxHandler(t *testing.T) {
 	fee := &txv1beta1.Fee{
 		Amount:   []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
 		GasLimit: 20000,
-		//Payer:    feePayerAddr,
+		Payer:    feePayerAddr,
 	}
 	tip := &txv1beta1.Tip{Amount: []*basev1beta1.Coin{{Denom: "tip-token", Amount: "10"}}}
 
@@ -65,12 +65,6 @@ func TestDirectAuxHandler(t *testing.T) {
 		SignerInfos: signerInfo,
 	}
 
-	feePayerSigningData := signing.SignerData{
-		ChainId:       chainID,
-		AccountNumber: accNum,
-		Address:       feePayerAddr,
-		PubKey:        anyPk,
-	}
 	signingData := signing.SignerData{
 		ChainId:       chainID,
 		AccountNumber: accNum,
@@ -89,12 +83,40 @@ func TestDirectAuxHandler(t *testing.T) {
 		AuthInfoBytes: authInfoBz,
 		BodyBytes:     bodyBz,
 	}
-	modeHandler := direct_aux.NewSignModeHandler(signing.NewGetSignersContext(signing.GetSignersOptions{}))
+	modeHandler := direct_aux.NewSignModeHandler(direct_aux.SignModeHandlerOptions{})
 
 	t.Log("verify fee payer cannot use SIGN_MODE_DIRECT_AUX")
+	feePayerSigningData := signing.SignerData{
+		ChainId:       chainID,
+		AccountNumber: accNum,
+		Address:       feePayerAddr,
+		PubKey:        anyPk,
+	}
 	_, err = modeHandler.GetSignBytes(context.Background(), feePayerSigningData, txData)
 	require.EqualError(t, err, fmt.Sprintf("fee payer %s cannot sign with %s: unauthorized",
 		feePayerAddr, signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX))
+
+	t.Log("verifying fee payer fallback to GetSigners cannot use SIGN_MODE_DIRECT_AUX")
+	feeWithNoPayer := &txv1beta1.Fee{
+		Amount:   []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+		GasLimit: 20000,
+	}
+	authInfoWithNoFeePayer := &txv1beta1.AuthInfo{
+		Fee:         feeWithNoPayer,
+		Tip:         tip,
+		SignerInfos: signerInfo,
+	}
+	authInfoWithNoFeePayerBz, err := proto.Marshal(authInfoWithNoFeePayer)
+	require.NoError(t, err)
+	txDataWithNoFeePayer := signing.TxData{
+		Body:          txBody,
+		BodyBytes:     bodyBz,
+		AuthInfo:      authInfoWithNoFeePayer,
+		AuthInfoBytes: authInfoWithNoFeePayerBz,
+	}
+	_, err = modeHandler.GetSignBytes(context.Background(), signingData, txDataWithNoFeePayer)
+	require.EqualError(t, err, fmt.Sprintf("fee payer %s cannot sign with %s: unauthorized", "",
+		signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX))
 
 	t.Log("verify GetSignBytes with generating sign bytes by marshaling signDocDirectAux")
 	signBytes, err := modeHandler.GetSignBytes(context.Background(), signingData, txData)

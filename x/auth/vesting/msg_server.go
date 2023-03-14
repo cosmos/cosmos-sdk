@@ -81,8 +81,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		}
 	}()
 
-	err = bk.SendCoins(ctx, from, to, msg.Amount)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -143,8 +142,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		}()
 	}
 
-	err = bk.SendCoins(ctx, from, to, totalCoins)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -176,9 +174,13 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	vestingCoins := sdk.NewCoins()
+	var totalCoins sdk.Coins
 	for _, period := range msg.VestingPeriods {
 		vestingCoins = vestingCoins.Add(period.Amount...)
+	}
+
+	if err := bk.IsSendEnabledCoins(ctx, totalCoins...); err != nil {
+		return nil, err
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
@@ -219,26 +221,7 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 		madeNewAcc = true
 	}
 
-	ak.SetAccount(ctx, va)
-
-	if madeNewAcc {
-		defer func() {
-			telemetry.IncrCounter(1, "new", "account")
-
-			for _, a := range vestingCoins {
-				if a.Amount.IsInt64() {
-					telemetry.SetGaugeWithLabels(
-						[]string{"tx", "msg", "create_clawback_vesting_account"},
-						float32(a.Amount.Int64()),
-						[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-					)
-				}
-			}
-		}()
-	}
-
-	err = bk.SendCoins(ctx, from, to, vestingCoins)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, totalCoins); err != nil {
 		return nil, err
 	}
 

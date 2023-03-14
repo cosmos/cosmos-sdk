@@ -199,27 +199,36 @@ be received in order for the block proposal to be valid, otherwise the validator
 MUST REJECT the proposal.
 
 In order to have the ability to validate signatures, `BaseApp` must have access
-to the `x/staking` module. However, we will avoid a direct dependency and instead
-rely on an interface. In addition, the Cosmos SDK will expose a signature verification
+to the `x/slashing` module, since this module stores an index from address to
+public key. However, we will avoid a direct dependency and instead rely on an
+interface. In addition, the Cosmos SDK will expose a signature verification
 method which applications can use:
 
 ```go
-type ValidatorI interface {
-	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)
+type ValidatorStore interface {
+	GetPubkey(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
 }
 
-type StakingKeeper interface {
-	Validator(sdk.Context, sdk.ValAddress) ValidatorI 
-}
-
-func (app *BaseApp) ValidateVoteExtensions(currentHeight int64, extCommit abci.ExtendedCommitInfo) error {
+func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64, extCommit abci.ExtendedCommitInfo) error {
 	for _, vote := range extCommit.Votes {
 		if !vote.SignedLastBlock || len(vote.VoteExtension) == 0 {
 			continue
 		}
 
+		valConsAddr := cmtcrypto.Address(vote.Validator.Address)
+
+		pubKey, err := app.validatorStore.GetPubkey(ctx, valConsAddr)
+		if err != nil {
+			return fmt.Errorf("failed to get validator %s for vote extension", valConsAddr)
+		}
+
+		cmtPubKey, err := cryptocodec.ToCmtProtoPublicKey(pubKey)
+		if err != nil {
+			return fmt.Errorf("failed to convert public key: %w", err)
+		}
+
 		if len(vote.ExtensionSignature) == 0 {
-			return 0, 0, fmt.Errorf("received a non-empty vote extension with empty signature for validator %X", vote.Validator)
+			return fmt.Errorf("received a non-empty vote extension with empty signature for validator %s", valConsAddr)
 		}
 
 		cve := cmtproto.CanonicalVoteExtension{
@@ -234,7 +243,11 @@ func (app *BaseApp) ValidateVoteExtensions(currentHeight int64, extCommit abci.E
 			return fmt.Errorf("failed to encode CanonicalVoteExtension: %w", err)
 		}
 
+		if !cmtPubKey.VerifySignature(extSignBytes, vote.ExtensionSignature) {
+			return errors.New("received vote with invalid signature")
+		}
 
+		return nil
 	}
 }
 ```

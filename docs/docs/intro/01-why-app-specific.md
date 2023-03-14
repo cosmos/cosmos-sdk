@@ -21,7 +21,7 @@ Application-specific blockchains are blockchains customized to operate a single 
                 |  |                               |  ^
 Blockchain node |  |           Consensus           |  |
                 |  |                               |  |
-                |  +-------------------------------+  |   CometBFT Core
+                |  +-------------------------------+  |   CometBFT
                 |  |                               |  |
                 |  |           Networking          |  |
                 |  |                               |  |

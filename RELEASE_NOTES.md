@@ -51,6 +51,7 @@ Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release
 * Notional ([@notionaldao](https://twitter.com/notionaldao))
 * Osmosis ([@osmosiszone](https://twitter.com/osmosiszone))
 * Regen Network ([@regen_network](https://twitter.com/RegenNetworkDev))
+* VitWit ([@vitwit](https://twitter.com/vitwit_))
 
 This list is non exhaustive and ordered alphabetically.  
 Thank you to everyone who contributed to this release!

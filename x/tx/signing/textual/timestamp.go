@@ -21,7 +21,7 @@ func NewTimestampValueRenderer() ValueRenderer {
 
 // Format implements the ValueRenderer interface.
 func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
-	ts, err := toProtoTimestamp(v.Message().Interface())
+	ts, err := toTimestamp(v.Message().Interface())
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (vr timestampValueRenderer) Parse(_ context.Context, screens []Screen) (pro
 // The input msg can be:
 // - either a timestamppb.Timestamp (in which case there's nothing to do),
 // - or a dynamicpb.Message.
-func toProtoTimestamp(msg protoreflect.ProtoMessage) (*tspb.Timestamp, error) {
+func toTimestamp(msg protoreflect.ProtoMessage) (*tspb.Timestamp, error) {
 	switch msg := msg.(type) {
 	case *tspb.Timestamp:
 		return msg, nil

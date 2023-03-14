@@ -259,15 +259,13 @@ func NewSimApp(
 		evidencetypes.StoreKey, authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
 	)
 
+	// register streaming services
+	bApp.RegisterStreamingServices(appOpts, keys)
+
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
 	memKeys := storetypes.NewMemoryStoreKeys("testingkey")
-
-	// register the streaming service with the BaseApp
-	if err := bApp.SetStreamingService(appOpts, appCodec, keys); err != nil {
-		panic(fmt.Errorf("failed to load state streaming: %w", err))
-	}
 
 	app := &SimApp{
 		BaseApp:           bApp,

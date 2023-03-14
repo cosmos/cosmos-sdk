@@ -22,7 +22,7 @@ will run the following steps:
 * ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
 * fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](./00-keyring.md) in a previous step.
 * sign the generated transaction with the keyring's account.
-* broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
+* broadcast the signed transaction to the network. This is possible because the CLI connects to the node's CometBFT RPC endpoint.
 
 The CLI bundles all the necessary steps into a simple-to-use user experience. However, it's possible to run all the steps individually too.
 
@@ -269,7 +269,7 @@ func sendTx() error {
 
 ### Broadcasting a Transaction
 
-The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the Tendermint RPC is also posible. An overview of the differences between these methods is exposed [here](../core/06-grpc_rest.md). For this tutorial, we will only describe the gRPC method.
+The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the CometBFT RPC is also posible. An overview of the differences between these methods is exposed [here](../core/06-grpc_rest.md). For this tutorial, we will only describe the gRPC method.
 
 ```go
 import (

@@ -165,6 +165,11 @@ func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req ab
 		return abci.ResponseVerifyVoteExtension{Status: REJECT}
 	}
 
+	// store updated vote extensions at the given height
+	//
+	// NOTE: Vote extensions can be overridden since we can timeout in a round.
+	SetPrices(h.state, req, req.VoteExtension)
+
 	return abci.ResponseVerifyVoteExtension{Status: ACCEPT}
 }
 ```
@@ -199,16 +204,18 @@ be received in order for the block proposal to be valid, otherwise the validator
 MUST REJECT the proposal.
 
 In order to have the ability to validate signatures, `BaseApp` must have access
-to the `x/slashing` module, since this module stores an index from address to
-public key. However, we will avoid a direct dependency and instead rely on an
-interface. In addition, the Cosmos SDK will expose a signature verification
-method which applications can use:
+to the `x/staking` module, since this module stores an index from consensus
+address to public key. However, we will avoid a direct dependency on `x/staking`
+and instead rely on an interface instead. In addition, the Cosmos SDK will expose
+a default signature verification method which applications can use:
 
 ```go
 type ValidatorStore interface {
-	GetPubkey(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
+	GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
 }
 
+// ValidateVoteExtensions is a function that an application can execute in
+// ProcessProposal to verify vote extension signatures.
 func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64, extCommit abci.ExtendedCommitInfo) error {
 	for _, vote := range extCommit.Votes {
 		if !vote.SignedLastBlock || len(vote.VoteExtension) == 0 {
@@ -217,12 +224,12 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 
 		valConsAddr := cmtcrypto.Address(vote.Validator.Address)
 
-		pubKey, err := app.validatorStore.GetPubkey(ctx, valConsAddr)
+		validator, err := app.validatorStore.GetValidatorByConsAddr(ctx, valConsAddr)
 		if err != nil {
 			return fmt.Errorf("failed to get validator %s for vote extension", valConsAddr)
 		}
 
-		cmtPubKey, err := cryptocodec.ToCmtProtoPublicKey(pubKey)
+		cmtPubKey, err := validator.CmtConsPublicKey()
 		if err != nil {
 			return fmt.Errorf("failed to convert public key: %w", err)
 		}
@@ -254,7 +261,18 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 
 Once at least 2/3 signatures, by voting power, are received and verified, the
 validator can use the vote extensions to derive additional data or come to some
-decision based on the vote extension
+decision based on the vote extensions.
+
+In order to make any data derived from vote extensions persistent, we propose to
+<!-- augment the existing invariant that `processProposalState` is never committed to
+now being written at the end of `ProcessProposal`. This has the side effect of
+application developers needing to be careful what they write to in their
+`ProcessProposal` handler. A `ProcessProposal` handler might look like the following
+now:
+
+```go
+
+``` -->
 
 ### `FinalizeBlock`
 

@@ -120,13 +120,13 @@ Here are some example commands that use the positional arguments we defined abov
 To query an account by address:
 
 ```bash
-`./app query auth account cosmos1abcd...xyz`
+<appd> query auth account cosmos1abcd...xyz
 ```
 
 To query an account address by account number:
 
 ```bash
-`./app query auth address-by-acc-num 1`
+<appd> query auth address-by-acc-num 1
 ```
 
 In both of these commands, the `auth` service is being queried with the `query` subcommand, followed by the specific method being called (`account` or `address-by-acc-num`). The positional argument is included at the end of the command (`cosmos1abcd...xyz` or `1`) to specify the address or account number, respectively.

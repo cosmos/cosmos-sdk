@@ -140,7 +140,7 @@ func toAny(msg proto.Message) (*anypb.Any, error) {
 	case *anypb.Any:
 		return msg, nil
 	case *dynamicpb.Message:
-		t, v := getFieldValue(msg, "type_url").String(), getFieldValue(msg, "v").Bytes()
+		t, v := getFieldValue(msg, "type_url").String(), getFieldValue(msg, "value").Bytes()
 		return &anypb.Any{TypeUrl: t, Value: v}, nil
 	default:
 		return nil, fmt.Errorf("expected dpb.Duration or dynamicpb.Message, got %T", msg)

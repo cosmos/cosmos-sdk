@@ -254,13 +254,6 @@ const config = {
           },
           {
             from: [
-              "/main/modules/capability/01_concepts",
-              "/main/modules/capability/02_state",
-            ],
-            to: "/main/modules/capability",
-          },
-          {
-            from: [
               "/main/modules/crisis/01_state",
               "/main/modules/crisis/02_messages",
               "/main/modules/crisis/03_events",

@@ -26,7 +26,6 @@ in for CometBFT and other lower-level libraries (eg. [IAVL](https://github.com/c
 
 * [`x/auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth)
 * [`x/bank`](https://github.com/cosmos/cosmos-sdk/tree/main/x/bank)
-* [`x/capability`](https://github.com/cosmos/cosmos-sdk/tree/main/x/capability)
 * [`x/staking`](https://github.com/cosmos/cosmos-sdk/tree/main/x/staking)
 * [`x/slashing`](https://github.com/cosmos/cosmos-sdk/tree/main/x/slashing)
 * [`x/evidence`](https://github.com/cosmos/cosmos-sdk/tree/main/x/evidence)

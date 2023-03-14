@@ -358,8 +358,13 @@ in the module interfaces.
 ### Negative
 
 * Some existing Cosmos SDK core APIs may need to be modified and thus broken.
+* Signature verification in `ProcessProposal` of 100+ vote extension signatures
+  will add significant performance overhead to `ProcessProposal`.
 
 ### Neutral
+
+* Having to manually "inject" vote extensions into the block proposal during
+  `PrepareProposal` is an awkward approach and takes up block space unnecessarily.
 
 ## Further Discussions
 

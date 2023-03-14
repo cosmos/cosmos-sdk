@@ -359,7 +359,9 @@ in the module interfaces.
 
 * Some existing Cosmos SDK core APIs may need to be modified and thus broken.
 * Signature verification in `ProcessProposal` of 100+ vote extension signatures
-  will add significant performance overhead to `ProcessProposal`.
+  will add significant performance overhead to `ProcessProposal`. Granted, the
+	signature verification process can happen concurrently using an error group
+	with `GOMAXPROCS` goroutines.
 
 ### Neutral
 

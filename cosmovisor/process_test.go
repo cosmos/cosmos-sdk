@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/Agoric/cosmos-sdk/cosmovisor"
 )
 
 type processTestSuite struct {

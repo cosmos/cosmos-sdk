@@ -821,7 +821,7 @@ func (k Keeper) TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddr
 					entry.CreationHeight, entry.CompletionTime, entry.InitialBalance, sdk.ZeroDec(), sharesToSend,
 				)
 				k.InsertRedelegationQueue(ctx, toRed, entry.CompletionTime)
-				(&redelegation).RemoveEntry(int64(i))
+				redelegation.RemoveEntry(int64(i))
 				i--
 				// okay to leave an obsolete entry in the queue for the removed entry
 				redelegationModified = true

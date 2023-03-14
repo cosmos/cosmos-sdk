@@ -241,6 +241,7 @@ func vestingDataToEvents(data cli.VestingData) ([]event, error) {
 
 // Time utilities
 
+// nolint:unused
 const day = 24 * time.Hour
 
 // formatDuration returns a duration in a string like "3d4h3m0.5s".

@@ -15,7 +15,7 @@ import (
 	"github.com/otiai10/copy"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/Agoric/cosmos-sdk/cosmovisor"
 )
 
 type upgradeTestSuite struct {

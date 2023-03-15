@@ -159,6 +159,24 @@ variable-length relative pointers:
 If we choose to enable these encoding options, changing these options would be a breaking change that needs to be
 prevented by the breaking change detector.
 
+#### Large Messages and Memory Management
+
+One potential issue to this approach is that it will be impossible to grow the memory buffer after its initial allocation
+if we are writing structs like this. To deal with this, a fixed-size 64kb buffer should be allocated as the default which
+should be sufficient for all normal blockchain use cases (besides storing VM byte code). Allocation methods will return
+an error if the memory buffer size is exceeded.
+
+In the future, we may consider ways to use different sized memory buffers, maybe specified at the message level with
+annotations, but this is not a priority for now because applications that need larger memory buffers be implemented as
+native Cosmos SDK go modules. The main use case for this would be to support user-defined code to run in VMs and this
+is deemed an acceptable trade-off for now.
+
+NOTE: in golang, it is feasible to grow the memory buffer at runtime if needed because of how the golang code is
+generated to use getters and setters rather than struct fields. One key motivation for the Rust design above is to
+minimize the amount of generated code because we expect that it is more likely that Rust code will run in resource
+constrained environments. Thus, for Rust generated code there are slightly higher performance requirements and
+expectations than for Go code.
+
 ### Generated Code
 
 We will describe the generated Go and Rust code using this example protobuf file:
@@ -356,24 +374,6 @@ foo.bars[0].baz = Baz::Y(cosmos_proto::String::new(root, "hello")?); // can retu
 foo.bars[1].abc = ABC::B;
 foo.bars[2].baz = Baz::X(4);
 ```
-
-#### Memory Buffer Management
-
-One potential issue to this approach is that it will be impossible to grow the memory buffer after its initial allocation
-if we are writing structs like this. To deal with this, a fixed-size 64kb buffer should be allocated as the default which
-should be sufficient for all normal blockchain use cases (besides storing VM byte code). Allocation methods will return
-an error if the memory buffer size is exceeded.
-
-In the future, we may consider ways to use different sized memory buffers, maybe specified at the message level with
-annotations, but this is not a priority for now because applications that need larger memory buffers be implemented as
-native Cosmos SDK go modules. The main use case for this would be to support user-defined code to run in VMs and this
-is deemed an acceptable trade-off for now.
-
-NOTE: in golang, it is feasible to grow the memory buffer at runtime if needed because of how the golang code is
-generated to use getters and setters rather than struct fields. One key motivation for the Rust design above is to
-minimize the amount of generated code because we expect that it is more likely that Rust code will run in resource
-constrained environments. Thus, for Rust generated code there are slightly higher performance requirements and
-expectations than for Go code.
 
 ## Abandoned Ideas (Optional)
 

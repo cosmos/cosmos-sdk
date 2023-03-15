@@ -53,6 +53,18 @@ func NewMsgCreateValidator(
 	}, nil
 }
 
+// GetSigners implements the sdk.Msg interface. It returns the address(es) that
+// must sign over msg.GetSignBytes().
+// If the validator address is not same as delegator's, then the validator must
+// sign the msg as well.
+func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
+	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+
+	valAccAddr := sdk.AccAddress(valAddr)
+
+	return []sdk.AccAddress{valAccAddr}
+}
+
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgCreateValidator) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
@@ -119,6 +131,12 @@ func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRat
 	}
 }
 
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
+	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	return []sdk.AccAddress{sdk.AccAddress(valAddr)}
+}
+
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgEditValidator) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
@@ -162,6 +180,12 @@ func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.C
 	}
 }
 
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
+}
+
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
@@ -199,6 +223,12 @@ func NewMsgBeginRedelegate(
 		ValidatorDstAddress: valDstAddr.String(),
 		Amount:              amount,
 	}
+}
+
+// GetSigners implements the sdk.Msg interface
+func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
 }
 
 // GetSignBytes implements the sdk.Msg interface.
@@ -240,6 +270,12 @@ func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk
 	}
 }
 
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
+}
+
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
@@ -275,6 +311,12 @@ func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddr
 		Amount:           amount,
 		CreationHeight:   creationHeight,
 	}
+}
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
 }
 
 // GetSignBytes implements the sdk.Msg interface.

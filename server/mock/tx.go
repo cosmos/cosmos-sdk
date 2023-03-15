@@ -109,6 +109,10 @@ func (msg *KVStoreTx) ValidateBasic() error {
 	return nil
 }
 
+func (msg *KVStoreTx) GetSigners() []sdk.AccAddress {
+	return nil
+}
+
 func (msg *KVStoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
 
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has

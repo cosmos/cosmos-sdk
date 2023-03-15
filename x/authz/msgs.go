@@ -43,6 +43,12 @@ func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization
 	return m, nil
 }
 
+// GetSigners implements Msg
+func (msg MsgGrant) GetSigners() []sdk.AccAddress {
+	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
+	return []sdk.AccAddress{granter}
+}
+
 // ValidateBasic implements Msg
 func (msg MsgGrant) ValidateBasic() error {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
@@ -113,6 +119,12 @@ func NewMsgRevoke(granter sdk.AccAddress, grantee sdk.AccAddress, msgTypeURL str
 	}
 }
 
+// GetSigners implements Msg
+func (msg MsgRevoke) GetSigners() []sdk.AccAddress {
+	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
+	return []sdk.AccAddress{granter}
+}
+
 // ValidateBasic implements MsgRequest.ValidateBasic
 func (msg MsgRevoke) ValidateBasic() error {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
@@ -172,6 +184,12 @@ func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
 	}
 
 	return msgs, nil
+}
+
+// GetSigners implements Msg
+func (msg MsgExec) GetSigners() []sdk.AccAddress {
+	grantee, _ := sdk.AccAddressFromBech32(msg.Grantee)
+	return []sdk.AccAddress{grantee}
 }
 
 // ValidateBasic implements Msg

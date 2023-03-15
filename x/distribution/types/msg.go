@@ -34,6 +34,12 @@ func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithd
 	}
 }
 
+// Return address that must sign over msg.GetSignBytes()
+func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
+}
+
 // get the bytes for the message signer to sign on
 func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
@@ -117,6 +123,13 @@ func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) *MsgFun
 	}
 }
 
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes.
+func (msg MsgFundCommunityPool) GetSigners() []sdk.AccAddress {
+	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
+	return []sdk.AccAddress{depositor}
+}
+
 // GetSignBytes returns the raw bytes for a MsgFundCommunityPool message that
 // the expected signer needs to sign.
 func (msg MsgFundCommunityPool) GetSignBytes() []byte {
@@ -163,6 +176,13 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 	return msg.Params.ValidateBasic()
 }
 
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes, which is the authority.
+func (msg MsgCommunityPoolSpend) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
 // GetSignBytes returns the raw bytes for a MsgCommunityPoolSpend message that
 // the expected signer needs to sign.
 func (msg MsgCommunityPoolSpend) GetSignBytes() []byte {
@@ -187,6 +207,13 @@ func NewMsgDepositValidatorRewardsPool(depositor sdk.AccAddress, valAddr sdk.Val
 		Authority:        depositor.String(),
 		ValidatorAddress: valAddr.String(),
 	}
+}
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes, which is the authority.
+func (msg MsgDepositValidatorRewardsPool) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
 }
 
 // GetSignBytes returns the raw bytes for a MsgDepositValidatorRewardsPool message

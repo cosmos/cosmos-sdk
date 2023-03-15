@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/store"
+	"github.com/cosmos/gogoproto/proto"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -71,8 +72,14 @@ func ProvideApp() (
 	codec.ProtoCodecMarshaler,
 	*baseapp.MsgServiceRouter,
 	appmodule.AppModule,
+	error,
 ) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	protoFiles, err := proto.MergedRegistry()
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
+	}
+
+	interfaceRegistry := codectypes.NewInterfaceRegistryWithProtoFiles(protoFiles)
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
@@ -90,7 +97,7 @@ func ProvideApp() (
 	}
 	appBuilder := &AppBuilder{app}
 
-	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}
+	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, nil
 }
 
 type AppInputs struct {

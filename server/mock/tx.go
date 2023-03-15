@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
+	protov2 "google.golang.org/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -98,6 +100,10 @@ func (msg *KVStoreTx) Type() string {
 
 func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
+}
+
+func (msg *KVStoreTx) GetMsgsV2() []protov2.Message {
+	return []protov2.Message{}
 }
 
 func (msg *KVStoreTx) GetSignBytes() []byte {

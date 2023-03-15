@@ -1,14 +1,15 @@
 package decode
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
+	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
 
+// DecodedTx contains the decoded transaction, its signers, and other flags.
 type DecodedTx struct {
 	Tx                           *v1beta1.Tx
 	TxRaw                        *v1beta1.TxRaw
@@ -16,11 +17,13 @@ type DecodedTx struct {
 	TxBodyHasUnknownNonCriticals bool
 }
 
+// Context contains the dependencies required for decoding transactions.
 type Context struct {
 	getSignersCtx *signing.GetSignersContext
 	protoFiles    *protoregistry.Files
 }
 
+// Decode decodes raw protobuf encoded transaction bytes into a DecodedTx.
 func (c *Context) Decode(txBytes []byte) (*DecodedTx, error) {
 	// Make sure txBytes follow ADR-027.
 	err := rejectNonADR027TxRaw(txBytes)

@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## v0.46.10.2-ledger - 2023-03-15
+## v0.46.10-alpha.ledger.2 - 2023-03-15
 
 ### Imporvements
 
@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (cli) [#22](https://github.com/evmos/cosmos-sdk/pull/22) Rollback `--fees auto` flag
 
-## [v0.46.10.1-ledger](https://github.com/evmos/cosmos-sdk/releases/tag/v0.46.10.1-ledger) - 2023-03-15
+## [v0.46.10-alpha.ledger.1](https://github.com/evmos/cosmos-sdk/releases/tag/v0.46.10-alpha.ledger.1) - 2023-03-15
 
 ### Bug Fixes
 

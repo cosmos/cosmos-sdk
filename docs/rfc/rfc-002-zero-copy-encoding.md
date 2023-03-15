@@ -57,8 +57,7 @@ The reasons for this are two-fold:
 
 1) from an API compatibility perspective, adding a new field to an existing message is actually a state machine breaking
    change which in [ADR 020](../architecture/adr-020-protobuf-transaction-encoding.md) required us to add an unknown
-   field
-   detector. Furthermore, in [ADR 054](../architecture/adr-054-semver-compatible-modules.md) this "feature" of protobuf
+   field detector. Furthermore, in [ADR 054](../architecture/adr-054-semver-compatible-modules.md) this "feature" of protobuf
    poses one of the biggest problems for correct forward compatibility between different versions of the same module.
 2) not allowing new fields in existing messages makes the generated code in languages like Rust (which is currently our
    highest priority target), much simpler and more performant because we can assume a fixed size struct gets allocated.
@@ -338,7 +337,8 @@ enum Baz {
 ```
 
 Example usage (which does the exact same thing as the go example above) would be:
-```rust
+
+```rust!
 let mut root = Root<Foo>::new();
 let mut foo = root.get_mut();
 foo.x = 1;

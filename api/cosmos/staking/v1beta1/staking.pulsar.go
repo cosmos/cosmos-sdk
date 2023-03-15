@@ -12806,6 +12806,538 @@ func (x *fastReflection_ValidatorUpdates) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_OperatorKeyRotationHistory                      protoreflect.MessageDescriptor
+	fd_OperatorKeyRotationHistory_operator_address     protoreflect.FieldDescriptor
+	fd_OperatorKeyRotationHistory_old_operator_address protoreflect.FieldDescriptor
+	fd_OperatorKeyRotationHistory_height               protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_staking_proto_init()
+	md_OperatorKeyRotationHistory = File_cosmos_staking_v1beta1_staking_proto.Messages().ByName("OperatorKeyRotationHistory")
+	fd_OperatorKeyRotationHistory_operator_address = md_OperatorKeyRotationHistory.Fields().ByName("operator_address")
+	fd_OperatorKeyRotationHistory_old_operator_address = md_OperatorKeyRotationHistory.Fields().ByName("old_operator_address")
+	fd_OperatorKeyRotationHistory_height = md_OperatorKeyRotationHistory.Fields().ByName("height")
+}
+
+var _ protoreflect.Message = (*fastReflection_OperatorKeyRotationHistory)(nil)
+
+type fastReflection_OperatorKeyRotationHistory OperatorKeyRotationHistory
+
+func (x *OperatorKeyRotationHistory) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_OperatorKeyRotationHistory)(x)
+}
+
+func (x *OperatorKeyRotationHistory) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_staking_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_OperatorKeyRotationHistory_messageType fastReflection_OperatorKeyRotationHistory_messageType
+var _ protoreflect.MessageType = fastReflection_OperatorKeyRotationHistory_messageType{}
+
+type fastReflection_OperatorKeyRotationHistory_messageType struct{}
+
+func (x fastReflection_OperatorKeyRotationHistory_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_OperatorKeyRotationHistory)(nil)
+}
+func (x fastReflection_OperatorKeyRotationHistory_messageType) New() protoreflect.Message {
+	return new(fastReflection_OperatorKeyRotationHistory)
+}
+func (x fastReflection_OperatorKeyRotationHistory_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_OperatorKeyRotationHistory
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_OperatorKeyRotationHistory) Descriptor() protoreflect.MessageDescriptor {
+	return md_OperatorKeyRotationHistory
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_OperatorKeyRotationHistory) Type() protoreflect.MessageType {
+	return _fastReflection_OperatorKeyRotationHistory_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_OperatorKeyRotationHistory) New() protoreflect.Message {
+	return new(fastReflection_OperatorKeyRotationHistory)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_OperatorKeyRotationHistory) Interface() protoreflect.ProtoMessage {
+	return (*OperatorKeyRotationHistory)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_OperatorKeyRotationHistory) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.OperatorAddress != "" {
+		value := protoreflect.ValueOfString(x.OperatorAddress)
+		if !f(fd_OperatorKeyRotationHistory_operator_address, value) {
+			return
+		}
+	}
+	if x.OldOperatorAddress != "" {
+		value := protoreflect.ValueOfString(x.OldOperatorAddress)
+		if !f(fd_OperatorKeyRotationHistory_old_operator_address, value) {
+			return
+		}
+	}
+	if x.Height != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Height)
+		if !f(fd_OperatorKeyRotationHistory_height, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_OperatorKeyRotationHistory) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.operator_address":
+		return x.OperatorAddress != ""
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.old_operator_address":
+		return x.OldOperatorAddress != ""
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.height":
+		return x.Height != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.OperatorKeyRotationHistory"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.OperatorKeyRotationHistory does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OperatorKeyRotationHistory) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.operator_address":
+		x.OperatorAddress = ""
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.old_operator_address":
+		x.OldOperatorAddress = ""
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.height":
+		x.Height = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.OperatorKeyRotationHistory"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.OperatorKeyRotationHistory does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_OperatorKeyRotationHistory) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.operator_address":
+		value := x.OperatorAddress
+		return protoreflect.ValueOfString(value)
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.old_operator_address":
+		value := x.OldOperatorAddress
+		return protoreflect.ValueOfString(value)
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.height":
+		value := x.Height
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.OperatorKeyRotationHistory"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.OperatorKeyRotationHistory does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OperatorKeyRotationHistory) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.operator_address":
+		x.OperatorAddress = value.Interface().(string)
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.old_operator_address":
+		x.OldOperatorAddress = value.Interface().(string)
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.height":
+		x.Height = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.OperatorKeyRotationHistory"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.OperatorKeyRotationHistory does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OperatorKeyRotationHistory) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.operator_address":
+		panic(fmt.Errorf("field operator_address of message cosmos.staking.v1beta1.OperatorKeyRotationHistory is not mutable"))
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.old_operator_address":
+		panic(fmt.Errorf("field old_operator_address of message cosmos.staking.v1beta1.OperatorKeyRotationHistory is not mutable"))
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.height":
+		panic(fmt.Errorf("field height of message cosmos.staking.v1beta1.OperatorKeyRotationHistory is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.OperatorKeyRotationHistory"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.OperatorKeyRotationHistory does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_OperatorKeyRotationHistory) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.operator_address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.old_operator_address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.staking.v1beta1.OperatorKeyRotationHistory.height":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.OperatorKeyRotationHistory"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.OperatorKeyRotationHistory does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_OperatorKeyRotationHistory) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.OperatorKeyRotationHistory", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_OperatorKeyRotationHistory) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OperatorKeyRotationHistory) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_OperatorKeyRotationHistory) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_OperatorKeyRotationHistory) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*OperatorKeyRotationHistory)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.OperatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.OldOperatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Height != 0 {
+			n += 1 + runtime.Sov(uint64(x.Height))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*OperatorKeyRotationHistory)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Height != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Height))
+			i--
+			dAtA[i] = 0x18
+		}
+		if len(x.OldOperatorAddress) > 0 {
+			i -= len(x.OldOperatorAddress)
+			copy(dAtA[i:], x.OldOperatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OldOperatorAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.OperatorAddress) > 0 {
+			i -= len(x.OperatorAddress)
+			copy(dAtA[i:], x.OperatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OperatorAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*OperatorKeyRotationHistory)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OperatorKeyRotationHistory: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OperatorKeyRotationHistory: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OperatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OldOperatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OldOperatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+				}
+				x.Height = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Height |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -14175,6 +14707,61 @@ func (x *ValidatorUpdates) GetUpdates() []*abci.ValidatorUpdate {
 	return nil
 }
 
+// OperatorKeyRotationHistory contains a validator's operator key rotation history.
+type OperatorKeyRotationHistory struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// operator_address defines the address of the validator's operator; bech encoded in JSON.
+	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
+	// old_operator_address defines the previous address of the validator's operator; bech encoded in JSON.
+	OldOperatorAddress string `protobuf:"bytes,2,opt,name=old_operator_address,json=oldOperatorAddress,proto3" json:"old_operator_address,omitempty"`
+	// height defines the block height at which the rotation event occured.
+	Height uint64 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
+}
+
+func (x *OperatorKeyRotationHistory) Reset() {
+	*x = OperatorKeyRotationHistory{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_staking_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *OperatorKeyRotationHistory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OperatorKeyRotationHistory) ProtoMessage() {}
+
+// Deprecated: Use OperatorKeyRotationHistory.ProtoReflect.Descriptor instead.
+func (*OperatorKeyRotationHistory) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_staking_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *OperatorKeyRotationHistory) GetOperatorAddress() string {
+	if x != nil {
+		return x.OperatorAddress
+	}
+	return ""
+}
+
+func (x *OperatorKeyRotationHistory) GetOldOperatorAddress() string {
+	if x != nil {
+		return x.OldOperatorAddress
+	}
+	return ""
+}
+
+func (x *OperatorKeyRotationHistory) GetHeight() uint64 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
 var File_cosmos_staking_v1beta1_staking_proto protoreflect.FileDescriptor
 
 var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
@@ -14555,39 +15142,49 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d,
 	0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
 	0x6f, 0x72, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7,
-	0xb0, 0x2a, 0x01, 0x52, 0x07, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x73, 0x2a, 0xb6, 0x01, 0x0a,
-	0x0a, 0x42, 0x6f, 0x6e, 0x64, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x2c, 0x0a, 0x17, 0x42,
-	0x4f, 0x4e, 0x44, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45,
-	0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x1a, 0x0f, 0x8a, 0x9d, 0x20, 0x0b, 0x55, 0x6e,
-	0x73, 0x70, 0x65, 0x63, 0x69, 0x66, 0x69, 0x65, 0x64, 0x12, 0x26, 0x0a, 0x14, 0x42, 0x4f, 0x4e,
-	0x44, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x42, 0x4f, 0x4e, 0x44, 0x45,
-	0x44, 0x10, 0x01, 0x1a, 0x0c, 0x8a, 0x9d, 0x20, 0x08, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x65,
-	0x64, 0x12, 0x28, 0x0a, 0x15, 0x42, 0x4f, 0x4e, 0x44, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53,
-	0x5f, 0x55, 0x4e, 0x42, 0x4f, 0x4e, 0x44, 0x49, 0x4e, 0x47, 0x10, 0x02, 0x1a, 0x0d, 0x8a, 0x9d,
-	0x20, 0x09, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x22, 0x0a, 0x12, 0x42,
-	0x4f, 0x4e, 0x44, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x42, 0x4f, 0x4e, 0x44, 0x45,
-	0x44, 0x10, 0x03, 0x1a, 0x0a, 0x8a, 0x9d, 0x20, 0x06, 0x42, 0x6f, 0x6e, 0x64, 0x65, 0x64, 0x1a,
-	0x04, 0x88, 0xa3, 0x1e, 0x00, 0x2a, 0x5d, 0x0a, 0x0a, 0x49, 0x6e, 0x66, 0x72, 0x61, 0x63, 0x74,
-	0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x16, 0x49, 0x4e, 0x46, 0x52, 0x41, 0x43, 0x54, 0x49, 0x4f,
-	0x4e, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12,
-	0x1a, 0x0a, 0x16, 0x49, 0x4e, 0x46, 0x52, 0x41, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x44, 0x4f,
-	0x55, 0x42, 0x4c, 0x45, 0x5f, 0x53, 0x49, 0x47, 0x4e, 0x10, 0x01, 0x12, 0x17, 0x0a, 0x13, 0x49,
-	0x4e, 0x46, 0x52, 0x41, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x44, 0x4f, 0x57, 0x4e, 0x54, 0x49,
-	0x4d, 0x45, 0x10, 0x02, 0x42, 0xdc, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x42, 0x0c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x53,
-	0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69,
-	0x6e, 0x67, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x3a, 0x3a, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0xb0, 0x2a, 0x01, 0x52, 0x07, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x73, 0x22, 0x9b, 0x01, 0x0a,
+	0x1a, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x4b, 0x65, 0x79, 0x52, 0x6f, 0x74, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x6f,
+	0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x14, 0x6f, 0x6c, 0x64, 0x5f, 0x6f, 0x70,
+	0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x12, 0x6f, 0x6c, 0x64, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f,
+	0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67,
+	0x68, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74,
+	0x3a, 0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x2a, 0xb6, 0x01, 0x0a, 0x0a, 0x42,
+	0x6f, 0x6e, 0x64, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x2c, 0x0a, 0x17, 0x42, 0x4f, 0x4e,
+	0x44, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49,
+	0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x1a, 0x0f, 0x8a, 0x9d, 0x20, 0x0b, 0x55, 0x6e, 0x73, 0x70,
+	0x65, 0x63, 0x69, 0x66, 0x69, 0x65, 0x64, 0x12, 0x26, 0x0a, 0x14, 0x42, 0x4f, 0x4e, 0x44, 0x5f,
+	0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x42, 0x4f, 0x4e, 0x44, 0x45, 0x44, 0x10,
+	0x01, 0x1a, 0x0c, 0x8a, 0x9d, 0x20, 0x08, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x65, 0x64, 0x12,
+	0x28, 0x0a, 0x15, 0x42, 0x4f, 0x4e, 0x44, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55,
+	0x4e, 0x42, 0x4f, 0x4e, 0x44, 0x49, 0x4e, 0x47, 0x10, 0x02, 0x1a, 0x0d, 0x8a, 0x9d, 0x20, 0x09,
+	0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x22, 0x0a, 0x12, 0x42, 0x4f, 0x4e,
+	0x44, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x42, 0x4f, 0x4e, 0x44, 0x45, 0x44, 0x10,
+	0x03, 0x1a, 0x0a, 0x8a, 0x9d, 0x20, 0x06, 0x42, 0x6f, 0x6e, 0x64, 0x65, 0x64, 0x1a, 0x04, 0x88,
+	0xa3, 0x1e, 0x00, 0x2a, 0x5d, 0x0a, 0x0a, 0x49, 0x6e, 0x66, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x12, 0x1a, 0x0a, 0x16, 0x49, 0x4e, 0x46, 0x52, 0x41, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f,
+	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x1a, 0x0a,
+	0x16, 0x49, 0x4e, 0x46, 0x52, 0x41, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x44, 0x4f, 0x55, 0x42,
+	0x4c, 0x45, 0x5f, 0x53, 0x49, 0x47, 0x4e, 0x10, 0x01, 0x12, 0x17, 0x0a, 0x13, 0x49, 0x4e, 0x46,
+	0x52, 0x41, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x44, 0x4f, 0x57, 0x4e, 0x54, 0x49, 0x4d, 0x45,
+	0x10, 0x02, 0x42, 0xdc, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x42, 0x0c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x53, 0x58, 0xaa,
+	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a,
+	0x3a, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -14603,62 +15200,63 @@ func file_cosmos_staking_v1beta1_staking_proto_rawDescGZIP() []byte {
 }
 
 var file_cosmos_staking_v1beta1_staking_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_cosmos_staking_v1beta1_staking_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_cosmos_staking_v1beta1_staking_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_cosmos_staking_v1beta1_staking_proto_goTypes = []interface{}{
-	(BondStatus)(0),                   // 0: cosmos.staking.v1beta1.BondStatus
-	(Infraction)(0),                   // 1: cosmos.staking.v1beta1.Infraction
-	(*HistoricalInfo)(nil),            // 2: cosmos.staking.v1beta1.HistoricalInfo
-	(*CommissionRates)(nil),           // 3: cosmos.staking.v1beta1.CommissionRates
-	(*Commission)(nil),                // 4: cosmos.staking.v1beta1.Commission
-	(*Description)(nil),               // 5: cosmos.staking.v1beta1.Description
-	(*Validator)(nil),                 // 6: cosmos.staking.v1beta1.Validator
-	(*ValAddresses)(nil),              // 7: cosmos.staking.v1beta1.ValAddresses
-	(*DVPair)(nil),                    // 8: cosmos.staking.v1beta1.DVPair
-	(*DVPairs)(nil),                   // 9: cosmos.staking.v1beta1.DVPairs
-	(*DVVTriplet)(nil),                // 10: cosmos.staking.v1beta1.DVVTriplet
-	(*DVVTriplets)(nil),               // 11: cosmos.staking.v1beta1.DVVTriplets
-	(*Delegation)(nil),                // 12: cosmos.staking.v1beta1.Delegation
-	(*UnbondingDelegation)(nil),       // 13: cosmos.staking.v1beta1.UnbondingDelegation
-	(*UnbondingDelegationEntry)(nil),  // 14: cosmos.staking.v1beta1.UnbondingDelegationEntry
-	(*RedelegationEntry)(nil),         // 15: cosmos.staking.v1beta1.RedelegationEntry
-	(*Redelegation)(nil),              // 16: cosmos.staking.v1beta1.Redelegation
-	(*Params)(nil),                    // 17: cosmos.staking.v1beta1.Params
-	(*DelegationResponse)(nil),        // 18: cosmos.staking.v1beta1.DelegationResponse
-	(*RedelegationEntryResponse)(nil), // 19: cosmos.staking.v1beta1.RedelegationEntryResponse
-	(*RedelegationResponse)(nil),      // 20: cosmos.staking.v1beta1.RedelegationResponse
-	(*Pool)(nil),                      // 21: cosmos.staking.v1beta1.Pool
-	(*ValidatorUpdates)(nil),          // 22: cosmos.staking.v1beta1.ValidatorUpdates
-	(*types.Header)(nil),              // 23: tendermint.types.Header
-	(*timestamppb.Timestamp)(nil),     // 24: google.protobuf.Timestamp
-	(*anypb.Any)(nil),                 // 25: google.protobuf.Any
-	(*durationpb.Duration)(nil),       // 26: google.protobuf.Duration
-	(*v1beta1.Coin)(nil),              // 27: cosmos.base.v1beta1.Coin
-	(*abci.ValidatorUpdate)(nil),      // 28: tendermint.abci.ValidatorUpdate
+	(BondStatus)(0),                    // 0: cosmos.staking.v1beta1.BondStatus
+	(Infraction)(0),                    // 1: cosmos.staking.v1beta1.Infraction
+	(*HistoricalInfo)(nil),             // 2: cosmos.staking.v1beta1.HistoricalInfo
+	(*CommissionRates)(nil),            // 3: cosmos.staking.v1beta1.CommissionRates
+	(*Commission)(nil),                 // 4: cosmos.staking.v1beta1.Commission
+	(*Description)(nil),                // 5: cosmos.staking.v1beta1.Description
+	(*Validator)(nil),                  // 6: cosmos.staking.v1beta1.Validator
+	(*ValAddresses)(nil),               // 7: cosmos.staking.v1beta1.ValAddresses
+	(*DVPair)(nil),                     // 8: cosmos.staking.v1beta1.DVPair
+	(*DVPairs)(nil),                    // 9: cosmos.staking.v1beta1.DVPairs
+	(*DVVTriplet)(nil),                 // 10: cosmos.staking.v1beta1.DVVTriplet
+	(*DVVTriplets)(nil),                // 11: cosmos.staking.v1beta1.DVVTriplets
+	(*Delegation)(nil),                 // 12: cosmos.staking.v1beta1.Delegation
+	(*UnbondingDelegation)(nil),        // 13: cosmos.staking.v1beta1.UnbondingDelegation
+	(*UnbondingDelegationEntry)(nil),   // 14: cosmos.staking.v1beta1.UnbondingDelegationEntry
+	(*RedelegationEntry)(nil),          // 15: cosmos.staking.v1beta1.RedelegationEntry
+	(*Redelegation)(nil),               // 16: cosmos.staking.v1beta1.Redelegation
+	(*Params)(nil),                     // 17: cosmos.staking.v1beta1.Params
+	(*DelegationResponse)(nil),         // 18: cosmos.staking.v1beta1.DelegationResponse
+	(*RedelegationEntryResponse)(nil),  // 19: cosmos.staking.v1beta1.RedelegationEntryResponse
+	(*RedelegationResponse)(nil),       // 20: cosmos.staking.v1beta1.RedelegationResponse
+	(*Pool)(nil),                       // 21: cosmos.staking.v1beta1.Pool
+	(*ValidatorUpdates)(nil),           // 22: cosmos.staking.v1beta1.ValidatorUpdates
+	(*OperatorKeyRotationHistory)(nil), // 23: cosmos.staking.v1beta1.OperatorKeyRotationHistory
+	(*types.Header)(nil),               // 24: tendermint.types.Header
+	(*timestamppb.Timestamp)(nil),      // 25: google.protobuf.Timestamp
+	(*anypb.Any)(nil),                  // 26: google.protobuf.Any
+	(*durationpb.Duration)(nil),        // 27: google.protobuf.Duration
+	(*v1beta1.Coin)(nil),               // 28: cosmos.base.v1beta1.Coin
+	(*abci.ValidatorUpdate)(nil),       // 29: tendermint.abci.ValidatorUpdate
 }
 var file_cosmos_staking_v1beta1_staking_proto_depIdxs = []int32{
-	23, // 0: cosmos.staking.v1beta1.HistoricalInfo.header:type_name -> tendermint.types.Header
+	24, // 0: cosmos.staking.v1beta1.HistoricalInfo.header:type_name -> tendermint.types.Header
 	6,  // 1: cosmos.staking.v1beta1.HistoricalInfo.valset:type_name -> cosmos.staking.v1beta1.Validator
 	3,  // 2: cosmos.staking.v1beta1.Commission.commission_rates:type_name -> cosmos.staking.v1beta1.CommissionRates
-	24, // 3: cosmos.staking.v1beta1.Commission.update_time:type_name -> google.protobuf.Timestamp
-	25, // 4: cosmos.staking.v1beta1.Validator.consensus_pubkey:type_name -> google.protobuf.Any
+	25, // 3: cosmos.staking.v1beta1.Commission.update_time:type_name -> google.protobuf.Timestamp
+	26, // 4: cosmos.staking.v1beta1.Validator.consensus_pubkey:type_name -> google.protobuf.Any
 	0,  // 5: cosmos.staking.v1beta1.Validator.status:type_name -> cosmos.staking.v1beta1.BondStatus
 	5,  // 6: cosmos.staking.v1beta1.Validator.description:type_name -> cosmos.staking.v1beta1.Description
-	24, // 7: cosmos.staking.v1beta1.Validator.unbonding_time:type_name -> google.protobuf.Timestamp
+	25, // 7: cosmos.staking.v1beta1.Validator.unbonding_time:type_name -> google.protobuf.Timestamp
 	4,  // 8: cosmos.staking.v1beta1.Validator.commission:type_name -> cosmos.staking.v1beta1.Commission
 	8,  // 9: cosmos.staking.v1beta1.DVPairs.pairs:type_name -> cosmos.staking.v1beta1.DVPair
 	10, // 10: cosmos.staking.v1beta1.DVVTriplets.triplets:type_name -> cosmos.staking.v1beta1.DVVTriplet
 	14, // 11: cosmos.staking.v1beta1.UnbondingDelegation.entries:type_name -> cosmos.staking.v1beta1.UnbondingDelegationEntry
-	24, // 12: cosmos.staking.v1beta1.UnbondingDelegationEntry.completion_time:type_name -> google.protobuf.Timestamp
-	24, // 13: cosmos.staking.v1beta1.RedelegationEntry.completion_time:type_name -> google.protobuf.Timestamp
+	25, // 12: cosmos.staking.v1beta1.UnbondingDelegationEntry.completion_time:type_name -> google.protobuf.Timestamp
+	25, // 13: cosmos.staking.v1beta1.RedelegationEntry.completion_time:type_name -> google.protobuf.Timestamp
 	15, // 14: cosmos.staking.v1beta1.Redelegation.entries:type_name -> cosmos.staking.v1beta1.RedelegationEntry
-	26, // 15: cosmos.staking.v1beta1.Params.unbonding_time:type_name -> google.protobuf.Duration
-	27, // 16: cosmos.staking.v1beta1.Params.operator_key_rotation_fee:type_name -> cosmos.base.v1beta1.Coin
+	27, // 15: cosmos.staking.v1beta1.Params.unbonding_time:type_name -> google.protobuf.Duration
+	28, // 16: cosmos.staking.v1beta1.Params.operator_key_rotation_fee:type_name -> cosmos.base.v1beta1.Coin
 	12, // 17: cosmos.staking.v1beta1.DelegationResponse.delegation:type_name -> cosmos.staking.v1beta1.Delegation
-	27, // 18: cosmos.staking.v1beta1.DelegationResponse.balance:type_name -> cosmos.base.v1beta1.Coin
+	28, // 18: cosmos.staking.v1beta1.DelegationResponse.balance:type_name -> cosmos.base.v1beta1.Coin
 	15, // 19: cosmos.staking.v1beta1.RedelegationEntryResponse.redelegation_entry:type_name -> cosmos.staking.v1beta1.RedelegationEntry
 	16, // 20: cosmos.staking.v1beta1.RedelegationResponse.redelegation:type_name -> cosmos.staking.v1beta1.Redelegation
 	19, // 21: cosmos.staking.v1beta1.RedelegationResponse.entries:type_name -> cosmos.staking.v1beta1.RedelegationEntryResponse
-	28, // 22: cosmos.staking.v1beta1.ValidatorUpdates.updates:type_name -> tendermint.abci.ValidatorUpdate
+	29, // 22: cosmos.staking.v1beta1.ValidatorUpdates.updates:type_name -> tendermint.abci.ValidatorUpdate
 	23, // [23:23] is the sub-list for method output_type
 	23, // [23:23] is the sub-list for method input_type
 	23, // [23:23] is the sub-list for extension type_name
@@ -14924,6 +15522,18 @@ func file_cosmos_staking_v1beta1_staking_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_staking_v1beta1_staking_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*OperatorKeyRotationHistory); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -14931,7 +15541,7 @@ func file_cosmos_staking_v1beta1_staking_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_staking_v1beta1_staking_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   21,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

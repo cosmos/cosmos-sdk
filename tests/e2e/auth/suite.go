@@ -3,10 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -368,108 +365,6 @@ func (s *E2ETestSuite) TestCliGetAccountAddressByID() {
 				require.NotNil(res.GetAccountAddress())
 			}
 		})
-	}
-}
-
-func (s *E2ETestSuite) TestCLISignAminoJSON() {
-	require := s.Require()
-	val1 := s.network.Validators[0]
-	txCfg := val1.ClientCtx.TxConfig
-	sendTokens := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-	)
-	txBz, err := s.createBankMsg(val1, val1.Address,
-		sendTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
-	require.NoError(err)
-	fileUnsigned := testutil.WriteToNewTempFile(s.T(), txBz.String())
-	defer fileUnsigned.Close()
-	chainFlag := fmt.Sprintf("--%s=%s", flags.FlagChainID, val1.ClientCtx.ChainID)
-	sigOnlyFlag := "--signature-only"
-	signModeAminoFlag := "--sign-mode=amino-json"
-
-	// SIC! validators have same key names and same addresses as those registered in the keyring,
-	//      BUT the keys are different!
-	valRecord, err := val1.ClientCtx.Keyring.Key(val1.Moniker)
-	require.NoError(err)
-
-	// query account info
-	queryResJSON, err := authclitestutil.QueryAccountExec(val1.ClientCtx, val1.Address)
-	require.NoError(err)
-	var account sdk.AccountI
-	require.NoError(val1.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
-
-	/****  test signature-only  ****/
-	res, err := authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
-		sigOnlyFlag, signModeAminoFlag)
-	require.NoError(err)
-	pub, err := valRecord.GetPubKey()
-	require.NoError(err)
-	checkSignatures(require, txCfg, res.Bytes(), pub)
-	sigs, err := txCfg.UnmarshalSignatureJSON(res.Bytes())
-	require.NoError(err)
-	require.Equal(1, len(sigs))
-	require.Equal(account.GetSequence(), sigs[0].Sequence)
-
-	/****  test full output  ****/
-	res, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, signModeAminoFlag)
-	require.NoError(err)
-
-	// txCfg.UnmarshalSignatureJSON can't unmarshal a fragment of the signature, so we create this structure.
-	type txFragment struct {
-		Signatures []json.RawMessage
-	}
-	var txOut txFragment
-	err = json.Unmarshal(res.Bytes(), &txOut)
-	require.NoError(err)
-	require.Len(txOut.Signatures, 1)
-
-	/****  test file output  ****/
-	filenameSigned := filepath.Join(s.T().TempDir(), "test_sign_out.json")
-	fileFlag := fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, filenameSigned)
-	_, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag, signModeAminoFlag)
-	require.NoError(err)
-	fContent, err := os.ReadFile(filenameSigned)
-	require.NoError(err)
-	require.Equal(res.String(), string(fContent))
-
-	/****  try to append to the previously signed transaction  ****/
-	res, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		sigOnlyFlag, signModeAminoFlag)
-	require.NoError(err)
-	checkSignatures(require, txCfg, res.Bytes(), pub, pub)
-
-	/****  try to overwrite the previously signed transaction  ****/
-
-	// We can't sign with other address, because the bank send message supports only one signer for a simple
-	// account. Changing the file is too much hacking, because TxDecoder returns sdk.Tx, which doesn't
-	// provide functionality to check / manage `auth_info`.
-	// Cases with different keys are are covered in unit tests of `tx.Sign`.
-	res, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		sigOnlyFlag, "--overwrite", signModeAminoFlag)
-	require.NoError(err)
-	checkSignatures(require, txCfg, res.Bytes(), pub)
-
-	/****  test flagAmino  ****/
-	res, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		"--amino=true", signModeAminoFlag)
-	require.NoError(err)
-
-	var txAmino authcli.BroadcastReq
-	err = val1.ClientCtx.LegacyAmino.UnmarshalJSON(res.Bytes(), &txAmino)
-	require.NoError(err)
-	require.Len(txAmino.Tx.Signatures, 2)
-	require.Equal(txAmino.Tx.Signatures[0].PubKey, pub)
-	require.Equal(txAmino.Tx.Signatures[1].PubKey, pub)
-}
-
-func checkSignatures(require *require.Assertions, txCfg client.TxConfig, output []byte, pks ...cryptotypes.PubKey) {
-	sigs, err := txCfg.UnmarshalSignatureJSON(output)
-	require.NoError(err, string(output))
-	require.Len(sigs, len(pks))
-	for i := range pks {
-		require.True(sigs[i].PubKey.Equals(pks[i]), "Pub key doesn't match. Got: %s, expected: %s, idx: %d", sigs[i].PubKey, pks[i], i)
-		require.NotEmpty(sigs[i].Data)
 	}
 }
 

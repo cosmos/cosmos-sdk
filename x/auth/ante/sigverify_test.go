@@ -9,7 +9,6 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -224,100 +223,6 @@ func TestSigVerification(t *testing.T) {
 					require.Nil(t, err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
 				}
 			})
-		}
-	}
-}
-
-// This test is exactly like the one above, but we set the codec explicitly to
-// Amino.
-// Once https://github.com/cosmos/cosmos-sdk/issues/6190 is in, we can remove
-// this, since it'll be handled by the test matrix.
-// In the meantime, we want to make double-sure amino compatibility works.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/7229
-func TestSigVerification_ExplicitAmino(t *testing.T) {
-	suite := SetupTestSuite(t, true)
-	// Set up TxConfig.
-	aminoCdc := codec.NewLegacyAmino()
-	// We're using TestMsg amino encoding in some tests, so register it here.
-	txConfig := legacytx.StdTxConfig{Cdc: aminoCdc}
-
-	suite.clientCtx = client.Context{}.
-		WithTxConfig(txConfig)
-
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   suite.accountKeeper,
-			BankKeeper:      suite.bankKeeper,
-			FeegrantKeeper:  suite.feeGrantKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		},
-	)
-
-	require.NoError(t, err)
-	suite.anteHandler = anteHandler
-
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-	// make block height non-zero to ensure account numbers part of signBytes
-	suite.ctx = suite.ctx.WithBlockHeight(1)
-
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	priv2, _, addr2 := testdata.KeyTestPubAddr()
-	priv3, _, addr3 := testdata.KeyTestPubAddr()
-
-	addrs := []sdk.AccAddress{addr1, addr2, addr3}
-
-	msgs := make([]sdk.Msg, len(addrs))
-	// set accounts and create msg for each address
-	for i, addr := range addrs {
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i)))
-		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		msgs[i] = testdata.NewTestMsg(addr)
-	}
-
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-
-	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
-	antehandler := sdk.ChainAnteDecorators(spkd, svd)
-
-	type testCase struct {
-		name      string
-		privs     []cryptotypes.PrivKey
-		accNums   []uint64
-		accSeqs   []uint64
-		recheck   bool
-		shouldErr bool
-	}
-	testCases := []testCase{
-		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, false, true},
-		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, false, true},
-		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, false, true},
-		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
-		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
-		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
-		{"no err on recheck", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, true, false},
-	}
-	for i, tc := range testCases {
-		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
-		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
-
-		require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
-		suite.txBuilder.SetFeeAmount(feeAmount)
-		suite.txBuilder.SetGasLimit(gasLimit)
-
-		tx, err := suite.CreateTestTx(suite.ctx, tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-		require.NoError(t, err)
-
-		_, err = antehandler(suite.ctx, tx, false)
-		if tc.shouldErr {
-			require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
-		} else {
-			require.Nil(t, err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
 		}
 	}
 }

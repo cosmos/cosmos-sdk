@@ -5,6 +5,7 @@ import (
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
@@ -13,7 +14,7 @@ import (
 // message where signers are specified by the cosmos.msg.v1.signer protobuf
 // option.
 type GetSignersContext struct {
-	protoFiles      *protoregistry.Files
+	protoFiles      protodesc.Resolver
 	getSignersFuncs map[protoreflect.FullName]getSignersFunc
 }
 
@@ -21,7 +22,7 @@ type GetSignersContext struct {
 type GetSignersOptions struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
-	ProtoFiles *protoregistry.Files
+	ProtoFiles protodesc.Resolver
 }
 
 // NewGetSignersContext creates a new GetSignersContext using the provided options.

@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Bug Fixes
+
+* [PR 564](https://github.com/provenance-io/cosmos-sdk/pull/564) Fix protobufjs parse error by using object form vs. array for `additional_bindings` rpc tag.
 
 ---
 

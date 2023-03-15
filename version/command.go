@@ -2,6 +2,7 @@ package version
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/cometbft/cometbft/libs/cli"
@@ -16,11 +17,12 @@ func NewVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the application binary version information",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			verInfo := NewInfo()
 
 			if long, _ := cmd.Flags().GetBool(flagLong); !long {
-				cmd.Println(verInfo.Version)
+				fmt.Fprintln(cmd.OutOrStdout(), verInfo.Version)
 				return nil
 			}
 
@@ -42,7 +44,7 @@ func NewVersionCommand() *cobra.Command {
 				return err
 			}
 
-			cmd.Println(string(bz))
+			fmt.Fprintln(cmd.OutOrStdout(), string(bz))
 			return nil
 		},
 	}

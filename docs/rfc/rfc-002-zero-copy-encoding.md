@@ -202,43 +202,43 @@ or struct methods, ex:
 
 ```go
 type Foo interface {
-X() int32
-SetX(int32) Foo
-Y() zpb.Option[uint32]
-SetY(zpb.Option[uint32]) Foo
-Z() string
-SetZ(string) Foo
-Bar() Bar
-Bars() zpb.Array[Bar]
+    X() int32
+    SetX(int32) Foo
+    Y() zpb.Option[uint32]
+    SetY(zpb.Option[uint32]) Foo
+    Z() string
+    SetZ(string) Foo
+    Bar() Bar
+    Bars() zpb.Array[Bar]
 }
 
 type Bar interface {
-Abc() ABC
-SetAbc(ABC) Bar
-Baz() Baz
-Xs() zpb.ScalarArray[uint32]
+    Abc() ABC
+    SetAbc(ABC) Bar
+    Baz() Baz
+    Xs() zpb.ScalarArray[uint32]
 }
 
 type Baz interface {
-Case() Baz_case
-GetX() uint32
-SetX(uint32)
-GetY() string
-SetY(string)
+    Case() Baz_case
+    GetX() uint32
+    SetX(uint32)
+    GetY() string
+    SetY(string)
 }
 
 type Baz_case int32
 const (
-Baz_X Baz_case = 0
-Baz_Y Baz_case = 1
+    Baz_X Baz_case = 0
+    Baz_Y Baz_case = 1
 )
 
 type ABC int32
 const (
-ABC_A ABC = 0
-ABC_B ABC = 1
-ABC_C ABC = 2
-ABC_D ABC = 3
+    ABC_A ABC = 0
+    ABC_B ABC = 1
+    ABC_C ABC = 2
+    ABC_D ABC = 3
 )
 ```
 
@@ -248,19 +248,19 @@ have an API like this:
 
 ```go
 type Option[T] interface {
-IsSet() bool
-Value() T
+    IsSet() bool
+    Value() T
 }
 
 type Array[T] interface {
 InitWithLength(int)
-Len() int
-Get(int) T
+    Len() int
+    Get(int) T
 }
 
 type ScalarArray[T] interface {
-Array[T]
-Set(int, T)
+    Array[T]
+    Set(int, T)
 }
 ```
 

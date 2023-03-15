@@ -141,6 +141,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [#15123](https://github.com/cosmos/cosmos-sdk/pull/15123) `NewFactoryCLI` now returns an error, in addition to the `Factory`.
 * (x/capability) [#15344](https://github.com/cosmos/cosmos-sdk/pull/15344) Capability module was removed and is now housed in [IBC-GO](https://github.com/cosmos/ibc-go). 
 * [#15299](https://github.com/cosmos/cosmos-sdk/pull/15299) remove `StdTx` transaction and signing APIs. No SDK version has actually supported `StdTx` since before Stargate.
+* [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284)
+  * `sdk.Msg.GetSigners` was deprecated and no longer supported. Use the `cosmos.msg.v1.signer` protobuf annotation instead.
+  * the `codec` types are `Codec` and `InterfaceRegistry` can no longer be overriden without embedding an existing codec type and new methods have been added.
+  * `types/tx.Tx` no longer implements `sdk.Tx`
 
 ### Client Breaking Changes
 

@@ -39,6 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* [PR 565](https://github.com/provenance-io/cosmos-sdk/pull/565) Removes locks around state listening. There's no concurrency risk.
+
 ### Bug Fixes
 
 * [PR 564](https://github.com/provenance-io/cosmos-sdk/pull/564) Fix protobufjs parse error by using object form vs. array for `additional_bindings` rpc tag.

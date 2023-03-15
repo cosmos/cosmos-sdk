@@ -400,3 +400,18 @@ enum Infraction {
 message ValidatorUpdates {
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
+
+// OperatorKeyRotationHistory contains a validator's operator key rotation history.
+message OperatorKeyRotationHistory {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // operator_address defines the address of the validator's operator; bech encoded in JSON.
+  string operator_address = 1 ;
+
+  // old_operator_address defines the previous address of the validator's operator; bech encoded in JSON.
+  string old_operator_address = 2 ;
+ 
+  // height defines the block height at which the rotation event occured.
+  uint64 height = 3;
+}

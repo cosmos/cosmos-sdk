@@ -252,7 +252,9 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	// register streaming services
-	app.RegisterStreamingServices(appOpts, app.kvStoreKeys())
+	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+		panic(err)
+	}
 
 	/****  Module Options ****/
 

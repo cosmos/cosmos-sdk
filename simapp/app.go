@@ -260,7 +260,9 @@ func NewSimApp(
 	)
 
 	// register streaming services
-	bApp.RegisterStreamingServices(appOpts, keys)
+	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
+		panic(err)
+	}
 
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should

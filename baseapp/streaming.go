@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 
@@ -23,7 +22,7 @@ const (
 )
 
 // RegisterStreamingServices registers streaming services with the BaseApp.
-func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, keys map[string]*storetypes.KVStoreKey) {
+func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, keys map[string]*storetypes.KVStoreKey) error {
 	// register streaming services
 	streamingCfg := cast.ToStringMap(appOpts.Get(StreamingTomlKey))
 	for service := range streamingCfg {
@@ -33,15 +32,15 @@ func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, ke
 			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
 			plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
 			if err != nil {
-				app.logger.Error("failed to load streaming plugin", "error", err)
-				os.Exit(1)
+				return fmt.Errorf("failed to load streaming plugin: %w", err)
 			}
 			if err := app.registerStreamingPlugin(appOpts, keys, plugin); err != nil {
-				app.logger.Error("failed to register streaming plugin", "error", err)
-				os.Exit(1)
+				return fmt.Errorf("failed to register streaming plugin %w", err)
 			}
 		}
 	}
+
+	return nil
 }
 
 // registerStreamingPlugin registers streaming plugins with the BaseApp.

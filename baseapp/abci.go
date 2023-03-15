@@ -219,7 +219,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	for _, abciListener := range app.streamingManager.ABCIListeners {
 		ctx := app.deliverState.ctx
 		blockHeight := ctx.BlockHeight()
-		if err := abciListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+		if err := abciListener.ListenBeginBlock(ctx, req, res); err != nil {
 			app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
 		}
 	}
@@ -426,15 +426,13 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
 	}
 
-	res = abci.ResponseDeliverTx{
+	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
-
-	return res
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in

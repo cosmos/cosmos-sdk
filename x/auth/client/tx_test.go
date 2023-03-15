@@ -12,16 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-)
-
-var (
-	priv = ed25519.GenPrivKey()
-	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
 func TestParseQueryResponse(t *testing.T) {

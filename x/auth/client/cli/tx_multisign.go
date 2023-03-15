@@ -21,15 +21,8 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
-
-// BroadcastReq defines a tx broadcasting request.
-type BroadcastReq struct {
-	Tx   legacytx.StdTx `json:"tx" yaml:"tx"`
-	Mode string         `json:"mode" yaml:"mode"`
-}
 
 // GetMultiSignCommand returns the multi-sign command
 func GetMultiSignCommand() *cobra.Command {

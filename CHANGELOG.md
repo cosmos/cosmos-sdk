@@ -140,6 +140,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto) [#15070](https://github.com/cosmos/cosmos-sdk/pull/15070) `GenerateFromPassword` and `Cost` from `bcrypt.go` now take a `uint32` instead of a `int` type.  
 * (client) [#15123](https://github.com/cosmos/cosmos-sdk/pull/15123) `NewFactoryCLI` now returns an error, in addition to the `Factory`.
 * (x/capability) [#15344](https://github.com/cosmos/cosmos-sdk/pull/15344) Capability module was removed and is now housed in [IBC-GO](https://github.com/cosmos/ibc-go). 
+* [#15299](https://github.com/cosmos/cosmos-sdk/pull/15299) remove `StdTx` transaction and signing APIs. No SDK version has actually supported `StdTx` since before Stargate.
 
 ### Client Breaking Changes
 
@@ -152,6 +153,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#14880](https://github.com/cosmos/cosmos-sdk/pull/14880) Remove `<app> tx gov submit-legacy-proposal cancel-software-upgrade` and `software-upgrade` commands. These commands are now in the `x/upgrade` module and using gov v1. Use `tx upgrade software-upgrade` instead.
 * (grpc-web) [#14652](https://github.com/cosmos/cosmos-sdk/pull/14652) Remove `grpc-web.address` flag.
 * (client) [#14342](https://github.com/cosmos/cosmos-sdk/pull/14342) `<app> config` command is now a sub-command. Use `<app> config --help` to learn more.
+* (cli) [#15299](https://github.com/cosmos/cosmos-sdk/pull/15299) remove `--amino` flag from `sign` and `multi-sign` commands. Amino `StdTx` has been deprecated for a while. Amino JSON signing still works as expected. 
 
 ### Bug Fixes
 

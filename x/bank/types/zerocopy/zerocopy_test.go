@@ -7,17 +7,17 @@ import (
 )
 
 func TestMsgSend(t *testing.T) {
-	msgSend := &msgSend{}
-	msgSend.SetFromAddress("cosmos1").SetToAddress("cosmos2")
-	coins := msgSend.InitCoins(2)
+	msg1 := &msgSend{}
+	msg1.SetFromAddress("cosmos1").SetToAddress("cosmos2")
+	coins := msg1.InitCoins(2)
 	coins.Get(0).SetDenom("atom").SetAmount("100")
 	coins.Get(1).SetDenom("foo").SetAmount("200")
 
-	msgSend2 := &msgSend{}
-	msgSend2.WithBufferContext(msgSend.BufferContext())
-	assert.Equal(t, msgSend2.FromAddress(), "cosmos1")
-	assert.Equal(t, msgSend2.ToAddress(), "cosmos2")
-	coins2 := msgSend2.Coins()
+	msg2 := &msgSend{}
+	msg2.WithBufferContext(msg1.BufferContext())
+	assert.Equal(t, msg2.FromAddress(), "cosmos1")
+	assert.Equal(t, msg2.ToAddress(), "cosmos2")
+	coins2 := msg2.Coins()
 	assert.Equal(t, coins2.Len(), 2)
 	assert.Equal(t, coins2.Get(0).Denom(), "atom")
 	assert.Equal(t, coins2.Get(0).Amount(), "100")

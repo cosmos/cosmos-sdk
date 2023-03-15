@@ -146,6 +146,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * the `codec` types are `Codec` and `InterfaceRegistry` can no longer be overriden without embedding an existing codec type and new methods have been added.
   * `types/tx.Tx` no longer implements `sdk.Tx`.
   * `sdk.Tx` now requires a new methods `GetMsgsV2()`.
+* (x/authx) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
+* (x/gov) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
 
 ### Client Breaking Changes
 

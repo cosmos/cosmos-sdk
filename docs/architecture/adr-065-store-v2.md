@@ -149,22 +149,42 @@ effectively version state because most of these databases use variable length
 keys which would effectively make actions likes iteration and range queries less
 performant.
 
-The state machine will continue to query state through it's own dedicated `KVStore`
-using the relevant `KVStoreKey`. However, the query will be invoked against the
-SS layer. Client queries, on the other hand, will be routed through
-the `MultiStore` set in `BaseApp` via a `abci.RequestQuery`. This in effect will
-route the query to the RMS and the RMS will use the SS layer to perform a direct
-key lookup. If a version is specified the `abci.RequestQuery` object, the SS `KVStore`
-will set the appropriate value for the timestamp. If no height is provided, the
-SS layer will assume the latest height. The SS layer will store a reverse index
-to lookup `LatestVersion -> timestamp(version)` which is set on `Commit`.
-
 Since operators might want pruning strategies to differ in SS compared to SC,
 e.g. having a very tight pruning strategy in SC while having a looser pruning
 strategy for SS, we propose to introduce an additional pruning configuration,
 with parameters that are identical to what exists in the SDK today, and allow
 operators to control the pruning strategy of the SS layer independently of the
 SC layer.
+
+Note, the SC pruning strategy must be congruent with the operator's state sync
+configuration. This is so as to allow state sync snapshots to execute successfully,
+otherwise, a snapshot could be triggered on a height that is not available in SC.
+
+#### State Sync
+
+The state sync process should be largely unaffected by the separation of the SC
+and SS layers. However, if a node syncs via state sync, the SS layer of the node
+will not have the state synced height available, since the IAVL import process is
+not setup in way to easily allow direct key/value insertion. A modification of
+the IAVL import process would be necessary to facilitate having the state sync
+height available.
+
+Note, this is not problematic for the state machine itself because when a query
+is made, the RMS will automatically direct the query correctly (see [Queries](#queries)).
+
+#### Queries
+
+To consolidate the query routing between both the SC and SS layers, we propose to
+have a notion of a "query router" that is constructed in the RMS. This query router
+will be supplied to each `KVStore` implementation. The query router will route
+queries to either the SC layer or the SS layer based on a few parameters. If
+`prove: true`, then the query must be routed to the SC layer. Otherwise, if the
+query height is available in the SS layer, the query will be served from the SS
+layer. Otherwise, we fall back on the SC layer.
+
+If no height is provided, the SS layer will assume the latest height. The SS
+layer will store a reverse index to lookup `LatestVersion -> timestamp(version)`
+which is set on `Commit`.
 
 #### Proofs
 
@@ -202,7 +222,7 @@ being present during `SaveVersion`.
 
 As a result of a new store V2 package, we should expect to see improved performance
 for queries and transactions due to the separation of concerns. We should also
-expect to see improved developer UX around experimentation of committment schemes
+expect to see improved developer UX around experimentation of commitment schemes
 and storage backends for further performance, in addition to a reduced amount of
 abstraction around KVStores making operations such as caching and state branching
 more intuitive.
@@ -223,7 +243,7 @@ be broken or modified.
 * Reduced layers of abstraction making storage primitives easier to understand
 * Atomic commitments for SC
 * Redesign of storage types and interfaces will allow for greater experimentation
-  such as different physical storage backends and different committment schemes
+  such as different physical storage backends and different commitment schemes
   for different application modules
 
 ### Negative
@@ -232,15 +252,26 @@ be broken or modified.
 
 ### Neutral
 
-* Keeping IAVL as the primary committment data structure, although drastic
+* Keeping IAVL as the primary commitment data structure, although drastic
   performance improvements are being made
 
 ## Further Discussions
 
+### Module Storage Control
+
+Many modules store secondary indexes that are typically solely used to support
+client queries, but are actually not needed for the state machine's state
+transitions. What this means is that these indexes technically have no reason to
+exist in the SC layer at all, as they take up unnecessary space. It is worth
+exploring what an API would look like to allow modules to indicate what (key, value)
+pairs they want to be persisted in the SC layer, implicitly indicating the SS
+layer as well, as opposed to just persisting the (key, value) pair only in the
+SS layer.
+
 ### Historical State Proofs
 
 It is not clear what the importance or demand is within the community of providing
-committment proofs for historical state. While solutions can be devised such as
+commitment proofs for historical state. While solutions can be devised such as
 rebuilding trees on the fly based on state snapshots, it is not clear what the
 performance implications are for such solutions.
 

@@ -7,66 +7,74 @@ const (
 	msgSendSize              = msgSendCoinsOffset + 4
 )
 
-type MsgSend struct {
+type msgSend struct {
 	ctx *BufferContext
 }
 
-func (m *MsgSend) FromAddress() string {
+type MsgSend interface {
+	FromAddress() (string, error)
+	SetFromAddress(string) MsgSend
+	ToAddress() (string, error)
+	SetToAddress(string) MsgSend
+	Coins() (Array[*Coin], error)
+}
+
+func (m *msgSend) FromAddress() string {
 	if m.ctx == nil {
 		return ""
 	}
 	return m.ctx.ResolvePointer(msgSendFromAddressOffset).ReadString()
 }
 
-func (m *MsgSend) ToAddress() string {
+func (m *msgSend) ToAddress() string {
 	if m.ctx == nil {
 		return ""
 	}
 	return m.ctx.ResolvePointer(msgSendToAddressOffset).ReadString()
 }
 
-func (m *MsgSend) init() {
+func (m *msgSend) init() {
 	if m.ctx == nil {
 		_, m.ctx = (&Buffer{}).Alloc(msgSendSize)
 	}
 }
 
-func (m *MsgSend) SetFromAddress(x string) *MsgSend {
+func (m *msgSend) SetFromAddress(x string) *msgSend {
 	m.init()
 	m.ctx.SetString(msgSendFromAddressOffset, x)
 	return m
 }
 
-func (m *MsgSend) SetToAddress(x string) *MsgSend {
+func (m *msgSend) SetToAddress(x string) *msgSend {
 	m.init()
 	m.ctx.SetString(msgSendToAddressOffset, x)
 	return m
 }
 
-func (m *MsgSend) Coins() Array[*Coin] {
+func (m *msgSend) Coins() Array[*Coin] {
 	m.init()
 	return ReadArray[Coin](m.ctx, msgSendCoinsOffset)
 }
 
-func (m *MsgSend) InitCoins(size int) Array[*Coin] {
+func (m *msgSend) InitCoins(size int) Array[*Coin] {
 	m.init()
 	return InitArray[Coin](m.ctx, msgSendCoinsOffset, size)
 }
 
-func (m *MsgSend) WithContext(ctx *BufferContext) *MsgSend {
+func (m *msgSend) WithContext(ctx *BufferContext) *msgSend {
 	m.ctx = ctx
 	return m
 }
 
-func (m *MsgSend) WithBufferContext(ctx *BufferContext) *MsgSend {
+func (m *msgSend) WithBufferContext(ctx *BufferContext) *msgSend {
 	m.ctx = ctx
 	return m
 }
 
-func (m *MsgSend) BufferContext() *BufferContext {
+func (m *msgSend) BufferContext() *BufferContext {
 	return m.ctx
 }
 
-func (m *MsgSend) Size() uint32 {
+func (m *msgSend) Size() uint32 {
 	return msgSendSize
 }

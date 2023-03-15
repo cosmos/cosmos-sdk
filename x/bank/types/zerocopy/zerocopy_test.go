@@ -7,13 +7,13 @@ import (
 )
 
 func TestMsgSend(t *testing.T) {
-	msgSend := &MsgSend{}
+	msgSend := &msgSend{}
 	msgSend.SetFromAddress("cosmos1").SetToAddress("cosmos2")
 	coins := msgSend.InitCoins(2)
 	coins.Get(0).SetDenom("atom").SetAmount("100")
 	coins.Get(1).SetDenom("foo").SetAmount("200")
 
-	msgSend2 := &MsgSend{}
+	msgSend2 := &msgSend{}
 	msgSend2.WithBufferContext(msgSend.BufferContext())
 	assert.Equal(t, msgSend2.FromAddress(), "cosmos1")
 	assert.Equal(t, msgSend2.ToAddress(), "cosmos2")

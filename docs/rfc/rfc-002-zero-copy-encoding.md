@@ -15,8 +15,7 @@ tooling was much higher and the client experience and performance were considere
 
 In [ADR 033: Protobuf-based Inter-Module Communication](./../architecture/adr-033-protobuf-inter-module-comm.md), the
 idea of cross-language/VM inter-module
-communication was considered again. And in the discussions
-around [ADR 054: Semver Compatible SDK Modules](./../architecture/adr-054-semver-compatible-modules.md),
+communication was considered again. And in the discussions around [ADR 054: Semver Compatible SDK Modules](./../architecture/adr-054-semver-compatible-modules.md),
 it was determined that multi-language/VM support in the SDK is a near term priority.
 
 ## Proposal
@@ -93,23 +92,37 @@ These requirements make the encoding and generated code simpler.
 
 ### Encoding
 
-The encoding of protobuf scalar and composite types is described below.
+#### Buffers and Memory Management
 
-#### Scalars
+By default, this encoding attempts to use a single fixed size encoding buffer of 64kb. This imposes a limit on the
+maximum size of a message that can be encoded. In the context of a message passing protocol for blockchains, this
+is generally a reasonable limit and the only known valid use case for exceeding it is to store user-uploaded byte
+code for execution in VMs. To accommodate this, large `string` and `bytes` values can be encoded in additional
+standalone buffers if needed. Still, the body of a message included all scalar and message fields
+must fit inside the 64kb buffer.
+
+While this design decision greatly simplifies the encoding and decoding logic, as well as the complexity of
+generated code, it does mean that APIs will need to do proper bounds checking when writing data that is not fixed
+size and return errors.
+
+The term `Root` is used to refer to the main 64kb buffer plus any additional large `string`/`bytes` buffers that are
+allocated.
+
+#### Scalar Encoding
 
 * `bool`s are encoded as 1 byte - `0` or `1`
 * `uint32`, `int32`, `sint32`, `fixed32`, `sfixed32` are encoded as 4 bytes by default
 * `uint64`, `int64`, `sint64`, `fixed64`, `sfixed64` are encoded as 8 bytes by default
 * `enum`s are encoded as 1 byte and values *MUST* be in the range of `0` to `255`.
-* all scalars declared as `optional` are prefixed with 1 additional whose value is `0` or `1` to indicate presence
+* all scalars declared as `optional` are prefixed with 1 additional byte whose value is `0` or `1` to indicate presence
 
-#### Messages
+#### Message Encoding
 
 By default, messages field are encoded inline as structs. Meaning that if a message struct takes 8 bytes then its inline
 field in another struct will add 8 bytes to that struct size.
 
 `optional` message fields will be prefixed by 1 byte to indicate presence. (Alternatively, we could encode optional
-message fields as relative pointers (see below) if the desire is to save memory when they are rarely used needed.)
+message fields as pointers (see below) if the desire is to save memory when they are rarely used needed.)
 
 #### Oneof’s
 
@@ -130,40 +143,18 @@ A discriminant of `0` indicates that the field is not set.
 #### Pointer Types: Bytes and Strings and Repeated fields
 
 A pointer is an 16-bit unsigned integer that points to an offset in the current memory buffer or to another memory
-buffer. If the highest bit in the pointer is unset, then the pointer points to an offset in the current memory buffer.
-If the highest bit in the pointer is set, then the pointer points a different memory buffer.
+buffer.  If the bit mask `0xFF00` on the is unset, then the pointer points to an offset in the main 64kb memory buffer.
+If that bit mask is set, then the pointer points to a large `string` or `bytes` buffer.  Up to 256 such buffers
+can be referenced in a single `Root`. The pointer `0` indicates that a field is not defined.
 
-Almost all messages should be smaller than 64kb so a 16-bit relative pointer should be sufficient. An amendment to this
-specification may choose to describe how to deal with larger messages. For now, protocols that need to use a larger
-amount of language should be implemented as native Cosmos SDK go modules. The only known use case for messages larger
-than 64kb in a blockchain application is storing executable byte code for a VM, so this seems like a reasonable
-limitation.
-
-`bytes`, `string`s and repeated fields are encoded as a relative pointer to a memory location that is prefixed with the
-length of the `bytes`, `string` or repeated field value. The length should be encoded as the size of the relative
-pointer - either 16 or 32-bits. The relative pointer `0` indicates that a field is not defined.
-
-#### Large Messages and Memory Management
-
-One potential issue to this approach is that it will be impossible to grow the memory buffer after its initial allocation
-if we are writing structs like this. To deal with this, a fixed-size 64kb buffer should be allocated as the default which
-should be sufficient for all normal blockchain use cases (besides storing VM byte code). Allocation methods will return
-an error if the memory buffer size is exceeded.
-
-In the future, we may consider ways to use different sized memory buffers, maybe specified at the message level with
-annotations, but this is not a priority for now because applications that need larger memory buffers be implemented as
-native Cosmos SDK go modules. The main use case for this would be to support user-defined code to run in VMs and this
-is deemed an acceptable trade-off for now.
-
-NOTE: in golang, it is feasible to grow the memory buffer at runtime if needed because of how the golang code is
-generated to use getters and setters rather than struct fields. One key motivation for the Rust design above is to
-minimize the amount of generated code because we expect that it is more likely that Rust code will run in resource
-constrained environments. Thus, for Rust generated code there are slightly higher performance requirements and
-expectations than for Go code.
+`bytes`, `string`s and repeated fields are encoded as pointers to a memory location that is prefixed with the
+length of the `bytes`, `string` or repeated field value. If the referenced memory location is in the main 64kb memory
+buffer, then this length prefix will be a 16-bit unsigned integer. If the referenced memory location is a large
+`string` or `bytes` buffer, then this length prefix will be a 32-bit unsigned integer.
 
 #### `Any`s
 
-`Any`s are encoded as a relative pointer to the type URL string and a relative pointer to the start of the message
+`Any`s are encoded as a pointer to the type URL string and a pointer to the start of the message
 specified by the type URL.
 
 #### Maps
@@ -177,8 +168,8 @@ We may choose to allow customizing the encoding of fields so that they take up l
 For example, we could allow 8-bit or 16-bit integers:
 `int32 x = 1 [(cosmos_proto.int16) = true]` would indicate that the field only needs 2 bytes
 
-Or we could allow `string` or `bytes` fields to have a fixed size rather than being encoding as
-variable-length relative pointers:
+Or we could allow `string`, `bytes` or `repeated` fields to have a fixed size rather than being encoding as
+pointers to a variable-length value:
 `string y = 2 [(cosmos_proto.fixed_size) = 3]` could indicate that this is a fixed width 3 byte string
 
 If we choose to enable these encoding options, changing these options would be a breaking change that needs to be
@@ -228,11 +219,11 @@ or struct methods, ex:
 ```go
 type Foo interface {
     X() int32
-    SetX(int32) Foo
+    SetX(int32) 
     Y() zpb.Option[uint32]
-    SetY(zpb.Option[uint32]) Foo
+    SetY(zpb.Option[uint32])
     Z() (string, error)
-    SetZ(string) Foo
+    SetZ(string) error
     Bar() Bar
     Bars() (zpb.Array[Bar], error)
 }
@@ -278,7 +269,7 @@ type Option[T] interface {
 }
 
 type Array[T] interface {
-InitWithLength(int)
+    InitWithLength(int) error
     Len() int
     Get(int) T
 }
@@ -292,19 +283,22 @@ type ScalarArray[T] interface {
 Arrays in particular would not be resizable, but would be initialized with a fixed length. This is to ensure that arrays
 can be written to the underlying buffer in a linear way.
 
-In golang, buffers would be managed transparently under the hood, and usage of this generated code might look like this
-with method chaining used on setters:
+In golang, buffers would be managed transparently under the hood by the first message initialized, and usage of this
+generated code might look like this:
 
 ```go
 foo := NewFoo()
 foo.SetX(1)
-    .SetY(zpb.NewOption[uint32](2))
-    .SetZ("hello")
+foo.SetY(zpb.NewOption[uint32](2))
+err := foo.SetZ("hello")
+if err != nil {
+    panic(err)
+}
 
 bar := foo.Bar()
 bar.Baz().SetX(3)
 
-xs, err := bar.Xs()
+xs, err = bar.Xs()
 if err != nil {
     panic(err)
 }
@@ -312,7 +306,7 @@ xs.InitWithLength(2)
 xs.Set(0, 0)
 xs.Set(1, 2)
 
-bars, err := foo.Bars()
+bars, err = foo.Bars()
 if err != nil {
     panic(err)
 }
@@ -332,7 +326,7 @@ always an error returned on the getter to do proper bounds checking on the buffe
 
 This encoding should allow generating native structs in Rust that are annotated with `#[repr(C, align(1))]`. It should
 be fairly natural to use from Rust with a key difference that memory buffers (called `Root`s) must be manually allocated
-and passed into any relative pointer type.
+and passed into any pointer type.
 
 Here is some example code that uses library types `Option`, `Enum`, `String`, `OneOf` and `Repeated`:
 
@@ -341,7 +335,7 @@ Here is some example code that uses library types `Option`, `Enum`, `String`, `O
 struct Foo {
     x: i32,
     y: cosmos_proto::Option<u32>,
-    z: cosmos_proto::String, // String wraps a relative pointer to a string
+    z: cosmos_proto::String, // String wraps a pointer to a string
     bar: Bar
 }
 
@@ -349,7 +343,7 @@ struct Foo {
 struct Bar {
     abc: cosmos_proto::Enum<ABC, 3>, // the Enum wrapper allows us to distinguish undefined and defined values of ABC at runtime. 3 is specified as the max value of ABC.
     baz: cosmos_proto::OneOf<Baz, 2>, // the OneOf wrapper allows distinguished undefined values of Baz at runtime. 2 is specified as the max field value of Baz.
-    xs: cosmos_proto::Repeated<u32> // Repeated wraps a relative pointer to repeated fields
+    xs: cosmos_proto::Repeated<u32> // Repeated wraps a pointer to repeated fields
 }
 
 #[repr(u8)]
@@ -375,16 +369,16 @@ let mut root = Root<Foo>::new();
 let mut foo = root.get_mut();
 foo.x = 1;
 foo.y = Some(2);
-foo.z.set(root, "hello");
+foo.z.set(root, "hello")?; // could return an allocation error
 
 foo.bar.baz = Baz::X(3);
 
-foo.bar.xs.init_with_size(root, 2);
+foo.bar.xs.init_with_size(root, 2)?; // could return an allocation error
 foo.bar.xs[0] = 0;
 foo.bar.xs[1] = 2;
 
-foo.bars.init_with_size(root, 3);
-foo.bars[0].baz = Baz::Y(cosmos_proto::String::new(root, "hello")); 
+foo.bars.init_with_size(root, 3)?; // could return an allocation error
+foo.bars[0].baz = Baz::Y(cosmos_proto::String::new(root, "hello")?); // could return an allocation error
 foo.bars[1].abc = ABC::B;
 foo.bars[2].baz = Baz::X(4);
 ```

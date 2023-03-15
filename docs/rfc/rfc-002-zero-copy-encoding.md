@@ -44,6 +44,10 @@ Furthermore, migrating to the **new golang generated code would be 100% opt-in**
 simply marshal existing gogo proto generated types to/from the zero-copy encoding when needed. So migrating to the new
 code generator would provide a performance benefit, but would not be required.
 
+In addition to supporting first-class Cosmos SDK modules defined in other languages and VMs, this encoding is intended
+to be useful for user-defined code executing in a VM. To satisfy this, this encoding is designed to enable proper bounds
+checking on all memory access at the expense of introducing some error return values in generated code.
+
 ### New Protobuf Linting and Breaking Change Rules
 
 This zero-copy encoding places some additional requirements on the definition and maintenance of protobuf schemas.
@@ -123,9 +127,12 @@ message Foo {
 
 A discriminant of `0` indicates that the field is not set.
 
-#### Relative Pointer Types: Bytes and Strings and Repeated fields
+#### Pointer Types: Bytes and Strings and Repeated fields
 
-A relative pointer is an integer offset from the start of the current memory location to another memory location.
+A pointer is an 16-bit unsigned integer that points to an offset in the current memory buffer or to another memory
+buffer. If the highest bit in the pointer is unset, then the pointer points to an offset in the current memory buffer.
+If the highest bit in the pointer is set, then the pointer points a different memory buffer.
+
 Almost all messages should be smaller than 64kb so a 16-bit relative pointer should be sufficient. An amendment to this
 specification may choose to describe how to deal with larger messages. For now, protocols that need to use a larger
 amount of language should be implemented as native Cosmos SDK go modules. The only known use case for messages larger
@@ -135,6 +142,24 @@ limitation.
 `bytes`, `string`s and repeated fields are encoded as a relative pointer to a memory location that is prefixed with the
 length of the `bytes`, `string` or repeated field value. The length should be encoded as the size of the relative
 pointer - either 16 or 32-bits. The relative pointer `0` indicates that a field is not defined.
+
+#### Large Messages and Memory Management
+
+One potential issue to this approach is that it will be impossible to grow the memory buffer after its initial allocation
+if we are writing structs like this. To deal with this, a fixed-size 64kb buffer should be allocated as the default which
+should be sufficient for all normal blockchain use cases (besides storing VM byte code). Allocation methods will return
+an error if the memory buffer size is exceeded.
+
+In the future, we may consider ways to use different sized memory buffers, maybe specified at the message level with
+annotations, but this is not a priority for now because applications that need larger memory buffers be implemented as
+native Cosmos SDK go modules. The main use case for this would be to support user-defined code to run in VMs and this
+is deemed an acceptable trade-off for now.
+
+NOTE: in golang, it is feasible to grow the memory buffer at runtime if needed because of how the golang code is
+generated to use getters and setters rather than struct fields. One key motivation for the Rust design above is to
+minimize the amount of generated code because we expect that it is more likely that Rust code will run in resource
+constrained environments. Thus, for Rust generated code there are slightly higher performance requirements and
+expectations than for Go code.
 
 #### `Any`s
 
@@ -158,24 +183,6 @@ variable-length relative pointers:
 
 If we choose to enable these encoding options, changing these options would be a breaking change that needs to be
 prevented by the breaking change detector.
-
-#### Large Messages and Memory Management
-
-One potential issue to this approach is that it will be impossible to grow the memory buffer after its initial allocation
-if we are writing structs like this. To deal with this, a fixed-size 64kb buffer should be allocated as the default which
-should be sufficient for all normal blockchain use cases (besides storing VM byte code). Allocation methods will return
-an error if the memory buffer size is exceeded.
-
-In the future, we may consider ways to use different sized memory buffers, maybe specified at the message level with
-annotations, but this is not a priority for now because applications that need larger memory buffers be implemented as
-native Cosmos SDK go modules. The main use case for this would be to support user-defined code to run in VMs and this
-is deemed an acceptable trade-off for now.
-
-NOTE: in golang, it is feasible to grow the memory buffer at runtime if needed because of how the golang code is
-generated to use getters and setters rather than struct fields. One key motivation for the Rust design above is to
-minimize the amount of generated code because we expect that it is more likely that Rust code will run in resource
-constrained environments. Thus, for Rust generated code there are slightly higher performance requirements and
-expectations than for Go code.
 
 ### Generated Code
 
@@ -224,24 +231,24 @@ type Foo interface {
     SetX(int32) Foo
     Y() zpb.Option[uint32]
     SetY(zpb.Option[uint32]) Foo
-    Z() string
+    Z() (string, error)
     SetZ(string) Foo
     Bar() Bar
-    Bars() zpb.Array[Bar]
+    Bars() (zpb.Array[Bar], error)
 }
 
 type Bar interface {
     Abc() ABC
     SetAbc(ABC) Bar
     Baz() Baz
-    Xs() zpb.ScalarArray[uint32]
+    Xs() (zpb.ScalarArray[uint32], error)
 }
 
 type Baz interface {
     Case() Baz_case
     GetX() uint32
     SetX(uint32)
-    GetY() string
+    GetY() (string, error)
     SetY(string)
 }
 
@@ -291,18 +298,24 @@ with method chaining used on setters:
 ```go
 foo := NewFoo()
 foo.SetX(1)
-.SetY(zpb.NewOption[uint32](2))
-.SetZ("hello")
+    .SetY(zpb.NewOption[uint32](2))
+    .SetZ("hello")
 
 bar := foo.Bar()
 bar.Baz().SetX(3)
 
-xs := bar.Xs()
+xs, err := bar.Xs()
+if err != nil {
+    panic(err)
+}
 xs.InitWithLength(2)
 xs.Set(0, 0)
 xs.Set(1, 2)
 
-bars := foo.Bars()
+bars, err := foo.Bars()
+if err != nil {
+    panic(err)
+}
 bars.InitWithLength(3)
 bars.Get(0).Baz().SetY("hello")
 bars.Get(1).SetAbc(ABC_B)
@@ -312,7 +325,8 @@ bars.Get(2).Baz().SetX(4)
 Under the hood the generated code would manage memory buffers on its own. The usage of `oneof`s is a bit easier than
 the existing go generated code (as with `bar.Baz()` above). And rather than using setters on embedded messages, we
 simply get the field (already allocated) and set its fields (as in the case of `foo.Bar()` above or the repeated
-field `foo.Bars()`).
+field `foo.Bars()`). Whenever a field is stored with a pointer (`string`, `bytes`, and `repeated` fields), there is
+always an error returned on the getter to do proper bounds checking on the buffer.
 
 #### Rust
 
@@ -361,16 +375,16 @@ let mut root = Root<Foo>::new();
 let mut foo = root.get_mut();
 foo.x = 1;
 foo.y = Some(2);
-foo.z.set(root, "hello")?; // can return an error if the buffer is too small
+foo.z.set(root, "hello");
 
 foo.bar.baz = Baz::X(3);
 
-foo.bar.xs.init_with_size(root, 2)?; // can return an error if the buffer is too small
+foo.bar.xs.init_with_size(root, 2);
 foo.bar.xs[0] = 0;
 foo.bar.xs[1] = 2;
 
-foo.bars.init_with_size(root, 3)?; // can return an error if the buffer is too small
-foo.bars[0].baz = Baz::Y(cosmos_proto::String::new(root, "hello")?); // can return an error if the buffer is too small
+foo.bars.init_with_size(root, 3);
+foo.bars[0].baz = Baz::Y(cosmos_proto::String::new(root, "hello")); 
 foo.bars[1].abc = ABC::B;
 foo.bars[2].baz = Baz::X(4);
 ```

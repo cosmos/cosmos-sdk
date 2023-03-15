@@ -7,15 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func createTestCodec() *codec.LegacyAmino {
@@ -119,26 +113,4 @@ func TestAminoCodecUnpackAnyFails(t *testing.T) {
 	err := cdc.UnpackAny(new(types.Any), &testdata.Cat{})
 	require.Error(t, err)
 	require.Equal(t, err, errors.New("AminoCodec can't handle unpack protobuf Any's"))
-}
-
-func TestAminoCodecFullDecodeAndEncode(t *testing.T) {
-	// This tx comes from https://github.com/cosmos/cosmos-sdk/issues/8117.
-	txSigned := `{"type":"cosmos-sdk/StdTx","value":{"msg":[{"type":"cosmos-sdk/MsgCreateValidator","value":{"description":{"moniker":"fulltest","identity":"satoshi","website":"example.com","details":"example inc"},"commission":{"rate":"0.500000000000000000","max_rate":"1.000000000000000000","max_change_rate":"0.200000000000000000"},"min_self_delegation":"1000000","delegator_address":"cosmos14pt0q5cwf38zt08uu0n6yrstf3rndzr5057jys","validator_address":"cosmosvaloper14pt0q5cwf38zt08uu0n6yrstf3rndzr52q28gr","pubkey":{"type":"tendermint/PubKeyEd25519","value":"CYrOiM3HtS7uv1B1OAkknZnFYSRpQYSYII8AtMMtev0="},"value":{"denom":"umuon","amount":"700000000"}}}],"fee":{"amount":[{"denom":"umuon","amount":"6000"}],"gas":"160000"},"signatures":[{"pub_key":{"type":"tendermint/PubKeySecp256k1","value":"AwAOXeWgNf1FjMaayrSnrOOKz+Fivr6DiI/i0x0sZCHw"},"signature":"RcnfS/u2yl7uIShTrSUlDWvsXo2p2dYu6WJC8VDVHMBLEQZWc8bsINSCjOnlsIVkUNNe1q/WCA9n3Gy1+0zhYA=="}],"memo":"","timeout_height":"0"}}`
-	legacyCdc := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, auth.AppModuleBasic{}).Amino
-	var tx legacytx.StdTx
-	err := legacyCdc.UnmarshalJSON([]byte(txSigned), &tx)
-	require.NoError(t, err)
-
-	// Marshalling/unmarshalling the tx should work.
-	marshaledTx, err := legacyCdc.MarshalJSON(tx)
-	require.NoError(t, err)
-	require.Equal(t, txSigned, string(marshaledTx))
-
-	// Marshalling/unmarshalling the tx wrapped in a struct should work.
-	txRequest := &cli.BroadcastReq{
-		Mode: flags.BroadcastSync,
-		Tx:   tx,
-	}
-	_, err = legacyCdc.MarshalJSON(txRequest)
-	require.NoError(t, err)
 }

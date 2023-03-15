@@ -147,11 +147,7 @@ prevented by the breaking change detector.
 
 ### Generated Code
 
-This encoding should allow generating native structs in Rust that are annotated with `#[repr(C)]` to control the encoding. This should allow for fairly natural usage from Rust.
-
-One blocker to this approach is that it will be impossible to grow the memory buffer after its initial allocation if we are writing structs like this. To deal with this, a fixed-size 64kb buffer should be expected as the default which should be sufficient for all normal blockchain use cases (besides storing VM byte code). Allocation methods will return an error if the memory buffer size is exceeded.
-
-Example proto file:
+We will describe the generated Go and Rust code using this example protobuf file:
 ```protobuf
 message Foo {
   int32 x = 1;
@@ -182,7 +178,84 @@ enum ABC {
 }
 ```
 
+#### Go
+
+In golang, the generated code would not expose any exported struct fields, but rather getters and setters as an interface
+or struct methods, ex:
+
+```go
+type Foo interface {
+    X() int32
+    SetX(int32)
+    Y() zpb.Option[uint32]
+    SetY(zpb.Option[uint32])
+    Z() string
+    SetZ(string)
+    Bar() Bar
+    SetBar(Bar)
+}
+
+type Bar interface {
+    Abc() ABC
+    SetAbc(ABC)
+    Baz() Baz
+    SetBaz(Baz)
+    Xs() zpb.Array[uint32]
+}
+
+type Baz interface {
+    isBaz()
+}
+
+type Baz_X interface {
+    Baz
+    X() uint32
+    SetX(uint32)
+}
+
+type BazY interface {
+    Baz
+    Y() string
+    SetY(string)
+}
+
+type ABC int32
+const (
+    ABC_A ABC = 0
+    ABC_B ABC = 1
+    ABC_C ABC = 2
+    ABC_D ABC = 3
+)
+```
+
+Special types `zpb.Option` and `zpb.Array` are used to represent `optional` and repeated fields respectively. These
+types would be included in the runtime library (called `zpb` here for zero-copy protobuf) and would have an API like this:
+
+```go
+type Option[T] interface {
+	IsSet() bool
+	Value() T
+}
+
+type Array[T] interface {
+    InitWithLength(int)
+	Len() int
+	Get(int) T
+	Set(int, T)
+}
+```
+
+Arrays in particular would not be resizable, but would be initialized with a fixed length. This is to ensure that arrays
+can be written to the underlying buffer in a linear way.
+
 #### Rust
+
+This encoding should allow generating native structs in Rust that are annotated with `#[repr(C)]` to control the encoding. This should allow for fairly natural usage from Rust.
+
+One blocker to this approach is that it will be impossible to grow the memory buffer after its initial allocation if we are writing structs like this. To deal with this, a fixed-size 64kb buffer should be expected as the default which should be sufficient for all normal blockchain use cases (besides storing VM byte code). Allocation methods will return an error if the memory buffer size is exceeded.
+
+Example proto file:
+
 
 Example Rust generated code:
 

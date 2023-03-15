@@ -676,13 +676,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		return sdk.GasInfo{}, nil, nil, 0, err
 	}
 
-	var msgsV2 []protov2.Message
-	if hasMsgsV2, ok := tx.(interface{ GetMsgsV2() []protov2.Message }); ok {
-		msgsV2 = hasMsgsV2.GetMsgsV2()
-	} else {
-		panic("tx does not implement GetMsgsV2")
-	}
-
 	if app.anteHandler != nil {
 		var (
 			anteCtx sdk.Context
@@ -745,7 +738,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
-	result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
+	result, err = app.runMsgs(runMsgCtx, msgs, tx.GetMsgsV2(), mode)
 	if err == nil {
 		// Run optional postHandlers.
 		//

@@ -52,6 +52,9 @@ type (
 		// GetMsgs gets the all the transaction's messages.
 		GetMsgs() []Msg
 
+		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
+		GetMsgsV2() []protov2.Message
+
 		// ValidateBasic does a simple and lightweight validation check that doesn't
 		// require access to any other information.
 		ValidateBasic() error

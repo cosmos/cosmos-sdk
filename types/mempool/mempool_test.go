@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/log"
 
@@ -75,6 +76,8 @@ var (
 
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
+func (tx testTx) GetMsgsV2() []protov2.Message { return nil }
+
 func (tx testTx) ValidateBasic() error { return nil }
 
 func (tx testTx) String() string {
@@ -88,6 +91,8 @@ type sigErrTx struct {
 func (sigErrTx) Size() int64 { return 0 }
 
 func (sigErrTx) GetMsgs() []sdk.Msg { return nil }
+
+func (sigErrTx) GetMsgsV2() []protov2.Message { return nil }
 
 func (sigErrTx) ValidateBasic() error { return nil }
 

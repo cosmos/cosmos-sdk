@@ -144,7 +144,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284)
   * `sdk.Msg.GetSigners` was deprecated and no longer supported. Use the `cosmos.msg.v1.signer` protobuf annotation instead.
   * the `codec` types are `Codec` and `InterfaceRegistry` can no longer be overriden without embedding an existing codec type and new methods have been added.
-  * `types/tx.Tx` no longer implements `sdk.Tx`
+  * `types/tx.Tx` no longer implements `sdk.Tx`.
+  * `sdk.Tx` now requires a new methods `GetMsgsV2()`.
 
 ### Client Breaking Changes
 

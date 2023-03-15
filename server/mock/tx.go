@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -103,7 +104,7 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 }
 
 func (msg *KVStoreTx) GetMsgsV2() []protov2.Message {
-	return []protov2.Message{}
+	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: "test"}} // this is a hack for tests
 }
 
 func (msg *KVStoreTx) GetSignBytes() []byte {

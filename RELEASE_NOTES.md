@@ -1,7 +1,7 @@
 # Cosmos SDK v0.45.15 Release Notes
 
 This release includes the migration to [CometBFT v0.34.27](https://github.com/cometbft/cometbft/blob/v0.34.27/CHANGELOG.md#v03427).
-This migration should be not be breaking for chains.
+This migration should be minimally breaking for chains.
 From `v0.45.15`+, the following replace is *mandatory* in the `go.mod` of your application:
 
 ```go
@@ -16,3 +16,18 @@ We recommend, as well, chains to perform a **coordinated upgrade** when migratin
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.45.x/CHANGELOG.md) for an exhaustive list of changes.
 
 **Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.45.14...v0.45.15
+
+## FAQ Migration to CometBFT v0.34.27
+
+### I use `tm-db` but I get an import error with `cometbft-db`
+
+For preventing API breaking changes, the SDK team has kept using `tm-db` for `v0.45.x` and `v0.46.x`.
+However, the CometBFT team kept using `cometbft-db` for their `v0.34.x` line.
+This means if your app directly interact with CometBFT (e.g. for a force pruning command), you will need to use `cometbft-db` there.
+When not interacting with CometBFT directly, you can use `tm-db` as usual.
+
+### I get import errors with `btcd`
+
+If you are using an old version of `btcd`, you will need to upgrade to the latest version.
+The previous versions had vulnerabilities so the SDK and CometBFT have upgraded to the latest version.
+In the latest version `btcsuite/btcd/` and `btcsuite/btcd/btcec` are two separate packages.

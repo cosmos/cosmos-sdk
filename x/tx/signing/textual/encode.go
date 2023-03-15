@@ -7,15 +7,24 @@ import (
 )
 
 var (
+	// Keys in the SignDoc struct
+	screensKey = cbor.NewUint(1)
+
+	// Keys in the Screen struct
 	titleKey   = cbor.NewUint(1)
 	contentKey = cbor.NewUint(2)
 	indentKey  = cbor.NewUint(3)
 	expertKey  = cbor.NewUint(4)
 )
 
-// encode encodes an array of screens according to the CDDL:
+// encode encodes a struct containing an array of screens according to the
+// CDDL:
 //
-//	screens = [* screen]
+//	sign_doc = {
+//	  screens_key: [* screen],
+//	}
+//	screens_key = 1
+//
 //	screen = {
 //	  ? title_key: tstr,
 //	  ? content_key: tstr,
@@ -33,7 +42,9 @@ func encode(screens []Screen, w io.Writer) error {
 	for _, s := range screens {
 		arr = arr.Append(s.Cbor())
 	}
-	return arr.Encode(w)
+
+	signDoc := cbor.NewMap(cbor.NewEntry(screensKey, arr))
+	return signDoc.Encode(w)
 }
 
 func (s Screen) Cbor() cbor.Cbor {

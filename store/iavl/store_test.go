@@ -7,9 +7,9 @@ import (
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
+	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"

@@ -1,7 +1,7 @@
 package store
 
 import (
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/cache"

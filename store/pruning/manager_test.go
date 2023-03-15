@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-	db "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	db "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/store/mock"
 	"cosmossdk.io/store/pruning"

@@ -14,7 +14,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/tendermint/tm-db"
 )
 
 func bz(s string) []byte { return []byte(s) }

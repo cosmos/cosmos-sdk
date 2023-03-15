@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/internal/kv"

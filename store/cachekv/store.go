@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"cosmossdk.io/math"
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/store/cachekv/internal"
 	"cosmossdk.io/store/internal/conv"

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/metrics"

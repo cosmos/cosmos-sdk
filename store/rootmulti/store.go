@@ -11,10 +11,10 @@ import (
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
+	dbm "github.com/tendermint/tm-db"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
@@ -802,7 +802,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 			nodeCount := 0
 			for {
 				node, err := exporter.Next()
-				if err == iavltree.ErrorExportDone {
+				if err == iavltree.ExportDone {
 					rs.logger.Debug("snapshot Done", "store", store.name, "nodeCount", nodeCount)
 					nodeCount = 0
 					break

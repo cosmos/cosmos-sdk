@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	db "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/store/snapshots"
 	"cosmossdk.io/store/snapshots/types"

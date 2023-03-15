@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"sync"
 
-	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
+	db "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/snapshots/types"

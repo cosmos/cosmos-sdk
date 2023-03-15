@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
+	db "github.com/tendermint/tm-db"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/snapshots"

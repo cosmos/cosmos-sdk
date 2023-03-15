@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/gaskv"

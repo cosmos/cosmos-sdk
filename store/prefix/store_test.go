@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/store/cachekv"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	dbm "github.com/tendermint/tm-db"
 
 	tiavl "github.com/cosmos/iavl"
 

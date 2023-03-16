@@ -231,7 +231,7 @@ func getValueFromFieldName(m proto.Message, fieldName string) protoreflect.Value
 // concrete message) with the values of givenMsg.
 //
 // If givenMsg is a protov2 concrete message of the same type, then it will
-// fast-path to be initialized to the same value.
+// fast-path to be initialized to the same pointer value.
 // For a dynamicpb message it checks that the names match then uses proto
 // reflection to initialize the fields of desiredMsg.
 // Otherwise throws an error.

@@ -13,8 +13,10 @@ import (
 const MaxGasWanted = uint64((1 << 63) - 1)
 
 // Interface implementation checks.
-var _, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
-var _ sdk.Tx = &Tx{}
+var (
+	_, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
+	_          sdk.Tx                             = &Tx{}
+)
 
 // GetMsgs implements the GetMsgs method on sdk.Tx.
 func (t *Tx) GetMsgs() []sdk.Msg {

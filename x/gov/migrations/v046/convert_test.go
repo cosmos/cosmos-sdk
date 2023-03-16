@@ -101,6 +101,7 @@ func TestConvertToLegacyProposalContent(t *testing.T) {
 	_, err = v046.ConvertToLegacyProposal(proposal)
 	require.ErrorIs(t, sdkerrors.ErrInvalidType, err)
 }
+
 func TestConvertToLegacyTallyResult(t *testing.T) {
 	tallyResult := v1.EmptyTallyResult()
 	testCases := map[string]struct {

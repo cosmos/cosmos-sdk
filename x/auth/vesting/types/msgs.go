@@ -17,7 +17,7 @@ const TypeMsgCreatePermanentLockedAccount = "msg_create_permanent_locked_account
 const TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
 
 // TypeMsgDonateAllVestingTokens defines the type value for a MsgDonateAllVestingTokens.
-const TypeMsgDonateAllVestingTokens = "msg_donate_all_vesting_tokens"
+const TypeMsgDonateAllVestingTokens = "msg_donate_all_vesting_tokens" // #nosec G101
 
 var _ sdk.Msg = &MsgCreateVestingAccount{}
 

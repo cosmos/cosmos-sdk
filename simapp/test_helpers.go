@@ -5,11 +5,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"math/rand"
 	"strconv"
 	"testing"
 	"time"
+
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"

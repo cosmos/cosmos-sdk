@@ -114,3 +114,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 )
+
+replace cosmossdk.io/core => ../../core

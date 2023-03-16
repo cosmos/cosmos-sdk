@@ -73,6 +73,12 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"hidden_bool": {
 					Hidden: true,
 				},
+				"a_coin": {
+					Usage: "some random coin",
+				},
+				"duration": {
+					Usage: "some random duration",
+				},
 			},
 		},
 	},
@@ -97,6 +103,19 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 			},
 		},
 	},
+}
+
+func TestCoin(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--a-coin", "100000foo",
+		"--duration", "4h3s",
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
 func TestEverything(t *testing.T) {

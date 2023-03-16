@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -63,4 +64,9 @@ message Params {
   uint64 tx_size_cost_per_byte     = 3;
   uint64 sig_verify_cost_ed25519   = 4 [(gogoproto.customname) = "SigVerifyCostED25519"];
   uint64 sig_verify_cost_secp256k1 = 5 [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
+  repeated cosmos.base.v1beta1.Coin pubkey_change_cost = 6[
+    (gogoproto.customname) = "PubkeyChangeCost",
+    (gogoproto.nullable) = false
+  ];
+  bool enable_change_pubkey = 7;
 }

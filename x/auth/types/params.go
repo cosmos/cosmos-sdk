@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Default parameter values
@@ -11,16 +13,21 @@ const (
 	DefaultTxSizeCostPerByte      uint64 = 10
 	DefaultSigVerifyCostED25519   uint64 = 590
 	DefaultSigVerifyCostSecp256k1 uint64 = 1000
+	DefaultEnableChangePubkey     bool   = true
 )
 
+var DefaultPubkeyChangeCost = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000)))
+
 // NewParams creates a new Params object
-func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64) Params {
+func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64, pubKeyChangeCost sdk.Coins, enableChangePubKey bool) Params {
 	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
 		TxSigLimit:             txSigLimit,
 		TxSizeCostPerByte:      txSizeCostPerByte,
 		SigVerifyCostED25519:   sigVerifyCostED25519,
 		SigVerifyCostSecp256k1: sigVerifyCostSecp256k1,
+		PubkeyChangeCost:       pubKeyChangeCost,
+		EnableChangePubkey:     enableChangePubKey,
 	}
 }
 
@@ -32,6 +39,8 @@ func DefaultParams() Params {
 		TxSizeCostPerByte:      DefaultTxSizeCostPerByte,
 		SigVerifyCostED25519:   DefaultSigVerifyCostED25519,
 		SigVerifyCostSecp256k1: DefaultSigVerifyCostSecp256k1,
+		PubkeyChangeCost:       DefaultPubkeyChangeCost,
+		EnableChangePubkey:     DefaultEnableChangePubkey,
 	}
 }
 
@@ -112,6 +121,28 @@ func validateTxSizeCostPerByte(i interface{}) error {
 	return nil
 }
 
+func validatePubKeyChangeCostParams(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if !sdk.Coins(v).IsValid() {
+		return fmt.Errorf("invalid change cost params: %s", v)
+	}
+
+	return nil
+}
+
+func validateEnableChangePubKey(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
 // Validate checks that the parameters have valid values.
 func (p Params) Validate() error {
 	if err := validateTxSigLimit(p.TxSigLimit); err != nil {
@@ -127,6 +158,13 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateTxSizeCostPerByte(p.TxSizeCostPerByte); err != nil {
+		return err
+	}
+	if err := validatePubKeyChangeCostParams(p.PubkeyChangeCost); err != nil {
+		return err
+	}
+
+	if err := validateEnableChangePubKey(p.EnableChangePubkey); err != nil {
 		return err
 	}
 

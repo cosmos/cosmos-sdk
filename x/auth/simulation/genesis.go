@@ -120,7 +120,9 @@ func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn type
 	)
 
 	params := types.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,
-		sigVerifyCostED25519, sigVerifyCostSECP256K1)
+		sigVerifyCostED25519, sigVerifyCostSECP256K1, types.DefaultPubkeyChangeCost,
+		types.DefaultEnableChangePubkey,
+	)
 	genesisAccs := randGenAccountsFn(simState)
 
 	authGenesis := types.NewGenesisState(params, genesisAccs)

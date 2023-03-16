@@ -5,18 +5,22 @@ package types
 
 import (
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -24,24 +28,24 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the parameters for the rekeying module.
-type Params struct {
-	PubKeyChangeCost   uint64 `protobuf:"varint,1,opt,name=pubkey_change_cost,json=pubkeyChangeCost,proto3" json:"pubkey_change_cost,omitempty" yaml:"pubkey_change_cost"`
-	EnableChangePubKey bool   `protobuf:"varint,2,opt,name=enable_change_pubkey,json=enableChangePubkey,proto3" json:"enable_change_pubkey,omitempty" yaml:"enable_change_pubkey"`
+type PubKeyHistory struct {
+	PubKey    []byte    `protobuf:"bytes,1,opt,name=pub_key,json=pubKey,proto3" json:"public_key,omitempty"`
+	StartTime time.Time `protobuf:"bytes,2,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
+	EndTime   time.Time `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
 }
 
-func (m *Params) Reset()         { *m = Params{} }
-func (m *Params) String() string { return proto.CompactTextString(m) }
-func (*Params) ProtoMessage()    {}
-func (*Params) Descriptor() ([]byte, []int) {
+func (m *PubKeyHistory) Reset()         { *m = PubKeyHistory{} }
+func (m *PubKeyHistory) String() string { return proto.CompactTextString(m) }
+func (*PubKeyHistory) ProtoMessage()    {}
+func (*PubKeyHistory) Descriptor() ([]byte, []int) {
 	return fileDescriptor_10097520f08f5deb, []int{0}
 }
-func (m *Params) XXX_Unmarshal(b []byte) error {
+func (m *PubKeyHistory) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PubKeyHistory) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Params.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PubKeyHistory.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -51,34 +55,41 @@ func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Params) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Params.Merge(m, src)
+func (m *PubKeyHistory) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PubKeyHistory.Merge(m, src)
 }
-func (m *Params) XXX_Size() int {
+func (m *PubKeyHistory) XXX_Size() int {
 	return m.Size()
 }
-func (m *Params) XXX_DiscardUnknown() {
-	xxx_messageInfo_Params.DiscardUnknown(m)
+func (m *PubKeyHistory) XXX_DiscardUnknown() {
+	xxx_messageInfo_PubKeyHistory.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Params proto.InternalMessageInfo
+var xxx_messageInfo_PubKeyHistory proto.InternalMessageInfo
 
-func (m *Params) GetPubKeyChangeCost() uint64 {
+func (m *PubKeyHistory) GetPubKey() []byte {
 	if m != nil {
-		return m.PubKeyChangeCost
+		return m.PubKey
 	}
-	return 0
+	return nil
 }
 
-func (m *Params) GetEnableChangePubKey() bool {
+func (m *PubKeyHistory) GetStartTime() time.Time {
 	if m != nil {
-		return m.EnableChangePubKey
+		return m.StartTime
 	}
-	return false
+	return time.Time{}
+}
+
+func (m *PubKeyHistory) GetEndTime() time.Time {
+	if m != nil {
+		return m.EndTime
+	}
+	return time.Time{}
 }
 
 func init() {
-	proto.RegisterType((*Params)(nil), "cosmos.rekeying.v1beta1.Params")
+	proto.RegisterType((*PubKeyHistory)(nil), "cosmos.rekeying.v1beta1.PubKeyHistory")
 }
 
 func init() {
@@ -86,56 +97,30 @@ func init() {
 }
 
 var fileDescriptor_10097520f08f5deb = []byte{
-	// 304 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4b, 0xce, 0x2f, 0xce,
-	0xcd, 0x2f, 0xd6, 0x2f, 0x4a, 0xcd, 0x4e, 0xad, 0xcc, 0xcc, 0x4b, 0xd7, 0x2f, 0x33, 0x4c, 0x4a,
-	0x2d, 0x49, 0x34, 0x84, 0x0b, 0xe8, 0x15, 0x14, 0xe5, 0x97, 0xe4, 0x0b, 0x89, 0x43, 0xd4, 0xe9,
-	0xc1, 0x85, 0xa1, 0xea, 0xa4, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0x6a, 0xf4, 0x41, 0x2c, 0x88,
-	0x72, 0x29, 0xc1, 0xc4, 0xdc, 0xcc, 0xbc, 0x7c, 0x7d, 0x30, 0x09, 0x11, 0x52, 0xfa, 0xc7, 0xc8,
-	0xc5, 0x16, 0x90, 0x58, 0x94, 0x98, 0x5b, 0x2c, 0x14, 0xcf, 0x25, 0x54, 0x50, 0x9a, 0x94, 0x9d,
-	0x5a, 0x19, 0x9f, 0x9c, 0x91, 0x98, 0x97, 0x9e, 0x1a, 0x9f, 0x9c, 0x5f, 0x5c, 0x22, 0xc1, 0xa8,
-	0xc0, 0xa8, 0xc1, 0xe2, 0x64, 0xf8, 0xe8, 0x9e, 0xbc, 0x40, 0x40, 0x69, 0x92, 0x77, 0x6a, 0xa5,
-	0x33, 0x58, 0xd2, 0x39, 0xbf, 0xb8, 0xe4, 0xd3, 0x3d, 0x79, 0xc9, 0xca, 0xc4, 0xdc, 0x1c, 0x2b,
-	0x25, 0x4c, 0x7d, 0x4a, 0x41, 0x02, 0x10, 0x41, 0x84, 0x72, 0xa1, 0x74, 0x2e, 0x91, 0xd4, 0xbc,
-	0xc4, 0xa4, 0x9c, 0x54, 0x98, 0x42, 0x88, 0x0a, 0x09, 0x26, 0x05, 0x46, 0x0d, 0x0e, 0x27, 0xd3,
-	0x47, 0xf7, 0xe4, 0x85, 0x5c, 0xc1, 0xf2, 0x10, 0x3d, 0x10, 0xeb, 0x3e, 0xdd, 0x93, 0x97, 0x86,
-	0x58, 0x82, 0x4d, 0xaf, 0x52, 0x90, 0x50, 0x2a, 0xaa, 0x96, 0xec, 0xd4, 0x4a, 0x2b, 0xad, 0x17,
-	0x0b, 0xe4, 0x19, 0xbb, 0x9e, 0x6f, 0xd0, 0x52, 0x84, 0x84, 0x8f, 0x6e, 0x71, 0x4a, 0xb6, 0x7e,
-	0x85, 0x7e, 0x62, 0x69, 0x49, 0x06, 0x22, 0x48, 0x21, 0xbe, 0x76, 0xf2, 0x39, 0xf1, 0x48, 0x8e,
-	0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58,
-	0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xa3, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4,
-	0xfc, 0x5c, 0x7d, 0x68, 0x7c, 0xe0, 0x31, 0xae, 0xa4, 0xb2, 0x20, 0xb5, 0x38, 0x89, 0x0d, 0x1c,
-	0xaa, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd0, 0x60, 0x4e, 0xb9, 0xc1, 0x01, 0x00, 0x00,
+	// 316 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x91, 0xb1, 0x4e, 0xfb, 0x30,
+	0x10, 0xc6, 0xe3, 0xff, 0x5f, 0x6a, 0x4b, 0x80, 0x25, 0xaa, 0x44, 0x55, 0xa1, 0xa4, 0x62, 0x40,
+	0x1d, 0x20, 0x56, 0xcb, 0x03, 0x20, 0x95, 0x05, 0x09, 0x06, 0x54, 0x31, 0xb1, 0x54, 0x76, 0x6b,
+	0x52, 0xab, 0x4d, 0xce, 0x8a, 0xcf, 0x08, 0xbf, 0x45, 0x1f, 0xab, 0x63, 0x47, 0xa6, 0x82, 0x9a,
+	0x8d, 0xa7, 0x40, 0x89, 0xd3, 0x32, 0x33, 0xd9, 0xf7, 0xdd, 0xef, 0xee, 0x3b, 0xe9, 0xf3, 0x2f,
+	0xa7, 0xa0, 0x53, 0xd0, 0x34, 0x17, 0x0b, 0x61, 0x65, 0x96, 0xd0, 0xb7, 0x01, 0x17, 0xc8, 0x06,
+	0x07, 0x21, 0x56, 0x39, 0x20, 0x04, 0x67, 0x8e, 0x8b, 0x0f, 0x72, 0xcd, 0x75, 0xdb, 0x09, 0x24,
+	0x50, 0x31, 0xb4, 0xfc, 0x39, 0xbc, 0x1b, 0x25, 0x00, 0xc9, 0x52, 0xd0, 0xaa, 0xe2, 0xe6, 0x95,
+	0xa2, 0x4c, 0x85, 0x46, 0x96, 0xaa, 0x1a, 0x38, 0xaf, 0x01, 0xa6, 0x24, 0x65, 0x59, 0x06, 0xc8,
+	0x50, 0x42, 0xa6, 0x5d, 0xf7, 0x62, 0x4d, 0xfc, 0xd3, 0x27, 0xc3, 0x1f, 0x84, 0xbd, 0x97, 0x1a,
+	0x21, 0xb7, 0xc1, 0xc0, 0x6f, 0x2a, 0xc3, 0x27, 0x0b, 0x61, 0x3b, 0xa4, 0x47, 0xfa, 0x27, 0xa3,
+	0xce, 0xf7, 0x36, 0x6a, 0x2b, 0xc3, 0x97, 0x72, 0x5a, 0xaa, 0x57, 0x90, 0x4a, 0x14, 0xa9, 0x42,
+	0x3b, 0x6e, 0xa8, 0x6a, 0x32, 0xb8, 0xf3, 0x7d, 0x8d, 0x2c, 0xc7, 0x49, 0xe9, 0xdd, 0xf9, 0xd7,
+	0x23, 0xfd, 0xe3, 0x61, 0x37, 0x76, 0xbe, 0xf1, 0xfe, 0xb0, 0xf8, 0x79, 0x7f, 0xd8, 0xa8, 0xb5,
+	0xde, 0x46, 0xde, 0xea, 0x33, 0x22, 0xe3, 0xa3, 0x6a, 0xae, 0xec, 0x04, 0xb7, 0x7e, 0x4b, 0x64,
+	0x33, 0xb7, 0xe2, 0xff, 0x1f, 0x56, 0x34, 0x45, 0x36, 0x2b, 0xf5, 0xd1, 0xe3, 0x7a, 0x17, 0x92,
+	0xcd, 0x2e, 0x24, 0x5f, 0xbb, 0x90, 0xac, 0x8a, 0xd0, 0xdb, 0x14, 0xa1, 0xf7, 0x51, 0x84, 0xde,
+	0xcb, 0x30, 0x91, 0x38, 0x37, 0x3c, 0x9e, 0x42, 0x4a, 0xeb, 0x14, 0xdc, 0x73, 0xad, 0x67, 0x0b,
+	0xfa, 0x4e, 0x99, 0xc1, 0xf9, 0x6f, 0x2e, 0x68, 0x95, 0xd0, 0xbc, 0x51, 0x99, 0xde, 0xfc, 0x04,
+	0x00, 0x00, 0xff, 0xff, 0x02, 0xf5, 0x71, 0xbb, 0xb7, 0x01, 0x00, 0x00,
 }
 
-func (this *Params) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Params)
-	if !ok {
-		that2, ok := that.(Params)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.PubKeyChangeCost != that1.PubKeyChangeCost {
-		return false
-	}
-	if this.EnableChangePubKey != that1.EnableChangePubKey {
-		return false
-	}
-	return true
-}
-func (m *Params) Marshal() (dAtA []byte, err error) {
+func (m *PubKeyHistory) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -145,30 +130,38 @@ func (m *Params) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Params) MarshalTo(dAtA []byte) (int, error) {
+func (m *PubKeyHistory) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PubKeyHistory) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.EnableChangePubKey {
-		i--
-		if m.EnableChangePubKey {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x10
+	n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.EndTime):])
+	if err1 != nil {
+		return 0, err1
 	}
-	if m.PubKeyChangeCost != 0 {
-		i = encodeVarintRekeying(dAtA, i, uint64(m.PubKeyChangeCost))
+	i -= n1
+	i = encodeVarintRekeying(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x1a
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintRekeying(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x12
+	if len(m.PubKey) > 0 {
+		i -= len(m.PubKey)
+		copy(dAtA[i:], m.PubKey)
+		i = encodeVarintRekeying(dAtA, i, uint64(len(m.PubKey)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -184,18 +177,20 @@ func encodeVarintRekeying(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *Params) Size() (n int) {
+func (m *PubKeyHistory) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.PubKeyChangeCost != 0 {
-		n += 1 + sovRekeying(uint64(m.PubKeyChangeCost))
+	l = len(m.PubKey)
+	if l > 0 {
+		n += 1 + l + sovRekeying(uint64(l))
 	}
-	if m.EnableChangePubKey {
-		n += 2
-	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovRekeying(uint64(l))
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.EndTime)
+	n += 1 + l + sovRekeying(uint64(l))
 	return n
 }
 
@@ -205,7 +200,7 @@ func sovRekeying(x uint64) (n int) {
 func sozRekeying(x uint64) (n int) {
 	return sovRekeying(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Params) Unmarshal(dAtA []byte) error {
+func (m *PubKeyHistory) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -228,17 +223,17 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Params: wiretype end group for non-group")
+			return fmt.Errorf("proto: PubKeyHistory: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PubKeyHistory: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PubKeyChangeCost", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PubKey", wireType)
 			}
-			m.PubKeyChangeCost = 0
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRekeying
@@ -248,16 +243,31 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PubKeyChangeCost |= uint64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if byteLen < 0 {
+				return ErrInvalidLengthRekeying
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRekeying
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PubKey = append(m.PubKey[:0], dAtA[iNdEx:postIndex]...)
+			if m.PubKey == nil {
+				m.PubKey = []byte{}
+			}
+			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EnableChangePubKey", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 			}
-			var v int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRekeying
@@ -267,12 +277,58 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.EnableChangePubKey = bool(v != 0)
+			if msglen < 0 {
+				return ErrInvalidLengthRekeying
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRekeying
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRekeying
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRekeying
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRekeying
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipRekeying(dAtA[iNdEx:])

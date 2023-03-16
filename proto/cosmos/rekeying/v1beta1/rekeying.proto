@@ -2,19 +2,17 @@ syntax = "proto3";
 package cosmos.rekeying.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "amino/amino.proto";
-import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/rekeying/types";
 
-// Params defines the parameters for the rekeying module.
-message Params {
-  option (amino.name)      = "cosmos-sdk/x/auth/rekeying/Params";
-  option (gogoproto.equal) = true;
 
-  repeated cosmos.base.v1beta1.Coin pubkey_change_cost = 1
-      [(gogoproto.moretags) = "yaml:\"pubkey_change_cost\"", (gogoproto.nullable) = false];
-  bool enable_change_pubkey = 2
-      [(gogoproto.moretags) = "yaml:\"enable_change_pubkey\"", (gogoproto.nullable) = false];
-      
+message PubKeyHistory {
+    bytes pub_key = 1
+        [(gogoproto.jsontag) = "public_key,omitempty"];
+    google.protobuf.Timestamp start_time = 2
+        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp end_time = 3
+        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }

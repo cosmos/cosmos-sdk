@@ -3,6 +3,10 @@ package cli_test
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"testing"
+	"time"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,13 +20,10 @@ import (
 	cli "github.com/cosmos/cosmos-sdk/x/circuit/client/cli"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
-	"io"
-	"testing"
-	"time"
 )
 
 const (
-	oneYear = 365 * 24 * 60 * 60
+	oneYearInSeconds = 365 * 24 * 60 * 60
 )
 
 type CLITestSuite struct {
@@ -44,7 +45,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+	s.T().Log("setting up cli test suite")
 
 	s.encCfg = testutilmod.MakeTestEncodingConfig(circuit.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
@@ -67,10 +68,6 @@ func (s *CLITestSuite) SetupSuite() {
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen().WithOutput(&outBuf)
-
-	if testing.Short() {
-		s.T().Skip("skipping test in unit-tests mode.")
-	}
 
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
 

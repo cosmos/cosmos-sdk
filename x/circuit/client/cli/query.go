@@ -8,9 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the parent command for all x/bank CLi query commands. The
-// provided clientCtx should have, at a minimum, a verifier, CometBFT RPC client,
-// and marshaler set.
+// GetQueryCmd returns the parent command for all circuit CLI query commands.
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -31,7 +29,7 @@ func GetQueryCmd() *cobra.Command {
 
 func GetDisabeListCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "disabled_list",
+		Use:   "disabled-list",
 		Short: "Query for all disabled message types",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -74,7 +72,7 @@ func GetAccountCmd() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.Account(cmd.Context(), &types.QueryAccountRequest{Address: addr.String()}) // avoid calling .String() as it sets the besch32 prefix
+			res, err := queryClient.Account(cmd.Context(), &types.QueryAccountRequest{Address: addr.String()})
 			if err != nil {
 				return err
 			}

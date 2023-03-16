@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	proto "github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
@@ -81,8 +79,6 @@ func (k *Keeper) EnableMsg(ctx sdk.Context, msgURL string) {
 
 func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, perms types.Permissions) (stop bool)) {
 	store := ctx.KVStore(k.storekey)
-
-	fmt.Println(types.AccountPermissionPrefix)
 	iter := storetypes.KVStorePrefixIterator(store, types.AccountPermissionPrefix)
 	defer func(iter storetypes.Iterator) {
 		err := iter.Close()

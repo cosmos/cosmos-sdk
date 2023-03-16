@@ -27,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
-// ConsensusVersion defines the current x/bank module consensus version.
+// ConsensusVersion defines the current circuit module consensus version.
 const ConsensusVersion = 4
 
 var (
@@ -35,26 +35,26 @@ var (
 	_ module.AppModuleBasic   = AppModuleBasic{}
 )
 
-// AppModuleBasic defines the basic application module used by the bank module.
+// AppModuleBasic defines the basic application module used by the circuit module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-// Name returns the bank module's name.
+// Name returns the circuit module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterLegacyAminoCodec registers the bank module's types on the LegacyAmino codec.
+// RegisterLegacyAminoCodec registers the circuit module's types on the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the bank
+// DefaultGenesis returns default genesis state as raw bytes for the circuit
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
-// ValidateGenesis performs genesis state validation for the bank module.
+// ValidateGenesis performs genesis state validation for the circuit module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
@@ -64,29 +64,29 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 	return data.Validate()
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the circuit module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// GetTxCmd returns the root tx command for the bank module.
+// GetTxCmd returns the root tx command for the circuit module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
-// GetQueryCmd returns no root query command for the bank module.
+// GetQueryCmd returns no root query command for the circuit module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaces registers interfaces and implementations of the bank module.
+// RegisterInterfaces registers interfaces and implementations of the circuit module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
-// AppModule implements an application module for the bank module.
+// AppModule implements an application module for the circuit module.
 type AppModule struct {
 	AppModuleBasic
 
@@ -103,8 +103,8 @@ func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	// types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 
 }
 
@@ -116,10 +116,10 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	}
 }
 
-// Name returns the bank module's name.
+// Name returns the circuit module's name.
 func (AppModule) Name() string { return types.ModuleName }
 
-// RegisterInvariants registers the bank module invariants.
+// RegisterInvariants registers the circuit module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
@@ -136,7 +136,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the bank
+// ExportGenesis returns the exported genesis state as raw bytes for the circuit
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)

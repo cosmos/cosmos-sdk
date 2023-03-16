@@ -96,9 +96,7 @@ func TripCircuitBreakerCmd() *cobra.Command {
 			}
 
 			var msgTypeUrls []string
-			if len(args) == 4 {
-				msgTypeUrls = strings.Split(args[0], ",")
-			}
+			msgTypeUrls = strings.Split(args[0], ",")
 
 			msg := types.NewMsgTripCircuitBreaker(clientCtx.GetFromAddress().String(), msgTypeUrls)
 

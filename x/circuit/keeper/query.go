@@ -18,6 +18,12 @@ type QueryServer struct {
 	keeper Keeper
 }
 
+// NewMsgServerImpl returns an implementation of the bank MsgServer interface
+// for the provided Keeper.
+func NewQueryServer(keeper Keeper) types.QueryServer {
+	return &QueryServer{keeper: keeper}
+}
+
 // Account returns account permissions.
 func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest) (*types.AccountResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(c)

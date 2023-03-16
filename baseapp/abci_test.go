@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/cosmos/gogoproto/proto"
 	"strings"
 	"testing"
 
@@ -832,6 +833,20 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 				require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 			}
 			// ToDo check the errors for each message
+			resData := sdk.TxMsgData{}
+			err = proto.Unmarshal(res.Data, &resData)
+			require.NoError(t, err)
+			if res.IsOK() {
+				// If the whole tx fails, there are no msg responses in the result.
+				// We could include them, but it would be a breaking change.
+				for i, success := range tc.succeed {
+					if success {
+						require.Equal(t, "/MsgCreateCounterResponse", resData.MsgResponses[i].TypeUrl)
+					} else {
+						require.Equal(t, "/cosmos.tx.v1beta1.MsgFailureResponse", resData.MsgResponses[i].TypeUrl)
+					}
+				}
+			}
 
 			store = getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
 

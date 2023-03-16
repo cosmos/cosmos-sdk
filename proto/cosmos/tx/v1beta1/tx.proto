@@ -262,3 +262,7 @@ message AuxSignerData {
   // sig is the signature of the sign doc.
   bytes sig = 4;
 }
+
+// This is an empty message to be added as a response for failed messages
+// when dealing with non-atomic multi-msg txs.
+message MsgFailureResponse {}

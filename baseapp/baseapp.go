@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"sort"
 	"strings"
 
@@ -795,8 +796,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 
-	// TODO: we probably need a context cache for each message
-
 	txSuccess := false
 	msgCtx := ctx // This context may be replaced on each message for non-atomic execution.
 
@@ -821,6 +820,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 		msgResult, err := handler(msgCtx, msg)
 		if err != nil {
 			if execGuarantee == NonAtomic {
+				value, err := codectypes.NewAnyWithValue(&tx.MsgFailureResponse{})
+				if err != nil {
+					return nil, err
+				}
+				msgResponses = append(msgResponses, value)
 				continue
 			}
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)

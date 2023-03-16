@@ -97,7 +97,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 	gasInfo, result, err := s.simulate(txBytes)
 	if err != nil {
-		return nil, status.Errorf(codes.Unknown, "%v with gas used: '%d'", err, gasInfo.GasUsed)
+		return nil, sdkerrors.GRPCWrap(err, codes.Unknown, fmt.Sprintf("%v With gas wanted: '%d' and gas used: '%d' ", err, gasInfo.GasWanted, gasInfo.GasUsed))
 	}
 
 	return &txtypes.SimulateResponse{

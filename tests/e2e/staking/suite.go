@@ -923,10 +923,10 @@ func (s *E2ETestSuite) TestGetCmdQueryParams() {
 			"with text output",
 			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`bond_denom: stake
-cons_pubkey_rotation_fee:
+historical_entries: 10000
+key_rotation_fee:
   amount: "1000000"
   denom: stake
-historical_entries: 10000
 max_cons_pubkey_rotations: "10"
 max_entries: 7
 max_validators: 100
@@ -936,7 +936,7 @@ unbonding_time: 1814400s`,
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000","max_cons_pubkey_rotations":"10","cons_pubkey_rotation_fee":{"denom":"stake","amount":"1000000"}}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000","key_rotation_fee":{"denom":"stake","amount":"1000000"},"max_cons_pubkey_rotations":"10"}`,
 		},
 	}
 	for _, tc := range testCases {

@@ -34,7 +34,7 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 		return nil, err
 	}
 
-	internalMsg, err := anyutil.Unpack(anymsg, ar.tr.protoFiles, ar.tr.protoTypes)
+	internalMsg, err := anyutil.Unpack(anymsg, ar.tr.fileResolver, ar.tr.typeResolver)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 	}
 
 	typeURL := screens[0].Content
-	msgType, err := ar.tr.protoTypes.FindMessageByURL(typeURL)
+	msgType, err := ar.tr.typeResolver.FindMessageByURL(typeURL)
 	if err == protoregistry.NotFound {
 		// If the proto v2 registry doesn't have this message, then we use
 		// protoFiles (which can e.g. be initialized to gogo's MergedRegistry)
@@ -84,7 +84,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		// message descriptor to create a proto.Message
 		typeURL := strings.TrimPrefix(typeURL, "/")
 
-		msgDesc, err := ar.tr.protoFiles.FindDescriptorByName(protoreflect.FullName(typeURL))
+		msgDesc, err := ar.tr.fileResolver.FindDescriptorByName(protoreflect.FullName(typeURL))
 		if err != nil {
 			return nilValue, fmt.Errorf("textual protoFiles does not have descriptor %s: %w", typeURL, err)
 		}

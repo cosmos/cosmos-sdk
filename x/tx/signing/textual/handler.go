@@ -37,20 +37,20 @@ type SignModeOptions struct {
 	// server-side code) or a gRPC query client (for client-side code).
 	CoinMetadataQuerier CoinMetadataQueryFn
 
-	// ProtoFiles are the protobuf files to use for resolving message
+	// FileResolver are the protobuf files to use for resolving message
 	// descriptors. If it is nil, the global protobuf registry will be used.
-	ProtoFiles *protoregistry.Files
+	FileResolver *protoregistry.Files
 
-	// ProtoTypes are the protobuf type resolvers to use for resolving message
-	// types. If it is nil, then a dynamicpb will be used on top of ProtoFiles.
-	ProtoTypes protoregistry.MessageTypeResolver
+	// TypeResolver are the protobuf type resolvers to use for resolving message
+	// types. If it is nil, then a dynamicpb will be used on top of FileResolver.
+	TypeResolver protoregistry.MessageTypeResolver
 }
 
 // SignModeHandler holds the configuration for dispatching
 // to specific value renderers for SIGN_MODE_TEXTUAL.
 type SignModeHandler struct {
-	protoFiles          *protoregistry.Files
-	protoTypes          protoregistry.MessageTypeResolver
+	fileResolver        *protoregistry.Files
+	typeResolver        protoregistry.MessageTypeResolver
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.
 	scalars map[string]ValueRendererCreator
@@ -68,17 +68,17 @@ func NewSignModeHandler(o SignModeOptions) (*SignModeHandler, error) {
 	if o.CoinMetadataQuerier == nil {
 		return nil, fmt.Errorf("coinMetadataQuerier must be non-empty")
 	}
-	if o.ProtoFiles == nil {
-		o.ProtoFiles = protoregistry.GlobalFiles
+	if o.FileResolver == nil {
+		o.FileResolver = protoregistry.GlobalFiles
 	}
-	if o.ProtoTypes == nil {
-		o.ProtoTypes = protoregistry.GlobalTypes
+	if o.TypeResolver == nil {
+		o.TypeResolver = protoregistry.GlobalTypes
 	}
 
 	t := &SignModeHandler{
 		coinMetadataQuerier: o.CoinMetadataQuerier,
-		protoFiles:          o.ProtoFiles,
-		protoTypes:          o.ProtoTypes,
+		fileResolver:        o.FileResolver,
+		typeResolver:        o.TypeResolver,
 	}
 	t.init()
 

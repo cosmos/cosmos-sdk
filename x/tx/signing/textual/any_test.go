@@ -68,7 +68,7 @@ func TestAny(t *testing.T) {
 func TestDynamicpb(t *testing.T) {
 	tr, err := textual.NewSignModeHandler(textual.SignModeOptions{
 		CoinMetadataQuerier: EmptyCoinMetadataQuerier,
-		ProtoTypes:          &protoregistry.Types{}, // Set to empty to force using dynamicpb
+		TypeResolver:        &protoregistry.Types{}, // Set to empty to force using dynamicpb
 	})
 	require.NoError(t, err)
 

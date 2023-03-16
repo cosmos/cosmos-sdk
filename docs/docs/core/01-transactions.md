@@ -112,7 +112,7 @@ The next paragraphs will describe each of these components, in this order.
 ### Messages
 
 :::tip
-Module `sdk.Msg`s are not to be confused with [ABCI Messages](https://docs.tendermint.com/master/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers.
+Module `sdk.Msg`s are not to be confused with [ABCI Messages](https://docs.cometbft.com/v0.37/spec/abci/) which define interactions between the CometBFT and application layers.
 :::
 
 **Messages** (or `sdk.Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../building-modules/03-msg-services.md), and also implement the corresponding `MsgServer`.
@@ -194,6 +194,6 @@ Each gRPC method has its corresponding REST endpoint, generated using [gRPC-gate
 
 An example can be seen [here](../run-node/03-txs.md#using-rest)
 
-#### Tendermint RPC
+#### CometBFT RPC
 
-The three methods presented above are actually higher abstractions over the Tendermint RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.tendermint.com/master/rpc/#/Tx). This means that you can use the Tendermint RPC endpoints directly to broadcast the transaction, if you wish so.
+The three methods presented above are actually higher abstractions over the CometBFT RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.cometbft.com/v0.37/core/rpc). This means that you can use the CometBFT RPC endpoints directly to broadcast the transaction, if you wish so.

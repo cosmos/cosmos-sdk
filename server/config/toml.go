@@ -199,27 +199,30 @@ snapshot-interval = {{ .StateSync.SnapshotInterval }}
 snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 
 ###############################################################################
-###                         Store / State Streaming                         ###
+###                              State Streaming                            ###
 ###############################################################################
 
-[store]
-streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
+# Streaming allows nodes to stream state to external systems.
+[streaming]
 
-[streamers]
-[streamers.file]
-keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
-write_dir = "{{ .Streamers.File.WriteDir }}"
-prefix = "{{ .Streamers.File.Prefix }}"
+# streaming.abci specifies the configuration for the ABCI Listener streaming service.
+[streaming.abci]
 
-# output-metadata specifies if output the metadata file which includes the abci request/responses 
-# during processing the block.
-output-metadata = "{{ .Streamers.File.OutputMetadata }}"
+# List of kv store keys to stream out via gRPC.
+# The store key names MUST match the module's StoreKey name.
+#
+# Example:
+# ["acc", "bank", "gov", "staking", "mint"[,...]]
+# ["*"] to expose all keys.
+keys = [{{ range .Streaming.ABCI.Keys }}{{ printf "%q, " . }}{{end}}]
 
-# stop-node-on-error specifies if propagate the file streamer errors to consensus state machine.
-stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
+# The plugin name used for streaming via gRPC.
+# Streaming is only enabled if this is set.
+# Supported plugins: abci
+plugin = "{{ .Streaming.ABCI.Plugin }}"
 
-# fsync specifies if call fsync after writing the files.
-fsync = "{{ .Streamers.File.Fsync }}"
+# stop-node-on-err specifies whether to stop the node on message delivery error.
+stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 
 ###############################################################################
 ###                         Mempool                                         ###

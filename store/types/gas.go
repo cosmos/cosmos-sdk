@@ -50,6 +50,10 @@ type GasMeter interface {
 	String() string
 }
 
+type GasConsumer interface {
+	ConsumeGas(amount Gas, descriptor string)
+}
+
 type basicGasMeter struct {
 	limit    Gas
 	consumed Gas

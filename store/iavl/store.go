@@ -185,12 +185,12 @@ func (st *Store) GetStoreType() types.StoreType {
 
 // Implements Store.
 func (st *Store) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(st, types.KVGasConfig())
+	return cachekv.NewStore(st)
 }
 
 // CacheWrapWithTrace implements the Store interface.
 func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(st, w, tc), types.KVGasConfig())
+	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
 }
 
 // Implements types.KVStore.

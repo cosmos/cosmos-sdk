@@ -71,6 +71,7 @@ func (gs *Store) Delete(key []byte) {
 // incurs a flat gas cost for seeking to the first key/value pair and a variable
 // gas cost based on the current value's length if the iterator is valid.
 func (gs *Store) Iterator(start, end []byte) types.Iterator {
+	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	return gs.iterator(start, end, true)
 }
 
@@ -79,6 +80,7 @@ func (gs *Store) Iterator(start, end []byte) types.Iterator {
 // and a variable gas cost based on the current value's length if the iterator
 // is valid.
 func (gs *Store) ReverseIterator(start, end []byte) types.Iterator {
+	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	return gs.iterator(start, end, false)
 }
 

@@ -7,6 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/signing/v1beta1/signing.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -253,4 +254,25 @@ message AuxSignerData {
   cosmos.tx.signing.v1beta1.SignMode mode = 3;
   // sig is the signature of the sign doc.
   bytes sig = 4;
+}
+
+
+// AminoSignFee is the amino-compatible version of txv1beta1.Fee, and differs from that message
+// by the name of the Gas field (GasLimit in txv1beta.Fee).
+message AminoSignFee {
+  repeated cosmos.base.v1beta1.Coin amount = 1;
+  uint64 gas = 2;
+  string payer = 3;
+  string granter = 4;
+}
+
+message AminoSignDoc {
+  uint64 account_number = 1;
+  uint64 sequence = 2;
+  uint64 timeout_height = 3;
+  string chain_id = 4;
+  string memo = 5;
+  bytes fee = 6;
+  repeated bytes msgs = 7;
+  Tip tip = 8;
 }

@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v0.1.0
 	cosmossdk.io/math v1.0.0-rc.0
-	cosmossdk.io/store v0.0.0-20230314205129-d50cb1ef349f
+	cosmossdk.io/store v0.0.0-20230227103508-bbe7f8a11b44
 	cosmossdk.io/x/tx v0.2.3-0.20230309163709-87da587416ba
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
@@ -157,6 +157,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )
+
+// Here are the short-lived replace from the Cosmos SDK
+// Replace here are pending PRs, or version to be tagged
+// TODO tag after https://github.com/cosmos/cosmos-sdk/pull/14207 merge
+replace cosmossdk.io/store => ./store
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

@@ -7,6 +7,10 @@ import (
 	"io"
 
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/google/tink/go/aead"
+	"github.com/google/tink/go/keyset"
+	"github.com/google/tink/go/tink"
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck
 
 	errorsmod "cosmossdk.io/errors"
@@ -27,6 +31,11 @@ const (
 
 	headerVersion = "version"
 	headerType    = "type"
+)
+
+var (
+	KDFBcrypt = "bcrypt"
+	KDFAead   = "aead"
 )
 
 // BcryptSecurityParameter is security parameter var, and it can be changed within the lcd test.
@@ -127,11 +136,26 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 //-----------------------------------------------------------------
 // encrypt/decrypt with armor
 
+// Aead cypher for symetric encryption
+func newAeadCypher() (tink.AEAD, error) {
+	keyTemplate, err := keyset.NewHandle(aead.ChaCha20Poly1305KeyTemplate())
+	if err != nil {
+		return nil, fmt.Errorf("Error creating aead key template: %v", err)
+	}
+
+	aeadCypher, err := aead.New(keyTemplate)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating aead cypher instance: %v", err)
+	}
+
+	return aeadCypher, err
+}
+
 // Encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
-		"kdf":  "bcrypt",
+		"kdf":  KDFAead,
 		"salt": fmt.Sprintf("%X", saltBytes),
 	}
 
@@ -149,15 +173,17 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 // encrypted priv key.
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-	if err != nil {
-		panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
-	}
 
-	key = crypto.Sha256(key) // get 32 bytes
+	key := argon2.IDKey([]byte(passphrase), saltBytes, 1, 64*1024, 4, 32)
+
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 
-	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
+	encBytes, err := newAeadCypher().Encrypt(privKeyBytes, key) //Decrypt with aead
+	if err != nil {
+		fmt.Errorf("Error while encrypting private key: %v", err)
+	}
+
+	return saltBytes, encBytes
 }
 
 // UnarmorDecryptPrivKey returns the privkey byte slice, a string of the algo type, and an error
@@ -171,7 +197,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 		return privKey, "", fmt.Errorf("unrecognized armor type: %v", blockType)
 	}
 
-	if header["kdf"] != "bcrypt" {
+	if header["kdf"] != KDFBcrypt || header["kdf"] != KDFAead {
 		return privKey, "", fmt.Errorf("unrecognized KDF type: %v", header["kdf"])
 	}
 
@@ -184,7 +210,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 		return privKey, "", fmt.Errorf("error decoding salt: %v", err.Error())
 	}
 
-	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
+	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase, header["kdf"])
 
 	if header[headerType] == "" {
 		header[headerType] = defaultAlgo
@@ -193,16 +219,26 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 	return privKey, header[headerType], err
 }
 
-func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey cryptotypes.PrivKey, err error) {
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-	if err != nil {
-		return privKey, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")
+func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf string) (privKey cryptotypes.PrivKey, err error) {
+	var key []byte
+	switch kdf {
+	case KDFAead:
+		key = argon2.IDKey([]byte(passphrase), saltBytes, 1, 64*1024, 4, 32)
+	default:
+		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
+		if err != nil {
+			return privKey, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")
+		}
+		key = crypto.Sha256(key) // Get 32 bytes
 	}
 
-	key = crypto.Sha256(key) // Get 32 bytes
+	privKeyBytes, err := newAeadCypher().Decrypt(encBytes, key) //Decrypt with aead
+	// Fallback: tries decryption with legacy encrypthin algortihm "xsalsa20symmetric"
+	if err != nil {
+		privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
+	}
 
-	privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
-	if err != nil && err == xsalsa20symmetric.ErrCiphertextDecrypt {
+	if err == xsalsa20symmetric.ErrCiphertextDecrypt {
 		return privKey, sdkerrors.ErrWrongPassword
 	} else if err != nil {
 		return privKey, err

@@ -8,9 +8,13 @@ import (
 	"testing"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/armor"
 	"github.com/cometbft/cometbft/crypto/xsalsa20symmetric"
+	"github.com/google/tink/go/aead"
+	"github.com/google/tink/go/keyset"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/argon2"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -193,4 +197,65 @@ func TestArmor(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 	assert.Equal(t, blockType, blockType2)
 	assert.Equal(t, data, data2)
+}
+
+func TestBcryptLegacyEncryption(t *testing.T) {
+	privKey := secp256k1.GenPrivKey()
+	saltBytes := cmtcrypto.CRandBytes(16)
+	passphrase := "passphrase"
+	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
+	header := map[string]string{
+		"kdf":  "bcrypt",
+		"salt": fmt.Sprintf("%X", saltBytes),
+	}
+
+	// Argon2 + xsalsa20symmetric
+	keyArgon2 := argon2.IDKey([]byte(passphrase), saltBytes, 1, 64*1024, 4, 32)
+	encBytesArgon2Xsalsa20symetric := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, keyArgon2)
+
+	// Bcrypt + Aead
+	keyTemplate, err := keyset.NewHandle(aead.ChaCha20Poly1305KeyTemplate())
+	aeadCypher, err := aead.New(keyTemplate)
+	keyBcrypt, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // Legacy Ley gemeratopm
+	keyAead, _ := aeadCypher.Encrypt(privKeyBytes, keyBcrypt)                      //Decrypt with aead
+
+	// bcrypt + xsalsa20symmetric
+	encBytesXsalsa20symetricBcrypt := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, keyBcrypt)
+
+	type testCase struct {
+		description   string
+		armor         string
+		expectedError string
+	}
+
+	for _, scenario := range []testCase{
+		{
+			description:   "Argon2 + Aead",
+			armor:         crypto.EncryptArmorPrivKey(privKey, "passphrase", ""),
+			expectedError: "invalid amount",
+		},
+		{
+			description:   "Argon2 + xsalsa20symmetric",
+			armor:         armor.EncodeArmor("TENDERMINT PRIVATE KEY", header, encBytesArgon2Xsalsa20symetric),
+			expectedError: "invalid amount",
+		},
+		{
+			description:   "Bcrypt + Aead",
+			armor:         armor.EncodeArmor("TENDERMINT PRIVATE KEY", header, encBytesBcryptAead),
+			expectedError: "invalid amount",
+		},
+		{
+			description:   "Bcrypt + xsalsa20symmetric",
+			armor:         armor.EncodeArmor("TENDERMINT PRIVATE KEY", header, encBytesXsalsa20symetricBcrypt),
+			expectedError: "invalid amount",
+		},
+	} {
+		t.Run(scenario.description, func(t *testing.T) {
+			_, _, err := crypto.UnarmorDecryptPrivKey(scenario.armor, "wrongpassphrase")
+			require.Error(t, err)
+			decryptedPrivKey, _, err := crypto.UnarmorDecryptPrivKey(scenario.armor, "passphrase")
+			require.NoError(t, err)
+			require.True(t, privKey.Equals(decryptedPrivKey))
+		})
+	}
 }

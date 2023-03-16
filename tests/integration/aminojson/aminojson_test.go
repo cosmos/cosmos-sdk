@@ -527,6 +527,18 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				MinSignedPerWindow:   dec10bz,
 			},
 		},
+		"staking/msg_update_params": {
+			gogo: &stakingtypes.MsgUpdateParams{
+				Params: stakingtypes.Params{
+					UnbondingTime:         0,
+					ConsPubkeyRotationFee: types.Coin{},
+				}},
+			pulsar: &stakingapi.MsgUpdateParams{
+				Params: &stakingapi.Params{
+					UnbondingTime:         &durationpb.Duration{Seconds: 0},
+					ConsPubkeyRotationFee: &v1beta1.Coin{},
+				}},
+		},
 		"staking/create_validator": {
 			gogo: &stakingtypes.MsgCreateValidator{Pubkey: pubkeyAny},
 			pulsar: &stakingapi.MsgCreateValidator{

@@ -494,7 +494,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Implementation is based on this ADR
-	// https://docs.cosmos.network/master/architecture/adr-016-validator-consensus-key-rotation.html
+	// https://docs.cosmos.network/main/architecture/adr-016-validator-consensus-key-rotation
 
 	pk, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {

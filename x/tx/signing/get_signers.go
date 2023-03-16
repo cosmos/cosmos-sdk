@@ -3,11 +3,12 @@ package signing
 import (
 	"fmt"
 
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 )
 
 // GetSignersContext is a context for retrieving the list of signers from a

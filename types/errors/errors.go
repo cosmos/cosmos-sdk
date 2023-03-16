@@ -1,7 +1,13 @@
 package errors
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
+	"github.com/pkg/errors"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // RootCodespace is the codespace for all errors defined in this package
@@ -143,3 +149,24 @@ var (
 	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = errorsmod.ErrPanic
 )
+
+func GRPCWrap(err error, c codes.Code, msg string) error {
+	if err == nil {
+		return nil
+	}
+	st := status.New(c, msg)
+	var sdkErr *Error
+	if errors.As(err, &sdkErr) {
+		errorInfo := &errdetails.ErrorInfo{
+			Reason:   sdkErr.Error(),
+			Metadata: map[string]string{"Codespace": sdkErr.Codespace(), "ABCICode": fmt.Sprintf("%d", sdkErr.ABCICode())},
+		}
+		var withDetailsErr error
+		st, withDetailsErr = st.WithDetails(errorInfo)
+		if withDetailsErr != nil {
+			return status.Errorf(c, "%v (failed to add error details: %v)", msg, withDetailsErr)
+		}
+	}
+
+	return st.Err()
+}

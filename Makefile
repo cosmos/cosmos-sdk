@@ -65,8 +65,8 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 			-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
 
 ifeq ($(ENABLE_ROCKSDB),true)
-  BUILD_TAGS += rocksdb_build
-  test_tags += rocksdb_build
+  BUILD_TAGS += rocksdb
+  test_tags += rocksdb
 endif
 
 # DB backend selection
@@ -82,7 +82,6 @@ ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
     $(error Cannot use RocksDB backend unless ENABLE_ROCKSDB=true)
   endif
   CGO_ENABLED=1
-  BUILD_TAGS += rocksdb
 endif
 # handle boltdb
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))

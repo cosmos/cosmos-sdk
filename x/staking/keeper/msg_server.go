@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -488,4 +489,49 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func (k msgServer) RotateOperatorKey(goCtx context.Context, req *types.MsgRotateOperatorKey) (*types.MsgRotateOperatorKeyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	curValAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return &types.MsgRotateOperatorKeyResponse{}, err
+	}
+
+	validator, found := k.Keeper.GetValidator(ctx, curValAddr)
+	if found {
+		return nil, types.ErrOperatorKeyAlreadyUsed
+	}
+
+	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
+	newValAddr, err := sdk.ValAddressFromBech32(req.NewOperatorKey)
+	if err != nil {
+		return &types.MsgRotateOperatorKeyResponse{}, err
+	}
+
+	_, found = k.Keeper.GetValidator(ctx, newValAddr)
+	if found {
+		return nil, types.ErrOperatorKeyAlreadyUsed
+	}
+
+	// checks if the signing account has enough balance to pay KeyRotationFee
+	// pays KeyRotationFee to community fund
+	rotationFee := k.OperatorKeyRotationFee(ctx)
+	sender := sdk.AccAddress(curValAddr)
+
+	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, sdk.NewCoins(rotationFee))
+	if err != nil {
+		return nil, err
+	}
+
+	validator.OperatorAddress = req.NewOperatorKey
+	k.SetValidator(ctx, validator)
+
+	// Add OperatorKeyRotationHistory for tracking rotations
+	if err := k.SetOperatorKeyRotationHistory(ctx, curValAddr, newValAddr, ctx.BlockHeight()); err != nil {
+		return &types.MsgRotateOperatorKeyResponse{}, err
+	}
+
+	return &types.MsgRotateOperatorKeyResponse{}, nil
 }

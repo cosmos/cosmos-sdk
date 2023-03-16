@@ -76,3 +76,13 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.cdc.MustUnmarshal(bz, &params)
 	return params
 }
+
+// // MaxOperatorKeyRotations - Maximum operator key rotations
+// func (k Keeper) MaxOperatorKeyRotations(ctx sdk.Context) (res uint64) {
+// 	return k.GetParams(ctx).MaxOperatorKeyRotations
+// }
+
+// OperatorKeyRotationFee - Fee to be paid for rotating a key
+func (k Keeper) OperatorKeyRotationFee(ctx sdk.Context) sdk.Coin {
+	return k.GetParams(ctx).KeyRotationFee
+}

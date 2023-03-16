@@ -54,6 +54,9 @@ var (
 	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
+
+	ValidatorOperatorKeyRotationHistoryKey      = []byte{0x80} // stores the operator key rotation history of a validator
+	ValidatorOperatorKeyRotationHistoryQueueKey = []byte{0x81} // this key is used to set the unbonding period time on each rotation
 )
 
 // UnbondingType defines the type of unbonding operation
@@ -377,4 +380,9 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKey(height int64) []byte {
 	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
+}
+
+func GetOperKeyRotationHistoryKey(valAddr sdk.ValAddress, height uint64) []byte {
+	key := append(ValidatorOperatorKeyRotationHistoryKey, address.MustLengthPrefix(valAddr)...)
+	return append(key, []byte(sdk.Uint64ToBigEndian(height))...)
 }

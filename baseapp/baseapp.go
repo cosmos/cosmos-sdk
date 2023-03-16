@@ -798,10 +798,18 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 	// TODO: we probably need a context cache for each message
 
 	txSuccess := false
+	msgCtx := ctx // This context may be replaced on each message for non-atomic execution.
+
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
 		if mode != runTxModeDeliver && mode != runTxModeSimulate {
 			break
+		}
+
+		// When dealing with non-atomic execution, we want each message to has its own context
+		var writeFn func()
+		if execGuarantee == NonAtomic {
+			msgCtx, writeFn = ctx.CacheContext()
 		}
 
 		handler := app.msgServiceRouter.Handler(msg)
@@ -810,7 +818,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 		}
 
 		// ADR 031 request type routing
-		msgResult, err := handler(ctx, msg)
+		msgResult, err := handler(msgCtx, msg)
 		if err != nil {
 			if execGuarantee == Atomic {
 				return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
@@ -821,6 +829,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 		}
 		// at least one message was executed successfully
 		txSuccess = true
+
+		// Write the msg execution result to the context
+		if execGuarantee == NonAtomic {
+			writeFn()
+		}
 
 		// create message events
 		msgEvents := createEvents(msgResult.GetEvents(), msg)

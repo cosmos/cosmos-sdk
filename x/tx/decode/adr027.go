@@ -9,8 +9,10 @@ import (
 // rejectNonADR027TxRaw rejects txBytes that do not follow ADR-027. This is NOT
 // a generic ADR-027 checker, it only applies decoding TxRaw. Specifically, it
 // only checks that:
-// - field numbers are in ascending order (1, 2, and potentially multiple 3s),
-// - and varints are as short as possible.
+//
+// - Field numbers are in ascending order (1, 2, and potentially multiple 3s)
+// - Varints are as short as possible
+//
 // All other ADR-027 edge cases (e.g. default values) are not applicable with
 // TxRaw.
 func rejectNonADR027TxRaw(txBytes []byte) error {

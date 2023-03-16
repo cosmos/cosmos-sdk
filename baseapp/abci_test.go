@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/cosmos/gogoproto/proto"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	dbm "github.com/cosmos/cosmos-db"
 

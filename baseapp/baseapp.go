@@ -2,9 +2,10 @@ package baseapp
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"sort"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/types/tx"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"

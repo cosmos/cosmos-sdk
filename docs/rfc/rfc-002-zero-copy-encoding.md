@@ -369,16 +369,16 @@ let mut root = Root<Foo>::new();
 let mut foo = root.get_mut();
 foo.x = 1;
 foo.y = Some(2);
-foo.z.set(root, "hello")?; // could return an allocation error
+foo.z.set(&mut root, "hello")?; // could return an allocation error
 
 foo.bar.baz = Baz::X(3);
 
-foo.bar.xs.init_with_size(root, 2)?; // could return an allocation error
+foo.bar.xs.init_with_size(&mut root, 2)?; // could return an allocation error
 foo.bar.xs[0] = 0;
 foo.bar.xs[1] = 2;
 
-foo.bars.init_with_size(root, 3)?; // could return an allocation error
-foo.bars[0].baz = Baz::Y(cosmos_proto::String::new(root, "hello")?); // could return an allocation error
+foo.bars.init_with_size(&mut root, 3)?; // could return an allocation error
+foo.bars[0].baz = Baz::Y(cosmos_proto::String::new(&mut root, "hello")?); // could return an allocation error
 foo.bars[1].abc = ABC::B;
 foo.bars[2].baz = Baz::X(4);
 ```

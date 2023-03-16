@@ -1,88 +1,30 @@
-# State Streaming Service
+# Cosmos-SDK Plugins
 
-This package contains the constructors for the `StreamingService`s used to write
-state changes out from individual KVStores to a file or stream, as described in
-[ADR-038](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-038-state-listening.md)
-and defined in [types/streaming.go](https://github.com/cosmos/cosmos-sdk/blob/main/store/types/streaming.go).
-The child directories contain the implementations for specific output destinations.
+This package contains an extensible plugin system for the Cosmos-SDK. The plugin system leverages the [hashicorp/go-plugin](https://github.com/hashicorp/go-plugin) system. This system is designed to work over RPC. 
 
-Currently, a `StreamingService` implementation that writes state changes out to
-files is supported, in the future support for additional output destinations can
-be added.
+Although the `go-plugin` is built to work over RPC, it is currently only designed to work over a local network.
 
-The `StreamingService` is configured from within an App using the `AppOptions`
-loaded from the `app.toml` file:
+## Pre requisites
 
-```toml
-# ...
+For an overview of supported features by the `go-plugin` system, please see https://github.com/hashicorp/go-plugin. The `go-plugin` documentation is located [here](https://github.com/hashicorp/go-plugin/tree/master/docs). You can also directly visit any of the links below:
 
-[store]
-# streaming is enabled if one or more streamers are defined
-streamers = [
-    # name of the streaming service, used by constructor
-    "file"
-]
+* [Writing plugins without Go](https://github.com/hashicorp/go-plugin/blob/master/docs/guide-plugin-write-non-go.md) 
+* [Go Plugin Tutorial](https://github.com/hashicorp/go-plugin/blob/master/docs/extensive-go-plugin-tutorial.md)
+* [Plugin Internals](https://github.com/hashicorp/go-plugin/blob/master/docs/internals.md)
+* [Plugin Architecture](https://www.youtube.com/watch?v=SRvm3zQQc1Q) (start here)
 
-[streamers]
-[streamers.file]
-    keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
-    write_dir = "path to the write directory"
-    prefix = "optional prefix to prepend to the generated file names"
-```
+## Exposing plugins
 
-The `store.streamers` field contains a list of the names of the `StreamingService`
-implementations to employ which are used by `ServiceTypeFromString` to return
-the `ServiceConstructor` for that particular implementation:
+To expose plugins to the plugin system, you will need to:
 
-```go
-listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
-for _, listenerName := range listeners {
-    constructor, err := ServiceTypeFromString(listenerName)
-    if err != nil {
-    	// handle error
-    }
-}
-```
+1. Implement the gRPC message protocol service of the plugin
+2. Build the plugin binary
+3. Export it
 
-The `streamers` field contains a mapping of the specific `StreamingService`
-implementation name to the configuration parameters for that specific service.
+Read the plugin documentation in the [Streaming Plugins](#streaming-plugins) section for examples on how to build a plugin.
 
-The `streamers.x.keys` field contains the list of `StoreKey` names for the
-KVStores to expose using this service and is required by every type of
-`StreamingService`. In order to expose *ALL* KVStores, we can include `*` in
-this list. An empty list is equivalent to turning the service off.
+## Streaming Plugins
 
-Additional configuration parameters are optional and specific to the implementation.
-In the case of the file streaming service, the `streamers.file.write_dir` field
-contains the path to the directory to write the files to, and `streamers.file.prefix`
-contains an optional prefix to prepend to the output files to prevent potential
-collisions with other App `StreamingService` output files.
+List of support streaming plugins
 
-The `ServiceConstructor` accepts `AppOptions`, the store keys collected using
-`streamers.x.keys`, a `BinaryMarshaller` and returns a `StreamingService
-implementation.
-
-The `AppOptions` are passed in to provide access to any implementation specific
-configuration options, e.g. in the case of the file streaming service the
-`streamers.file.write_dir` and `streamers.file.prefix`.
-
-```go
-streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
-if err != nil {
-    // handler error
-}
-```
-
-The returned `StreamingService` is loaded into the BaseApp using the BaseApp's
-`SetStreamingService` method.
-
-The `Stream` method is called on the service to begin the streaming process.
-Depending on the implementation this process may be synchronous or asynchronous
-with the message processing of the state machine.
-
-```go
-bApp.SetStreamingService(streamingService)
-wg := new(sync.WaitGroup)
-quitChan := make(chan struct{})
-streamingService.Stream(wg, quitChan)
-```
+* [ABCI State Streaming Plugin](abci/README.md)

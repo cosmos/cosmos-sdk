@@ -174,7 +174,7 @@ func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req ab
 }
 ```
 
-#### Vote Extension Propagation
+#### Vote Extension Propagation & Verification
 
 As mentioned previously, vote extensions for height `H` are only made available
 to the proposer at height `H+1` during `PrepareProposal`. However, in order to
@@ -262,6 +262,15 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 Once at least 2/3 signatures, by voting power, are received and verified, the
 validator can use the vote extensions to derive additional data or come to some
 decision based on the vote extensions.
+
+> NOTE: It is very important to state, that neither the vote propagation technique
+> nor the vote extension verification mechanism described above is required for
+> applications to implement. In other words, a proposer is not required to verify
+> and propagate vote extensions along with their signatures nor are proposers
+> required to verify those signatures. An application can implement it's own
+> PKI mechanism and use that to sign and verify vote extensions.
+
+#### Vote Extension Persistence
 
 In order to make any data derived from vote extensions persistent, we propose to
 <!-- augment the existing invariant that `processProposalState` is never committed to

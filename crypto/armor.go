@@ -38,6 +38,13 @@ var (
 	KDFAead   = "aead"
 )
 
+const (
+	argon2Time    = 1
+	argon2Memory  = 64 * 1024
+	argon2Threads = 4
+	argon2KeyLen  = 32
+)
+
 // BcryptSecurityParameter is security parameter var, and it can be changed within the lcd test.
 // Making the bcrypt security parameter a var shouldn't be a security issue:
 // One can't verify an invalid key by maliciously changing the bcrypt
@@ -223,7 +230,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 	var key []byte
 	switch kdf {
 	case KDFAead:
-		key = argon2.IDKey([]byte(passphrase), saltBytes, 1, 64*1024, 4, 32)
+		key = argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
 	default:
 		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 		if err != nil {
@@ -235,7 +242,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 	privKeyBytes, err := newAeadCypher().Decrypt(encBytes, key) //Decrypt with aead
 	// Fallback: tries decryption with legacy encrypthin algortihm "xsalsa20symmetric"
 	if err != nil {
-		privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
+		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 	}
 
 	if err == xsalsa20symmetric.ErrCiphertextDecrypt {

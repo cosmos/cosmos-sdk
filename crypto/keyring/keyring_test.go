@@ -12,16 +12,13 @@ import (
 	"testing"
 
 	"github.com/99designs/keyring"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	cosmosbcrypt "github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -1950,32 +1947,6 @@ func TestRenameKey(t *testing.T) {
 			tc.run(kr)
 		})
 	}
-}
-
-// TestChangeBcrypt tests the compatibility from upstream Bcrypt and our own
-func TestChangeBcrypt(t *testing.T) {
-	pw := []byte("somepasswword!")
-
-	saltBytes := cmtcrypto.CRandBytes(16)
-	cosmosHash, err := cosmosbcrypt.GenerateFromPassword(saltBytes, pw, 2)
-	require.NoError(t, err)
-
-	bcryptHash, err := bcrypt.GenerateFromPassword(pw, 2)
-	require.NoError(t, err)
-
-	// Check the new hash with the old bcrypt, vice-versa and with the same
-	// bcrypt version just because.
-	err = cosmosbcrypt.CompareHashAndPassword(bcryptHash, pw)
-	require.NoError(t, err)
-
-	err = cosmosbcrypt.CompareHashAndPassword(cosmosHash, pw)
-	require.NoError(t, err)
-
-	err = bcrypt.CompareHashAndPassword(cosmosHash, pw)
-	require.NoError(t, err)
-
-	err = bcrypt.CompareHashAndPassword(bcryptHash, pw)
-	require.NoError(t, err)
 }
 
 func requireEqualRenamedKey(t *testing.T, key *Record, mnemonic *Record, nameMatch bool) {

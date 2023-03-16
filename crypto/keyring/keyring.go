@@ -17,6 +17,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	cometbftCrypto "github.com/cometbft/cometbft/crypto"
+
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -52,6 +55,13 @@ const (
 var (
 	_                          Keyring = &keystore{}
 	maxPassphraseEntryAttempts         = 3
+)
+
+const (
+	argon2Time    = 1
+	argon2Memory  = 64 * 1024
+	argon2Threads = 4
+	argon2KeyLen  = 32
 )
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
@@ -751,11 +761,8 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			passwordHash, err := bcrypt.GenerateFromPassword([]byte(pass), 2)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				continue
-			}
+			saltBytes := cometbftCrypto.CRandBytes(16)
+			passwordHash := argon2.IDKey([]byte(pass), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
 
 			if err := os.WriteFile(keyhashFilePath, passwordHash, 0o600); err != nil {
 				return "", err

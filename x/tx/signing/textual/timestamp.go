@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/dynamicpb"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -21,7 +20,8 @@ func NewTimestampValueRenderer() ValueRenderer {
 
 // Format implements the ValueRenderer interface.
 func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
-	ts, err := toTimestamp(v.Message().Interface())
+	ts := &tspb.Timestamp{}
+	err := coerceToMessage(v.Message().Interface(), ts)
 	if err != nil {
 		return nil, err
 	}
@@ -49,20 +49,4 @@ func (vr timestampValueRenderer) Parse(_ context.Context, screens []Screen) (pro
 	// Reflect the proto Timestamp.
 	msg := timestamp.ProtoReflect()
 	return protoreflect.ValueOfMessage(msg), nil
-}
-
-// convertToGoTime converts the proto Message to a timestamppb.Timestamp.
-// The input msg can be:
-// - either a timestamppb.Timestamp (in which case there's nothing to do),
-// - or a dynamicpb.Message.
-func toTimestamp(msg protoreflect.ProtoMessage) (*tspb.Timestamp, error) {
-	switch msg := msg.(type) {
-	case *tspb.Timestamp:
-		return msg, nil
-	case *dynamicpb.Message:
-		s, n := getValueFromFieldName(msg, "seconds").Int(), getValueFromFieldName(msg, "nanos").Int()
-		return &tspb.Timestamp{Seconds: s, Nanos: int32(n)}, nil
-	default:
-		return nil, fmt.Errorf("expected timestamppb.Timestamp or dynamicpb.Message, got %T", msg)
-	}
 }

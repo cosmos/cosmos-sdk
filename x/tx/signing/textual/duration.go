@@ -7,9 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/dynamicpb"
 	dpb "google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -69,7 +67,8 @@ func formatSeconds(seconds int64, nanos int32) string {
 func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	// Reify the reflected message as a proto Duration
 	msg := v.Message().Interface()
-	duration, err := toDuration(msg)
+	duration := &dpb.Duration{}
+	err := coerceToMessage(msg, duration)
 	if err != nil {
 		return nil, err
 	}
@@ -185,20 +184,4 @@ func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (prot
 
 	msg := dur.ProtoReflect()
 	return protoreflect.ValueOfMessage(msg), nil
-}
-
-// toDuration converts the proto Message to a durationpb.Duration.
-// The input msg can be:
-// - either a durationpb.Duration already (in which case there's nothing to do),
-// - or a dynamicpb.Message.
-func toDuration(msg proto.Message) (*dpb.Duration, error) {
-	switch msg := msg.(type) {
-	case *dpb.Duration:
-		return msg, nil
-	case *dynamicpb.Message:
-		s, n := getValueFromFieldName(msg, "seconds").Int(), getValueFromFieldName(msg, "nanos").Int()
-		return &dpb.Duration{Seconds: s, Nanos: int32(n)}, nil
-	default:
-		return nil, fmt.Errorf("expected dpb.Duration or dynamicpb.Message, got %T", msg)
-	}
 }

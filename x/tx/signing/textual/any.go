@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -29,7 +28,8 @@ func NewAnyValueRenderer(t *SignModeHandler) ValueRenderer {
 // Format implements the ValueRenderer interface.
 func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	msg := v.Message().Interface()
-	anymsg, err := toAny(msg)
+	anymsg := &anypb.Any{}
+	err := coerceToMessage(msg, anymsg)
 	if err != nil {
 		return nil, err
 	}
@@ -129,20 +129,4 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 	}
 
 	return protoreflect.ValueOfMessage(anyMsg.ProtoReflect()), nil
-}
-
-// toAny converts the proto Message to a anypb.Any.
-// The input msg can be:
-// - either a anypb.Any already (in which case there's nothing to do),
-// - or a dynamicpb.Message.
-func toAny(msg proto.Message) (*anypb.Any, error) {
-	switch msg := msg.(type) {
-	case *anypb.Any:
-		return msg, nil
-	case *dynamicpb.Message:
-		t, v := getValueFromFieldName(msg, "type_url").String(), getValueFromFieldName(msg, "value").Bytes()
-		return &anypb.Any{TypeUrl: t, Value: v}, nil
-	default:
-		return nil, fmt.Errorf("expected anypb.Any or dynamicpb.Message, got %T", msg)
-	}
 }

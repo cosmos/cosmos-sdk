@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -224,4 +225,41 @@ func getValueFromFieldName(m proto.Message, fieldName string) protoreflect.Value
 	fd := m.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name(fieldName))
 
 	return m.ProtoReflect().Get(fd)
+}
+
+// coerceToMessage initializes the given desiredMsg (presented as a protov2
+// concrete message) with the values of givenMsg.
+//
+// If givenMsg is a protov2 concrete message of the same type, then it will
+// fast-path to be initialized to the same value.
+// For a dynamicpb message it checks that the names match then uses proto
+// reflection to initialize the fields of desiredMsg.
+// Otherwise throws an error.
+//
+// Example:
+//
+// // Assume `givenCoin` is a dynamicpb.Message representing a Coin
+// coin := &basev1beta1.Coin{}
+// err := coerceToMessage(givenCoin, coin)
+// if err != nil { /* handler error */ }
+// fmt.Println(coin) // Will have the same field values as `givenCoin`
+func coerceToMessage(givenMsg, desiredMsg proto.Message) error {
+	if reflect.TypeOf(givenMsg) == reflect.TypeOf(desiredMsg) {
+		// Below is a way of saying "*desiredMsg = *givenMsg" using go reflect
+		reflect.Indirect(reflect.ValueOf(desiredMsg)).Set(reflect.Indirect(reflect.ValueOf(givenMsg)))
+		return nil
+	}
+
+	givenName, desiredName := givenMsg.ProtoReflect().Descriptor().FullName(), desiredMsg.ProtoReflect().Descriptor().FullName()
+	if givenName != desiredName {
+		return fmt.Errorf("expected dynamicpb.Message with FullName %s, got %s", desiredName, givenName)
+	}
+
+	desiredFields := desiredMsg.ProtoReflect().Descriptor().Fields()
+	for i := 0; i < desiredFields.Len(); i++ {
+		fd := desiredFields.Get(i)
+		desiredMsg.ProtoReflect().Set(fd, getValueFromFieldName(givenMsg, string(fd.Name())))
+	}
+
+	return nil
 }

@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/dynamicpb"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -39,7 +37,8 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 
 	// Since this value renderer has a FormatRepeated method, the Format one
 	// here only handles single coin.
-	coin, err := toCoin(v.Interface().(protoreflect.Message).Interface())
+	coin := &basev1beta1.Coin{}
+	err := coerceToMessage(v.Interface().(protoreflect.Message).Interface(), coin)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +65,8 @@ func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.
 	coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
 	var err error
 	for i := 0; i < protoCoins.Len(); i++ {
-		coin, err := toCoin(protoCoins.Get(i).Interface().(protoreflect.Message).Interface())
+		coin := &basev1beta1.Coin{}
+		err := coerceToMessage(protoCoins.Get(i).Interface().(protoreflect.Message).Interface(), coin)
 		if err != nil {
 			return nil, err
 		}
@@ -217,20 +217,4 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 		Amount: amtDec.TruncateInt().String(),
 		Denom:  baseDenom,
 	}, nil
-}
-
-// toCoin converts the proto Message to a Coin.
-// The input msg can be:
-// - either a Coin already (in which case there's nothing to do),
-// - or a dynamicpb.Message.
-func toCoin(msg proto.Message) (*basev1beta1.Coin, error) {
-	switch msg := msg.(type) {
-	case *basev1beta1.Coin:
-		return msg, nil
-	case *dynamicpb.Message:
-		a, d := getValueFromFieldName(msg, "amount").String(), getValueFromFieldName(msg, "denom").String()
-		return &basev1beta1.Coin{Amount: a, Denom: d}, nil
-	default:
-		return nil, fmt.Errorf("expected Coin or dynamicpb.Message, got %T", msg)
-	}
 }

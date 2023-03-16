@@ -130,14 +130,12 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 // This will cause the AccAddress.String() to print out unexpected prefixes if the config was changed between bech32 lookups.
 // See https://github.com/cosmos/cosmos-sdk/issues/15317.
 func (s *addressTestSuite) TestAddrCache() {
-	//types.SetAddrCacheEnabled(false)
-
-	//Use a random key
+	// Use a random key
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 	rand.Read(pub.Key)
 
-	//Set SDK bech32 prefixes to 'osmo'
+	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
 	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
@@ -147,17 +145,17 @@ func (s *addressTestSuite) TestAddrCache() {
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
-	//Set SDK bech32 to 'cosmos'
+	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
 	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
 	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
 	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
 
-	//We name this 'addrCosmos' to prove a point, but the bech32 address will still begin with 'osmo' due to the cache behavior.
+	// We name this 'addrCosmos' to prove a point, but the bech32 address will still begin with 'osmo' due to the cache behavior.
 	addrCosmos := types.AccAddress(pub.Address())
 	cosmosAddrBech32 := addrCosmos.String()
 
-	//The default behavior will retrieve the bech32 address from the cache, ignoring the bech32 prefix change.
+	// The default behavior will retrieve the bech32 address from the cache, ignoring the bech32 prefix change.
 	s.Require().Equal(osmoAddrBech32, cosmosAddrBech32)
 	s.Require().True(strings.HasPrefix(osmoAddrBech32, "osmo"))
 	s.Require().True(strings.HasPrefix(cosmosAddrBech32, "osmo"))
@@ -169,12 +167,12 @@ func (s *addressTestSuite) TestAddrCache() {
 func (s *addressTestSuite) TestAddrCacheDisabled() {
 	types.SetAddrCacheEnabled(false)
 
-	//Use a random key
+	// Use a random key
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 	rand.Read(pub.Key)
 
-	//Set SDK bech32 prefixes to 'osmo'
+	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
 	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
@@ -184,7 +182,7 @@ func (s *addressTestSuite) TestAddrCacheDisabled() {
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
-	//Set SDK bech32 to 'cosmos'
+	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
 	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
 	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
@@ -193,7 +191,7 @@ func (s *addressTestSuite) TestAddrCacheDisabled() {
 	addrCosmos := types.AccAddress(pub.Address())
 	cosmosAddrBech32 := addrCosmos.String()
 
-	//retrieve the bech32 address from the cache, respecting the bech32 prefix change.
+	// retrieve the bech32 address from the cache, respecting the bech32 prefix change.
 	s.Require().NotEqual(osmoAddrBech32, cosmosAddrBech32)
 	s.Require().True(strings.HasPrefix(osmoAddrBech32, "osmo"))
 	s.Require().True(strings.HasPrefix(cosmosAddrBech32, "cosmos"))

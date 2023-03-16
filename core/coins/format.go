@@ -14,13 +14,10 @@ import (
 const emptyCoins = "zero"
 
 var (
-	// Denominations can be 3 ~ 128 characters long and support letters, followed by either
-	// a letter, a number or a separator ('/', ':', '.', '_' or '-').
-	reDnmString = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
-	reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
-	reSpc       = `[[:space:]]*`
-	reDnm       *regexp.Regexp
-	reDecCoin   *regexp.Regexp
+	// Amount can be a whole number or a decimal number. Denominations can be 3 ~ 128
+	// characters long and support letters, followed by either a letter, a number or
+	// a separator ('/', ':', '.', '_' or '-').
+	coinRegex = regexp.MustCompile(`^(\d+(\.\d+)?)([a-zA-Z][a-zA-Z0-9\/\:\._\-]{2,127})$`)
 )
 
 // formatCoin formats a sdk.Coin into a value-rendered string, using the
@@ -106,16 +103,23 @@ func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (s
 	return strings.Join(formatted, ", "), nil
 }
 
-func ParseCoin(encodedCoin string) (*basev1beta1.Coin, error) {
-	coin := &basev1beta1.Coin{}
-	for i, char := range encodedCoin {
-		if char == '1' || char == '2' || char == '3' || char == '4' || char == '5' || char == '6' || char == '7' || char == '8' || char == '9' || char == '0' || char == '.' {
-			continue
-		} else {
-			coin.Amount = encodedCoin[:i]
-			coin.Denom = encodedCoin[i:]
-			break
-		}
+// ParseCoin parses a coin from a string. The string must be in the format
+// <amount><denom>, where <amount> is a number and <denom> is a valid denom.
+func ParseCoin(input string) (*basev1beta1.Coin, error) {
+	input = strings.TrimSpace(input)
+
+	if input == "" {
+		return nil, fmt.Errorf("empty input when parsing coin")
 	}
-	return coin, nil
+
+	matches := coinRegex.FindStringSubmatch(input)
+
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("invalid input format")
+	}
+
+	return &basev1beta1.Coin{
+		Amount: matches[1],
+		Denom:  matches[3],
+	}, nil
 }

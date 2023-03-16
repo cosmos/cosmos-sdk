@@ -232,7 +232,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 	case KDFAead:
 		key = argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
 	default:
-		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
+		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 		if err != nil {
 			return privKey, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")
 		}

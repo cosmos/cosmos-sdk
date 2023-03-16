@@ -320,13 +320,13 @@ message Params {
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
-  // max_cons_pubkey_rotations is maximum number of consensus pubkey rotations
-  uint64 max_cons_pubkey_rotations = 7;
-  // cons_pubkey_rotation_fee is fee to be spent when rotating validator's consensus pubkey
-  cosmos.base.v1beta1.Coin cons_pubkey_rotation_fee = 8 [
+  // key_rotation_fee is fee to be spent when rotating validator's consensus pubkey
+  cosmos.base.v1beta1.Coin key_rotation_fee = 7 [
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+  // max_cons_pubkey_rotations is maximum number of consensus pubkey rotations
+  uint64 max_cons_pubkey_rotations = 8;
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -408,15 +408,9 @@ message ConsPubKeyRotationHistory {
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
   string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
   // old_cons_pubkey is the old consensus public key of the validator, as a Protobuf Any.
-  google.protobuf.Any old_cons_pubkey = 2 [
-    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey",
-    (gogoproto.moretags)             = "yaml:\"old_consensus_pubkey\""
-  ];
+  google.protobuf.Any old_cons_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   // new_cons_pubkey is the new consensus public key of the validator, as a Protobuf Any.
-  google.protobuf.Any new_cons_pubkey = 3 [
-    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey",
-    (gogoproto.moretags)             = "yaml:\"new_consensus_pubkey\""
-  ];
+  google.protobuf.Any new_cons_pubkey = 3 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   // height defines the block height at which the rotation event occured.
   uint64 height = 4;
 }

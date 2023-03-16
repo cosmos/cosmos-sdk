@@ -62,6 +62,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (mempool) [#15328](https://github.com/cosmos/cosmos-sdk/pull/15328) Improve the `PriorityNonceMempool`
+    * Support generic transaction prioritization, instead of `ctx.Priority()`
+    * Improve construction through the use of a single `PriorityNonceMempoolConfig` instead of option functions
 * (x/authz) [#15164](https://github.com/cosmos/cosmos-sdk/pull/15164) Add `MsgCancelUnbondingDelegation` to staking authorization
 * (server) [#15358](https://github.com/cosmos/cosmos-sdk/pull/15358) Add `server.InterceptConfigsAndCreateContext` as alternative to `server.InterceptConfigsPreRunHandler` which does not set the server context and the default SDK logger.
 * [#15011](https://github.com/cosmos/cosmos-sdk/pull/15011) Introduce `cosmossdk.io/log` package to provide a consistent logging interface through the SDK. CometBFT logger is now replaced by `cosmossdk.io/log.Logger`.
@@ -97,6 +100,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (mempool) [#15328](https://github.com/cosmos/cosmos-sdk/pull/15328) The `PriorityNonceMempool` is now generic over type `C comparable` and takes a single `PriorityNonceMempoolConfig[C]` argument. See `DefaultPriorityNonceMempoolConfig` for how to construct the configuration and a `TxPriority` type.
 * (server) [#15358](https://github.com/cosmos/cosmos-sdk/pull/15358) Remove `server.ErrorCode` that was not used anywhere.
 * [#15211](https://github.com/cosmos/cosmos-sdk/pull/15211) Remove usage of `github.com/cometbft/cometbft/libs/bytes.HexBytes` in favor of `[]byte` thorough the SDK.
 * [#15011](https://github.com/cosmos/cosmos-sdk/pull/15011) All functions that were taking a CometBFT logger, now take `cosmossdk.io/log.Logger` instead.
@@ -136,6 +140,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto) [#15070](https://github.com/cosmos/cosmos-sdk/pull/15070) `GenerateFromPassword` and `Cost` from `bcrypt.go` now take a `uint32` instead of a `int` type.  
 * (client) [#15123](https://github.com/cosmos/cosmos-sdk/pull/15123) `NewFactoryCLI` now returns an error, in addition to the `Factory`.
 * (x/capability) [#15344](https://github.com/cosmos/cosmos-sdk/pull/15344) Capability module was removed and is now housed in [IBC-GO](https://github.com/cosmos/ibc-go). 
+* [#15299](https://github.com/cosmos/cosmos-sdk/pull/15299) remove `StdTx` transaction and signing APIs. No SDK version has actually supported `StdTx` since before Stargate.
 
 ### Client Breaking Changes
 
@@ -148,6 +153,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#14880](https://github.com/cosmos/cosmos-sdk/pull/14880) Remove `<app> tx gov submit-legacy-proposal cancel-software-upgrade` and `software-upgrade` commands. These commands are now in the `x/upgrade` module and using gov v1. Use `tx upgrade software-upgrade` instead.
 * (grpc-web) [#14652](https://github.com/cosmos/cosmos-sdk/pull/14652) Remove `grpc-web.address` flag.
 * (client) [#14342](https://github.com/cosmos/cosmos-sdk/pull/14342) `<app> config` command is now a sub-command. Use `<app> config --help` to learn more.
+* (cli) [#15299](https://github.com/cosmos/cosmos-sdk/pull/15299) remove `--amino` flag from `sign` and `multi-sign` commands. Amino `StdTx` has been deprecated for a while. Amino JSON signing still works as expected. 
 
 ### Bug Fixes
 

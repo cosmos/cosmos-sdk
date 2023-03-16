@@ -13,7 +13,7 @@ type Keeper struct {
 	ak  authkeeper.AccountKeeper
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, ak authkeeper.AccountKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak authkeeper.AccountKeeper) Keeper {
 	return Keeper{
 		key: storeKey,
 		cdc: cdc,

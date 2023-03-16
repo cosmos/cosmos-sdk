@@ -1,0 +1,18 @@
+syntax = "proto3";
+package cosmos.rekeying.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/rekeying/types";
+
+
+// message PubKeyHistory {
+//     bytes pub_key = 1
+//         [(gogoproto.jsontag) = "public_key,omitempty"];
+//     google.protobuf.Timestamp start_time = 2
+//         [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+//     google.protobuf.Timestamp end_time = 3
+//         [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+// }

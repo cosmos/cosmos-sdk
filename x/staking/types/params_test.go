@@ -39,7 +39,7 @@ func TestValidateParams(t *testing.T) {
 	// reset params to default
 	params = types.DefaultParams()
 
-	// check ConsPubkeyRotationFee
-	params.ConsPubkeyRotationFee = coinZero
+	// check keyRotationFee
+	params.KeyRotationFee = coinZero
 	require.Error(t, params.Validate())
 }

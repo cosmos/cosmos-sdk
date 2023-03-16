@@ -202,7 +202,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
 
-	rotationFee := k.ConsPubKeyRotationFee(ctx)
+	rotationFee := k.KeyRotationFee(ctx)
 	// ApplyAndReturnValidatorSetUpdates checks if there is ConsPubKeyRotationHistory
 	// with ConsPubKeyRotationHistory.RotatedHeight == ctx.BlockHeight() and if so, generates 2 ValidatorUpdate,
 	// one for a remove validator and one for create new validator

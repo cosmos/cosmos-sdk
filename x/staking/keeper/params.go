@@ -82,6 +82,6 @@ func (k Keeper) MaxConsPubKeyRotations(ctx sdk.Context) (res uint64) {
 	return k.GetParams(ctx).MaxConsPubkeyRotations
 }
 
-func (k Keeper) ConsPubKeyRotationFee(ctx sdk.Context) (res sdk.Coin) {
-	return k.GetParams(ctx).ConsPubkeyRotationFee
+func (k Keeper) KeyRotationFee(ctx sdk.Context) (res sdk.Coin) {
+	return k.GetParams(ctx).KeyRotationFee
 }

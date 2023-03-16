@@ -523,7 +523,7 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 
 	// checks if the signing account has enough balance to pay KeyRotationFee
 	// pays KeyRotationFee to community fund
-	rotationFee := k.ConsPubKeyRotationFee(ctx)
+	rotationFee := k.KeyRotationFee(ctx)
 	sender := sdk.AccAddress(valAddr)
 
 	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, sdk.NewCoins(rotationFee))

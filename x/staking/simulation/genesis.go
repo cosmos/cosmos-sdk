@@ -18,7 +18,7 @@ const (
 	maxValidators          = "max_validators"
 	historicalEntries      = "historical_entries"
 	maxConsPubkeyRotations = "max_cons_pubkey_rotations"
-	consPubkeyRotationFee  = "cons_pubkey_rotation_fee"
+	keyRotationFee         = "cons_pubkey_rotation_fee"
 )
 
 // genUnbondingTime returns randomized UnbondingTime
@@ -36,9 +36,9 @@ func getHistEntries(r *rand.Rand) uint32 {
 	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
 }
 
-// getConsPubKeyRotationFee returns randomized consPubKeyRotationFee between 10000-1000000.
-func getConsPubKeyRotationFee(r *rand.Rand) sdk.Coin {
-	return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(r.Int63n(types.DefaultConsPubKeyRotationFee.Amount.Int64()-10000)+10000))
+// getKeyRotationFee returns randomized keyRotationFee between 10000-1000000.
+func getKeyRotationFee(r *rand.Rand) sdk.Coin {
+	return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(r.Int63n(types.DefaultKeyRotationFee.Amount.Int64()-10000)+10000))
 }
 
 // getMaxConsPubKeyRotations returns randomized maxConsPubKeyRotations between 1-10.
@@ -79,8 +79,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, consPubkeyRotationFee, &histEntries, simState.Rand,
-		func(r *rand.Rand) { rotationFee = getConsPubKeyRotationFee(r) },
+		simState.Cdc, keyRotationFee, &histEntries, simState.Rand,
+		func(r *rand.Rand) { rotationFee = getKeyRotationFee(r) },
 	)
 
 	// NOTE: the slashing module need to be defined after the staking module on the

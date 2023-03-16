@@ -734,7 +734,7 @@ func TestGRPCParams(t *testing.T) {
 			HistoricalEntries:      rapid.Uint32Min(1).Draw(rt, "historical-entries"),
 			MinCommissionRate:      sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
 			MaxConsPubkeyRotations: rapid.Uint64Range(1, 10).Draw(rt, "max-pubkey-rotations"),
-			ConsPubkeyRotationFee:  sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(rapid.Uint64Range(1000, 1000000).Draw(rt, "cons-pubkey-rotation-fee"))),
+			KeyRotationFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(rapid.Uint64Range(1000, 1000000).Draw(rt, "cons-pubkey-rotation-fee"))),
 		}
 
 		err := f.stakingKeeper.SetParams(f.ctx, params)
@@ -751,7 +751,7 @@ func TestGRPCParams(t *testing.T) {
 		HistoricalEntries:      5,
 		MinCommissionRate:      sdk.NewDecWithPrec(5, 2),
 		MaxConsPubkeyRotations: 5,
-		ConsPubkeyRotationFee:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)),
+		KeyRotationFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)),
 	}
 
 	err := f.stakingKeeper.SetParams(f.ctx, params)

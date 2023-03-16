@@ -443,7 +443,7 @@ func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
 	}
 
 	params := keeper.GetParams(ctx)
-	params.ConsPubkeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	params.KeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
 	keeper.SetParams(ctx, params)
 
 	valAddr1 := sdk.ValAddress(PKs[0].Address().Bytes())

@@ -249,7 +249,7 @@ func TestRotateConsPubKey(t *testing.T) {
 
 	for _, testCase := range testCases {
 		params := stakingKeeper.GetParams(ctx)
-		params.ConsPubkeyRotationFee = sdk.NewInt64Coin(bondDenom, 1000)
+		params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 1000)
 		params.MaxConsPubkeyRotations = testCase.rotationLimit
 		err := stakingKeeper.SetParams(ctx, params)
 		require.NoError(t, err)
@@ -269,7 +269,7 @@ func TestRotateConsPubKey(t *testing.T) {
 
 			// rotation fee payment from sender to distrtypes
 			newDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
-			require.Equal(t, newDistrBalance, oldDistrBalance.Add(params.ConsPubkeyRotationFee))
+			require.Equal(t, newDistrBalance, oldDistrBalance.Add(params.KeyRotationFee))
 
 			// validator consensus pubkey update check
 			validator, found := stakingKeeper.GetValidator(ctx, testCase.validator)

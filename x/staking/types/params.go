@@ -39,15 +39,15 @@ var (
 	// DefaultMinCommissionRate is set to 0%
 	DefaultMinCommissionRate = math.LegacyZeroDec()
 
-	// DefaultConsPubKeyRotationFee is fees used to rotate the ConsPubkey
-	DefaultConsPubKeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)
+	// DefaultKeyRotationFee is fees used to rotate the ConsPubkey or Operator key
+	DefaultKeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)
 )
 
 // NewParams creates a new Params instance
 func NewParams(unbondingTime time.Duration,
 	maxValidators, maxEntries, historicalEntries uint32,
 	bondDenom string, minCommissionRate sdk.Dec,
-	maxConsPubKeyRotations uint64, consPubKeyRotationFee sdk.Coin) Params {
+	maxConsPubKeyRotations uint64, keyRotationFee sdk.Coin) Params {
 
 	return Params{
 		UnbondingTime:          unbondingTime,
@@ -57,7 +57,7 @@ func NewParams(unbondingTime time.Duration,
 		BondDenom:              bondDenom,
 		MinCommissionRate:      minCommissionRate,
 		MaxConsPubkeyRotations: maxConsPubKeyRotations,
-		ConsPubkeyRotationFee:  consPubKeyRotationFee,
+		KeyRotationFee:         keyRotationFee,
 	}
 }
 
@@ -71,7 +71,7 @@ func DefaultParams() Params {
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
 		DefaultMaxConsPubKeyRotations,
-		DefaultConsPubKeyRotationFee,
+		DefaultKeyRotationFee,
 	)
 }
 
@@ -125,7 +125,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateConsPubkeyRotationFee(p.ConsPubkeyRotationFee); err != nil {
+	if err := validateKeyRotationFee(p.KeyRotationFee); err != nil {
 		return err
 	}
 
@@ -242,7 +242,7 @@ func validateMaxConsPubkeyRotations(i interface{}) error {
 	return nil
 }
 
-func validateConsPubkeyRotationFee(i interface{}) error {
+func validateKeyRotationFee(i interface{}) error {
 	v, ok := i.(sdk.Coin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

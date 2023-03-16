@@ -530,13 +530,13 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"staking/msg_update_params": {
 			gogo: &stakingtypes.MsgUpdateParams{
 				Params: stakingtypes.Params{
-					UnbondingTime:         0,
-					ConsPubkeyRotationFee: types.Coin{},
+					UnbondingTime:  0,
+					KeyRotationFee: types.Coin{},
 				}},
 			pulsar: &stakingapi.MsgUpdateParams{
 				Params: &stakingapi.Params{
-					UnbondingTime:         &durationpb.Duration{Seconds: 0},
-					ConsPubkeyRotationFee: &v1beta1.Coin{},
+					UnbondingTime:  &durationpb.Duration{Seconds: 0},
+					KeyRotationFee: &v1beta1.Coin{},
 				}},
 		},
 		"staking/create_validator": {

@@ -122,6 +122,9 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 
 	// store object
 	bz, err := proto.MarshalOptions{Deterministic: true}.Marshal(message)
+	if err != nil {
+		return err
+	}
 	err = writer.CommitmentStore().Set(pk, bz)
 	if err != nil {
 		return err

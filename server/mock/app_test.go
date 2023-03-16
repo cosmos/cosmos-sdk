@@ -7,21 +7,33 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-func TestInitApp(t *testing.T) {
-	app, closer, err := SetupApp()
-	// closer may need to be run, even when error in later stage
-	if closer != nil {
-		defer closer()
-	}
+// SetupApp initializes a new application,
+// failing t if initialization fails.
+func SetupApp(t *testing.T) abci.Application {
+	t.Helper()
+
+	logger := log.NewTestLogger(t)
+
+	rootDir := t.TempDir()
+
+	app, err := NewApp(rootDir, logger)
 	require.NoError(t, err)
 
-	appState, err := AppGenState(nil, types.GenesisDoc{}, nil)
+	return app
+}
+
+func TestInitApp(t *testing.T) {
+	app := SetupApp(t)
+
+	appState, err := AppGenState(nil, genutiltypes.AppGenesis{}, nil)
 	require.NoError(t, err)
 
 	req := abci.RequestInitChain{
@@ -42,12 +54,7 @@ func TestInitApp(t *testing.T) {
 }
 
 func TestDeliverTx(t *testing.T) {
-	app, closer, err := SetupApp()
-	// closer may need to be run, even when error in later stage
-	if closer != nil {
-		defer closer()
-	}
-	require.NoError(t, err)
+	app := SetupApp(t)
 
 	key := "my-special-key"
 	value := "top-secret-data!!"

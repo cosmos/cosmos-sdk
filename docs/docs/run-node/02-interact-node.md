@@ -12,7 +12,7 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 
 ### Pre-requisite Readings
 
-* [gRPC, REST and Tendermint Endpoints](../core/06-grpc_rest.md)
+* [gRPC, REST and CometBFT Endpoints](../core/06-grpc_rest.md)
 * [Running a Node](./01-run-node.md)
 
 :::

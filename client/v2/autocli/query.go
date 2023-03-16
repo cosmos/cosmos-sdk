@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"cosmossdk.io/client/v2/internal/strcase"
 	"cosmossdk.io/client/v2/internal/util"
 )
 
@@ -20,66 +19,25 @@ import (
 func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
-	if err := b.EnhanceQueryCommand(queryCmd, moduleOptions, customCmds); err != nil {
-		return nil, err
-	}
 
-	return queryCmd, nil
-}
-
-// EnhanceQueryCommand enhances the provided query command with either generated commands based on the provided module
-// options or the provided custom commands for each module. If the provided query command already contains a command
-// for a module, that command is not over-written by this method. This allows a graceful addition of autocli to
-// automatically fill in missing commands.
-func (b *Builder) EnhanceQueryCommand(queryCmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) error {
-	allModuleNames := map[string]bool{}
-	for moduleName := range moduleOptions {
-		allModuleNames[moduleName] = true
-	}
-	for moduleName := range customCmds {
-		allModuleNames[moduleName] = true
-	}
-
-	for moduleName := range allModuleNames {
-		// if we have an existing command skip adding one here
-		if existing := findSubCommand(queryCmd, moduleName); existing != nil {
-			continue
-		}
-
-		// if we have a custom command use that instead of generating one
-		if custom := customCmds[moduleName]; custom != nil {
-			// custom commands get added lower down
-			queryCmd.AddCommand(custom)
-			continue
-		}
-
-		// check for autocli options
-		modOpts := moduleOptions[moduleName]
-		if modOpts == nil {
-			continue
-		}
-
-		queryCmdDesc := modOpts.Query
-		if queryCmdDesc != nil {
-			cmd, err := b.BuildModuleQueryCommand(moduleName, queryCmdDesc)
+	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
+		txQueryDesc := modOpts.Query
+		if txQueryDesc != nil {
+			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+			err := b.AddQueryServiceCommands(subCmd, txQueryDesc)
 			if err != nil {
 				return err
 			}
 
-			queryCmd.AddCommand(cmd)
+			cmd.AddCommand(subCmd)
 		}
+		return nil
+	}
+	if err := b.enhanceCommandCommon(queryCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
+		return nil, err
 	}
 
-	return nil
-}
-
-// BuildModuleQueryCommand builds the query command for a single module.
-func (b *Builder) BuildModuleQueryCommand(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
-
-	err := b.AddQueryServiceCommands(cmd, cmdDescriptor)
-
-	return cmd, err
+	return queryCmd, nil
 }
 
 // AddQueryServiceCommands adds a sub-command to the provided command for each
@@ -126,15 +84,22 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	n := methods.Len()
 	for i := 0; i < n; i++ {
 		methodDescriptor := methods.Get(i)
-		methodOpts := rpcOptMap[methodDescriptor.Name()]
+		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
+		if !ok {
+			methodOpts = &autocliv1.RpcCommandOptions{}
+		}
+
+		if methodOpts.Skip {
+			continue
+		}
+
 		methodCmd, err := b.BuildQueryMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
 		}
 
-		if methodCmd != nil {
-			cmd.AddCommand(methodCmd)
-		}
+		cmd.AddCommand(methodCmd)
+
 	}
 
 	return nil
@@ -143,52 +108,10 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 // BuildQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
 // just a single command for a single service rpc method.
 func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	if options == nil {
-		// use the defaults
-		options = &autocliv1.RpcCommandOptions{}
-	}
-
-	if options.Skip {
-		return nil, nil
-	}
-
-	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
-
-	long := options.Long
-	if long == "" {
-		long = util.DescriptorDocs(descriptor)
-	}
-
 	getClientConn := b.GetClientConn
+	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
-
-	inputDesc := descriptor.Input()
-	inputType := util.ResolveMessageType(b.TypeResolver, inputDesc)
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
-
-	use := options.Use
-	if use == "" {
-		use = protoNameToCliName(descriptor.Name())
-	}
-
-	cmd := &cobra.Command{
-		Use:        use,
-		Long:       long,
-		Short:      options.Short,
-		Example:    options.Example,
-		Aliases:    options.Alias,
-		SuggestFor: options.SuggestFor,
-		Deprecated: options.Deprecated,
-		Version:    options.Version,
-	}
-
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
-	if err != nil {
-		return nil, err
-	}
-
-	cmd.Args = binder.CobraArgs
-
 	jsonMarshalOptions := protojson.MarshalOptions{
 		Indent:          "  ",
 		UseProtoNames:   true,
@@ -197,13 +120,8 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 		Resolver:        b.TypeResolver,
 	}
 
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
 		clientConn, err := getClientConn(cmd)
-		if err != nil {
-			return err
-		}
-
-		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err
 		}
@@ -220,8 +138,11 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 			return err
 		}
 
-		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
+		err = b.outOrStdoutFormat(cmd, bz)
 		return err
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	if b.AddQueryConnFlags != nil {
@@ -229,18 +150,4 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	return cmd, nil
-}
-
-func protoNameToCliName(name protoreflect.Name) string {
-	return strcase.ToKebab(string(name))
-}
-
-func topLevelCmd(use, short string) *cobra.Command {
-	return &cobra.Command{
-		Use:                        use,
-		Short:                      short,
-		DisableFlagParsing:         false,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       validateCmd,
-	}
 }

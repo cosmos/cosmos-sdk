@@ -31,6 +31,8 @@ const (
 //
 // - 0x03: nextProposalID
 //
+// - 0x04<proposalID_Bytes>: []byte{0x01} if proposalID is in the voting period
+//
 // - 0x10<proposalID_Bytes><depositorAddrLen (1 Byte)><depositorAddr_Bytes>: Deposit
 //
 // - 0x20<proposalID_Bytes><voterAddrLen (1 Byte)><voterAddr_Bytes>: Voter
@@ -49,6 +51,9 @@ var (
 
 	// ParamsKey is the key to query all gov params
 	ParamsKey = []byte{0x30}
+
+	// KeyConstitution is the key string used to store the chain's constitution
+	KeyConstitution = []byte("constitution")
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))

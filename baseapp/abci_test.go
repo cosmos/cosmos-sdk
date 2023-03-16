@@ -814,7 +814,7 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 			for _, success := range tc.succeed {
 				msgs = append(msgs, &baseapptestutil.MsgCounter{Counter: msgCounter + int64(extra), FailOnHandler: !success})
 				if success {
-					extra += 1
+					extra++
 				}
 			}
 			builder.SetMsgs(msgs...)
@@ -946,7 +946,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 			{newTxCounter(t, suite.txConfig, Atomic, 100, 5, 4, 3, 2, 1), false},
 
 			{newTxCounter(t, suite.txConfig, Atomic, 0, -1), true},
-			{newTxCounter(t, suite.txConfig, 1, 0, -2), true},
+			{newTxCounter(t, suite.txConfig, Atomic, 1, 0, -2), true},
 			{newTxCounter(t, suite.txConfig, Atomic, 0, 1, 2, -10, 5), true},
 		}
 
@@ -1059,17 +1059,17 @@ func TestABCI_TxGasLimits(t *testing.T) {
 		{newTxCounter(t, suite.txConfig, Atomic, 1, 9), 10, false},
 		{newTxCounter(t, suite.txConfig, Atomic, 10, 0), 10, false},
 		{newTxCounter(t, suite.txConfig, Atomic, 0, 10), 10, false},
-		{newTxCounter(t, suite.txConfig, 8, 0, 2), 10, false},
+		{newTxCounter(t, suite.txConfig, Atomic, 8, 0, 2), 10, false},
 		{newTxCounter(t, suite.txConfig, Atomic, 0, 5, 1, 1, 1, 1, 1), 10, false},
 		{newTxCounter(t, suite.txConfig, Atomic, 0, 5, 1, 1, 1, 1), 9, false},
 
 		{newTxCounter(t, suite.txConfig, Atomic, 9, 2), 11, true},
 		{newTxCounter(t, suite.txConfig, Atomic, 2, 9), 11, true},
-		{newTxCounter(t, suite.txConfig, 1, 9, 1), 11, true},
+		{newTxCounter(t, suite.txConfig, Atomic, 1, 9, 1), 11, true},
 		{newTxCounter(t, suite.txConfig, Atomic, 1, 8, 1, 1), 11, true},
 		{newTxCounter(t, suite.txConfig, Atomic, 11, 0), 11, true},
 		{newTxCounter(t, suite.txConfig, Atomic, 0, 11), 11, true},
-		{newTxCounter(t, suite.txConfig, 5, 0, 11), 16, true},
+		{newTxCounter(t, suite.txConfig, Atomic, 5, 0, 11), 16, true},
 	}
 
 	for i, tc := range testCases {

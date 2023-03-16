@@ -820,12 +820,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 		// ADR 031 request type routing
 		msgResult, err := handler(msgCtx, msg)
 		if err != nil {
-			if execGuarantee == Atomic {
-				return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
-			} else {
-				// ToDo: add events for failed messages
+			if execGuarantee == NonAtomic {
 				continue
 			}
+			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 		// at least one message was executed successfully
 		txSuccess = true

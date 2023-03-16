@@ -72,6 +72,8 @@ var (
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
 
+func (tx testTx) IsNonAtomic() bool { return false }
+
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
 func (tx testTx) ValidateBasic() error { return nil }
@@ -82,6 +84,10 @@ func (tx testTx) String() string {
 
 type sigErrTx struct {
 	getSigs func() ([]txsigning.SignatureV2, error)
+}
+
+func (sigErrTx) IsNonAtomic() bool {
+	return false
 }
 
 func (sigErrTx) Size() int64 { return 0 }

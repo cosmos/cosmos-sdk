@@ -127,7 +127,6 @@ gap in current simulation test coverage.
 Modules not returning simulation operations:
 
 * `auth`
-* `capability`
 * `evidence`
 * `mint`
 * `params`

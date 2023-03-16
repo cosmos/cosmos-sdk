@@ -1,0 +1,18 @@
+syntax = "proto3";
+package cosmos.rekeying.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/rekeying/types";
+
+// Params defines the parameters for the rekeying module.
+message Params {
+  option (amino.name)      = "cosmos-sdk/x/auth/rekeying/Params";
+  option (gogoproto.equal) = true;
+
+  uint64 pubkey_change_cost = 1
+      [(gogoproto.customname) = "PubKeyChangeCost", (gogoproto.moretags) = "yaml:\"pubkey_change_cost\""];
+  bool enable_change_pubkey = 2
+      [(gogoproto.customname) = "EnableChangePubKey", (gogoproto.moretags) = "yaml:\"enable_change_pubkey\""];
+}

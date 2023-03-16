@@ -1,0 +1,29 @@
+syntax = "proto3";
+package cosmos.rekeying.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/rekeying/types";
+
+// Msg defines the bank Msg service.
+service Msg {
+  // ChangePubKey defines a method for changing a pubkey of an account
+  rpc ChangePubKey(MsgChangePubKey) returns (MsgChangePubKeyResponse);
+}
+
+// MsgChangePubKey defines a message that enables changing a pubkey
+// of an account.
+message MsgChangePubKey {
+  option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer)      = "from_address";
+  option (amino.name)                = "cosmos-sdk/MsgChangePubKey";
+
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  bytes  pub_key = 2 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
+}
+
+// MsgChangePubKeyResponse defines the Msg/ChangePubKey response type.
+message MsgChangePubKeyResponse {}

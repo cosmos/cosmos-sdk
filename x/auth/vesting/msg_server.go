@@ -10,18 +10,26 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 type msgServer struct {
 	keeper.AccountKeeper
 	types.BankKeeper
+	types.DistrKeeper
+	types.StakingKeeper
 }
 
 // NewMsgServerImpl returns an implementation of the vesting MsgServer interface,
 // wrapping the corresponding AccountKeeper and BankKeeper.
-func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
-	return &msgServer{AccountKeeper: k, BankKeeper: bk}
+func NewMsgServerImpl(
+	k keeper.AccountKeeper,
+	bk types.BankKeeper,
+	dk types.DistrKeeper,
+	sk types.StakingKeeper,
+) types.MsgServer {
+	return &msgServer{AccountKeeper: k, BankKeeper: bk, DistrKeeper: dk, StakingKeeper: sk}
 }
 
 var _ types.MsgServer = msgServer{}
@@ -212,4 +220,63 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		),
 	)
 	return &types.MsgCreatePeriodicVestingAccountResponse{}, nil
+}
+
+func (s msgServer) DonateAllVestingTokens(goCtx context.Context, msg *types.MsgDonateAllVestingTokens) (*types.MsgDonateAllVestingTokensResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	ak := s.AccountKeeper
+	dk := s.DistrKeeper
+	sk := s.StakingKeeper
+
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	acc := ak.GetAccount(ctx, from)
+	if acc == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s not exists", msg.FromAddress)
+	}
+
+	// check whether an account has any type of staking entry
+	if len(sk.GetDelegatorDelegations(ctx, acc.GetAddress(), 1)) != 0 ||
+		len(sk.GetUnbondingDelegations(ctx, acc.GetAddress(), 1)) != 0 ||
+		len(sk.GetRedelegations(ctx, acc.GetAddress(), 1)) != 0 {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s has staking entry", msg.FromAddress)
+	}
+
+	vestingAcc, ok := acc.(exported.VestingAccount)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s is not a vesting account", msg.FromAddress)
+	}
+
+	vestingCoins := vestingAcc.GetVestingCoins(ctx.BlockTime())
+	if vestingCoins.IsZero() {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s has no vesting tokens", msg.FromAddress)
+	}
+
+	// Change the account as normal account
+	ak.SetAccount(ctx,
+		authtypes.NewBaseAccount(
+			acc.GetAddress(),
+			acc.GetPubKey(),
+			acc.GetAccountNumber(),
+			acc.GetSequence(),
+		),
+	)
+
+	if err := dk.FundCommunityPool(ctx, vestingCoins, from); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, vestingCoins.String()),
+		),
+	)
+
+	return &types.MsgDonateAllVestingTokensResponse{}, nil
 }

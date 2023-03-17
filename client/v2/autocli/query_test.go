@@ -117,7 +117,7 @@ func TestEverything(t *testing.T) {
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
 		"--a-coin", `{"denom":"foo","amount":"100000"}`,
-		"--an-address", "cosmos102p8jygt7rdxmq6z7wps2xrpck36yn3rnlllse",
+		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",
 		"--page-key", "MTIzNTQ4N3NnaGRhcw==",
@@ -161,13 +161,13 @@ func TestAddress(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
-		"--an-address", "cosmos102p8jygt7rdxmq6z7wps2xrpck36yn3rnlllse",
+		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 	)
 	assert.Equal(t, "", conn.errorOut.String())
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
-		"--an-address", "regen102p8jygt7rdxmq6z7wps2xrpck36yn3rnlllse",
+		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
 

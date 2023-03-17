@@ -157,6 +157,28 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
+func TestAddress(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--an-address", "cosmos102p8jygt7rdxmq6z7wps2xrpck36yn3rnlllse",
+	)
+	assert.Equal(t, "", conn.errorOut.String())
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--an-address", "regen102p8jygt7rdxmq6z7wps2xrpck36yn3rnlllse",
+	)
+	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--an-address", "cosmps1BAD_ENCODING",
+	)
+	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
+}
+
 func TestOutputFormat(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",

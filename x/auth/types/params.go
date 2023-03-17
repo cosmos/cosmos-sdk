@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Default parameter values
@@ -121,13 +119,9 @@ func validateTxSizeCostPerByte(i interface{}) error {
 }
 
 func validatePubKeyChangeCostParams(i interface{}) error {
-	v, ok := i.(sdk.Coins)
+	_, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if !sdk.Coins(v).IsValid() {
-		return fmt.Errorf("invalid change cost params: %s", v)
 	}
 
 	return nil

@@ -13,7 +13,7 @@ import (
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
-func (k *Keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) {
+func (k Keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	for _, tmEvidence := range req.ByzantineValidators {
@@ -22,7 +22,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) {
 		// premeditation. So for now we agree to treat them in the same way.
 		case abci.MisbehaviorType_DUPLICATE_VOTE, abci.MisbehaviorType_LIGHT_CLIENT_ATTACK:
 			evidence := types.FromABCIEvidence(tmEvidence)
-			k.handleEquivocationEvidence(ctx, evidence.(*types.Equivocation))
+			k.handleEquivocationEvidence(ctx, evidence)
 
 		default:
 			k.Logger(ctx).Error(fmt.Sprintf("ignored unknown evidence type: %s", tmEvidence.Type))

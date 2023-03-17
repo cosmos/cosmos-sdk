@@ -141,9 +141,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
-// RegisterInvariants registers the evidence module's invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
-
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {

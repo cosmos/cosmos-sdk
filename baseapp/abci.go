@@ -807,7 +807,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height)
 
-	// query for and set the block timestamp at the given height
+	// query for and set the block timestamp for historical queries
 	if height != lastBlockHeight {
 		if app.blockRetriever == nil {
 			return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrAppConfig, "cannot query historical height %d without block retriever set", height)

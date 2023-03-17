@@ -358,8 +358,9 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			}
 		}
 		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		// This isn't true since smart contracts and module accounts can also be delegators.
 		if simAccount.PrivKey == nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "account private key is nil"), nil, nil
 		}
 
 		account := ak.GetAccount(ctx, delAddr)

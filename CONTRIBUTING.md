@@ -1,28 +1,29 @@
 # Contributing
 
-* [Teams Dev Calls](#teams-dev-calls)
-* [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-* [Development Procedure](#development-procedure)
-    * [Testing](#testing)
-    * [Pull Requests](#pull-requests)
-    * [Pull Request Templates](#pull-request-templates)
-    * [Requesting Reviews](#requesting-reviews)
-    * [Updating Documentation](#updating-documentation)
-* [Dependencies](#dependencies)
-    * [`go.work`](#gowork)
-    * [`go.mod`](#gomod)
-* [Protobuf](#protobuf)
-* [Branching Model and Release](#branching-model-and-release)
-    * [PR Targeting](#pr-targeting)
-* [Code Owner Membership](#code-owner-membership)
-* [Concept & Feature Approval Process](#concept--feature-approval-process)
-    * [Strategy Discovery](#strategy-discovery)
-    * [Concept Approval](#concept-approval)
-        * [Time Bound Period](#time-bound-period)
-        * [Approval Committee & Decision Making](#approval-committee--decision-making)
-        * [Committee Members](#committee-members)
-        * [Committee Criteria](#committee-criteria)
-    * [Implementation & Release Approval](#implementation--release-approval)
+- [Contributing](#contributing)
+  - [Teams Dev Calls](#teams-dev-calls)
+  - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+  - [Development Procedure](#development-procedure)
+    - [Testing](#testing)
+    - [Pull Requests](#pull-requests)
+    - [Pull Request Templates](#pull-request-templates)
+    - [Requesting Reviews](#requesting-reviews)
+    - [Updating Documentation](#updating-documentation)
+  - [Dependencies](#dependencies)
+    - [`go.work`](#gowork)
+    - [`go.mod`](#gomod)
+  - [Protobuf](#protobuf)
+  - [Branching Model and Release](#branching-model-and-release)
+    - [PR Targeting](#pr-targeting)
+  - [Code Owner Membership](#code-owner-membership)
+  - [Concept \& Feature Approval Process](#concept--feature-approval-process)
+    - [Strategy Discovery](#strategy-discovery)
+    - [Concept Approval](#concept-approval)
+      - [Time Bound Period](#time-bound-period)
+      - [Approval Committee \& Decision Making](#approval-committee--decision-making)
+      - [Committee Members](#committee-members)
+      - [Committee Criteria](#committee-criteria)
+    - [Implementation \& Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -195,6 +196,8 @@ When extracting a package to its own go modules, some extra steps are required, 
     * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
     * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
     * Ask the team to add the project to SonarCloud
+* (optional) When the migrated package was a SDK module, migrate the protos to the new packages.
+    * For how to do it, refer to [this PR](https://github.com/cosmos/cosmos-sdk/pull/XXXX).
 * (optional) Configure a `cosmossdk.io` vanity url by submitting a PR to [cosmos/vanity](https://github.com/cosmos/vanity).
 
 ## Protobuf

@@ -1,12 +1,10 @@
-# This module represents buf.build/cosmos/cosmos-sdk
 version: v1
-name: buf.build/cosmos/cosmos-sdk
+name: buf.build/mods/nft
 deps:
+  - buf.build/cosmos/cosmos-sdk
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
-  # Extract SDK modules
-  - buf.build/mods/nft
 breaking:
   use:
     - FILE
@@ -21,5 +19,3 @@ lint:
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
     - RPC_REQUEST_STANDARD_NAME
-  ignore:
-    - tendermint

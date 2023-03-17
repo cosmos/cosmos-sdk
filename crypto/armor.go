@@ -169,8 +169,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes [
 
 	aead, err := chacha20poly1305.New(key)
 	if err != nil {
-		fmt.Errorf("Error while generating aead cypher from key: %v", err)
-		return saltBytes, encBytes
+		panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
 	}
 
 	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead())
@@ -227,7 +226,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 		key = crypto.Sha256(key) // Get 32 bytes
 	}
 
-	//Symetrhic decryption
+	// Symetrhic decryption
 	aead, err := chacha20poly1305.New(key)
 	if len(encBytes) < aead.NonceSize() {
 		return privKey, errorsmod.Wrap(err, "error generating aead cypher from key")
@@ -235,7 +234,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 	nonce, privKeyBytesEncrypted := encBytes[:aead.NonceSize()], encBytes[aead.NonceSize():] // Split nonce and ciphertext.
 	privKeyBytes, err := aead.Open(nil, nonce, privKeyBytesEncrypted, nil)                   // Decrypt the message and check it wasn't tampered with.
 
-	// Fallback: tries decryption with legacy encrypthin algortihm "xsalsa20symmetric"
+	// Fallback: tries decryption with legacy encrypthin algorithm "xsalsa20symmetric"
 	if err != nil {
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 	}

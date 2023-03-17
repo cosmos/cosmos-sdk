@@ -1,7 +1,6 @@
 package xsalsa20symmetric
 
 import (
-	"crypto/sha256"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto"
@@ -31,10 +30,4 @@ func TestSimpleWithKDF(t *testing.T) {
 
 	require.NoError(t, err, "%+v", err)
 	assert.Equal(t, plaintext, plaintext2)
-}
-
-func sha256Sum(bytes []byte) []byte {
-	hasher := sha256.New()
-	hasher.Write(bytes)
-	return hasher.Sum(nil)
 }

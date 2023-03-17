@@ -222,7 +222,7 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 	keyBcrypt = cmtcrypto.Sha256(keyBcrypt)
 	aead, _ := chacha20poly1305.New(keyBcrypt)
 	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead())
-	encBytesBcryptAead := aead.Seal(nonce, nonce, privKeyBytes, nil) //Decrypt with aead
+	encBytesBcryptAead := aead.Seal(nonce, nonce, privKeyBytes, nil) // Decrypt with aead
 
 	// bcrypt + xsalsa20symmetric
 	encBytesBcryptXsalsa20symetric := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, keyBcrypt)

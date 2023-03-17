@@ -24,9 +24,7 @@ func (k *Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	})
 
 	k.IterateDisableLists(ctx, func(address []byte, perm types.Permissions) (stop bool) {
-		for _, url := range perm.LimitTypeUrls {
-			disabledMsgs = append(disabledMsgs, url)
-		}
+		disabledMsgs = append(disabledMsgs, perm.LimitTypeUrls...)
 		return false
 	})
 
@@ -38,7 +36,6 @@ func (k *Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 
 // InitGenesis initializes the bank module's state from a given genesis state.
 func (k *Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
-
 	for _, accounts := range genState.AccountPermissions {
 		add, err := k.addressCodec.StringToBytes(accounts.Address)
 		if err != nil {

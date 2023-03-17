@@ -25,7 +25,7 @@ type fixture struct {
 	MockMsgURL string
 }
 
-func SetupFixture(t *testing.T) *fixture {
+func setupFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("circuit")
 	keeperX := NewKeeper(mockStoreKey, addresses[0], testutil.NewBech32Codec())
 	mockMsgURL := "mock_url"

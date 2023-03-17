@@ -10,7 +10,7 @@ import (
 
 func TestQueryServer(t *testing.T) {
 	t.Parallel()
-	f := SetupFixture(t)
+	f := setupFixture(t)
 
 	add, err := f.Keeper.addressCodec.StringToBytes(addresses[0])
 	require.NoError(t, err)
@@ -35,9 +35,8 @@ func TestQueryServer(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	//var acct *types.GenesisAccountPermissions
 	for _, a := range res1.Accounts {
-		require.Equal(t, addresses[0], string(a.Address))
+		require.Equal(t, addresses[0], a.Address)
 		require.Equal(t, f.MockPerms, *a.Permissions)
 	}
 

@@ -83,7 +83,7 @@ func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, per
 	defer func(iter storetypes.Iterator) {
 		err := iter.Close()
 		if err != nil {
-
+			return
 		}
 	}(iter)
 
@@ -91,7 +91,7 @@ func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, per
 		var perms types.Permissions
 		err := proto.Unmarshal(iter.Value(), &perms)
 		if err != nil {
-			return
+			panic(err)
 		}
 
 		if cb(iter.Key()[len(types.AccountPermissionPrefix):], perms) {
@@ -107,7 +107,7 @@ func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(url []byte, perms 
 	defer func(iter storetypes.Iterator) {
 		err := iter.Close()
 		if err != nil {
-
+			return
 		}
 	}(iter)
 

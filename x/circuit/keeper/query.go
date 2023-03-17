@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	context "context"
-
+	"context"
 	"strings"
 
 	"cosmossdk.io/store/prefix"
@@ -56,18 +55,17 @@ func (qs QueryServer) Accounts(c context.Context, req *types.QueryAccountsReques
 			return err
 		}
 
-		trim := strings.TrimRight(string(key), "\x00")
 		accounts = append(accounts, &types.GenesisAccountPermissions{
-			Address:     string(trim),
+			Address:     strings.TrimRight(string(key), "\x00"),
 			Permissions: perm,
 		})
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.AccountsResponse{Accounts: accounts, Pagination: pageRes}, nil
 }
 
@@ -78,9 +76,7 @@ func (qs QueryServer) DisabledList(c context.Context, req *types.QueryDisableLis
 
 	var msgs []string
 	qs.keeper.IterateDisableLists(sdkCtx, func(address []byte, perm types.Permissions) (stop bool) {
-		for _, url := range perm.LimitTypeUrls {
-			msgs = append(msgs, url)
-		}
+		msgs = append(msgs, perm.LimitTypeUrls...)
 		return false
 	})
 

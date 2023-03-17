@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
@@ -16,7 +15,6 @@ import (
 )
 
 type fixture struct {
-	cdc        codec.Codec
 	ctx        sdk.Context
 	keeper     keeper.Keeper
 	mockAddr   []byte
@@ -26,20 +24,16 @@ type fixture struct {
 
 func initFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	keeperX := keeper.NewKeeper(mockStoreKey, "mock_address", testutil.NewBech32Codec())
-	mockMsgURL := "mock_url"
-	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})
-	mockPerms := types.Permissions{
-		Level: 3,
-	}
+	k := keeper.NewKeeper(mockStoreKey, "mock_address", testutil.NewBech32Codec())
 
 	return &fixture{
-		ctx:        ctx,
-		keeper:     keeperX,
-		mockAddr:   []byte("mock_address"),
-		mockPerms:  mockPerms,
-		mockMsgURL: mockMsgURL,
+		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),
+		keeper:   k,
+		mockAddr: []byte("mock_address"),
+		mockPerms: types.Permissions{
+			Level: 3,
+		},
+		mockMsgURL: "mock_url",
 	}
 }
 
@@ -50,21 +44,20 @@ func TestGetAuthority(t *testing.T) {
 	assert.Equal(t, string(f.mockAddr), authority)
 }
 
-// require.Equal(suite.T(), suite.mockAddr.String(), suite.keeper.GetAuthority())
 func TestGetAndSetPermissions(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 	// Set the permissions for the mock address.
 
 	err := f.keeper.SetPermissions(f.ctx, f.mockAddr, &f.mockPerms)
+	require.NoError(t, err)
 
-	//// Retrieve the permissions for the mock address.
+	// Retrieve the permissions for the mock address.
 	perms, err := f.keeper.GetPermissions(f.ctx, f.mockAddr)
 	require.NoError(t, err)
 
 	//// Assert that the retrieved permissions match the expected value.
 	require.Equal(t, &f.mockPerms, perms)
-
 }
 
 func TestIteratePermissions(t *testing.T) {
@@ -99,6 +92,7 @@ func TestIteratePermissions(t *testing.T) {
 	// Assert that the returned permissions match the set mock permissions
 	require.Equal(t, mockPerms, returnedPerms)
 }
+
 func TestIterateDisabledList(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
@@ -132,5 +126,4 @@ func TestIterateDisabledList(t *testing.T) {
 	require.Equal(t, mockPerms[0].LimitTypeUrls, returnedDisabled[0].LimitTypeUrls)
 	require.Equal(t, mockPerms[1].LimitTypeUrls, returnedDisabled[1].LimitTypeUrls)
 	require.Equal(t, mockPerms[2].LimitTypeUrls, returnedDisabled[2].LimitTypeUrls)
-
 }

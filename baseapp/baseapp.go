@@ -435,6 +435,8 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 	}
 }
 
+// SetCircuitBreaker sets the circuit breaker for the BaseApp.
+// The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
 func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
 	app.msgServiceRouter.SetCircuit(cb)
 }

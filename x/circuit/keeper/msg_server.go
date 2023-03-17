@@ -4,6 +4,7 @@ import (
 	"bytes"
 	context "context"
 	fmt "fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
@@ -83,34 +84,25 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 	}
 
 	switch {
-	case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || bytes.Equal(address, srv.GetAuthority()):
-		// add all msg type urls to the disable list
-		for _, msgTypeUrl := range msg.MsgTypeUrls {
-			if !srv.IsAllowed(ctx, msgTypeUrl) {
-				return nil, fmt.Errorf("message %s is already disabled", msgTypeUrl)
-			}
-			store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
-		}
-	case perms.Level == types.Permissions_LEVEL_ALL_MSGS:
-		// iterate over the msg type urls
-		for _, msgTypeUrl := range msg.MsgTypeUrls {
+	case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
+		for _, msgTypeURL := range msg.MsgTypeUrls {
 			// check if the message is in the list of allowed messages
-			if !srv.IsAllowed(ctx, msgTypeUrl) {
-				return nil, fmt.Errorf("message %s is already disabled", msgTypeUrl)
+			if !srv.IsAllowed(ctx, msgTypeURL) {
+				return nil, fmt.Errorf("message %s is already disabled", msgTypeURL)
 			}
-			store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
+			store.Set(types.CreateDisableMsgPrefix(msgTypeURL), []byte{0x01})
 		}
 	case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
-		for _, msgTypeUrl := range msg.MsgTypeUrls {
+		for _, msgTypeURL := range msg.MsgTypeUrls {
 			// check if the message is in the list of allowed messages
-			if !srv.IsAllowed(ctx, msgTypeUrl) {
-				return nil, fmt.Errorf("message %s is already disabled", msgTypeUrl)
+			if !srv.IsAllowed(ctx, msgTypeURL) {
+				return nil, fmt.Errorf("message %s is already disabled", msgTypeURL)
 			}
 			for _, msgurl := range perms.LimitTypeUrls {
-				if msgTypeUrl == msgurl {
-					store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
+				if msgTypeURL == msgurl {
+					store.Set(types.CreateDisableMsgPrefix(msgTypeURL), []byte{0x01})
 				} else {
-					return nil, fmt.Errorf("account does not have permission to trip circuit breaker for message %s", msgTypeUrl)
+					return nil, fmt.Errorf("account does not have permission to trip circuit breaker for message %s", msgTypeURL)
 				}
 			}
 		}
@@ -118,19 +110,16 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 		return nil, fmt.Errorf("account does not have permission to trip circuit breaker")
 	}
 
-	var msg_urls string
+	var urls string
 	if len(msg.GetMsgTypeUrls()) > 1 {
-
-		for _, url := range msg.GetMsgTypeUrls() {
-			msg_urls = msg_urls + ", " + url
-		}
+		urls = strings.Join(msg.GetMsgTypeUrls(), ",")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"trip_circuit_breaker",
 			sdk.NewAttribute("authority", msg.Authority),
-			sdk.NewAttribute("msg_url", msg_urls),
+			sdk.NewAttribute("msg_url", urls),
 		),
 	})
 
@@ -158,62 +147,30 @@ func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgRe
 
 	store := ctx.KVStore(srv.storekey)
 
-	switch {
-	case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || bytes.Equal(address, srv.GetAuthority()):
+	if perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || perms.Level == types.Permissions_LEVEL_SOME_MSGS || bytes.Equal(address, srv.GetAuthority()) {
 		// add all msg type urls to the disable list
-		for _, msgTypeUrl := range msg.MsgTypeUrls {
-			if srv.IsAllowed(ctx, msgTypeUrl) {
-				return nil, fmt.Errorf("message %s is not disabled", msgTypeUrl)
+		for _, msgTypeURL := range msg.MsgTypeUrls {
+			if srv.IsAllowed(ctx, msgTypeURL) {
+				return nil, fmt.Errorf("message %s is not disabled", msgTypeURL)
 			}
-			store.Delete(types.CreateDisableMsgPrefix(msgTypeUrl))
+			store.Delete(types.CreateDisableMsgPrefix(msgTypeURL))
 		}
-	case perms.Level == types.Permissions_LEVEL_ALL_MSGS:
-		// iterate over the msg type urls
-		for _, msgTypeUrl := range msg.MsgTypeUrls {
-			// check if the message is in the list of allowed messages
-			if srv.IsAllowed(ctx, msgTypeUrl) {
-				return nil, fmt.Errorf("message %s is not disabled", msgTypeUrl)
-			}
-			store.Delete(types.CreateDisableMsgPrefix(msgTypeUrl))
-		}
-	case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
-		for _, msgTypeUrl := range msg.MsgTypeUrls {
-			// check if the message is in the list of allowed messages
-			if srv.IsAllowed(ctx, msgTypeUrl) {
-				return nil, fmt.Errorf("message %s is not disabled", msgTypeUrl)
-			}
-			// allow user with limited permissions to reset circuit breaker for any message
-			store.Delete(types.CreateDisableMsgPrefix(msgTypeUrl))
-
-		}
-	default:
+	} else {
 		return nil, fmt.Errorf("account does not have permission to reset circuit breaker")
 	}
 
-	var msg_urls string
+	var urls string
 	if len(msg.GetMsgTypeUrls()) > 1 {
-
-		for _, url := range msg.GetMsgTypeUrls() {
-			msg_urls = msg_urls + ", " + url
-		}
+		urls = strings.Join(msg.GetMsgTypeUrls(), ",")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"reset_circuit_breaker",
 			sdk.NewAttribute("authority", msg.Authority),
-			sdk.NewAttribute("msg_url", msg_urls),
+			sdk.NewAttribute("msg_url", urls),
 		),
 	})
 
 	return &types.MsgResetCircuitBreakerResponse{Success: true}, nil
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
-	ft := SetupFixture(t)
+func Test_AuthorizeCircuitBreaker(t *testing.T) {
+	ft := setupFixture(t)
 
 	srv := msgServer{
 		Keeper: ft.Keeper,
@@ -84,13 +84,14 @@ func Test_msgServer_AuthorizeCircuitBreaker(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func Test_msgServer_TripCircuitBreaker(t *testing.T) {
-	ft := SetupFixture(t)
+func Test_TripCircuitBreaker(t *testing.T) {
+	ft := setupFixture(t)
 
 	srv := msgServer{
 		Keeper: ft.Keeper,
 	}
 	url := "cosmos.bank.v1beta1.MsgSend"
+
 	// admin trips circuit breaker
 	admintrip := &types.MsgTripCircuitBreaker{Authority: addresses[0], MsgTypeUrls: []string{url}}
 	_, err := srv.TripCircuitBreaker(ft.Ctx, admintrip)
@@ -137,11 +138,10 @@ func Test_msgServer_TripCircuitBreaker(t *testing.T) {
 	twoTrip := &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{alreadyTripped}}
 	_, err = srv.TripCircuitBreaker(ft.Ctx, twoTrip)
 	require.Error(t, err)
-
 }
 
-func Test_msgServer_ResetCircuitBreaker(t *testing.T) {
-	ft := SetupFixture(t)
+func Test_ResetCircuitBreaker(t *testing.T) {
+	ft := setupFixture(t)
 
 	srv := msgServer{
 		Keeper: ft.Keeper,
@@ -191,7 +191,7 @@ func Test_msgServer_ResetCircuitBreaker(t *testing.T) {
 	_, err = srv.TripCircuitBreaker(ft.Ctx, admintrip)
 	require.NoError(t, err)
 
-	//user with all messages resets circuit breaker
+	// user with all messages resets circuit breaker
 	allMsgsReset := &types.MsgResetCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url}}
 	_, err = srv.ResetCircuitBreaker(ft.Ctx, allMsgsReset)
 	require.NoError(t, err)
@@ -209,7 +209,7 @@ func Test_msgServer_ResetCircuitBreaker(t *testing.T) {
 	_, err = srv.TripCircuitBreaker(ft.Ctx, admintrip)
 	require.NoError(t, err)
 
-	//user with all messages resets circuit breaker
+	// user with all messages resets circuit breaker
 	someMsgsReset := &types.MsgResetCircuitBreaker{Authority: addresses[2], MsgTypeUrls: []string{url}}
 	_, err = srv.ResetCircuitBreaker(ft.Ctx, someMsgsReset)
 	require.NoError(t, err)
@@ -218,5 +218,4 @@ func Test_msgServer_ResetCircuitBreaker(t *testing.T) {
 	admintrip = &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url2}}
 	_, err = srv.TripCircuitBreaker(ft.Ctx, admintrip)
 	require.Error(t, err)
-
 }

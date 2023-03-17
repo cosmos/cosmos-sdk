@@ -16,34 +16,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-var (
-	metaData = []types.Metadata{
-		{
-			Name:        "Cosmos Hub Atom",
-			Symbol:      "ATOM",
-			Description: "The native staking token of the Cosmos Hub.",
-			DenomUnits: []*types.DenomUnit{
-				{"uatom", uint32(0), []string{"microatom"}},
-				{"matom", uint32(3), []string{"milliatom"}},
-				{"atom", uint32(6), nil},
-			},
-			Base:    "uatom",
-			Display: "atom",
+var metaData = []types.Metadata{
+	{
+		Name:        "Cosmos Hub Atom",
+		Symbol:      "ATOM",
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*types.DenomUnit{
+			{"uatom", uint32(0), []string{"microatom"}},
+			{"matom", uint32(3), []string{"milliatom"}},
+			{"atom", uint32(6), nil},
 		},
-		{
-			Name:        "Token",
-			Symbol:      "TOKEN",
-			Description: "The native staking token of the Token Hub.",
-			DenomUnits: []*types.DenomUnit{
-				{"1token", uint32(5), []string{"decitoken"}},
-				{"2token", uint32(4), []string{"centitoken"}},
-				{"3token", uint32(7), []string{"dekatoken"}},
-			},
-			Base:    "utoken",
-			Display: "token",
+		Base:    "uatom",
+		Display: "atom",
+	},
+	{
+		Name:        "Token",
+		Symbol:      "TOKEN",
+		Description: "The native staking token of the Token Hub.",
+		DenomUnits: []*types.DenomUnit{
+			{"1token", uint32(5), []string{"decitoken"}},
+			{"2token", uint32(4), []string{"centitoken"}},
+			{"3token", uint32(7), []string{"dekatoken"}},
 		},
-	}
-)
+		Base:    "utoken",
+		Display: "token",
+	},
+}
 
 func TestMigrateStore(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()

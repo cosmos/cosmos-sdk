@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
+	cmttypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -17,6 +18,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
+
+// BlockRetriever defines the function signature for retrieving a block, typically
+// from the CometBFT RPC service.
+type BlockRetriever func(context.Context, int64) (*cmttypes.Block, error)
 
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
 func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }

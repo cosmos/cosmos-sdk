@@ -431,7 +431,8 @@ func NewSimApp(
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
-	genesisModuleOrder := []string{authtypes.ModuleName, banktypes.ModuleName,
+	genesisModuleOrder := []string{
+		authtypes.ModuleName, banktypes.ModuleName,
 		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
 		minttypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, nft.ModuleName, group.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
@@ -685,12 +686,10 @@ func (app *SimApp) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
-	cmtservice.RegisterTendermintService(
-		clientCtx,
-		app.BaseApp.GRPCQueryRouter(),
-		app.interfaceRegistry,
-		app.Query,
-	)
+	ss := cmtservice.NewQueryServer(clientCtx, app.interfaceRegistry, app.Query)
+	cmtservice.RegisterTendermintServiceWithService(app.BaseApp.GRPCQueryRouter(), ss)
+
+	app.BaseApp.SetBlockRetriever(cmtservice.BlockRetriever(ss))
 }
 
 func (app *SimApp) RegisterNodeService(clientCtx client.Context) {

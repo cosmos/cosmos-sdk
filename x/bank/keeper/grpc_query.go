@@ -87,13 +87,13 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	balances := sdk.NewCoins()
-	accountStore := k.getAccountStore(sdkCtx, addr)
 	zeroAmt := math.ZeroInt()
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, _ []byte) error {
-		balances = append(balances, sdk.NewCoin(string(key), zeroAmt))
-		return nil
-	})
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (include bool) {
+		balances = append(balances, sdk.NewCoin(key.K2(), zeroAmt))
+		return false // not including results as they're appended here
+	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
+
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}

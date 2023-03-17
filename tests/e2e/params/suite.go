@@ -72,6 +72,7 @@ func (s *E2ETestSuite) SetupSuite() {
 			nil,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+			baseapp.SetChainID(s.cfg.ChainID),
 		)
 
 		s.Require().NoError(app.Load(false))

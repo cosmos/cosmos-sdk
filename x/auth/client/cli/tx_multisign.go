@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -16,19 +18,11 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
-
-// BroadcastReq defines a tx broadcasting request.
-type BroadcastReq struct {
-	Tx   legacytx.StdTx `json:"tx" yaml:"tx"`
-	Mode string         `json:"mode" yaml:"mode"`
-}
 
 // GetMultiSignCommand returns the multi-sign command
 func GetMultiSignCommand() *cobra.Command {
@@ -64,7 +58,6 @@ The SIGN_MODE_DIRECT sign mode is not supported.'
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document is written to the given file instead of STDOUT")
-	cmd.Flags().Bool(flagAmino, false, "Generate Amino-encoded JSON suitable for submitting to the txs REST endpoint")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -81,7 +74,10 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+		txFactory, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
 		if txFactory.SignMode() == signingtypes.SignMode_SIGN_MODE_UNSPECIFIED {
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
@@ -163,28 +159,10 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
-		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
-
 		var json []byte
-
-		if aminoJSON {
-			stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
-			if err != nil {
-				return err
-			}
-
-			req := BroadcastReq{
-				Tx:   stdTx,
-				Mode: "sync|async",
-			}
-
-			json, _ = clientCtx.LegacyAmino.MarshalJSON(req)
-
-		} else {
-			json, err = marshalSignatureJSON(txCfg, txBuilder, sigOnly)
-			if err != nil {
-				return err
-			}
+		json, err = marshalSignatureJSON(txCfg, txBuilder, sigOnly)
+		if err != nil {
+			return err
 		}
 
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
@@ -256,7 +234,10 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		txCfg := clientCtx.TxConfig
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+		txFactory, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
 		if txFactory.SignMode() == signingtypes.SignMode_SIGN_MODE_UNSPECIFIED {
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
@@ -348,28 +329,10 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-			aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
-
 			var json []byte
-
-			if aminoJSON {
-				stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBldr.GetTx())
-				if err != nil {
-					return err
-				}
-
-				req := BroadcastReq{
-					Tx:   stdTx,
-					Mode: "sync|async",
-				}
-
-				json, _ = clientCtx.LegacyAmino.MarshalJSON(req)
-
-			} else {
-				json, err = marshalSignatureJSON(txCfg, txBldr, sigOnly)
-				if err != nil {
-					return err
-				}
+			json, err = marshalSignatureJSON(txCfg, txBldr, sigOnly)
+			if err != nil {
+				return err
 			}
 
 			err = clientCtx.PrintString(fmt.Sprintf("%s\n", json))
@@ -420,7 +383,7 @@ func getMultisigRecord(clientCtx client.Context, name string) (*keyring.Record, 
 	kb := clientCtx.Keyring
 	multisigRecord, err := kb.Key(name)
 	if err != nil {
-		return nil, errors.Wrap(err, "error getting keybase multisig account")
+		return nil, errorsmod.Wrap(err, "error getting keybase multisig account")
 	}
 
 	return multisigRecord, nil

@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/spf13/cobra"
 )
 
 // NewRollbackCmd creates a command to rollback CometBFT and multistore state by one height.
@@ -36,7 +37,7 @@ application.
 			// rollback CometBFT state
 			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)
 			if err != nil {
-				return fmt.Errorf("failed to rollback cometbft state: %w", err)
+				return fmt.Errorf("failed to rollback CometBFT state: %w", err)
 			}
 			// rollback the multistore
 

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,7 +25,7 @@ func Test_TestnetCmd(t *testing.T) {
 	home := t.TempDir()
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, auth.AppModuleBasic{})
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	err = genutiltest.ExecInitCmd(simapp.ModuleBasics, home, encodingConfig.Codec)

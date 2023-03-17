@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine AS build
+FROM golang:1.20-alpine AS build
 
 RUN apk add build-base git linux-headers
 
@@ -12,6 +12,8 @@ COPY depinject/go.mod depinject/go.sum /work/depinject/
 COPY tools/rosetta/go.mod tools/rosetta/go.sum /work/tools/rosetta/
 COPY collections/go.mod collections/go.sum /work/collections/
 COPY store/go.mod store/go.sum /work/store/
+COPY log/go.mod log/go.sum /work/log/
+COPY x/tx/go.mod x/tx/go.sum /work/x/tx/
 RUN go mod download
 
 COPY ./ /work
@@ -29,4 +31,3 @@ WORKDIR /simd
 
 COPY contrib/images/simd-env/wrapper.sh /usr/bin/wrapper.sh
 COPY --from=build /work/build/simd /simd/
-

@@ -3,7 +3,7 @@ package orm
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store"

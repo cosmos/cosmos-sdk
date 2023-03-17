@@ -18,7 +18,6 @@ type resetSuite struct {
 
 func (s *resetSuite) Before(t *testing.T) {
 	s.baseFixture = initFixture(t)
-
 }
 
 func (s *resetSuite) HasPermission(a string, b string) {

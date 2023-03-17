@@ -24,7 +24,10 @@ import (
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
-	txf := NewFactoryCLI(clientCtx, flagSet)
+	txf, err := NewFactoryCLI(clientCtx, flagSet)
+	if err != nil {
+		return err
+	}
 
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
@@ -69,6 +72,10 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
+		if clientCtx.Offline {
+			return errors.New("cannot estimate gas in offline mode")
+		}
+
 		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
@@ -120,7 +127,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	// broadcast to a Tendermint node
+	// broadcast to a CometBFT node
 	res, err := clientCtx.BroadcastTx(txBytes)
 	if err != nil {
 		return err

@@ -10,21 +10,18 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 )
 
-func init() {
-	rootCmd.AddCommand(initCmd)
-}
-
 var initCmd = &cobra.Command{
 	Use:   "init <path to executable>",
-	Short: "Initializes a cosmovisor daemon home directory.",
+	Short: "Initialize a cosmovisor daemon home directory.",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(cosmovisor.LoggerKey).(*zerolog.Logger)
+		logger := cmd.Context().Value(log.ContextKey).(*zerolog.Logger)
 
 		return InitializeCosmovisor(logger, args)
 	},

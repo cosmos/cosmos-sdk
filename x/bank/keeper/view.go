@@ -3,9 +3,14 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/collections"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
+
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
@@ -39,15 +44,33 @@ type BaseViewKeeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 	ak       types.AccountKeeper
+
+	Schema        collections.Schema
+	Supply        collections.Map[string, math.Int]
+	DenomMetadata collections.Map[string, types.Metadata]
+	SendEnabled   collections.Map[string, bool]
+	Params        collections.Item[types.Params]
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
 func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
-	return BaseViewKeeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		ak:       ak,
+	sb := collections.NewSchemaBuilder(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)))
+	k := BaseViewKeeper{
+		cdc:           cdc,
+		storeKey:      storeKey,
+		ak:            ak,
+		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
+		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
+		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // Logger returns a module-specific logger.
@@ -220,7 +243,7 @@ func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (sp
 func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	balances := k.GetAllBalances(ctx, addr)

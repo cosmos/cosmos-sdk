@@ -9,11 +9,11 @@ import (
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -30,7 +30,7 @@ import (
 
 const DefaultGenTxGas = 10000000
 
-// DefaultConsensusParams defines the default Tendermint consensus params used in
+// DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	Block: &cmtproto.BlockParams{
@@ -199,7 +199,7 @@ func GenesisStateWithValSet(
 	bondAmt := sdk.DefaultPowerReduction
 
 	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert pubkey: %w", err)
 		}

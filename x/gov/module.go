@@ -169,7 +169,7 @@ type GovInputs struct {
 	Cdc              codec.Codec
 	Key              *store.KVStoreKey
 	ModuleKey        depinject.OwnModuleKey
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter baseapp.MessageRouter
 
 	AccountKeeper      govtypes.AccountKeeper
 	BankKeeper         govtypes.BankKeeper
@@ -219,7 +219,7 @@ func ProvideModule(in GovInputs) GovOutputs {
 }
 
 func ProvideKeyTable() paramtypes.KeyTable {
-	return v1.ParamKeyTable()
+	return v1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 }
 
 func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {

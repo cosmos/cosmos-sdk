@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
+	errorsmod "cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
@@ -33,20 +34,20 @@ var fallBackCodec = codec.NewProtoCodec(failingInterfaceRegistry{})
 // Invoke implements the grpc ClientConn.Invoke method
 func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
-	// 1. either we're broadcasting a Tx, in which call we call Tendermint's broadcast endpoint directly,
+	// 1. either we're broadcasting a Tx, in which call we call CometBFT's broadcast endpoint directly,
 	// 2-1. or we are querying for state, in which case we call grpc if grpc client set.
 	// 2-2. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
 
 	// In both cases, we don't allow empty request args (it will panic unexpectedly).
 	if reflect.ValueOf(req).IsNil() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
 	}
 
 	// Case 1. Broadcasting a Tx.
 	if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
 		res, ok := reply.(*tx.BroadcastTxResponse)
 		if !ok {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), req)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), req)
 		}
 
 		broadcastRes, err := TxServiceBroadcast(grpcCtx, ctx, reqProto)
@@ -77,7 +78,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 			return err
 		}
 		if height < 0 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
 				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
 		}

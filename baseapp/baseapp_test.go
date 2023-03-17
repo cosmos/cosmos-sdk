@@ -6,18 +6,18 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
-
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -26,7 +26,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -60,10 +59,9 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-	logger := defaultLogger()
 	db := dbm.NewMemDB()
 
-	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder(), opts...)
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, txConfig.TxDecoder(), opts...)
 	require.Equal(t, t.Name(), app.Name())
 
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
@@ -160,7 +158,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 }
 
 func TestLoadVersion(t *testing.T) {
-	logger := defaultLogger()
+	logger := log.NewTestLogger(t)
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
@@ -285,7 +283,7 @@ func TestSetLoader(t *testing.T) {
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, nil, opts...)
 			app.MountStores(storetypes.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -303,11 +301,10 @@ func TestSetLoader(t *testing.T) {
 }
 
 func TestVersionSetterGetter(t *testing.T) {
-	logger := defaultLogger()
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil, pruningOpt)
 
 	require.Equal(t, "", app.Version())
 	res := app.Query(abci.RequestQuery{Path: "app/version"})
@@ -362,9 +359,8 @@ func TestOptionFunction(t *testing.T) {
 		}
 	}
 
-	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	bap := baseapp.NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
+	bap := baseapp.NewBaseApp("starting name", log.NewTestLogger(t), db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.Name(), "new name", "BaseApp should have had name changed via option function")
 }
 
@@ -427,10 +423,10 @@ func TestTxDecoder(t *testing.T) {
 
 func TestCustomRunTxPanicHandler(t *testing.T) {
 	customPanicMsg := "test panic"
-	anteErr := sdkerrors.Register("fakeModule", 100500, "fakeError")
+	anteErr := errorsmod.Register("fakeModule", 100500, "fakeError")
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
+			panic(errorsmod.Wrap(anteErr, "anteHandler"))
 		})
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -544,10 +540,9 @@ func TestBaseAppAnteHandler(t *testing.T) {
 func TestABCI_CreateQueryContext(t *testing.T) {
 	t.Parallel()
 
-	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
 	app.Commit()

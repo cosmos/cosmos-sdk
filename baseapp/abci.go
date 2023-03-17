@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
+	errorsmod "cosmossdk.io/errors"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
@@ -36,6 +37,10 @@ const (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+	if req.ChainId != app.chainID {
+		panic(fmt.Sprintf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId))
+	}
+
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
 	initHeader := cmtproto.Header{ChainID: req.ChainId, Time: req.Time}
@@ -56,8 +61,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// initialize states with a correct header
 	app.setState(runTxModeDeliver, initHeader)
 	app.setState(runTxModeCheck, initHeader)
-	app.setState(runTxPrepareProposal, initHeader)
-	app.setState(runTxProcessProposal, initHeader)
+
+	// Use an empty header for prepare and process proposal states. The header
+	// will be overwritten for the first block (see getContextForProposal()) and
+	// cleaned up on every Commit(). Only the ChainID is needed so it's set in
+	// the context.
+	emptyHeader := cmtproto.Header{ChainID: req.ChainId}
+	app.setState(runTxPrepareProposal, emptyHeader)
+	app.setState(runTxProcessProposal, emptyHeader)
 
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
@@ -153,6 +164,10 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	if req.Header.ChainID != app.chainID {
+		panic(fmt.Sprintf("invalid chain-id on BeginBlock; expected: %s, got: %s", app.chainID, req.Header.ChainID))
+	}
+
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(storetypes.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
@@ -176,20 +191,13 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			WithBlockHeight(req.Header.Height)
 	}
 
-	// add block gas meter
-	var gasMeter storetypes.GasMeter
-	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
-		gasMeter = storetypes.NewGasMeter(maxGas)
-	} else {
-		gasMeter = storetypes.NewInfiniteGasMeter()
-	}
-
-	// NOTE: header hash is not set in NewContext, so we manually set it here
+	gasMeter := app.getBlockGasMeter(app.deliverState.ctx)
 
 	app.deliverState.ctx = app.deliverState.ctx.
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash).
-		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
+		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx)).
+		WithVoteInfos(req.LastCommitInfo.GetVotes())
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
@@ -208,10 +216,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 
-	// call the hooks with the BeginBlock messages
-	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-			panic(fmt.Errorf("BeginBlock listening hook failed, height: %d, err: %w", req.Header.Height, err))
+	// call the streaming service hook with the BeginBlock messages
+	for _, abciListener := range app.streamingManager.ABCIListeners {
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
+		if err := abciListener.ListenBeginBlock(ctx, req, res); err != nil {
+			app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
 		}
 	}
 
@@ -237,10 +247,12 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res.ConsensusParamUpdates = cp
 	}
 
-	// call the streaming service hooks with the EndBlock messages
-	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-			panic(fmt.Errorf("EndBlock listening hook failed, height: %d, err: %w", req.Height, err))
+	// call the streaming service hook with the EndBlock messages
+	for _, abciListener := range app.streamingManager.ABCIListeners {
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
+		if err := abciListener.ListenEndBlock(ctx, req, res); err != nil {
+			app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
 		}
 	}
 
@@ -271,13 +283,15 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal called with invalid height")
 	}
 
-	ctx := app.getContextForProposal(app.prepareProposalState.ctx, req.Height)
-
-	ctx = ctx.WithVoteInfos(app.voteInfos).
+	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
+		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx))
+		WithProposer(req.ProposerAddress)
+
+	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
+		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
+		WithBlockGasMeter(app.getBlockGasMeter(app.prepareProposalState.ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -287,11 +301,12 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 				"time", req.Time,
 				"panic", err,
 			)
+
 			resp = abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 	}()
 
-	resp = app.prepareProposal(ctx, req)
+	resp = app.prepareProposal(app.prepareProposalState.ctx, req)
 	return resp
 }
 
@@ -315,15 +330,16 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	ctx := app.getContextForProposal(app.processProposalState.ctx, req.Height)
-
-	ctx = ctx.
+	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx))
+		WithProposer(req.ProposerAddress)
+
+	app.processProposalState.ctx = app.processProposalState.ctx.
+		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
+		WithBlockGasMeter(app.getBlockGasMeter(app.processProposalState.ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -338,7 +354,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		}
 	}()
 
-	resp = app.processProposal(ctx, req)
+	resp = app.processProposal(app.processProposalState.ctx, req)
 	return resp
 }
 
@@ -382,14 +398,18 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Otherwise, the ResponseDeliverTx will contain relevant error information.
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
+	var res abci.ResponseDeliverTx
 	defer func() {
-		for _, streamingListener := range app.abciListeners {
-			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
-				panic(fmt.Errorf("DeliverTx listening hook failed: %w", err))
+		// call the streaming service hook with the EndBlock messages
+		for _, abciListener := range app.streamingManager.ABCIListeners {
+			ctx := app.deliverState.ctx
+			blockHeight := ctx.BlockHeight()
+			if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
 			}
 		}
 	}()
@@ -438,10 +458,16 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 		RetainHeight: retainHeight,
 	}
 
-	// call the hooks with the Commit message
-	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenCommit(app.deliverState.ctx, res); err != nil {
-			panic(fmt.Errorf("Commit listening hook failed, height: %d, err: %w", header.Height, err))
+	// call the streaming service hook with the EndBlock messages
+	abciListeners := app.streamingManager.ABCIListeners
+	if len(abciListeners) > 0 {
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
+		changeSet := app.cms.PopStateCache()
+		for _, abciListener := range abciListeners {
+			if err := abciListener.ListenCommit(ctx, res, changeSet); err != nil {
+				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+			}
 		}
 	}
 
@@ -452,8 +478,12 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
-	app.setState(runTxPrepareProposal, header)
-	app.setState(runTxProcessProposal, header)
+
+	// Reset state to the latest committed but with an empty header to avoid
+	// leaking the header from the last block.
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
+	app.setState(runTxPrepareProposal, emptyHeader)
+	app.setState(runTxProcessProposal, emptyHeader)
 
 	// empty/reset the deliver state
 	app.deliverState = nil
@@ -510,7 +540,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
 	defer func() {
 		if r := recover(); r != nil {
-			res = sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%v", r), app.trace)
+			res = sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrPanic, "%v", r), app.trace)
 		}
 	}()
 
@@ -523,6 +553,10 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	telemetry.IncrCounter(1, "query", req.Path)
 	defer telemetry.MeasureSince(time.Now(), req.Path)
 
+	if req.Path == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace)
+	}
+
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
@@ -531,7 +565,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	path := SplitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {
@@ -546,7 +580,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return handleQueryP2P(app, path)
 	}
 
-	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
+	return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
 }
 
 // ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
@@ -692,27 +726,27 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 func gRPCErrorToSDKError(err error) error {
 	status, ok := grpcstatus.FromError(err)
 	if !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	switch status.Code() {
 	case codes.NotFound:
-		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
 	case codes.InvalidArgument:
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	case codes.FailedPrecondition:
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	case codes.Unauthenticated:
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	default:
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+		return errorsmod.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
 }
 
 func checkNegativeHeight(height int64) error {
 	if height < 0 {
 		// Reject invalid heights.
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"cannot query with height < 0; please provide a valid height",
 		)
@@ -735,12 +769,12 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 
 	lastBlockHeight := qms.LatestVersion()
 	if lastBlockHeight == 0 {
-		return sdk.Context{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
+		return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
 	}
 
 	if height > lastBlockHeight {
 		return sdk.Context{},
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				sdkerrors.ErrInvalidHeight,
 				"cannot query with height in the future; please provide a valid height",
 			)
@@ -753,7 +787,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 
 	if height <= 1 && prove {
 		return sdk.Context{},
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			)
@@ -762,7 +796,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
 				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
 			)
@@ -857,7 +891,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 			gInfo, res, err := app.Simulate(txBytes)
 			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to simulate tx"), app.trace)
+				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to simulate tx"), app.trace)
 			}
 
 			simRes := &sdk.SimulationResponse{
@@ -867,7 +901,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 			bz, err := codec.ProtoMarshalJSON(simRes, app.interfaceRegistry)
 			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to JSON encode simulation response"), app.trace)
+				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to JSON encode simulation response"), app.trace)
 			}
 
 			return abci.ResponseQuery{
@@ -884,12 +918,12 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 			}
 
 		default:
-			return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path), app.trace)
+			return sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path), app.trace)
 		}
 	}
 
 	return sdkerrors.QueryResult(
-		sdkerrors.Wrap(
+		errorsmod.Wrap(
 			sdkerrors.ErrUnknownRequest,
 			"expected second parameter to be either 'simulate' or 'version', neither was present",
 		), app.trace)
@@ -899,14 +933,14 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 	// "/store" prefix for store queries
 	queryable, ok := app.cms.(storetypes.Queryable)
 	if !ok {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
 	}
 
 	req.Path = "/" + strings.Join(path[1:], "/")
 
 	if req.Height <= 1 && req.Prove {
 		return sdkerrors.QueryResult(
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			), app.trace)
@@ -922,7 +956,7 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 	// "/p2p" prefix for p2p queries
 	if len(path) < 4 {
 		return sdkerrors.QueryResult(
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>",
 			), app.trace)
 	}
@@ -941,7 +975,7 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 		}
 
 	default:
-		resp = sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
+		resp = sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
 	}
 
 	return resp
@@ -967,6 +1001,8 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
 	if height == 1 {
 		ctx, _ = app.deliverState.ctx.CacheContext()
+		// clear all context data set during InitChain to avoid inconsistent behavior
+		ctx = ctx.WithBlockHeader(cmtproto.Header{})
 		return ctx
 	}
 	return ctx

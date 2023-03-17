@@ -2,7 +2,9 @@ package indexes
 
 import (
 	"context"
+
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/codec"
 )
 
 // Unique identifies an index that imposes uniqueness constraints on the reference key.
@@ -14,8 +16,8 @@ func NewUnique[ReferenceKey, PrimaryKey, Value any](
 	schema *collections.SchemaBuilder,
 	prefix collections.Prefix,
 	name string,
-	refCodec collections.KeyCodec[ReferenceKey],
-	pkCodec collections.KeyCodec[PrimaryKey],
+	refCodec codec.KeyCodec[ReferenceKey],
+	pkCodec codec.KeyCodec[PrimaryKey],
 	getRefKeyFunc func(pk PrimaryKey, v Value) (ReferenceKey, error),
 ) *Unique[ReferenceKey, PrimaryKey, Value] {
 	i := collections.NewGenericUniqueIndex(schema, prefix, name, refCodec, pkCodec, func(pk PrimaryKey, value Value) ([]collections.IndexReference[ReferenceKey, PrimaryKey], error) {
@@ -47,6 +49,22 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context
 func (i *Unique[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ranger collections.Ranger[ReferenceKey]) (UniqueIterator[ReferenceKey, PrimaryKey], error) {
 	iter, err := (*collections.GenericUniqueIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(i).Iterate(ctx, ranger)
 	return (UniqueIterator[ReferenceKey, PrimaryKey])(iter), err
+}
+
+func (i *Unique[ReferenceKey, PrimaryKey, Value]) Walk(
+	ctx context.Context,
+	ranger collections.Ranger[ReferenceKey],
+	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool,
+) error {
+	return (*collections.GenericUniqueIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(i).Walk(ctx, ranger, walkFunc)
+}
+
+func (i *Unique[ReferenceKey, PrimaryKey, Value]) IterateRaw(ctx context.Context, start, end []byte, order collections.Order) (u UniqueIterator[ReferenceKey, PrimaryKey], err error) {
+	iter, err := (*collections.GenericUniqueIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(i).IterateRaw(ctx, start, end, order)
+	if err != nil {
+		return
+	}
+	return (UniqueIterator[ReferenceKey, PrimaryKey])(iter), nil
 }
 
 // UniqueIterator is an Iterator wrapper, that exposes only the functionality needed to work with Unique keys.
@@ -84,9 +102,11 @@ func (i UniqueIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]collections.Pair
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Next() {
 	(collections.Iterator[ReferenceKey, PrimaryKey])(i).Next()
 }
+
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Valid() bool {
 	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Valid()
 }
+
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Close() error {
 	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Close()
 }

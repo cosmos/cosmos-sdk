@@ -30,8 +30,7 @@ var errCanceledInPreRun = errors.New("canceled in prerun")
 // Used in each test to run the function under test via Cobra
 // but to always halt the command
 func preRunETestImpl(cmd *cobra.Command, args []string) error {
-	err := server.InterceptConfigsPreRunHandler(cmd, "", nil, cmtcfg.DefaultConfig())
-	if err != nil {
+	if err := server.InterceptConfigsPreRunHandler(cmd, "", nil, cmtcfg.DefaultConfig()); err != nil {
 		return err
 	}
 
@@ -68,9 +67,9 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 		t.Fatal("config.toml created as empty file")
 	}
 
-	// Test that tendermint config is initialized
+	// Test that CometBFT config is initialized
 	if serverCtx.Config == nil {
-		t.Fatal("tendermint config not created")
+		t.Fatal("CometBFT config not created")
 	}
 
 	// Test that app.toml is created
@@ -435,7 +434,12 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run StartCmd.
 	cmd = server.StartCmd(nil, tempDir)
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		return server.InterceptConfigsPreRunHandler(cmd, "", nil, cmtcfg.DefaultConfig())
+		ctx, err := server.InterceptConfigsAndCreateContext(cmd, "", nil, cmtcfg.DefaultConfig())
+		if err != nil {
+			return err
+		}
+
+		return server.SetCmdServerContext(cmd, ctx)
 	}
 	err = cmd.ExecuteContext(ctx)
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())

@@ -188,13 +188,15 @@ func (s *VestingTestSuite) TestCreatePermanentLockedAccount() {
 }
 
 func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
-	testCases := map[string]struct {
+	testCases := []struct {
+		name      string
 		preRun    func()
 		input     *vestingtypes.MsgCreatePeriodicVestingAccount
 		expErr    bool
 		expErrMsg string
 	}{
-		"create for existing account": {
+		{
+			name: "create for existing account",
 			preRun: func() {
 				toAcc := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
 				s.accountKeeper.SetAccount(s.ctx, toAcc)
@@ -213,8 +215,10 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 			expErr:    true,
 			expErrMsg: "already exists",
 		},
-		"create a valid periodic vesting account": {
+		{
+			name: "create a valid periodic vesting account",
 			preRun: func() {
+				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), periodCoin.Add(fooCoin)).Return(nil)
 				s.bankKeeper.EXPECT().SendCoins(gomock.Any(), fromAddr, to2Addr, gomock.Any()).Return(nil)
 			},
 			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
@@ -237,8 +241,8 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 		},
 	}
 
-	for name, tc := range testCases {
-		s.Run(name, func() {
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
 			tc.preRun()
 			_, err := s.msgServer.CreatePeriodicVestingAccount(s.ctx, tc.input)
 			if tc.expErr {

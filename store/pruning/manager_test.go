@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	db "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -79,12 +79,14 @@ func TestStrategies(t *testing.T) {
 		},
 	}
 
-	manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
-
-	require.NotNil(t, manager)
-
 	for name, tc := range testcases {
+		tc := tc // Local copy to avoid shadowing.
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
+			require.NotNil(t, manager)
+
 			curStrategy := tc.strategy
 			manager.SetSnapshotInterval(tc.snapshotInterval)
 

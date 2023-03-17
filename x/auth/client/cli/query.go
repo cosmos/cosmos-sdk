@@ -6,28 +6,31 @@ import (
 	"strconv"
 	"strings"
 
-	cmttypes "github.com/cometbft/cometbft/types"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
+	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
-	flagEvents = "events"
-	flagType   = "type"
+	FlagEvents  = "events" // TODO: Remove when #14758 is merged
+	FlagQuery   = "query"
+	FlagType    = "type"
+	FlagOrderBy = "order_by"
 
-	typeHash   = "hash"
-	typeAccSeq = "acc_seq"
-	typeSig    = "signature"
+	TypeHash   = "hash"
+	TypeAccSeq = "acc_seq"
+	TypeSig    = "signature"
+	TypeHeight = "height"
 
-	eventFormat = "{eventType}.{eventAttribute}={value}"
+	EventFormat = "{eventType}.{eventAttribute}={value}"
 )
 
 // GetQueryCmd returns the transaction commands for this module
@@ -113,7 +116,7 @@ func GetAccountCmd() *cobra.Command {
 				}
 				catchingUp := status.SyncInfo.CatchingUp
 				if !catchingUp {
-					return errors.Wrapf(err, "your node may be syncing, please check node status using `/status`")
+					return errorsmod.Wrapf(err, "your node may be syncing, please check node status using `/status`")
 				}
 				return err
 			}
@@ -261,55 +264,29 @@ func QueryTxsByEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
 		Short: "Query for paginated transactions that match a set of events",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`
-Search for transactions that match the exact given events where results are paginated.
-Each event takes the form of '%s'. Please refer
-to each module's documentation for the full set of events to query for. Each module
-documents its respective events under 'xx_events.md'.
+		Long: `Search for transactions that match the exact given events where results are paginated.
+The events query is directly passed to Tendermint's RPC TxSearch method and must
+conform to Tendermint's query syntax.
 
-Example:
-$ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator_reward' --page 1 --limit 30
-`, eventFormat, version.AppName, flagEvents),
+Please refer to each module's documentation for the full set of events to query
+for. Each module documents its respective events under 'xx_events.md'.
+`,
+		Example: fmt.Sprintf(
+			"$ %s query txs --query \"message.sender='cosmos1...' AND message.action='withdraw_delegator_reward' AND tx.height > 7\" --page 1 --limit 30",
+			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-			eventsRaw, _ := cmd.Flags().GetString(flagEvents)
-			eventsStr := strings.Trim(eventsRaw, "'")
 
-			var events []string
-			if strings.Contains(eventsStr, "&") {
-				events = strings.Split(eventsStr, "&")
-			} else {
-				events = append(events, eventsStr)
-			}
-
-			var tmEvents []string
-
-			for _, event := range events {
-				if !strings.Contains(event, "=") {
-					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, eventFormat)
-				} else if strings.Count(event, "=") > 1 {
-					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, eventFormat)
-				}
-
-				tokens := strings.Split(event, "=")
-				if tokens[0] == cmttypes.TxHeightKey {
-					event = fmt.Sprintf("%s=%s", tokens[0], tokens[1])
-				} else {
-					event = fmt.Sprintf("%s='%s'", tokens[0], tokens[1])
-				}
-
-				tmEvents = append(tmEvents, event)
-			}
-
+			query, _ := cmd.Flags().GetString(FlagQuery)
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+			orderBy, _ := cmd.Flags().GetString(FlagOrderBy)
 
-			txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, page, limit, "")
+			txs, err := authtx.QueryTxsByEvents(clientCtx, page, limit, query, orderBy)
 			if err != nil {
 				return err
 			}
@@ -319,10 +296,11 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
-	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
-	cmd.MarkFlagRequired(flagEvents)
+	cmd.Flags().Int(flags.FlagPage, querytypes.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int(flags.FlagLimit, querytypes.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().String(FlagQuery, "", "The transactions events query per Tendermint's query semantics")
+	cmd.Flags().String(FlagOrderBy, "", "The ordering semantics (asc|dsc)")
+	_ = cmd.MarkFlagRequired(FlagQuery)
 
 	return cmd
 }
@@ -339,8 +317,8 @@ $ %s query tx --%s=%s <addr>/<sequence>
 $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 `,
 			version.AppName,
-			version.AppName, flagType, typeAccSeq,
-			version.AppName, flagType, typeSig)),
+			version.AppName, FlagType, TypeAccSeq,
+			version.AppName, FlagType, TypeSig)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -348,83 +326,86 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 				return err
 			}
 
-			typ, _ := cmd.Flags().GetString(flagType)
+			typ, _ := cmd.Flags().GetString(FlagType)
 
 			switch typ {
-			case typeHash:
-				{
-					if args[0] == "" {
-						return fmt.Errorf("argument should be a tx hash")
-					}
-
-					// If hash is given, then query the tx by hash.
-					output, err := authtx.QueryTx(clientCtx, args[0])
-					if err != nil {
-						return err
-					}
-
-					if output.Empty() {
-						return fmt.Errorf("no transaction found with hash %s", args[0])
-					}
-
-					return clientCtx.PrintProto(output)
+			case TypeHash:
+				if args[0] == "" {
+					return fmt.Errorf("argument should be a tx hash")
 				}
-			case typeSig:
-				{
-					sigParts, err := ParseSigArgs(args)
-					if err != nil {
-						return err
-					}
-					tmEvents := make([]string, len(sigParts))
-					for i, sig := range sigParts {
-						tmEvents[i] = fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
-					}
 
-					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
-					if err != nil {
-						return err
-					}
-					if len(txs.Txs) == 0 {
-						return fmt.Errorf("found no txs matching given signatures")
-					}
-					if len(txs.Txs) > 1 {
-						// This case means there's a bug somewhere else in the code. Should not happen.
-						return errors.ErrLogic.Wrapf("found %d txs matching given signatures", len(txs.Txs))
-					}
-
-					return clientCtx.PrintProto(txs.Txs[0])
+				// if hash is given, then query the tx by hash
+				output, err := authtx.QueryTx(clientCtx, args[0])
+				if err != nil {
+					return err
 				}
-			case typeAccSeq:
-				{
-					if args[0] == "" {
-						return fmt.Errorf("`acc_seq` type takes an argument '<addr>/<seq>'")
-					}
 
-					tmEvents := []string{
-						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeyAccountSequence, args[0]),
-					}
-					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
-					if err != nil {
-						return err
-					}
-					if len(txs.Txs) == 0 {
-						return fmt.Errorf("found no txs matching given address and sequence combination")
-					}
-					if len(txs.Txs) > 1 {
-						// This case means there's a bug somewhere else in the code. Should not happen.
-						return fmt.Errorf("found %d txs matching given address and sequence combination", len(txs.Txs))
-					}
-
-					return clientCtx.PrintProto(txs.Txs[0])
+				if output.Empty() {
+					return fmt.Errorf("no transaction found with hash %s", args[0])
 				}
+
+				return clientCtx.PrintProto(output)
+
+			case TypeSig:
+				sigParts, err := ParseSigArgs(args)
+				if err != nil {
+					return err
+				}
+
+				events := make([]string, len(sigParts))
+				for i, sig := range sigParts {
+					events[i] = fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
+				}
+
+				query := strings.Join(events, " AND ")
+
+				txs, err := authtx.QueryTxsByEvents(clientCtx, querytypes.DefaultPage, querytypes.DefaultLimit, query, "")
+				if err != nil {
+					return err
+				}
+
+				if len(txs.Txs) == 0 {
+					return fmt.Errorf("found no txs matching given signatures")
+				}
+				if len(txs.Txs) > 1 {
+					// This case means there's a bug somewhere else in the code as this
+					// should not happen.
+					return errors.ErrLogic.Wrapf("found %d txs matching given signatures", len(txs.Txs))
+				}
+
+				return clientCtx.PrintProto(txs.Txs[0])
+
+			case TypeAccSeq:
+				if args[0] == "" {
+					return fmt.Errorf("`acc_seq` type takes an argument '<addr>/<seq>'")
+				}
+
+				query := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeyAccountSequence, args[0])
+
+				txs, err := authtx.QueryTxsByEvents(clientCtx, querytypes.DefaultPage, querytypes.DefaultLimit, query, "")
+				if err != nil {
+					return err
+				}
+
+				if len(txs.Txs) == 0 {
+					return fmt.Errorf("found no txs matching given address and sequence combination")
+				}
+				if len(txs.Txs) > 1 {
+					// This case means there's a bug somewhere else in the code as this
+					// should not happen.
+					return fmt.Errorf("found %d txs matching given address and sequence combination", len(txs.Txs))
+				}
+
+				return clientCtx.PrintProto(txs.Txs[0])
+
 			default:
-				return fmt.Errorf("unknown --%s value %s", flagType, typ)
+				return fmt.Errorf("unknown --%s value %s", FlagType, typ)
 			}
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeAccSeq, typeSig))
+	cmd.Flags().String(FlagType, TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", TypeHash, TypeAccSeq, TypeSig))
 
 	return cmd
 }

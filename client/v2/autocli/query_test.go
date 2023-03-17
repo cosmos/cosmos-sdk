@@ -117,7 +117,7 @@ func TestEverything(t *testing.T) {
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
 		"--a-coin", `{"denom":"foo","amount":"100000"}`,
-		"--an-address", "cosmossdghdsfoi2134sdgh",
+		"--an-address", "cosmos102p8jygt7rdxmq6z7wps2xrpck36yn3rnlllse",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",
 		"--page-key", "MTIzNTQ4N3NnaGRhcw==",

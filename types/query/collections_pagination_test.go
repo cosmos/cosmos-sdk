@@ -99,7 +99,7 @@ func TestCollectionPagination(t *testing.T) {
 				Limit: 3,
 			},
 			expResp: &PageResponse{
-				NextKey: encodeKey(5),
+				NextKey: encodeKey(3),
 			},
 			filter: func(key uint64, value uint64) bool {
 				return key%2 == 0
@@ -107,7 +107,6 @@ func TestCollectionPagination(t *testing.T) {
 			expResults: []collections.KeyValue[uint64, uint64]{
 				{Key: 0, Value: 0},
 				{Key: 2, Value: 2},
-				{Key: 4, Value: 4},
 			},
 		},
 		"filtered with key": {
@@ -116,7 +115,7 @@ func TestCollectionPagination(t *testing.T) {
 				Limit: 3,
 			},
 			expResp: &PageResponse{
-				NextKey: encodeKey(7),
+				NextKey: encodeKey(5),
 			},
 			filter: func(key uint64, value uint64) bool {
 				return key%2 == 0
@@ -124,7 +123,6 @@ func TestCollectionPagination(t *testing.T) {
 			expResults: []collections.KeyValue[uint64, uint64]{
 				{Key: 2, Value: 2},
 				{Key: 4, Value: 4},
-				{Key: 6, Value: 6},
 			},
 		},
 	}

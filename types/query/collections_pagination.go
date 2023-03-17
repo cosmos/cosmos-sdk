@@ -97,7 +97,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	}
 	// invalid iter error is ignored to retain Paginate behaviour
 	if errors.Is(err, collections.ErrInvalidIterator) {
-		return results, pageRes, nil
+		return results, new(PageResponse), nil
 	}
 	// strip the prefix from next key
 	if len(pageRes.NextKey) != 0 && prefix != nil {
@@ -265,13 +265,19 @@ func encodeCollKey[K, V any, C Collection[K, V]](coll C, key K) ([]byte, error) 
 }
 
 func getCollIter[K, V any, C Collection[K, V]](ctx context.Context, coll C, prefix []byte, start []byte, reverse bool) (collections.Iterator[K, V], error) {
+	// TODO: maybe can be simplified
+	if reverse {
+		var end []byte
+		if prefix != nil {
+			start = storetypes.PrefixEndBytes(append(prefix, start...))
+			end = prefix
+		}
+		return coll.IterateRaw(ctx, end, start, collections.OrderDescending)
+	}
 	var end []byte
 	if prefix != nil {
 		start = append(prefix, start...)
 		end = storetypes.PrefixEndBytes(prefix)
-	}
-	if reverse {
-		return coll.IterateRaw(ctx, nil, start, collections.OrderDescending)
 	}
 	return coll.IterateRaw(ctx, start, end, collections.OrderAscending)
 }

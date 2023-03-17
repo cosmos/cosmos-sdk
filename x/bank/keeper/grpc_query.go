@@ -65,6 +65,9 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		balances = append(balances, sdk.NewCoin(denom, value))
 		return false // we don't include results because we're appending them here.
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+	}
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
 }

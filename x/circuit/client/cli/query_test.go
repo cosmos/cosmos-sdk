@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 )

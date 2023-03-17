@@ -105,7 +105,6 @@ func (am AppModule) IsAppModule() {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
-
 }
 
 // NewAppModule creates a new AppModule object
@@ -162,7 +161,6 @@ type CircuitOutputs struct {
 }
 
 func ProvideModule(in CircuitInputs) CircuitOutputs {
-
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress("gov")
 	if in.Config.Authority != "" {

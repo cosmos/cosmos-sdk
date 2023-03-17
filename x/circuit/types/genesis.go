@@ -7,7 +7,6 @@ func DefaultGenesisState() *GenesisState {
 }
 
 func (gs *GenesisState) Validate() error {
-
 	for _, account := range gs.AccountPermissions {
 		if account.Address == "" {
 			return fmt.Errorf("invalid account address: %s", account.Address)

@@ -26,7 +26,6 @@ type fixture struct {
 	mockMsgURL    string
 	mockclientCtx client.Context
 	txBuilder     client.TxBuilder
-	encCfg        moduletestutil.TestEncodingConfig
 }
 
 type MockCircuitBreaker struct {
@@ -39,21 +38,17 @@ func (m MockCircuitBreaker) IsAllowed(ctx sdk.Context, typeURL string) bool {
 
 func initFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
-	mockMsgURL := "test"
 	mockclientCtx := client.Context{}.
 		WithTxConfig(encCfg.TxConfig).
 		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
-	txBuilder := mockclientCtx.TxConfig.NewTxBuilder()
 
 	return &fixture{
-		ctx:           ctx,
+		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),
 		mockStoreKey:  mockStoreKey,
-		mockMsgURL:    mockMsgURL,
+		mockMsgURL:    "test",
 		mockclientCtx: mockclientCtx,
-		txBuilder:     txBuilder,
+		txBuilder:     mockclientCtx.TxConfig.NewTxBuilder(),
 	}
 }
 
@@ -62,7 +57,6 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 	f := initFixture(t)
 
 	// Circuit breaker is allowed to pass through all transactions
-
 	circuitBreaker := &MockCircuitBreaker{true}
 	// CircuitBreakerDecorator AnteHandler should always return success
 	decorator := ante.NewCircuitBreakerDecorator(circuitBreaker)

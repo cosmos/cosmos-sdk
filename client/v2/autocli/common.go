@@ -108,11 +108,7 @@ func (b *Builder) enhanceCommandCommon(cmd *cobra.Command, moduleOptions map[str
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	var err error
 	outputType := cmd.Flag(flags.FlagOutput)
-	if outputType == nil {
-		return fmt.Errorf("output flag not found")
-
-	}
-	if outputType.Value.String() == "text" {
+	if outputType != nil && outputType.Value.String() == "text" {
 		out, err = yaml.JSONToYAML(out)
 		if err != nil {
 			return err

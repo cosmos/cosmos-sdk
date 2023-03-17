@@ -28,7 +28,7 @@ import (
 )
 
 // ConsensusVersion defines the current circuit module consensus version.
-const ConsensusVersion = 4
+const ConsensusVersion = 1
 
 var (
 	_ module.AppModuleGenesis = AppModule{}

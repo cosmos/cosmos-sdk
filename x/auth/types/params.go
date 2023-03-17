@@ -14,12 +14,11 @@ const (
 	DefaultSigVerifyCostED25519   uint64 = 590
 	DefaultSigVerifyCostSecp256k1 uint64 = 1000
 	DefaultEnableChangePubkey     bool   = true
+	DefaultPubkeyChangeCost       uint64 = 1000000
 )
 
-var DefaultPubkeyChangeCost = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000)))
-
 // NewParams creates a new Params object
-func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64, pubKeyChangeCost sdk.Coins, enableChangePubKey bool) Params {
+func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64, pubKeyChangeCost uint64, enableChangePubKey bool) Params {
 	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
 		TxSigLimit:             txSigLimit,

@@ -47,6 +47,9 @@ func (s msgServer) ChangePubKey(goCtx context.Context, msg *types.MsgChangePubKe
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", addressByPubkey)
 	}
 
+	amount := ak.GetParams(ctx).PubkeyChangeCost
+	ctx.GasMeter().ConsumeGas(amount, "pubkey change fee")
+
 	err = acc.SetPubKey(pubKey)
 	if err != nil {
 		return nil, err

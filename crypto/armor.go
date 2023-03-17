@@ -7,13 +7,11 @@ import (
 	"io"
 
 	"github.com/cometbft/cometbft/crypto"
-	"github.com/google/tink/go/aead"
-	"github.com/google/tink/go/keyset"
-	"github.com/google/tink/go/tink"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck
 
 	errorsmod "cosmossdk.io/errors"
+	chacha20poly1305 "golang.org/x/crypto/chacha20poly1305"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
@@ -35,7 +33,7 @@ const (
 
 var (
 	KDFBcrypt = "bcrypt"
-	KDFAead   = "aead"
+	KDFArgon2 = "argon2"
 )
 
 const (
@@ -143,26 +141,11 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 //-----------------------------------------------------------------
 // encrypt/decrypt with armor
 
-// Aead cypher for symetric encryption
-func newAeadCypher() (tink.AEAD, error) {
-	keyTemplate, err := keyset.NewHandle(aead.ChaCha20Poly1305KeyTemplate())
-	if err != nil {
-		return nil, fmt.Errorf("Error creating aead key template: %v", err)
-	}
-
-	aeadCypher, err := aead.New(keyTemplate)
-	if err != nil {
-		return nil, fmt.Errorf("Error creating aead cypher instance: %v", err)
-	}
-
-	return aeadCypher, err
-}
-
 // Encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
-		"kdf":  KDFAead,
+		"kdf":  KDFArgon2,
 		"salt": fmt.Sprintf("%X", saltBytes),
 	}
 
@@ -181,14 +164,18 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
 
-	key := argon2.IDKey([]byte(passphrase), saltBytes, 1, 64*1024, 4, 32)
-
+	key := argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 
-	encBytes, err := newAeadCypher().Encrypt(privKeyBytes, key) //Decrypt with aead
+	aead, err := chacha20poly1305.New(key)
 	if err != nil {
-		fmt.Errorf("Error while encrypting private key: %v", err)
+		fmt.Errorf("Error while generating aead cypher from key: %v", err)
+		return saltBytes, encBytes
 	}
+
+	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead())
+
+	encBytes = aead.Seal(nonce, nonce, privKeyBytes, nil)
 
 	return saltBytes, encBytes
 }
@@ -204,7 +191,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 		return privKey, "", fmt.Errorf("unrecognized armor type: %v", blockType)
 	}
 
-	if header["kdf"] != KDFBcrypt || header["kdf"] != KDFAead {
+	if header["kdf"] != KDFBcrypt && header["kdf"] != KDFArgon2 {
 		return privKey, "", fmt.Errorf("unrecognized KDF type: %v", header["kdf"])
 	}
 
@@ -227,9 +214,10 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 }
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf string) (privKey cryptotypes.PrivKey, err error) {
+	// Key derivation
 	var key []byte
 	switch kdf {
-	case KDFAead:
+	case KDFArgon2:
 		key = argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
 	default:
 		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
@@ -239,7 +227,14 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 		key = crypto.Sha256(key) // Get 32 bytes
 	}
 
-	privKeyBytes, err := newAeadCypher().Decrypt(encBytes, key) //Decrypt with aead
+	//Symetrhic decryption
+	aead, err := chacha20poly1305.New(key)
+	if len(encBytes) < aead.NonceSize() {
+		return privKey, errorsmod.Wrap(err, "error generating aead cypher from key")
+	}
+	nonce, privKeyBytesEncrypted := encBytes[:aead.NonceSize()], encBytes[aead.NonceSize():] // Split nonce and ciphertext.
+	privKeyBytes, err := aead.Open(nil, nonce, privKeyBytesEncrypted, nil)                   // Decrypt the message and check it wasn't tampered with.
+
 	// Fallback: tries decryption with legacy encrypthin algortihm "xsalsa20symmetric"
 	if err != nil {
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)

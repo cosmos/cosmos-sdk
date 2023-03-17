@@ -157,17 +157,18 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
-func TestAddress(t *testing.T) {
+func TestAddressValidation(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 	)
 	assert.Equal(t, "", conn.errorOut.String())
+
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
-		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+		"--an-address", "regen1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
 

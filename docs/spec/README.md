@@ -19,7 +19,7 @@ block.
 
 Go the [module directory](https://github.com/cosmos/cosmos-sdk/blob/main/x/README.md)
 
-## Tendermint
+## CometBFT
 
 For details on the underlying blockchain and p2p protocols, see
-the [Tendermint specification](https://github.com/tendermint/spec/tree/master/spec).
+the [CometBFT specification](https://github.com/cometbft/cometbft/tree/main/spec).

@@ -52,6 +52,10 @@ Next is the `proto/` directory where all of our protobuf files live. In here the
 
 The above diagram all the files and directories within the Cosmos SDK `proto/` directory. 
 
+:::warning
+Modules protobuf files are being extracted out of the root `proto/` folder to live in their own module directories.
+:::
+
 #### `buf.gen.gogo.yaml`
 
 `buf.gen.gogo.yaml` defines how the protobuf files should be generated for use with in the module. This file uses [gogoproto](https://github.com/gogo/protobuf), a separate generator from the google go-proto generator that makes working with various objects more ergonomic, and it has more performant encode and decode steps

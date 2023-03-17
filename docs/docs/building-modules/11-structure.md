@@ -10,8 +10,6 @@ This document outlines the recommended structure of Cosmos SDK modules. These id
 
 ## Structure
 
-## TODO update this section with new guidelines
-
 A typical Cosmos SDK module can be structured as follows:
 
 ```shell

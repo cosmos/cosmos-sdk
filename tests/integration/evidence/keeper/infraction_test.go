@@ -112,13 +112,6 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// double sign less than max age
 	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
-	// evidence := &types.Equivocation{
-	// 	Height:           0,
-	// 	Time:             time.Unix(0, 0),
-	// 	Power:            power,
-	// 	ConsensusAddress: sdk.ConsAddress(val.Address()).String(),
-	// }
-
 	evidence := abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
@@ -127,6 +120,7 @@ func TestHandleDoubleSign(t *testing.T) {
 			Height:    0,
 		}},
 	}
+
 	f.evidenceKeeper.BeginBlocker(ctx, evidence)
 
 	// should be jailed and tombstoned

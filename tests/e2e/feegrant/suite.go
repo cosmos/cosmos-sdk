@@ -97,7 +97,7 @@ func (s *E2ETestSuite) createGrant(granter, grantee sdk.Address) {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant()
+	cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
 
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -171,7 +171,7 @@ func (s *E2ETestSuite) TestCmdGetFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrant()
+			cmd := cli.GetCmdQueryFeeGrant(testutil.NewBech32Codec())
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -237,7 +237,7 @@ func (s *E2ETestSuite) TestCmdGetFeeGrantsByGrantee() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrantsByGrantee()
+			cmd := cli.GetCmdQueryFeeGrantsByGrantee(testutil.NewBech32Codec())
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -294,7 +294,7 @@ func (s *E2ETestSuite) TestCmdGetFeeGrantsByGranter() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrantsByGranter()
+			cmd := cli.GetCmdQueryFeeGrantsByGranter(testutil.NewBech32Codec())
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -587,7 +587,7 @@ func (s *E2ETestSuite) TestNewCmdFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant()
+			cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -694,7 +694,7 @@ func (s *E2ETestSuite) TestNewCmdRevokeFeegrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeFeegrant()
+			cmd := cli.NewCmdRevokeFeegrant(testutil.NewBech32Codec())
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -743,7 +743,7 @@ func (s *E2ETestSuite) TestTxWithFeeGrant() {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant()
+	cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
 
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -878,7 +878,7 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant()
+			cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -900,7 +900,7 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 	}
 
 	// get filtered fee allowance and check info
-	cmd := cli.GetCmdQueryFeeGrant()
+	cmd := cli.GetCmdQueryFeeGrant(testutil.NewBech32Codec())
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
@@ -963,7 +963,7 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 					},
 					commonFlags...,
 				)
-				cmd := cli.NewCmdFeeGrant()
+				cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
 				return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			},
 			&sdk.TxResponse{},

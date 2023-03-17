@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -25,7 +26,7 @@ const (
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd() *cobra.Command {
+func GetTxCmd(ac address.Codec) *cobra.Command {
 	feegrantTxCmd := &cobra.Command{
 		Use:                        feegrant.ModuleName,
 		Short:                      "Feegrant transactions subcommands",
@@ -36,15 +37,15 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	feegrantTxCmd.AddCommand(
-		NewCmdFeeGrant(),
-		NewCmdRevokeFeegrant(),
+		NewCmdFeeGrant(ac),
+		NewCmdRevokeFeegrant(ac),
 	)
 
 	return feegrantTxCmd
 }
 
 // NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantAllowance transaction.
-func NewCmdFeeGrant() *cobra.Command {
+func NewCmdFeeGrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant [granter_key_or_address] [grantee]",
 		Short: "Grant Fee allowance to an address",
@@ -69,7 +70,7 @@ Examples:
 				return err
 			}
 
-			grantee, err := sdk.AccAddressFromBech32(args[1])
+			grantee, err := ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
@@ -180,7 +181,7 @@ Examples:
 }
 
 // NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeAllowance transaction.
-func NewCmdRevokeFeegrant() *cobra.Command {
+func NewCmdRevokeFeegrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke [granter] [grantee]",
 		Short: "revoke fee-grant",
@@ -200,7 +201,7 @@ Example:
 				return err
 			}
 
-			grantee, err := sdk.AccAddressFromBech32(args[1])
+			grantee, err := ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}

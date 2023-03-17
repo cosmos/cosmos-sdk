@@ -4,7 +4,9 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 )
 
@@ -36,8 +38,16 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 		return nil, err
 	}
 
+	if msg.Grantee == msg.Granter {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
+	}
+
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
+		return nil, err
+	}
+
+	if err := allowance.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
@@ -66,6 +76,10 @@ func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevok
 	err = k.Keeper.revokeAllowance(ctx, granter, grantee)
 	if err != nil {
 		return nil, err
+	}
+
+	if msg.Grantee == msg.Granter {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
 	}
 
 	return &feegrant.MsgRevokeAllowanceResponse{}, nil

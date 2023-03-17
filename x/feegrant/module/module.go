@@ -142,9 +142,6 @@ func (AppModule) Name() string {
 	return feegrant.ModuleName
 }
 
-// RegisterInvariants registers the feegrant module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
-
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {

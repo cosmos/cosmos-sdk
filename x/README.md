@@ -21,7 +21,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.
 * [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/architecture/adr-043-nft-module.html).
-* [Consensus](./consensus/README.md) - Consensus module for modifying Tendermint's ABCI consensus params.
+* [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
 * [Circuit](./circuit/README.md) - Circuit breaker module for pausing messages.
 * [Genutil](./genutil/README.md) - Genesis utilities for the Cosmos SDK.
 

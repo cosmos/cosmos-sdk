@@ -813,7 +813,10 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrAppConfig, "cannot query historical height %d without block retriever set", height)
 		}
 
-		block, err := app.blockRetriever(context.Background(), height)
+		goCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		defer cancel()
+
+		block, err := app.blockRetriever(goCtx, height)
 		if err != nil || block == nil {
 			return sdk.Context{}, errorsmod.Wrapf(err, "failed to query for historical block %d", height)
 		}

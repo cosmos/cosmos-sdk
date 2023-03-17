@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Agoric/cosmos-sdk/cosmovisor"
+	"github.com/agoric-labs/cosmos-sdk/cosmovisor"
 )
 
 type upgradeTestSuite struct {

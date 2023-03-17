@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.3.1
-	cosmossdk.io/client/v2 v2.0.0-20230314205129-d50cb1ef349f
+	cosmossdk.io/client/v2 v2.0.0-20230317172032-ac345ce694cf
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cockroachdb/errors v1.9.1
 	github.com/hashicorp/go-multierror v1.1.1
@@ -119,3 +119,9 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+
+// Temporal for PR
+replace (
+	cosmossdk.io/client/v2 => ../../client/v2
+	)

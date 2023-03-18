@@ -399,8 +399,8 @@ message ValidatorUpdates {
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// OperatorKeyRotationHistory contains a validator's operator key rotation history.
-message OperatorKeyRotationHistory {
+// OperatorKeyRotationRecord contains a validator's operator key rotation history.
+message OperatorKeyRotationRecord {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
 
@@ -412,4 +412,10 @@ message OperatorKeyRotationHistory {
  
   // height defines the block height at which the rotation event occured.
   uint64 height = 3;
+}
+
+// RotatedOperatorAddresses contains the array of addresses which rotated their keys
+// This is to block the validator's next rotation till unbonding period.
+message RotatedOperatorAddresses {
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

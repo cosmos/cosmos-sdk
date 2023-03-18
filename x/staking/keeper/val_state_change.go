@@ -92,6 +92,8 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		)
 	}
 
+	k.UpdateAllMaturedVORRotatedKeys(ctx, ctx.BlockHeader().Time)
+
 	return validatorUpdates
 }
 

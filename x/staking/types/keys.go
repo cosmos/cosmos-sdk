@@ -55,8 +55,9 @@ var (
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 
-	ValidatorOperatorKeyRotationHistoryKey      = []byte{0x80} // stores the operator key rotation history of a validator
-	ValidatorOperatorKeyRotationHistoryQueueKey = []byte{0x81} // this key is used to set the unbonding period time on each rotation
+	ValidatorOperatorKeyRotationRecordKey      = []byte{0x80} // stores the operator key rotation Record of a validator
+	ValidatorOperatorKeyRotationRecordQueueKey = []byte{0x81} // this key is used to set the unbonding period time on each rotation
+	ValidatorOperatorKeyRotationRecordIndexKey = []byte{0x82} // this key is used to restrict the validator next rotation within unbonding period
 )
 
 // UnbondingType defines the type of unbonding operation
@@ -383,6 +384,15 @@ func GetHistoricalInfoKey(height int64) []byte {
 }
 
 func GetOperKeyRotationHistoryKey(valAddr sdk.ValAddress, height uint64) []byte {
-	key := append(ValidatorOperatorKeyRotationHistoryKey, address.MustLengthPrefix(valAddr)...)
+	key := append(ValidatorOperatorKeyRotationRecordKey, address.MustLengthPrefix(valAddr)...)
 	return append(key, []byte(sdk.Uint64ToBigEndian(height))...)
+}
+
+func GetOperatorRotationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(ValidatorOperatorKeyRotationRecordQueueKey, bz...)
+}
+
+func GetVORIndexKey(valAddr sdk.ValAddress) []byte {
+	return append(ValidatorOperatorKeyRotationRecordIndexKey, valAddr...)
 }

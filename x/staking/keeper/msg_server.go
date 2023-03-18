@@ -528,8 +528,8 @@ func (k msgServer) RotateOperatorKey(goCtx context.Context, req *types.MsgRotate
 	validator.OperatorAddress = req.NewOperatorKey
 	k.SetValidator(ctx, validator)
 
-	// Add OperatorKeyRotationHistory for tracking rotations
-	if err := k.SetOperatorKeyRotationHistory(ctx, curValAddr, newValAddr, ctx.BlockHeight()); err != nil {
+	// Add OperatorKeyRotationRecord for tracking rotations
+	if err := k.SetOperatorKeyRotationRecord(ctx, curValAddr, newValAddr, ctx.BlockHeight()); err != nil {
 		return &types.MsgRotateOperatorKeyResponse{}, err
 	}
 

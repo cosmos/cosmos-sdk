@@ -187,10 +187,16 @@ go.sum: go.mod
 
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
+	go install golang.org/x/tools/cmd/godoc@latest
 	godoc -http=:6060
 
 build-docs:
 	@cd docs && DOCS_DOMAIN=docs.cosmos.network sh ./build-all.sh
+
+# Usage: make changelog module=path/to/submodule tag=vx.y.z
+changelog:
+	@echo "Generating changelog..."
+	docker run --rm -v "$$(pwd)"/.git:/app/ -v "$$(pwd)/cliff.toml":/app/cliff.toml docker.pkg.github.com/orhun/git-cliff/git-cliff:latest --unreleased --include-path $(module) --tag $(tag)
 
 .PHONY: build-docs
 

@@ -3,6 +3,7 @@ package config_test
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"

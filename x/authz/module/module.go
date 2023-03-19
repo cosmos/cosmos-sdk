@@ -5,22 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/appmodule"
 
 	"cosmossdk.io/depinject"
 
+	"cosmossdk.io/errors"
+	store "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -77,7 +78,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data authz.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", authz.ModuleName)
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", authz.ModuleName)
 	}
 
 	return authz.ValidateGenesis(data)
@@ -133,13 +134,6 @@ func (AppModule) Name() string {
 	return authz.ModuleName
 }
 
-// RegisterInvariants does nothing, there are no invariants to enforce
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
 // InitGenesis performs genesis initialization for the authz module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
@@ -180,7 +174,7 @@ type AuthzInputs struct {
 	AccountKeeper    authz.AccountKeeper
 	BankKeeper       authz.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter baseapp.MessageRouter
 }
 
 //nolint:revive
@@ -206,14 +200,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the authz content functions used to
-// simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
 // RegisterStoreDecoder registers a decoder for authz module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

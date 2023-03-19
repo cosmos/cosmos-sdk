@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/golang/mock/gomock"
@@ -32,7 +33,7 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	s.txBuilder.SetGasLimit(0)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// Set IsCheckTx to true
@@ -67,7 +68,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, feeAmount).Return(nil).Times(3)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// Set high gas price so standard test fee fails
@@ -124,7 +125,7 @@ func TestDeductFees(t *testing.T) {
 	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)

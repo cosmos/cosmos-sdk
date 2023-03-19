@@ -39,8 +39,8 @@ func TestMap(t *testing.T) {
 func TestMap_IterateRaw(t *testing.T) {
 	sk, ctx := deps()
 	// safety check to ensure prefix boundaries are not crossed
-	sk.OpenKVStore(ctx).Set([]byte{0x0, 0x0}, []byte("before prefix"))
-	sk.OpenKVStore(ctx).Set([]byte{0x2, 0x0}, []byte("after prefix"))
+	require.NoError(t, sk.OpenKVStore(ctx).Set([]byte{0x0, 0x0}, []byte("before prefix")))
+	require.NoError(t, sk.OpenKVStore(ctx).Set([]byte{0x2, 0x0}, []byte("after prefix")))
 
 	sb := NewSchemaBuilder(sk)
 

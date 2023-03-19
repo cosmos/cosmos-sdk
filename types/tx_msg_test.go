@@ -25,21 +25,19 @@ func (s *testMsgSuite) TestMsg() {
 	msg := testdata.NewTestMsg(accAddr)
 	s.Require().NotNil(msg)
 	s.Require().True(accAddr.Equals(msg.GetSigners()[0]))
-	s.Require().Equal("TestMsg", msg.Route())
-	s.Require().Equal("Test message", msg.Type())
 	s.Require().Nil(msg.ValidateBasic())
 	s.Require().NotPanics(func() { msg.GetSignBytes() })
 }
 
 func (s *testMsgSuite) TestMsgTypeURL() {
-	s.Require().Equal("/testdata.TestMsg", sdk.MsgTypeURL(new(testdata.TestMsg)))
+	s.Require().Equal("/testpb.TestMsg", sdk.MsgTypeURL(new(testdata.TestMsg)))
 }
 
 func (s *testMsgSuite) TestGetMsgFromTypeURL() {
 	msg := new(testdata.TestMsg)
 	cdc := codec.NewProtoCodec(testdata.NewTestInterfaceRegistry())
 
-	result, err := sdk.GetMsgFromTypeURL(cdc, "/testdata.TestMsg")
+	result, err := sdk.GetMsgFromTypeURL(cdc, "/testpb.TestMsg")
 	s.Require().NoError(err)
 	s.Require().Equal(msg, result)
 }

@@ -3,6 +3,9 @@ package v4_test
 import (
 	"testing"
 
+	storetypes "cosmossdk.io/store/types"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -10,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	v4 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/stretchr/testify/require"
 )
 
 type mockSubspace struct {
@@ -29,8 +31,8 @@ func TestMigrate(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(bank.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v4.ModuleName)
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey(v4.ModuleName)
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 

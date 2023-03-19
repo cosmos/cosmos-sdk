@@ -46,15 +46,15 @@ halt-time = {{ .BaseConfig.HaltTime }}
 
 # MinRetainBlocks defines the minimum block height offset from the current
 # block being committed, such that all blocks past this offset are pruned
-# from Tendermint. It is used as part of the process of determining the
+# from CometBFT. It is used as part of the process of determining the
 # ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 # that no blocks should be pruned.
 #
-# This configuration value is only responsible for pruning Tendermint blocks.
+# This configuration value is only responsible for pruning CometBFT blocks.
 # It has no bearing on application state pruning which is determined by the
 # "pruning-*" configurations.
 #
-# Note: Tendermint block pruning is dependant on this parameter in conunction
+# Note: CometBFT block pruning is dependant on this parameter in conjunction
 # with the unbonding (safety threshold) period, state pruning and state sync
 # snapshot parameters to determine the correct minimum value of
 # ResponseCommit.RetainHeight.
@@ -64,7 +64,7 @@ min-retain-blocks = {{ .BaseConfig.MinRetainBlocks }}
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
 # IndexEvents defines the set of events in the form {eventType}.{attributeKey},
-# which informs Tendermint what to index. If empty, all events will be indexed.
+# which informs CometBFT what to index. If empty, all events will be indexed.
 #
 # Example:
 # ["message.sender", "message.recipient"]
@@ -77,10 +77,14 @@ iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 # Default is false.
 iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 
+# IAVLLazyLoading enable/disable the lazy loading of iavl store.
+# Default is false.
+iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}
+
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
 # First fallback is the deprecated compile-time types.DBBackend value.
-# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in Tendermint's config.toml.
+# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in CometBFT's config.toml.
 app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################
@@ -136,13 +140,13 @@ address = "{{ .API.Address }}"
 # MaxOpenConnections defines the number of maximum open connections.
 max-open-connections = {{ .API.MaxOpenConnections }}
 
-# RPCReadTimeout defines the Tendermint RPC read timeout (in seconds).
+# RPCReadTimeout defines the CometBFT RPC read timeout (in seconds).
 rpc-read-timeout = {{ .API.RPCReadTimeout }}
 
-# RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds).
+# RPCWriteTimeout defines the CometBFT RPC write timeout (in seconds).
 rpc-write-timeout = {{ .API.RPCWriteTimeout }}
 
-# RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes).
+# RPCMaxBodyBytes defines the CometBFT maximum request body (in bytes).
 rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
@@ -176,13 +180,8 @@ max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
 # GRPCWebEnable defines if the gRPC-web should be enabled.
 # NOTE: gRPC must also be enabled, otherwise, this configuration is a no-op.
+# NOTE: gRPC-Web uses the same address as the API server.
 enable = {{ .GRPCWeb.Enable }}
-
-# Address defines the gRPC-web server address to bind to.
-address = "{{ .GRPCWeb.Address }}"
-
-# EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
-enable-unsafe-cors = {{ .GRPCWeb.EnableUnsafeCORS }}
 
 ###############################################################################
 ###                        State Sync Configuration                         ###
@@ -200,27 +199,30 @@ snapshot-interval = {{ .StateSync.SnapshotInterval }}
 snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 
 ###############################################################################
-###                         Store / State Streaming                         ###
+###                              State Streaming                            ###
 ###############################################################################
 
-[store]
-streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
+# Streaming allows nodes to stream state to external systems.
+[streaming]
 
-[streamers]
-[streamers.file]
-keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
-write_dir = "{{ .Streamers.File.WriteDir }}"
-prefix = "{{ .Streamers.File.Prefix }}"
+# streaming.abci specifies the configuration for the ABCI Listener streaming service.
+[streaming.abci]
 
-# output-metadata specifies if output the metadata file which includes the abci request/responses 
-# during processing the block.
-output-metadata = "{{ .Streamers.File.OutputMetadata }}"
+# List of kv store keys to stream out via gRPC.
+# The store key names MUST match the module's StoreKey name.
+#
+# Example:
+# ["acc", "bank", "gov", "staking", "mint"[,...]]
+# ["*"] to expose all keys.
+keys = [{{ range .Streaming.ABCI.Keys }}{{ printf "%q, " . }}{{end}}]
 
-# stop-node-on-error specifies if propagate the file streamer errors to consensus state machine.
-stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
+# The plugin name used for streaming via gRPC.
+# Streaming is only enabled if this is set.
+# Supported plugins: abci
+plugin = "{{ .Streaming.ABCI.Plugin }}"
 
-# fsync specifies if call fsync after writing the files.
-fsync = "{{ .Streamers.File.Fsync }}"
+# stop-node-on-err specifies whether to stop the node on message delivery error.
+stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 
 ###############################################################################
 ###                         Mempool                                         ###
@@ -283,7 +285,6 @@ func WriteConfigFile(configFilePath string, config interface{}) {
 
 func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
 	if err := os.WriteFile(filePath, contents, mode); err != nil {
-		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
-		os.Exit(1)
+		panic(fmt.Errorf("failed to write file: %w", err))
 	}
 }

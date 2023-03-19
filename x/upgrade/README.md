@@ -22,9 +22,9 @@ recover from.
 * [State](#state)
 * [Events](#events)
 * [Client](#client)
-    * [CLI](#cli)
-    * [REST](#rest)
-    * [gRPC](#grpc)
+  * [CLI](#cli)
+  * [REST](#rest)
+  * [gRPC](#grpc)
 * [Resources](#resources)
 
 ## Concepts
@@ -103,7 +103,7 @@ the `Plan`, which targets a specific `Handler`, is persisted and scheduled. The
 upgrade can be delayed or hastened by updating the `Plan.Height` in a new proposal.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/upgrade/v1beta1/tx.proto#L24-L36
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L29-L41
 ```
 
 #### Cancelling Upgrade Proposals
@@ -115,7 +115,7 @@ Of course this requires that the upgrade was known to be a bad idea well before 
 upgrade itself, to allow time for a vote.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/upgrade/v1beta1/tx.proto#L43-L51
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L48-L57
 ```
 
 If such a possibility is desired, the upgrade height is to be
@@ -246,8 +246,6 @@ module_versions:
   version: "1"
 - name: bank
   version: "2"
-- name: capability
-  version: "1"
 - name: crisis
   version: "1"
 - name: distribution
@@ -314,6 +312,23 @@ info: ""
 name: test-upgrade
 time: "0001-01-01T00:00:00Z"
 upgraded_client_state: null
+```
+
+#### Transactions
+
+The upgrade module supports the following transactions:
+
+* `software-proposal` - submits an upgrade proposal:
+
+```bash
+simd tx upgrade software-upgrade v2 --title="Test Proposal" --summary="testing" --deposit="100000000stake" --upgrade-height 1000000 \
+--upgrade-info '{ "binaries": { "linux/amd64":"https://example.com/simd.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f" } }' --from cosmos1..
+```
+
+* `cancel-software-upgrade` - cancels a previously submitted upgrade proposal:
+
+```bash
+simd tx upgrade cancel-software-upgrade --title="Test Proposal" --summary="testing" --deposit="100000000stake" --from cosmos1..
 ```
 
 ### REST
@@ -394,10 +409,6 @@ Example Output:
     {
       "name": "bank",
       "version": "2"
-    },
-    {
-      "name": "capability",
-      "version": "1"
     },
     {
       "name": "crisis",
@@ -540,10 +551,6 @@ Example Output:
     {
       "name": "bank",
       "version": "2"
-    },
-    {
-      "name": "capability",
-      "version": "1"
     },
     {
       "name": "crisis",

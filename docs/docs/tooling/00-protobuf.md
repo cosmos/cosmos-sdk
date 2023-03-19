@@ -2,23 +2,22 @@
 sidebar_position: 1
 ---
 
-
 # Protocol Buffers
 
 It is known that Cosmos SDK uses protocol buffers extensively, this docuemnt is meant to provide a guide on how it is used in the cosmos-sdk. 
 
-To generate the proto file, the Cosmos SDK uses a docker image, this image is provided to all to use as well. The latest version is `ghcr.io/cosmos/proto-builder:0.11.0`
+To generate the proto file, the Cosmos SDK uses a docker image, this image is provided to all to use as well. The latest version is `ghcr.io/cosmos/proto-builder:0.12.x`
 
 Below is the example of the Cosmos SDK's commands for generating, linting, and formatting protobuf files that can be reused in any applications makefile. 
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/10ac33edb87dab12ffa496e76f1114ea9225a107/Makefile#L408-L437
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/Makefile#L411-L432
 ```
 
 The script used to generate the protobuf files can be found in the `scripts/` directory. 
 
 ```shell reference
-https://github.com/cosmos/cosmos-sdk/blob/10ac33edb87dab12ffa496e76f1114ea9225a107/scripts/protocgen.sh#L1-L37
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/scripts/protocgen.sh#L1-L37
 ```
 
 ## Buf
@@ -58,7 +57,7 @@ The above diagram all the files and directories within the Cosmos SDK `proto/` d
 `buf.gen.gogo.yaml` defines how the protobuf files should be generated for use with in the module. This file uses [gogoproto](https://github.com/gogo/protobuf), a separate generator from the google go-proto generator that makes working with various objects more ergonomic, and it has more performant encode and decode steps
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.gogo.yaml#L1-l9
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.gogo.yaml#L1-L9
 ```
 
 :::tip

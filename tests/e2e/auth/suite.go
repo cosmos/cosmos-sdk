@@ -3,16 +3,13 @@ package auth
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
@@ -223,7 +220,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 
 	for _, tc := range cases {
 		cmd := authcli.GetSignCommand()
-		tmcli.PrepareBaseCmd(cmd, "", "")
+		cmtcli.PrepareBaseCmd(cmd, "", "")
 		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
 		if tc.expErr {
 			s.Require().Error(err)
@@ -310,7 +307,6 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
-	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// fetch the sequence after a tx, should be incremented.
 	_, seq1, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, val.Address)
@@ -372,108 +368,6 @@ func (s *E2ETestSuite) TestCliGetAccountAddressByID() {
 	}
 }
 
-func (s *E2ETestSuite) TestCLISignAminoJSON() {
-	require := s.Require()
-	val1 := s.network.Validators[0]
-	txCfg := val1.ClientCtx.TxConfig
-	sendTokens := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-	)
-	txBz, err := s.createBankMsg(val1, val1.Address,
-		sendTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
-	require.NoError(err)
-	fileUnsigned := testutil.WriteToNewTempFile(s.T(), txBz.String())
-	defer fileUnsigned.Close()
-	chainFlag := fmt.Sprintf("--%s=%s", flags.FlagChainID, val1.ClientCtx.ChainID)
-	sigOnlyFlag := "--signature-only"
-	signModeAminoFlag := "--sign-mode=amino-json"
-
-	// SIC! validators have same key names and same addresses as those registered in the keyring,
-	//      BUT the keys are different!
-	valRecord, err := val1.ClientCtx.Keyring.Key(val1.Moniker)
-	require.NoError(err)
-
-	// query account info
-	queryResJSON, err := authclitestutil.QueryAccountExec(val1.ClientCtx, val1.Address)
-	require.NoError(err)
-	var account sdk.AccountI
-	require.NoError(val1.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
-
-	/****  test signature-only  ****/
-	res, err := authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
-		sigOnlyFlag, signModeAminoFlag)
-	require.NoError(err)
-	pub, err := valRecord.GetPubKey()
-	require.NoError(err)
-	checkSignatures(require, txCfg, res.Bytes(), pub)
-	sigs, err := txCfg.UnmarshalSignatureJSON(res.Bytes())
-	require.NoError(err)
-	require.Equal(1, len(sigs))
-	require.Equal(account.GetSequence(), sigs[0].Sequence)
-
-	/****  test full output  ****/
-	res, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, signModeAminoFlag)
-	require.NoError(err)
-
-	// txCfg.UnmarshalSignatureJSON can't unmarshal a fragment of the signature, so we create this structure.
-	type txFragment struct {
-		Signatures []json.RawMessage
-	}
-	var txOut txFragment
-	err = json.Unmarshal(res.Bytes(), &txOut)
-	require.NoError(err)
-	require.Len(txOut.Signatures, 1)
-
-	/****  test file output  ****/
-	filenameSigned := filepath.Join(s.T().TempDir(), "test_sign_out.json")
-	fileFlag := fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, filenameSigned)
-	_, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag, signModeAminoFlag)
-	require.NoError(err)
-	fContent, err := os.ReadFile(filenameSigned)
-	require.NoError(err)
-	require.Equal(res.String(), string(fContent))
-
-	/****  try to append to the previously signed transaction  ****/
-	res, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		sigOnlyFlag, signModeAminoFlag)
-	require.NoError(err)
-	checkSignatures(require, txCfg, res.Bytes(), pub, pub)
-
-	/****  try to overwrite the previously signed transaction  ****/
-
-	// We can't sign with other address, because the bank send message supports only one signer for a simple
-	// account. Changing the file is too much hacking, because TxDecoder returns sdk.Tx, which doesn't
-	// provide functionality to check / manage `auth_info`.
-	// Cases with different keys are are covered in unit tests of `tx.Sign`.
-	res, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		sigOnlyFlag, "--overwrite", signModeAminoFlag)
-	require.NoError(err)
-	checkSignatures(require, txCfg, res.Bytes(), pub)
-
-	/****  test flagAmino  ****/
-	res, err = authclitestutil.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		"--amino=true", signModeAminoFlag)
-	require.NoError(err)
-
-	var txAmino authcli.BroadcastReq
-	err = val1.ClientCtx.LegacyAmino.UnmarshalJSON(res.Bytes(), &txAmino)
-	require.NoError(err)
-	require.Len(txAmino.Tx.Signatures, 2)
-	require.Equal(txAmino.Tx.Signatures[0].PubKey, pub)
-	require.Equal(txAmino.Tx.Signatures[1].PubKey, pub)
-}
-
-func checkSignatures(require *require.Assertions, txCfg client.TxConfig, output []byte, pks ...cryptotypes.PubKey) {
-	sigs, err := txCfg.UnmarshalSignatureJSON(output)
-	require.NoError(err, string(output))
-	require.Len(sigs, len(pks))
-	for i := range pks {
-		require.True(sigs[i].PubKey.Equals(pks[i]), "Pub key doesn't match. Got: %s, expected: %s, idx: %d", sigs[i].PubKey, pks[i], i)
-		require.NotEmpty(sigs[i].Data)
-	}
-}
-
 func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
 	val := s.network.Validators[0]
 
@@ -530,9 +424,15 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			clientCtx := val.ClientCtx
+			var (
+				out testutil.BufferWriter
+				err error
+			)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
+			err = s.network.RetryForBlocks(func() error {
+				out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+				return err
+			}, 2)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
@@ -568,7 +468,10 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByEvents() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Query the tx by hash to get the inner tx.
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+	err = s.network.RetryForBlocks(func() error {
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		return err
+	}, 3)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	protoTx := txRes.GetTx().(*tx.Tx)
@@ -685,7 +588,10 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Query the tx by hash to get the inner tx.
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+	err = s.network.RetryForBlocks(func() error {
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		return err
+	}, 3)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 
@@ -697,8 +603,10 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 		{
 			"fee event happy case",
 			[]string{
-				fmt.Sprintf("--events=tx.fee=%s",
-					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf(
+					"--query=tx.fee='%s'",
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
@@ -706,8 +614,10 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 		{
 			"no matching fee event",
 			[]string{
-				fmt.Sprintf("--events=tx.fee=%s",
-					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String()),
+				fmt.Sprintf(
+					"--query=tx.fee='%s'",
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String(),
+				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
@@ -865,7 +775,10 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
-	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
+	err = s.network.RetryForBlocks(func() error {
+		resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
+		return err
+	}, 3)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -1150,11 +1063,14 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
-	s.Require().NoError(err)
-
 	var balRes banktypes.QueryAllBalancesResponse
-	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = s.network.RetryForBlocks(func() error {
+		resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
+		if err != nil {
+			return err
+		}
+		return val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	}, 3)
 	s.Require().NoError(err)
 	s.Require().True(sendTokens.Amount.Equal(balRes.Balances.AmountOf(s.cfg.BondDenom)))
 
@@ -1196,9 +1112,20 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 	defer sign2File.Close()
 
-	// Does not work in offline mode.
-	_, err = authclitestutil.TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
-	s.Require().EqualError(err, fmt.Sprintf("couldn't verify signature for address %s", addr1))
+	// Work in offline mode.
+	multisigAccNum, multisigSeq, err := val1.ClientCtx.AccountRetriever.GetAccountNumberSequence(val1.ClientCtx, addr)
+	s.Require().NoError(err)
+	_, err = authclitestutil.TxMultiSignExec(
+		val1.ClientCtx,
+		multisigRecord.Name,
+		multiGeneratedTxFile.Name(),
+		fmt.Sprintf("--%s", flags.FlagOffline),
+		fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, multisigAccNum),
+		fmt.Sprintf("--%s=%d", flags.FlagSequence, multisigSeq),
+		sign1File.Name(),
+		sign2File.Name(),
+	)
+	s.Require().NoError(err)
 
 	val1.ClientCtx.Offline = false
 	multiSigWith2Signatures, err := authclitestutil.TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
@@ -1682,7 +1609,6 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	)
 	require.NoError(err)
-	require.NoError(s.network.WaitForNextBlock())
 	require.NoError(s.network.WaitForNextBlock())
 
 	var txRes sdk.TxResponse

@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -43,8 +45,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v1.ModuleName)
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 
@@ -64,7 +66,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
 	require.NoError(t, v4.Migrate(ctx, store, legacySubspace, cdc))
 
-	ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	ctx = app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
 	stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
 
 	testCases := []struct {
@@ -544,7 +546,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 
 				// un-delegation of the original vesting
-				_, err = stakingKeeper.Undelegate(ctx, delegatorAddr, valAddr, sdk.NewDecFromInt(sdk.NewInt(300)))
+				_, _, err = stakingKeeper.Undelegate(ctx, delegatorAddr, valAddr, sdk.NewDecFromInt(sdk.NewInt(300)))
 				require.NoError(t, err)
 			},
 			cleartTrackingFields,
@@ -644,8 +646,8 @@ func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, a
 	vDA, ok := baseAccount.(exported.VestingAccount)
 	require.True(t, ok)
 
-	vestedOk := expDelVesting.IsEqual(vDA.GetDelegatedVesting())
-	freeOk := expDelFree.IsEqual(vDA.GetDelegatedFree())
+	vestedOk := expDelVesting.Equal(vDA.GetDelegatedVesting())
+	freeOk := expDelFree.Equal(vDA.GetDelegatedFree())
 	require.True(t, vestedOk, vDA.GetDelegatedVesting().String())
 	require.True(t, freeOk, vDA.GetDelegatedFree().String())
 }

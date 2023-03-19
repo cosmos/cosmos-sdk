@@ -4,10 +4,11 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/upgrade/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 type storedUpgrade struct {
@@ -20,8 +21,8 @@ func encodeOldDoneKey(upgrade storedUpgrade) []byte {
 }
 
 func TestMigrateDoneUpgradeKeys(t *testing.T) {
-	upgradeKey := sdk.NewKVStoreKey("upgrade")
-	ctx := testutil.DefaultContext(upgradeKey, sdk.NewTransientStoreKey("transient_test"))
+	upgradeKey := storetypes.NewKVStoreKey("upgrade")
+	ctx := testutil.DefaultContext(upgradeKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(upgradeKey)
 
 	testCases := []struct {

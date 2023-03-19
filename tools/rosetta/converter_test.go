@@ -9,8 +9,8 @@ import (
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -119,7 +119,6 @@ func (s *ConverterTestSuite) TestMsgToMetaMetaToMsg() {
 		ToAddress:   "addr2",
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin("test", 10)),
 	}
-	msg.Route()
 
 	meta, err := s.c.ToRosetta().Meta(msg)
 	s.Require().NoError(err)

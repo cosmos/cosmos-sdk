@@ -3,12 +3,18 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
+
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	"github.com/tendermint/tendermint/libs/log"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -38,15 +44,33 @@ type BaseViewKeeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 	ak       types.AccountKeeper
+
+	Schema        collections.Schema
+	Supply        collections.Map[string, math.Int]
+	DenomMetadata collections.Map[string, types.Metadata]
+	SendEnabled   collections.Map[string, bool]
+	Params        collections.Item[types.Params]
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
 func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
-	return BaseViewKeeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		ak:       ak,
+	sb := collections.NewSchemaBuilder(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)))
+	k := BaseViewKeeper{
+		cdc:           cdc,
+		storeKey:      storeKey,
+		ak:            ak,
+		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
+		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
+		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // Logger returns a module-specific logger.
@@ -219,7 +243,7 @@ func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (sp
 func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	balances := k.GetAllBalances(ctx, addr)
@@ -252,6 +276,10 @@ func (k BaseViewKeeper) getDenomAddressPrefixStore(ctx sdk.Context, denom string
 
 // UnmarshalBalanceCompat unmarshal balance amount from storage, it's backward-compatible with the legacy format.
 func UnmarshalBalanceCompat(cdc codec.BinaryCodec, bz []byte, denom string) (sdk.Coin, error) {
+	if err := sdk.ValidateDenom(denom); err != nil {
+		return sdk.Coin{}, err
+	}
+
 	amount := math.ZeroInt()
 	if bz == nil {
 		return sdk.NewCoin(denom, amount), nil

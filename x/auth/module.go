@@ -5,20 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/depinject"
 
 	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+
+	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -124,9 +126,6 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterInvariants performs a no-op.
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -178,13 +177,13 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState, am.randGenAccountsFn)
 }
 
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
+// ProposalMsgs returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs()
 }
 
 // RegisterStoreDecoder registers a decoder for auth module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.accountKeeper)
 }
 
@@ -199,8 +198,15 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(ProvideAddressCodec),
 		appmodule.Provide(ProvideModule),
 	)
+}
+
+// ProvideAddressCodec provides an address.Codec to the container for any
+// modules that want to do address string <> bytes conversion.
+func ProvideAddressCodec(config *modulev1.Module) address.Codec {
+	return keeper.NewBech32Codec(config.Bech32Prefix)
 }
 
 //nolint:revive

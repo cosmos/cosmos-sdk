@@ -21,9 +21,9 @@ jobs:
         go-arch: ["amd64", "arm", "arm64"]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: 1.19.4
+          go-version: 1.20.2
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
@@ -35,15 +35,27 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
+        ###################
+        #### Build App ####
+        ###################
       - name: Build
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
+        run: GOARCH=${{ matrix.go-arch }} make build
       - name: Build Legacy
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false COSMOS_BUILD_OPTIONS=legacy make build
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
+        ###################
+        ## Build Tooling ##
+        ###################
       - name: Build Cosmovisor
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
+        run: GOARCH=${{ matrix.go-arch }} make cosmovisor
       - name: Build Rosetta
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make rosetta
+        run: GOARCH=${{ matrix.go-arch }} make rosetta
+      - name: Build Confix
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make confix
+      - name: Build Hubl
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make hubl

@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	"github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	"cosmossdk.io/store/snapshots"
+	"cosmossdk.io/store/snapshots/types"
 )
 
 func setupStore(t *testing.T) *snapshots.Store {

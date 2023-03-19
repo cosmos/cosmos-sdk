@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-
-	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
@@ -388,7 +388,7 @@ func TestPreprocessHook(t *testing.T) {
 
 	coin := sdk.Coin{
 		Denom:  "atom",
-		Amount: sdk.NewInt(20),
+		Amount: sdkmath.NewInt(20),
 	}
 	newTip := &txtypes.Tip{
 		Amount: sdk.Coins{coin},

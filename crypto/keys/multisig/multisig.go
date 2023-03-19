@@ -3,7 +3,7 @@ package multisig
 import (
 	fmt "fmt"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -36,7 +36,7 @@ func NewLegacyAminoPubKey(threshold int, pubKeys []cryptotypes.PubKey) *LegacyAm
 
 // Address implements cryptotypes.PubKey Address method
 func (m *LegacyAminoPubKey) Address() cryptotypes.Address {
-	return tmcrypto.AddressHash(m.Bytes())
+	return cmtcrypto.AddressHash(m.Bytes())
 }
 
 // Bytes returns the proto encoded version of the LegacyAminoPubKey

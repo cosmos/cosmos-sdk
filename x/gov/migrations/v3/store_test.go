@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -14,14 +16,12 @@ import (
 	v3gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func TestMigrateStore(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{}, gov.AppModuleBasic{}).Codec
-	govKey := sdk.NewKVStoreKey("gov")
-	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
+	cdc := moduletestutil.MakeTestEncodingConfig(gov.AppModuleBasic{}).Codec
+	govKey := storetypes.NewKVStoreKey("gov")
+	ctx := testutil.DefaultContext(govKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
 
 	propTime := time.Unix(1e9, 0)
@@ -31,9 +31,8 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 	prop1Bz, err := cdc.Marshal(&prop1)
 	require.NoError(t, err)
-	prop2, err := v1beta1.NewProposal(upgradetypes.NewSoftwareUpgradeProposal("my title 2", "my desc 2", upgradetypes.Plan{
-		Name: "my plan 2",
-	}), 2, propTime, propTime)
+	prop2, err := v1beta1.NewProposal(v1beta1.NewTextProposal("my title 2", "my desc 2"), 2, propTime, propTime)
+	require.NoError(t, err)
 	require.NoError(t, err)
 	prop2Bz, err := cdc.Marshal(&prop2)
 	require.NoError(t, err)

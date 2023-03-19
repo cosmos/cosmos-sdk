@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	dbm "github.com/cosmos/cosmos-db"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -31,27 +30,27 @@ import (
 
 const DefaultGenTxGas = 10000000
 
-// DefaultConsensusParams defines the default Tendermint consensus params used in
+// DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &tmproto.ConsensusParams{
-	Block: &tmproto.BlockParams{
+var DefaultConsensusParams = &cmtproto.ConsensusParams{
+	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
-	Evidence: &tmproto.EvidenceParams{
+	Evidence: &cmtproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: &tmproto.ValidatorParams{
+	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
+			cmttypes.ABCIPubKeyTypeEd25519,
 		},
 	},
 }
 
 // CreateRandomValidatorSet creates a validator set with one random validator
-func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
+func CreateRandomValidatorSet() (*cmttypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -59,9 +58,9 @@ func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	}
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
+	validator := cmttypes.NewValidator(pubKey, 1)
 
-	return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+	return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 }
 
 type GenesisAccount struct {
@@ -75,7 +74,7 @@ type GenesisAccount struct {
 // BaseAppOption defines the additional operations that must be run on baseapp before app start.
 // AtGenesis defines if the app started should already have produced block or not.
 type StartupConfig struct {
-	ValidatorSet    func() (*tmtypes.ValidatorSet, error)
+	ValidatorSet    func() (*cmttypes.ValidatorSet, error)
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
@@ -84,7 +83,7 @@ type StartupConfig struct {
 func DefaultStartUpConfig() StartupConfig {
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
-	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))}
+	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)))}
 	return StartupConfig{
 		ValidatorSet:    CreateRandomValidatorSet,
 		AtGenesis:       false,
@@ -154,7 +153,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain must be called to stop deliverState from being nil
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
 	}
@@ -171,7 +170,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
 		app.Commit()
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 			Height:             app.LastBlockHeight() + 1,
 			AppHash:            app.LastCommitID().Hash,
 			ValidatorsHash:     valSet.Hash(),
@@ -186,7 +185,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 func GenesisStateWithValSet(
 	codec codec.Codec,
 	genesisState map[string]json.RawMessage,
-	valSet *tmtypes.ValidatorSet,
+	valSet *cmttypes.ValidatorSet,
 	genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {
@@ -200,7 +199,7 @@ func GenesisStateWithValSet(
 	bondAmt := sdk.DefaultPowerReduction
 
 	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert pubkey: %w", err)
 		}
@@ -216,15 +215,15 @@ func GenesisStateWithValSet(
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   math.LegacyOneDec(),
+			DelegatorShares:   sdkmath.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
-			MinSelfDelegation: math.ZeroInt(),
+			Commission:        stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
+			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), math.LegacyOneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdkmath.LegacyOneDec()))
 
 	}
 

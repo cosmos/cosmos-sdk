@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
 
-	"github.com/hashicorp/go-multierror"
+	"cosmossdk.io/core/store"
 )
 
 // SchemaBuilder is used for building schemas. The Build method should always
@@ -16,20 +17,25 @@ import (
 // collections with the builder after initialization will result in panics.
 type SchemaBuilder struct {
 	schema *Schema
-	err    *multierror.Error
+	err    error
+}
+
+// NewSchemaBuilderFromAccessor creates a new schema builder from the provided store accessor function.
+func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) store.KVStore) *SchemaBuilder {
+	return &SchemaBuilder{
+		schema: &Schema{
+			storeAccessor:       accessorFunc,
+			collectionsByName:   map[string]collection{},
+			collectionsByPrefix: map[string]collection{},
+		},
+	}
 }
 
 // NewSchemaBuilder creates a new schema builder from the provided store key.
 // Callers should always call the SchemaBuilder.Build method when they are
 // done adding collections to the schema.
 func NewSchemaBuilder(service store.KVStoreService) *SchemaBuilder {
-	return &SchemaBuilder{
-		schema: &Schema{
-			storeAccessor:       service.OpenKVStore,
-			collectionsByName:   map[string]collection{},
-			collectionsByPrefix: map[string]collection{},
-		},
-	}
+	return NewSchemaBuilderFromAccessor(service.OpenKVStore)
 }
 
 // Build should be called after all collections that are part of the schema
@@ -58,9 +64,17 @@ func (s *SchemaBuilder) Build() (Schema, error) {
 		}
 	}
 
+	// compute ordered collections
+	collectionsOrdered := make([]string, 0, len(s.schema.collectionsByName))
+	for name := range s.schema.collectionsByName {
+		collectionsOrdered = append(collectionsOrdered, name)
+	}
+	sort.Strings(collectionsOrdered)
+	s.schema.collectionsOrdered = collectionsOrdered
+
 	if s.schema == nil {
 		// explicit panic to avoid nil pointer dereference
-		panic("schema is nil")
+		panic("builder already used to construct a schema")
 	}
 
 	schema := *s.schema
@@ -75,22 +89,30 @@ func (s *SchemaBuilder) addCollection(collection collection) {
 	name := collection.getName()
 
 	if _, ok := s.schema.collectionsByPrefix[string(prefix)]; ok {
-		s.err = multierror.Append(s.err, fmt.Errorf("prefix %v already taken within schema", prefix))
+		s.appendError(fmt.Errorf("prefix %v already taken within schema", prefix))
 		return
 	}
 
 	if _, ok := s.schema.collectionsByName[name]; ok {
-		s.err = multierror.Append(s.err, fmt.Errorf("name %s already taken within schema", name))
+		s.appendError(fmt.Errorf("name %s already taken within schema", name))
 		return
 	}
 
 	if !nameRegex.MatchString(name) {
-		s.err = multierror.Append(s.err, fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
+		s.appendError(fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
 		return
 	}
 
 	s.schema.collectionsByPrefix[string(prefix)] = collection
 	s.schema.collectionsByName[name] = collection
+}
+
+func (s *SchemaBuilder) appendError(err error) {
+	if s.err == nil {
+		s.err = err
+		return
+	}
+	s.err = fmt.Errorf("%w\n%w", s.err, err)
 }
 
 // NameRegex is the regular expression that all valid collection names must match.
@@ -105,6 +127,7 @@ var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
 // clients.
 type Schema struct {
 	storeAccessor       func(context.Context) store.KVStore
+	collectionsOrdered  []string
 	collectionsByPrefix map[string]collection
 	collectionsByName   map[string]collection
 }
@@ -137,4 +160,129 @@ func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema 
 		collectionsByName:   map[string]collection{},
 		collectionsByPrefix: map[string]collection{},
 	}
+}
+
+// DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
+func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
+	for _, name := range s.collectionsOrdered {
+		err := s.defaultGenesis(target, name)
+		if err != nil {
+			return fmt.Errorf("failed to instantiate default genesis for %s: %w", name, err)
+		}
+	}
+
+	return nil
+}
+
+func (s Schema) defaultGenesis(target appmodule.GenesisTarget, name string) error {
+	wc, err := target(name)
+	if err != nil {
+		return err
+	}
+	defer wc.Close()
+
+	coll, err := s.getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	return coll.defaultGenesis(wc)
+}
+
+// ValidateGenesis implements the appmodule.HasGenesis.ValidateGenesis method.
+func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
+	for _, name := range s.collectionsOrdered {
+		err := s.validateGenesis(source, name)
+		if err != nil {
+			return fmt.Errorf("failed genesis validation of %s: %w", name, err)
+		}
+	}
+	return nil
+}
+
+func (s Schema) validateGenesis(source appmodule.GenesisSource, name string) error {
+	rc, err := source(name)
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+
+	coll, err := s.getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	err = coll.validateGenesis(rc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// InitGenesis implements the appmodule.HasGenesis.InitGenesis method.
+func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource) error {
+	for _, name := range s.collectionsOrdered {
+		err := s.initGenesis(ctx, source, name)
+		if err != nil {
+			return fmt.Errorf("failed genesis initialisation of %s: %w", name, err)
+		}
+	}
+
+	return nil
+}
+
+func (s Schema) initGenesis(ctx context.Context, source appmodule.GenesisSource, name string) error {
+	rc, err := source(name)
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+
+	coll, err := s.getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	err = coll.importGenesis(ctx, rc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ExportGenesis implements the appmodule.HasGenesis.ExportGenesis method.
+func (s Schema) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
+	for _, name := range s.collectionsOrdered {
+		err := s.exportGenesis(ctx, target, name)
+		if err != nil {
+			return fmt.Errorf("failed to export genesis for %s: %w", name, err)
+		}
+	}
+
+	return nil
+}
+
+func (s Schema) exportGenesis(ctx context.Context, target appmodule.GenesisTarget, name string) error {
+	wc, err := target(name)
+	if err != nil {
+		return err
+	}
+	defer wc.Close()
+
+	coll, err := s.getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	return coll.exportGenesis(ctx, wc)
+}
+
+func (s Schema) getCollection(name string) (collection, error) {
+	coll, ok := s.collectionsByName[name]
+	if !ok {
+		return nil, fmt.Errorf("unknown collection: %s", name)
+	}
+	return coll, nil
 }

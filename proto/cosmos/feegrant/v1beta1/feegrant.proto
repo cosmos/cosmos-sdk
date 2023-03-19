@@ -10,7 +10,7 @@ import "amino/amino.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
+option go_package = "cosmossdk.io/x/feegrant";
 
 // BasicAllowance implements Allowance with a one-time grant of coins
 // that optionally expires. The grantee can use up to SpendLimit to cover fees.
@@ -24,6 +24,7 @@ message BasicAllowance {
   repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -50,6 +51,7 @@ message PeriodicAllowance {
   repeated cosmos.base.v1beta1.Coin period_spend_limit = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -57,6 +59,7 @@ message PeriodicAllowance {
   repeated cosmos.base.v1beta1.Coin period_can_spend = 4 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 

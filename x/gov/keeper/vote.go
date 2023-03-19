@@ -3,8 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -14,7 +16,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	// Check if proposal is in voting period.
 	store := ctx.KVStore(keeper.storeKey)
 	if !store.Has(types.VotingPeriodProposalKey(proposalID)) {
-		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
 	err := keeper.assertMetadataLength(metadata)
@@ -24,7 +26,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 
 	for _, option := range options {
 		if !v1.ValidWeightedVoteOption(*option) {
-			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+			return errors.Wrap(types.ErrInvalidVote, option.String())
 		}
 	}
 
@@ -88,7 +90,7 @@ func (keeper Keeper) SetVote(ctx sdk.Context, vote v1.Vote) {
 // IterateAllVotes iterates over all the stored votes and performs a callback function
 func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote v1.Vote) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.VotesKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -104,7 +106,7 @@ func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote v1.Vote) (sto
 // IterateVotes iterates over all the proposals votes and performs a callback function
 func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote v1.Vote) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.VotesKey(proposalID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -115,6 +117,12 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 			break
 		}
 	}
+}
+
+// deleteVotes deletes the all votes from a given proposalID.
+func (keeper Keeper) deleteVotes(ctx sdk.Context, proposalID uint64) {
+	store := ctx.KVStore(keeper.storeKey)
+	store.Delete(types.VotesKey(proposalID))
 }
 
 // deleteVote deletes a vote from a given proposalID and voter from the store

@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/log"
 	db "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/store/mock"
-	"github.com/cosmos/cosmos-sdk/store/pruning"
-	"github.com/cosmos/cosmos-sdk/store/pruning/types"
+	"cosmossdk.io/store/mock"
+	"cosmossdk.io/store/pruning"
+	"cosmossdk.io/store/pruning/types"
 )
 
 const dbErr = "db error"
@@ -79,12 +79,14 @@ func TestStrategies(t *testing.T) {
 		},
 	}
 
-	manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
-
-	require.NotNil(t, manager)
-
 	for name, tc := range testcases {
+		tc := tc // Local copy to avoid shadowing.
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
+			require.NotNil(t, manager)
+
 			curStrategy := tc.strategy
 			manager.SetSnapshotInterval(tc.snapshotInterval)
 

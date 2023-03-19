@@ -1,14 +1,14 @@
 package keeper_test
 
 import (
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
-	defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
 
 	testCases := []struct {
 		msg      string
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 				s.msgServer.UpdateParams(s.ctx, input)
 			},
 			types.QueryParamsResponse{
-				Params: &tmproto.ConsensusParams{
+				Params: &cmtproto.ConsensusParams{
 					Block:     defaultConsensusParams.Block,
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,

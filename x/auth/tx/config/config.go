@@ -13,9 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
 
 func init() {
@@ -31,9 +31,14 @@ type TxInputs struct {
 	Config              *txconfigv1.Config
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
 
-	AccountKeeper  ante.AccountKeeper    `optional:"true"`
-	BankKeeper     authtypes.BankKeeper  `optional:"true"`
-	FeeGrantKeeper feegrantkeeper.Keeper `optional:"true"`
+	AccountKeeper ante.AccountKeeper `optional:"true"`
+	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
+	BankKeeper authtypes.BankKeeper `optional:"true"`
+	// TxBankKeeper is the expected bank keeper to be passed to Textual
+	TxBankKeeper   BankKeeper
+	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
+
+	CustomSignModeHandlers func() []signing.SignModeHandler `optional:"true"`
 }
 
 //nolint:revive
@@ -45,7 +50,13 @@ type TxOutputs struct {
 }
 
 func ProvideModule(in TxInputs) TxOutputs {
-	txConfig := tx.NewTxConfig(in.ProtoCodecMarshaler, tx.DefaultSignModes)
+	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
+	var txConfig client.TxConfig
+	if in.CustomSignModeHandlers == nil {
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
+	} else {
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual, in.CustomSignModeHandlers()...)
+	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers

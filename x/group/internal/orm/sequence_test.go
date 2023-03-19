@@ -3,15 +3,16 @@ package orm
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 func TestSequenceUniqueConstraint(t *testing.T) {
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	seq := NewSequence(0x1)
 	err := seq.InitVal(store, 2)
@@ -22,7 +23,7 @@ func TestSequenceUniqueConstraint(t *testing.T) {
 
 func TestSequenceIncrements(t *testing.T) {
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	seq := NewSequence(0x1)
 	var i uint64

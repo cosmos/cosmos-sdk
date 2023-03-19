@@ -1,18 +1,20 @@
 package keeper
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strings"
 
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/x/evidence/exported"
+	"cosmossdk.io/x/evidence/types"
+
+	"cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // Keeper defines the evidence module's keeper. The keeper is responsible for
@@ -66,7 +68,7 @@ func (k *Keeper) SetRouter(rtr types.Router) {
 // no handler exists, an error is returned.
 func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) {
 	if !k.router.HasRoute(evidenceRoute) {
-		return nil, sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidenceRoute)
+		return nil, errors.Wrap(types.ErrNoEvidenceHandlerExists, evidenceRoute)
 	}
 
 	return k.router.GetRoute(evidenceRoute), nil
@@ -78,21 +80,21 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // persisted.
 func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
 	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
-		return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
+		return errors.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
 	}
 	if !k.router.HasRoute(evidence.Route()) {
-		return sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
+		return errors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
 	}
 
 	handler := k.router.GetRoute(evidence.Route())
 	if err := handler(ctx, evidence); err != nil {
-		return sdkerrors.Wrap(types.ErrInvalidEvidence, err.Error())
+		return errors.Wrap(types.ErrInvalidEvidence, err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSubmitEvidence,
-			sdk.NewAttribute(types.AttributeKeyEvidenceHash, evidence.Hash().String()),
+			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
 		),
 	)
 
@@ -108,7 +110,7 @@ func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
-func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
+func (k Keeper) GetEvidence(ctx sdk.Context, hash []byte) (exported.Evidence, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
 	bz := store.Get(hash)
@@ -124,7 +126,7 @@ func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Ev
 // will close and stop.
 func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

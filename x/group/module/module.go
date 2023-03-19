@@ -5,19 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
+	store "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -124,10 +125,6 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
@@ -172,14 +169,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the group content functions used to
-// simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
 // RegisterStoreDecoder registers a decoder for group module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[group.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
@@ -212,7 +203,7 @@ type GroupInputs struct {
 	AccountKeeper    group.AccountKeeper
 	BankKeeper       group.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter baseapp.MessageRouter
 }
 
 type GroupOutputs struct {

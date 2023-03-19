@@ -2,20 +2,19 @@ package baseapp_test
 
 import (
 	"context"
-	"os"
 	"sync"
 	"testing"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -59,7 +58,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil)
+	app := appBuilder.Build(log.NewTestLogger(t), db, nil)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {

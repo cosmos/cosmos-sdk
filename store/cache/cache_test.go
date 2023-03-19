@@ -8,10 +8,10 @@ import (
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/cache"
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/cache"
+	"cosmossdk.io/store/cachekv"
+	iavlstore "cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/types"
 )
 
 func TestGetOrSetStoreCache(t *testing.T) {

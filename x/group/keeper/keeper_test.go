@@ -10,10 +10,12 @@ import (
 	"testing"
 	"time"
 
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtime "github.com/tendermint/tendermint/types/time"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -50,10 +52,10 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	s.blockTime = tmtime.Now()
-	key := sdk.NewKVStoreKey(group.StoreKey)
+	s.blockTime = cmttime.Now()
+	key := storetypes.NewKVStoreKey(group.StoreKey)
 
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 
@@ -122,21 +124,22 @@ func (s *TestSuite) SetupTest() {
 	s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
 }
 
-func (s TestSuite) setNextAccount() { //nolint:govet // this is a test and we're okay with copying locks here.
+func (s *TestSuite) setNextAccount() {
 	nextAccVal := s.groupKeeper.GetGroupPolicySeq(s.sdkCtx) + 1
 	derivationKey := make([]byte, 8)
 	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-	accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{keeper.GroupPolicyTablePrefix}, derivationKey})
-
-	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+	ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{keeper.GroupPolicyTablePrefix}, derivationKey)
 	s.Require().NoError(err)
 
-	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(ac)
+	s.Require().NoError(err)
+
+	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(ac)
 	s.Require().NoError(err)
 	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
 
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(accountCredentials.Address())).Return(nil).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(ac.Address())).Return(nil).AnyTimes()
 	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
 	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), sdk.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
 }

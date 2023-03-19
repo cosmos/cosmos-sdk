@@ -12,7 +12,7 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 
 ### Pre-requisite Readings
 
-* [gRPC, REST and Tendermint Endpoints](../core/06-grpc_rest.md)
+* [gRPC, REST and CometBFT Endpoints](../core/06-grpc_rest.md)
 * [Running a Node](./01-run-node.md)
 
 :::
@@ -22,7 +22,7 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 Now that your chain is running, it is time to try sending tokens from the first account you created to a second account. In a new terminal window, start by running the following query command:
 
 ```bash
-simd query bank balances $MY_VALIDATOR_ADDRESS --chain-id my-test-chain
+simd query bank balances $MY_VALIDATOR_ADDRESS
 ```
 
 You should see the current balance of the account you created, equal to the original balance of `stake` you granted it minus the amount you delegated via the `gentx`. Now, create a second account:
@@ -40,7 +40,7 @@ The command above creates a local key-pair that is not yet registered on the cha
 simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000000stake --chain-id my-test-chain --keyring-backend test
 
 # Check that the recipient account did receive the tokens.
-simd query bank balances $RECIPIENT --chain-id my-test-chain
+simd query bank balances $RECIPIENT
 ```
 
 Finally, delegate some of the stake tokens sent to the `recipient` account to the validator:
@@ -49,7 +49,7 @@ Finally, delegate some of the stake tokens sent to the `recipient` account to th
 simd tx staking delegate $(simd keys show my_validator --bech val -a --keyring-backend test) 500stake --from recipient --chain-id my-test-chain --keyring-backend test
 
 # Query the total delegations to `validator`.
-simd query staking delegations-to $(simd keys show my_validator --bech val -a --keyring-backend test) --chain-id my-test-chain
+simd query staking delegations-to $(simd keys show my_validator --bech val -a --keyring-backend test)
 ```
 
 You should see two delegations, the first one made from the `gentx`, and the second one you just performed from the `recipient` account.
@@ -79,7 +79,7 @@ You should see a list of gRPC services, like `cosmos.bank.v1beta1.Query`. This i
 In order to get a description of the service you can run the following command:
 
 ```bash
-grpcurl \
+grpcurl -plaintext \
     localhost:9090 \
     describe cosmos.bank.v1beta1.Query                  # Service we want to inspect
 ```
@@ -88,8 +88,8 @@ It's also possible to execute an RPC call to query the node for information:
 
 ```bash
 grpcurl \
-    -plaintext
-    -d '{"address":"$MY_VALIDATOR"}' \
+    -plaintext \
+    -d "{\"address\":\"$MY_VALIDATOR_ADDRESS\"}" \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/AllBalances
 ```
@@ -103,8 +103,8 @@ You may also query for historical data by passing some [gRPC metadata](https://g
 ```bash
 grpcurl \
     -plaintext \
-    -H "x-cosmos-block-height: 279256" \
-    -d '{"address":"$MY_VALIDATOR"}' \
+    -H "x-cosmos-block-height: 123" \
+    -d "{\"address\":\"$MY_VALIDATOR_ADDRESS\"}" \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/AllBalances
 ```
@@ -123,6 +123,8 @@ go get github.com/cosmos/cosmos-sdk@main
 ```
 
 ```go
+package main
+
 import (
     "context"
     "fmt"
@@ -135,7 +137,7 @@ import (
 )
 
 func queryState() error {
-    myAddress, err := sdk.AccAddressFromBech32("cosmos1...")
+    myAddress, err := sdk.AccAddressFromBech32("cosmos1...") // the my_validator or recipient address.
     if err != nil {
         return err
     }
@@ -157,7 +159,7 @@ func queryState() error {
     bankClient := banktypes.NewQueryClient(grpcConn)
     bankRes, err := bankClient.Balance(
         context.Background(),
-        &banktypes.QueryBalanceRequest{Address: myAddress.String(), Denom: "atom"},
+        &banktypes.QueryBalanceRequest{Address: myAddress.String(), Denom: "stake"},
     )
     if err != nil {
         return err
@@ -166,6 +168,12 @@ func queryState() error {
     fmt.Println(bankRes.GetBalance()) // Prints the account balance
 
     return nil
+}
+
+func main() {
+    if err := queryState(); err != nil {
+        panic(err)
+    }
 }
 ```
 
@@ -176,36 +184,63 @@ You can replace the query client (here we are using `x/bank`'s) with one generat
 Querying for historical blocks is done by adding the block height metadata in the gRPC request.
 
 ```go
+package main
+
 import (
-    "context"
-    "fmt"
+	"context"
+	"fmt"
 
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/metadata"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
-    "github.com/cosmos/cosmos-sdk/codec"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-    banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func queryState() error {
-    // --snip--
+	myAddress, err := sdk.AccAddressFromBech32("cosmos1yerherx4d43gj5wa3zl5vflj9d4pln42n7kuzu") // the my_validator or recipient address.
+	if err != nil {
+		return err
+	}
 
-    var header metadata.MD
-    bankRes, err = bankClient.Balance(
-        metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // Add metadata to request
-        &banktypes.QueryBalanceRequest{Address: myAddress.String(), Denom: "atom"},
-        grpc.Header(&header), // Retrieve header from response
-    )
-    if err != nil {
-        return err
+	// Create a connection to the gRPC server.
+	grpcConn, err := grpc.Dial(
+		"127.0.0.1:9090",    // your gRPC server address.
+		grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism.
+		// This instantiates a general gRPC codec which handles proto bytes. We pass in a nil interface registry
+		// if the request/response types contain interface instead of 'nil' you should pass the application specific codec.
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())),
+	)
+	if err != nil {
+		return err
+	}
+	defer grpcConn.Close()
+
+	// This creates a gRPC client to query the x/bank service.
+	bankClient := banktypes.NewQueryClient(grpcConn)
+
+	var header metadata.MD
+	_, err = bankClient.Balance(
+		metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // Add metadata to request
+		&banktypes.QueryBalanceRequest{Address: myAddress.String(), Denom: "stake"},
+		grpc.Header(&header), // Retrieve header from response
+	)
+	if err != nil {
+		return err
+	}
+	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
+
+	fmt.Println(blockHeight) // Prints the block height (12)
+
+	return nil
+}
+
+func main() {
+    if err := queryState(); err != nil {
+        panic(err)
     }
-    blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
-
-    fmt.Println(blockHeight) // Prints the block height (12)
-
-    return nil
 }
 ```
 
@@ -217,13 +252,20 @@ CosmJS documentation can be found at [https://cosmos.github.io/cosmjs](https://c
 
 As described in the [gRPC guide](../core/06-grpc_rest.md), all gRPC services on the Cosmos SDK are made available for more convenient REST-based queries through gRPC-gateway. The format of the URL path is based on the Protobuf service method's full-qualified name, but may contain small customizations so that final URLs look more idiomatic. For example, the REST endpoint for the `cosmos.bank.v1beta1.Query/AllBalances` method is `GET /cosmos/bank/v1beta1/balances/{address}`. Request arguments are passed as query parameters.
 
+Note that the REST endpoints are not enabled by default. To enable them, edit the `api` section of your  `~/.simapp/config/app.toml` file:
+
+```toml
+# Enable defines if the API server should be enabled.
+enable = true
+```
+
 As a concrete example, the `curl` command to make balances request is:
 
 ```bash
 curl \
     -X GET \
     -H "Content-Type: application/json" \
-    http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR
+    http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR_ADDRESS
 ```
 
 Make sure to replace `localhost:1317` with the REST endpoint of your node, configured under the `api.address` field.
@@ -238,8 +280,8 @@ Querying for historical state is done using the HTTP header `x-cosmos-block-heig
 curl \
     -X GET \
     -H "Content-Type: application/json" \
-    -H "x-cosmos-block-height: 279256"
-    http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR
+    -H "x-cosmos-block-height: 123" \
+    http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR_ADDRESS
 ```
 
 Assuming the state at that block has not yet been pruned by the node, this query should return a non-empty response.

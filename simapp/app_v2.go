@@ -8,11 +8,21 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/x/evidence"
+	evidencekeeper "cosmossdk.io/x/evidence/keeper"
+	nftkeeper "cosmossdk.io/x/nft/keeper"
+	nftmodule "cosmossdk.io/x/nft/module"
+
+	storetypes "cosmossdk.io/store/types"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/upgrade"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -23,8 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -36,18 +45,12 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -57,8 +60,6 @@ import (
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -67,9 +68,6 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 )
 
 var (
@@ -83,15 +81,12 @@ var (
 		auth.AppModuleBasic{},
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
-		capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{
 				paramsclient.ProposalHandler,
-				upgradeclient.LegacyProposalHandler,
-				upgradeclient.LegacyCancelProposalHandler,
 			},
 		),
 		params.AppModuleBasic{},
@@ -127,7 +122,6 @@ type SimApp struct {
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
-	CapabilityKeeper      *capabilitykeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
@@ -168,21 +162,6 @@ func NewSimApp(
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
-		// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
-		// handlers. These defaults are already set in the SDK's BaseApp, this shows an example of how to override
-		// them.
-		//
-		// nonceMempool = mempool.NewSenderNonceMempool()
-		// mempoolOpt   = baseapp.SetMempool(nonceMempool)
-		// prepareOpt   = func(app *baseapp.BaseApp) {
-		// 	app.SetPrepareProposal(app.DefaultPrepareProposal())
-		// }
-		// processOpt = func(app *baseapp.BaseApp) {
-		// 	app.SetProcessProposal(app.DefaultProcessProposal())
-		// }
-		//
-		// Further down we'd set the options in the AppBuilder like below.
-		// baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -204,7 +183,7 @@ func NewSimApp(
 				// For providing a custom a base account type add it below.
 				// By default the auth module uses authtypes.ProtoBaseAccount().
 				//
-				// func() authtypes.AccountI { return authtypes.ProtoBaseAccount() },
+				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
 
 				//
 				// MINT
@@ -226,7 +205,6 @@ func NewSimApp(
 		&app.autoCliOpts,
 		&app.AccountKeeper,
 		&app.BankKeeper,
-		&app.CapabilityKeeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,
@@ -245,11 +223,37 @@ func NewSimApp(
 		panic(err)
 	}
 
+	// Below we could construct and set an application specific mempool and
+	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are
+	// already set in the SDK's BaseApp, this shows an example of how to override
+	// them.
+	//
+	// Example:
+	//
+	// app.App = appBuilder.Build(...)
+	// nonceMempool := mempool.NewSenderNonceMempool()
+	// abciPropHandler := NewDefaultProposalHandler(nonceMempool, app.App.BaseApp)
+	//
+	// app.App.BaseApp.SetMempool(nonceMempool)
+	// app.App.BaseApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
+	// app.App.BaseApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
+	//
+	// Alternatively, you can construct BaseApp options, append those to
+	// baseAppOptions and pass them to the appBuilder.
+	//
+	// Example:
+	//
+	// prepareOpt = func(app *baseapp.BaseApp) {
+	// 	abciPropHandler := baseapp.NewDefaultProposalHandler(nonceMempool, app)
+	// 	app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
+	// }
+	// baseAppOptions = append(baseAppOptions, prepareOpt)
+
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
-	if err := app.App.BaseApp.SetStreamingService(appOpts, app.appCodec, app.kvStoreKeys()); err != nil {
-		logger.Error("failed to load state streaming", "err", err)
-		os.Exit(1)
+	// register streaming services
+	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+		panic(err)
 	}
 
 	/****  Module Options ****/

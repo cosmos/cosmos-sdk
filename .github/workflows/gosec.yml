@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run Gosec Security Scanner
-        uses: cosmos/gosec@master
+        uses: securego/gosec@master
         with:
           # we let the report trigger content trigger a failure using the GitHub Security features.
           args: "-no-fail -fmt sarif -out results.sarif ./..."

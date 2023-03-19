@@ -1,17 +1,21 @@
 package keeper_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -29,12 +33,15 @@ import (
 )
 
 const (
-	fooDenom     = "foo"
-	barDenom     = "bar"
-	initialPower = int64(100)
-	holder       = "holder"
-	multiPerm    = "multiple permissions account"
-	randomPerm   = "random permission"
+	fooDenom            = "foo"
+	barDenom            = "bar"
+	ibcPath             = "transfer/channel-0"
+	ibcBaseDenom        = "farboo"
+	metaDataDescription = "IBC Token from %s"
+	initialPower        = int64(100)
+	holder              = "holder"
+	multiPerm           = "multiple permissions account"
+	randomPerm          = "random permission"
 )
 
 var (
@@ -67,6 +74,36 @@ func newBarCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(barDenom, amt)
 }
 
+func newIbcCoin(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(getIBCDenom(ibcPath, ibcBaseDenom), amt)
+}
+
+func getIBCDenom(path string, baseDenom string) string {
+	return fmt.Sprintf("%s/%s", "ibc", hex.EncodeToString(getIBCHash(path, baseDenom)))
+}
+
+func getIBCHash(path string, baseDenom string) []byte {
+	hash := sha256.Sum256([]byte(path + "/" + baseDenom))
+	return hash[:]
+}
+
+func addIBCMetadata(ctx sdk.Context, k keeper.BaseKeeper) {
+	metadata := banktypes.Metadata{
+		Description: fmt.Sprintf(metaDataDescription, ibcPath),
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    ibcBaseDenom,
+				Exponent: 0,
+			},
+		},
+		// Setting base as IBChash Denom as SetDenomMetaData uses Base as storeKey
+		// and the bank keeper will only have the IBCHash to get the denom metadata
+		Base:    getIBCDenom(ibcPath, ibcBaseDenom),
+		Display: ibcPath + "/" + ibcBaseDenom,
+	}
+	k.SetDenomMetaData(ctx, metadata)
+}
+
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -85,9 +122,9 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	key := sdk.NewKVStoreKey(banktypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations
@@ -199,7 +236,7 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
 		return keeper.NewBaseKeeper(
 			moduletestutil.MakeTestEncodingConfig().Codec,
-			sdk.NewKVStoreKey(banktypes.StoreKey),
+			storetypes.NewKVStoreKey(banktypes.StoreKey),
 			nil,
 			nil,
 			authority,
@@ -570,7 +607,7 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 	balances := sdk.NewCoins(newFooCoin(50))
 
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -589,7 +626,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 func (suite *KeeperTestSuite) TestValidateBalance() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
@@ -809,7 +846,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 func (suite *KeeperTestSuite) TestSpendableCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -842,7 +879,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 func (suite *KeeperTestSuite) TestVestingAccountSend() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -871,7 +908,7 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
@@ -905,7 +942,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -937,7 +974,7 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -974,7 +1011,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 func (suite *KeeperTestSuite) TestDelegateCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -1031,7 +1068,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins_Invalid() {
 func (suite *KeeperTestSuite) TestUndelegateCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))

@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	FlagDenom = "denom"
+	FlagDenom        = "denom"
+	FlagResolveDenom = "resolve-denom"
 )
 
 // GetQueryCmd returns the parent command for all x/bank CLi query commands. The
-// provided clientCtx should have, at a minimum, a verifier, Tendermint RPC client,
+// provided clientCtx should have, at a minimum, a verifier, CometBFT RPC client,
 // and marshaler set.
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -50,8 +51,9 @@ func GetBalancesCmd() *cobra.Command {
 Example:
   $ %s query %s balances [address]
   $ %s query %s balances [address] --denom=[denom]
+  $ %s query %s balances [address] --resolve-denom
 `,
-				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -81,7 +83,12 @@ Example:
 			ctx := cmd.Context()
 
 			if denom == "" {
-				params := types.NewQueryAllBalancesRequest(addr, pageReq)
+				resolveDenom, err := cmd.Flags().GetBool(FlagResolveDenom)
+				if err != nil {
+					return err
+				}
+
+				params := types.NewQueryAllBalancesRequest(addr, pageReq, resolveDenom)
 
 				res, err := queryClient.AllBalances(ctx, params)
 				if err != nil {
@@ -103,6 +110,7 @@ Example:
 	}
 
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
+	cmd.Flags().Bool(FlagResolveDenom, false, "Resolve denom to human-readable denom from metadata")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all balances")
 

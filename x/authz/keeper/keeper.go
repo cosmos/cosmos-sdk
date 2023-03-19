@@ -5,14 +5,16 @@ import (
 	"strconv"
 	"time"
 
+	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
+
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -26,12 +28,12 @@ const gasCostPerIteration = uint64(20)
 type Keeper struct {
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
-	router     *baseapp.MsgServiceRouter
+	router     baseapp.MessageRouter
 	authKeeper authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter, ak authz.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router baseapp.MessageRouter, ak authz.AccountKeeper) Keeper {
 	return Keeper{
 		storeKey:   storeKey,
 		cdc:        cdc,
@@ -101,7 +103,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 
 			grant, found := k.getGrant(ctx, skey)
 			if !found {
-				return nil, sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to update grant with key %s", string(skey))
+				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "failed to update grant with key %s", string(skey))
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(now) {
@@ -139,7 +141,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 
 		msgResp, err := handler(ctx, msg)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
+			return nil, errorsmod.Wrapf(err, "failed to execute message; message %v", msg)
 		}
 
 		results[i] = msgResp.Data
@@ -208,7 +210,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 	skey := grantStoreKey(grantee, granter, msgType)
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
-		return sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to delete grant with key %s", string(skey))
+		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "failed to delete grant with key %s", string(skey))
 	}
 
 	if grant.Expiration != nil {
@@ -231,7 +233,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := grantStoreKey(grantee, granter, "")
-	iter := sdk.KVStorePrefixIterator(store, key)
+	iter := storetypes.KVStorePrefixIterator(store, key)
 	defer iter.Close()
 
 	var authorization authz.Grant
@@ -279,7 +281,7 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, GrantKey)
+	iter := storetypes.KVStorePrefixIterator(store, GrantKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var grant authz.Grant
@@ -343,7 +345,7 @@ func (k Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, granter, 
 	key := GrantQueueKey(expiration, granter, grantee)
 	bz := store.Get(key)
 	if bz == nil {
-		return sdkerrors.Wrap(authz.ErrNoGrantKeyFound, "can't remove grant from the expire queue, grant key not found")
+		return errorsmod.Wrap(authz.ErrNoGrantKeyFound, "can't remove grant from the expire queue, grant key not found")
 	}
 
 	var queueItem authz.GrantQueueItem
@@ -378,7 +380,7 @@ func (k Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, granter, 
 func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context) error {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(GrantQueuePrefix, sdk.InclusiveEndBytes(GrantQueueTimePrefix(ctx.BlockTime())))
+	iterator := store.Iterator(GrantQueuePrefix, storetypes.InclusiveEndBytes(GrantQueueTimePrefix(ctx.BlockTime())))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

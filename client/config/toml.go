@@ -22,7 +22,7 @@ chain-id = "{{ .ChainID }}"
 keyring-backend = "{{ .KeyringBackend }}"
 # CLI output format (text|json)
 output = "{{ .Output }}"
-# <host>:<port> to Tendermint RPC interface for this chain
+# <host>:<port> to CometBFT RPC interface for this chain
 node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
@@ -88,7 +88,7 @@ func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 		return nil, err
 	}
 
-	conf := new(ClientConfig)
+	conf := DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, err
 	}

@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"io"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/confio/ics23/go"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
-	sdkerrors "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/internal/kv"
-	"github.com/cosmos/cosmos-sdk/store/metrics"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/internal/kv"
+	"cosmossdk.io/store/metrics"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/types"
 )
 
 const (
@@ -242,6 +242,11 @@ func (st *Store) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
 	return st.tree.LoadVersionForOverwriting(targetVersion)
 }
 
+// LazyLoadVersionForOverwriting is the lazy version of LoadVersionForOverwriting.
+func (st *Store) LazyLoadVersionForOverwriting(targetVersion int64) (int64, error) {
+	return st.tree.LazyLoadVersionForOverwriting(targetVersion)
+}
+
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, true)
@@ -270,17 +275,13 @@ func (st *Store) SetInitialVersion(version int64) {
 func (st *Store) Export(version int64) (*iavl.Exporter, error) {
 	istore, err := st.GetImmutable(version)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "iavl export failed for version %v", version)
+		return nil, errorsmod.Wrapf(err, "iavl export failed for version %v", version)
 	}
 	tree, ok := istore.tree.(*immutableTree)
 	if !ok || tree == nil {
 		return nil, fmt.Errorf("iavl export failed: unable to fetch tree for version %v", version)
 	}
-	export, err := tree.Export()
-	if err != nil {
-		return nil, err
-	}
-	return export, nil
+	return tree.Export()
 }
 
 // Import imports an IAVL tree at the given version, returning an iavl.Importer for importing.
@@ -317,7 +318,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer st.metrics.MeasureSince("store", "iavl", "query")
 
 	if len(req.Data) == 0 {
-		return types.QueryResult(sdkerrors.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
+		return types.QueryResult(errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
 	}
 
 	tree := st.tree
@@ -382,16 +383,21 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.Value = bz
 
 	default:
-		return types.QueryResult(sdkerrors.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
+		return types.QueryResult(errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
 	}
 
 	return res
 }
 
+// TraverseStateChanges traverses the state changes between two versions and calls the given function.
+func (st *Store) TraverseStateChanges(startVersion, endVersion int64, fn func(version int64, changeSet *iavl.ChangeSet) error) error {
+	return st.tree.TraverseStateChanges(startVersion, endVersion, fn)
+}
+
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto.ProofOps {
+func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *cmtprotocrypto.ProofOps {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error
@@ -414,5 +420,5 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 	}
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
+	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}
 }

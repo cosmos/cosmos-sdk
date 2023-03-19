@@ -3,7 +3,7 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 export VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
-export TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
+export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -20,26 +20,26 @@ ENABLE_ROCKSDB ?= false
 # process build tags
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
-  ifeq ($(OS),Windows_NT)
-    GCCEXE = $(shell where gcc.exe 2> NUL)
-    ifeq ($(GCCEXE),)
-      $(error gcc.exe not installed for ledger support, please install or set LEDGER_ENABLED=false)
-    else
-      build_tags += ledger
-    endif
-  else
-    UNAME_S = $(shell uname -s)
-    ifeq ($(UNAME_S),OpenBSD)
-      $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
-    else
-      GCC = $(shell command -v gcc 2> /dev/null)
-      ifeq ($(GCC),)
-        $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
-      else
-        build_tags += ledger
-      endif
-    endif
-  endif
+	ifeq ($(OS),Windows_NT)
+	GCCEXE = $(shell where gcc.exe 2> NUL)
+	ifeq ($(GCCEXE),)
+		$(error gcc.exe not installed for ledger support, please install or set LEDGER_ENABLED=false)
+	else
+		build_tags += ledger
+	endif
+	else
+	UNAME_S = $(shell uname -s)
+	ifeq ($(UNAME_S),OpenBSD)
+		$(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
+	else
+		GCC = $(shell command -v gcc 2> /dev/null)
+		ifeq ($(GCC),)
+			$(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
+		else
+			build_tags += ledger
+		endif
+	endif
+	endif
 endif
 
 ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
@@ -62,7 +62,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-			-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
+			-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
 
 ifeq ($(ENABLE_ROCKSDB),true)
   BUILD_TAGS += rocksdb_build
@@ -124,7 +124,7 @@ build: BUILD_ARGS=-o $(BUILDDIR)/
 
 build-linux-amd64:
 	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
-	
+
 build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
@@ -140,7 +140,13 @@ cosmovisor:
 rosetta:
 	$(MAKE) -C tools/rosetta rosetta
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta
+confix:
+	$(MAKE) -C tools/confix confix
+
+hubl:
+	$(MAKE) -C tools/hubl hubl
+
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta confix
 
 
 mocks: $(MOCKS_DIR)
@@ -159,9 +165,10 @@ $(MOCKS_DIR):
 distclean: clean tools-clean
 clean:
 	rm -rf \
-    $(BUILDDIR)/ \
-    artifacts/ \
-    tmp-swagger-gen/
+	$(BUILDDIR)/ \
+	artifacts/ \
+	tmp-swagger-gen/ \
+	.testnets
 
 .PHONY: distclean clean
 
@@ -177,16 +184,6 @@ go.sum: go.mod
 ###############################################################################
 ###                              Documentation                              ###
 ###############################################################################
-
-update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
-	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
-        exit 1;\
-    else \
-        echo "\033[92mSwagger docs are in sync\033[0m";\
-    fi
-.PHONY: update-swagger-docs
 
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
@@ -270,6 +267,20 @@ test-sim-nondeterminism:
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
 		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
 
+# Requires an exported plugin. See store/streaming/README.md for documentation.
+#
+# example:
+#   export COSMOS_SDK_ABCI_V1=<path-to-plugin-binary>
+#   make test-sim-nondeterminism-streaming
+#
+# Using the built-in examples:
+#   export COSMOS_SDK_ABCI_V1=<path-to-sdk>/store/streaming/abci/examples/file/file
+#   make test-sim-nondeterminism-streaming
+test-sim-nondeterminism-streaming:
+	@echo "Running non-determinism-streaming test..."
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
+		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h -EnableStreaming=true
+
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
@@ -305,6 +316,7 @@ test-sim-benchmark-invariants:
 
 .PHONY: \
 test-sim-nondeterminism \
+test-sim-nondeterminism-streaming \
 test-sim-custom-genesis-fast \
 test-sim-import-export \
 test-sim-after-import \
@@ -319,13 +331,41 @@ SIM_COMMIT ?= true
 
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$  \
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
+
+# Requires an exported plugin. See store/streaming/README.md for documentation.
+#
+# example:
+#   export COSMOS_SDK_ABCI_V1=<path-to-plugin-binary>
+#   make test-sim-benchmark-streaming
+#
+# Using the built-in examples:
+#   export COSMOS_SDK_ABCI_V1=<path-to-sdk>/store/streaming/abci/examples/file/file
+#   make test-sim-benchmark-streaming
+test-sim-benchmark-streaming:
+	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
+		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -EnableStreaming=true
 
 test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
+
+# Requires an exported plugin. See store/streaming/README.md for documentation.
+#
+# example:
+#   export COSMOS_SDK_ABCI_V1=<path-to-plugin-binary>
+#   make test-sim-profile-streaming
+#
+# Using the built-in examples:
+#   export COSMOS_SDK_ABCI_V1=<path-to-sdk>/store/streaming/abci/examples/file/file
+#   make test-sim-profile-streaming
+test-sim-profile-streaming:
+	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
+		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out -EnableStreaming=true
 
 .PHONY: test-sim-profile test-sim-benchmark
 
@@ -343,7 +383,7 @@ benchmark:
 ###############################################################################
 
 golangci_lint_cmd=golangci-lint
-golangci_version=v1.50.1
+golangci_version=v1.51.2
 
 lint:
 	@echo "--> Running linter"
@@ -363,36 +403,10 @@ format:
 .PHONY: format
 
 ###############################################################################
-###                                 Devdoc                                  ###
-###############################################################################
-
-DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
-
-devdoc-init:
-	$(DOCKER) run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" tendermint/devdoc echo
-	# TODO make this safer
-	$(call DEVDOC_SAVE)
-
-devdoc:
-	$(DOCKER) run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" devdoc:local bash
-
-devdoc-save:
-	# TODO make this safer
-	$(call DEVDOC_SAVE)
-
-devdoc-clean:
-	docker rmi -f $$(docker images -f "dangling=true" -q)
-
-devdoc-update:
-	docker pull tendermint/devdoc
-
-.PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update
-
-###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.4
+protoVer=0.12.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -415,40 +429,40 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-rc2/proto/tendermint
+CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.37.0/proto/tendermint
 
-TM_CRYPTO_TYPES     = proto/tendermint/crypto
-TM_ABCI_TYPES       = proto/tendermint/abci
-TM_TYPES            = proto/tendermint/types
-TM_VERSION          = proto/tendermint/version
-TM_LIBS             = proto/tendermint/libs/bits
-TM_P2P              = proto/tendermint/p2p
+CMT_CRYPTO_TYPES     = proto/tendermint/crypto
+CMT_ABCI_TYPES       = proto/tendermint/abci
+CMT_TYPES            = proto/tendermint/types
+CMT_VERSION          = proto/tendermint/version
+CMT_LIBS             = proto/tendermint/libs/bits
+CMT_P2P              = proto/tendermint/p2p
 
 proto-update-deps:
 	@echo "Updating Protobuf dependencies"
 
-	@mkdir -p $(TM_ABCI_TYPES)
-	@curl -sSL $(TM_URL)/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
+	@mkdir -p $(CMT_ABCI_TYPES)
+	@curl -sSL $(CMT_URL)/abci/types.proto > $(CMT_ABCI_TYPES)/types.proto
 
-	@mkdir -p $(TM_VERSION)
-	@curl -sSL $(TM_URL)/version/types.proto > $(TM_VERSION)/types.proto
+	@mkdir -p $(CMT_VERSION)
+	@curl -sSL $(CMT_URL)/version/types.proto > $(CMT_VERSION)/types.proto
 
-	@mkdir -p $(TM_TYPES)
-	@curl -sSL $(TM_URL)/types/types.proto > $(TM_TYPES)/types.proto
-	@curl -sSL $(TM_URL)/types/evidence.proto > $(TM_TYPES)/evidence.proto
-	@curl -sSL $(TM_URL)/types/params.proto > $(TM_TYPES)/params.proto
-	@curl -sSL $(TM_URL)/types/validator.proto > $(TM_TYPES)/validator.proto
-	@curl -sSL $(TM_URL)/types/block.proto > $(TM_TYPES)/block.proto
+	@mkdir -p $(CMT_TYPES)
+	@curl -sSL $(CMT_URL)/types/types.proto > $(CMT_TYPES)/types.proto
+	@curl -sSL $(CMT_URL)/types/evidence.proto > $(CMT_TYPES)/evidence.proto
+	@curl -sSL $(CMT_URL)/types/params.proto > $(CMT_TYPES)/params.proto
+	@curl -sSL $(CMT_URL)/types/validator.proto > $(CMT_TYPES)/validator.proto
+	@curl -sSL $(CMT_URL)/types/block.proto > $(CMT_TYPES)/block.proto
 
-	@mkdir -p $(TM_CRYPTO_TYPES)
-	@curl -sSL $(TM_URL)/crypto/proof.proto > $(TM_CRYPTO_TYPES)/proof.proto
-	@curl -sSL $(TM_URL)/crypto/keys.proto > $(TM_CRYPTO_TYPES)/keys.proto
+	@mkdir -p $(CMT_CRYPTO_TYPES)
+	@curl -sSL $(CMT_URL)/crypto/proof.proto > $(CMT_CRYPTO_TYPES)/proof.proto
+	@curl -sSL $(CMT_URL)/crypto/keys.proto > $(CMT_CRYPTO_TYPES)/keys.proto
 
-	@mkdir -p $(TM_LIBS)
-	@curl -sSL $(TM_URL)/libs/bits/types.proto > $(TM_LIBS)/types.proto
+	@mkdir -p $(CMT_LIBS)
+	@curl -sSL $(CMT_URL)/libs/bits/types.proto > $(CMT_LIBS)/types.proto
 
-	@mkdir -p $(TM_P2P)
-	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
+	@mkdir -p $(CMT_P2P)
+	@curl -sSL $(CMT_URL)/p2p/types.proto > $(CMT_P2P)/types.proto
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 

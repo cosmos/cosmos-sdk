@@ -1,19 +1,20 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
-
-// slashing message types
-const (
-	TypeMsgUnjail = "unjail"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // verify interface at compile time
 var (
 	_ sdk.Msg = &MsgUnjail{}
 	_ sdk.Msg = &MsgUpdateParams{}
+
+	_ legacytx.LegacyMsg = &MsgUnjail{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 )
 
 // NewMsgUnjail creates a new MsgUnjail instance
@@ -24,12 +25,6 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
 		ValidatorAddr: validatorAddr.String(),
 	}
 }
-
-// Route implements the sdk.Msg interface.
-func (msg MsgUnjail) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgUnjail) Type() string { return TypeMsgUnjail }
 
 // GetSigners returns the expected signers for MsgUnjail.
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
@@ -57,15 +52,15 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 }
 
 // GetSigners returns the expected signers for a MsgUpdateParams message.
-func (msg *MsgUpdateParams) GetSigners() []sdk.AccAddress {
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }
 
 // ValidateBasic does a sanity check on the provided data.
-func (msg *MsgUpdateParams) ValidateBasic() error {
+func (msg MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.Wrap(err, "invalid authority address")
+		return errorsmod.Wrap(err, "invalid authority address")
 	}
 
 	if err := msg.Params.Validate(); err != nil {

@@ -9,21 +9,22 @@ import (
 
 	"cosmossdk.io/math"
 
+	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltestutil "github.com/cosmos/cosmos-sdk/x/genutil/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -50,8 +51,8 @@ type GenTxTestSuite struct {
 
 func (suite *GenTxTestSuite) SetupTest() {
 	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(genutil.AppModuleBasic{})
-	key := sdk.NewKVStoreKey("a_Store_Key")
-	tkey := sdk.NewTransientStoreKey("a_transient_store")
+	key := storetypes.NewKVStoreKey("a_Store_Key")
+	tkey := storetypes.NewTransientStoreKey("a_transient_store")
 	suite.ctx = testutil.DefaultContext(key, tkey)
 
 	ctrl := gomock.NewController(suite.T())

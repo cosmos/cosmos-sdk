@@ -3,12 +3,14 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/log"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/tendermint/tendermint/libs/log"
+
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -84,7 +86,7 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	bech32Codec := newBech32Codec(bech32Prefix)
+	bech32Codec := NewBech32Codec(bech32Prefix)
 
 	return AccountKeeper{
 		storeKey:   storeKey,
@@ -101,6 +103,12 @@ func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
 
+// GetAddressCodec returns the x/auth module's address.
+// x/auth is tied to bech32 encoded user accounts
+func (ak AccountKeeper) GetAddressCodec() address.Codec {
+	return ak.addressCdc
+}
+
 // Logger returns a module-specific logger.
 func (ak AccountKeeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
@@ -110,7 +118,7 @@ func (ak AccountKeeper) Logger(ctx sdk.Context) log.Logger {
 func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (cryptotypes.PubKey, error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	return acc.GetPubKey(), nil
@@ -120,7 +128,7 @@ func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (cryptot
 func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return 0, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return 0, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	return acc.GetSequence(), nil

@@ -5,12 +5,16 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/upgrade"
+	"cosmossdk.io/x/upgrade/keeper"
+	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,9 +22,6 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type KeeperTestSuite struct {
@@ -38,9 +39,9 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	s.key = key
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
@@ -61,7 +62,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
-	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now(), Height: 10})
+	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: 10})
 
 	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
 	s.addrs = simtestutil.CreateIncrementalAccounts(1)

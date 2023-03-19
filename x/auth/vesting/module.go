@@ -3,9 +3,9 @@ package vesting
 import (
 	"encoding/json"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/depinject"
 
@@ -97,9 +97,6 @@ func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
-
-// RegisterInvariants performs a no-op; there are no invariants to enforce.
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {

@@ -12,7 +12,7 @@ sidebar_position: 1
 ### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
-* [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events)
+* [CometBFT Documentation on Events](https://docs.cometbft.com/v0.37/spec/abci/abci++_basic_concepts#events)
 
 :::
 
@@ -22,7 +22,7 @@ Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type an
 take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
 ```protobuf reference
-https://github.com/tendermint/tendermint/blob/v0.34.21/proto/tendermint/abci/types.proto#L310-L319
+https://github.com/cometbft/cometbft/blob/v0.37.0/proto/tendermint/abci/types.proto#L334-L343
 ```
 
 An Event contains:
@@ -57,7 +57,6 @@ The following examples show how to query Events using the Cosmos SDK.
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tx.height=23`                                   | Query all transactions at height 23                                                                                                                      |
 | `message.action='/cosmos.bank.v1beta1.Msg/Send'` | Query all transactions containing a x/bank `Send` [Service `Msg`](../building-modules/03-msg-services.md). Note the `'`s around the value.                  |
-| `message.action='send'`                          | Query all transactions containing a x/bank `Send` [legacy `Msg`](../building-modules/03-msg-services.md#legacy-amino-msgs). Note the `'`s around the value. |
 | `message.module='bank'`                          | Query all transactions containing messages from the x/bank module. Note the `'`s around the value.                                                       |
 | `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../modules/staking/README.md).                                                         |
 
@@ -68,7 +67,7 @@ Internally, the `EventManager` tracks a list of Events for the entire execution 
 transaction or `BeginBlock`/`EndBlock`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/events.go#L17-L25
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/events.go#L24-L27
 ```
 
 The `EventManager` comes with a set of useful methods to manage Events. The method
@@ -76,7 +75,7 @@ that is used most by module and application developers is `EmitTypedEvent` or `E
 an Event in the `EventManager`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/events.go#L50-L59
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/events.go#L53-L62
 ```
 
 Module developers should handle Event emission via the `EventManager#EmitTypedEvent` or `EventManager#EmitEvent` in each message
@@ -87,7 +86,7 @@ the [`Context`](./02-context.md), where Event should be already registered, and 
 **Typed events:**
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/keeper/msg_server.go#L89-L92
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/keeper/msg_server.go#L88-L91
 ```
 
 **Legacy events:**
@@ -112,7 +111,7 @@ view on how to typically implement Events and use the `EventManager` in modules.
 
 ## Subscribing to Events
 
-You can use Tendermint's [Websocket](https://docs.tendermint.com/master/tendermint-core/subscription.html#subscribing-to-events-via-websocket) to subscribe to Events by calling the `subscribe` RPC method:
+You can use CometBFT's [Websocket](https://docs.cometbft.com/v0.37/core/subscription) to subscribe to Events by calling the `subscribe` RPC method:
 
 ```json
 {
@@ -132,9 +131,9 @@ The main `eventCategory` you can subscribe to are:
 * `ValidatorSetUpdates`: Contains validator set updates for the block.
 
 These Events are triggered from the `state` package after a block is committed. You can get the
-full list of Event categories [on the Tendermint Go documentation](https://pkg.go.dev/github.com/tendermint/tendermint/types#pkg-constants).
+full list of Event categories [on the CometBFT Go documentation](https://pkg.go.dev/github.com/cometbft/cometbft/types#pkg-constants).
 
-The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `Mint` transaction triggers an Event of type `EventMint` and has an `Id` and an `Owner` as `attributes` (as defined in the [`events.proto` file of the `NFT` module](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/nft/v1beta1/event.proto#L14-L19)).
+The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `Mint` transaction triggers an Event of type `EventMint` and has an `Id` and an `Owner` as `attributes` (as defined in the [`events.proto` file of the `NFT` module](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/nft/v1beta1/event.proto#L21-L31)).
 
 Subscribing to this Event would be done like so:
 
@@ -151,7 +150,7 @@ Subscribing to this Event would be done like so:
 
 where `ownerAddress` is an address following the [`AccAddress`](../basics/03-accounts.md#addresses) format.
 
-The same way can be used to subscribe to [legacy events](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/types/events.go).
+The same way can be used to subscribe to [legacy events](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/types/events.go).
 
 ## Default Events
 

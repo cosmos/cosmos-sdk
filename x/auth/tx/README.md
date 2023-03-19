@@ -37,19 +37,19 @@ This package represents the Cosmos SDK implementation of the `client.TxConfig`, 
 The interface defines a set of methods for creating a `client.TxBuilder`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/client/tx_config.go#L25-L31
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx_config.go#L25-L31
 ```
 
 The default implementation of `client.TxConfig` is instantiated by `NewTxConfig` in `x/auth/tx` module.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/x/auth/tx/config.go#L24-L30
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/tx/config.go#L22-L28
 ```
 
 ### `TxBuilder`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/client/tx_config.go#L33-L50
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx_config.go#L33-L50
 ```
 
 The [`client.TxBuilder`](https://docs.cosmos.network/main/core/transactions#transaction-generation) interface is as well implemented by `x/auth/tx`.
@@ -83,6 +83,32 @@ When querying a transaction given its signature, use the `--type=signature` flag
 
 ```shell
 simd query tx --type=signature Ofjvgrqi8twZfqVDmYIhqwRLQjZZ40XbxEamk/veH3gQpRF0hL2PH4ejRaDzAX+2WChnaWNQJQ41ekToIi5Wqw==
+```
+
+When querying a transaction given its events, use the `--type=events` flag:
+
+```shell
+simd query txs --events 'message.sender=cosmos...' --page 1 --limit 30
+```
+
+The `x/auth/block` module provides a CLI command to query any block, given its hash, height, or events.
+
+When querying a block by its hash, use the `--type=hash` flag:
+
+```shell
+simd query block --type=hash DFE87B78A630C0EFDF76C80CD24C997E252792E0317502AE1A02B9809F0D8685
+```
+
+When querying a block by its height, use the `--type=height` flag:
+
+```shell
+simd query block --type=height 1357
+```
+
+When querying a block by its events, use the `--query` flag:
+
+```shell
+simd query blocks --query 'message.sender=cosmos...' --page 1 --limit 30
 ```
 
 #### Transactions

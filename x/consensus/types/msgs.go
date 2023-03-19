@@ -1,18 +1,17 @@
 package types
 
 import (
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-const (
-	TypeMsgUpdateParams = "update_params"
+var (
+	_ sdk.Msg            = &MsgUpdateParams{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 )
-
-var _ legacytx.LegacyMsg = &MsgUpdateParams{}
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
@@ -27,34 +26,26 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgUpdateParams) Route() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-func (msg MsgUpdateParams) Type() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
 // ValidateBasic performs basic MsgUpdateParams message validation.
 func (msg MsgUpdateParams) ValidateBasic() error {
-	params := tmtypes.ConsensusParamsFromProto(msg.ToProtoConsensusParams())
+	params := cmttypes.ConsensusParamsFromProto(msg.ToProtoConsensusParams())
 	return params.ValidateBasic()
 }
 
-func (msg MsgUpdateParams) ToProtoConsensusParams() tmproto.ConsensusParams {
-	return tmproto.ConsensusParams{
-		Block: &tmproto.BlockParams{
+func (msg MsgUpdateParams) ToProtoConsensusParams() cmtproto.ConsensusParams {
+	return cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
 			MaxBytes: msg.Block.MaxBytes,
 			MaxGas:   msg.Block.MaxGas,
 		},
-		Evidence: &tmproto.EvidenceParams{
+		Evidence: &cmtproto.EvidenceParams{
 			MaxAgeNumBlocks: msg.Evidence.MaxAgeNumBlocks,
 			MaxAgeDuration:  msg.Evidence.MaxAgeDuration,
 			MaxBytes:        msg.Evidence.MaxBytes,
 		},
-		Validator: &tmproto.ValidatorParams{
+		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
-		Version: tmtypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
+		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
 }

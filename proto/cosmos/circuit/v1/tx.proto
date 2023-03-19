@@ -47,10 +47,10 @@ message CircuitBreakerPermissions {
   // level is the level of permissions granted to this account.
   Level level = 1;
 
-  // limit_type_urls is used with LEVEL_SOME_MSGS to limit the lists of Msg type
-  // URLs that the account can pause. It is an error to use limit_type_urls with
+  // limit_msg_types is used with LEVEL_SOME_MSGS to limit the lists of Msg type
+  // name that the account can pause. It is an error to use limit_msg_types with
   // a level other than LEVEL_SOME_MSGS.
-  repeated string limit_type_urls = 2;
+  repeated string limit_msg_types = 2;
 
   // Level is the permission level.
   enum Level {

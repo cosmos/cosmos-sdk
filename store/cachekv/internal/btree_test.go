@@ -3,7 +3,7 @@ package internal
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/types"
 	"github.com/stretchr/testify/require"
 )
 

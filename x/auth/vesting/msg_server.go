@@ -5,6 +5,8 @@ import (
 
 	"github.com/armon/go-metrics"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -45,11 +47,11 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	}
 
 	if bk.BlockedAddr(to) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
 	if acc := ak.GetAccount(ctx, to); acc != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
@@ -79,8 +81,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		}
 	}()
 
-	err = bk.SendCoins(ctx, from, to, msg.Amount)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -106,11 +107,11 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 	}
 
 	if bk.BlockedAddr(to) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
 	if acc := ak.GetAccount(ctx, to); acc != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
@@ -133,8 +134,7 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 		}
 	}()
 
-	err = bk.SendCoins(ctx, from, to, msg.Amount)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -157,13 +157,16 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	}
 
 	if acc := ak.GetAccount(ctx, to); acc != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
 	var totalCoins sdk.Coins
-
 	for _, period := range msg.VestingPeriods {
 		totalCoins = totalCoins.Add(period.Amount...)
+	}
+
+	if err := bk.IsSendEnabledCoins(ctx, totalCoins...); err != nil {
+		return nil, err
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
@@ -186,8 +189,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		}
 	}()
 
-	err = bk.SendCoins(ctx, from, to, totalCoins)
-	if err != nil {
+	if err = bk.SendCoins(ctx, from, to, totalCoins); err != nil {
 		return nil, err
 	}
 

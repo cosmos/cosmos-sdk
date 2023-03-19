@@ -4,28 +4,28 @@ import (
 	"context"
 	"encoding/json"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/errors"
+	store "cosmossdk.io/store/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
+	"cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft/simulation"
 )
 
 var (
@@ -69,7 +69,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data nft.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", nft.ModuleName)
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", nft.ModuleName)
 	}
 
 	return nft.ValidateGenesis(data)
@@ -126,13 +126,6 @@ func (AppModule) Name() string {
 	return nft.ModuleName
 }
 
-// RegisterInvariants does nothing, there are no invariants to enforce
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
 // InitGenesis performs genesis initialization for the nft module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
@@ -161,14 +154,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the nft content functions used to
-// simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
 // RegisterStoreDecoder registers a decoder for nft module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

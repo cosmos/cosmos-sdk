@@ -3,18 +3,15 @@ package ormtable
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
-	"google.golang.org/protobuf/reflect/protoregistry"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
@@ -132,7 +129,7 @@ func Build(options Options) (Table, error) {
 
 		return &singleton{table}, nil
 	default:
-		return nil, ormerrors.InvalidTableDefinition.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
+		return nil, ormerrors.NoTableDescriptor.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
 	}
 
 	tableId := tableDesc.Id

@@ -2,8 +2,9 @@ package keeper_test
 
 import (
 	"cosmossdk.io/depinject"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -17,8 +18,8 @@ func testComponents() (*codec.LegacyAmino, sdk.Context, storetypes.StoreKey, sto
 	}
 
 	legacyAmino := createTestCodec()
-	mkey := sdk.NewKVStoreKey("test")
-	tkey := sdk.NewTransientStoreKey("transient_test")
+	mkey := storetypes.NewKVStoreKey("test")
+	tkey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := sdktestutil.DefaultContext(mkey, tkey)
 	keeper := paramskeeper.NewKeeper(cdc, legacyAmino, mkey, tkey)
 

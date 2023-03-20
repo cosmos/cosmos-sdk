@@ -36,7 +36,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, accountKeeper, testutil.NewBech32Codec())
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, accountKeeper, testutil.NewBech32Codec("cosmos"))
 
 	suite.ctx = testCtx.Ctx
 }

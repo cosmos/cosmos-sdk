@@ -48,7 +48,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrant(testutil.NewBech32Codec())
+			cmd := cli.GetCmdQueryFeeGrant(testutil.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -95,7 +95,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrantsByGrantee(testutil.NewBech32Codec())
+			cmd := cli.GetCmdQueryFeeGrantsByGrantee(testutil.NewBech32Codec("cosmos"))
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
@@ -142,7 +142,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGranter() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrantsByGranter(testutil.NewBech32Codec())
+			cmd := cli.GetCmdQueryFeeGrantsByGranter(testutil.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {

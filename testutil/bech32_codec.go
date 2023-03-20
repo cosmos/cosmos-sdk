@@ -15,8 +15,8 @@ type bech32Codec struct {
 
 var _ address.Codec = &bech32Codec{}
 
-func NewBech32Codec() address.Codec {
-	return bech32Codec{"cosmos"}
+func NewBech32Codec(hrp string) address.Codec {
+	return bech32Codec{hrp}
 }
 
 // StringToBytes encodes text to bytes

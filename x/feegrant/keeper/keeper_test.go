@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper, testutil.NewBech32Codec())
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper, testutil.NewBech32Codec("cosmos"))
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(555)))
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		})
 	}
 	address := "cosmos1rxr4mq58w3gtnx5tsc438mwjjafv3mja7k5pnu"
-	accAddr, err := testutil.NewBech32Codec().StringToBytes(address)
+	accAddr, err := testutil.NewBech32Codec("cosmos").StringToBytes(address)
 	suite.Require().NoError(err)
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
 

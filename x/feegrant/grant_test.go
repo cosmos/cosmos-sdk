@@ -16,7 +16,7 @@ import (
 )
 
 func TestGrant(t *testing.T) {
-	addressCodec := testutil.NewBech32Codec()
+	addressCodec := testutil.NewBech32Codec("cosmos")
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})

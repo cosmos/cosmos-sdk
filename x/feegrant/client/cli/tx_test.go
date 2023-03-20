@@ -125,7 +125,7 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+	cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec("cosmos"))
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
 
@@ -412,7 +412,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+			cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -436,7 +436,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 	}
 
-	addressCodec := testutil.NewBech32Codec()
+	addressCodec := testutil.NewBech32Codec("cosmos")
 	// Create new fee grant specifically to test amino.
 	encodedGrantee := "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00"
 	aminoGrantee, err := addressCodec.StringToBytes(encodedGrantee)
@@ -505,7 +505,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeFeegrant(testutil.NewBech32Codec())
+			cmd := cli.NewCmdRevokeFeegrant(testutil.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -550,7 +550,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+	cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec("cosmos"))
 
 	var res sdk.TxResponse
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -707,7 +707,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+			cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -762,7 +762,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 					commonFlags...,
 				)
 
-				cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+				cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec("cosmos"))
 				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 

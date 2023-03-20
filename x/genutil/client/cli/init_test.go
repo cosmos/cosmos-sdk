@@ -12,6 +12,7 @@ import (
 	abci_server "github.com/cometbft/cometbft/abci/server"
 	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
@@ -28,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -288,7 +288,7 @@ func TestInitConfig(t *testing.T) {
 func TestInitWithHeight(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
@@ -311,7 +311,7 @@ func TestInitWithHeight(t *testing.T) {
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
-	appGenesis, importErr := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+	appGenesis, importErr := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 	require.NoError(t, importErr)
 
 	require.Equal(t, testInitialHeight, appGenesis.InitialHeight)
@@ -320,7 +320,7 @@ func TestInitWithHeight(t *testing.T) {
 func TestInitWithNegativeHeight(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
@@ -343,7 +343,7 @@ func TestInitWithNegativeHeight(t *testing.T) {
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
-	appGenesis, importErr := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+	appGenesis, importErr := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 	require.NoError(t, importErr)
 
 	require.Equal(t, int64(1), appGenesis.InitialHeight)

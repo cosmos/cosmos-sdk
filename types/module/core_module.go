@@ -19,30 +19,30 @@ import (
 // UseCoreAPIModule wraps the core API module as an AppModule that this version
 // of the SDK can use.
 func UseCoreAPIModule(name string, module appmodule.AppModule) AppModule {
-	return coreAppModuleAdapator{
+	return coreAppModuleAdaptor{
 		name:   name,
 		module: module,
 	}
 }
 
 var (
-	_ AppModuleBasic      = coreAppModuleAdapator{}
-	_ AppModule           = coreAppModuleAdapator{}
-	_ AppModuleGenesis    = coreAppModuleAdapator{}
-	_ BeginBlockAppModule = coreAppModuleAdapator{}
-	_ EndBlockAppModule   = coreAppModuleAdapator{}
+	_ AppModuleBasic      = coreAppModuleAdaptor{}
+	_ AppModule           = coreAppModuleAdaptor{}
+	_ AppModuleGenesis    = coreAppModuleAdaptor{}
+	_ BeginBlockAppModule = coreAppModuleAdaptor{}
+	_ EndBlockAppModule   = coreAppModuleAdaptor{}
 )
 
-type coreAppModuleAdapator struct {
+type coreAppModuleAdaptor struct {
 	name   string
 	module appmodule.AppModule
 }
 
-func (c coreAppModuleAdapator) Name() string {
+func (c coreAppModuleAdaptor) Name() string {
 	return c.name
 }
 
-func (c coreAppModuleAdapator) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
 	if mod, ok := c.module.(interface {
 		RegisterLegacyAminoCodec(amino *codec.LegacyAmino)
 	}); ok {
@@ -50,7 +50,7 @@ func (c coreAppModuleAdapator) RegisterLegacyAminoCodec(amino *codec.LegacyAmino
 	}
 }
 
-func (c coreAppModuleAdapator) RegisterInterfaces(registry types.InterfaceRegistry) {
+func (c coreAppModuleAdaptor) RegisterInterfaces(registry types.InterfaceRegistry) {
 	if mod, ok := c.module.(interface {
 		RegisterInterfaces(registry types.InterfaceRegistry)
 	}); ok {
@@ -58,7 +58,7 @@ func (c coreAppModuleAdapator) RegisterInterfaces(registry types.InterfaceRegist
 	}
 }
 
-func (c coreAppModuleAdapator) DefaultGenesis(codec.JSONCodec) json.RawMessage {
+func (c coreAppModuleAdaptor) DefaultGenesis(codec.JSONCodec) json.RawMessage {
 	if mod, ok := c.module.(appmodule.HasGenesis); ok {
 		target := genesis.RawJSONTarget{}
 		err := mod.DefaultGenesis(target.Target())
@@ -77,7 +77,7 @@ func (c coreAppModuleAdapator) DefaultGenesis(codec.JSONCodec) json.RawMessage {
 	return nil
 }
 
-func (c coreAppModuleAdapator) ValidateGenesis(codec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (c coreAppModuleAdaptor) ValidateGenesis(codec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
 	if mod, ok := c.module.(appmodule.HasGenesis); ok {
 		source, err := genesis.SourceFromRawJSON(message)
 		if err != nil {
@@ -90,7 +90,7 @@ func (c coreAppModuleAdapator) ValidateGenesis(codec codec.JSONCodec, config cli
 	return nil
 }
 
-func (c coreAppModuleAdapator) RegisterRESTRoutes(context client.Context, router *mux.Router) {
+func (c coreAppModuleAdaptor) RegisterRESTRoutes(context client.Context, router *mux.Router) {
 	if mod, ok := c.module.(interface {
 		RegisterRESTRoutes(context client.Context, router *mux.Router)
 	}); ok {
@@ -98,7 +98,7 @@ func (c coreAppModuleAdapator) RegisterRESTRoutes(context client.Context, router
 	}
 }
 
-func (c coreAppModuleAdapator) RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux) {
+func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux) {
 	if mod, ok := c.module.(interface {
 		RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux)
 	}); ok {
@@ -106,7 +106,7 @@ func (c coreAppModuleAdapator) RegisterGRPCGatewayRoutes(context client.Context,
 	}
 }
 
-func (c coreAppModuleAdapator) GetTxCmd() *cobra.Command {
+func (c coreAppModuleAdaptor) GetTxCmd() *cobra.Command {
 	if mod, ok := c.module.(interface {
 		GetTxCmd() *cobra.Command
 	}); ok {
@@ -116,7 +116,7 @@ func (c coreAppModuleAdapator) GetTxCmd() *cobra.Command {
 	return nil
 }
 
-func (c coreAppModuleAdapator) GetQueryCmd() *cobra.Command {
+func (c coreAppModuleAdaptor) GetQueryCmd() *cobra.Command {
 	if mod, ok := c.module.(interface {
 		GetQueryCmd() *cobra.Command
 	}); ok {
@@ -126,7 +126,7 @@ func (c coreAppModuleAdapator) GetQueryCmd() *cobra.Command {
 	return nil
 }
 
-func (c coreAppModuleAdapator) InitGenesis(context sdk.Context, codec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
+func (c coreAppModuleAdaptor) InitGenesis(context sdk.Context, codec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
 	if mod, ok := c.module.(appmodule.HasGenesis); ok {
 		source, err := genesis.SourceFromRawJSON(message)
 		if err != nil {
@@ -141,7 +141,7 @@ func (c coreAppModuleAdapator) InitGenesis(context sdk.Context, codec codec.JSON
 	return nil
 }
 
-func (c coreAppModuleAdapator) ExportGenesis(context sdk.Context, codec codec.JSONCodec) json.RawMessage {
+func (c coreAppModuleAdaptor) ExportGenesis(context sdk.Context, codec codec.JSONCodec) json.RawMessage {
 	if mod, ok := c.module.(appmodule.HasGenesis); ok {
 		target := genesis.RawJSONTarget{}
 		err := mod.ExportGenesis(sdk.WrapSDKContext(context), target.Target())
@@ -160,7 +160,7 @@ func (c coreAppModuleAdapator) ExportGenesis(context sdk.Context, codec codec.JS
 	return nil
 }
 
-func (c coreAppModuleAdapator) RegisterInvariants(registry sdk.InvariantRegistry) {
+func (c coreAppModuleAdaptor) RegisterInvariants(registry sdk.InvariantRegistry) {
 	if mod, ok := c.module.(interface {
 		RegisterInvariants(registry sdk.InvariantRegistry)
 	}); ok {
@@ -168,7 +168,7 @@ func (c coreAppModuleAdapator) RegisterInvariants(registry sdk.InvariantRegistry
 	}
 }
 
-func (c coreAppModuleAdapator) Route() sdk.Route {
+func (c coreAppModuleAdaptor) Route() sdk.Route {
 	if mod, ok := c.module.(interface {
 		Route() sdk.Route
 	}); ok {
@@ -178,7 +178,7 @@ func (c coreAppModuleAdapator) Route() sdk.Route {
 	return sdk.Route{}
 }
 
-func (c coreAppModuleAdapator) QuerierRoute() string {
+func (c coreAppModuleAdaptor) QuerierRoute() string {
 	if mod, ok := c.module.(interface {
 		QuerierRoute() string
 	}); ok {
@@ -188,11 +188,11 @@ func (c coreAppModuleAdapator) QuerierRoute() string {
 	return ""
 }
 
-func (c coreAppModuleAdapator) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
+func (c coreAppModuleAdaptor) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
-func (c coreAppModuleAdapator) RegisterServices(c2 Configurator) {
+func (c coreAppModuleAdaptor) RegisterServices(c2 Configurator) {
 	if mod, ok := c.module.(interface {
 		RegisterServices(c2 Configurator)
 	}); ok {
@@ -200,7 +200,7 @@ func (c coreAppModuleAdapator) RegisterServices(c2 Configurator) {
 	}
 }
 
-func (c coreAppModuleAdapator) ConsensusVersion() uint64 {
+func (c coreAppModuleAdaptor) ConsensusVersion() uint64 {
 	if mod, ok := c.module.(interface {
 		ConsensusVersion() uint64
 	}); ok {
@@ -210,13 +210,13 @@ func (c coreAppModuleAdapator) ConsensusVersion() uint64 {
 	return 0
 }
 
-func (c coreAppModuleAdapator) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+func (c coreAppModuleAdaptor) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	if mod, ok := c.module.(appmodule.HasBeginBlocker); ok {
 		mod.BeginBlock(sdk.WrapSDKContext(ctx))
 	}
 }
 
-func (c coreAppModuleAdapator) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (c coreAppModuleAdaptor) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	if mod, ok := c.module.(appmodule.HasEndBlocker); ok {
 		mod.EndBlock(sdk.WrapSDKContext(ctx))
 	}

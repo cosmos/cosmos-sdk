@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -27,6 +28,11 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
+)
+
+const (
+	TxHashContextKey   = sdk.ContextKey("tx-hash")
+	TxMsgIdxContextKey = sdk.ContextKey("tx-msg-idx")
 )
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -591,6 +597,11 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+	txHash, ok := ctx.Context().Value(TxHashContextKey).(string)
+	if !ok {
+		txHash = fmt.Sprintf("%X", tmhash.Sum(txBytes))
+		ctx = ctx.WithContext(context.WithValue(ctx.Context(), TxHashContextKey, txHash))
+	}
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
@@ -598,7 +609,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 		msCache = msCache.SetTracingContext(
 			sdk.TraceContext(
 				map[string]interface{}{
-					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
+					"txHash": txHash,
 				},
 			),
 		).(sdk.CacheMultiStore)
@@ -760,6 +771,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		)
 
 		msgCtx := ctx.WithEventManager(sdk.NewEventManagerWithHistory(historicalEvents))
+		msgCtx = msgCtx.WithContext(context.WithValue(msgCtx.Context(), TxMsgIdxContextKey, i))
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(msgCtx, msg)

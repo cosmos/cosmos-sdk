@@ -269,7 +269,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal method not set")
 	}
 
-	// always reset state given that PrepareProposal can timeout and be called again.
+	// always reset state given that PrepareProposal can timeout and be called again
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 	app.setState(runTxPrepareProposal, emptyHeader)
 
@@ -326,7 +326,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	// always reset state given that ProcessProposal can timeout and be called again.
+	// always reset state given that ProcessProposal can timeout and be called again
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 	app.setState(runTxProcessProposal, emptyHeader)
 

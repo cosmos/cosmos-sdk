@@ -5,30 +5,24 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-<<<<<<< HEAD
 	sdk "github.com/cosmos/cosmos-sdk/types"
-=======
-	"github.com/cosmos/cosmos-sdk/types"
->>>>>>> a2797c8cd (feat: add query `groups` in `x/group` (#14879))
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
-	"github.com/golang/mock/gomock"
-
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
-func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAddress, group.QueryClient) {
+func initKeeper(t *testing.T) (sdk.Context, groupkeeper.Keeper, []sdk.AccAddress, group.QueryClient) {
 	var (
 		groupKeeper       groupkeeper.Keeper
 		interfaceRegistry codectypes.InterfaceRegistry
@@ -39,9 +33,6 @@ func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAdd
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	ctx := testCtx.Ctx
-
-	sdkCtx := sdk.WrapSDKContext(ctx)
-
 	bApp := baseapp.NewBaseApp(
 		"group",
 		log.NewNopLogger(),
@@ -76,7 +67,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 		{Address: addrs[2].String(), Weight: "1"}, {Address: addrs[3].String(), Weight: "2"},
 	}
 
-	_, err := groupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
+	_, err := groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[0].String(),
 		Members: members,
 	})
@@ -85,7 +76,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 	members = []group.MemberRequest{
 		{Address: addrs[3].String(), Weight: "1"}, {Address: addrs[4].String(), Weight: "2"},
 	}
-	_, err = groupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
+	_, err = groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[1].String(),
 		Members: members,
 	})

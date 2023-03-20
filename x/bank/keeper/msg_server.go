@@ -115,4 +115,3 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 
 	return &types.MsgMultiSendResponse{}, nil
 }
-

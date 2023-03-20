@@ -51,6 +51,8 @@ type Keeper interface {
 
 	GetAuthority() string
 
+	SetSendRestrictionsFunc(sendRestrictionsFunc func(sdk.Context, string, string, string) error)
+
 	types.QueryServer
 }
 

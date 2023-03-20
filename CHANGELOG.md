@@ -39,6 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* [PR 563](https://github.com/provenance-io/cosmos-sdk/pull/563) Add support for applying send restrictions before doing a bank send
+
 ### Improvements
 
 * [PR 565](https://github.com/provenance-io/cosmos-sdk/pull/565) Removes locks around state listening. There's no concurrency risk.

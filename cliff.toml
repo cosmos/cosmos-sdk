@@ -39,14 +39,14 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 -->
 
 # Changelog
-All notable changes to this project will be documented in this file.
+
 """
 # template for the changelog body
 body = """
 {% if version %}\
     ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
 {% else %}\
-    ## [unreleased]
+    ## [Unreleased]
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim | upper_first }}
@@ -90,7 +90,7 @@ commit_preprocessors = [
     # don't include dependabot auto merge entries.
     { pattern = '.*dependabot-automerge-.*', replace='' },
     # don't include statements saying which issue is closed.
-    { pattern = '^closes:.*', replace='' },
+    { pattern = '^closes:.*|Closes:.*', replace='' },
     # remove standalone links in the commit messages.
     { pattern = '^https://.*', replace='' },
     # remove lines with html.
@@ -105,7 +105,7 @@ commit_parsers = [
     { message = "^((?i)deps|(?i)dep|(?i)build)", group = "<!-- 0 -->Dependencies" },
     { message = '^.*\(api\)!', group = "<!-- 1 -->API Breaking" },
     { message = '^.*\(statemachine\)!', group = "<!-- 2 -->State Machine Breaking" },
-    { message = "^((?i)improvements|(?i)imp)", group = "<!-- 3 -->Improvements" },
+    { message = "^((?i)improvements|(?i)imp|(?i)impr)", group = "<!-- 3 -->Improvements" },
     { message = "^((?i)feature|(?i)feat)", group = "<!-- 4 -->Features" },
     { message = "^((?i)fix|(?i)bug)", group = "<!-- 5 -->Bug Fixes" },
     { message = "^((?i)doc|(?i)docs|(?i)documentation)", group = "<!-- 6 -->Documentation" },
@@ -116,7 +116,8 @@ commit_parsers = [
 # filter out the commits that are not matched by commit parsers
 filter_commits = false
 # glob pattern for matching git tags
-tag_pattern = "v[0-9]*"
+# note SDK tags are purposely ignored, only submodules are included.
+tag_pattern = "**/v[0-9]*"
 # regex for skipping tags
 skip_tags = ""
 # regex for ignoring tags

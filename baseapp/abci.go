@@ -326,6 +326,12 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
+	// CometBFT must never call ProcessProposal with a height of 0.
+	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	if req.Height < 1 {
+		panic("ProcessProposal called with invalid height")
+	}
+
 	// always reset state given that ProcessProposal can timeout and be called again
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 	app.setState(runTxProcessProposal, emptyHeader)

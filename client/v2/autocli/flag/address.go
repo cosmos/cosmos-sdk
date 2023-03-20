@@ -49,6 +49,7 @@ func (a addressValue) String() string {
 	return a.value
 }
 
+// Set implements the flag.Value interface for addressValue it only supports bech32 addresses.
 func (a *addressValue) Set(s string) error {
 	_, err := types.GetFromBech32(s, a.addressPrefix)
 	if err != nil {

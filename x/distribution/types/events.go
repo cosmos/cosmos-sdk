@@ -11,10 +11,6 @@ const (
 
 	AttributeKeyWithdrawAddress = "withdraw_address"
 	AttributeKeyValidator       = "validator"
-<<<<<<< HEAD
-
-	AttributeValueCategory = ModuleName
-=======
 	AttributeKeyDelegator       = "delegator"
->>>>>>> 176c61cf7 (feat: add delegator to withdraw address (#15462))
+	AttributeValueCategory      = ModuleName
 )

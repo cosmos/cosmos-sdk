@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -112,8 +111,8 @@ func printAndValidateSigs(
 				Sequence:      accSeq,
 				PubKey:        pubKey,
 			}
-			// When Textual is wired up, the context argument should be retrieved from the client context.
-			err = authsigning.VerifySignature(context.TODO(), pubKey, signingData, sig.Data, signModeHandler, sigTx)
+
+			err = authsigning.VerifySignature(cmd.Context(), pubKey, signingData, sig.Data, signModeHandler, sigTx)
 			if err != nil {
 				return false
 			}

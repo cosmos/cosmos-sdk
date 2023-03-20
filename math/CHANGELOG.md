@@ -37,10 +37,6 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [math/v1.0.0-rc.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-rc.0) - 2023-03-20
 
-### Dependencies
-
-* Bump github.com/stretchr/testify from 1.8.1 to 1.8.2 ([#15172](https://github.com/cosmos/cosmos-sdk/issues/15172))
-
 ### Features
 
 * Add rand funcs to math ([#15043](https://github.com/cosmos/cosmos-sdk/issues/15043))
@@ -57,13 +53,11 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 * Bump cometbft to v0.37.0-rc3 ([#15220](https://github.com/cosmos/cosmos-sdk/issues/15220))
 
-## [math/v1.0.0-beta.6](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-beta.6) - 2023-02-06
-
 ### Dependencies
 
-* Bump cosmossdk.io/core from 0.5.0 to 0.5.1 ([#14811](https://github.com/cosmos/cosmos-sdk/issues/14811))
-* Bump github.com/stretchr/testify from 1.8.0 to 1.8.1 in /tools/cosmovisor ([#13637](https://github.com/cosmos/cosmos-sdk/issues/13637))
-* Bump go minimum version to go 1.19 ([#13397](https://github.com/cosmos/cosmos-sdk/issues/13397))
+* Bump github.com/stretchr/testify from 1.8.1 to 1.8.2 ([#15172](https://github.com/cosmos/cosmos-sdk/issues/15172))
+
+## [math/v1.0.0-beta.6](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-beta.6) - 2023-02-06
 
 ### Features
 
@@ -71,6 +65,11 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 * Math: add generics versions of Max, Min to cater to all numeric types ([#14166](https://github.com/cosmos/cosmos-sdk/issues/14166))
 * Add uint `IsNil` method ([#13381](https://github.com/cosmos/cosmos-sdk/issues/13381))
 * Go workspaces ([#12675](https://github.com/cosmos/cosmos-sdk/issues/12675))
+
+### Improvements
+
+* Math: optimize and test FormatInt + simplify LegacyNewDecFromStr ([#14010](https://github.com/cosmos/cosmos-sdk/issues/14010))
+* Math: precompute & use square of precisionReuse instead of 2 repeated computations ([#12794](https://github.com/cosmos/cosmos-sdk/issues/12794))
 
 ### Bug Fixes
 
@@ -83,31 +82,20 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ### Miscellaneous Tasks
 
-* Iavl-v0.20-alpha1 and cosmos-db ([#14411](https://github.com/cosmos/cosmos-sdk/issues/14411))
-* Fix linting issues exposed by fixing golangci-lint ([#12895](https://github.com/cosmos/cosmos-sdk/issues/12895))
-
-### Ci
-
-* Make sonarcloud more quiet ([#14585](https://github.com/cosmos/cosmos-sdk/issues/14585))
-* Configure monorepo sonarcloud ([#13944](https://github.com/cosmos/cosmos-sdk/issues/13944))
-
-### Perf
-
-* Math: optimize and test FormatInt + simplify LegacyNewDecFromStr ([#14010](https://github.com/cosmos/cosmos-sdk/issues/14010))
-* Math: precompute & use square of precisionReuse instead of 2 repeated computations ([#12794](https://github.com/cosmos/cosmos-sdk/issues/12794))
-
-### Refactor
-
 * Moving value codecs to a single place ([#14912](https://github.com/cosmos/cosmos-sdk/issues/14912))
 * Remove upgrade as dependency of the SDK ([#14882](https://github.com/cosmos/cosmos-sdk/issues/14882))
+* Iavl-v0.20-alpha1 and cosmos-db ([#14411](https://github.com/cosmos/cosmos-sdk/issues/14411))
 * Move FormatCoins to `core` ([#13306](https://github.com/cosmos/cosmos-sdk/issues/13306))
 * Migrate to `cosmos/gogoproto` ([#13070](https://github.com/cosmos/cosmos-sdk/issues/13070))
-
-## [math/v1.0.0-beta.3](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-beta.3) - 2022-07-20
+* Fix linting issues exposed by fixing golangci-lint ([#12895](https://github.com/cosmos/cosmos-sdk/issues/12895))
 
 ### Dependencies
 
-* Bump github.com/stretchr/testify in /math ([#12514](https://github.com/cosmos/cosmos-sdk/issues/12514))
+* Bump cosmossdk.io/core from 0.5.0 to 0.5.1 ([#14811](https://github.com/cosmos/cosmos-sdk/issues/14811))
+* Bump github.com/stretchr/testify from 1.8.0 to 1.8.1 in /tools/cosmovisor ([#13637](https://github.com/cosmos/cosmos-sdk/issues/13637))
+* Bump go minimum version to go 1.19 ([#13397](https://github.com/cosmos/cosmos-sdk/issues/13397))
+
+## [math/v1.0.0-beta.3](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-beta.3) - 2022-07-20
 
 ### Bug Fixes
 
@@ -115,20 +103,17 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ### Miscellaneous Tasks
 
+* Move sdk.Dec to math package ([#12634](https://github.com/cosmos/cosmos-sdk/issues/12634))
 * Gofumpt ([#11839](https://github.com/cosmos/cosmos-sdk/issues/11839))
 * Update module path for math module ([#11821](https://github.com/cosmos/cosmos-sdk/issues/11821))
 
-### Math
+### Dependencies
 
-* Derive marshalled byte length from copy, not blind assumptions ([#12010](https://github.com/cosmos/cosmos-sdk/issues/12010))
-
-### Refactor
-
-* Move sdk.Dec to math package ([#12634](https://github.com/cosmos/cosmos-sdk/issues/12634))
+* Bump github.com/stretchr/testify in /math ([#12514](https://github.com/cosmos/cosmos-sdk/issues/12514))
 
 ## [math/v1.0.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-beta.1) - 2022-04-28
 
-### Refactor
+### Miscellaneous Tasks
 
 * Create math go sub module ([#11788](https://github.com/cosmos/cosmos-sdk/issues/11788))
 

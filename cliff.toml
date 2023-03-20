@@ -102,19 +102,20 @@ commit_parsers = [
     # specifying the number in a comment is a workaround to enable ordering of groups.
     # these comments are stripped out of the markdown with the filter "{{ group | striptags | trim | upper_first }}"
     # above in the body template.
-    { message = "^((?i)deps|(?i)dep|(?i)build)", group = "<!-- 0 -->Dependencies" },
-    { message = '^.*\(api\)!', group = "<!-- 1 -->API Breaking" },
-    { message = '^.*\(statemachine\)!', group = "<!-- 2 -->State Machine Breaking" },
-    { message = "^((?i)improvements|(?i)imp|(?i)impr)", group = "<!-- 3 -->Improvements" },
-    { message = "^((?i)feature|(?i)feat)", group = "<!-- 4 -->Features" },
-    { message = "^((?i)fix|(?i)bug)", group = "<!-- 5 -->Bug Fixes" },
-    { message = "^((?i)doc|(?i)docs|(?i)documentation)", group = "<!-- 6 -->Documentation" },
-    { message = "^((?i)test)", group = "<!-- 7 -->Testing" },
+    { message = "^((?i)feature|(?i)feat)", group = "<!-- 0 -->Features" },
+    { message = "^((?i)improvements|(?i)imp|(?i)impr|(?i)perf)", group = "<!-- 1 -->Improvements" },
+    { message = "^((?i)fix|(?i)bug)", group = "<!-- 2 -->Bug Fixes" },
+    { message = '^.*\(api\)!', group = "<!-- 3 -->API Breaking" },
+    { message = '^.*\(statemachine\)!', group = "<!-- 4 -->State Machine Breaking" },
+    { message = "^((?i)test)", group = "<!-- 5 -->Testing" },
+    { message = "^((?i)chore|(?i)misc|(?i)nit|(?i)refactor)", group = "<!-- 6 -->Miscellaneous Tasks" },
+    { message = "^((?i)doc|(?i)docs|(?i)documentation)", group = "<!-- 7 -->Documentation" },
     { message = "^((?i)deprecated)", group = "<!-- 8 -->Deprecated" },
-    { message = "^((?i)chore|(?i)misc|(?i)nit)", group = "<!-- 9 -->Miscellaneous Tasks" },
+    { message = "^((?i)deps|(?i)dep|(?i)build)", group = "<!-- 9 -->Dependencies" },
+    { message = "^revert|^ci", skip = true} # explicitly skips changelog for reverts, CI and refactor commits
 ]
 # filter out the commits that are not matched by commit parsers
-filter_commits = false
+filter_commits = true
 # glob pattern for matching git tags
 # note SDK tags are purposely ignored, only submodules are included.
 tag_pattern = "**/v[0-9]*"

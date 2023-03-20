@@ -426,14 +426,14 @@ func TestInputOutputNewAccount(t *testing.T) {
 	assert.Assert(t, f.accountKeeper.GetAccount(ctx, addr2) == nil)
 	assert.Assert(t, f.bankKeeper.GetAllBalances(ctx, addr2).Empty())
 
-	inputs := []types.Input{
-		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+	input := types.Input{
+		Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
 	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	assert.NilError(t, f.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	assert.NilError(t, f.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
 	acc2Balances := f.bankKeeper.GetAllBalances(ctx, addr2)
@@ -460,8 +460,8 @@ func TestInputOutputCoins(t *testing.T) {
 	acc3 := f.accountKeeper.NewAccountWithAddress(ctx, addr3)
 	f.accountKeeper.SetAccount(ctx, acc3)
 
-	input := []types.Input{
-		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
+	input := types.Input{
+		Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
 	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
@@ -473,11 +473,10 @@ func TestInputOutputCoins(t *testing.T) {
 
 	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, balances))
 
-	insufficientInput := []types.Input{
-		{
-			Address: addr1.String(),
-			Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
-		},
+	insufficientInput := types.Input{
+
+		Address: addr1.String(),
+		Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
 	}
 	insufficientOutputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
@@ -722,11 +721,9 @@ func TestMsgMultiSendEvents(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-	input := []types.Input{
-		{
-			Address: addr.String(),
-			Coins:   coins,
-		},
+	input := types.Input{
+		Address: addr.String(),
+		Coins:   coins,
 	}
 	outputs := []types.Output{
 		{Address: addr3.String(), Coins: newCoins},

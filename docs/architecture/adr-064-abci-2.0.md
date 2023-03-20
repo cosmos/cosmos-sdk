@@ -361,6 +361,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 	app.MergeProcessProposalState()
 
 	beginBlockResp := app.beginBlock(ctx, req)
+	appendBlockEventAttr(beginBlockResp.Events, "begin_block")
 
 	txExecResults := make([]abci.ExecTxResult, 0, len(req.Txs))
 	for _, tx := range req.Txs {
@@ -369,6 +370,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 	}
 
 	endBlockResp := app.endBlock(ctx, req)
+	appendBlockEventAttr(beginBlockResp.Events, "end_block")
 
 	return abci.ResponseFinalizeBlock{
 		TxResults:             txExecResults,
@@ -391,7 +393,7 @@ and rely on existing events, especially since applications will still define
 In order to facilitate existing event functionality, we propose that all `BeginBlock`
 and `EndBlock` events have a dedicated `EventAttribute` with `key=block` and
 `value=begin_block|end_block`. The `EventAttribute` will be appended to each event
-in both `BeginBlock` and `EndBlock` events`.
+in both `BeginBlock` and `EndBlock` events`. 
 
 ## Consequences
 

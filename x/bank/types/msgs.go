@@ -58,8 +58,8 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
-func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
-	return &MsgMultiSend{Inputs: in, Outputs: out}
+func NewMsgMultiSend(in Input, out []Output) *MsgMultiSend {
+	return &MsgMultiSend{Inputs: []Input{in}, Outputs: out}
 }
 
 // ValidateBasic Implements Msg.
@@ -89,13 +89,13 @@ func (msg MsgMultiSend) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
-	addrs := make([]sdk.AccAddress, len(msg.Inputs))
-	for i, in := range msg.Inputs {
-		inAddr, _ := sdk.AccAddressFromBech32(in.Address)
-		addrs[i] = inAddr
+	// should not happen as ValidateBasic would have failed
+	if len(msg.Inputs) == 0 {
+		return nil
 	}
 
-	return addrs
+	addrs, _ := sdk.AccAddressFromBech32(msg.Inputs[0].Address)
+	return []sdk.AccAddress{addrs}
 }
 
 // ValidateBasic - validate transaction input

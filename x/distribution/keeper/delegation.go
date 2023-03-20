@@ -206,7 +206,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 			types.EventTypeWithdrawRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, del.GetDelegatorAddr().String()),
+			sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr().String()),
 		),
 	)
 

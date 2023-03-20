@@ -36,7 +36,7 @@ func TestMessageJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	tr := textual.NewSignModeHandler(EmptyCoinMetadataQuerier)
+	tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: EmptyCoinMetadataQuerier})
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			rend := textual.NewMessageValueRenderer(tr, (&testpb.Foo{}).ProtoReflect().Descriptor())

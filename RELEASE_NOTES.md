@@ -39,7 +39,7 @@ When not interacting with CometBFT directly, you can use `tm-db` as usual.
 
 If you are using an old version of `btcd`, you will need to upgrade to the latest version.
 The previous versions had vulnerabilities so the SDK and CometBFT have upgraded to the latest version.
-In the latest version `btcsuite/btcd/` and `btcsuite/btcd/btcec` are two separate packages.
+In the latest version `btcsuite/btcd` and `btcsuite/btcd/btcec` are two separate go modules.
 
 ### I encounter state sync issues
 

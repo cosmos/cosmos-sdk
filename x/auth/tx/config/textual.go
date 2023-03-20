@@ -40,7 +40,7 @@ func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (*textual.SignMod
 
 			return res.Metadata, nil
 		},
-		ProtoFiles: protoFiles,
+		FileResolver: protoFiles,
 	})
 }
 
@@ -85,7 +85,7 @@ func NewTextualWithBankKeeper(bk BankKeeper) (*textual.SignModeHandler, error) {
 
 			return m, nil
 		},
-		ProtoFiles: protoFiles,
+		FileResolver: protoFiles,
 	})
 }
 

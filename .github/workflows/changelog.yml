@@ -32,5 +32,9 @@ jobs:
         env:
           OUTPUT: ${{ steps.get_path.outputs.PATH }}/CHANGELOG.md
 
-      - name: Print the changelog
-        run: cat "${{ steps.git-cliff.outputs.changelog }}"
+      - name: Submit PR with changelog
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PRBOT_PAT }}
+        run: |
+          gh pr create --repo cosmos/cosmos-sdk --base main --head "cosmos/cosmos-sdk:${{ github.ref_name }}" --title "chore: generate changelog for $GITHUB_REF_NAME" --body "Automated PR for $GITHUB_REF_NAME changelog"

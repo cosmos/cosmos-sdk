@@ -9,7 +9,7 @@ import (
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"github.com/cosmos/cosmos-proto/any"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -21,10 +21,10 @@ import (
 func TestDirectModeHandler(t *testing.T) {
 	memo := "sometestmemo"
 
-	msg, err := any.New(&bankv1beta1.MsgSend{})
+	msg, err := anyutil.New(&bankv1beta1.MsgSend{})
 	require.NoError(t, err)
 
-	pk, err := any.New(&secp256k1.PubKey{
+	pk, err := anyutil.New(&secp256k1.PubKey{
 		Key: make([]byte, 256),
 	})
 	require.NoError(t, err)

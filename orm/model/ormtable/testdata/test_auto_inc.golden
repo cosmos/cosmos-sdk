@@ -16,6 +16,8 @@ SET 0301666f6f 0001
 ORM AFTER INSERT testpb.ExampleAutoIncrementTable {"id":1,"x":"foo","y":5}
 GET 03808002 01
     SEQ testpb.ExampleAutoIncrementTable 1
+GET 03808002 01
+    SEQ testpb.ExampleAutoIncrementTable 1
 GET 03000002 
     PK testpb.ExampleAutoIncrementTable 2 -> {"id":2}
 ORM BEFORE INSERT testpb.ExampleAutoIncrementTable {"id":2,"x":"bar","y":10}
@@ -28,6 +30,8 @@ SET 03808002 02
 SET 0301626172 0002
     UNIQ testpb.ExampleAutoIncrementTable x : bar -> 2
 ORM AFTER INSERT testpb.ExampleAutoIncrementTable {"id":2,"x":"bar","y":10}
+GET 03808002 02
+    SEQ testpb.ExampleAutoIncrementTable 2
 GET 03808002 02
     SEQ testpb.ExampleAutoIncrementTable 2
 ITERATOR 0300 -> 0301

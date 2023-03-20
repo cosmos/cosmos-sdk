@@ -1,8 +1,6 @@
 package std
 
 import (
-	"fmt"
-
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/textual"
@@ -10,19 +8,20 @@ import (
 
 // SignModeOptions are options for configuring the standard sign mode handler map.
 type SignModeOptions struct {
-	// CoinMetadataQueryFn is the CoinMetadataQueryFn required for SIGN_MODE_TEXTUAL.
-	CoinMetadataQueryFn textual.CoinMetadataQueryFn
+	// Textual are options for SIGN_MODE_TEXTUAL
+	Textual textual.SignModeOptions
 }
 
 // HandlerMap returns a sign mode handler map that Cosmos SDK apps can use out
 // of the box to support all "standard" sign modes.
 func (s SignModeOptions) HandlerMap() (*signing.HandlerMap, error) {
-	if s.CoinMetadataQueryFn == nil {
-		return nil, fmt.Errorf("missing %T needed for SIGN_MODE_TEXTUAL", s.CoinMetadataQueryFn)
+	txt, err := textual.NewSignModeHandler(s.Textual)
+	if err != nil {
+		return nil, err
 	}
 
 	return signing.NewHandlerMap(
 		direct.SignModeHandler{},
-		textual.NewSignModeHandler(s.CoinMetadataQueryFn),
+		txt,
 	), nil
 }

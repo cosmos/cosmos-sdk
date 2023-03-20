@@ -128,9 +128,6 @@ func (am AppModule) ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// RegisterInvariants does nothing, there are no invariants to enforce
-func (am AppModule) RegisterInvariants(sdk.InvariantRegistry) {}
-
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},

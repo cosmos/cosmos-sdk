@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"context"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -40,6 +41,8 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Deprecated: options.Deprecated,
 		Version:    options.Version,
 	}
+
+	cmd.SetContext(context.Background())
 
 	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
 	if err != nil {

@@ -17,9 +17,6 @@ func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
 			panic(err)
 		}
 		reflectionClient := reflectionv2alpha1.NewReflectionServiceClient(conn)
-		if ctx == nil {
-			ctx = context.Background()
-		}
 		resp, err := reflectionClient.GetConfigurationDescriptor(ctx, &reflectionv2alpha1.GetConfigurationDescriptorRequest{})
 		if err != nil {
 			panic(err)

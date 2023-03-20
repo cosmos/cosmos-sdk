@@ -273,15 +273,50 @@ decision based on the vote extensions.
 #### Vote Extension Persistence
 
 In order to make any data derived from vote extensions persistent, we propose to
-<!-- augment the existing invariant that `processProposalState` is never committed to
-now being written at the end of `ProcessProposal`. This has the side effect of
-application developers needing to be careful what they write to in their
-`ProcessProposal` handler. A `ProcessProposal` handler might look like the following
-now:
+to allow application developers to "merge" the `processProposalState` into the
+`finalizeState`, such that when processing transactions during `FinalizeBlock`,
+the base state includes any state changes from processing votes extensions
+(see [`FinalizeBlock`](#finalizeblock-1) below).
+
+However, we DO NOT want to pollute `finalizeState` with any state changes from
+verifying transactions during `ProcessProposal`, so we will introduce a new API,
+`ResetProcessProposalState`, that will allow applications to essentially reset
+the `ProcessProposal` state, effectively allowing any state transitions after to
+be committed.
+
+What this means is that any explicit state changes in a `ProcessProposal` handler
+using the injected `processProposalState.Context` will be written to state! An
+application must be careful to execute `ResetProcessProposalState` where and when
+appropriate.
+
+A `ProcessProposal` handler could look like the following:
 
 ```go
+func (h MyHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
+	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		for _, txBytes := range req.Txs {
+			_, err := h.app.ProcessProposalVerifyTx(txBytes)
+			if err != nil {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			}
+		}
 
-``` -->
+		// Reset the ProposalProposal state, which, up to this point, has accumulated
+		// possible state transitions from transaction verification and processing.
+		// Any subsequent state transitions after this will be merged into the
+		// FinalizeState before processing Begin/EndBlock and transactions.
+		// 
+		// NOTE: Applications must call this to ensure no state transactions up to now
+		// are committed!
+		h.app.ResetProcessProposalState()
+
+		// Any state changes that occur on the provided ctx WILL be written to state!
+		h.myKeeper.SetVoteExtResult(ctx, ...)
+	
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	}
+}
+```
 
 ### `FinalizeBlock`
 
@@ -322,6 +357,9 @@ we can come up with new types and names altogether.
 
 ```go
 func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
+	// merge any state changes from ProcessProposal into the FinalizeBlock state
+	app.MergeProcessProposalState()
+
 	beginBlockResp := app.beginBlock(ctx, req)
 
 	txExecResults := make([]abci.ExecTxResult, 0, len(req.Txs))
@@ -341,6 +379,9 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 	}
 }
 ```
+
+#### Events
+
 
 ## Consequences
 

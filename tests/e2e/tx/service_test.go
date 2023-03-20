@@ -10,11 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-<<<<<<< HEAD
-=======
 	errorsmod "cosmossdk.io/errors"
-
->>>>>>> c71d19939 (fix: change the behavior of offline mode correctly (#15123))
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

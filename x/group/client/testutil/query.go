@@ -149,10 +149,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	}
 }
 
-<<<<<<< HEAD:x/group/client/testutil/query.go
-func (s *IntegrationTestSuite) TestQueryGroupMembers() {
-=======
-func (s *E2ETestSuite) TestQueryGroups() {
+func (s *IntegrationTestSuite) TestQueryGroups() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	require := s.Require()
@@ -167,7 +164,7 @@ func (s *E2ETestSuite) TestQueryGroups() {
 	}{
 		{
 			name:      "valid req",
-			args:      []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			args:      []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			expectErr: false,
 			numItems:  5,
 		},
@@ -175,7 +172,7 @@ func (s *E2ETestSuite) TestQueryGroups() {
 			name: "valid req with pagination",
 			args: []string{
 				"--limit=2",
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			expectErr: false,
 			numItems:  2,
@@ -186,7 +183,7 @@ func (s *E2ETestSuite) TestQueryGroups() {
 		tc := tc
 		s.Run(tc.name, func() {
 			cmd := client.QueryGroupsCmd()
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				require.Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -201,8 +198,7 @@ func (s *E2ETestSuite) TestQueryGroups() {
 	}
 }
 
-func (s *E2ETestSuite) TestQueryGroupMembers() {
->>>>>>> a2797c8cd (feat: add query `groups` in `x/group` (#14879)):tests/e2e/group/query.go
+func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 

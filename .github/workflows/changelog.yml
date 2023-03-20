@@ -32,6 +32,9 @@ jobs:
         env:
           OUTPUT: ${{ steps.get_path.outputs.PATH }}/CHANGELOG.md
 
+      - name: Print the changelog
+        run: cat "${{ steps.git-cliff.outputs.changelog }}"
+
       - name: Submit PR with changelog
         shell: bash
         env:

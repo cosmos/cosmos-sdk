@@ -614,13 +614,8 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 
 	args := append([]string{
 		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
-<<<<<<< HEAD
 		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),
 		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType),
-=======
-		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),   //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated: use FlagDescription instead
-		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType), //nolint:staticcheck // SA1019: govcli.FlagProposalType is deprecated: use FlagProposalType instead
->>>>>>> 667440221 (feat(gov,cli): Create AddGovPropFlagsToCmd and ReadGovPropFlags. (#14718))
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
 	}, commonArgs...)
 

@@ -2,8 +2,11 @@ package runtime
 
 import (
 	"fmt"
+	"os"
 
 	"cosmossdk.io/core/store"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -19,6 +22,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 type appModule struct {
@@ -71,6 +76,8 @@ func ProvideApp() (
 	codec.ProtoCodecMarshaler,
 	*baseapp.MsgServiceRouter,
 	appmodule.AppModule,
+	protodesc.Resolver,
+	protoregistry.MessageTypeResolver,
 ) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
@@ -90,7 +97,21 @@ func ProvideApp() (
 	}
 	appBuilder := &AppBuilder{app}
 
-	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}
+	protoFiles, err := proto.MergedRegistry()
+	if err != nil {
+		panic(err)
+	}
+	protoTypes := protoregistry.GlobalTypes
+
+	// At startup, check that all proto annotations are correct.
+	err = msgservice.ValidateProtoAnnotations(protoFiles)
+	if err != nil {
+		// Once we switch to using protoreflect-based antehandlers, we might
+		// want to panic here instead of logging a warning.
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+
+	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes
 }
 
 type AppInputs struct {

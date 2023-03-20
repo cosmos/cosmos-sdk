@@ -50,7 +50,11 @@ func NewSignModeHandler(options SignModeHandlerOptions) SignModeHandler {
 	}
 
 	if options.SignersContext == nil {
-		h.signersContext = signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: h.fileResolver})
+		var err error
+		h.signersContext, err = signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: h.fileResolver})
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		h.signersContext = options.SignersContext
 	}

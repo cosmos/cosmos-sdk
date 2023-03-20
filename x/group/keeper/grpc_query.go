@@ -354,8 +354,10 @@ func (k Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResu
 }
 
 // Groups returns all the groups present in the state.
-func (k Keeper) Groups(ctx context.Context, request *group.QueryGroupsRequest) (*group.QueryGroupsResponse, error) {
-	it, err := k.groupTable.PrefixScan(k.KVStoreService.OpenKVStore(ctx), 1, math.MaxUint64)
+func (k Keeper) Groups(goCtx context.Context, request *group.QueryGroupsRequest) (*group.QueryGroupsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	it, err := k.groupTable.PrefixScan(ctx.KVStore(k.key), 1, math.MaxUint64)
 	if err != nil {
 		return nil, err
 	}

@@ -417,6 +417,9 @@ in the module interfaces.
 
 * Having to manually "inject" vote extensions into the block proposal during
   `PrepareProposal` is an awkward approach and takes up block space unnecessarily.
+* The requirement of `ResetProcessProposalState` can create a footgun for
+  application developers if they're not careful, but this is necessary in order
+	for applications to be able to commit state from vote extension computation.
 
 ## Further Discussions
 

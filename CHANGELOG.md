@@ -39,6 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/distribution) [#15462](https://github.com/cosmos/cosmos-sdk/pull/15462) Add delegator address to the event for withdrawing delegation rewards
 
+### Deprecated
+
+* (x/genutil) [#15316](https://github.com/cosmos/cosmos-sdk/pull/15316) Remove requirement on node & IP being included in a gentx.
+
 ## [v0.47.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0) - 2023-03-14
 
 ### Features

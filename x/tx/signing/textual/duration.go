@@ -67,9 +67,10 @@ func formatSeconds(seconds int64, nanos int32) string {
 func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	// Reify the reflected message as a proto Duration
 	msg := v.Message().Interface()
-	duration, ok := msg.(*dpb.Duration)
-	if !ok {
-		return nil, fmt.Errorf("expected Duration, got %T", msg)
+	duration := &dpb.Duration{}
+	err := coerceToMessage(msg, duration)
+	if err != nil {
+		return nil, err
 	}
 
 	// Bypass use of time.Duration, as the range is more limited than that of dpb.Duration.

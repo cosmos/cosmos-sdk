@@ -39,7 +39,8 @@ func TestE2EJsonTestcases(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			_, bodyBz, _, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
 
-			tr := textual.NewSignModeHandler(mockCoinMetadataQuerier)
+			tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: mockCoinMetadataQuerier})
+			require.NoError(t, err)
 			rend := textual.NewTxValueRenderer(tr)
 			ctx := addMetadataToContext(context.Background(), tc.Metadata)
 

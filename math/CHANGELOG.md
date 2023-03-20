@@ -35,7 +35,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 # Changelog
 
-## [math/v1.0.0-rc.0] - 2023-03-20
+## [math/v1.0.0-rc.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-rc.0) - 2023-03-20
 
 ### Dependencies
 
@@ -57,7 +57,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 * Bump cometbft to v0.37.0-rc3 ([#15220](https://github.com/cosmos/cosmos-sdk/issues/15220))
 
-## [math/v1.0.0-beta.6] - 2023-02-06
+## [math/v1.0.0-beta.6](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-beta.6) - 2023-02-06
 
 ### Dependencies
 
@@ -103,7 +103,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 * Move FormatCoins to `core` ([#13306](https://github.com/cosmos/cosmos-sdk/issues/13306))
 * Migrate to `cosmos/gogoproto` ([#13070](https://github.com/cosmos/cosmos-sdk/issues/13070))
 
-## [math/v1.0.0-beta.3] - 2022-07-20
+## [math/v1.0.0-beta.3](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-beta.3) - 2022-07-20
 
 ### Dependencies
 
@@ -126,7 +126,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 * Move sdk.Dec to math package ([#12634](https://github.com/cosmos/cosmos-sdk/issues/12634))
 
-## [math/v1.0.0-beta.1] - 2022-04-28
+## [math/v1.0.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-beta.1) - 2022-04-28
 
 ### Refactor
 

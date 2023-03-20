@@ -13,6 +13,7 @@
 * Dec 06, 2022: Re-ordering of envelope screens.
 * Dec 14, 2022: Mention exceptions for invertability.
 * Jan 23, 2022: Switch Screen.Text to Title+Content.
+* Mar 07, 2023: Change SignDoc from array to struct containing array.
 
 ## Status
 
@@ -135,7 +136,9 @@ type Screen struct {
   Expert bool
 }
 
-type SignDocTextual = []Screen
+type SignDocTextual struct {
+  Screens []Screen
+}
 ```
 
 We do not plan to use protobuf serialization to form the sequence of bytes
@@ -147,8 +150,13 @@ The encoding is defined by the following CDDL ([RFC 8610](https://www.rfc-editor
 ;;; CDDL (RFC 8610) Specification of SignDoc for SIGN_MODE_TEXTUAL.
 ;;; Must be encoded using CBOR deterministic encoding (RFC 8949, section 4.2.1).
 
-;; A Textual document is an array of screens.
-screens = [* screen]
+;; A Textual document is a struct containing one field: an array of screens.
+sign_doc = {
+  screens_key: [* screen],
+}
+
+;; The key is an integer to keep the encoding small.
+screens_key = 1
 
 ;; A screen consists of a text string, an indentation, and the expert flag,
 ;; represented as an integer-keyed map. All entries are optional
@@ -168,6 +176,8 @@ content_key = 2
 indent_key = 3
 expert_key = 4
 ```
+
+Defining the sign_doc as directly an array of screens has also been considered. However, given the possibility of future iterations of this specification, using a single-keyed struct has been chosen over the former proposal, as structs allow for easier backwards-compatibility.
 
 ## Details
 

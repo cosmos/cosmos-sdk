@@ -29,7 +29,8 @@ func TestEnumJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := textual.NewSignModeHandler(nil)
+	textual, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: EmptyCoinMetadataQuerier})
+	require.NoError(t, err)
 
 	for _, tc := range testcases {
 		t.Run(tc.Text, func(t *testing.T) {

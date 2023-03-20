@@ -34,7 +34,7 @@ type SignModeHandlerOptions struct {
 }
 
 // NewSignModeHandler returns a new SignModeHandler.
-func NewSignModeHandler(options SignModeHandlerOptions) SignModeHandler {
+func NewSignModeHandler(options SignModeHandlerOptions) (SignModeHandler, error) {
 	h := SignModeHandler{}
 
 	if options.FileResolver == nil {
@@ -53,13 +53,13 @@ func NewSignModeHandler(options SignModeHandlerOptions) SignModeHandler {
 		var err error
 		h.signersContext, err = signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: h.fileResolver})
 		if err != nil {
-			panic(err)
+			return h, err
 		}
 	} else {
 		h.signersContext = options.SignersContext
 	}
 
-	return h
+	return h, nil
 }
 
 var _ signing.SignModeHandler = SignModeHandler{}

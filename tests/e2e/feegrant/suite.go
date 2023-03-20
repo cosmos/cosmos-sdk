@@ -102,7 +102,6 @@ func (s *E2ETestSuite) createGrant(granter, grantee sdk.Address) {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
-	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *E2ETestSuite) TearDownSuite() {

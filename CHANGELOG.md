@@ -35,9 +35,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Improvements
+## [Unreleased]
 
-* (x/distribution) [#15462](https://github.com/cosmos/cosmos-sdk/pull/15462) Add delegator address to the event for withdrawing delegation rewards
+### Features
+
+* (x/genutil,cli) [#15147](https://github.com/cosmos/cosmos-sdk/pull/15147) Add `--initial-height` flag to cli init cmd to provide `genesis.json` with user defined initial block height.
+
+### Improvements
+
+* (x/distribution) [#15462](https://github.com/cosmos/cosmos-sdk/pull/15462) Add delegator address to the event for withdrawing delegation rewards.
+* [#14609](https://github.com/cosmos/cosmos-sdk/pull/14609) Add RetryForBlocks method to use in tests that require waiting for a transaction to be included in a block.
 
 ### Deprecated
 

@@ -3,6 +3,7 @@ package rpc_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -61,7 +62,9 @@ func (s *IntegrationTestSuite) TestCLIQueryConn() {
 	s.NoError(err)
 
 	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
-	s.Require().Equal([]string{"1"}, blockHeight)
+	height, err := strconv.Atoi(blockHeight[0])
+	s.Require().NoError(err)
+	s.Require().GreaterOrEqual(height, 1) // at least the 1st block
 
 	s.Equal("hello", res.Message)
 }

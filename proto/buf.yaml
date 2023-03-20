@@ -5,7 +5,7 @@ deps:
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
-  # Extract SDK modules
+  # Extracted SDK modules
   - buf.build/mods/nft
 breaking:
   use:

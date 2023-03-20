@@ -1,7 +1,7 @@
 version: v1
 name: buf.build/mods/nft
 deps:
-  - buf.build/cosmos/cosmos-sdk
+  - buf.build/cosmos/cosmos-sdk:proto-nft-extract
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis

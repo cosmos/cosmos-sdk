@@ -306,14 +306,10 @@ func (i *PriorityNonceIterator) Tx() sdk.Tx {
 //
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
-<<<<<<< HEAD
-func (mp *PriorityNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
-=======
 //
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
-func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterator {
->>>>>>> 0d20a1456 (docs: update mempool Select godoc (#15486))
+func (mp *PriorityNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}

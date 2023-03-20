@@ -7,13 +7,6 @@ on:
 permissions:
   pull-requests: write
 jobs:
-  need-changelog:
-    name: Verify if changelog is needed
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get
-        run: ${{ github.event.pull_request.title }}
-
   remind:
     name: Changelog Reminder
     runs-on: ubuntu-latest

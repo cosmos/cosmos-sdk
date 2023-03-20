@@ -10,6 +10,8 @@ import (
 	"testing"
 )
 
+// foo
+
 // NOTE: never use new(Dec) or else we will panic unmarshalling into the
 // nil embedded big.Int
 type LegacyDec struct {

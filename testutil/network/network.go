@@ -32,11 +32,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/client/flags"
-=======
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
->>>>>>> 7505c18e2 (test: fix flaky tests + new method RetryForBlocks (#14609))
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -22,7 +22,8 @@ func TestCoinsJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	txt := textual.NewSignModeHandler(mockCoinMetadataQuerier)
+	txt, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: mockCoinMetadataQuerier})
+	require.NoError(t, err)
 	vr, err := txt.GetFieldValueRenderer(fieldDescriptorFromName("COINS"))
 	vrr := vr.(textual.RepeatedValueRenderer)
 	require.NoError(t, err)

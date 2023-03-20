@@ -650,6 +650,7 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	input := banktypes.Input{
 		Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
 	}
+
 	outputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}

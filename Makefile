@@ -198,7 +198,7 @@ changelog:
 	@echo "Generating changelog..."
 	@if [ -z "$(module)" ]; then echo "module is not set"; exit 1; fi
 	@if [ -z "$(tag)" ]; then echo "tag is not set"; exit 1; fi
-	docker run --rm -v "$$(pwd)"/.git:/app/ -v "$$(pwd)/cliff.toml":/app/cliff.toml orhunp/git-cliff:latest --include-path $(module)/** --tag $(tag) > $(module)/CHANGELOG.md
+	docker run --rm -v "$(CURDIR)"/.git:/app/ -v "$(CURDIR)/cliff.toml":/app/cliff.toml orhunp/git-cliff:latest --include-path $(module)/** --tag $(tag) > $(module)/CHANGELOG.md
 
 .PHONY: build-docs
 

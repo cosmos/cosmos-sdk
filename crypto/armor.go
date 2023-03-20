@@ -233,7 +233,6 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 	}
 	nonce, privKeyBytesEncrypted := encBytes[:aead.NonceSize()], encBytes[aead.NonceSize():] // Split nonce and ciphertext.
 	privKeyBytes, err := aead.Open(nil, nonce, privKeyBytesEncrypted, nil)                   // Decrypt the message and check it wasn't tampered with.
-
 	// Fallback: tries decryption with legacy encrypthin algorithm "xsalsa20symmetric"
 	if err != nil {
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)

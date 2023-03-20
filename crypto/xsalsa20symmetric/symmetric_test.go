@@ -23,7 +23,7 @@ func TestSimpleWithKDF(t *testing.T) {
 	plaintext := []byte("sometext")
 	secretPass := []byte("somesecret")
 	saltBytes := crypto.CRandBytes(16)
-	secret := argon2.IDKey([]byte(secretPass), saltBytes, 1, 64*1024, 4, 32)
+	secret := argon2.IDKey(secretPass, saltBytes, 1, 64*1024, 4, 32)
 
 	ciphertext := EncryptSymmetric(plaintext, secret)
 	plaintext2, err := DecryptSymmetric(ciphertext, secret)

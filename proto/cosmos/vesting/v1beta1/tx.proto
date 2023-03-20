@@ -36,11 +36,10 @@ message MsgCreateVestingAccount {
   // Amount to transfer to the new account.
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // End time of the vesting duration.
-  int64 end_time = 4 [(gogoproto.moretags) = "yaml:\"end_time\""];
-  // If true, creates a DelayedVestingAccount,
-  // otherwise creates a ContinuousVestingAccount.
-  bool delayed = 5;
+
+  // end of vesting as unix time (in seconds).
+  int64 end_time = 4;
+  bool  delayed  = 5;
 }
 
 // MsgCreateVestingAccountResponse defines the MsgCreateVestingAccount response type.
@@ -51,13 +50,10 @@ message MsgCreateVestingAccountResponse {}
 message MsgCreatePeriodicVestingAccount {
   option (gogoproto.equal) = false;
 
-  // Address of the account providing the funds, which must also sign the request.
-  string from_address = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  // Address of the account to receive the funds.
-  string to_address = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
-  // Start time of the vesting. Periods start relative to this time.
-  int64 start_time = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
-  // Vesting events as a sequence of durations and amounts, starting relative to start_time.
+  string          from_address    = 1;
+  string          to_address      = 2;
+  // start of vesting as unix time (in seconds).
+  int64           start_time      = 3;
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false];
   // If true, merge this new grant into an existing PeriodicVestingAccount,
   // or create it if it does not exist. If false, creates a new account,

@@ -33,17 +33,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
 type MsgCreateVestingAccount struct {
-	// Address of the account providing the funds, which must also sign the request.
-	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
-	// Address of the vesting account to create.
-	ToAddress string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
-	// Amount to transfer to the new account.
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	// End time of the vesting duration.
-	EndTime int64 `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty" yaml:"end_time"`
-	// If true, creates a DelayedVestingAccount,
-	// otherwise creates a ContinuousVestingAccount.
-	Delayed bool `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
+	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	// end of vesting as unix time (in seconds).
+	EndTime int64 `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Delayed bool  `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
 }
 
 func (m *MsgCreateVestingAccount) Reset()         { *m = MsgCreateVestingAccount{} }
@@ -274,7 +269,19 @@ func (m *MsgCreatePeriodicVestingAccountResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgCreatePeriodicVestingAccountResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCreatePeriodicVestingAccountResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgCreatePermanentLockedAccountResponse proto.InternalMessageInfo
+
+// MsgCreateVestingAccount defines a message that enables creating a vesting
+// account.
+//
+// Since: cosmos-sdk 0.46
+type MsgCreatePeriodicVestingAccount struct {
+	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress   string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	// start of vesting as unix time (in seconds).
+	StartTime      int64    `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	VestingPeriods []Period `protobuf:"bytes,4,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
+}
 
 // MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.
 type MsgCreateClawbackVestingAccount struct {

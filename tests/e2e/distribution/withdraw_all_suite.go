@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -94,21 +95,31 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	}
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
-	require.NoError(s.network.WaitForNextBlock())
 
-	args = []string{
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	var out testutil.BufferWriter
+	err = s.network.RetryForBlocks(func() error {
+		args = []string{
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		}
+		cmd = cli.NewWithdrawAllRewardsCmd()
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		if err != nil {
+			return err
+		}
+
+		// expect 2 transactions in the generated file when --max-msgs in a tx set 1.
+		txLen := len(strings.Split(strings.Trim(out.String(), "\n"), "\n"))
+		if txLen != 2 {
+			return fmt.Errorf("expected 2 transactions in the generated file, got %d", txLen)
+		}
+		return nil
+	}, 3)
 	require.NoError(err)
-	// expect 2 transactions in the generated file when --max-msgs in a tx set 1.
-	s.Require().Equal(2, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 
 	args = []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),

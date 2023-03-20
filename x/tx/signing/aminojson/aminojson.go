@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
@@ -67,9 +68,12 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	}
 
 	tip := txData.AuthInfo.Tip
-	var fee *txv1beta1.AminoSignFee
+	if tip != nil && tip.Tipper == "" {
+		return nil, fmt.Errorf("tipper cannot be empty")
+	}
 	isTipper := tip != nil && tip.Tipper == signerData.Address
 
+	var fee *txv1beta1.AminoSignFee
 	if isTipper {
 		fee = &txv1beta1.AminoSignFee{
 			Amount: nil,
@@ -98,10 +102,6 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		msgBytes = append(msgBytes, bz)
 	}
 
-	if tip != nil && tip.Tipper == "" {
-		return nil, fmt.Errorf("tipper cannot be empty")
-	}
-
 	feeBz, err := h.encoder.Marshal(fee)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,19 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	if err != nil {
 		return nil, err
 	}
-	return bz, nil
+	return sortJSON(bz)
+}
+func sortJSON(toSortJSON []byte) ([]byte, error) {
+	var c interface{}
+	err := json.Unmarshal(toSortJSON, &c)
+	if err != nil {
+		return nil, err
+	}
+	js, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return js, nil
 }
 
 var _ signing.SignModeHandler = (*SignModeHandler)(nil)

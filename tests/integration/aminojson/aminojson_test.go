@@ -1,6 +1,7 @@
 package aminojson
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -45,6 +46,7 @@ import (
 	feegranttypes "cosmossdk.io/x/feegrant"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/signing/aminojson"
+	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -57,7 +59,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -614,6 +619,44 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				return
 			}
 			require.Equal(t, string(gogoBytes), string(newGogoBytes))
+
+			// test amino json signer handler equivalence
+			msg, ok := tc.gogo.(types.Msg)
+			if !ok {
+				// not signable
+				return
+			}
+
+			handlerOptions := signing_testutil.HandlerArgumentOptions{
+				ChainId:       "test-chain",
+				Memo:          "sometestmemo",
+				Msg:           tc.pulsar,
+				AccNum:        1,
+				AccSeq:        2,
+				SignerAddress: "signerAddress",
+			}
+
+			signerData, txData, err := signing_testutil.MakeHandlerArguments(handlerOptions)
+			require.NoError(t, err)
+
+			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
+			signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
+			require.NoError(t, err)
+
+			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+			txBuilder := encCfg.TxConfig.NewTxBuilder()
+			require.NoError(t, txBuilder.SetMsgs([]types.Msg{msg}...))
+
+			legacySigningData := signing.SignerData{
+				ChainID:       handlerOptions.ChainId,
+				Address:       handlerOptions.SignerAddress,
+				AccountNumber: handlerOptions.AccNum,
+				Sequence:      handlerOptions.AccSeq,
+			}
+			legacySignBz, err := legacyHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				legacySigningData, txBuilder.GetTx())
+			require.NoError(t, err)
+			require.Equal(t, string(legacySignBz), string(signBz))
 		})
 	}
 }

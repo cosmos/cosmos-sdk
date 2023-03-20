@@ -20,6 +20,10 @@ var _ signing.SignModeHandler = signModeLegacyAminoJSONHandler{}
 // SignModeHandler.
 type signModeLegacyAminoJSONHandler struct{}
 
+func NewSignModeLegacyAminoJSONHandler() signing.SignModeHandler {
+	return signModeLegacyAminoJSONHandler{}
+}
+
 func (s signModeLegacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
 	return signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }

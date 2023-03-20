@@ -382,6 +382,16 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 
 #### Events
 
+Many tools, indexers and ecosystem libraries rely on the existence `BeginBlock`
+and `EndBlock` events. Since CometBFT now only exposes `FinalizeBlockEvents`, we
+find that it will still be useful for these clients and tools to still query for
+and rely on existing events, especially since applications will still define
+`BeginBlock` and `EndBlock` implementations.
+
+In order to facilitate existing event functionality, we propose that all `BeginBlock`
+and `EndBlock` events have a dedicated `EventAttribute` with `key=block` and
+`value=begin_block|end_block`. The `EventAttribute` will be appended to each event
+in both `BeginBlock` and `EndBlock` events`.
 
 ## Consequences
 

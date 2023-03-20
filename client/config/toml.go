@@ -73,11 +73,6 @@ func ReadHomeDirFromFile(filePath string) (string, error) {
 	return homeDir, nil
 }
 
-// ensureConfigPath creates a directory configPath if it does not exist
-func ensureConfigPath(configPath string) error {
-	return os.MkdirAll(configPath, os.ModePerm)
-}
-
 // getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
 func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 	v.AddConfigPath(configPath)

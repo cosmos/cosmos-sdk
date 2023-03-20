@@ -50,7 +50,7 @@ func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 	return signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
-func (h SignModeHandler) GetSignBytes(ctx context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
+func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	body := txData.Body
 	_, err := decode.RejectUnknownFields(
 		txData.BodyBytes, body.ProtoReflect().Descriptor(), false, h.fileResolver)

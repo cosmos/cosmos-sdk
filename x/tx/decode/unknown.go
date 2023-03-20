@@ -100,14 +100,14 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 			}
 
 			msgName := MessageNameFromTypeURL(a.TypeUrl)
-			fieldMessage, err := resolver.FindDescriptorByName(msgName)
+			msgDesc, err := resolver.FindDescriptorByName(msgName)
 			if err != nil {
 				return hasUnknownNonCriticals, err
 			}
 
 			accepts := proto.GetExtension(fieldDesc.Options(), cosmos_proto.E_AcceptsInterface).(string)
 			if accepts != "" {
-				implements := proto.GetExtension(fieldMessage.Options(), cosmos_proto.E_ImplementsInterface).([]string)
+				implements := proto.GetExtension(msgDesc.Options(), cosmos_proto.E_ImplementsInterface).([]string)
 				found := false
 				for _, iface := range implements {
 					if iface == accepts {
@@ -119,10 +119,11 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 				if !found {
 					return hasUnknownNonCriticals, ErrInterfaceNotImplemented.Wrapf(
 						"expected interface %s, message %s implements %v",
-						accepts, fieldMessage.FullName(), implements)
+						accepts, msgDesc.FullName(), implements)
 				}
 			}
 
+			fieldMessage = msgDesc.(protoreflect.MessageDescriptor)
 			fieldBytes = a.Value
 		}
 

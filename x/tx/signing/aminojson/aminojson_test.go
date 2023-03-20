@@ -54,7 +54,7 @@ func makeHandlerArguments(options handlerArgumentOptions) (signing.SignerData, s
 		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
 	}
 	if options.tip == nil {
-		options.tip = &txv1beta1.Tip{Amount: []*basev1beta1.Coin{{Denom: "tip-token", Amount: "10"}}}
+		options.tip = &txv1beta1.Tip{Tipper: "tipper", Amount: []*basev1beta1.Coin{{Denom: "tip-token", Amount: "10"}}}
 	}
 
 	anyMsg, err := anyutil.New(options.msg)
@@ -93,7 +93,7 @@ func makeHandlerArguments(options handlerArgumentOptions) (signing.SignerData, s
 		ChainId:       options.chainID,
 		AccountNumber: options.accNum,
 		Sequence:      options.accSeq,
-		Address:       "",
+		Address:       "signerAddr",
 		PubKey:        anyPk,
 	}
 

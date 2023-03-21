@@ -426,7 +426,9 @@ func TestInputOutputNewAccount(t *testing.T) {
 	assert.Assert(t, f.accountKeeper.GetAccount(ctx, addr2) == nil)
 	assert.Assert(t, f.bankKeeper.GetAllBalances(ctx, addr2).Empty())
 
-	input := types.Input{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))}
+	input := types.Input{
+		Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
+	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
@@ -458,7 +460,9 @@ func TestInputOutputCoins(t *testing.T) {
 	acc3 := f.accountKeeper.NewAccountWithAddress(ctx, addr3)
 	f.accountKeeper.SetAccount(ctx, acc3)
 
-	input := types.Input{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))}
+	input := types.Input{
+		Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
+	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},

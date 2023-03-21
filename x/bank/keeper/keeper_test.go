@@ -563,7 +563,9 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	require.Empty(suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
 
 	suite.mockInputOutputCoins([]sdk.AccountI{authtypes.NewBaseAccountWithAddress(accAddrs[0])}, []sdk.AccAddress{accAddrs[1]})
-	input := banktypes.Input{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))}
+	input := banktypes.Input{
+		Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
+	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
@@ -581,7 +583,9 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-	input := banktypes.Input{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))}
+	input := banktypes.Input{
+		Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
+	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 		{Address: accAddrs[2].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},

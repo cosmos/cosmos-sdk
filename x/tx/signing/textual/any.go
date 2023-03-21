@@ -3,10 +3,12 @@ package textual
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	"github.com/cosmos/cosmos-proto/any"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -26,15 +28,17 @@ func NewAnyValueRenderer(t *SignModeHandler) ValueRenderer {
 // Format implements the ValueRenderer interface.
 func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	msg := v.Message().Interface()
-	anymsg, ok := msg.(*anypb.Any)
-	if !ok {
-		return nil, fmt.Errorf("expected Any, got %T", msg)
+	anymsg := &anypb.Any{}
+	err := coerceToMessage(msg, anymsg)
+	if err != nil {
+		return nil, err
 	}
 
-	internalMsg, err := anymsg.UnmarshalNew()
+	internalMsg, err := anyutil.Unpack(anymsg, ar.tr.fileResolver, ar.tr.typeResolver)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling any %s: %w", anymsg.TypeUrl, err)
+		return nil, err
 	}
+
 	vr, err := ar.tr.GetMessageValueRenderer(internalMsg.ProtoReflect().Descriptor())
 	if err != nil {
 		return nil, err
@@ -45,10 +49,17 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 		return nil, err
 	}
 
-	screens := make([]Screen, 1+len(subscreens))
+	// The Any value renderer suppresses emission of the object header
+	omitHeader := 0
+	_, isMsgRenderer := vr.(*messageValueRenderer)
+	if isMsgRenderer && subscreens[0].Content == fmt.Sprintf("%s object", internalMsg.ProtoReflect().Descriptor().Name()) {
+		omitHeader = 1
+	}
+
+	screens := make([]Screen, (1-omitHeader)+len(subscreens))
 	screens[0].Content = anymsg.GetTypeUrl()
-	for i, subscreen := range subscreens {
-		subscreen.Indent++
+	for i, subscreen := range subscreens[omitHeader:] {
+		subscreen.Indent += 1 - omitHeader
 		screens[i+1] = subscreen
 	}
 
@@ -64,8 +75,22 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		return nilValue, fmt.Errorf("bad indentation: want 0, got %d", screens[0].Indent)
 	}
 
-	msgType, err := protoregistry.GlobalTypes.FindMessageByURL(screens[0].Content)
-	if err != nil {
+	typeURL := screens[0].Content
+	msgType, err := ar.tr.typeResolver.FindMessageByURL(typeURL)
+	if err == protoregistry.NotFound {
+		// If the proto v2 registry doesn't have this message, then we use
+		// protoFiles (which can e.g. be initialized to gogo's MergedRegistry)
+		// to retrieve the message descriptor, and then use dynamicpb on that
+		// message descriptor to create a proto.Message
+		typeURL := strings.TrimPrefix(typeURL, "/")
+
+		msgDesc, err := ar.tr.fileResolver.FindDescriptorByName(protoreflect.FullName(typeURL))
+		if err != nil {
+			return nilValue, fmt.Errorf("textual protoFiles does not have descriptor %s: %w", typeURL, err)
+		}
+
+		msgType = dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor))
+	} else if err != nil {
 		return nilValue, err
 	}
 	vr, err := ar.tr.GetMessageValueRenderer(msgType.Descriptor())
@@ -82,12 +107,23 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		subscreens[i-1].Indent--
 	}
 
+	// Prepend with a "%s object" if the message goes through the default
+	// messageValueRenderer.
+	_, isMsgRenderer := vr.(*messageValueRenderer)
+	if isMsgRenderer {
+		for i := range subscreens {
+			subscreens[i].Indent++
+		}
+
+		subscreens = append([]Screen{{Content: fmt.Sprintf("%s object", msgType.Descriptor().Name())}}, subscreens...)
+	}
+
 	internalMsg, err := vr.Parse(ctx, subscreens)
 	if err != nil {
 		return nilValue, err
 	}
 
-	anyMsg, err := any.New(internalMsg.Message().Interface())
+	anyMsg, err := anyutil.New(internalMsg.Message().Interface())
 	if err != nil {
 		return nilValue, err
 	}

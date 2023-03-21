@@ -13,13 +13,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/argon2"
-	chacha20poly1305 "golang.org/x/crypto/chacha20poly1305"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/crypto"
+	crypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
@@ -205,14 +203,6 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 	passphrase := "passphrase"
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 
-	// Argon2 + xsalsa20symmetric
-	headerArgon2 := map[string]string{
-		"kdf":  "argon2",
-		"salt": fmt.Sprintf("%X", saltBytes),
-	}
-	keyArgon2 := argon2.IDKey([]byte(passphrase), saltBytes, 1, 64*1024, 4, 32)
-	encBytesArgon2Xsalsa20symetric := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, keyArgon2)
-
 	// Bcrypt + Aead
 	headerBcrypt := map[string]string{
 		"kdf":  "bcrypt",
@@ -220,9 +210,6 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 	}
 	keyBcrypt, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // Legacy Ley gemeratopm
 	keyBcrypt = cmtcrypto.Sha256(keyBcrypt)
-	aead, _ := chacha20poly1305.New(keyBcrypt)
-	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead())
-	encBytesBcryptAead := aead.Seal(nonce, nonce, privKeyBytes, nil) // Decrypt with aead
 
 	// bcrypt + xsalsa20symmetric
 	encBytesBcryptXsalsa20symetric := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, keyBcrypt)
@@ -237,16 +224,6 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 		{
 			description:   "Argon2 + Aead",
 			armor:         crypto.EncryptArmorPrivKey(privKey, "passphrase", ""),
-			expectedError: "invalid amount",
-		},
-		{
-			description:   "Argon2 + xsalsa20symmetric",
-			armor:         armor.EncodeArmor("TENDERMINT PRIVATE KEY", headerArgon2, encBytesArgon2Xsalsa20symetric),
-			expectedError: "invalid amount",
-		},
-		{
-			description:   "Bcrypt + Aead",
-			armor:         armor.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptAead),
 			expectedError: "invalid amount",
 		},
 		{

@@ -26,7 +26,9 @@ RFC creation is an **iterative** process. Instead of trying to solve all decisio
 
 5. Merged RFCs SHOULD NOT be pruned.
 
-6. If there is consensus and enough feedback, an ADR can be written on 
+6. If there is consensus and enough feedback then the RFC can be accepted. 
+
+> Note: An RFC is written when there is no working group or team session on the problem. RFC's are meant as a distributed white boarding session. If there is a working group on the proposal there is no need to have an RFC as there is synchornous whiteboarding going on. 
 
 ### RFC status
 

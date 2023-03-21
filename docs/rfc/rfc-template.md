@@ -32,6 +32,38 @@
 > path and fall into the same pitfalls that we've since matured from. Abandoned ideas are a way to recognize that path 
 > and explain the pitfalls and why they were abandoned.
 
+## Descision
+
+> This section describes alternative designs to the chosen design. This section
+> is important and if an adr does not have any alternatives then it should be
+> considered that the ADR was not thought through. 
+
+## Consequences (optional)
+
+> This section describes the resulting context, after applying the decision. All
+> consequences should be listed here, not just the "positive" ones. A particular
+> decision may have positive, negative, and neutral consequences, but all of them
+> affect the team and project in the future.
+
+### Backwards Compatibility
+
+> All ADRs that introduce backwards incompatibilities must include a section
+> describing these incompatibilities and their severity. The ADR must explain
+> how the author proposes to deal with these incompatibilities. ADR submissions
+> without a sufficient backwards compatibility treatise may be rejected outright.
+
+### Positive
+
+> {positive consequences}
+
+### Negative
+
+> {negative consequences}
+
+### Neutral
+
+> {neutral consequences}
+
 
 
 ### References

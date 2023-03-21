@@ -74,7 +74,7 @@ type Store struct {
 	interBlockCache     types.MultiStorePersistentCache
 	listeners           map[types.StoreKey]*types.MemoryListener
 	metrics             metrics.StoreMetrics
-	latestHeader        cmtproto.Header
+	commitHeader        cmtproto.Header
 }
 
 var (
@@ -467,12 +467,12 @@ func (rs *Store) Commit() types.CommitID {
 		version = previousHeight + 1
 	}
 
-	if rs.latestHeader.Height != version {
-		panic(fmt.Sprintf("latest header and commit version mismatch; expected %d, got %d", rs.latestHeader.Height, version))
+	if rs.commitHeader.Height != version {
+		panic(fmt.Sprintf("commit header and version mismatch; expected %d, got %d", rs.commitHeader.Height, version))
 	}
 
 	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
-	rs.lastCommitInfo.Timestamp = rs.latestHeader.Time
+	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 
 	// remove remnants of removed stores
@@ -483,6 +483,7 @@ func (rs *Store) Commit() types.CommitID {
 			delete(rs.keysByName, sk.Name())
 		}
 	}
+
 	// reset the removalMap
 	rs.removalMap = make(map[types.StoreKey]bool)
 
@@ -1051,9 +1052,9 @@ func (rs *Store) RollbackToVersion(target int64) error {
 	return rs.LoadLatestVersion()
 }
 
-// SetLatestHeader sets the latest block header of the store.
-func (rs *Store) SetLatestHeader(h cmtproto.Header) {
-	rs.latestHeader = h
+// SetCommitHeader sets the commit block header of the store.
+func (rs *Store) SetCommitHeader(h cmtproto.Header) {
+	rs.commitHeader = h
 }
 
 // GetCommitInfo attempts to retrieve CommitInfo for a given version/height. It

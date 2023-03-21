@@ -450,7 +450,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	rms, ok := app.cms.(*rootmulti.Store)
 	if ok {
-		rms.SetLatestHeader(header)
+		rms.SetCommitHeader(header)
 	}
 
 	// Write the DeliverTx state into branched storage and commit the MultiStore.

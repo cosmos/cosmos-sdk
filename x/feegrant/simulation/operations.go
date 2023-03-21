@@ -3,13 +3,13 @@ package simulation
 import (
 	"math/rand"
 
+	"cosmosdk.io/core/address"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/simulation"

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmosdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 

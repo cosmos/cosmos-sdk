@@ -7,13 +7,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/x/feegrant"
+	"cosmosdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	"cosmossdk.io/x/feegrant"
 )
 
 // flag for feegrant module

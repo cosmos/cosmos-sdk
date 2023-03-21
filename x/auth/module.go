@@ -11,8 +11,8 @@ import (
 
 	"cosmossdk.io/depinject"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/types/address"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 

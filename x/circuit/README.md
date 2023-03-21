@@ -108,5 +108,44 @@ This message is expected to fail if:
 
 * if the type url is not disabled
 
-* `## Events` - list and describe event tags used
-* `## Client` - list and describe CLI commands and gRPC and REST endpoints
+## Events - list and describe event tags 
+
+The circuit module emits the following events:
+
+### Message Events
+
+#### MsgAuthorizeCircuitBreaker
+
+| Type    | Attribute Key | Attribute Value           |
+|---------|---------------|---------------------------|
+| string  | granter       | {granteeAddress}          |
+| string  | grantee       | {granterAddress}          |
+| string  | permission    | {granteePermissions}      |
+| message | module        | circuit                   |
+| message | action        | authorize_circuit_breaker |
+
+#### MsgTripCircuitBreaker
+
+| Type     | Attribute Key | Attribute Value    |
+|----------|---------------|--------------------|
+| string   | authority     | {authorityAddress} |
+| []string | msg_urls      | []string{msg_urls} |
+| message  | module        | circuit            |
+| message  | action        | trip_circuit_breaker |
+
+#### ResetCircuitBreaker
+
+| Type     | Attribute Key | Attribute Value    |
+|----------|---------------|--------------------|
+| string   | authority     | {authorityAddress} |
+| []string | msg_urls      | []string{msg_urls} |
+| message  | module        | circuit            |
+| message  | action        | reset_circuit_breaker |
+
+
+## Keys - list of key prefixes used by the circuit module
+
+* `AccountPermissionPrefix` - `0x01`
+* `DisableListPrefix` -  `0x02`
+
+## Client - list and describe CLI commands and gRPC and REST endpoints

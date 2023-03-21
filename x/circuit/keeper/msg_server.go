@@ -6,7 +6,10 @@ import (
 	fmt "fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
@@ -35,11 +38,11 @@ func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.M
 		// Check that the authorizer has the permission level of "super admin"
 		perms, err := srv.GetPermissions(ctx, address)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("user permission does not exist %w", err)
 		}
 
 		if perms.Level != types.Permissions_LEVEL_SUPER_ADMIN {
-			return nil, fmt.Errorf("only super admins can authorize users")
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only super admins can authorize users")
 		}
 	}
 
@@ -75,13 +78,13 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 		return nil, err
 	}
 
-	store := ctx.KVStore(srv.storekey)
-
 	// Check that the account has the permissions
 	perms, err := srv.GetPermissions(ctx, address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user permission does not exist %w", err)
 	}
+
+	store := ctx.KVStore(srv.storekey)
 
 	switch {
 	case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
@@ -102,12 +105,12 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 				if msgTypeURL == msgurl {
 					store.Set(types.CreateDisableMsgPrefix(msgTypeURL), []byte{0x01})
 				} else {
-					return nil, fmt.Errorf("account does not have permission to trip circuit breaker for message %s", msgTypeURL)
+					return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker for message %s", msgTypeURL)
 				}
 			}
 		}
 	default:
-		return nil, fmt.Errorf("account does not have permission to trip circuit breaker")
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker")
 	}
 
 	var urls string
@@ -142,7 +145,7 @@ func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgRe
 	// Get the permissions for the account specified in the msg.Authority field
 	perms, err := keeper.GetPermissions(ctx, address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user permission does not exist %w", err)
 	}
 
 	store := ctx.KVStore(srv.storekey)
@@ -156,7 +159,7 @@ func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgRe
 			store.Delete(types.CreateDisableMsgPrefix(msgTypeURL))
 		}
 	} else {
-		return nil, fmt.Errorf("account does not have permission to reset circuit breaker")
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker")
 	}
 
 	var urls string

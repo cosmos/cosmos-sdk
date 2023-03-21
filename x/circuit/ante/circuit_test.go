@@ -56,40 +56,37 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	// Circuit breaker is allowed to pass through all transactions
-	circuitBreaker := &MockCircuitBreaker{true}
-	// CircuitBreakerDecorator AnteHandler should always return success
-	decorator := ante.NewCircuitBreakerDecorator(circuitBreaker)
-	// Test case 1: the transaction is allowed
-	// Test case 2: the transaction is not allowed
-
-	msg1 := &cbtypes.MsgAuthorizeCircuitBreaker{
-		Grantee: "cosmos1fghij",
-		Granter: "cosmos1abcde",
-	}
-
-	f.txBuilder.SetMsgs(msg1)
-	tx := f.txBuilder.GetTx()
-
-	newCtx, err := decorator.AnteHandle(f.ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-		return ctx, nil
-	})
-	require.NoError(t, err)
-	require.NotNil(t, newCtx)
-
-	// keys and addresses
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
+	testcases := []struct {
+		msg     sdk.Msg
+		allowed bool
+	}{
+		{msg: &cbtypes.MsgAuthorizeCircuitBreaker{
+			Grantee: "cosmos1fghij",
+			Granter: "cosmos1abcde",
+		}, allowed: true},
+		{msg: testdata.NewTestMsg(addr1), allowed: false},
+	}
 
-	f.txBuilder.SetMsgs(msg)
-	tx = f.txBuilder.GetTx()
+	for _, tc := range testcases {
+		// Circuit breaker is allowed to pass through all transactions
+		circuitBreaker := &MockCircuitBreaker{true}
+		// CircuitBreakerDecorator AnteHandler should always return success
+		decorator := ante.NewCircuitBreakerDecorator(circuitBreaker)
 
-	newCtx, err = decorator.AnteHandle(f.ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-		return ctx, nil
-	})
+		f.txBuilder.SetMsgs(tc.msg)
+		tx := f.txBuilder.GetTx()
 
-	require.Equal(t, "tx type not allowed", err.Error())
-	require.NotNil(t, newCtx)
+		_, err := decorator.AnteHandle(f.ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			return ctx, nil
+		})
+
+		if tc.allowed {
+			require.NoError(t, err)
+		} else {
+			require.Equal(t, "tx type not allowed", err.Error())
+		}
+	}
+
 }

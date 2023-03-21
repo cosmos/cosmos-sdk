@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQueryServer(t *testing.T) {
+func TestQueryAccount(t *testing.T) {
 	t.Parallel()
 	f := setupFixture(t)
 
@@ -28,6 +28,20 @@ func TestQueryServer(t *testing.T) {
 	require.Equal(t, res.Permission.LimitTypeUrls, []string{
 		"test",
 	})
+}
+
+func TestQueryAccounts(t *testing.T) {
+	t.Parallel()
+	f := setupFixture(t)
+
+	add, err := f.Keeper.addressCodec.StringToBytes(addresses[0])
+	require.NoError(t, err)
+
+	err = f.Keeper.SetPermissions(f.Ctx, add, &f.MockPerms)
+	require.NoError(t, err)
+
+	// create a new query server
+	qs := QueryServer{keeper: f.Keeper}
 
 	// test the Accounts method
 	res1, err := qs.Accounts(f.Ctx, &types.QueryAccountsRequest{
@@ -41,6 +55,20 @@ func TestQueryServer(t *testing.T) {
 	}
 
 	require.NotNil(t, res1)
+}
+
+func TestQueryDisabledList(t *testing.T) {
+	t.Parallel()
+	f := setupFixture(t)
+
+	add, err := f.Keeper.addressCodec.StringToBytes(addresses[0])
+	require.NoError(t, err)
+
+	err = f.Keeper.SetPermissions(f.Ctx, add, &f.MockPerms)
+	require.NoError(t, err)
+
+	// create a new query server
+	qs := QueryServer{keeper: f.Keeper}
 
 	// test the DisabledList method
 	disabledList, err := qs.DisabledList(f.Ctx, &types.QueryDisableListRequest{})

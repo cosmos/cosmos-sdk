@@ -3,25 +3,15 @@ package simapp
 import (
 	"errors"
 
-	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	circuitante "github.com/cosmos/cosmos-sdk/x/circuit/ante"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper          ante.AccountKeeper
-	BankKeeper             types.BankKeeper
-	ExtensionOptionChecker ante.ExtensionOptionChecker
-	FeegrantKeeper         ante.FeegrantKeeper
-	SignModeHandler        authsigning.SignModeHandler
-	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
-	TxFeeChecker           ante.TxFeeChecker
-	CircuitKeeper          circuitante.CircuitBreaker
+	ante.HandlerOptions
+	CircuitKeeper circuitante.CircuitBreaker
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence

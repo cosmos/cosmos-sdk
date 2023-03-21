@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
-	"strings"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,8 +55,14 @@ func (qs QueryServer) Accounts(c context.Context, req *types.QueryAccountsReques
 			return err
 		}
 
+		// remove key suffix
+		address, err := qs.keeper.addressCodec.BytesToString(bytes.TrimRight(key, "\x00"))
+		if err != nil {
+			return err
+		}
+
 		accounts = append(accounts, &types.GenesisAccountPermissions{
-			Address:     strings.TrimRight(string(key), "\x00"),
+			Address:     address,
 			Permissions: perm,
 		})
 

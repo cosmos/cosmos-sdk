@@ -41,9 +41,7 @@ func init() {
 // ConsensusVersion defines the current x/upgrade module consensus version.
 const ConsensusVersion uint64 = 2
 
-var (
-	_ module.AppModuleBasic = AppModuleBasic{}
-)
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
 type AppModuleBasic struct{}

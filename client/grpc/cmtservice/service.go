@@ -4,7 +4,6 @@ import (
 	"context"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmttypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
@@ -256,28 +255,8 @@ func RegisterTendermintService(
 	RegisterServiceServer(server, NewQueryServer(clientCtx, iRegistry, queryFn))
 }
 
-// RegisterTendermintServiceWithServer registers the CometBFT queries on the
-// gRPC router with a provided ServiceServer.
-func RegisterTendermintServiceWithService(server gogogrpc.Server, ss ServiceServer) {
-	RegisterServiceServer(server, ss)
-}
-
 // RegisterGRPCGatewayRoutes mounts the CometBFT service's GRPC-gateway routes on the
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
 	_ = RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))
-}
-
-// BlockRetriever returns a function that retrieves the block at the given
-// height from a CometBFT RPC service using the provided gRPC ServiceServer, which
-// uses the GetBlockByHeight request.
-func BlockRetriever(ss ServiceServer) func(context.Context, int64) (*cmttypes.Block, error) {
-	return func(ctx context.Context, height int64) (*cmttypes.Block, error) {
-		b, err := ss.GetBlockByHeight(ctx, &GetBlockByHeightRequest{Height: height})
-		if err != nil {
-			return nil, err
-		}
-
-		return b.Block, nil
-	}
 }

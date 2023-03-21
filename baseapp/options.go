@@ -297,7 +297,3 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 	app.streamingManager = manager
 }
-
-func (app *BaseApp) SetBlockRetriever(br BlockRetriever) {
-	app.blockRetriever = br
-}

@@ -158,10 +158,12 @@ func (a *App) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (a *App) RegisterTendermintService(clientCtx client.Context) {
-	ss := cmtservice.NewQueryServer(clientCtx, a.interfaceRegistry, a.Query)
-	cmtservice.RegisterTendermintServiceWithService(a.BaseApp.GRPCQueryRouter(), ss)
-
-	a.BaseApp.SetBlockRetriever(cmtservice.BlockRetriever(ss))
+	cmtservice.RegisterTendermintService(
+		clientCtx,
+		a.GRPCQueryRouter(),
+		a.interfaceRegistry,
+		a.Query,
+	)
 }
 
 // RegisterNodeService registers the node gRPC service on the app gRPC router.

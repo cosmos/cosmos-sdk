@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -11,14 +10,15 @@ import (
 	"syscall"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
+
+	errorsmod "cosmossdk.io/errors"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -806,23 +806,6 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height)
-
-	// query for and set the block timestamp for historical queries
-	if height != lastBlockHeight {
-		if app.blockRetriever == nil {
-			return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrAppConfig, "cannot query historical height %d without block retriever set", height)
-		}
-
-		goCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-		defer cancel()
-
-		block, err := app.blockRetriever(goCtx, height)
-		if err != nil || block == nil {
-			return sdk.Context{}, errorsmod.Wrapf(err, "failed to query for historical block %d", height)
-		}
-
-		ctx = ctx.WithBlockTime(block.Header.Time)
-	}
 
 	return ctx, nil
 }

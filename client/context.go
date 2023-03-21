@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -61,6 +62,16 @@ type Context struct {
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
+
+	// CmdContext is the context.Context from the Cobra command.
+	CmdContext context.Context
+}
+
+// WithCmdContext returns a copy of the context with an updated context.Context,
+// usually set to the cobra cmd context.
+func (ctx Context) WithCmdContext(c context.Context) Context {
+	ctx.CmdContext = c
+	return ctx
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.

@@ -14,13 +14,13 @@ The main difference the Cosmos SDK is defining as a differentiation between RFC 
 
 ## RFC life cycle
 
-RFC creation is an **iterative** process. Instead of trying to solve all decisions in a single RFC pull request, we MUST firstly understand the problem and collect feedback through a GitHub Issue.
+RFC creation is an **iterative** process. An RFC is meant as a distributed colloboration session, it may have many comments and is usually the bi-product of no working group or synchornous communication 
 
 1. Proposals could start with a new GitHub Issue,  be a result of existing Issues or a discussion.
 
 2. An RFC doesn't have to arrive to `main` with an _accepted_ status in a single PR. If the motivation is clear and the solution is sound, we SHOULD be able to merge it and keep a _proposed_ status. It's preferable to have an iterative approach rather than long, not merged Pull Requests.
 
-3. If a _proposed_ ADR is merged, then it should clearly document outstanding issues either in the RFC document notes or in a GitHub Issue.
+3. If a _proposed_ RFC is merged, then it should clearly document outstanding issues either in the RFC document notes or in a GitHub Issue.
 
 4. The PR SHOULD always be merged. In the case of a faulty RFC, we still prefer to  merge it with a _rejected_ status. The only time the RFC SHOULD NOT be merged is if the author abandons it.
 

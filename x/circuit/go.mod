@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/store v0.1.0-alpha.1
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321155358-6522dd1731b5
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321163926-e2054ee87922
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.53.0
@@ -99,5 +99,3 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace cosmossdk.io/x/tx => ../../x/tx

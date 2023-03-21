@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.0.0-rc.0
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.37.0
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230314215525-ba8de97d1af8
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321155358-6522dd1731b5
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0
 	github.com/spf13/cobra v1.6.1
@@ -19,7 +19,7 @@ require (
 require (
 	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7 // indirect
 	cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba // indirect
-	cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba // indirect
+	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1 // indirect

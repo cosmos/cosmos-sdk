@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
-	cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba
+	cosmossdk.io/core v0.6.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v0.1.0
@@ -12,7 +12,7 @@ require (
 	github.com/cometbft/cometbft v0.37.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230314215525-ba8de97d1af8
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321155358-6522dd1731b5
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0

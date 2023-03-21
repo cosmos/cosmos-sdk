@@ -3,7 +3,7 @@ module cosmossdk.io/tools/hubl
 go 1.20
 
 require (
-	cosmossdk.io/api v0.3.1
+	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
 	cosmossdk.io/client/v2 v2.0.0-20230314205129-d50cb1ef349f
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cockroachdb/errors v1.9.1
@@ -17,7 +17,7 @@ require (
 
 require (
 	cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba // indirect
-	cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba // indirect
+	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/log v0.1.0 // indirect
 	cosmossdk.io/math v1.0.0-rc.0 // indirect
@@ -41,7 +41,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230314215525-ba8de97d1af8 // indirect
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321155358-6522dd1731b5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/iavl v0.21.0-beta.1 // indirect
@@ -119,3 +119,5 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace cosmossdk.io/x/tx => ../../x/tx

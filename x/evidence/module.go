@@ -140,9 +140,10 @@ func (am AppModule) Name() string {
 }
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) {
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(registrar, am.keeper)
+	return nil
 }
 
 // InitGenesis performs the evidence module's genesis initialization It returns

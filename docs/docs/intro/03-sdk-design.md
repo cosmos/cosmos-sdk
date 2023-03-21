@@ -4,11 +4,11 @@ sidebar_position: 1
 
 # Main Components of the Cosmos SDK
 
-The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of Tendermint. At its core, the Cosmos SDK is a boilerplate implementation of the [ABCI](./02-sdk-app-architecture.md#abci) in Golang. It comes with a [`multistore`](../core/04-store.md#multistore) to persist data and a [`router`](../core/00-baseapp.md#routing) to handle transactions.
+The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of CometBFT. At its core, the Cosmos SDK is a boilerplate implementation of the [ABCI](./02-sdk-app-architecture.md#abci) in Golang. It comes with a [`multistore`](../core/04-store.md#multistore) to persist data and a [`router`](../core/00-baseapp.md#routing) to handle transactions.
 
-Here is a simplified view of how transactions are handled by an application built on top of the Cosmos SDK when transferred from Tendermint via `DeliverTx`:
+Here is a simplified view of how transactions are handled by an application built on top of the Cosmos SDK when transferred from CometBFT via `DeliverTx`:
 
-1. Decode `transactions` received from the Tendermint consensus engine (remember that Tendermint only deals with `[]bytes`).
+1. Decode `transactions` received from the CometBFT consensus engine (remember that CometBFT only deals with `[]bytes`).
 2. Extract `messages` from `transactions` and do basic sanity checks.
 3. Route each message to the appropriate module so that it can be processed.
 4. Commit state changes.
@@ -43,7 +43,7 @@ Here is a simplified view of how a transaction is processed by the application o
                                       +
                                       |
                                       |  Transaction relayed from the full-node's
-                                      |  Tendermint engine to the node's application
+                                      |  CometBFT engine to the node's application
                                       |  via DeliverTx
                                       |
                                       |
@@ -79,7 +79,7 @@ Here is a simplified view of how a transaction is processed by the application o
                                                                   |
                                        +--------------------------+
                                        |
-                                       | Return result to Tendermint
+                                       | Return result to CometBFT
                                        | (0=Ok, 1=Err)
                                        v
 ```

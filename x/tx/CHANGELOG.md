@@ -33,4 +33,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## API Breaking
 
+* [#13793](https://github.com/cosmos/cosmos-sdk/pull/13793) `direct_aux.NewSignModeHandler` constructor function now returns an additional error argument.
 * [#15278](https://github.com/cosmos/cosmos-sdk/pull/15278) Move `x/tx/{textual,aminojson}` into `x/tx/signing`.
+* [#15302](https://github.com/cosmos/cosmos-sdk/pull/15302) `textual.NewSignModeHandler` now takes an options struct instead of a simple coin querier argument. It also returns an error.
+
+## Improvements
+
+* [#15302](https://github.com/cosmos/cosmos-sdk/pull/15302) Add support for a custom registry (e.g. gogo's MergedRegistry) to be plugged into SIGN_MODE_TEXTUAL.
+

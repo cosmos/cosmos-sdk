@@ -30,9 +30,6 @@ const (
 	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
 	// bytes the server can send.
 	DefaultGRPCMaxSendMsgSize = math.MaxInt32
-
-	// FileStreamer defines the store streaming type for file streaming.
-	FileStreamer = "file"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -171,34 +168,17 @@ type MempoolConfig struct {
 	MaxTxs int
 }
 
+// State Streaming configuration
 type (
-	// StoreConfig defines application configuration for state streaming and other
-	// storage related operations.
-	StoreConfig struct {
-		Streamers []string `mapstructure:"streamers"`
+	// StreamingConfig defines application configuration for external streaming services
+	StreamingConfig struct {
+		ABCI ABCIListenerConfig `mapstructure:"abci"`
 	}
-
-	// StreamersConfig defines concrete state streaming configuration options. These
-	// fields are required to be set when state streaming is enabled via a non-empty
-	// list defined by 'StoreConfig.Streamers'.
-	StreamersConfig struct {
-		File FileStreamerConfig `mapstructure:"file"`
-	}
-
-	// FileStreamerConfig defines the file streaming configuration options.
-	FileStreamerConfig struct {
-		Keys     []string `mapstructure:"keys"`
-		WriteDir string   `mapstructure:"write_dir"`
-		Prefix   string   `mapstructure:"prefix"`
-		// OutputMetadata specifies if output the block metadata file which includes
-		// the abci requests/responses, otherwise only the data file is outputted.
-		OutputMetadata bool `mapstructure:"output-metadata"`
-		// StopNodeOnError specifies if propagate the streamer errors to the consensus
-		// state machine, it's nesserary for data integrity of output.
-		StopNodeOnError bool `mapstructure:"stop-node-on-error"`
-		// Fsync specifies if calling fsync after writing the files, it slows down
-		// the commit, but don't lose data in face of system crash.
-		Fsync bool `mapstructure:"fsync"`
+	// ABCIListenerConfig defines application configuration for ABCIListener streaming service
+	ABCIListenerConfig struct {
+		Keys          []string `mapstructure:"keys"`
+		Plugin        string   `mapstructure:"plugin"`
+		StopNodeOnErr bool     `mapstructure:"stop-node-on-err"`
 	}
 )
 
@@ -212,8 +192,7 @@ type Config struct {
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
 	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
-	Store     StoreConfig      `mapstructure:"store"`
-	Streamers StreamersConfig  `mapstructure:"streamers"`
+	Streaming StreamingConfig  `mapstructure:"streaming"`
 	Mempool   MempoolConfig    `mapstructure:"mempool"`
 }
 
@@ -285,18 +264,10 @@ func DefaultConfig() *Config {
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 2,
 		},
-		Store: StoreConfig{
-			Streamers: []string{},
-		},
-		Streamers: StreamersConfig{
-			File: FileStreamerConfig{
-				Keys:            []string{"*"},
-				WriteDir:        "",
-				OutputMetadata:  true,
-				StopNodeOnError: true,
-				// NOTICE: The default config doesn't protect the streamer data integrity
-				// in face of system crash.
-				Fsync: false,
+		Streaming: StreamingConfig{
+			ABCI: ABCIListenerConfig{
+				Keys:          []string{},
+				StopNodeOnErr: true,
 			},
 		},
 		Mempool: MempoolConfig{

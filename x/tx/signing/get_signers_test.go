@@ -12,7 +12,8 @@ import (
 )
 
 func TestGetSigners(t *testing.T) {
-	ctx := NewGetSignersContext(GetSignersOptions{})
+	ctx, err := NewGetSignersContext(GetSignersOptions{})
+	require.NoError(t, err)
 	tests := []struct {
 		name    string
 		msg     proto.Message

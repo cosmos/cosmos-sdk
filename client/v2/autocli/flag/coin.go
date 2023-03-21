@@ -26,15 +26,7 @@ func (c coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	if c.value == nil {
 		return protoreflect.Value{}, nil
 	}
-
-	return protoreflect.ValueOfMessage((&basev1beta1.Coin{}).ProtoReflect()), nil
-
-	protoValue := c.value.ProtoReflect()
-	//fmt.Println(protoValue)
-	//pf := protoValue.(*basev1beta1.Coin)
-	//fmt.Println(pf)
-	reflectedValue := protoreflect.ValueOfMessage(protoValue)
-	return reflectedValue, nil
+	return protoreflect.ValueOfMessage(c.value.ProtoReflect()), nil
 }
 
 func (c coinValue) String() string {

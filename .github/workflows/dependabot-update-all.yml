@@ -15,7 +15,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           # Secret to be added in the repo under Settings > Secrets > Dependabot
           token: ${{ secrets.PRBOT_PAT }}
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: 1.20.2
       - name: Extract updated dependency

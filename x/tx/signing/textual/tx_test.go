@@ -56,7 +56,7 @@ func TestTxJsonTestcases(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			txBody, bodyBz, txAuthInfo, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
 
-			tr := textual.NewSignModeHandler(mockCoinMetadataQuerier)
+			tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: mockCoinMetadataQuerier})
 			rend := textual.NewTxValueRenderer(tr)
 			ctx := addMetadataToContext(context.Background(), tc.Metadata)
 

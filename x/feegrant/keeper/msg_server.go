@@ -28,12 +28,12 @@ var _ feegrant.MsgServer = msgServer{}
 func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := k.addressCodec.StringToBytes(msg.Grantee)
+	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := k.addressCodec.StringToBytes(msg.Granter)
+	granter, err := k.authKeeper.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -63,12 +63,12 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevokeAllowance) (*feegrant.MsgRevokeAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := k.addressCodec.StringToBytes(msg.Grantee)
+	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := k.addressCodec.StringToBytes(msg.Granter)
+	granter, err := k.authKeeper.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}

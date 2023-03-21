@@ -18,21 +18,19 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc          codec.BinaryCodec
-	storeKey     storetypes.StoreKey
-	authKeeper   feegrant.AccountKeeper
-	addressCodec feegrant.AddressCodec
+	cdc        codec.BinaryCodec
+	storeKey   storetypes.StoreKey
+	authKeeper feegrant.AccountKeeper
 }
 
 var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak feegrant.AccountKeeper, addressCodec feegrant.AddressCodec) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak feegrant.AccountKeeper) Keeper {
 	return Keeper{
-		cdc:          cdc,
-		storeKey:     storeKey,
-		authKeeper:   ak,
-		addressCodec: addressCodec,
+		cdc:        cdc,
+		storeKey:   storeKey,
+		authKeeper: ak,
 	}
 }
 
@@ -250,11 +248,11 @@ func emitUseGrantEvent(ctx sdk.Context, granter, grantee string) {
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func (k Keeper) InitGenesis(ctx sdk.Context, data *feegrant.GenesisState) error {
 	for _, f := range data.Allowances {
-		granter, err := k.addressCodec.StringToBytes(f.Granter)
+		granter, err := k.authKeeper.StringToBytes(f.Granter)
 		if err != nil {
 			return err
 		}
-		grantee, err := k.addressCodec.StringToBytes(f.Grantee)
+		grantee, err := k.authKeeper.StringToBytes(f.Grantee)
 		if err != nil {
 			return err
 		}

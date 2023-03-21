@@ -121,9 +121,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry, ac address.Codec) AppModule {
+func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ac},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -190,14 +190,13 @@ type FeegrantInputs struct {
 	Key           *store.KVStoreKey
 	Cdc           codec.Codec
 	AccountKeeper feegrant.AccountKeeper
-	AddressCodec  feegrant.AddressCodec
 	BankKeeper    feegrant.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.AddressCodec)
-	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry, in.AddressCodec)
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper)
+	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
 	return k, m
 }
 

@@ -1,6 +1,7 @@
 package crisis
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -36,8 +37,7 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.EndBlockAppModule = AppModule{}
-	_ module.AppModuleBasic    = AppModuleBasic{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // Module init related flags
@@ -175,9 +175,10 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the crisis module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, *am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	EndBlocker(c, *am.keeper)
+	return nil
 }
 
 // App Wiring Setup

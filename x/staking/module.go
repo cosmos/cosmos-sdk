@@ -193,6 +193,7 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 
 // EndBlock returns the end blocker for the staking module. It returns no validator
 // updates.
+// TODO: can't convert to Core API because it returns validator updates
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, am.keeper)
 }

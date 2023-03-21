@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 	"time"
 
@@ -38,6 +39,10 @@ type PluginTestSuite struct {
 }
 
 func (s *PluginTestSuite) SetupTest() {
+	if runtime.GOOS != "linux" {
+		s.T().Skip("only run on linux")
+	}
+
 	path, err := os.Getwd()
 	if err != nil {
 		s.T().Fail()

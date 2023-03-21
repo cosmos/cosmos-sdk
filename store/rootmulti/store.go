@@ -467,10 +467,6 @@ func (rs *Store) Commit() types.CommitID {
 		version = previousHeight + 1
 	}
 
-	if rs.commitHeader.Height != version {
-		panic(fmt.Sprintf("commit header and version mismatch; expected %d, got %d", rs.commitHeader.Height, version))
-	}
-
 	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
 	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)

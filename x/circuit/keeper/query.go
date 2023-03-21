@@ -5,9 +5,9 @@ import (
 	"context"
 
 	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/x/circuit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 	"github.com/cosmos/gogoproto/proto"
 )
 

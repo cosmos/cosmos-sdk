@@ -3,7 +3,7 @@ package keeper
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/circuit/types"
+	"cosmossdk.io/x/circuit/types"
 	"github.com/stretchr/testify/require"
 )
 

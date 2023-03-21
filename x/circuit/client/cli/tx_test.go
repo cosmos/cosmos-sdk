@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/x/circuit"
+	cli "cosmossdk.io/x/circuit/client/cli"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,8 +18,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/circuit"
-	cli "github.com/cosmos/cosmos-sdk/x/circuit/client/cli"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 )

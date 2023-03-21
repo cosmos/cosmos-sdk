@@ -28,7 +28,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/protobuf v1.29.0
-	github.com/cosmos/cosmos-sdk/x/circuit v0.0.0-20230220112800-f69b9ff58fbe
+	cosmossdk.io/x/circuit v0.0.0-20230220112800-f69b9ff58fbe
 )
 
 require (
@@ -202,7 +202,7 @@ replace (
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/upgrade => ../x/upgrade
-	github.com/cosmos/cosmos-sdk/x/circuit => ../x/circuit
+	cosmossdk.io/x/circuit => ../x/circuit
 )
 
 // Below are the long-lived replace of the SimApp

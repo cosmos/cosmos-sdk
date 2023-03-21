@@ -4,9 +4,9 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/circuit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
 // Keeper defines the circuit module's keeper.

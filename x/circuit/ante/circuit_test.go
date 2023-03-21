@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
+	cbtypes "cosmossdk.io/x/circuit/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -13,10 +14,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	cbtypes "github.com/cosmos/cosmos-sdk/x/circuit/types"
 
+	"cosmossdk.io/x/circuit/ante"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/circuit/ante"
 	"github.com/stretchr/testify/require"
 )
 

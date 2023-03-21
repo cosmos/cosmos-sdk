@@ -24,6 +24,8 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
+	"cosmossdk.io/x/circuit"
+	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,8 +47,6 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/circuit"
-	circuitkeeper "github.com/cosmos/cosmos-sdk/x/circuit/keeper"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis"

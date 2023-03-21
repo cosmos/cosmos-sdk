@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/circuit/types"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
 var addresses = []string{

@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	store "cosmossdk.io/store/types"
+	"cosmossdk.io/x/circuit/client/cli"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,12 +20,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/circuit/client/cli"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
-	"github.com/cosmos/cosmos-sdk/x/circuit/types"
+	"cosmossdk.io/x/circuit/keeper"
+	"cosmossdk.io/x/circuit/types"
 )
 
 // ConsensusVersion defines the current circuit module consensus version.

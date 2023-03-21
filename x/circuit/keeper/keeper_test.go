@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/circuit/keeper"
+	"cosmossdk.io/x/circuit/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
-	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 	"gotest.tools/v3/assert"
 )
 

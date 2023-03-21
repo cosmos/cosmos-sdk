@@ -166,7 +166,7 @@ When writing documentation, follow the [Documentation Writing Guidelines](./docs
 
 ### RFC & ADR
 
-Within the Cosmos SDK we have two forms of documenting descisions, Request For Comment (RFC) & Architecture Design Record (ADR). They perform two different functions. The process for assessing if something needs an RFC is located in the respective folders: 
+Within the Cosmos SDK we have two forms of documenting decisions, Request For Comment (RFC) & Architecture Design Record (ADR). They perform two different functions. The process for assessing if something needs an RFC is located in the respective folders: 
 
 * [RFC Process](./docs/rfc/process.md)
 * [ADR Process](./docs/adr/process.md) 

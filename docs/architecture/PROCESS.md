@@ -8,11 +8,11 @@
 
 ## What is an ADR? 
 
-An ADR is a document to document an implementation and design that may or may not have been discussed in an RFC. While an RFC is meant to replace synchoronus communication in a distributed environment, an ADR is meant to document an already made descision. An ADR wont come with much of a communication overhead because the discussion was recorded in an RFC or a synchronous discussion. If the consensus came from a synchoronus discussion then a short excerpt should be added to the ADR to explain the goals. 
+An ADR is a document to document an implementation and design that may or may not have been discussed in an RFC. While an RFC is meant to replace synchoronus communication in a distributed environment, an ADR is meant to document an already made decision. An ADR wont come with much of a communication overhead because the discussion was recorded in an RFC or a synchronous discussion. If the consensus came from a synchoronus discussion then a short excerpt should be added to the ADR to explain the goals. 
 
 ## ADR life cycle
 
-ADR creation is an **iterative** process. Instead of having a high amount of communication overhead, an ADR is used when there is already a descision made and implementation details need to be added. The ADR should document what the collective consensus for the specific issue is and how to solve it. 
+ADR creation is an **iterative** process. Instead of having a high amount of communication overhead, an ADR is used when there is already a decision made and implementation details need to be added. The ADR should document what the collective consensus for the specific issue is and how to solve it. 
 
 1. Every ADR should start with either an RFC or discussion where consensus has been met. 
 

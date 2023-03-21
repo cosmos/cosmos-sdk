@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmosdk.io/core/address"
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/x/feegrant"

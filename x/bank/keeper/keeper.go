@@ -49,6 +49,8 @@ type Keeper interface {
 	DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
+	EmitAllTransientBalances(ctx sdk.Context)
+
 	types.QueryServer
 }
 

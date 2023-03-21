@@ -1,0 +1,26 @@
+syntax = "proto3";
+package cosmos.bank.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+
+// EventSetBalance is an event that tracks the latest bank balance.
+message EventSetBalances {
+  repeated BalanceUpdate balance_updates = 1;
+}
+
+// BalanceUpdate contains a given address's latest balance
+message BalanceUpdate {
+  bytes addr  = 1;
+  bytes denom = 2;
+  // the latest amount
+  string amt = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}

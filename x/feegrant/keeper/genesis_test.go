@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/feegrant/module"
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -36,7 +37,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, accountKeeper, testutil.NewBech32Codec("cosmos"))
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, accountKeeper, codecaddress.NewBech32Codec("cosmos"))
 
 	suite.ctx = testCtx.Ctx
 }

@@ -10,13 +10,14 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/module"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestGrant(t *testing.T) {
-	addressCodec := testutil.NewBech32Codec("cosmos")
+	addressCodec := codecaddress.NewBech32Codec("cosmos")
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})

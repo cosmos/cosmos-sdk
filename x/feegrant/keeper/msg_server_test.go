@@ -5,8 +5,8 @@ import (
 
 	"cosmossdk.io/x/feegrant"
 
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/golang/mock/gomock"
 )
@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 	yesterday := ctx.BlockTime().AddDate(0, 0, -1)
 
-	addressCodec := testutil.NewBech32Codec("cosmos")
+	addressCodec := codecaddress.NewBech32Codec("cosmos")
 
 	testCases := []struct {
 		name      string

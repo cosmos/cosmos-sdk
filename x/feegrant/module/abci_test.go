@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,7 +41,7 @@ func TestFeegrantPruning(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter2).Return(authtypes.NewBaseAccountWithAddress(granter2)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter3).Return(authtypes.NewBaseAccountWithAddress(granter3)).AnyTimes()
 
-	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, key, accountKeeper, testutil.NewBech32Codec("cosmos"))
+	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, key, accountKeeper, codecaddress.NewBech32Codec("cosmos"))
 
 	feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,

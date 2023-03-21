@@ -10,6 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -86,7 +87,7 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	bech32Codec := NewBech32Codec(bech32Prefix)
+	bech32Codec := codecaddress.NewBech32Codec(bech32Prefix)
 
 	return AccountKeeper{
 		storeKey:   storeKey,
@@ -262,10 +263,10 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	bech32Codec, ok := ak.addressCdc.(bech32Codec)
+	bech32Codec, ok := ak.addressCdc.(codecaddress.Bech32Codec)
 	if !ok {
 		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.addressCdc)
 	}
 
-	return bech32Codec.bech32Prefix, nil
+	return bech32Codec.Bech32Prefix, nil
 }

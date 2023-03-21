@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMarshalAndUnmarshalFeegrantKey(t *testing.T) {
-	addressCodec := testutil.NewBech32Codec("cosmos")
+	addressCodec := codecaddress.NewBech32Codec("cosmos")
 	grantee, err := addressCodec.StringToBytes("cosmos1qk93t4j0yyzgqgt6k5qf8deh8fq6smpn3ntu3x")
 	require.NoError(t, err)
 	granter, err := addressCodec.StringToBytes("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")
@@ -28,7 +28,7 @@ func TestMarshalAndUnmarshalFeegrantKey(t *testing.T) {
 }
 
 func TestMarshalAndUnmarshalFeegrantKeyQueueKey(t *testing.T) {
-	addressCodec := testutil.NewBech32Codec("cosmos")
+	addressCodec := codecaddress.NewBech32Codec("cosmos")
 	grantee, err := addressCodec.StringToBytes("cosmos1qk93t4j0yyzgqgt6k5qf8deh8fq6smpn3ntu3x")
 	require.NoError(t, err)
 	granter, err := addressCodec.StringToBytes("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")

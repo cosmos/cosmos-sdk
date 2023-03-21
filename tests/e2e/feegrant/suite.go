@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/feegrant/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -97,7 +98,7 @@ func (s *E2ETestSuite) createGrant(granter, grantee sdk.Address) {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+	cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -171,7 +172,7 @@ func (s *E2ETestSuite) TestCmdGetFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrant(testutil.NewBech32Codec())
+			cmd := cli.GetCmdQueryFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -237,7 +238,7 @@ func (s *E2ETestSuite) TestCmdGetFeeGrantsByGrantee() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrantsByGrantee(testutil.NewBech32Codec())
+			cmd := cli.GetCmdQueryFeeGrantsByGrantee(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -294,7 +295,7 @@ func (s *E2ETestSuite) TestCmdGetFeeGrantsByGranter() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrantsByGranter(testutil.NewBech32Codec())
+			cmd := cli.GetCmdQueryFeeGrantsByGranter(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -587,7 +588,7 @@ func (s *E2ETestSuite) TestNewCmdFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -617,7 +618,7 @@ func (s *E2ETestSuite) TestNewCmdRevokeFeegrant() {
 
 	address := "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00"
 	// Create new fee grant specifically to test amino.
-	aminoGrantee, err := testutil.NewBech32Codec().StringToBytes(address)
+	aminoGrantee, err := codecaddress.NewBech32Codec("cosmos").StringToBytes(address)
 	s.Require().NoError(err)
 	s.createGrant(granter, sdk.AccAddress(aminoGrantee))
 
@@ -695,7 +696,7 @@ func (s *E2ETestSuite) TestNewCmdRevokeFeegrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeFeegrant(testutil.NewBech32Codec())
+			cmd := cli.NewCmdRevokeFeegrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -744,7 +745,7 @@ func (s *E2ETestSuite) TestTxWithFeeGrant() {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+	cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -879,7 +880,7 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -901,7 +902,7 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 	}
 
 	// get filtered fee allowance and check info
-	cmd := cli.GetCmdQueryFeeGrant(testutil.NewBech32Codec())
+	cmd := cli.GetCmdQueryFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
@@ -964,7 +965,7 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 					},
 					commonFlags...,
 				)
-				cmd := cli.NewCmdFeeGrant(testutil.NewBech32Codec())
+				cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 				return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			},
 			&sdk.TxResponse{},

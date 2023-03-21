@@ -21,7 +21,6 @@ use (
 	./x/tx
 	./x/nft
 	./x/circuit
-	./x/consensus
 	./x/feegrant
 	./x/evidence
 	./x/upgrade

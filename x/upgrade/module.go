@@ -42,8 +42,7 @@ func init() {
 const ConsensusVersion uint64 = 2
 
 var (
-	_ module.BeginBlockAppModule = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
@@ -95,7 +94,10 @@ func NewAppModule(keeper *keeper.Keeper) AppModule {
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -154,8 +156,10 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // BeginBlock calls the upgrade module hooks
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(am.keeper, ctx, req)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	BeginBlocker(am.keeper, c)
+	return nil
 }
 
 //

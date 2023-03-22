@@ -3124,8 +3124,9 @@ type MsgCreateVestingAccount struct {
 	FromAddress string          `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 	ToAddress   string          `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
 	Amount      []*v1beta1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`
-	EndTime     int64           `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	Delayed     bool            `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
+	// end of vesting as unix time (in seconds).
+	EndTime int64 `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Delayed bool  `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
 }
 
 func (x *MsgCreateVestingAccount) Reset() {
@@ -3303,8 +3304,9 @@ type MsgCreatePeriodicVestingAccount struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	FromAddress    string    `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
-	ToAddress      string    `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress   string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	// start of vesting as unix time (in seconds).
 	StartTime      int64     `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	VestingPeriods []*Period `protobuf:"bytes,4,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods,omitempty"`
 }

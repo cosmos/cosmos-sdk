@@ -10,7 +10,6 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v0.1.0
 	cosmossdk.io/math v1.0.0-rc.0
-	cosmossdk.io/store v0.1.0-alpha.1
 	cosmossdk.io/x/tx v0.3.1-0.20230321155358-6522dd1731b5
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
@@ -18,7 +17,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.9.1
-	github.com/cometbft/cometbft v0.37.0
+	github.com/cometbft/cometbft v0.0.0-20230321232650-16823b401e93
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3

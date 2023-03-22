@@ -6,8 +6,8 @@ import (
 	"cosmossdk.io/log"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -56,7 +56,7 @@ type AccountKeeperI interface {
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
-	storeKey  storetypes.StoreKey
+	storeSvc  storetypes.KVStoreService
 	cdc       codec.BinaryCodec
 	permAddrs map[string]types.PermissionsForAddress
 
@@ -78,7 +78,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, proto func() sdk.AccountI,
+	cdc codec.BinaryCodec, storeSvc storetypes.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -89,7 +89,7 @@ func NewAccountKeeper(
 	bech32Codec := NewBech32Codec(bech32Prefix)
 
 	return AccountKeeper{
-		storeKey:   storeKey,
+		storeSvc:   storeSvc,
 		proto:      proto,
 		cdc:        cdc,
 		permAddrs:  permAddrs,
@@ -138,9 +138,13 @@ func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint6
 // If the global account number is not set, it initializes it with value 0.
 func (ak AccountKeeper) NextAccountNumber(ctx sdk.Context) uint64 {
 	var accNumber uint64
-	store := ctx.KVStore(ak.storeKey)
+	store := ak.storeSvc.OpenKVStore(ctx)
 
-	bz := store.Get(types.GlobalAccountNumberKey)
+	bz, err := store.Get(types.GlobalAccountNumberKey)
+	if err != nil {
+		// panics only on nil key, which should not be possible
+		panic(err)
+	}
 	if bz == nil {
 		// initialize the account numbers
 		accNumber = 0

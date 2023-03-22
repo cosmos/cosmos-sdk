@@ -51,7 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (cli) [#15123](https://github.com/cosmos/cosmos-sdk/pull/15123) Change the offline mode behavior that does not match the written in the description to behave as written. The API of `clienttx.NewFactoryCLI` is updated to return an error. 
+* (cli) [#15123](https://github.com/cosmos/cosmos-sdk/pull/15123) Fix the CLI `offline` mode behavior to be really offline. The API of `clienttx.NewFactoryCLI` is updated to return an error. 
 
 ### Deprecated
 

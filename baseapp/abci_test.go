@@ -1586,7 +1586,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	suite := NewBaseAppSuite(t, prepareOpt, processOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-		ConsensusParams: &cmtproto.ConsensusParams{},
+		ConsensusParams: &tmproto.ConsensusParams{},
 	})
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
@@ -1615,6 +1615,6 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	}
 
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+		Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
 	})
 }

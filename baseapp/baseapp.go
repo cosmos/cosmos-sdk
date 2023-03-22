@@ -141,9 +141,10 @@ type BaseApp struct { //nolint: maligned
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	// abciListeners for hooking into the ABCI message processing of the BaseApp
-	// and exposing the requests and responses to external consumers
-	abciListeners []storetypes.ABCIListener
+	// streamingManager for managing instances and configuration of ABCIListener services
+	streamingManager storetypes.StreamingManager
+
+	chainID string
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -351,14 +352,10 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
-	emptyHeader := cmtproto.Header{}
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(runTxModeCheck, emptyHeader)
-
-	// needed for ABCI Replay Blocks mode which calls Prepare/Process proposal (InitChain is not called)
-	app.setState(runTxPrepareProposal, emptyHeader)
-	app.setState(runTxProcessProposal, emptyHeader)
 	app.Seal()
 
 	if app.cms == nil {
@@ -413,7 +410,7 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+		ctx: sdk.NewContext(ms, header, false, app.logger).WithStreamingManager(app.streamingManager),
 	}
 
 	switch mode {

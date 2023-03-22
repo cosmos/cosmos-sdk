@@ -38,9 +38,8 @@ func init() {
 	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
 }
 
-const (
-	consensusVersion uint64 = 2
-)
+// ConsensusVersion defines the current x/upgrade module consensus version.
+const ConsensusVersion uint64 = 2
 
 var (
 	_ module.BeginBlockAppModule = AppModule{}
@@ -104,9 +103,6 @@ func (am AppModule) IsOnePerModuleType() {}
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
-// RegisterInvariants does nothing, there are no invariants to enforce
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
@@ -153,7 +149,7 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock calls the upgrade module hooks
 //

@@ -76,13 +76,15 @@ After the release branch has all commits required for the next patch release:
 
 Major Release series continue to receive bug fixes (released as a Patch Release) until they reach **End Of Life**.
 Major Release series is maintained in compliance with the **Stable Release Policy** as described in this document.
-Note: not every Major Release is denoted as stable releases.
 
 Only the following major release series have a stable release status:
 
-* **0.45** is supported until 6 months after **0.46.0** release. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.46** is the last major release and will be supportted until 6 months after **0.47.0** release.
-* **0.47** is the next major release and will be supported until 6 months after **0.48.0** release.
+* **0.46** is the previous major release and is supported until the release of **0.48.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
+* **0.47** is the last major release and is supported until the release of **0.49.0**.
+
+The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.
+The SDK team will not backport any bug fixes to releases that are not supported.
+Widely-used (decided at SDK team's discretion) unsupported releases are considered to be in a security maintenance mode. The SDK team will backport security fixes to these releases.
 
 ## Stable Release Policy
 
@@ -93,7 +95,7 @@ and must follow the [Patch Release Procedure](CONTRIBUTING.md#branching-model-an
 
 ### Rationale
 
-Unlike in-development `main` branch snapshots, **Cosmos-SDK** releases are subject to much wider adoption,
+Unlike in-development `main` branch snapshots, **Cosmos SDK** releases are subject to much wider adoption,
 and by a significantly different demographic of users. During development, changes in the `main` branch
 affect SDK users, application developers, early adopters, and other advanced users that elect to use
 unstable experimental software at their own risk.
@@ -197,7 +199,7 @@ It's crucial to make the effort of thinking about what could happen in case a re
 
 ### Stable Release Managers
 
-The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos-SDK Stable Release series,
+The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos SDK Stable Release series,
 according to the [stable release policy](#stable-release-policy) and [release procedure](#major-release-procedure).
 Decisions are made by consensus.
 
@@ -207,6 +209,7 @@ Their responsibilites include:
 * Approving/rejecting proposed changes to a stable release series.
 * Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
 
-The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
+Currently residing Stable Release Managers:
 
-* @amaurym - Amaury Martiny
+* @tac0turtle - Marko Baricevic
+* @julienrbrt - Julien Robert

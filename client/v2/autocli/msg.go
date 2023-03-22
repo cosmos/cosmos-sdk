@@ -20,7 +20,7 @@ func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOpti
 		txCmdDesc := modOpts.Tx
 		if txCmdDesc != nil {
 			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
-			err := b.AddMsgServiceCommands(cmd, txCmdDesc)
+			err := b.AddMsgServiceCommands(subCmd, txCmdDesc)
 			if err != nil {
 				return err
 			}
@@ -73,7 +73,6 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 		// validate that methods exist
 		if m := methods.ByName(methodName); m == nil {
 			return fmt.Errorf("rpc method %q not found for service %q", methodName, service.FullName())
-
 		}
 		rpcOptMap[methodName] = option
 

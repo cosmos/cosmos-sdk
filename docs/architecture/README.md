@@ -85,6 +85,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 059: Test Scopes](./adr-059-test-scopes.md)
 * [ADR 062: Collections State Layer](./adr-062-collections-state-layer.md)
 * [ADR 063: Core Module API](./adr-063-core-module-api.md)
+* [ADR 065: Store V2](./adr-065-store-v2.md)
 
 ### Draft
 

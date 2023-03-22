@@ -73,6 +73,9 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"hidden_bool": {
 					Hidden: true,
 				},
+				"bz": {
+					Usage: "some bytes",
+				},
 			},
 		},
 	},
@@ -150,6 +153,18 @@ func TestOptions(t *testing.T) {
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"-u", "27", // shorthand
 		"--u64", "5", // no opt default value
+	)
+	lastReq := conn.lastRequest.(*testpb.EchoRequest)
+	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set
+	assert.Equal(t, int32(3), lastReq.I32)   // default value got set
+	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
+}
+
+func TestBinaryFile(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--bz", "testdata/file.test", // no opt default value
 	)
 	lastReq := conn.lastRequest.(*testpb.EchoRequest)
 	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set

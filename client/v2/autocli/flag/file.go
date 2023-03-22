@@ -5,11 +5,7 @@ import (
 	"encoding/hex"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"os"
-	"regexp"
 )
-
-// regex for file path
-var isFilePathRegex = regexp.MustCompile(`^\/([A-z0-9-_+]+\/)*([A-z0-9]+\.(txt|zip))$`)
 
 type fileBinaryType struct{}
 
@@ -38,13 +34,15 @@ func (f fileBinaryValue) Set(s string) error {
 	var fileBytes []byte
 	var err error
 	var value []byte
-	// check if s is a file path
-	if isFilePathRegex.MatchString(s) {
+	// check if file exist
+	_, err = os.Stat(s)
+	if err == nil {
 		// open file at path s
 		fileBytes, err = os.ReadFile(s)
 		if err != nil {
 			return err
 		}
+		value = make([]byte, hex.EncodedLen(len(fileBytes)))
 		hex.Encode(value, fileBytes)
 	} else {
 		// s is not a file path, so it must be hex encoded

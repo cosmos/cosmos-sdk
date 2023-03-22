@@ -21,8 +21,8 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0
-	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
-	google.golang.org/grpc v1.53.0
+	google.golang.org/genproto v0.0.0-20230320184635-7606e756e683 // indirect
+	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0 // indirect
 	gotest.tools/v3 v3.4.0
 )

@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -58,7 +59,7 @@ type AccountKeeperI interface {
 // encoding/decoding library.
 type AccountKeeper struct {
 	storeSvc  corestore.KVStoreService
-	key       storetypes.StoreKey
+	storeKey  storetypes.StoreKey
 	cdc       codec.BinaryCodec
 	permAddrs map[string]types.PermissionsForAddress
 
@@ -80,7 +81,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, storeSvc corestore.KVStoreService, proto func() sdk.AccountI,
+	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, proto func() sdk.AccountI,
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -90,8 +91,11 @@ func NewAccountKeeper(
 
 	bech32Codec := NewBech32Codec(bech32Prefix)
 
+	storeSvc := runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey))
+
 	return AccountKeeper{
 		storeSvc:   storeSvc,
+		storeKey:   storeKey,
 		proto:      proto,
 		cdc:        cdc,
 		permAddrs:  permAddrs,

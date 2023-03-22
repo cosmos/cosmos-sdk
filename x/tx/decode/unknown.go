@@ -73,8 +73,6 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 			continue
 		}
 
-		// Let's recursively traverse and typecheck the field.
-
 		// consume length prefix of nested message
 		_, o := protowire.ConsumeVarint(fieldBytes)
 		fieldBytes = fieldBytes[o:]

@@ -78,6 +78,7 @@ type StartupConfig struct {
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
+	DB              dbm.DB
 }
 
 func DefaultStartUpConfig() StartupConfig {
@@ -88,6 +89,7 @@ func DefaultStartUpConfig() StartupConfig {
 		ValidatorSet:    CreateRandomValidatorSet,
 		AtGenesis:       false,
 		GenesisAccounts: []GenesisAccount{ga},
+		DB:              dbm.NewMemDB(),
 	}
 }
 
@@ -124,9 +126,9 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	if startupConfig.BaseAppOption != nil {
-		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, startupConfig.BaseAppOption)
+		app = appBuilder.Build(log.NewNopLogger(), startupConfig.DB, nil, startupConfig.BaseAppOption)
 	} else {
-		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+		app = appBuilder.Build(log.NewNopLogger(), startupConfig.DB, nil)
 	}
 	if err := app.Load(true); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)

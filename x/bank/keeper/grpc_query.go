@@ -3,9 +3,6 @@ package keeper
 import (
 	"context"
 	"cosmossdk.io/collections"
-	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/kv"
-
 	"cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -227,55 +224,28 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	// TODO(tip): remove me
-	addressAndDenomFromBalanceStore := func(key []byte) (sdk.AccAddress, string, error) {
-		if len(key) == 0 {
-			return nil, "", fmt.Errorf("invalid key")
-		}
-
-		kv.AssertKeyAtLeastLength(key, 1)
-
-		addrBound := int(key[0])
-
-		if len(key)-1 < addrBound {
-			return nil, "", fmt.Errorf("invalid key, wanted %d, got %d", len(key)-1, addrBound)
-		}
-
-		return key[1 : addrBound+1], string(key[addrBound+1:]), nil
-	}
-
 	if err := sdk.ValidateDenom(req.Denom); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, req.Denom)
-
 	var denomOwners []*types.DenomOwner
-	pageRes, err := query.FilteredPaginate(
-		denomPrefixStore,
-		req.Pagination,
-		func(key []byte, _ []byte, accumulate bool) (bool, error) {
-			if accumulate {
-				address, _, err := addressAndDenomFromBalanceStore(key)
-				if err != nil {
-					return false, err
-				}
 
-				denomOwners = append(
-					denomOwners,
-					&types.DenomOwner{
-						Address: address.String(),
-						Balance: k.GetBalance(ctx, address, req.Denom),
-					},
-				)
+	_, pageRes, err := query.CollectionFilteredPaginate(goCtx, k.Balances.Indexes.Denom, req.Pagination,
+		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (include bool) {
+			amt, err := k.Balances.Get(goCtx, collections.Join(key.K2(), req.Denom))
+			if err != nil {
+				panic(err) // should never happen.
 			}
-
-			return true, nil
+			denomOwners = append(denomOwners, &types.DenomOwner{
+				Address: key.K2().String(),
+				Balance: sdk.NewCoin(req.Denom, amt),
+			})
+			return false
 		},
+		query.WithCollectionPaginationPairPrefix[string, sdk.AccAddress](req.Denom),
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil

@@ -79,7 +79,7 @@ Major Release series is maintained in compliance with the **Stable Release Polic
 
 Only the following major release series have a stable release status:
 
-* **0.46** is the previous major release and is supported until the release of **0.48.0**.
+* **0.46** is the previous major release and is supported until the release of **0.48.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
 * **0.47** is the last major release and is supported until the release of **0.49.0**.
 
 The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.

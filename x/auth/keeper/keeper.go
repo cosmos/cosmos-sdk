@@ -6,8 +6,9 @@ import (
 	"cosmossdk.io/log"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	storetypes "cosmossdk.io/core/store"
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -56,7 +57,8 @@ type AccountKeeperI interface {
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
-	storeSvc  storetypes.KVStoreService
+	storeSvc  corestore.KVStoreService
+	key       storetypes.StoreKey
 	cdc       codec.BinaryCodec
 	permAddrs map[string]types.PermissionsForAddress
 
@@ -78,7 +80,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, storeSvc storetypes.KVStoreService, proto func() sdk.AccountI,
+	cdc codec.BinaryCodec, storeSvc corestore.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)

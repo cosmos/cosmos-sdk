@@ -271,6 +271,8 @@ logic.
 
 ### Further discussion
 
+#### Credentials abstraction 
+
 Credentials are currently abstracted over entities that can verify arbitrary signed bytes, which covers the use-case of crypto
 curves.
 
@@ -278,6 +280,11 @@ The idea is that in the future we can further abstract the authentication mechan
 can be able to define its own authentication mechanisms, which are not tied to the `SignMode` provided by the sdk.
 Trying to fit this change right now would have yielded into a much broader work, that would have most likely lead to impactful
 breaking changes.
+
+#### Update x/auth, instead of creating an x/authn module
+
+Considering the limitations over the credentials abstraction, the changeset for `x/auth` is still limited, so we could
+just update `x/auth` to support `x/accounts` deployment and key rotation messages.
 
 ## Migration
 

@@ -94,13 +94,13 @@ func TestBalanceKeysMigration(t *testing.T) {
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
 	require.NoError(t, err)
 
-	newKey := types.CreatePrefixedAccountStoreKey(addr, []byte(fooCoin.Denom))
+	newKey := v2bank.CreatePrefixedAccountStoreKey(addr, []byte(fooCoin.Denom))
 	// -7 because we replaced "balances" with 0x02,
 	// +1 because we added length-prefix to address.
 	require.Equal(t, len(oldFooKey)-7+1, len(newKey))
 	require.Nil(t, store.Get(oldFooKey))
 	require.Equal(t, fooBz, store.Get(newKey))
 
-	newKeyFooBar := types.CreatePrefixedAccountStoreKey(addr, []byte(fooBarCoin.Denom))
+	newKeyFooBar := v2bank.CreatePrefixedAccountStoreKey(addr, []byte(fooBarCoin.Denom))
 	require.Nil(t, store.Get(newKeyFooBar)) // after migration zero balances pruned from store.
 }

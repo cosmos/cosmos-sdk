@@ -70,7 +70,7 @@ example implementation of the `InternalAccount` type can be found in [this](http
 recovered. In fact, even if the `Internal` implementation is untyped (with respect to `proto.Message`), the concrete implementation is fully typed.
 
 During any of the execution methods of `InternalAccount`, `schema` excluded, the account is given a `Context` which provides:
-- A namespaced `KVStore` for the account, which isolates the account state from others.
+- A namespaced `KVStore` for the account, which isolates the account state from others (NOTE: no `store keys` needed, the account address serves as `store key`).
 - Information regarding itself (its address)
 - Information regarding the sender.
 - ...

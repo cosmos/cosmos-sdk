@@ -374,6 +374,50 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				aminoJson, err := aj.Marshal(msg)
 				require.NoError(t, err)
 				require.Equal(t, string(legacyAminoJson), string(aminoJson))
+
+				// test amino json signer handler equivalence
+				gogoMsg, ok := gogo.(types.Msg)
+				if !ok {
+					// not signable
+					return
+				}
+
+				handlerOptions := signing_testutil.HandlerArgumentOptions{
+					ChainId:       "test-chain",
+					Memo:          "sometestmemo",
+					Msg:           tt.pulsar,
+					AccNum:        1,
+					AccSeq:        2,
+					SignerAddress: "signerAddress",
+					Fee: &txv1beta1.Fee{
+						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+					},
+				}
+
+				signerData, txData, err := signing_testutil.MakeHandlerArguments(handlerOptions)
+				require.NoError(t, err)
+
+				handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
+				signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
+				require.NoError(t, err)
+
+				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+				txBuilder := encCfg.TxConfig.NewTxBuilder()
+				require.NoError(t, txBuilder.SetMsgs([]types.Msg{gogoMsg}...))
+				txBuilder.SetMemo(handlerOptions.Memo)
+				txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
+				theTx := txBuilder.GetTx()
+
+				legacySigningData := signing.SignerData{
+					ChainID:       handlerOptions.ChainId,
+					Address:       handlerOptions.SignerAddress,
+					AccountNumber: handlerOptions.AccNum,
+					Sequence:      handlerOptions.AccSeq,
+				}
+				legacySignBz, err := legacyHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+					legacySigningData, theTx)
+				require.NoError(t, err)
+				require.Equal(t, string(legacySignBz), string(signBz))
 			})
 		})
 	}
@@ -533,10 +577,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7},
 				MinSignedPerWindow:   dec10bz,
 			},
-		},
-		"staking/commission_rates": {
-			gogo:   &stakingtypes.CommissionRates{Rate: types.NewDec(0)},
-			pulsar: &stakingapi.CommissionRates{},
 		},
 		"staking/create_validator": {
 			gogo: &stakingtypes.MsgCreateValidator{Pubkey: pubkeyAny},
@@ -739,10 +779,13 @@ func TestDecimalMutation(t *testing.T) {
 	_, err = gogoproto.Marshal(rates)
 
 	rateBz, _ = encCfg.Amino.MarshalJSON(rates)
-	require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
-	require.Equal(t,
-		`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
-		string(rateBz))
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+
+	// these assertions show behavior prior to the merge of https://github.com/cosmos/cosmos-sdk/pull/15506
+	//require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	//require.Equal(t,
+	//	`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
+	//	string(rateBz))
 }
 
 func postFixPulsarMessage(msg proto.Message) {

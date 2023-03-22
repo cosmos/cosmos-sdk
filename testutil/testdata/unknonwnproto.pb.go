@@ -715,7 +715,6 @@ type Customer3 struct {
 	Surcharge   float32 `protobuf:"fixed32,4,opt,name=surcharge,proto3" json:"surcharge,omitempty"`
 	Destination string  `protobuf:"bytes,5,opt,name=destination,proto3" json:"destination,omitempty"`
 	// Types that are valid to be assigned to Payment:
-	//
 	//	*Customer3_CreditCardNo
 	//	*Customer3_ChequeNo
 	Payment  isCustomer3_Payment `protobuf_oneof:"payment"`

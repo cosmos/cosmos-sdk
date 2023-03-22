@@ -10475,8 +10475,9 @@ func (x *AuxSignerData) GetSig() []byte {
 	return nil
 }
 
-// AminoSignFee is the amino-compatible version of txv1beta1.Fee, and differs from that message
+// AminoSignFee is the legacy amino json sign mode compatible version of txv1beta1.Fee, and differs from that message
 // by the name of the Gas field (GasLimit in txv1beta.Fee).
+// Note: this is only used for signing, see x/tx/signing/aminojson.go for more details.
 type AminoSignFee struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -10536,6 +10537,8 @@ func (x *AminoSignFee) GetGranter() string {
 	return ""
 }
 
+// AminoSignDoc is a message container used to generate the SIGN_MODE_LEGACY_AMINO_JSON sign bytes with proto3 API.
+// Note: This is only used for generated JSON in signing, see x/tx/signing/aminojson.go for more details.
 type AminoSignDoc struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

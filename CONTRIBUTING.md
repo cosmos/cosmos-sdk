@@ -8,6 +8,7 @@
     * [Pull Request Templates](#pull-request-templates)
     * [Requesting Reviews](#requesting-reviews)
     * [Updating Documentation](#updating-documentation)
+    * [RFC & ADR](#RFC & ADR)
 * [Dependencies](#dependencies)
     * [`go.work`](#gowork)
     * [`go.mod`](#gomod)
@@ -162,6 +163,14 @@ If you open a PR on the Cosmos SDK, it is mandatory to update the relevant docum
 * If your changes relate to a module, then be sure to update the module's spec in `x/{moduleName}/README.md`.
 
 When writing documentation, follow the [Documentation Writing Guidelines](./docs/DOC_WRITING_GUIDELINES.md).
+
+### RFC & ADR
+
+Within the Cosmos SDK we have two forms of documenting decisions, Request For Comment (RFC) & Architecture Design Record (ADR). They perform two different functions. The process for assessing if something needs an RFC is located in the respective folders: 
+
+* [RFC Process](./docs/rfc/process.md)
+* [ADR Process](./docs/adr/process.md) 
+
 
 ## Dependencies
 

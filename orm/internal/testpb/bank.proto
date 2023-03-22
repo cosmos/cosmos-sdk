@@ -14,31 +14,37 @@ message Module {
     go_import: "github.com/cosmos/orm/model/ormdb"
   };
   option (cosmos.orm.v1alpha1.module_schema) = {
-    schema_file: {
-      id: 1
-      proto_file_name: "testpb/bank.proto"
-    }
+    schema_file: {id: 1 proto_file_name: "testpb/bank.proto"}
   };
 }
 
 message Balance {
   option (cosmos.orm.v1.table) = {
     id: 1;
-    primary_key: {fields: "address,denom"}
-    index: {id: 1 fields: "denom"}
-  };
+primary_key: {
+fields:
+  "address,denom"
+}
+index: {
+id:
+  1 fields: "denom"
+}
+};
 
-  string address = 1;
-  string denom = 2;
-  uint64 amount = 3;
+string address = 1;
+string denom   = 2;
+uint64 amount  = 3;
 }
 
 message Supply {
   option (cosmos.orm.v1.table) = {
     id: 2;
-    primary_key: {fields: "denom"}
-  };
+primary_key: {
+fields:
+  "denom"
+}
+};
 
-  string denom = 1;
-  uint64 amount = 2;
+string denom  = 1;
+uint64 amount = 2;
 }

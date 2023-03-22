@@ -190,13 +190,15 @@ require (
 // Replace here are pending PRs, or version to be tagged.
 // It must be in sync with SimApp temporary replaces
 replace (
+	cosmossdk.io/api => ../api
+	// debugging, remove
+	cosmossdk.io/math => ../math
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/upgrade => ../x/upgrade
 	cosmossdk.io/x/tx => ../x/tx
-	cosmossdk.io/api => ../api
+	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 
 // Below are the long-lived replace for tests.

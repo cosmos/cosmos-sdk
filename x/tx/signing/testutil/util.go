@@ -5,7 +5,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
@@ -19,6 +18,7 @@ type HandlerArgumentOptions struct {
 	AccNum        uint64
 	AccSeq        uint64
 	Tip           *txv1beta1.Tip
+	Fee           *txv1beta1.Fee
 	SignerAddress string
 }
 
@@ -45,9 +45,9 @@ func MakeHandlerArguments(options HandlerArgumentOptions) (signing.SignerData, s
 		},
 	}
 
-	fee := &txv1beta1.Fee{
-		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
-	}
+	//fee := &txv1beta1.Fee{
+	//	Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+	//}
 
 	anyMsg, err := anyutil.New(options.Msg)
 	if err != nil {
@@ -60,7 +60,7 @@ func MakeHandlerArguments(options HandlerArgumentOptions) (signing.SignerData, s
 	}
 
 	authInfo := &txv1beta1.AuthInfo{
-		Fee:         fee,
+		Fee:         options.Fee,
 		Tip:         options.Tip,
 		SignerInfos: signerInfo,
 	}

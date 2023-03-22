@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
@@ -81,6 +80,9 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		}
 	} else {
 		f := txData.AuthInfo.Fee
+		if f == nil {
+			return nil, fmt.Errorf("fee cannot be nil when tipper is not signer")
+		}
 		fee = &txv1beta1.AminoSignFee{
 			Amount:  f.Amount,
 			Gas:     f.GasLimit,
@@ -89,23 +91,23 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		}
 	}
 
-	msgBytes := make([][]byte, len(txData.Body.Messages))
-	for _, anyMsg := range txData.Body.Messages {
-		msg, err := anyutil.Unpack(anyMsg, h.fileResolver, h.typeResolver)
-		if err != nil {
-			return nil, err
-		}
-		bz, err := h.encoder.Marshal(msg)
-		if err != nil {
-			return nil, err
-		}
-		msgBytes = append(msgBytes, bz)
-	}
+	//msgBytes := make([][]byte, len(txData.Body.Messages))
+	//for _, anyMsg := range txData.Body.Messages {
+	//	msg, err := anyutil.Unpack(anyMsg, h.fileResolver, h.typeResolver)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	bz, err := h.encoder.Marshal(msg)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	msgBytes = append(msgBytes, bz)
+	//}
 
-	feeBz, err := h.encoder.Marshal(fee)
-	if err != nil {
-		return nil, err
-	}
+	//feeBz, err := h.encoder.Marshal(fee)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	signDoc := &txv1beta1.AminoSignDoc{
 		AccountNumber: signerData.AccountNumber,
@@ -113,8 +115,8 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		ChainId:       signerData.ChainId,
 		Sequence:      signerData.Sequence,
 		Memo:          body.Memo,
-		Msgs:          msgBytes,
-		Fee:           feeBz,
+		Msgs:          txData.Body.Messages,
+		Fee:           fee,
 	}
 
 	bz, err := h.encoder.Marshal(signDoc)
@@ -123,6 +125,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	}
 	return sortJSON(bz)
 }
+
 func sortJSON(toSortJSON []byte) ([]byte, error) {
 	var c interface{}
 	err := json.Unmarshal(toSortJSON, &c)

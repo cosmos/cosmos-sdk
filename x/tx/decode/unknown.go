@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -105,23 +104,23 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 				return hasUnknownNonCriticals, err
 			}
 
-			accepts := proto.GetExtension(fieldDesc.Options(), cosmos_proto.E_AcceptsInterface).(string)
-			if accepts != "" {
-				implements := proto.GetExtension(msgDesc.Options(), cosmos_proto.E_ImplementsInterface).([]string)
-				found := false
-				for _, iface := range implements {
-					if iface == accepts {
-						found = true
-						break
-					}
-				}
-
-				if !found {
-					return hasUnknownNonCriticals, ErrInterfaceNotImplemented.Wrapf(
-						"expected interface %s, message %s implements %v",
-						accepts, msgDesc.FullName(), implements)
-				}
-			}
+			//accepts := proto.GetExtension(fieldDesc.Options(), cosmos_proto.E_AcceptsInterface).(string)
+			//if accepts != "" {
+			//	implements := proto.GetExtension(msgDesc.Options(), cosmos_proto.E_ImplementsInterface).([]string)
+			//	found := false
+			//	for _, iface := range implements {
+			//		if iface == accepts {
+			//			found = true
+			//			break
+			//		}
+			//	}
+			//
+			//	if !found {
+			//		return hasUnknownNonCriticals, ErrInterfaceNotImplemented.Wrapf(
+			//			"expected interface %s, message %s implements %v",
+			//			accepts, msgDesc.FullName(), implements)
+			//	}
+			//}
 
 			fieldMessage = msgDesc.(protoreflect.MessageDescriptor)
 			fieldBytes = a.Value

@@ -14,6 +14,9 @@ import (
 )
 
 func TestAminoJsonSignMode(t *testing.T) {
+	fee := &txv1beta1.Fee{
+		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+	}
 	handlerOptions := testutil.HandlerArgumentOptions{
 		ChainId: "test-chain",
 		Memo:    "sometestmemo",
@@ -26,7 +29,9 @@ func TestAminoJsonSignMode(t *testing.T) {
 		AccNum:        1,
 		AccSeq:        2,
 		SignerAddress: "signerAddress",
+		Fee:           fee,
 	}
+
 	testCases := []struct {
 		name     string
 		malleate func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions
@@ -60,6 +65,15 @@ func TestAminoJsonSignMode(t *testing.T) {
 				return opts
 			},
 			error: "tipper cannot be empty",
+		},
+		{
+			name: "nil fee",
+			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
+				opts.Tip.Tipper = "tipper"
+				opts.Fee = nil
+				return opts
+			},
+			error: "fee cannot be nil",
 		},
 	}
 

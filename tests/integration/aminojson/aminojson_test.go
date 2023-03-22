@@ -39,8 +39,10 @@ import (
 	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
@@ -532,6 +534,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				MinSignedPerWindow:   dec10bz,
 			},
 		},
+		"staking/commission_rates": {
+			gogo:   &stakingtypes.CommissionRates{Rate: types.NewDec(0)},
+			pulsar: &stakingapi.CommissionRates{},
+		},
 		"staking/create_validator": {
 			gogo: &stakingtypes.MsgCreateValidator{Pubkey: pubkeyAny},
 			pulsar: &stakingapi.MsgCreateValidator{
@@ -634,6 +640,9 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				AccNum:        1,
 				AccSeq:        2,
 				SignerAddress: "signerAddress",
+				Fee: &txv1beta1.Fee{
+					Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+				},
 			}
 
 			signerData, txData, err := signing_testutil.MakeHandlerArguments(handlerOptions)
@@ -646,6 +655,9 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
 			txBuilder := encCfg.TxConfig.NewTxBuilder()
 			require.NoError(t, txBuilder.SetMsgs([]types.Msg{msg}...))
+			txBuilder.SetMemo(handlerOptions.Memo)
+			txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
+			theTx := txBuilder.GetTx()
 
 			legacySigningData := signing.SignerData{
 				ChainID:       handlerOptions.ChainId,
@@ -654,7 +666,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				Sequence:      handlerOptions.AccSeq,
 			}
 			legacySignBz, err := legacyHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-				legacySigningData, txBuilder.GetTx())
+				legacySigningData, theTx)
 			require.NoError(t, err)
 			require.Equal(t, string(legacySignBz), string(signBz))
 		})
@@ -706,6 +718,31 @@ func TestSendAuthorization(t *testing.T) {
 	// at this point, pulsar.SpendLimit = [], and gogo.SpendLimit = nil, but they will both marshal to `[]`
 	// this is *only* possible because of Cosmos SDK's custom MarshalJSON method for Coins
 	require.Equal(t, string(legacyAminoJson), string(aminoJson))
+}
+
+func TestDecimalMutation(t *testing.T) {
+	dec := *new(math.LegacyDec)
+	decBytes, err := dec.MarshalJSON()
+	require.NoError(t, err)
+	require.Equal(t, `"0"`, string(decBytes))
+	_, err = dec.Marshal()
+	require.NoError(t, err)
+
+	decBytes, err = dec.MarshalJSON()
+	require.NoError(t, err)
+	require.Equal(t, `"0"`, string(decBytes))
+
+	encCfg := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{})
+	rates := &stakingtypes.CommissionRates{}
+	rateBz, _ := encCfg.Amino.MarshalJSON(rates)
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	_, err = gogoproto.Marshal(rates)
+
+	rateBz, _ = encCfg.Amino.MarshalJSON(rates)
+	require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	require.Equal(t,
+		`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
+		string(rateBz))
 }
 
 func postFixPulsarMessage(msg proto.Message) {

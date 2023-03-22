@@ -49,6 +49,16 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
 
+	suite.accountKeeper.EXPECT().StringToBytes(authtypes.NewBaseAccountWithAddress(suite.addrs[0]).Address).Return(suite.addrs[0], nil).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(authtypes.NewBaseAccountWithAddress(suite.addrs[1]).Address).Return(suite.addrs[1], nil).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(authtypes.NewBaseAccountWithAddress(suite.addrs[2]).Address).Return(suite.addrs[2], nil).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(authtypes.NewBaseAccountWithAddress(suite.addrs[3]).Address).Return(suite.addrs[3], nil).AnyTimes()
+
+	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0]).Address, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1]).Address, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2]).Address, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3]).Address, nil).AnyTimes()
+
 	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper)
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)

@@ -95,7 +95,3 @@ func TestAminoJsonSignMode(t *testing.T) {
 	}
 
 }
-
-func TestAminoJsonSignMode_GetSignBytes(t *testing.T) {
-
-}

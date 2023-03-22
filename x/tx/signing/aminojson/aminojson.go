@@ -14,18 +14,21 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
+// SignModeHandler implements the SIGN_MODE_LEGACY_AMINO_JSON signing mode.
 type SignModeHandler struct {
 	fileResolver protodesc.Resolver
 	typeResolver protoregistry.MessageTypeResolver
 	encoder      Encoder
 }
 
+// SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
 	fileResolver protodesc.Resolver
 	typeResolver protoregistry.MessageTypeResolver
 	encoder      *Encoder
 }
 
+// NewSignModeHandler returns a new SignModeHandler.
 func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 	h := &SignModeHandler{}
 	if options.fileResolver == nil {
@@ -46,10 +49,12 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 	return h
 }
 
+// Mode implements the Mode method of the SignModeHandler interface.
 func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 	return signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
+// GetSignBytes implements the GetSignBytes method of the SignModeHandler interface.
 func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	body := txData.Body
 	_, err := decode.RejectUnknownFields(
@@ -91,24 +96,6 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		}
 	}
 
-	//msgBytes := make([][]byte, len(txData.Body.Messages))
-	//for _, anyMsg := range txData.Body.Messages {
-	//	msg, err := anyutil.Unpack(anyMsg, h.fileResolver, h.typeResolver)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	bz, err := h.encoder.Marshal(msg)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	msgBytes = append(msgBytes, bz)
-	//}
-
-	//feeBz, err := h.encoder.Marshal(fee)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	signDoc := &txv1beta1.AminoSignDoc{
 		AccountNumber: signerData.AccountNumber,
 		TimeoutHeight: body.TimeoutHeight,
@@ -126,6 +113,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	return sortJSON(bz)
 }
 
+// sortJSON sorts the JSON keys of the given JSON encoded byte slice.
 func sortJSON(toSortJSON []byte) ([]byte, error) {
 	var c interface{}
 	err := json.Unmarshal(toSortJSON, &c)

@@ -2,6 +2,8 @@ go 1.20
 
 module github.com/cosmos/cosmos-sdk
 
+require github.com/cometbft/cometbft v0.0.0-20230321232650-16823b401e93 // latest feature/abci++vef
+
 require (
 	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
 	cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba
@@ -17,7 +19,6 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.9.1
-	github.com/cometbft/cometbft v0.0.0-20230321232650-16823b401e93
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3

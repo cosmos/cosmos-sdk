@@ -1,14 +1,16 @@
 package autocli
 
 import (
+	"fmt"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:

@@ -17,13 +17,14 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 type appModule struct {

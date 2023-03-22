@@ -88,8 +88,8 @@ func (h SignModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
 
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.
 func (h SignModeHandler) GetSignBytes(
-	_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
-
+	_ context.Context, signerData signing.SignerData, txData signing.TxData,
+) ([]byte, error) {
 	feePayer := txData.AuthInfo.Fee.Payer
 	if feePayer == "" {
 		fp, err := h.getFirstSigner(txData)

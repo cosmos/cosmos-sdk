@@ -40,7 +40,6 @@ func (b *Builder) init() {
 		b.scalarFlagTypes = map[string]Type{}
 		b.scalarFlagTypes["cosmos.AddressString"] = addressStringType{}
 	}
-
 }
 
 func (b *Builder) DefineMessageFlagType(messageName protoreflect.FullName, flagType Type) {

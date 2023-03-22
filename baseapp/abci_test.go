@@ -11,7 +11,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 
@@ -604,8 +603,8 @@ func TestBaseApp_Commit(t *testing.T) {
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
-	cp := &tmproto.ConsensusParams{
-		Block: &tmproto.BlockParams{
+	cp := &cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
 			MaxGas: 5000000,
 		},
 	}
@@ -631,8 +630,8 @@ func TestBaseApp_Precommit(t *testing.T) {
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
-	cp := &tmproto.ConsensusParams{
-		Block: &tmproto.BlockParams{
+	cp := &cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
 			MaxGas: 5000000,
 		},
 	}
@@ -1392,7 +1391,7 @@ func TestCommiterCalledWithCheckState(t *testing.T) {
 		wasCommiterCalled = true
 	})
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
 	app.Commit()
 
 	require.Equal(t, true, wasCommiterCalled)
@@ -1414,7 +1413,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 		wasPrecommiterCalled = true
 	})
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
 	app.Commit()
 
 	require.Equal(t, true, wasPrecommiterCalled)

@@ -116,8 +116,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	// When Textual is wired up, the context argument should be retrieved from the client context.
-	err = Sign(context.TODO(), txf, clientCtx.GetFromName(), tx, true)
+	err = Sign(clientCtx.CmdContext, txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return err
 	}

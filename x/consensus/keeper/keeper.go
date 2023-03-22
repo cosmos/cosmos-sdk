@@ -36,12 +36,12 @@ func (k *Keeper) GetAuthority() string {
 func (k *Keeper) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
 	store := k.storeSvc.OpenKVStore(ctx)
 
-	cp := &cmtproto.ConsensusParams{}
 	bz, err := store.Get(types.ParamStoreKeyConsensusParams)
 	if err != nil {
 		return nil, err
 	}
 
+	cp := &cmtproto.ConsensusParams{}
 	if err := k.cdc.Unmarshal(bz, cp); err != nil {
 		return nil, err
 	}
@@ -49,23 +49,13 @@ func (k *Keeper) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
 	return cp, nil
 }
 
-func (k *Keeper) Has(ctx sdk.Context) bool {
+func (k *Keeper) Has(ctx sdk.Context) (bool, error) {
 	store := k.storeSvc.OpenKVStore(ctx)
-
-	has, err := store.Has(types.ParamStoreKeyConsensusParams)
-	// should never panic given that key is hardcoded
-	if err != nil {
-		panic(err)
-	}
-
-	return has
+	return store.Has(types.ParamStoreKeyConsensusParams)
 }
 
 // Set sets the consensus parameters
-func (k *Keeper) Set(ctx sdk.Context, cp *cmtproto.ConsensusParams) {
+func (k *Keeper) Set(ctx sdk.Context, cp *cmtproto.ConsensusParams) error {
 	store := k.storeSvc.OpenKVStore(ctx)
-	err := store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
-	if err != nil {
-		panic(err)
-	}
+	return store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
 }

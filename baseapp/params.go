@@ -10,6 +10,6 @@ import (
 // fulfill.
 type ParamStore interface {
 	Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error)
-	Has(ctx sdk.Context) bool
-	Set(ctx sdk.Context, cp *cmtproto.ConsensusParams)
+	Has(ctx sdk.Context) (bool, error)
+	Set(ctx sdk.Context, cp *cmtproto.ConsensusParams) error
 }

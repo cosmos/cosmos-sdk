@@ -19,7 +19,7 @@ type (
 	// ParamStore which allows setting its appVersion field.
 	ConsensusParamSetter interface {
 		Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error)
-		Has(ctx sdk.Context) bool
-		Set(ctx sdk.Context, cp *cmtproto.ConsensusParams)
+		Has(ctx sdk.Context) (bool, error)
+		Set(ctx sdk.Context, cp *cmtproto.ConsensusParams) error
 	}
 )

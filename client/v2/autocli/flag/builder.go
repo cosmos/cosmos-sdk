@@ -28,6 +28,7 @@ func (b *Builder) init() {
 		b.messageFlagTypes = map[protoreflect.FullName]Type{}
 		b.messageFlagTypes["google.protobuf.Timestamp"] = timestampType{}
 		b.messageFlagTypes["google.protobuf.Duration"] = durationType{}
+		b.messageFlagTypes["bytes"] = fileBinaryType{}
 	}
 
 	if b.scalarFlagTypes == nil {

@@ -675,12 +675,14 @@ func TestDecimalMutation(t *testing.T) {
 	rateBz, _ = encCfg.Amino.MarshalJSON(rates)
 
 	// these assertions show behavior prior to the merge of https://github.com/cosmos/cosmos-sdk/pull/15506
-	//require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
-	//require.Equal(t,
-	//	`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
-	//	string(rateBz))
+	// and should be updated to reflect the new behavior once a release of math is made and updated in ./tests/go.mod
+	require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	require.Equal(t,
+		`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
+		string(rateBz))
 
-	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	// new behavior
+	//require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
 }
 
 func postFixPulsarMessage(msg proto.Message) {

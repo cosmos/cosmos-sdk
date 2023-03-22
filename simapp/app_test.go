@@ -22,6 +22,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -278,4 +279,11 @@ func TestMergedRegistry(t *testing.T) {
 	r, err := proto.MergedRegistry()
 	require.NoError(t, err)
 	require.Greater(t, r.NumFiles(), 0)
+}
+
+func TestProtoAnnotations(t *testing.T) {
+	r, err := proto.MergedRegistry()
+	require.NoError(t, err)
+	err = msgservice.ValidateProtoAnnotations(r)
+	require.NoError(t, err)
 }

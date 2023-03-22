@@ -33,6 +33,7 @@ message BaseVestingAccount {
     (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  // Vesting end time, as unix timestamp (in seconds).
   int64 end_time = 5;
 }
 
@@ -43,7 +44,8 @@ message ContinuousVestingAccount {
   option (gogoproto.goproto_getters) = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
-  int64              start_time           = 2;
+  // Vesting start time, as unix timestamp (in seconds).
+  int64 start_time = 2;
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
@@ -58,6 +60,7 @@ message DelayedVestingAccount {
 
 // Period defines a length of time and amount of coins that will vest.
 message Period {
+  // Period duration in seconds.
   int64    length                          = 1;
   repeated cosmos.base.v1beta1.Coin amount = 2 [
     (gogoproto.nullable)     = false,

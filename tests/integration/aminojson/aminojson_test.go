@@ -674,6 +674,26 @@ func TestSendAuthorization(t *testing.T) {
 	require.Equal(t, string(legacyAminoJson), string(aminoJson))
 }
 
+func TestDecimalMutation(t *testing.T) {
+	encCfg := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{})
+	rates := &stakingtypes.CommissionRates{}
+	rateBz, _ := encCfg.Amino.MarshalJSON(rates)
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	_, err := gogoproto.Marshal(rates)
+	require.NoError(t, err)
+	rateBz, _ = encCfg.Amino.MarshalJSON(rates)
+
+	// these assertions show behavior prior to the merge of https://github.com/cosmos/cosmos-sdk/pull/15506
+	// and should be updated to reflect the new behavior once a release of math is made and updated in ./tests/go.mod
+	require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	require.Equal(t,
+		`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
+		string(rateBz))
+
+	// new behavior
+	//require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+}
+
 func postFixPulsarMessage(msg proto.Message) {
 	switch m := msg.(type) {
 	case *authapi.ModuleAccount:

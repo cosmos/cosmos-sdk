@@ -2,8 +2,6 @@ go 1.20
 
 module github.com/cosmos/cosmos-sdk
 
-require github.com/cometbft/cometbft v0.0.0-20230321232650-16823b401e93 // latest feature/abci++vef
-
 require (
 	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
 	cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba
@@ -12,6 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v0.1.0
 	cosmossdk.io/math v1.0.0-rc.0
+	cosmossdk.io/store v0.1.0-alpha.1
 	cosmossdk.io/x/tx v0.3.1-0.20230321155358-6522dd1731b5
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
@@ -19,6 +18,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.9.1
+	github.com/cometbft/cometbft v0.37.0
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -66,7 +66,6 @@ require (
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
-	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
@@ -80,7 +79,6 @@ require (
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/iavl v0.21.0-beta.1 // indirect
-	github.com/creachadair/taskgroup v0.4.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
@@ -106,8 +104,6 @@ require (
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
-	github.com/gtank/merlin v0.1.1 // indirect
-	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.9 // indirect
@@ -123,11 +119,11 @@ require (
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
-	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
@@ -162,6 +158,8 @@ require (
 replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// Latest version of CometBFT v0.38.x, i.e. feature/abci++vef
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230321232650-16823b401e93
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

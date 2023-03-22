@@ -16,11 +16,6 @@ const bit11NonCritical = 1 << 10
 var anyDesc = (&anypb.Any{}).ProtoReflect().Descriptor()
 var anyFullName = anyDesc.FullName()
 
-func RejectUnknownFieldsStrict(bz []byte, msg protoreflect.MessageDescriptor, resolver protodesc.Resolver) error {
-	var _, err = RejectUnknownFields(bz, msg, false, resolver)
-	return err
-}
-
 // RejectUnknownFields rejects any bytes bz with an error that has unknown fields for the provided proto.Message type with an
 // option to allow non-critical fields (specified as those fields with bit 11) to pass through. In either case, the
 // hasUnknownNonCriticals will be set to true if non-critical fields were encountered during traversal. This flag can be
@@ -103,24 +98,6 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 			if err != nil {
 				return hasUnknownNonCriticals, err
 			}
-
-			//accepts := proto.GetExtension(fieldDesc.Options(), cosmos_proto.E_AcceptsInterface).(string)
-			//if accepts != "" {
-			//	implements := proto.GetExtension(msgDesc.Options(), cosmos_proto.E_ImplementsInterface).([]string)
-			//	found := false
-			//	for _, iface := range implements {
-			//		if iface == accepts {
-			//			found = true
-			//			break
-			//		}
-			//	}
-			//
-			//	if !found {
-			//		return hasUnknownNonCriticals, ErrInterfaceNotImplemented.Wrapf(
-			//			"expected interface %s, message %s implements %v",
-			//			accepts, msgDesc.FullName(), implements)
-			//	}
-			//}
 
 			fieldMessage = msgDesc.(protoreflect.MessageDescriptor)
 			fieldBytes = a.Value

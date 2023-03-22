@@ -69,12 +69,7 @@ func NewCreateValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			validator, err := parseAndValidateValidatorJSON(clientCtx.Codec, args[0])
-			if err != nil {
-				return err
-			}
-
-			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator)
+			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}

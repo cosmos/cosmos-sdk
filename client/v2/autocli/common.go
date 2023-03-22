@@ -2,8 +2,9 @@ package autocli
 
 import (
 	"context"
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"fmt"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -43,7 +44,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	}
 
 	cmd.SetContext(context.Background())
-
 	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err

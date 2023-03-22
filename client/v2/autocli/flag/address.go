@@ -2,6 +2,7 @@ package flag
 
 import (
 	"context"
+
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -10,7 +11,6 @@ import (
 type addressStringType struct{}
 
 func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
-
 	if b.AddressPrefix == "" {
 		conn, err := b.GetClientConn()
 		if err != nil {

@@ -38,7 +38,6 @@ func (k *Keeper) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
 
 	cp := &cmtproto.ConsensusParams{}
 	bz, err := store.Get(types.ParamStoreKeyConsensusParams)
-
 	if err != nil {
 		return nil, err
 	}

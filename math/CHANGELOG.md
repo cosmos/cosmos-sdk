@@ -43,6 +43,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 ### Bug Fixes
 
 * [#14922](https://github.com/cosmos/cosmos-sdk/issues/14922) check for negative precision
+* [#15506](https://github.com/cosmos/cosmos-sdk/issues/16605) fix: Dec marshal shouldn't have side effects
 
 ### Testing
 

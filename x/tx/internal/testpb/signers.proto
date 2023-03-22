@@ -6,57 +6,57 @@ option go_package = "cosmossdk.io/x/tx/internal/testpb";
 
 message SimpleSigner {
   option (cosmos.msg.v1.signer) = "signer";
-  string signer = 1;
+  string signer                 = 1;
 }
 
 message RepeatedSigner {
   option (cosmos.msg.v1.signer) = "signer";
-  repeated string signer = 1;
+  repeated string signer        = 1;
 }
 
 message NestedSigner {
   option (cosmos.msg.v1.signer) = "inner";
-  Inner inner = 1;
+  Inner inner                   = 1;
 
   message Inner {
     option (cosmos.msg.v1.signer) = "signer";
-    string signer = 1;
+    string signer                 = 1;
   }
 }
 
 message RepeatedNestedSigner {
   option (cosmos.msg.v1.signer) = "inner";
-  repeated Inner inner = 1;
+  repeated Inner inner          = 1;
 
   message Inner {
     option (cosmos.msg.v1.signer) = "signer";
-    string signer = 1;
+    string signer                 = 1;
   }
 }
 
 message NestedRepeatedSigner {
   option (cosmos.msg.v1.signer) = "inner";
-  Inner inner = 1;
+  Inner inner                   = 1;
 
   message Inner {
     option (cosmos.msg.v1.signer) = "signer";
-    repeated string signer = 1;
+    repeated string signer        = 1;
   }
 }
 
 message RepeatedNestedRepeatedSigner {
   option (cosmos.msg.v1.signer) = "inner";
-  repeated Inner inner = 1;
+  repeated Inner inner          = 1;
 
   message Inner {
     option (cosmos.msg.v1.signer) = "signer";
-    repeated string signer = 1;
+    repeated string signer        = 1;
   }
 }
 
 message BadSigner {
   option (cosmos.msg.v1.signer) = "signer";
-  bytes signer = 1;
+  bytes signer                  = 1;
 }
 message NoSignerOption {
   bytes signer = 1;

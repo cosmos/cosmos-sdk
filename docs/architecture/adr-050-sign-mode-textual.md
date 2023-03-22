@@ -12,12 +12,15 @@
 * Dec 01, 2022: Link to examples in separate JSON file.
 * Dec 06, 2022: Re-ordering of envelope screens.
 * Dec 14, 2022: Mention exceptions for invertability.
-* Jan 23, 2022: Switch Screen.Text to Title+Content.
+* Jan 23, 2023: Switch Screen.Text to Title+Content.
 * Mar 07, 2023: Change SignDoc from array to struct containing array.
+* Mar 20, 2023: Introduce a spec version initialized to 0.
 
 ## Status
 
 Accepted. Implementation started. Small value renderers details still need to be polished.
+
+Spec version: 0.
 
 ## Abstract
 
@@ -299,6 +302,21 @@ This is to prevent transaction hash malleability. The point #1 about invertiblit
 By including this hash in the SIGN_MODE_TEXTUAL signing payload, we keep the same level of guarantees as [SIGN_MODE_DIRECT](./adr-020-protobuf-transaction-encoding.md).
 
 These bytes are only shown in expert mode, hence the leading `*`.
+
+## Updates to the current specification
+
+The current specification is not set in stone, and future iterations are to be expected. We distinguish two categories of updates to this specification:
+
+1. Updates that require changes of the hardware device embedded application.
+2. Updates that only modify the envelope and the value renderers.
+
+Updates in the 1st category include changes of the `Screen` struct or its corresponding CBOR encoding. This type of updates require a modification of the hardware signer application, to be able to decode and parse the new types. Backwards-compatibility must also be guaranteed, so that the new hardware application works with existing versions of the SDK. These updates require the coordination of multiple parties: SDK developers, hardware application developers (currently: Zondax), and client-side developers (e.g. CosmJS). Furthermore, a new submission of the hardware device application may be necessary, which, dependending on the vendor, can take some time. As such, we recommend to avoid this type of updates as much as possible.
+
+Updates in the 2nd category include changes to any of the value renderers or to the transaction envelope. For example, the ordering of fields in the envelope can be swapped, or the timestamp formatting can be modified. Since SIGN_MODE_TEXTUAL sends `Screen`s to the hardware device, this type of change do not need a hardware wallet application update. They are however state-machine-breaking, and must be documented as such. They require the coordination of SDK developers with client-side developers (e.g. CosmJS), so that the updates are released on both sides close to each other in time.
+
+We define a spec version, which is an integer that must be incremented on each update of either category. This spec version will be exposed by the SDK's implementation, and can be communicated to clients. For example, SDK v0.48 might use the spec version 1, and SDK v0.49 might use 2; thanks to this versioning, clients can know how to craft SIGN_MODE_TEXTUAL transactions based on the target SDK version.
+
+The current spec version is defined in the "Status" section, on the top of this document. It is initialized to `0` to allow flexibility in choosing how to define future versions, as it would allow adding a field either in the SignDoc Go struct or in Protobuf in a backwards-compatible way.
 
 ## Additional Formatting by the Hardware Device
 

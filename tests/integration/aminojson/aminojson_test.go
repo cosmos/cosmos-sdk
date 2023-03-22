@@ -42,7 +42,6 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
-	"cosmossdk.io/math"
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
@@ -761,34 +760,24 @@ func TestSendAuthorization(t *testing.T) {
 }
 
 func TestDecimalMutation(t *testing.T) {
-	dec := *new(math.LegacyDec)
-	decBytes, err := dec.MarshalJSON()
-	require.NoError(t, err)
-	require.Equal(t, `"0"`, string(decBytes))
-	_, err = dec.Marshal()
-	require.NoError(t, err)
-
-	decBytes, err = dec.MarshalJSON()
-	require.NoError(t, err)
-	require.Equal(t, `"0"`, string(decBytes))
-
 	encCfg := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{})
 	rates := &stakingtypes.CommissionRates{}
 	rateBz, _ := encCfg.Amino.MarshalJSON(rates)
 	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
-	_, err = gogoproto.Marshal(rates)
+	_, err := gogoproto.Marshal(rates)
+	require.NoError(t, err)
 
 	rateBz, _ = encCfg.Amino.MarshalJSON(rates)
 
 	// these assertions show behavior prior to the merge of https://github.com/cosmos/cosmos-sdk/pull/15506
 	// and should be updated to reflect the new behavior once a release of math is made and updated in ./tests/go.mod
-	require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
-	require.Equal(t,
-		`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
-		string(rateBz))
+	//require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	//require.Equal(t,
+	//	`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
+	//	string(rateBz))
 
 	// new behavior
-	//require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
 }
 
 func postFixPulsarMessage(msg proto.Message) {

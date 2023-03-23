@@ -57,7 +57,7 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 
 #### Buf
 
-The SDK has been using the buf registry for protobuf versionning.
+The SDK has been using the buf registry for protobuf versioning.
 As the SDK is starting to extract its core modules as standalone go modules, the buf registry (`buf.build/cosmos/cosmos-sdk`) does not contain the protobufs of the extracted modules. These lives in their own buf registry (`buf.build/mods/{module}`).
 
 When using protobufs types from extracted modules, the following must be changed in your application's `buf.yaml`:

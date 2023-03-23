@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
-	cosmossdk.io/core v0.6.1
+	cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.9.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -114,5 +114,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 )
-
-replace cosmossdk.io/core => ../../core

@@ -143,6 +143,25 @@ func TestEverything(t *testing.T) {
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
+func TestJSONParsing(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--some-messages", `{"bar":"baz"}`,
+		"-u", "27", // shorthand
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--some-messages", "testdata/some_message.json",
+		"-u", "27", // shorthand
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+}
+
 func TestOptions(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",

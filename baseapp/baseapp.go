@@ -448,16 +448,16 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *cmtproto.ConsensusParam
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *cmtproto.ConsensusParams) {
+func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
 
 	if cp == nil {
-		return
+		return nil
 	}
 
-	app.paramStore.Set(ctx, cp)
+	return app.paramStore.Set(ctx, cp)
 	// We're explicitly not storing the CometBFT app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
 }

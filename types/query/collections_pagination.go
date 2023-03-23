@@ -49,7 +49,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	ctx context.Context,
 	coll C,
 	pageReq *PageRequest,
-	predicateFunc func(key K, value V) (include bool),
+	predicateFunc func(key K, value V) (include bool, err error),
 	opts ...func(opt *CollectionsPaginateOptions[K]),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	if pageReq == nil {
@@ -116,7 +116,7 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 	offset uint64,
 	limit uint64,
 	countTotal bool,
-	predicateFunc func(K, V) bool,
+	predicateFunc func(K, V) (bool, error),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	iterator, err := getCollIter[K, V](ctx, coll, prefix, nil, reverse)
 	if err != nil {
@@ -146,8 +146,14 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 			if predicateFunc == nil {
 				results = append(results, kv)
 				// if predicate function is defined we check if the result matches the filtering criteria
-			} else if predicateFunc(kv.Key, kv.Value) {
-				results = append(results, kv)
+			} else {
+				include, err := predicateFunc(kv.Key, kv.Value)
+				if err != nil {
+					return nil, nil, err
+				}
+				if include {
+					results = append(results, kv)
+				}
 			}
 			count++
 		// second case, we found all the objects specified within the limit
@@ -207,7 +213,7 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 	key []byte,
 	reverse bool,
 	limit uint64,
-	predicateFunc func(K, V) bool,
+	predicateFunc func(K, V) (bool, error),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	iterator, err := getCollIter[K, V](ctx, coll, prefix, key, reverse)
 	if err != nil {
@@ -246,8 +252,14 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 			results = append(results, kv)
 			// if predicate is applied we execute the predicate function
 			// and append only if predicateFunc yields true.
-		} else if predicateFunc(kv.Key, kv.Value) {
-			results = append(results, kv)
+		} else {
+			include, err := predicateFunc(kv.Key, kv.Value)
+			if err != nil {
+				return nil, nil, err
+			}
+			if include {
+				results = append(results, kv)
+			}
 		}
 		count++
 	}

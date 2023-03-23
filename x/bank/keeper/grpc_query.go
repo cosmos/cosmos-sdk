@@ -52,7 +52,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 
 	balances := sdk.NewCoins()
 
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], value math.Int) (include bool) {
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], value math.Int) (include bool, err error) {
 		denom := key.K2()
 		if req.ResolveDenom {
 			if metadata, ok := k.GetDenomMetaData(sdkCtx, denom); ok {
@@ -60,7 +60,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 			}
 		}
 		balances = append(balances, sdk.NewCoin(denom, value))
-		return false // we don't include results because we're appending them here.
+		return false, nil // we don't include results because we're appending them here.
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
@@ -86,9 +86,9 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	balances := sdk.NewCoins()
 	zeroAmt := math.ZeroInt()
 
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (include bool) {
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (include bool, err error) {
 		balances = append(balances, sdk.NewCoin(key.K2(), zeroAmt))
-		return false // not including results as they're appended here
+		return false, nil // not including results as they're appended here
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 
 	if err != nil {
@@ -231,16 +231,16 @@ func (k BaseKeeper) DenomOwners(
 	var denomOwners []*types.DenomOwner
 
 	_, pageRes, err := query.CollectionFilteredPaginate(goCtx, k.Balances.Indexes.Denom, req.Pagination,
-		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (include bool) {
+		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (include bool, err error) {
 			amt, err := k.Balances.Get(goCtx, collections.Join(key.K2(), req.Denom))
 			if err != nil {
-				panic(err) // should never happen.
+				return false, err
 			}
 			denomOwners = append(denomOwners, &types.DenomOwner{
 				Address: key.K2().String(),
 				Balance: sdk.NewCoin(req.Denom, amt),
 			})
-			return false
+			return false, nil
 		},
 		query.WithCollectionPaginationPairPrefix[string, sdk.AccAddress](req.Denom),
 	)

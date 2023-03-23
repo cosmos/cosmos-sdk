@@ -50,7 +50,10 @@ type TxOutputs struct {
 }
 
 func ProvideModule(in TxInputs) TxOutputs {
-	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
+	textual, err := NewTextualWithBankKeeper(in.TxBankKeeper)
+	if err != nil {
+		panic(err)
+	}
 	var txConfig client.TxConfig
 	if in.CustomSignModeHandlers == nil {
 		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)

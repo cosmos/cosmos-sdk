@@ -61,6 +61,15 @@ func (t autoIncrementTable) Update(ctx context.Context, message proto.Message) e
 	return err
 }
 
+func (t autoIncrementTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return t.curSeqValue(backend.IndexStoreReader())
+}
+
 func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) (newPK uint64, err error) {
 	messageRef := message.ProtoReflect()
 	val := messageRef.Get(t.autoIncField).Uint()

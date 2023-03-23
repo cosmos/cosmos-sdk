@@ -8,23 +8,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-)
-
-var (
-	priv = ed25519.GenPrivKey()
-	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
 func TestParseQueryResponse(t *testing.T) {
@@ -43,16 +34,6 @@ func TestParseQueryResponse(t *testing.T) {
 
 	res, err = authclient.ParseQueryResponse([]byte("fuzzy"))
 	require.Error(t, err)
-}
-
-// TODO: remove this and authclient.GetTxEncoder after the proto tx migration is complete
-func TestDefaultTxEncoder(t *testing.T) {
-	cdc := makeCodec()
-
-	defaultEncoder := legacytx.DefaultTxEncoder(cdc)
-	encoder := authclient.GetTxEncoder(cdc)
-
-	compareEncoders(t, defaultEncoder, encoder)
 }
 
 func TestReadTxFromFile(t *testing.T) {
@@ -149,24 +130,4 @@ func TestBatchScanner_Scan(t *testing.T) {
 			require.Equal(t, tt.numTxs, i)
 		})
 	}
-}
-
-func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
-	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	tx := legacytx.NewStdTx(msgs, legacytx.StdFee{}, []legacytx.StdSignature{}, "") //nolint:staticcheck // SA1019: legacytx.StdFee is deprecated: use FeeTx interface instead
-
-	defaultEncoderBytes, err := expected(tx)
-	require.NoError(t, err)
-	encoderBytes, err := actual(tx)
-	require.NoError(t, err)
-	require.Equal(t, defaultEncoderBytes, encoderBytes)
-}
-
-func makeCodec() *codec.LegacyAmino {
-	cdc := codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
-	cryptocodec.RegisterCrypto(cdc)
-	authtypes.RegisterLegacyAminoCodec(cdc)
-	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
-	return cdc
 }

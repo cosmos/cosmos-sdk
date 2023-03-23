@@ -1,12 +1,13 @@
 package keeper
 
 import (
+	"context"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -33,7 +34,7 @@ func (k *Keeper) GetAuthority() string {
 }
 
 // Get gets the consensus parameters
-func (k *Keeper) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
+func (k *Keeper) Get(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	store := k.storeService.OpenKVStore(ctx)
 
 	bz, err := store.Get(types.ParamStoreKeyConsensusParams)
@@ -49,13 +50,13 @@ func (k *Keeper) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
 	return cp, nil
 }
 
-func (k *Keeper) Has(ctx sdk.Context) (bool, error) {
+func (k *Keeper) Has(ctx context.Context) (bool, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Has(types.ParamStoreKeyConsensusParams)
 }
 
 // Set sets the consensus parameters
-func (k *Keeper) Set(ctx sdk.Context, cp *cmtproto.ConsensusParams) error {
+func (k *Keeper) Set(ctx context.Context, cp *cmtproto.ConsensusParams) error {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
 }

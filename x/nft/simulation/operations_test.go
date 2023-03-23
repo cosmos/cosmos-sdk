@@ -95,7 +95,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
+	initAmt := suite.stakingKeeper.TokensFromConsensusPower(200000)
 	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
 	// add coins to the accounts

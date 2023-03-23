@@ -1,7 +1,6 @@
 package v3
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
@@ -21,7 +20,7 @@ type subspace interface {
 // The migration includes:
 //
 // - Setting the MinCommissionRate param in the paramstore
-func MigrateStore(ctx sdk.Context, cdc codec.BinaryCodec, paramstore exported.Subspace) error {
+func MigrateStore(ctx sdk.Context, paramstore exported.Subspace) error {
 	migrateParamsStore(ctx, paramstore.(subspace))
 
 	return nil

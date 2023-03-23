@@ -21,7 +21,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	}
 
 	// migrate unbonding delegations
-	err := migrateUBDEntries(ctx, store, cdc)
+	err := migrateUBDEntries(store, cdc)
 
 	return err
 }
@@ -42,7 +42,7 @@ func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 
 // migrateUBDEntries will remove the ubdEntries with same creation_height
 // and create a new ubdEntry with updated balance and initial_balance
-func migrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func migrateUBDEntries(store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	iterator := storetypes.KVStorePrefixIterator(store, types.UnbondingDelegationKey)
 	defer iterator.Close()
 
@@ -78,12 +78,12 @@ func migrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.Bina
 		}
 
 		// set the new ubd to the store
-		setUBDToStore(ctx, store, cdc, ubd)
+		setUBDToStore(store, cdc, ubd)
 	}
 	return nil
 }
 
-func setUBDToStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, ubd types.UnbondingDelegation) {
+func setUBDToStore(store storetypes.KVStore, cdc codec.BinaryCodec, ubd types.UnbondingDelegation) {
 	delegatorAddress := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
 
 	bz := types.MustMarshalUBD(cdc, ubd)

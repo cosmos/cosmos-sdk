@@ -14,7 +14,6 @@ import (
 
 	"cosmossdk.io/depinject"
 
-	"cosmossdk.io/errors"
 	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -75,13 +74,8 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the authz module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data authz.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return errors.Wrapf(err, "failed to unmarshal %s genesis state", authz.ModuleName)
-	}
-
-	return authz.ValidateGenesis(data)
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ sdkclient.TxEncodingConfig, _ json.RawMessage) error {
+	return authz.ValidateGenesis()
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.

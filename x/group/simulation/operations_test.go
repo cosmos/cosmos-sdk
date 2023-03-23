@@ -58,7 +58,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(suite.interfaceRegistry, appParams, cdc, suite.accountKeeper,
-		suite.bankKeeper, suite.groupKeeper, cdc,
+		suite.bankKeeper, suite.groupKeeper,
 	)
 
 	s := rand.NewSource(2)

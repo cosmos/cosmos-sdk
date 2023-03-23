@@ -12,7 +12,7 @@ func NewGenesisState(entries []GrantAuthorization) *GenesisState {
 }
 
 // ValidateGenesis check the given genesis state has no integrity issues
-func ValidateGenesis(data GenesisState) error {
+func ValidateGenesis() error {
 	return nil
 }
 

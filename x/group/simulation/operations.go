@@ -83,7 +83,7 @@ const (
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak group.AccountKeeper,
-	bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker,
+	bk group.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGroup                     int
@@ -253,7 +253,7 @@ func SimulateMsgCreateGroup(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk gr
 		accAddr := acc.Address.String()
 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "fee error"), nil, err
 		}
@@ -296,7 +296,7 @@ func SimulateMsgCreateGroupWithPolicy(cdc *codec.ProtoCodec, ak group.AccountKee
 		accAddr := acc.Address.String()
 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "fee error"), nil, err
 		}
@@ -361,7 +361,7 @@ func SimulateMsgCreateGroupPolicy(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		groupID := groupInfo.Id
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupPolicy, "fee error"), nil, err
 		}
@@ -445,7 +445,7 @@ func SimulateMsgSubmitProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "fee error"), nil, err
 		}
@@ -498,7 +498,7 @@ func SimulateMsgUpdateGroupAdmin(cdc *codec.ProtoCodec, ak group.AccountKeeper, 
 		groupID := groupInfo.Id
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAdmin, "fee error"), nil, err
 		}
@@ -558,7 +558,7 @@ func SimulateMsgUpdateGroupMetadata(cdc *codec.ProtoCodec, ak group.AccountKeepe
 		groupID := groupInfo.Id
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMetadata, "fee error"), nil, err
 		}
@@ -611,7 +611,7 @@ func SimulateMsgUpdateGroupMembers(cdc *codec.ProtoCodec, ak group.AccountKeeper
 		groupID := groupInfo.Id
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "fee error"), nil, err
 		}
@@ -689,7 +689,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(cdc *codec.ProtoCodec, ak group.AccountKe
 		groupPolicyAddr := groupPolicy.Address
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyAdmin, "fee error"), nil, err
 		}
@@ -751,7 +751,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(cdc *codec.ProtoCodec, ak group.
 		groupPolicyAddr := groupPolicy.Address
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "fee error"), nil, err
 		}
@@ -812,7 +812,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(cdc *codec.ProtoCodec, ak group.Accoun
 		groupPolicyAddr := groupPolicy.Address
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyMetadata, "fee error"), nil, err
 		}
@@ -914,7 +914,7 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		proposerAcc := ak.GetAccount(sdkCtx, proposer.Address)
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, proposer.Address)
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fee error"), nil, err
 		}
@@ -982,7 +982,7 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fee error"), nil, err
 		}
@@ -1075,7 +1075,7 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		groupPolicyAddr := groupPolicy.Address
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
@@ -1159,7 +1159,7 @@ func SimulateMsgLeaveGroup(cdc *codec.ProtoCodec, k keeper.Keeper, ak group.Acco
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, acc.Address)
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "fee error"), nil, err
 		}

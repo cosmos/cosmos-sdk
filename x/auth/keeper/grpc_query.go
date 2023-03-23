@@ -164,7 +164,7 @@ func (ak AccountKeeper) ModuleAccountByName(c context.Context, req *types.QueryM
 }
 
 // Bech32Prefix returns the keeper internally stored bech32 prefix.
-func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
+func (ak AccountKeeper) Bech32Prefix(_ context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
 	bech32Prefix, err := ak.getBech32Prefix()
 	if err != nil {
 		return nil, err
@@ -175,7 +175,7 @@ func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32Prefi
 
 // AddressBytesToString converts an address from bytes to string, using the
 // keeper's bech32 prefix.
-func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
+func (ak AccountKeeper) AddressBytesToString(_ context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -194,7 +194,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 
 // AddressStringToBytes converts an address from string to bytes, using the
 // keeper's bech32 prefix.
-func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
+func (ak AccountKeeper) AddressStringToBytes(_ context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

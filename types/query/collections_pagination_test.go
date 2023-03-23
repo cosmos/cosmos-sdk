@@ -148,7 +148,7 @@ type testStore struct {
 	db db.DB
 }
 
-func (t testStore) OpenKVStore(ctx context.Context) store.KVStore {
+func (t testStore) OpenKVStore(_ context.Context) store.KVStore {
 	return t
 }
 

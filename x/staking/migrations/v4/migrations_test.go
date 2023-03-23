@@ -27,7 +27,7 @@ func newMockSubspace(ps types.Params) mockSubspace {
 	return mockSubspace{ps: ps}
 }
 
-func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet) {
+func (ms mockSubspace) GetParamSet(_ sdk.Context, ps paramtypes.ParamSet) {
 	*ps.(*types.Params) = ms.ps
 }
 

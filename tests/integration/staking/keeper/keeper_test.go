@@ -50,7 +50,7 @@ func initFixture(t *testing.T) *fixture {
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction(ctx))
+	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction())
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	f.app, f.ctx, f.queryClient, f.addrs, f.vals = app, ctx, queryClient, addrs, validators

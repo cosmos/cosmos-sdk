@@ -85,7 +85,7 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 	accNums := rapid.SliceOfNDistinct(rapid.Uint64(), count, count, func(i uint64) uint64 { return i }).Draw(t, "acc-numss")
 
 	for i := 0; i < count; i++ {
-		pub := pubkeyGenerator(t).Draw(t, "pubkey")
+		pub := pubkeyGenerator().Draw(t, "pubkey")
 		addr := sdk.AccAddress(pub.Address())
 		accNum := accNums[i]
 		seq := rapid.Uint64().Draw(t, "sequence")
@@ -119,7 +119,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 }
 
 // pubkeyGenerator creates and returns a random pubkey generator using rapid.
-func pubkeyGenerator(t *rapid.T) *rapid.Generator[secp256k1.PubKey] {
+func pubkeyGenerator() *rapid.Generator[secp256k1.PubKey] {
 	return rapid.Custom(func(t *rapid.T) secp256k1.PubKey {
 		pkBz := rapid.SliceOfN(rapid.Byte(), 33, 33).Draw(t, "hex")
 		return secp256k1.PubKey{Key: pkBz}
@@ -162,7 +162,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		pub := pubkeyGenerator(t).Draw(t, "pubkey")
+		pub := pubkeyGenerator().Draw(t, "pubkey")
 		addr := sdk.AccAddress(pub.Address())
 
 		accNum := rapid.Uint64().Draw(t, "account-number")

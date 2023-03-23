@@ -186,7 +186,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 }
 
 // don't consume any gas
-func SigGasNoConsumer(meter storetypes.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
+func SigGasNoConsumer(_ storetypes.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
 	return nil
 }
 

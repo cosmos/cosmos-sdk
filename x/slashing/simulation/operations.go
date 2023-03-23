@@ -86,7 +86,7 @@ func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.B
 		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := simtypes.RandomFees(r, ctx, spendable)
+		fees, err := simtypes.RandomFees(r, spendable)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 		}

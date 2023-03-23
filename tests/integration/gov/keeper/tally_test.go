@@ -383,7 +383,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
 	assert.Assert(t, found)
 	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])

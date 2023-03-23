@@ -47,8 +47,8 @@ func SetupUnbondingTests(t *testing.T, app *simapp.SimApp, ctx sdk.Context, hook
 	addrDels = simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 2, math.NewInt(10000))
 	addrVals = simtestutil.ConvertAddrsToValAddrs(addrDels)
 
-	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(10)
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(20)
 
 	bondDenom = app.StakingKeeper.BondDenom(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)

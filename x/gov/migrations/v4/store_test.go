@@ -52,7 +52,7 @@ func newMockSubspace(p v1.Params) mockSubspace {
 	}
 }
 
-func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+func (ms mockSubspace) Get(_ sdk.Context, key []byte, ptr interface{}) {
 	switch string(key) {
 	case string(v1.ParamStoreKeyDepositParams):
 		*ptr.(*v1.DepositParams) = ms.dp

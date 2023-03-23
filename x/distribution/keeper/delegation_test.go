@@ -129,7 +129,6 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
 	addr := sdk.AccAddress(valAddr)
-	valPower := int64(100)
 	stake := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 	val, err := distrtestutil.CreateValidator(valConsPk0, stake)
 	require.NoError(t, err)
@@ -163,9 +162,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
 	slashedTokens := distrtestutil.SlashValidator(
 		ctx,
-		valConsAddr0,
 		ctx.BlockHeight(),
-		valPower,
 		sdk.NewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
@@ -257,9 +254,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
 	slashedTokens := distrtestutil.SlashValidator(
 		ctx,
-		valConsAddr0,
 		ctx.BlockHeight(),
-		valPower,
 		sdk.NewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
@@ -280,9 +275,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	// slash the validator by 50% again
 	slashedTokens = distrtestutil.SlashValidator(
 		ctx,
-		valConsAddr0,
 		ctx.BlockHeight(),
-		valPower/2,
 		sdk.NewDecWithPrec(2, 1),
 		&val,
 		&distrKeeper,
@@ -535,13 +528,10 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
-	valPower := int64(100)
 	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
 	distrtestutil.SlashValidator(
 		ctx,
-		valConsAddr0,
 		ctx.BlockHeight(),
-		valPower,
 		sdk.NewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
@@ -551,9 +541,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	// stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1))
 	distrtestutil.SlashValidator(
 		ctx,
-		valConsAddr0,
 		ctx.BlockHeight(),
-		valPower/2,
 		sdk.NewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
@@ -636,9 +624,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 	distrtestutil.SlashValidator(
 		ctx,
-		valConsAddr0,
 		ctx.BlockHeight(),
-		valPower,
 		sdk.NewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
@@ -677,9 +663,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 	distrtestutil.SlashValidator(
 		ctx,
-		valConsAddr0,
 		ctx.BlockHeight(),
-		valPower,
 		sdk.NewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,

@@ -102,7 +102,7 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 
 		granterAcc := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, granter.Address)
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
@@ -183,7 +183,7 @@ func SimulateMsgRevoke(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.B
 		}
 
 		spendableCoins := bk.SpendableCoins(ctx, granterAddr)
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "fee error"), nil, err
 		}
@@ -283,7 +283,7 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ban
 
 		msgExec := authz.NewMsgExec(granteeAddr, msg)
 		granteeSpendableCoins := bk.SpendableCoins(ctx, granteeAddr)
-		fees, err := simtypes.RandomFees(r, ctx, granteeSpendableCoins)
+		fees, err := simtypes.RandomFees(r, granteeSpendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}

@@ -45,7 +45,7 @@ func (s *StdTxBuilder) SetGasLimit(limit uint64) {
 	s.StdTx.Fee.Gas = limit
 }
 
-func (s *StdTxBuilder) SetTip(tip *tx.Tip) {
+func (s *StdTxBuilder) SetTip(_ *tx.Tip) {
 	panic("StdTxBuilder does not support tips")
 }
 

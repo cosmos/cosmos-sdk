@@ -179,7 +179,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		am.registry,
 		simState.AppParams, simState.Cdc,
-		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
+		am.accKeeper, am.bankKeeper, am.keeper,
 	)
 }
 

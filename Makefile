@@ -71,7 +71,7 @@ ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
 endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
-  CGO_ENABLEDe=1
+  CGO_ENABLED=1
   build_tags += rocksdb
 endif
 # handle boltdb

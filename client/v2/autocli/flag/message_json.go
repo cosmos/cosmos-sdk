@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/client/v2/internal/util"
 )
 
-var isJsonFileRegex = regexp.MustCompile(`\.json$`)
+var isJSONFileRegex = regexp.MustCompile(`\.json$`)
 
 type jsonMessageFlagType struct {
 	messageDesc protoreflect.MessageDescriptor
@@ -61,7 +61,7 @@ func (j *jsonMessageFlagValue) String() string {
 func (j *jsonMessageFlagValue) Set(s string) error {
 	j.message = j.messageType.New().Interface()
 	var messageBytes []byte
-	if isJsonFileRegex.MatchString(s) {
+	if isJSONFileRegex.MatchString(s) {
 		jsonFile, err := os.Open(s)
 		if err != nil {
 			return err

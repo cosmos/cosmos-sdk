@@ -153,6 +153,11 @@ func ZeroInt() Int { return Int{big.NewInt(0)} }
 // OneInt returns Int value with one
 func OneInt() Int { return Int{big.NewInt(1)} }
 
+// ToDec converts Int to Dec
+func (i Int) ToDec() LegacyDec {
+	return LegacyNewDecFromInt(i)
+}
+
 // Int64 converts Int to int64
 // Panics if the value is out of range
 func (i Int) Int64() int64 {

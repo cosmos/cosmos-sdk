@@ -14,4 +14,4 @@ This is the first patch release for the `v0.47.x` line. Missed the v0.47.0 annou
 
 It includes sweet things we could not include in `v0.47.0` due to the feature freeze.
 
-Notably, it introduces a new query for listing of all groups on a chain and a helper functions for commands to use when the command is for submitting a governance proposal.
+Notably, it introduces a new `x/groups` query for listing of all groups on a chain and a `x/gov` helper function for commands to use when the command is for submitting a governance proposal.

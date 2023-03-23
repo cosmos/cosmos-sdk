@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 	"time"
 
@@ -38,6 +39,10 @@ type PluginTestSuite struct {
 }
 
 func (s *PluginTestSuite) SetupTest() {
+	if runtime.GOOS != "linux" {
+		s.T().Skip("only run on linux")
+	}
+
 	path, err := os.Getwd()
 	if err != nil {
 		s.T().Fail()
@@ -113,7 +118,6 @@ func TestPluginTestSuite(t *testing.T) {
 
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
-
 		abciListeners := s.loggerCtx.StreamingManager().ABCIListeners
 		for _, abciListener := range abciListeners {
 			for i := range [50]int{} {
@@ -143,8 +147,10 @@ func (s *PluginTestSuite) updateHeight(n int64) {
 	s.loggerCtx = NewMockContext(header, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
 }
 
-var _ context.Context = MockContext{}
-var _ storetypes.Context = MockContext{}
+var (
+	_ context.Context    = MockContext{}
+	_ storetypes.Context = MockContext{}
+)
 
 type MockContext struct {
 	baseCtx          context.Context

@@ -320,6 +320,20 @@ func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
 }
 
+// GetAllDenomMetaData mocks base method.
+func (m *MockBankKeeper) GetAllDenomMetaData(ctx types.Context) []types1.Metadata {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllDenomMetaData", ctx)
+	ret0, _ := ret[0].([]types1.Metadata)
+	return ret0
+}
+
+// GetAllDenomMetaData indicates an expected call of GetAllDenomMetaData.
+func (mr *MockBankKeeperMockRecorder) GetAllDenomMetaData(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllDenomMetaData", reflect.TypeOf((*MockBankKeeper)(nil).GetAllDenomMetaData), ctx)
+}
+
 // GetAllSendEnabledEntries mocks base method.
 func (m *MockBankKeeper) GetAllSendEnabledEntries(ctx types.Context) []types1.SendEnabled {
 	m.ctrl.T.Helper()

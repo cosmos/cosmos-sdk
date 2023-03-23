@@ -263,7 +263,7 @@ func (suite *SimTestSuite) SetupTest() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
+	initAmt := suite.stakingKeeper.TokensFromConsensusPower(200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts

@@ -93,7 +93,7 @@ func (s *SimTestSuite) SetupTest() {
 	mintKeeper.SetParams(ctx, minttypes.DefaultParams())
 	mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
 
-	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
+	initAmt := stakingKeeper.TokensFromConsensusPower(200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	s.accounts = accounts
@@ -187,7 +187,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	validator0 := s.getTestingValidator0(ctx)
 
 	// setup delegation
-	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
+	delTokens := s.stakingKeeper.TokensFromConsensusPower(2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
@@ -281,7 +281,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	validator0 := s.getTestingValidator0(ctx)
 
 	// setup delegation
-	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
+	delTokens := s.stakingKeeper.TokensFromConsensusPower(2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
@@ -321,7 +321,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	validator0 := s.getTestingValidator0(ctx)
 	validator1 := s.getTestingValidator1(ctx)
 
-	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
+	delTokens := s.stakingKeeper.TokensFromConsensusPower(2)
 	validator1, issuedShares := validator1.AddTokensFromDel(delTokens)
 
 	// setup accounts[3] as delegator
@@ -373,7 +373,7 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 	s.Require().NoError(err)
 
 	validator.DelegatorShares = math.LegacyNewDec(100)
-	validator.Tokens = s.stakingKeeper.TokensFromConsensusPower(ctx, 100)
+	validator.Tokens = s.stakingKeeper.TokensFromConsensusPower(100)
 
 	s.stakingKeeper.SetValidator(ctx, validator)
 

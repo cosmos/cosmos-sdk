@@ -152,7 +152,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 				panic(fmt.Sprintf("validator %s not found", lv.Address))
 			}
 
-			update := validator.ABCIValidatorUpdate(k.PowerReduction(ctx))
+			update := validator.ABCIValidatorUpdate(k.PowerReduction())
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
 			res = append(res, update)
 		}

@@ -26,7 +26,7 @@ var (
 // same elements input on the mempool should be in the output except for sender nonce duplicates, which are overwritten by the later duplicate entries.
 // for every sender transaction tx_n, tx_0.nonce < tx_1.nonce ... < tx_n.nonce
 
-func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {
+func AddressGenerator() *rapid.Generator[sdk.AccAddress] {
 	return rapid.Custom(func(t *rapid.T) sdk.AccAddress {
 		pkBz := rapid.SliceOfN(rapid.Byte(), 20, 20).Draw(t, "hex")
 		return sdk.AccAddress(pkBz)
@@ -37,7 +37,7 @@ func testMempoolProperties(t *rapid.T) {
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	mp := mempool.NewSenderNonceMempool()
 
-	genMultipleAddress := rapid.SliceOfNDistinct(AddressGenerator(t), 1, 10, func(acc sdk.AccAddress) string {
+	genMultipleAddress := rapid.SliceOfNDistinct(AddressGenerator(), 1, 10, func(acc sdk.AccAddress) string {
 		return acc.String()
 	})
 

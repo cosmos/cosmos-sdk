@@ -28,7 +28,7 @@ func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.Ge
 		vals = append(vals, cmttypes.GenesisValidator{
 			Address: sdk.ConsAddress(cmtPk.Address()).Bytes(),
 			PubKey:  cmtPk,
-			Power:   validator.GetConsensusPower(keeper.PowerReduction(ctx)),
+			Power:   validator.GetConsensusPower(keeper.PowerReduction()),
 			Name:    validator.GetMoniker(),
 		})
 

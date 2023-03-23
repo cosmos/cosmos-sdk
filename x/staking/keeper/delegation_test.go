@@ -196,7 +196,7 @@ func (s *KeeperTestSuite) TestUnbondDelegation() {
 	require := s.Require()
 
 	delAddrs, valAddrs := createValAddrs(1)
-	startTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	startTokens := keeper.TokensFromConsensusPower(10)
 	validator := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
 
 	validator, issuedShares := validator.AddTokensFromDel(startTokens)
@@ -208,7 +208,7 @@ func (s *KeeperTestSuite) TestUnbondDelegation() {
 	delegation := stakingtypes.NewDelegation(delAddrs[0], valAddrs[0], issuedShares)
 	keeper.SetDelegation(ctx, delegation)
 
-	bondTokens := keeper.TokensFromConsensusPower(ctx, 6)
+	bondTokens := keeper.TokensFromConsensusPower(6)
 	amount, err := keeper.Unbond(ctx, delAddrs[0], valAddrs[0], sdk.NewDecFromInt(bondTokens))
 	require.NoError(err)
 	require.Equal(bondTokens, amount) // shares to be added to an unbonding delegation
@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestUndelegateSelfDelegationBelowMinSelfDelegation() {
 	require := s.Require()
 
 	addrDels, addrVals := createValAddrs(1)
-	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := keeper.TokensFromConsensusPower(10)
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -260,7 +260,7 @@ func (s *KeeperTestSuite) TestUndelegateSelfDelegationBelowMinSelfDelegation() {
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
-	_, _, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(keeper.TokensFromConsensusPower(ctx, 6)))
+	_, _, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(keeper.TokensFromConsensusPower(6)))
 	require.NoError(err)
 
 	// end block
@@ -269,7 +269,7 @@ func (s *KeeperTestSuite) TestUndelegateSelfDelegationBelowMinSelfDelegation() {
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(found)
-	require.Equal(keeper.TokensFromConsensusPower(ctx, 14), validator.Tokens)
+	require.Equal(keeper.TokensFromConsensusPower(14), validator.Tokens)
 	require.Equal(stakingtypes.Unbonding, validator.Status)
 	require.True(validator.Jailed)
 }
@@ -277,7 +277,7 @@ func (s *KeeperTestSuite) TestUndelegateSelfDelegationBelowMinSelfDelegation() {
 func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
-	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := keeper.TokensFromConsensusPower(10)
 
 	addrDels, addrVals := createValAddrs(2)
 
@@ -353,14 +353,14 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
-	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := keeper.TokensFromConsensusPower(10)
 	addrDels, addrVals := createValAddrs(2)
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
 	keeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	valTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(valTokens, issuedShares.RoundInt())
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
@@ -409,7 +409,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	require.Equal(validator.Status, stakingtypes.Unbonded)
 
 	// unbond some of the other delegation's shares
-	unbondTokens := keeper.TokensFromConsensusPower(ctx, 6)
+	unbondTokens := keeper.TokensFromConsensusPower(6)
 	_, amount2, err := keeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(unbondTokens))
 	require.NoError(err)
 	require.Equal(amount2, unbondTokens)
@@ -429,14 +429,14 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
-	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := keeper.TokensFromConsensusPower(10)
 	addrDels, addrVals := createValAddrs(2)
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
 	keeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	valTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(valTokens, issuedShares.RoundInt())
 
@@ -587,7 +587,7 @@ func (s *KeeperTestSuite) TestRedelegateToSameValidator() {
 	require := s.Require()
 
 	_, addrVals := createValAddrs(1)
-	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	valTokens := keeper.TokensFromConsensusPower(10)
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -614,7 +614,7 @@ func (s *KeeperTestSuite) TestRedelegationMaxEntries() {
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
-	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	valTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(valTokens, issuedShares.RoundInt())
 
@@ -667,7 +667,7 @@ func (s *KeeperTestSuite) TestRedelegateSelfDelegation() {
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
 	keeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	valTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(valTokens, issuedShares.RoundInt())
 
@@ -687,7 +687,7 @@ func (s *KeeperTestSuite) TestRedelegateSelfDelegation() {
 	require.Equal(stakingtypes.Bonded, validator2.Status)
 
 	// create a second delegation to validator 1
-	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(delTokens, issuedShares.RoundInt())
 	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
@@ -718,7 +718,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
 	keeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	valTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(valTokens, issuedShares.RoundInt())
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
@@ -729,7 +729,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 
 	// create a second delegation to this validator
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
-	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(delTokens, issuedShares.RoundInt())
 	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
@@ -775,7 +775,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond some of the other delegation's shares
-	redelegateTokens := keeper.TokensFromConsensusPower(ctx, 6)
+	redelegateTokens := keeper.TokensFromConsensusPower(6)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	_, err = keeper.BeginRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1], sdk.NewDecFromInt(redelegateTokens))
 	require.NoError(err)
@@ -798,7 +798,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
 	keeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	valTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(valTokens, issuedShares.RoundInt())
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
@@ -809,7 +809,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 
 	// create a second delegation to this validator
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
-	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := keeper.TokensFromConsensusPower(10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(delTokens, issuedShares.RoundInt())
 	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
@@ -847,7 +847,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 	keeper.UnbondingToUnbonded(ctx, validator)
 
 	// redelegate some of the delegation's shares
-	redelegationTokens := keeper.TokensFromConsensusPower(ctx, 6)
+	redelegationTokens := keeper.TokensFromConsensusPower(6)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	_, err = keeper.BeginRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1], sdk.NewDecFromInt(redelegationTokens))
 	require.NoError(err)

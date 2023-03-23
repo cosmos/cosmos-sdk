@@ -405,7 +405,7 @@ func getTestingAccounts(
 ) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
+	initAmt := stakingKeeper.TokensFromConsensusPower(200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts

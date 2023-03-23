@@ -217,11 +217,11 @@ func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 
 // SetDecisionPolicy sets the decision policy for MsgCreateGroupWithPolicy.
 func (m *MsgCreateGroupWithPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
-	any, err := types.NewAnyWithValue(decisionPolicy)
+	anyDecision, err := types.NewAnyWithValue(decisionPolicy)
 	if err != nil {
 		return err
 	}
-	m.DecisionPolicy = any
+	m.DecisionPolicy = anyDecision
 	return nil
 }
 
@@ -501,11 +501,11 @@ func (m *MsgCreateGroupPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 
 // SetDecisionPolicy sets the decision policy of MsgCreateGroupPolicy.
 func (m *MsgCreateGroupPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
-	any, err := types.NewAnyWithValue(decisionPolicy)
+	anyDecision, err := types.NewAnyWithValue(decisionPolicy)
 	if err != nil {
 		return err
 	}
-	m.DecisionPolicy = any
+	m.DecisionPolicy = anyDecision
 	return nil
 }
 

@@ -32,13 +32,13 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
 	}
 
-	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), validators, keeper.PowerReduction(ctx))
+	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), validators, keeper.PowerReduction())
 	keeper.SetHistoricalInfo(ctx, 2, &hi)
 
 	recv, found := keeper.GetHistoricalInfo(ctx, 2)
 	require.True(found, "HistoricalInfo not found after set")
 	require.Equal(hi, recv, "HistoricalInfo not equal")
-	require.True(IsValSetSorted(recv.Valset, keeper.PowerReduction(ctx)), "HistoricalInfo validators is not sorted")
+	require.True(IsValSetSorted(recv.Valset, keeper.PowerReduction()), "HistoricalInfo validators is not sorted")
 
 	keeper.DeleteHistoricalInfo(ctx, 2)
 
@@ -72,8 +72,8 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
 		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
-	hi4 := stakingtypes.NewHistoricalInfo(h4, valSet, keeper.PowerReduction(ctx))
-	hi5 := stakingtypes.NewHistoricalInfo(h5, valSet, keeper.PowerReduction(ctx))
+	hi4 := stakingtypes.NewHistoricalInfo(h4, valSet, keeper.PowerReduction())
+	hi5 := stakingtypes.NewHistoricalInfo(h5, valSet, keeper.PowerReduction())
 	keeper.SetHistoricalInfo(ctx, 4, &hi4)
 	keeper.SetHistoricalInfo(ctx, 5, &hi5)
 	recv, found := keeper.GetHistoricalInfo(ctx, 4)
@@ -86,17 +86,17 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// Set bonded validators in keeper
 	val1 := testutil.NewValidator(s.T(), addrVals[2], PKs[2])
 	val1.Status = stakingtypes.Bonded // when not bonded, consensus power is Zero
-	val1.Tokens = keeper.TokensFromConsensusPower(ctx, 10)
+	val1.Tokens = keeper.TokensFromConsensusPower(10)
 	keeper.SetValidator(ctx, val1)
 	keeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	val2 := testutil.NewValidator(s.T(), addrVals[3], PKs[3])
 	val1.Status = stakingtypes.Bonded
-	val2.Tokens = keeper.TokensFromConsensusPower(ctx, 80)
+	val2.Tokens = keeper.TokensFromConsensusPower(80)
 	keeper.SetValidator(ctx, val2)
 	keeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
 
 	vals := []stakingtypes.Validator{val1, val2}
-	require.True(IsValSetSorted(vals, keeper.PowerReduction(ctx)))
+	require.True(IsValSetSorted(vals, keeper.PowerReduction()))
 
 	// Set Header for BeginBlock context
 	header := cmtproto.Header{

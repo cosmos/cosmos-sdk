@@ -13,7 +13,7 @@ import (
 )
 
 func (suite *TestSuite) createAccounts(accs int) []sdk.AccAddress {
-	addrs := simtestutil.CreateIncrementalAccounts(2)
+	addrs := simtestutil.CreateIncrementalAccounts(accs)
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0])).AnyTimes()
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1])).AnyTimes()
 	return addrs

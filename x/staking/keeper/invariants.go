@@ -106,13 +106,13 @@ func NonNegativePowerInvariant(k *Keeper) sdk.Invariant {
 				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
 			}
 
-			powerKey := types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx))
+			powerKey := types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction())
 
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				broken = true
 				msg += fmt.Sprintf("power store invariance:\n\tvalidator.Power: %v"+
 					"\n\tkey should be: %v\n\tkey in store: %v\n",
-					validator.GetConsensusPower(k.PowerReduction(ctx)), powerKey, iterator.Key())
+					validator.GetConsensusPower(k.PowerReduction()), powerKey, iterator.Key())
 			}
 
 			if validator.Tokens.IsNegative() {

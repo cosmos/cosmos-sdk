@@ -39,7 +39,7 @@ func TestBeginBlocker(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	pks := simtestutil.CreateTestPubKeys(1)
-	simtestutil.AddTestAddrsFromPubKeys(bankKeeper, stakingKeeper, ctx, pks, stakingKeeper.TokensFromConsensusPower(ctx, 200))
+	simtestutil.AddTestAddrsFromPubKeys(bankKeeper, stakingKeeper, ctx, pks, stakingKeeper.TokensFromConsensusPower(200))
 	addr, pk := sdk.ValAddress(pks[0].Address()), pks[0]
 	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 

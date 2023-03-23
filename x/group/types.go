@@ -266,11 +266,11 @@ func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddre
 
 // SetDecisionPolicy sets the decision policy for GroupPolicyInfo.
 func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
-	any, err := codectypes.NewAnyWithValue(decisionPolicy)
+	anyDecision, err := codectypes.NewAnyWithValue(decisionPolicy)
 	if err != nil {
 		return err
 	}
-	g.DecisionPolicy = any
+	g.DecisionPolicy = anyDecision
 	return nil
 }
 

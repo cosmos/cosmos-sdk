@@ -96,7 +96,7 @@ func (suite *SimTestSuite) SetupTest() {
 	// remove genesis validator account
 	suite.accounts = accounts[1:]
 
-	initAmt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
+	initAmt := suite.stakingKeeper.TokensFromConsensusPower(200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
@@ -163,7 +163,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.stakingKeeper.Jail(ctx, val0ConsAddress)
 
 	// setup self delegation
-	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
+	delTokens := suite.stakingKeeper.TokensFromConsensusPower(2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	suite.Require().NoError(err)

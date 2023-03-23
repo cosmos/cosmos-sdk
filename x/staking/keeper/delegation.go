@@ -497,7 +497,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,
 	minTime time.Time, balance math.Int,
-	sharesSrc, sharesDst sdk.Dec,
+	sharesDst sdk.Dec,
 ) types.Redelegation {
 	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	id := k.IncrementUnbondingID(ctx)
@@ -609,7 +609,7 @@ func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) st
 // DequeueAllMatureRedelegationQueue returns a concatenated list of all the
 // timeslices inclusively previous to currTime, and deletes the timeslices from
 // the queue.
-func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
+func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context) (matureRedelegations []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
@@ -946,7 +946,7 @@ func (k Keeper) BeginRedelegation(
 
 	red := k.SetRedelegationEntry(
 		ctx, delAddr, valSrcAddr, valDstAddr,
-		height, completionTime, returnAmount, sharesAmount, sharesCreated,
+		height, completionTime, returnAmount, sharesCreated,
 	)
 	k.InsertRedelegationQueue(ctx, red, completionTime)
 

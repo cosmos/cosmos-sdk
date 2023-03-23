@@ -59,7 +59,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	}
 
 	// Remove all mature redelegations from the red queue.
-	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
+	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx)
 	for _, dvvTriplet := range matureRedelegations {
 		valSrcAddr, err := sdk.ValAddressFromBech32(dvvTriplet.ValidatorSrcAddress)
 		if err != nil {
@@ -110,7 +110,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate, err error) {
 	params := k.GetParams(ctx)
 	maxValidators := params.MaxValidators
-	powerReduction := k.PowerReduction(ctx)
+	powerReduction := k.PowerReduction()
 	totalPower := math.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := math.ZeroInt(), math.ZeroInt()
 
@@ -138,7 +138,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// if we get to a zero-power validator (which we don't bond),
 		// there are no more possible bonded validators
-		if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+		if validator.PotentialConsensusPower(k.PowerReduction()) == 0 {
 			break
 		}
 

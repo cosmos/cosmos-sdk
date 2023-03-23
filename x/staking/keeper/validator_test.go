@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestValidator() {
 
 	valPubKey := PKs[0]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	valTokens := keeper.TokensFromConsensusPower(10)
 
 	// test how the validator is set from a purely unbonbed pool
 	validator := testutil.NewValidator(s.T(), valAddr, valPubKey)
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestValidator() {
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
 	validator, found := keeper.GetValidator(ctx, valAddr)
 	require.True(found)
-	require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
+	require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction()), updates[0])
 
 	// after the save the validator should be bonded
 	require.Equal(stakingtypes.Bonded, validator.Status)
@@ -93,14 +93,14 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 		validators[i] = testutil.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
 		validators[i].Status = stakingtypes.Unbonded
 		validators[i].Tokens = math.ZeroInt()
-		tokens := keeper.TokensFromConsensusPower(ctx, power)
+		tokens := keeper.TokensFromConsensusPower(power)
 
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 	}
 
-	require.Equal(keeper.TokensFromConsensusPower(ctx, 9), validators[0].Tokens)
-	require.Equal(keeper.TokensFromConsensusPower(ctx, 8), validators[1].Tokens)
-	require.Equal(keeper.TokensFromConsensusPower(ctx, 7), validators[2].Tokens)
+	require.Equal(keeper.TokensFromConsensusPower(9), validators[0].Tokens)
+	require.Equal(keeper.TokensFromConsensusPower(8), validators[1].Tokens)
+	require.Equal(keeper.TokensFromConsensusPower(7), validators[2].Tokens)
 
 	// check the empty keeper first
 	_, found := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
@@ -131,11 +131,11 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	require.Equal(1, len(resVals))
 	require.True(validators[0].MinEqual(&resVals[0]))
 	require.Equal(stakingtypes.Bonded, validators[0].Status)
-	require.True(keeper.TokensFromConsensusPower(ctx, 9).Equal(validators[0].BondedTokens()))
+	require.True(keeper.TokensFromConsensusPower(9).Equal(validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
 	validators[0].Status = stakingtypes.Bonded
-	validators[0].Tokens = keeper.TokensFromConsensusPower(ctx, 10)
+	validators[0].Tokens = keeper.TokensFromConsensusPower(10)
 	validators[0].DelegatorShares = sdk.NewDecFromInt(validators[0].Tokens)
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
 	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
@@ -186,7 +186,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 
 	valPubKey := PKs[0]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-	valTokens := keeper.TokensFromConsensusPower(ctx, 100)
+	valTokens := keeper.TokensFromConsensusPower(100)
 
 	// add a validator
 	validator := testutil.NewValidator(s.T(), valAddr, PKs[0])
@@ -200,20 +200,20 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 	require.True(found)
 	require.Equal(valTokens, validator.Tokens)
 
-	power := stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx))
+	power := stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction())
 	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// burn half the delegator shares
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(math.LegacyNewDec(2)))
-	require.Equal(keeper.TokensFromConsensusPower(ctx, 50), burned)
+	require.Equal(keeper.TokensFromConsensusPower(50), burned)
 	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true) // update the validator, possibly kicking it out
 	require.False(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(found)
 
-	power = stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx))
+	power = stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction())
 	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// set new validator by power index
@@ -232,7 +232,7 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 
 	for i, power := range powers {
 		validators[i] = testutil.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
-		tokens := keeper.TokensFromConsensusPower(ctx, power)
+		tokens := keeper.TokensFromConsensusPower(power)
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 
 	}
@@ -245,26 +245,26 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 	s.applyValidatorSetUpdates(ctx, keeper, 2)
 
 	// check initial power
-	require.Equal(int64(100), validators[0].GetConsensusPower(keeper.PowerReduction(ctx)))
-	require.Equal(int64(100), validators[1].GetConsensusPower(keeper.PowerReduction(ctx)))
+	require.Equal(int64(100), validators[0].GetConsensusPower(keeper.PowerReduction()))
+	require.Equal(int64(100), validators[1].GetConsensusPower(keeper.PowerReduction()))
 
 	// test multiple value change
 	// tendermintUpdate set: {c1, c3} -> {c1', c3'}
-	delTokens1 := keeper.TokensFromConsensusPower(ctx, 20)
-	delTokens2 := keeper.TokensFromConsensusPower(ctx, 30)
+	delTokens1 := keeper.TokensFromConsensusPower(20)
+	delTokens2 := keeper.TokensFromConsensusPower(30)
 	validators[0], _ = validators[0].RemoveDelShares(sdk.NewDecFromInt(delTokens1))
 	validators[1], _ = validators[1].RemoveDelShares(sdk.NewDecFromInt(delTokens2))
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], false)
 	validators[1] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[1], false)
 
 	// power has changed
-	require.Equal(int64(80), validators[0].GetConsensusPower(keeper.PowerReduction(ctx)))
-	require.Equal(int64(70), validators[1].GetConsensusPower(keeper.PowerReduction(ctx)))
+	require.Equal(int64(80), validators[0].GetConsensusPower(keeper.PowerReduction()))
+	require.Equal(int64(70), validators[1].GetConsensusPower(keeper.PowerReduction()))
 
 	// CometBFT updates should reflect power change
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 2)
-	require.Equal(validators[0].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
-	require.Equal(validators[1].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[1])
+	require.Equal(validators[0].ABCIValidatorUpdate(keeper.PowerReduction()), updates[0])
+	require.Equal(validators[1].ABCIValidatorUpdate(keeper.PowerReduction()), updates[1])
 }
 
 func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
@@ -336,8 +336,8 @@ func (s *KeeperTestSuite) TestValidatorToken() {
 
 	valPubKey := PKs[0]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-	addTokens := keeper.TokensFromConsensusPower(ctx, 10)
-	delTokens := keeper.TokensFromConsensusPower(ctx, 5)
+	addTokens := keeper.TokensFromConsensusPower(10)
+	delTokens := keeper.TokensFromConsensusPower(5)
 
 	validator := testutil.NewValidator(s.T(), valAddr, valPubKey)
 	validator, _ = keeper.AddValidatorTokensAndShares(ctx, validator, addTokens)
@@ -362,7 +362,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	valPubKey := PKs[0]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
 	validator := testutil.NewValidator(s.T(), valAddr, valPubKey)
-	addTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	addTokens := keeper.TokensFromConsensusPower(10)
 
 	// set unbonding validator
 	endTime := time.Now()

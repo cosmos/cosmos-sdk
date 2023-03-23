@@ -95,7 +95,7 @@ func (k Keeper) TrackHistoricalInfo(ctx sdk.Context) {
 
 	// Create HistoricalInfo struct
 	lastVals := k.GetLastValidators(ctx)
-	historicalEntry := types.NewHistoricalInfo(ctx.BlockHeader(), lastVals, k.PowerReduction(ctx))
+	historicalEntry := types.NewHistoricalInfo(ctx.BlockHeader(), lastVals, k.PowerReduction())
 
 	// Set latest HistoricalInfo at current height
 	k.SetHistoricalInfo(ctx, ctx.BlockHeight(), &historicalEntry)

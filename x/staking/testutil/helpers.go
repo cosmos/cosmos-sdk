@@ -42,7 +42,7 @@ func (sh *Helper) CreateValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, st
 // CreateValidatorWithValPower calls staking module `MsgServer/CreateValidator` to create a new validator with zero
 // commission
 func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotypes.PubKey, valPower int64, ok bool) math.Int {
-	amount := sh.k.TokensFromConsensusPower(sh.Ctx, valPower)
+	amount := sh.k.TokensFromConsensusPower(valPower)
 	coin := sdk.NewCoin(sh.Denom, amount)
 	sh.createValidator(addr, pk, coin, ok)
 	return amount
@@ -85,7 +85,7 @@ func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount 
 
 // DelegateWithPower calls staking module `MsgServer/Delegate` to delegate stake for a validator
 func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress, power int64) {
-	coin := sdk.NewCoin(sh.Denom, sh.k.TokensFromConsensusPower(sh.Ctx, power))
+	coin := sdk.NewCoin(sh.Denom, sh.k.TokensFromConsensusPower(power))
 	msg := stakingtypes.NewMsgDelegate(delegator, val, coin)
 	res, err := sh.msgSrvr.Delegate(sh.Ctx, msg)
 	require.NoError(sh.t, err)

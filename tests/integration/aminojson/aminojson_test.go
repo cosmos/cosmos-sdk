@@ -685,13 +685,13 @@ func TestDecimalMutation(t *testing.T) {
 
 	// these assertions show behavior prior to the merge of https://github.com/cosmos/cosmos-sdk/pull/15506
 	// and should be updated to reflect the new behavior once a release of math is made and updated in ./tests/go.mod
-	require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
-	require.Equal(t,
-		`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
-		string(rateBz))
+	// require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	// require.Equal(t,
+	// 	`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
+	// 	string(rateBz))
 
 	// new behavior
-	//require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
 }
 
 func postFixPulsarMessage(msg proto.Message) {

@@ -526,7 +526,7 @@ func (MockCoreAppModule) ValidateGenesis(src appmodule.GenesisSource) error {
 	return nil
 }
 func (MockCoreAppModule) InitGenesis(context.Context, appmodule.GenesisSource) error { return nil }
-func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
+func (MockCoreAppModule) ExportGenesis(_ context.Context, target appmodule.GenesisTarget) error {
 	wrt, err := target("someField")
 	if err != nil {
 		return err

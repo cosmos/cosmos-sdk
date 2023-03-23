@@ -39,7 +39,7 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 
 	var ms1, ms2 runtime.MemStats
 	runtime.ReadMemStats(&ms1)
-	anyCustomUrl, err := types.NewAnyWithValue(eom)
+	anyCustomURL, err := types.NewAnyWithValue(eom)
 	runtime.ReadMemStats(&ms2)
 	// Ensure that no fresh allocation was made.
 	if diff := ms2.HeapAlloc - ms1.HeapAlloc; diff > 0 {
@@ -48,8 +48,8 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 	if err == nil {
 		t.Fatal("err wasn't returned")
 	}
-	if anyCustomUrl != nil {
-		t.Fatalf("Unexpectedly got a non-nil Any value: %v", anyCustomUrl)
+	if anyCustomURL != nil {
+		t.Fatalf("Unexpectedly got a non-nil Any value: %v", anyCustomURL)
 	}
 }
 

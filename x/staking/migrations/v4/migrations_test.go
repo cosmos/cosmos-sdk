@@ -47,7 +47,7 @@ func TestMigrate(t *testing.T) {
 	valAddr := valAddrs[0]
 
 	// creating 10 ubdEntries with same height and 10 ubdEntries with different creation height
-	err := createOldStateUnbonding(t, duplicateCreationHeight, valAddr, accAddr, cdc, store)
+	err := createOldStateUnbonding(duplicateCreationHeight, valAddr, accAddr, cdc, store)
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
@@ -97,7 +97,7 @@ func TestMigrate(t *testing.T) {
 
 // createOldStateUnbonding will create the ubd entries with duplicate heights
 // 10 duplicate heights and 10 unique ubd with creation height
-func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, store storetypes.KVStore) error {
+func createOldStateUnbonding(creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, store storetypes.KVStore) error {
 	unbondBalance := sdk.NewInt(100)
 	completionTime := time.Now()
 	ubdEntries := make([]types.UnbondingDelegationEntry, 0, 10)

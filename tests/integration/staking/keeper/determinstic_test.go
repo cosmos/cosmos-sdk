@@ -65,8 +65,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: f.stakingKeeper})
 	f.queryClient = stakingtypes.NewQueryClient(queryHelper)
 
-	f.amt1 = f.stakingKeeper.TokensFromConsensusPower(f.ctx, 101)
-	f.amt2 = f.stakingKeeper.TokensFromConsensusPower(f.ctx, 102)
+	f.amt1 = f.stakingKeeper.TokensFromConsensusPower(101)
+	f.amt2 = f.stakingKeeper.TokensFromConsensusPower(102)
 
 	return f
 }
@@ -223,7 +223,7 @@ func getStaticValidator2(f *deterministicFixture, t *testing.T) stakingtypes.Val
 
 // createDelegationAndDelegate funds the delegator account with a random delegation in range 100-1000 and delegates.
 func createDelegationAndDelegate(rt *rapid.T, f *deterministicFixture, t *testing.T, delegator sdk.AccAddress, validator stakingtypes.Validator) (newShares math.LegacyDec, err error) {
-	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, rapid.Int64Range(100, 1000).Draw(rt, "amount"))
+	amt := f.stakingKeeper.TokensFromConsensusPower(rapid.Int64Range(100, 1000).Draw(rt, "amount"))
 	return fundAccountAndDelegate(f, t, delegator, validator, amt)
 }
 

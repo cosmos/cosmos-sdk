@@ -182,7 +182,7 @@ func TestSupply(t *testing.T) {
 	assert.NilError(t, err)
 
 	initialPower := int64(100)
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, initialPower)
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(initialPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 
 	// set burnerAcc balance

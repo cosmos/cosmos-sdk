@@ -25,7 +25,7 @@ func TestStoreMigration(t *testing.T) {
 	require.False(t, paramstore.Has(ctx, types.KeyMinCommissionRate))
 
 	// Run migrations.
-	err := v3.MigrateStore(ctx, stakingKey, encCfg.Codec, paramstore)
+	err := v3.MigrateStore(ctx, encCfg.Codec, paramstore)
 	require.NoError(t, err)
 
 	// Make sure the new params are set.

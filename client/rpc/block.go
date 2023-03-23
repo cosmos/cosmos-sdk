@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -84,7 +83,7 @@ func GetBlockByHeight(clientCtx client.Context, height *int64) (*cmt.Block, erro
 		return nil, err
 	}
 
-	out := sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339))
+	out := sdk.NewResponseResultBlock(resBlock)
 	if out == nil {
 		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
 	}
@@ -112,7 +111,7 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*cmt.Block,
 		return nil, fmt.Errorf("block not found with hash: %s", hashHexString)
 	}
 
-	out := sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339))
+	out := sdk.NewResponseResultBlock(resBlock)
 	if out == nil {
 		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
 	}
@@ -124,7 +123,7 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*cmt.Block,
 func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*cmt.Block, error) {
 	out := make([]*cmt.Block, len(resBlocks))
 	for i := range resBlocks {
-		out[i] = sdk.NewResponseResultBlock(resBlocks[i], resBlocks[i].Block.Time.Format(time.RFC3339))
+		out[i] = sdk.NewResponseResultBlock(resBlocks[i])
 		if out[i] == nil {
 			return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlocks[i])
 		}

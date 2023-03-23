@@ -146,7 +146,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := stakingKeeper.TokensFromConsensusPower(ctx, 10)
+	initial := stakingKeeper.TokensFromConsensusPower(10)
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -221,7 +221,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := stakingKeeper.TokensFromConsensusPower(ctx, 10)
+	initial := stakingKeeper.TokensFromConsensusPower(10)
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -347,7 +347,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
 	balancePower := int64(1000)
-	balanceTokens := stakingKeeper.TokensFromConsensusPower(ctx, balancePower)
+	balanceTokens := stakingKeeper.TokensFromConsensusPower(balancePower)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
@@ -379,7 +379,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	val := stakingKeeper.Validator(ctx, valAddrs[0])
 
 	// allocate some rewards
-	initial := stakingKeeper.TokensFromConsensusPower(ctx, 10)
+	initial := stakingKeeper.TokensFromConsensusPower(10)
 	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
 
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
@@ -461,7 +461,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := sdk.NewDecFromInt(stakingKeeper.TokensFromConsensusPower(ctx, 10))
+	initial := sdk.NewDecFromInt(stakingKeeper.TokensFromConsensusPower(10))
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -529,7 +529,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	del1 := stakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
 	// allocate some rewards
-	initial := sdk.NewDecFromInt(stakingKeeper.TokensFromConsensusPower(ctx, 30))
+	initial := sdk.NewDecFromInt(stakingKeeper.TokensFromConsensusPower(30))
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 

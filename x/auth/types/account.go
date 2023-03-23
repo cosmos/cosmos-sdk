@@ -88,9 +88,9 @@ func (acc *BaseAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 		acc.PubKey = nil
 		return nil
 	}
-	any, err := codectypes.NewAnyWithValue(pubKey)
+	anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
 	if err == nil {
-		acc.PubKey = any
+		acc.PubKey = anyPubKey
 	}
 	return err
 }

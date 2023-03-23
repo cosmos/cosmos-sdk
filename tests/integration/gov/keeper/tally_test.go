@@ -264,7 +264,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{5, 6, 7})
 
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(30)
 	val1, found := app.StakingKeeper.GetValidator(ctx, valAddrs[0])
 	assert.Assert(t, found)
 
@@ -302,7 +302,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(30)
 	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])
 	assert.Assert(t, found)
 
@@ -339,7 +339,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(10)
 	val1, found := app.StakingKeeper.GetValidator(ctx, vals[0])
 	assert.Assert(t, found)
 	val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
@@ -424,7 +424,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{25, 6, 7})
 
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
 	assert.Assert(t, found)
 	val3, found := app.StakingKeeper.GetValidator(ctx, valAddrs[2])
@@ -469,7 +469,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
 
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
 	assert.Assert(t, found)
 
@@ -494,10 +494,10 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
 
-	expectedYes := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
-	expectedAbstain := app.StakingKeeper.TokensFromConsensusPower(ctx, 0)
-	expectedNo := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	expectedNoWithVeto := app.StakingKeeper.TokensFromConsensusPower(ctx, 0)
+	expectedYes := app.StakingKeeper.TokensFromConsensusPower(30)
+	expectedAbstain := app.StakingKeeper.TokensFromConsensusPower(0)
+	expectedNo := app.StakingKeeper.TokensFromConsensusPower(10)
+	expectedNoWithVeto := app.StakingKeeper.TokensFromConsensusPower(0)
 	expectedTallyResult := v1.NewTallyResult(expectedYes, expectedAbstain, expectedNo, expectedNoWithVeto)
 
 	assert.Assert(t, tallyResults.Equals(expectedTallyResult))

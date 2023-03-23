@@ -21,7 +21,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	addrDels := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 1, sdk.NewInt(10000))
 	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
-	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(10)
 
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)

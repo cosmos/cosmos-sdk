@@ -29,7 +29,7 @@ func bootstrapGenesisTest(t *testing.T, numAddrs int) (*simapp.SimApp, sdk.Conte
 func TestInitGenesis(t *testing.T) {
 	app, ctx, addrs := bootstrapGenesisTest(t, 10)
 
-	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(1)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	validators := app.StakingKeeper.GetAllValidators(ctx)
@@ -183,9 +183,9 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		assert.NilError(t, err)
 		validators[i].Status = types.Bonded
 
-		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
+		tokens := app.StakingKeeper.TokensFromConsensusPower(1)
 		if i < 100 {
-			tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+			tokens = app.StakingKeeper.TokensFromConsensusPower(2)
 		}
 
 		validators[i].Tokens = tokens

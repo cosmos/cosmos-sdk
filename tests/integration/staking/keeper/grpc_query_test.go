@@ -427,7 +427,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	addrAcc2 := addrs[1]
 	addrVal2 := vals[1].OperatorAddress
 
-	unbondingTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+	unbondingTokens := app.StakingKeeper.TokensFromConsensusPower(2)
 	valAddr, err1 := sdk.ValAddressFromBech32(addrVal2)
 	assert.NilError(t, err1)
 	_, _, err := app.StakingKeeper.Undelegate(ctx, addrAcc2, valAddr, sdk.NewDecFromInt(unbondingTokens))
@@ -493,7 +493,7 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal, addrVal2 := vals[0].OperatorAddress, vals[1].OperatorAddress
 
-	unbondingTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+	unbondingTokens := app.StakingKeeper.TokensFromConsensusPower(2)
 	valAddr1, err1 := sdk.ValAddressFromBech32(addrVal)
 	assert.NilError(t, err1)
 	_, _, err := app.StakingKeeper.Undelegate(ctx, addrAcc, valAddr1, sdk.NewDecFromInt(unbondingTokens))
@@ -662,12 +662,12 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	val1, val2, val3, val4 := vals[0], vals[1], valAddrs[3], valAddrs[4]
-	delAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
+	delAmount := app.StakingKeeper.TokensFromConsensusPower(1)
 	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, types.Unbonded, val1, true)
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
-	rdAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
+	rdAmount := app.StakingKeeper.TokensFromConsensusPower(1)
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
@@ -774,7 +774,7 @@ func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 	val1 := vals[0]
 
 	// undelegate
-	undelAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+	undelAmount := app.StakingKeeper.TokensFromConsensusPower(2)
 	_, _, err := app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), sdk.NewDecFromInt(undelAmount))
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)

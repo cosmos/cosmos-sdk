@@ -55,7 +55,7 @@ func initFixture(t assert.TestingT) *fixture {
 
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
 	f.slashingKeeper.SetParams(ctx, testutil.TestParams())
-	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 5, f.stakingKeeper.TokensFromConsensusPower(ctx, 200))
+	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 5, f.stakingKeeper.TokensFromConsensusPower(200))
 
 	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
@@ -87,7 +87,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	p.MaxValidators = 5
 	f.stakingKeeper.SetParams(ctx, p)
 
-	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 6, f.stakingKeeper.TokensFromConsensusPower(ctx, 200))
+	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 6, f.stakingKeeper.TokensFromConsensusPower(200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 	pks := simtestutil.CreateTestPubKeys(6)
 	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
@@ -103,7 +103,7 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
 	addr, val := valAddrs[5], pks[5]
-	amt := f.stakingKeeper.TokensFromConsensusPower(ctx, 50)
+	amt := f.stakingKeeper.TokensFromConsensusPower(50)
 	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	res, err := tstaking.CreateValidatorWithMsg(ctx, msg)
@@ -117,7 +117,7 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	// unbond below minimum self-delegation
 	assert.Equal(t, p.BondDenom, tstaking.Denom)
-	tstaking.Undelegate(sdk.AccAddress(addr), addr, f.stakingKeeper.TokensFromConsensusPower(ctx, 1), true)
+	tstaking.Undelegate(sdk.AccAddress(addr), addr, f.stakingKeeper.TokensFromConsensusPower(1), true)
 
 	staking.EndBlocker(ctx, f.stakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -151,7 +151,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	ctx := f.ctx
 
-	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 1, f.stakingKeeper.TokensFromConsensusPower(ctx, 0))
+	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 1, f.stakingKeeper.TokensFromConsensusPower(0))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
@@ -184,9 +184,9 @@ func TestHandleNewValidator(t *testing.T) {
 	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	assert.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 	bondPool := f.stakingKeeper.GetBondedPool(ctx)
-	expTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 100)
+	expTokens := f.stakingKeeper.TokensFromConsensusPower(100)
 	// adding genesis validator tokens
-	expTokens = expTokens.Add(f.stakingKeeper.TokensFromConsensusPower(ctx, 1))
+	expTokens = expTokens.Add(f.stakingKeeper.TokensFromConsensusPower(1))
 	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(ctx, bondPool.GetAddress(), f.stakingKeeper.BondDenom(ctx)).Amount))
 }
 
@@ -199,7 +199,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	// initial setup
 	ctx := f.ctx
 
-	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 1, f.stakingKeeper.TokensFromConsensusPower(ctx, 200))
+	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 1, f.stakingKeeper.TokensFromConsensusPower(200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
@@ -231,7 +231,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	assert.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
-	resultingTokens := amt.Sub(f.stakingKeeper.TokensFromConsensusPower(ctx, 1))
+	resultingTokens := amt.Sub(f.stakingKeeper.TokensFromConsensusPower(1))
 	assert.DeepEqual(t, resultingTokens, validator.GetTokens())
 
 	// another block missed
@@ -258,7 +258,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	power := int64(100)
 
 	pks := simtestutil.CreateTestPubKeys(3)
-	simtestutil.AddTestAddrsFromPubKeys(f.bankKeeper, f.stakingKeeper, ctx, pks, f.stakingKeeper.TokensFromConsensusPower(ctx, 200))
+	simtestutil.AddTestAddrsFromPubKeys(f.bankKeeper, f.stakingKeeper, ctx, pks, f.stakingKeeper.TokensFromConsensusPower(200))
 
 	addr, val := pks[0].Address(), pks[0]
 	consAddr := sdk.ConsAddress(addr)

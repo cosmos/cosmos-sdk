@@ -184,12 +184,12 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	assert.Assert(t, found)
 	// power decreased
-	assert.Equal(t, int64(5), validator.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx)))
+	assert.Equal(t, int64(5), validator.GetConsensusPower(app.StakingKeeper.PowerReduction()))
 
 	// pool bonded shares decreased
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
-	assert.DeepEqual(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 5).String(), diffTokens.String())
+	assert.DeepEqual(t, app.StakingKeeper.TokensFromConsensusPower(5).String(), diffTokens.String())
 }
 
 // tests Slash at the current height
@@ -215,12 +215,12 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	assert.Assert(t, found)
 	// power decreased
-	assert.Equal(t, int64(5), validator.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx)))
+	assert.Equal(t, int64(5), validator.GetConsensusPower(app.StakingKeeper.PowerReduction()))
 
 	// pool bonded shares decreased
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
-	assert.DeepEqual(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 5).String(), diffTokens.String())
+	assert.DeepEqual(t, app.StakingKeeper.TokensFromConsensusPower(5).String(), diffTokens.String())
 }
 
 // tests Slash at a previous height with an unbonding delegation
@@ -232,7 +232,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
-	ubdTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 4)
+	ubdTokens := app.StakingKeeper.TokensFromConsensusPower(4)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens, 0)
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 

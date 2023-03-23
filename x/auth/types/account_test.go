@@ -67,9 +67,9 @@ func TestBaseSequence(t *testing.T) {
 
 func TestBaseAccountMarshal(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
-
 	err := depinject.Inject(testutil.AppConfig, &accountKeeper)
 	require.NoError(t, err)
+
 	_, pub, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)

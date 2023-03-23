@@ -18,7 +18,6 @@ import (
 )
 
 var buildModuleQueryCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
-
 	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
 	err := b.AddQueryServiceCommands(cmd, testCmdDesc)
@@ -194,7 +193,6 @@ func TestOutputFormat(t *testing.T) {
 	)
 	fmt.Println(conn.out.String())
 	assert.Assert(t, strings.Contains(conn.out.String(), "  positional1: 1"))
-
 }
 
 func TestHelp(t *testing.T) {

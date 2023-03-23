@@ -2,9 +2,10 @@ package autocli
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/encoding/protojson"
 	"strings"
 	"testing"
+
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"gotest.tools/v3/golden"
 
@@ -127,7 +128,6 @@ func TestMsgOutputFormat(t *testing.T) {
 	)
 
 	assert.Assert(t, strings.Contains(conn.out.String(), "positional1: 5"))
-
 }
 
 func TestMsgOptionsError(t *testing.T) {
@@ -145,7 +145,6 @@ func TestMsgOptionsError(t *testing.T) {
 		"--u64", "abc",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "invalid argument "))
-
 }
 
 func TestDeprecatedMsg(t *testing.T) {
@@ -325,7 +324,6 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 		},
 	})
 	assert.ErrorContains(t, err, "can't find field un-existent-flag")
-
 }
 
 func TestEnhanceMessageCommand(t *testing.T) {
@@ -368,7 +366,6 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	customCommands = map[string]*cobra.Command{}
 	err = b.enhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
 	assert.NilError(t, err)
-
 }
 
 type testMessageServer struct {

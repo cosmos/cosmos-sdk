@@ -474,7 +474,6 @@ func TestInputOutputCoins(t *testing.T) {
 	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, balances))
 
 	insufficientInput := types.Input{
-
 		Address: addr1.String(),
 		Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
 	}

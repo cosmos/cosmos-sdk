@@ -93,13 +93,15 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			Builder: flag.Builder{
 				TypeResolver: &dynamicTypeResolver{chainInfo},
 				FileResolver: chainInfo.ProtoFiles,
+				GetClientConn: func() (grpc.ClientConnInterface, error) {
+					return chainInfo.OpenClient()
+				},
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()
 			},
 			AddQueryConnFlags: func(command *cobra.Command) {},
 		}
-
 		var (
 			update   bool
 			reconfig bool

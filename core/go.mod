@@ -5,7 +5,7 @@ go 1.19
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/math v1.0.0-rc.0
+	cosmossdk.io/math v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/grpc v1.53.0

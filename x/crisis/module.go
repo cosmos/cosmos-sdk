@@ -118,7 +118,10 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}

@@ -18,7 +18,6 @@ import (
 )
 
 var buildModuleQueryCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
-
 	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
 	err := b.AddQueryServiceCommands(cmd, testCmdDesc)
@@ -120,7 +119,7 @@ func TestEverything(t *testing.T) {
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
 		"--a-coin", `{"denom":"foo","amount":"100000"}`,
-		"--an-address", "cosmossdghdsfoi2134sdgh",
+		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",
 		"--page-key", "MTIzNTQ4N3NnaGRhcw==",
@@ -160,6 +159,7 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
+
 func TestBinaryFile(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
@@ -168,6 +168,30 @@ func TestBinaryFile(t *testing.T) {
 	)
 	lastReq := conn.lastRequest.(*testpb.EchoRequest)
 	assert.Equal(t, "this is just a test file", string(lastReq.Bz)) // shorthand got set
+}
+
+
+func TestAddressValidation(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+	)
+	assert.Equal(t, "", conn.errorOut.String())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--an-address", "regen1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+	)
+	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--an-address", "cosmps1BAD_ENCODING",
+	)
+	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
 
 }
 
@@ -185,7 +209,6 @@ func TestOutputFormat(t *testing.T) {
 	)
 	fmt.Println(conn.out.String())
 	assert.Assert(t, strings.Contains(conn.out.String(), "  positional1: 1"))
-
 }
 
 func TestHelp(t *testing.T) {

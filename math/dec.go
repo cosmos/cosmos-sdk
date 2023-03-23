@@ -799,19 +799,21 @@ func (d LegacyDec) MarshalYAML() (interface{}, error) {
 
 // Marshal implements the gogo proto custom type interface.
 func (d LegacyDec) Marshal() ([]byte, error) {
-	if d.i == nil {
-		d.i = new(big.Int)
+	i := d.i
+	if i == nil {
+		i = new(big.Int)
 	}
-	return d.i.MarshalText()
+	return i.MarshalText()
 }
 
 // MarshalTo implements the gogo proto custom type interface.
 func (d *LegacyDec) MarshalTo(data []byte) (n int, err error) {
-	if d.i == nil {
-		d.i = new(big.Int)
+	i := d.i
+	if i == nil {
+		i = new(big.Int)
 	}
 
-	if d.i.Cmp(zeroInt) == 0 {
+	if i.Cmp(zeroInt) == 0 {
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

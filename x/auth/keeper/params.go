@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // SetParams sets the auth module's parameters.
-func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) error {
+func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
 	if err := params.Validate(); err != nil {
 		return err
 	}
@@ -17,7 +18,7 @@ func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 }
 
 // GetParams gets the auth module's parameters.
-func (ak AccountKeeper) GetParams(ctx sdk.Context) (params types.Params) {
+func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	store := ak.storeSvc.OpenKVStore(ctx)
 	bz, err := store.Get(types.ParamsKey)
 	if err != nil {

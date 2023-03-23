@@ -22,14 +22,14 @@ func (c coinType) DefaultValue() string {
 	return stringCoin
 }
 
-func (c coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
+func (c *coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	if c.value == nil {
 		return protoreflect.Value{}, nil
 	}
 	return protoreflect.ValueOfMessage(c.value.ProtoReflect()), nil
 }
 
-func (c coinValue) String() string {
+func (c *coinValue) String() string {
 	return c.value.String()
 }
 
@@ -42,6 +42,6 @@ func (c *coinValue) Set(stringValue string) error {
 	return nil
 }
 
-func (c coinValue) Type() string {
+func (c *coinValue) Type() string {
 	return "cosmos.base.v1beta1.Coin"
 }

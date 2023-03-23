@@ -10,7 +10,9 @@ import (
 // MultiPair is an index that is used with collections.Pair keys. It indexes objects by their second part of the key.
 // When the value is being indexed by collections.IndexedMap then MultiPair will create a relationship between
 // the second part of the primary key and the first part.
-type MultiPair[K1, K2, Value any] collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value]
+type MultiPair[K1, K2, Value any] struct {
+	refKeys collections.KeySet[collections.Pair[K2, K1]] // refKeys has the relationships between Join(K1,K2)
+}
 
 // TODO(tip): this is an interface to cast a collections.KeyCodec
 // to a pair codec. currently we return it as a KeyCodec[Pair[K1, K2]]
@@ -31,27 +33,18 @@ func NewMultiPair[Value any, K1, K2 any](
 	pairCodec codec.KeyCodec[collections.Pair[K1, K2]],
 ) *MultiPair[K1, K2, Value] {
 	pkc := pairCodec.(pairKeyCodec[K1, K2])
-	mi := collections.NewGenericMultiIndex(
-		sb,
-		prefix,
-		name,
-		pkc.KeyCodec2(),
-		pkc.KeyCodec1(),
-		func(pk collections.Pair[K1, K2], _ Value) ([]collections.IndexReference[K2, K1], error) {
-			return []collections.IndexReference[K2, K1]{
-				collections.NewIndexReference(pk.K2(), pk.K1()),
-			}, nil
-		},
-	)
+	mi := &MultiPair[K1, K2, Value]{
+		refKeys: collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1())),
+	}
 
-	return (*MultiPair[K1, K2, Value])(mi)
+	return mi
 }
 
 // Iterate exposes the raw iterator API.
 func (i *MultiPair[K1, K2, Value]) Iterate(ctx context.Context, ranger collections.Ranger[collections.Pair[K2, K1]]) (iter MultiPairIterator[K2, K1], err error) {
-	sIter, err := (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).Iterate(ctx, ranger)
+	sIter, err := i.refKeys.Iterate(ctx, ranger)
 	if err != nil {
-		return iter, err
+		return
 	}
 	return (MultiPairIterator[K2, K1])(sIter), nil
 }
@@ -62,13 +55,13 @@ func (i *MultiPair[K1, K2, Value]) MatchExact(ctx context.Context, key K2) (Mult
 }
 
 // Reference implements collections.Index
-func (i *MultiPair[K1, K2, Value]) Reference(ctx context.Context, pk collections.Pair[K1, K2], value Value, oldValue *Value) error {
-	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).Reference(ctx, pk, value, oldValue)
+func (i *MultiPair[K1, K2, Value]) Reference(ctx context.Context, pk collections.Pair[K1, K2], _ Value, _ func() (Value, error)) error {
+	return i.refKeys.Set(ctx, collections.Join(pk.K2(), pk.K1()))
 }
 
 // Unreference implements collections.Index
-func (i *MultiPair[K1, K2, Value]) Unreference(ctx context.Context, pk collections.Pair[K1, K2], value Value) error {
-	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).Unreference(ctx, pk, value)
+func (i *MultiPair[K1, K2, Value]) Unreference(ctx context.Context, pk collections.Pair[K1, K2], _ Value) error {
+	return i.refKeys.Remove(ctx, collections.Join(pk.K2(), pk.K1()))
 }
 
 func (i *MultiPair[K1, K2, Value]) Walk(
@@ -76,7 +69,9 @@ func (i *MultiPair[K1, K2, Value]) Walk(
 	ranger collections.Ranger[collections.Pair[K2, K1]],
 	walkFunc func(indexingKey K2, indexedKey K1) bool,
 ) error {
-	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).Walk(ctx, ranger, walkFunc)
+	return i.refKeys.Walk(ctx, ranger, func(key collections.Pair[K2, K1]) bool {
+		return walkFunc(key.K1(), key.K2())
+	})
 }
 
 func (i *MultiPair[K1, K2, Value]) IterateRaw(
@@ -84,7 +79,11 @@ func (i *MultiPair[K1, K2, Value]) IterateRaw(
 ) (
 	iter collections.Iterator[collections.Pair[K2, K1], collections.NoValue], err error,
 ) {
-	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).IterateRaw(ctx, start, end, order)
+	return i.refKeys.IterateRaw(ctx, start, end, order)
+}
+
+func (i *MultiPair[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K2, K1]] {
+	return i.refKeys.KeyCodec()
 }
 
 // MultiPairIterator is a helper type around a collections.KeySetIterator when used to work

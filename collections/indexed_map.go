@@ -2,9 +2,6 @@ package collections
 
 import (
 	"context"
-	"errors"
-	"fmt"
-
 	"cosmossdk.io/collections/codec"
 )
 
@@ -21,10 +18,9 @@ type Indexes[PrimaryKey, Value any] interface {
 // Index represents an index of the Value indexed using the type PrimaryKey.
 type Index[PrimaryKey, Value any] interface {
 	// Reference creates a reference between the provided primary key and value.
-	// If oldValue is not nil then the Index must update the references
-	// of the primary key associated with the new value and remove the
-	// old invalid references.
-	Reference(ctx context.Context, pk PrimaryKey, newValue Value, oldValue *Value) error
+	// It provides a lazyOldValue function that if called will attempt to fetch
+	// the previous old value, returns ErrNotFound if no value existed.
+	Reference(ctx context.Context, pk PrimaryKey, newValue Value, lazyOldValue func() (Value, error)) error
 	// Unreference removes the reference between the primary key and value.
 	Unreference(ctx context.Context, pk PrimaryKey, value Value) error
 }
@@ -76,26 +72,10 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Has(ctx context.Context, pk Primary
 // Set maps the value using the primary key. It will also iterate every index and instruct them to
 // add or update the indexes.
 func (m *IndexedMap[PrimaryKey, Value, Idx]) Set(ctx context.Context, pk PrimaryKey, value Value) error {
-	// we need to see if there was a previous instance of the value
-	oldValue, err := m.m.Get(ctx, pk)
-	switch {
-	// update indexes
-	case err == nil:
-		err = m.ref(ctx, pk, value, &oldValue)
-		if err != nil {
-			return fmt.Errorf("collections: indexing error: %w", err)
-		}
-	// create new indexes
-	case errors.Is(err, ErrNotFound):
-		err = m.ref(ctx, pk, value, nil)
-		if err != nil {
-			return fmt.Errorf("collections: indexing error: %w", err)
-		}
-	// cannot move forward error
-	default:
+	err := m.ref(ctx, pk, value)
+	if err != nil {
 		return err
 	}
-
 	return m.m.Set(ctx, pk, value)
 }
 
@@ -134,9 +114,11 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value
 	return m.m.ValueCodec()
 }
 
-func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value, oldValue *Value) error {
+func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value) error {
 	for _, index := range m.Indexes.IndexesList() {
-		err := index.Reference(ctx, pk, value, oldValue)
+		err := index.Reference(ctx, pk, value, func() (Value, error) {
+			return m.m.Get(ctx, pk)
+		})
 		if err != nil {
 			return err
 		}

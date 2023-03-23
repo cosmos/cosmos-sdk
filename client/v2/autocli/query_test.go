@@ -167,9 +167,8 @@ func TestBinaryFile(t *testing.T) {
 		"--bz", "testdata/file.test", // no opt default value
 	)
 	lastReq := conn.lastRequest.(*testpb.EchoRequest)
-	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set
-	assert.Equal(t, int32(3), lastReq.I32)   // default value got set
-	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
+	assert.Equal(t, "this is just a test file", string(lastReq.Bz)) // shorthand got set
+
 }
 
 func TestOutputFormat(t *testing.T) {

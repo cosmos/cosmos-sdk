@@ -1,15 +1,15 @@
 package baseapp
 
 import (
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 // ParamStore defines the interface the parameter store used by the BaseApp must
 // fulfill.
 type ParamStore interface {
-	Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error)
-	Has(ctx sdk.Context) bool
-	Set(ctx sdk.Context, cp *cmtproto.ConsensusParams)
+	Get(ctx context.Context) (*cmtproto.ConsensusParams, error)
+	Has(ctx context.Context) (bool, error)
+	Set(ctx context.Context, cp *cmtproto.ConsensusParams) error
 }

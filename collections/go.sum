@@ -1,8 +1,8 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cosmossdk.io/api v0.3.1 h1:NNiOclKRR0AOlO4KIqeaG6PS6kswOMhHD0ir0SscNXE=
 cosmossdk.io/api v0.3.1/go.mod h1:DfHfMkiNA2Uhy8fj0JJlOCYOBp4eWUUJ1te5zBGNyIw=
-cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba h1:kSnaDzbwMInpQYwz8ESgvi6ceUQWcXAJdEVZW454dX0=
-cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba/go.mod h1:WiFk9ZQbFVBHk9AqQIkLFqyj30NPQB6C45CIeAZxDcw=
+cosmossdk.io/core v0.6.1 h1:OBy7TI2W+/gyn2z40vVvruK3di+cAluinA6cybFbE7s=
+cosmossdk.io/core v0.6.1/go.mod h1:g3MMBCBXtxbDWBURDVnJE7XML4BG5qENhs0gzkcpuFA=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
@@ -292,8 +292,8 @@ golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPh
 golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2/go.mod h1:T9bdIzuCu7OtxOm1hfPfRQxPLYneinmdGuTeoZ9dtd4=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
-golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2 h1:Jvc7gsqn21cJHCmAWx0LiimpP18LZmUxkT5Mp7EZ1mI=
-golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
+golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0 h1:LGJsf5LRplCck6jUCH3dBL2dmycNruWNF5xugkSlfXw=
+golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
 golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3/go.mod h1:6SW0HCj/g11FgYtHlgUYUwCkIfeOF89ocIRzGO/8vkc=

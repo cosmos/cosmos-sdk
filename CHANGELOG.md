@@ -60,7 +60,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/groups) [#14879](https://github.com/cosmos/cosmos-sdk/pull/14879) Add `Query/Groups` query to get all the groups.
 * (x/genutil,cli) [#15147](https://github.com/cosmos/cosmos-sdk/pull/15147) Add `--initial-height` flag to cli init cmd to provide `genesis.json` with user defined initial block height
 * (x/gov) [#15151](https://github.com/cosmos/cosmos-sdk/pull/15151) Add `burn_vote_quorum`, `burn_proposal_deposit_prevote` and `burn_vote_veto` params to allow applications to decide if they would like to burn deposits
-* (client/autocli) [#15451](https://github.com/cosmos/cosmos-sdk/pull/15451) Add support to reading a json file to AutoCli generated commands.
 
 
 ### Improvements

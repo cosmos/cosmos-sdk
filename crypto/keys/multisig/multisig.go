@@ -164,11 +164,11 @@ func packPubKeys(pubKeys []cryptotypes.PubKey) ([]*types.Any, error) {
 	anyPubKeys := make([]*types.Any, len(pubKeys))
 
 	for i := 0; i < len(pubKeys); i++ {
-		any, err := types.NewAnyWithValue(pubKeys[i])
+		anyPubKey, err := types.NewAnyWithValue(pubKeys[i])
 		if err != nil {
 			return nil, err
 		}
-		anyPubKeys[i] = any
+		anyPubKeys[i] = anyPubKey
 	}
 	return anyPubKeys, nil
 }

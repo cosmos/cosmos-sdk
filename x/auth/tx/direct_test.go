@@ -27,12 +27,12 @@ func TestDirectModeHandler(t *testing.T) {
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
-	any, err := codectypes.NewAnyWithValue(pubkey)
+	anyDirect, err := codectypes.NewAnyWithValue(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo
 	signerInfo = append(signerInfo, &txtypes.SignerInfo{
-		PublicKey: any,
+		PublicKey: anyDirect,
 		ModeInfo: &txtypes.ModeInfo{
 			Sum: &txtypes.ModeInfo_Single_{
 				Single: &txtypes.ModeInfo_Single{

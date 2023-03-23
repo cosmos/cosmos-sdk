@@ -89,9 +89,9 @@ func (s *Suite) TestNested() {
 	s.cdc.RegisterConcrete(&testdata.HasHasAnimal{}, "testdata/HasHasAnimal", nil)
 	s.cdc.RegisterConcrete(&testdata.HasHasHasAnimal{}, "testdata/HasHasHasAnimal", nil)
 
-	any, err := types.NewAnyWithValue(&s.b)
+	anyNested, err := types.NewAnyWithValue(&s.b)
 	s.Require().NoError(err)
-	hha := testdata.HasHasAnimal{HasAnimal: any}
+	hha := testdata.HasHasAnimal{HasAnimal: anyNested}
 	any2, err := types.NewAnyWithValue(&hha)
 	s.Require().NoError(err)
 	hhha := testdata.HasHasHasAnimal{HasHasAnimal: any2}

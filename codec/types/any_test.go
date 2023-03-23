@@ -39,7 +39,7 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 
 	var ms1, ms2 runtime.MemStats
 	runtime.ReadMemStats(&ms1)
-	any, err := types.NewAnyWithValue(eom)
+	anyCustomUrl, err := types.NewAnyWithValue(eom)
 	runtime.ReadMemStats(&ms2)
 	// Ensure that no fresh allocation was made.
 	if diff := ms2.HeapAlloc - ms1.HeapAlloc; diff > 0 {
@@ -48,8 +48,8 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 	if err == nil {
 		t.Fatal("err wasn't returned")
 	}
-	if any != nil {
-		t.Fatalf("Unexpectedly got a non-nil Any value: %v", any)
+	if anyCustomUrl != nil {
+		t.Fatalf("Unexpectedly got a non-nil Any value: %v", anyCustomUrl)
 	}
 }
 
@@ -59,14 +59,14 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		any, err := types.NewAnyWithValue(eom)
+		anyCustomURL, err := types.NewAnyWithValue(eom)
 		if err == nil {
 			b.Fatal("err wasn't returned")
 		}
-		if any != nil {
-			b.Fatalf("Unexpectedly got a non-nil Any value: %v", any)
+		if anyCustomURL != nil {
+			b.Fatalf("Unexpectedly got a non-nil Any value: %v", anyCustomURL)
 		}
-		sink = any
+		sink = anyCustomURL
 	}
 	if sink == nil {
 		b.Fatal("benchmark didn't run")

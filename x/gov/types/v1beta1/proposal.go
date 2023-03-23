@@ -25,13 +25,13 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 		return Proposal{}, fmt.Errorf("%T does not implement proto.Message", content)
 	}
 
-	any, err := codectypes.NewAnyWithValue(msg)
+	anyProposal, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return Proposal{}, err
 	}
 
 	p := Proposal{
-		Content:          any,
+		Content:          anyProposal,
 		ProposalId:       id,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),

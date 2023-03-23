@@ -293,12 +293,12 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	for i, sig := range signatures {
 		var modeInfo *tx.ModeInfo
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-		any, err := codectypes.NewAnyWithValue(sig.PubKey)
+		anySignature, err := codectypes.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return err
 		}
 		signerInfos[i] = &tx.SignerInfo{
-			PublicKey: any,
+			PublicKey: anySignature,
 			ModeInfo:  modeInfo,
 			Sequence:  sig.Sequence,
 		}

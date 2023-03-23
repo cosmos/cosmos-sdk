@@ -204,7 +204,7 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 		return nil, err
 	}
 
-	any, err := codectypes.NewAnyWithValue(res)
+	anyWrapService, err := codectypes.NewAnyWithValue(res)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 	return &Result{
 		Data:         data,
 		Events:       events,
-		MsgResponses: []*codectypes.Any{any},
+		MsgResponses: []*codectypes.Any{anyWrapService},
 	}, nil
 }
 

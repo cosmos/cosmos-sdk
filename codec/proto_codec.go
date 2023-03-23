@@ -193,7 +193,7 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}
-	any, err := types.NewAnyWithValue(i)
+	anyAnimal, err := types.NewAnyWithValue(i)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 		return nil, err
 	}
 
-	return pc.Marshal(any)
+	return pc.Marshal(anyAnimal)
 }
 
 // UnmarshalInterface is a convenience function for proto unmarshaling interfaces. It
@@ -215,24 +215,24 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 //	var x MyInterface
 //	err := cdc.UnmarshalInterface(bz, &x)
 func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
-	any := &types.Any{}
-	err := pc.Unmarshal(bz, any)
+	unmarshalAny := &types.Any{}
+	err := pc.Unmarshal(bz, unmarshalAny)
 	if err != nil {
 		return err
 	}
 
-	return pc.UnpackAny(any, ptr)
+	return pc.UnpackAny(unmarshalAny, ptr)
 }
 
 // MarshalInterfaceJSON is a convenience function for proto marshalling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) {
-	any, err := types.NewAnyWithValue(x)
+	marshalAny, err := types.NewAnyWithValue(x)
 	if err != nil {
 		return nil, err
 	}
-	return pc.MarshalJSON(any)
+	return pc.MarshalJSON(marshalAny)
 }
 
 // UnmarshalInterfaceJSON is a convenience function for proto unmarshaling interfaces.
@@ -245,12 +245,12 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) 
 //	var x MyInterface  // must implement proto.Message
 //	err := cdc.UnmarshalInterfaceJSON(&x, bz)
 func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface interface{}) error {
-	any := &types.Any{}
-	err := pc.UnmarshalJSON(bz, any)
+	marshalAny := &types.Any{}
+	err := pc.UnmarshalJSON(bz, marshalAny)
 	if err != nil {
 		return err
 	}
-	return pc.UnpackAny(any, iface)
+	return pc.UnpackAny(marshalAny, iface)
 }
 
 // UnpackAny implements AnyUnpacker.UnpackAny method,

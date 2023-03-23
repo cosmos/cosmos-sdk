@@ -30,7 +30,7 @@ func TestDirectAuxHandler(t *testing.T) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accNum, accSeq := uint64(1), uint64(2) // Arbitrary account number/sequence
 
-	any, err := codectypes.NewAnyWithValue(pubkey)
+	anyPubKey, err := codectypes.NewAnyWithValue(pubkey)
 	require.NoError(t, err)
 
 	sigData := &signingtypes.SingleSignatureData{
@@ -107,7 +107,7 @@ func TestDirectAuxHandler(t *testing.T) {
 		AccountNumber: accNum,
 		BodyBytes:     bodyBytes,
 		ChainId:       "test-chain",
-		PublicKey:     any,
+		PublicKey:     anyPubKey,
 		Sequence:      accSeq,
 		Tip:           tip,
 	}

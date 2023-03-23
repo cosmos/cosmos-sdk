@@ -24,11 +24,11 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		new, err := v3gov.MigrateJSON(&old)
+		newState, err := v3gov.MigrateJSON(&old)
 		if err != nil {
 			panic(err)
 		}
-		appState[v3gov.ModuleName] = clientCtx.Codec.MustMarshalJSON(new)
+		appState[v3gov.ModuleName] = clientCtx.Codec.MustMarshalJSON(newState)
 	}
 
 	// Migrate x/staking.

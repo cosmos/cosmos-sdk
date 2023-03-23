@@ -88,7 +88,7 @@ func testMarshalingTestCase(require *require.Assertions, tc testCase, m mustMars
 }
 
 func testMarshaling(t *testing.T, cdc codec.Codec) {
-	any, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
+	anyAnimal, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
 	require.NoError(t, err)
 
 	testCases := []testCase{
@@ -109,8 +109,8 @@ func testMarshaling(t *testing.T, cdc codec.Codec) {
 	if _, ok := cdc.(*codec.AminoCodec); ok {
 		testCases = append(testCases, testCase{
 			"any marshaling",
-			&testdata.HasAnimal{Animal: any},
-			&testdata.HasAnimal{Animal: any},
+			&testdata.HasAnimal{Animal: anyAnimal},
+			&testdata.HasAnimal{Animal: anyAnimal},
 			false,
 			false,
 		})

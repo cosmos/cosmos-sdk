@@ -124,11 +124,9 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return nil
 			}
 
-			if err = appGenesis.SaveAs(outputDocument); err != nil {
-				return err
-			}
+			err = appGenesis.SaveAs(outputDocument)
 
-			return nil
+			return err
 		},
 	}
 

@@ -135,12 +135,12 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 				return hasUnknownNonCriticals, err
 			}
 			// And finally we can extract the TypeURL containing the protoMessageName.
-			any := new(types.Any)
-			if err := proto.Unmarshal(fieldBytes, any); err != nil {
+			anyAnimal := new(types.Any)
+			if err := proto.Unmarshal(fieldBytes, anyAnimal); err != nil {
 				return hasUnknownNonCriticals, err
 			}
-			protoMessageName = any.TypeUrl
-			fieldBytes = any.Value
+			protoMessageName = anyAnimal.TypeUrl
+			fieldBytes = anyAnimal.Value
 			msg, err = resolver.Resolve(protoMessageName)
 			if err != nil {
 				return hasUnknownNonCriticals, err

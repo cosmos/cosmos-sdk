@@ -26,12 +26,12 @@ func TestTxBuilder(t *testing.T) {
 	memo := "sometestmemo" //nolint:goconst
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
-	any, err := codectypes.NewAnyWithValue(pubkey)
+	anyPubKey, err := codectypes.NewAnyWithValue(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo
 	signerInfo = append(signerInfo, &txtypes.SignerInfo{
-		PublicKey: any,
+		PublicKey: anyPubKey,
 		ModeInfo: &txtypes.ModeInfo{
 			Sum: &txtypes.ModeInfo_Single_{
 				Single: &txtypes.ModeInfo_Single{
@@ -112,12 +112,12 @@ func TestTxBuilder(t *testing.T) {
 	require.Equal(t, 1, len(pks))
 	require.True(t, pubkey.Equals(pks[0]))
 
-	any, err = codectypes.NewAnyWithValue(testdata.NewTestMsg())
+	anyPubKey, err = codectypes.NewAnyWithValue(testdata.NewTestMsg())
 	require.NoError(t, err)
-	txBuilder.SetExtensionOptions(any)
-	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetExtensionOptions())
-	txBuilder.SetNonCriticalExtensionOptions(any)
-	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetNonCriticalExtensionOptions())
+	txBuilder.SetExtensionOptions(anyPubKey)
+	require.Equal(t, []*codectypes.Any{anyPubKey}, txBuilder.GetExtensionOptions())
+	txBuilder.SetNonCriticalExtensionOptions(anyPubKey)
+	require.Equal(t, []*codectypes.Any{anyPubKey}, txBuilder.GetNonCriticalExtensionOptions())
 
 	txBuilder = &wrapper{}
 	require.NotPanics(t, func() {

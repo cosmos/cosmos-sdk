@@ -31,9 +31,9 @@ func (s *Suite) SetupTest() {
 	s.spot = &testdata.Dog{Size_: "small", Name: "Spot"}
 	s.a = TypeWithInterface{Animal: s.spot}
 
-	any, err := types.NewAnyWithValue(s.spot)
+	anyAnimal, err := types.NewAnyWithValue(s.spot)
 	s.Require().NoError(err)
-	s.b = testdata.HasAnimal{Animal: any}
+	s.b = testdata.HasAnimal{Animal: anyAnimal}
 }
 
 func (s *Suite) TestAminoBinary() {

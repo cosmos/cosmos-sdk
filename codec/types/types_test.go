@@ -19,10 +19,10 @@ func TestAnyPackUnpack(t *testing.T) {
 	var animal testdata.Animal
 
 	// with cache
-	any, err := types.NewAnyWithValue(spot)
+	anyAnimal, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
-	require.Equal(t, spot, any.GetCachedValue())
-	err = registry.UnpackAny(any, &animal)
+	require.Equal(t, spot, anyAnimal.GetCachedValue())
+	err = registry.UnpackAny(anyAnimal, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 }
@@ -92,11 +92,11 @@ func TestUnpackInterfaces(t *testing.T) {
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
-	any, err := types.NewAnyWithValue(spot)
+	anyAnimal, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
 	hasAny := testdata.HasAnimal{
-		Animal: any,
+		Animal: anyAnimal,
 		X:      1,
 	}
 	bz, err := hasAny.Marshal()
@@ -116,18 +116,18 @@ func TestNested(t *testing.T) {
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
-	any, err := types.NewAnyWithValue(spot)
+	anyAnimal, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
-	ha := &testdata.HasAnimal{Animal: any}
-	any2, err := types.NewAnyWithValue(ha)
+	ha := &testdata.HasAnimal{Animal: anyAnimal}
+	anyAnimal2, err := types.NewAnyWithValue(ha)
 	require.NoError(t, err)
 
-	hha := &testdata.HasHasAnimal{HasAnimal: any2}
-	any3, err := types.NewAnyWithValue(hha)
+	hha := &testdata.HasHasAnimal{HasAnimal: anyAnimal2}
+	anyAnimal3, err := types.NewAnyWithValue(hha)
 	require.NoError(t, err)
 
-	hhha := testdata.HasHasHasAnimal{HasHasAnimal: any3}
+	hhha := testdata.HasHasHasAnimal{HasHasAnimal: anyAnimal3}
 
 	// marshal
 	bz, err := hhha.Marshal()
@@ -145,26 +145,26 @@ func TestNested(t *testing.T) {
 
 func TestAny_ProtoJSON(t *testing.T) {
 	spot := &testdata.Dog{Name: "Spot"}
-	any, err := types.NewAnyWithValue(spot)
+	anyAnimal, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
 	jm := &jsonpb.Marshaler{}
-	json, err := jm.MarshalToString(any)
+	json, err := jm.MarshalToString(anyAnimal)
 	require.NoError(t, err)
 	require.Equal(t, "{\"@type\":\"/testpb.Dog\",\"name\":\"Spot\"}", json)
 
 	registry := testdata.NewTestInterfaceRegistry()
 	jum := &jsonpb.Unmarshaler{}
-	var any2 types.Any
-	err = jum.Unmarshal(strings.NewReader(json), &any2)
+	var anyAnimal2 types.Any
+	err = jum.Unmarshal(strings.NewReader(json), &anyAnimal2)
 	require.NoError(t, err)
 	var animal testdata.Animal
-	err = registry.UnpackAny(&any2, &animal)
+	err = registry.UnpackAny(&anyAnimal2, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 
 	ha := &testdata.HasAnimal{
-		Animal: any,
+		Animal: anyAnimal,
 	}
 	err = ha.UnpackInterfaces(types.ProtoJSONPacker{JSONPBMarshaler: jm})
 	require.NoError(t, err)

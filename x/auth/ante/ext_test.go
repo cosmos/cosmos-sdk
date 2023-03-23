@@ -42,9 +42,9 @@ func TestRejectExtensionOptionsDecorator(t *testing.T) {
 			}
 
 			// set an extension option and check
-			any, err := codectypes.NewAnyWithValue(testdata.NewTestMsg())
+			anyAnimal, err := codectypes.NewAnyWithValue(testdata.NewTestMsg())
 			require.NoError(t, err)
-			extOptsTxBldr.SetExtensionOptions(any)
+			extOptsTxBldr.SetExtensionOptions(anyAnimal)
 			theTx = txBuilder.GetTx()
 			_, err = antehandler(suite.ctx, theTx, false)
 			if tc.allow {

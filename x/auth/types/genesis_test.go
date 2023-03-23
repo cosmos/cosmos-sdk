@@ -110,9 +110,9 @@ func TestPackAccountsAny(t *testing.T) {
 				for i, a := range genAccounts {
 					msg, ok := a.(proto.Message)
 					require.Equal(t, ok, true)
-					any, err := codectypes.NewAnyWithValue(msg)
+					anyMsg, err := codectypes.NewAnyWithValue(msg)
 					require.NoError(t, err)
-					accounts[i] = any
+					accounts[i] = anyMsg
 				}
 			},
 			true,

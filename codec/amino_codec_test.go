@@ -37,7 +37,7 @@ func TestAminoCodec(t *testing.T) {
 }
 
 func TestAminoCodecMarshalJSONIndent(t *testing.T) {
-	any, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
+	anyAnimal, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -58,7 +58,7 @@ func TestAminoCodecMarshalJSONIndent(t *testing.T) {
 		},
 		{
 			name:  "any marshaling",
-			input: &testdata.HasAnimal{Animal: any},
+			input: &testdata.HasAnimal{Animal: anyAnimal},
 			wantJSON: `{
   "animal": {
     "type": "testdata/Dog",

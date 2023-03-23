@@ -158,12 +158,12 @@ func (msg MsgRevoke) GetSignBytes() []byte {
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
-		any, err := cdctypes.NewAnyWithValue(msg)
+		anyMsg, err := cdctypes.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
 
-		msgsAny[i] = any
+		msgsAny[i] = anyMsg
 	}
 
 	return MsgExec{

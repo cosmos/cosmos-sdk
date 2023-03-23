@@ -40,16 +40,16 @@ func TestAnyPackUnpack(t *testing.T) {
 	var animal Animal
 
 	// with cache
-	any, err := NewAnyWithValue(spot)
+	anyAnimal, err := NewAnyWithValue(spot)
 	require.NoError(t, err)
-	require.Equal(t, spot, any.GetCachedValue())
-	err = registry.UnpackAny(any, &animal)
+	require.Equal(t, spot, anyAnimal.GetCachedValue())
+	err = registry.UnpackAny(anyAnimal, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 
 	// without cache
-	any.cachedValue = nil
-	err = registry.UnpackAny(any, &animal)
+	anyAnimal.cachedValue = nil
+	err = registry.UnpackAny(anyAnimal, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 }
@@ -57,11 +57,11 @@ func TestAnyPackUnpack(t *testing.T) {
 func TestString(t *testing.T) {
 	require := require.New(t)
 	spot := &Dog{Name: "Spot"}
-	any, err := NewAnyWithValue(spot)
+	anyAnimal, err := NewAnyWithValue(spot)
 	require.NoError(err)
 
-	require.Equal("&Any{TypeUrl:/tests/dog,Value:[10 4 83 112 111 116],XXX_unrecognized:[]}", any.String())
+	require.Equal("&Any{TypeUrl:/tests/dog,Value:[10 4 83 112 111 116],XXX_unrecognized:[]}", anyAnimal.String())
 	require.Equal(`&Any{TypeUrl: "/tests/dog",
   Value: []byte{0xa, 0x4, 0x53, 0x70, 0x6f, 0x74}
-}`, any.GoString())
+}`, anyAnimal.GoString())
 }

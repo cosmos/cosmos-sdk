@@ -126,9 +126,7 @@ func (p Params) Validate() error {
 	if err := validateMaxMemoCharacters(p.MaxMemoCharacters); err != nil {
 		return err
 	}
-	if err := validateTxSizeCostPerByte(p.TxSizeCostPerByte); err != nil {
-		return err
-	}
+	err := validateTxSizeCostPerByte(p.TxSizeCostPerByte)
 
-	return nil
+	return err
 }

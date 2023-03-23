@@ -50,10 +50,10 @@ func TestMigration(t *testing.T) {
 			grantee1,
 			sendMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(sendAuthz)
+				anySendAuthz, err := codectypes.NewAnyWithValue(sendAuthz)
 				require.NoError(t, err)
 				return authz.Grant{
-					Authorization: any,
+					Authorization: anySendAuthz,
 					Expiration:    &oneDay,
 				}
 			},
@@ -63,10 +63,10 @@ func TestMigration(t *testing.T) {
 			grantee2,
 			sendMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(sendAuthz)
+				anySendAuthz, err := codectypes.NewAnyWithValue(sendAuthz)
 				require.NoError(t, err)
 				return authz.Grant{
-					Authorization: any,
+					Authorization: anySendAuthz,
 					Expiration:    &oneDay,
 				}
 			},
@@ -76,10 +76,10 @@ func TestMigration(t *testing.T) {
 			grantee1,
 			genericMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(genericMsgType))
+				anyGenericMsgType, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(genericMsgType))
 				require.NoError(t, err)
 				return authz.Grant{
-					Authorization: any,
+					Authorization: anyGenericMsgType,
 					Expiration:    &oneYear,
 				}
 			},
@@ -89,10 +89,10 @@ func TestMigration(t *testing.T) {
 			grantee2,
 			genericMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(genericMsgType))
+				anyGenericMsgType, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(genericMsgType))
 				require.NoError(t, err)
 				return authz.Grant{
-					Authorization: any,
+					Authorization: anyGenericMsgType,
 					Expiration:    &blockTime,
 				}
 			},

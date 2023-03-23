@@ -387,12 +387,12 @@ func TestUniqueIndex(t *testing.T) {
 	_, err = it.LoadNext(&loaded)
 	require.Error(t, errors.ErrORMIteratorDone, err)
 	// create with same index key should fail
-	new := testdata.TableModel{
+	newTable := testdata.TableModel{
 		Id:       1,
 		Name:     "my test",
 		Metadata: []byte("my-metadata"),
 	}
-	err = myTable.Create(store, &new)
+	err = myTable.Create(store, &newTable)
 	require.Error(t, errors.ErrORMUniqueConstraint, err)
 
 	// and when delete

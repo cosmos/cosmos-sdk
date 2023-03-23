@@ -362,11 +362,11 @@ func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy De
 	if !ok {
 		return sdkerrors.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
 	}
-	any, err := types.NewAnyWithValue(msg)
+	anyDecision, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return err
 	}
-	m.DecisionPolicy = any
+	m.DecisionPolicy = anyDecision
 	return nil
 }
 

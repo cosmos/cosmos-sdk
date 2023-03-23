@@ -21,11 +21,9 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	}
 
 	// migrate unbonding delegations
-	if err := migrateUBDEntries(ctx, store, cdc, legacySubspace); err != nil {
-		return err
-	}
+	err := migrateUBDEntries(ctx, store, cdc, legacySubspace)
 
-	return nil
+	return err
 }
 
 // migrateParams will set the params to store from legacySubspace

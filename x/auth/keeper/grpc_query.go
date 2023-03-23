@@ -87,12 +87,12 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
-	any, err := codectypes.NewAnyWithValue(account)
+	anyAnimal, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAccountResponse{Account: any}, nil
+	return &types.QueryAccountResponse{Account: anyAnimal}, nil
 }
 
 // Params returns parameters of auth module
@@ -128,11 +128,11 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 		if account == nil {
 			return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
 		}
-		any, err := codectypes.NewAnyWithValue(account)
+		anyAnimal, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
-		modAccounts = append(modAccounts, any)
+		modAccounts = append(modAccounts, anyAnimal)
 	}
 
 	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
@@ -155,12 +155,12 @@ func (ak AccountKeeper) ModuleAccountByName(c context.Context, req *types.QueryM
 	if account == nil {
 		return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
 	}
-	any, err := codectypes.NewAnyWithValue(account)
+	anyAnimal, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return &types.QueryModuleAccountByNameResponse{Account: any}, nil
+	return &types.QueryModuleAccountByNameResponse{Account: anyAnimal}, nil
 }
 
 // Bech32Prefix returns the keeper internally stored bech32 prefix.

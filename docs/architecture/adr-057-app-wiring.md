@@ -329,7 +329,3 @@ light of code generation. It may be better to do this type registration with a D
 * https://github.com/google/wire
 * https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container
 * https://github.com/cosmos/cosmos-sdk/pull/11802
-<<<<<<< HEAD
-=======
-* [ADR 061](./adr-061-core-module-api.md)
->>>>>>> 750d12505 (docs: remove ignite cli (#15521))

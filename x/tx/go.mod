@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
-	cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba
+	cosmossdk.io/core v0.6.1
 	cosmossdk.io/math v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/google/go-cmp v0.5.9

@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -21,6 +20,7 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -234,15 +234,7 @@ func (suite *SimTestSuite) SetupTest() {
 		appBuilder *runtime.AppBuilder
 		err        error
 	)
-	suite.app, err = simtestutil.Setup(configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.ParamsModule(),
-		configurator.BankModule(),
-		configurator.StakingModule(),
-		configurator.TxModule(),
-		configurator.ConsensusModule(),
-		configurator.DistributionModule(),
-	), &suite.accountKeeper,
+	suite.app, err = simtestutil.Setup(distrtestutil.AppConfig, &suite.accountKeeper,
 		&suite.bankKeeper,
 		&suite.cdc,
 		&appBuilder,

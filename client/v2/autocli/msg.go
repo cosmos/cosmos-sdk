@@ -73,7 +73,6 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 		// validate that methods exist
 		if m := methods.ByName(methodName); m == nil {
 			return fmt.Errorf("rpc method %q not found for service %q", methodName, service.FullName())
-
 		}
 		rpcOptMap[methodName] = option
 

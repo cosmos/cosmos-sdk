@@ -257,7 +257,7 @@ func (ps *paramStore) Has(_ sdk.Context) bool {
 	return ok
 }
 
-func (ps paramStore) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
+func (ps paramStore) Get(_ sdk.Context) (*cmtproto.ConsensusParams, error) {
 	bz, err := ps.db.Get(ParamStoreKey)
 	if err != nil {
 		panic(err)

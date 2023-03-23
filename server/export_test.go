@@ -150,13 +150,13 @@ func (e *mockExporter) SetDefaultExportApp() {
 //
 // Export panics if neither e.ExportApp nor e.Err have been set.
 func (e *mockExporter) Export(
-	logger log.Logger,
-	db dbm.DB,
-	traceWriter io.Writer,
+	_ log.Logger,
+	_ dbm.DB,
+	_ io.Writer,
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
-	opts types.AppOptions,
+	_ types.AppOptions,
 	modulesToExport []string,
 ) (types.ExportedApp, error) {
 	if e.Err == nil && isZeroExportedApp(e.ExportApp) {

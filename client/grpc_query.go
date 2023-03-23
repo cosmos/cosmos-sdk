@@ -154,19 +154,19 @@ type failingInterfaceRegistry struct{}
 // or encode a type which contains an interface field.
 var errCodecNotSet = errors.New("client: cannot encode or decode type which requires the application specific codec")
 
-func (f failingInterfaceRegistry) UnpackAny(any *types.Any, iface interface{}) error {
+func (f failingInterfaceRegistry) UnpackAny(_ *types.Any, _ interface{}) error {
 	return errCodecNotSet
 }
 
-func (f failingInterfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
+func (f failingInterfaceRegistry) Resolve(_ string) (proto.Message, error) {
 	return nil, errCodecNotSet
 }
 
-func (f failingInterfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...proto.Message) {
+func (f failingInterfaceRegistry) RegisterInterface(_ string, _ interface{}, _ ...proto.Message) {
 	panic("cannot be called")
 }
 
-func (f failingInterfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
+func (f failingInterfaceRegistry) RegisterImplementations(_ interface{}, _ ...proto.Message) {
 	panic("cannot be called")
 }
 
@@ -174,10 +174,10 @@ func (f failingInterfaceRegistry) ListAllInterfaces() []string {
 	panic("cannot be called")
 }
 
-func (f failingInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string {
+func (f failingInterfaceRegistry) ListImplementations(_ string) []string {
 	panic("cannot be called")
 }
 
-func (f failingInterfaceRegistry) EnsureRegistered(iface interface{}) error {
+func (f failingInterfaceRegistry) EnsureRegistered(_ interface{}) error {
 	panic("cannot be called")
 }

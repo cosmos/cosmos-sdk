@@ -29,19 +29,19 @@ func NewMockABCIListener(name string) MockABCIListener {
 	}
 }
 
-func (m MockABCIListener) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+func (m MockABCIListener) ListenBeginBlock(_ context.Context, _ abci.RequestBeginBlock, _ abci.ResponseBeginBlock) error {
 	return nil
 }
 
-func (m MockABCIListener) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (m MockABCIListener) ListenEndBlock(_ context.Context, _ abci.RequestEndBlock, _ abci.ResponseEndBlock) error {
 	return nil
 }
 
-func (m MockABCIListener) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+func (m MockABCIListener) ListenDeliverTx(_ context.Context, _ abci.RequestDeliverTx, _ abci.ResponseDeliverTx) error {
 	return nil
 }
 
-func (m *MockABCIListener) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
+func (m *MockABCIListener) ListenCommit(_ context.Context, _ abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	m.ChangeSet = changeSet
 	return nil
 }

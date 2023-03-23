@@ -13,13 +13,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-<<<<<<< HEAD
 DOCS_DOMAIN=docs.cosmos.network
-# RocksDB is a native dependency, so we don't assume the library is installed.
-# Instead, it must be explicitly enabled and we warn when it is not.
-ENABLE_ROCKSDB ?= false
-=======
->>>>>>> 67dc59488 (fix: Makefile rocksdb (#15422))
 
 # process build tags
 build_tags = netgo
@@ -62,19 +56,11 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 # process linker flags
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
-<<<<<<< HEAD
 		  -X github.com/cosmos/cosmos-sdk/version.AppName=simd \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-			-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TMVERSION)
-=======
-		-X github.com/cosmos/cosmos-sdk/version.AppName=simd \
-		-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-		-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-		-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
->>>>>>> 67dc59488 (fix: Makefile rocksdb (#15422))
+		  -X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TMVERSION)
 
 
 # DB backend selection

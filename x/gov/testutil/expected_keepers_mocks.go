@@ -321,10 +321,10 @@ func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gom
 }
 
 // GetAllDenomMetaData mocks base method.
-func (m *MockBankKeeper) GetAllDenomMetaData(ctx types.Context) []types0.Metadata {
+func (m *MockBankKeeper) GetAllDenomMetaData(ctx types.Context) []types1.Metadata {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllDenomMetaData", ctx)
-	ret0, _ := ret[0].([]types0.Metadata)
+	ret0, _ := ret[0].([]types1.Metadata)
 	return ret0
 }
 

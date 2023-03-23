@@ -42,11 +42,11 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		new, err := stakingv3.MigrateJSON(old)
+		newState, err := stakingv3.MigrateJSON(old)
 		if err != nil {
 			panic(err)
 		}
-		appState[stakingv3.ModuleName] = clientCtx.Codec.MustMarshalJSON(&new)
+		appState[stakingv3.ModuleName] = clientCtx.Codec.MustMarshalJSON(&newState)
 	}
 
 	return appState

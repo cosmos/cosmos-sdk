@@ -74,6 +74,7 @@ type Store struct {
 	listeners           map[types.StoreKey]*types.MemoryListener
 	metrics             metrics.StoreMetrics
 	commitHeader        cmtproto.Header
+	commitSync          bool
 }
 
 var (
@@ -99,6 +100,14 @@ func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics)
 		pruningManager:      pruning.NewManager(db, logger),
 		metrics:             metricGatherer,
 	}
+}
+
+func (rs *Store) GetCommitSync() bool {
+	return rs.commitSync
+}
+
+func (rs *Store) SetCommitSync(sync bool) {
+	rs.commitSync = sync
 }
 
 // GetPruning fetches the pruning strategy from the root store.
@@ -1012,9 +1021,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics)
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.commitSync, rs.metrics)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics)
+			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.commitSync, rs.metrics)
 		}
 
 		if err != nil {

@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	crypto "github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
@@ -215,21 +215,18 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 	encBytesBcryptXsalsa20symetric := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, keyBcrypt)
 
 	type testCase struct {
-		description   string
-		armor         string
-		expectedError string
+		description string
+		armor       string
 	}
 
 	for _, scenario := range []testCase{
 		{
-			description:   "Argon2 + Aead",
-			armor:         crypto.EncryptArmorPrivKey(privKey, "passphrase", ""),
-			expectedError: "invalid amount",
+			description: "Argon2 + Aead",
+			armor:       crypto.EncryptArmorPrivKey(privKey, "passphrase", ""),
 		},
 		{
-			description:   "Bcrypt + xsalsa20symmetric",
-			armor:         armor.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric),
-			expectedError: "invalid amount",
+			description: "Bcrypt + xsalsa20symmetric",
+			armor:       armor.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric),
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {

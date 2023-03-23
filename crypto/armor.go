@@ -32,8 +32,9 @@ const (
 )
 
 var (
-	KDFBcrypt = "bcrypt"
-	KDFArgon2 = "argon2"
+	kdf       = "kdf"
+	kdfBcrypt = "bcrypt"
+	kdfArgon2 = "argon2"
 )
 
 const (
@@ -145,7 +146,7 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
-		"kdf":  KDFArgon2,
+		kdf:    kdfArgon2,
 		"salt": fmt.Sprintf("%X", saltBytes),
 	}
 
@@ -190,8 +191,8 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 		return privKey, "", fmt.Errorf("unrecognized armor type: %v", blockType)
 	}
 
-	if header["kdf"] != KDFBcrypt && header["kdf"] != KDFArgon2 {
-		return privKey, "", fmt.Errorf("unrecognized KDF type: %v", header["kdf"])
+	if header[kdf] != kdfBcrypt && header[kdf] != kdfArgon2 {
+		return privKey, "", fmt.Errorf("unrecognized KDF type: %v", header[kdf])
 	}
 
 	if header["salt"] == "" {
@@ -203,7 +204,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 		return privKey, "", fmt.Errorf("error decoding salt: %v", err.Error())
 	}
 
-	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase, header["kdf"])
+	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase, header[kdf])
 
 	if header[headerType] == "" {
 		header[headerType] = defaultAlgo
@@ -214,24 +215,32 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf string) (privKey cryptotypes.PrivKey, err error) {
 	// Key derivation
-	var key []byte
-	var privKeyBytes []byte
+	var (
+		key          []byte
+		privKeyBytes []byte
+	)
 
 	// Since the argon2 key derivation and chacha encryption was implemented together, it is not possible to have mixed kdf and encryption algorithms
 	switch kdf {
-	case KDFArgon2:
+	case kdfArgon2:
 		key = argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
 
 		aead, err := chacha20poly1305.New(key)
-		if len(encBytes) < aead.NonceSize() {
-			return privKey, errorsmod.Wrap(err, "error generating aead cypher from key")
+		if err != nil {
+			return privKey, errorsmod.Wrap(err, "Error generating aead cypher from key.")
+		} else if len(encBytes) < aead.NonceSize() {
+			return privKey, errorsmod.Wrap(nil, "Encrypted bytes length is smaller than aead nonce size.")
 		}
+
 		nonce, privKeyBytesEncrypted := encBytes[:aead.NonceSize()], encBytes[aead.NonceSize():] // Split nonce and ciphertext.
 		privKeyBytes, err = aead.Open(nil, nonce, privKeyBytesEncrypted, nil)                    // Decrypt the message and check it wasn't tampered with.
+		if err != nil {
+			return privKey, errorsmod.Wrap(err, "Error decrypting with aead.")
+		}
 	default:
 		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 		if err != nil {
-			return privKey, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")
+			return privKey, errorsmod.Wrap(err, "Error generating bcrypt key from passphrase.")
 		}
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)

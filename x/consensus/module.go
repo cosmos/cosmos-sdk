@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	store "cosmossdk.io/store/types"
+	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -144,9 +144,9 @@ func init() {
 type ConsensusInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Cdc    codec.Codec
-	Key    *store.KVStoreKey
+	Config       *modulev1.Module
+	Cdc          codec.Codec
+	StoreService storetypes.KVStoreService
 }
 
 //nolint:revive
@@ -165,7 +165,7 @@ func ProvideModule(in ConsensusInputs) ConsensusOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String())
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(&k)

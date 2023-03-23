@@ -222,6 +222,12 @@ type CommitMultiStore interface {
 	// PopStateCache returns the accumulated state change messages from the CommitMultiStore
 	PopStateCache() []*StoreKVPair
 
+	// SetCommitSync set store commit sync mode
+	SetCommitSync(sync bool)
+
+	// GetCommitSync get store commit sync mode
+	GetCommitSync() bool
+
 	// SetMetrics sets the metrics for the KVStore
 	SetMetrics(metrics metrics.StoreMetrics)
 }

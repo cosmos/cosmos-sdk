@@ -7,11 +7,11 @@ import (
 	"cosmossdk.io/collections/codec"
 )
 
-// MultiPair is an index that is used with collections.Pair keys. It indexes objects by their second part of the key.
-// When the value is being indexed by collections.IndexedMap then MultiPair will create a relationship between
+// ReversePair is an index that is used with collections.Pair keys. It indexes objects by their second part of the key.
+// When the value is being indexed by collections.IndexedMap then ReversePair will create a relationship between
 // the second part of the primary key and the first part.
-type MultiPair[K1, K2, Value any] struct {
-	refKeys collections.KeySet[collections.Pair[K2, K1]] // refKeys has the relationships between Join(K1,K2)
+type ReversePair[K1, K2, Value any] struct {
+	refKeys collections.KeySet[collections.Pair[K2, K1]] // refKeys has the relationships between Join(K2, K1)
 }
 
 // TODO(tip): this is an interface to cast a collections.KeyCodec
@@ -23,17 +23,17 @@ type pairKeyCodec[K1, K2 any] interface {
 	KeyCodec2() codec.KeyCodec[K2]
 }
 
-// NewMultiPair instantiates a new MultiPair index.
-// NOTE: when using this function you will need to type hint: doing NewMultiPair[Value]()
-// Example: if the value of the indexed map is string, you need to do NewMultiPair[string](...)
-func NewMultiPair[Value any, K1, K2 any](
+// NewReversePair instantiates a new ReversePair index.
+// NOTE: when using this function you will need to type hint: doing NewReversePair[Value]()
+// Example: if the value of the indexed map is string, you need to do NewReversePair[string](...)
+func NewReversePair[Value any, K1, K2 any](
 	sb *collections.SchemaBuilder,
 	prefix collections.Prefix,
 	name string,
 	pairCodec codec.KeyCodec[collections.Pair[K1, K2]],
-) *MultiPair[K1, K2, Value] {
+) *ReversePair[K1, K2, Value] {
 	pkc := pairCodec.(pairKeyCodec[K1, K2])
-	mi := &MultiPair[K1, K2, Value]{
+	mi := &ReversePair[K1, K2, Value]{
 		refKeys: collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1())),
 	}
 
@@ -41,30 +41,30 @@ func NewMultiPair[Value any, K1, K2 any](
 }
 
 // Iterate exposes the raw iterator API.
-func (i *MultiPair[K1, K2, Value]) Iterate(ctx context.Context, ranger collections.Ranger[collections.Pair[K2, K1]]) (iter MultiPairIterator[K2, K1], err error) {
+func (i *ReversePair[K1, K2, Value]) Iterate(ctx context.Context, ranger collections.Ranger[collections.Pair[K2, K1]]) (iter ReversePairIterator[K2, K1], err error) {
 	sIter, err := i.refKeys.Iterate(ctx, ranger)
 	if err != nil {
 		return
 	}
-	return (MultiPairIterator[K2, K1])(sIter), nil
+	return (ReversePairIterator[K2, K1])(sIter), nil
 }
 
 // MatchExact will return an iterator containing only the primary keys starting with the provided second part of the multipart pair key.
-func (i *MultiPair[K1, K2, Value]) MatchExact(ctx context.Context, key K2) (MultiPairIterator[K2, K1], error) {
+func (i *ReversePair[K1, K2, Value]) MatchExact(ctx context.Context, key K2) (ReversePairIterator[K2, K1], error) {
 	return i.Iterate(ctx, collections.NewPrefixedPairRange[K2, K1](key))
 }
 
 // Reference implements collections.Index
-func (i *MultiPair[K1, K2, Value]) Reference(ctx context.Context, pk collections.Pair[K1, K2], _ Value, _ func() (Value, error)) error {
+func (i *ReversePair[K1, K2, Value]) Reference(ctx context.Context, pk collections.Pair[K1, K2], _ Value, _ func() (Value, error)) error {
 	return i.refKeys.Set(ctx, collections.Join(pk.K2(), pk.K1()))
 }
 
 // Unreference implements collections.Index
-func (i *MultiPair[K1, K2, Value]) Unreference(ctx context.Context, pk collections.Pair[K1, K2], _ Value) error {
+func (i *ReversePair[K1, K2, Value]) Unreference(ctx context.Context, pk collections.Pair[K1, K2], _ Value) error {
 	return i.refKeys.Remove(ctx, collections.Join(pk.K2(), pk.K1()))
 }
 
-func (i *MultiPair[K1, K2, Value]) Walk(
+func (i *ReversePair[K1, K2, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[collections.Pair[K2, K1]],
 	walkFunc func(indexingKey K2, indexedKey K1) bool,
@@ -74,7 +74,7 @@ func (i *MultiPair[K1, K2, Value]) Walk(
 	})
 }
 
-func (i *MultiPair[K1, K2, Value]) IterateRaw(
+func (i *ReversePair[K1, K2, Value]) IterateRaw(
 	ctx context.Context, start, end []byte, order collections.Order,
 ) (
 	iter collections.Iterator[collections.Pair[K2, K1], collections.NoValue], err error,
@@ -82,17 +82,17 @@ func (i *MultiPair[K1, K2, Value]) IterateRaw(
 	return i.refKeys.IterateRaw(ctx, start, end, order)
 }
 
-func (i *MultiPair[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K2, K1]] {
+func (i *ReversePair[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K2, K1]] {
 	return i.refKeys.KeyCodec()
 }
 
-// MultiPairIterator is a helper type around a collections.KeySetIterator when used to work
-// with MultiPair indexes iterations.
-type MultiPairIterator[K2, K1 any] collections.KeySetIterator[collections.Pair[K2, K1]]
+// ReversePairIterator is a helper type around a collections.KeySetIterator when used to work
+// with ReversePair indexes iterations.
+type ReversePairIterator[K2, K1 any] collections.KeySetIterator[collections.Pair[K2, K1]]
 
 // PrimaryKey returns the primary key from the index. The index is composed like a reverse
 // pair key. So we just fetch the pair key from the index and return the reverse.
-func (m MultiPairIterator[K2, K1]) PrimaryKey() (pair collections.Pair[K1, K2], err error) {
+func (m ReversePairIterator[K2, K1]) PrimaryKey() (pair collections.Pair[K1, K2], err error) {
 	reversePair, err := m.FullKey()
 	if err != nil {
 		return pair, err
@@ -102,7 +102,7 @@ func (m MultiPairIterator[K2, K1]) PrimaryKey() (pair collections.Pair[K1, K2], 
 }
 
 // PrimaryKeys returns all the primary keys contained in the iterator.
-func (m MultiPairIterator[K2, K1]) PrimaryKeys() (pairs []collections.Pair[K1, K2], err error) {
+func (m ReversePairIterator[K2, K1]) PrimaryKeys() (pairs []collections.Pair[K1, K2], err error) {
 	defer m.Close()
 	for ; m.Valid(); m.Next() {
 		pair, err := m.PrimaryKey()
@@ -114,18 +114,18 @@ func (m MultiPairIterator[K2, K1]) PrimaryKeys() (pairs []collections.Pair[K1, K
 	return pairs, err
 }
 
-func (m MultiPairIterator[K2, K1]) FullKey() (p collections.Pair[K2, K1], err error) {
+func (m ReversePairIterator[K2, K1]) FullKey() (p collections.Pair[K2, K1], err error) {
 	return (collections.KeySetIterator[collections.Pair[K2, K1]])(m).Key()
 }
 
-func (m MultiPairIterator[K2, K1]) Next() {
+func (m ReversePairIterator[K2, K1]) Next() {
 	(collections.KeySetIterator[collections.Pair[K2, K1]])(m).Next()
 }
 
-func (m MultiPairIterator[K2, K1]) Valid() bool {
+func (m ReversePairIterator[K2, K1]) Valid() bool {
 	return (collections.KeySetIterator[collections.Pair[K2, K1]])(m).Valid()
 }
 
-func (m MultiPairIterator[K2, K1]) Close() error {
+func (m ReversePairIterator[K2, K1]) Close() error {
 	return (collections.KeySetIterator[collections.Pair[K2, K1]])(m).Close()
 }

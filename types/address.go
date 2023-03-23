@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/hashicorp/golang-lru/simplelru"
 	"sigs.k8s.io/yaml"
@@ -86,8 +87,7 @@ var (
 	valAddrMu     sync.Mutex
 	valAddrCache  *simplelru.LRU
 
-	isCachingEnabled bool
-	cacheEnabledMu   sync.Mutex
+	isCachingEnabled atomic.Bool
 )
 
 // sentinel errors
@@ -97,7 +97,7 @@ var (
 
 func init() {
 	var err error
-	isCachingEnabled = true
+	SetAddrCacheEnabled(true)
 
 	// in total the cache size is 61k entries. Key is 32 bytes and value is around 50-70 bytes.
 	// That will make around 92 * 61k * 2 (LRU) bytes ~ 11 MB
@@ -114,15 +114,11 @@ func init() {
 
 // By default, caches are enabled. This enables or disables accAddrCache, consAddrCache, and valAddrCache.
 func SetAddrCacheEnabled(enabled bool) {
-	cacheEnabledMu.Lock()
-	isCachingEnabled = enabled
-	cacheEnabledMu.Unlock()
+	isCachingEnabled.Store(enabled)
 }
 
 func IsCacheEnabled() bool {
-	cacheEnabledMu.Lock()
-	defer cacheEnabledMu.Unlock()
-	return isCachingEnabled
+	return isCachingEnabled.Load()
 }
 
 // Address is a common interface for different types of addresses used by the SDK

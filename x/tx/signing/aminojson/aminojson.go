@@ -9,9 +9,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson/internal/aminojsonpb"
 )
 
 // SignModeHandler implements the SIGN_MODE_LEGACY_AMINO_JSON signing mode.
@@ -77,9 +77,9 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	}
 	isTipper := tip != nil && tip.Tipper == signerData.Address
 
-	var fee *txv1beta1.AminoSignFee
+	var fee *aminojsonpb.AminoSignFee
 	if isTipper {
-		fee = &txv1beta1.AminoSignFee{
+		fee = &aminojsonpb.AminoSignFee{
 			Amount: nil,
 			Gas:    0,
 		}
@@ -88,7 +88,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		if f == nil {
 			return nil, fmt.Errorf("fee cannot be nil when tipper is not signer")
 		}
-		fee = &txv1beta1.AminoSignFee{
+		fee = &aminojsonpb.AminoSignFee{
 			Amount:  f.Amount,
 			Gas:     f.GasLimit,
 			Payer:   f.Payer,
@@ -96,7 +96,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		}
 	}
 
-	signDoc := &txv1beta1.AminoSignDoc{
+	signDoc := &aminojsonpb.AminoSignDoc{
 		AccountNumber: signerData.AccountNumber,
 		TimeoutHeight: body.TimeoutHeight,
 		ChainId:       signerData.ChainId,

@@ -9,7 +9,7 @@ Welcome to the Cosmos SDK's team roadmap.
 
 ### Storage
  
-* [ ] [Produce a spec for the new store design](https://github.com/cosmos/cosmos-sdk/issues/12986)
+* [x] [Produce a spec for the new store design](https://github.com/cosmos/cosmos-sdk/issues/12986)
     * Research a new design for store. This could entail writing some POC's in order to identify design patterns
 * [x] Store as its own go module 
     * Store module should be its own go.mod without a dependency on the Cosmos SDK
@@ -25,7 +25,7 @@ Welcome to the Cosmos SDK's team roadmap.
 
 * [x] Release v1 of query support (auto-cli) 
     * A version of query support has been merged, documentation is missing
-* Dynamic metadata support 
+* [ ] Dynamic metadata support 
     * Dynamic support allows the Cosmos SDK to release a cmd line tool that could work with any chain. 
     * Add metadata support to latest version of Cosmos SDK and, if possible, backport to older versions
 * [x] Multi-chain command **(Done)**
@@ -44,14 +44,13 @@ Welcome to the Cosmos SDK's team roadmap.
     * Migrate 3 modules to use collections api
         *  Migrating 3 modules to use collections would help in show users how to migrate users
 * [ ] [Release ORM v1](https://github.com/cosmos/cosmos-sdk/issues/11088)
-* [ ] [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) 
+* [x] [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) 
     * Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up a audit before final release.
-* Core API
-    * [x] [Merge ADR for Core API](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-063-core-module-api.md) 
+* [ ] Core API
+    * [Merge ADR for Core API](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-063-core-module-api.md) 
     * Migrate three modules to use core api
-* [ ] Module Dependency 
-    * [x] Give three modules their own go.mods 
-    * Cleanup dependency graph (dependent on integration testing framework)
+* [x] Module Dependency 
+    * Give three modules their own go.mods 
 * [ ] [Metamask signing directly into the sdk](https://github.com/cosmos/cosmos-sdk/discussions/13892) 
 * [ ] [ADR-033 (internal message routing)](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)
     * Merge internal message router

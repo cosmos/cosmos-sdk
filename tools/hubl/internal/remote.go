@@ -95,7 +95,8 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 				FileResolver: chainInfo.ProtoFiles,
 				GetClientConn: func() (grpc.ClientConnInterface, error) {
 					return chainInfo.OpenClient()
-				}},
+				},
+			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()
 			},

@@ -141,7 +141,7 @@ type ConsensusInputs struct {
 
 	Config       *modulev1.Module
 	Cdc          codec.Codec
-	storeService storetypes.KVStoreService
+	StoreService storetypes.KVStoreService
 }
 
 //nolint:revive
@@ -160,7 +160,7 @@ func ProvideModule(in ConsensusInputs) ConsensusOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.storeService, authority.String())
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String())
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(&k)

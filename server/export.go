@@ -102,11 +102,9 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
-			if err = appGenesis.SaveAs(outputDocument); err != nil {
-				return err
-			}
+			err = appGenesis.SaveAs(outputDocument)
 
-			return nil
+			return err
 		},
 	}
 

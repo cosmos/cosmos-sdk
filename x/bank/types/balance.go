@@ -28,11 +28,9 @@ func (b Balance) Validate() error {
 		return err
 	}
 
-	if err := b.Coins.Validate(); err != nil {
-		return err
-	}
+	err := b.Coins.Validate()
 
-	return nil
+	return err
 }
 
 type balanceByAddress struct {

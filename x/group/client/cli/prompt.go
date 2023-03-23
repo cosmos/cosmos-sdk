@@ -168,9 +168,7 @@ func writeFile(fileName string, input any) error {
 		return fmt.Errorf("failed to marshal proposal: %w", err)
 	}
 
-	if err := os.WriteFile(fileName, raw, 0o600); err != nil {
-		return err
-	}
+	err = os.WriteFile(fileName, raw, 0o600)
 
-	return nil
+	return err
 }

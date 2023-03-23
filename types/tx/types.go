@@ -176,11 +176,9 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		return err
 	}
 
-	if err := unpackTxExtensionOptionsI(unpacker, m.NonCriticalExtensionOptions); err != nil {
-		return err
-	}
+	err := unpackTxExtensionOptionsI(unpacker, m.NonCriticalExtensionOptions)
 
-	return nil
+	return err
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method

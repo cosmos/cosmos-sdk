@@ -60,10 +60,8 @@ func (p Params) Validate() error {
 	if err := validateSlashFractionDoubleSign(p.SlashFractionDoubleSign); err != nil {
 		return err
 	}
-	if err := validateSlashFractionDowntime(p.SlashFractionDowntime); err != nil {
-		return err
-	}
-	return nil
+	err := validateSlashFractionDowntime(p.SlashFractionDowntime)
+	return err
 }
 
 func validateSignedBlocksWindow(i interface{}) error {

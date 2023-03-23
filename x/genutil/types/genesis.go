@@ -68,11 +68,9 @@ func (ag *AppGenesis) ValidateAndComplete() error {
 		ag.GenesisTime = cmttime.Now()
 	}
 
-	if err := ag.Consensus.ValidateAndComplete(); err != nil {
-		return err
-	}
+	err := ag.Consensus.ValidateAndComplete()
 
-	return nil
+	return err
 }
 
 // SaveAs is a utility method for saving AppGenesis as a JSON file.

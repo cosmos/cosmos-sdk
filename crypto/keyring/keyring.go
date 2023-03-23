@@ -463,11 +463,8 @@ func (ks keystore) Rename(oldName, newName string) error {
 		return err
 	}
 
-	if err := ks.ImportPrivKey(newName, armor, passPhrase); err != nil {
-		return err
-	}
-
-	return nil
+	err = ks.ImportPrivKey(newName, armor, passPhrase)
+	return err
 }
 
 // Delete deletes a key in the keyring. `uid` represents the key name, without
@@ -815,11 +812,9 @@ func (ks keystore) writeRecord(k *Record) error {
 		Data: []byte(key),
 	}
 
-	if err := ks.SetItem(item); err != nil {
-		return err
-	}
+	err = ks.SetItem(item)
 
-	return nil
+	return err
 }
 
 // existsInDb returns (true, nil) if either addr or name exist is in keystore DB.

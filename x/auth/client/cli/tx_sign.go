@@ -211,11 +211,9 @@ func sign(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Fac
 		return fmt.Errorf("error getting account from keybase: %w", err)
 	}
 
-	if err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true, true); err != nil {
-		return err
-	}
+	err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true, true)
 
-	return nil
+	return err
 }
 
 func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Factory, multisig string) error {
@@ -224,7 +222,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		return fmt.Errorf("error getting account from keybase: %w", err)
 	}
 
-	if err = authclient.SignTxWithSignerAddress(
+	err = authclient.SignTxWithSignerAddress(
 		txFactory,
 		clientCtx,
 		multisigAddr,
@@ -232,11 +230,9 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		txBuilder,
 		clientCtx.Offline,
 		true,
-	); err != nil {
-		return err
-	}
+	)
 
-	return nil
+	return err
 }
 
 func setOutputFile(cmd *cobra.Command) (func(), error) {

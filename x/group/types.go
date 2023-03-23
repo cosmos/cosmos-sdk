@@ -557,10 +557,8 @@ func (t TallyResult) GetNoWithVetoCount() (math.Dec, error) {
 }
 
 func (t *TallyResult) Add(vote Vote, weight string) error {
-	if err := t.operation(vote, weight, math.Add); err != nil {
-		return err
-	}
-	return nil
+	err := t.operation(vote, weight, math.Add)
+	return err
 }
 
 // TotalCounts is the sum of all weights.

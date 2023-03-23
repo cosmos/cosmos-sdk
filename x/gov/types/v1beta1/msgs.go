@@ -107,11 +107,9 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	if !IsValidProposalType(content.ProposalType()) {
 		return errorsmod.Wrap(types.ErrInvalidProposalType, content.ProposalType())
 	}
-	if err := content.ValidateBasic(); err != nil {
-		return err
-	}
+	err := content.ValidateBasic()
 
-	return nil
+	return err
 }
 
 // GetSignBytes returns the message bytes to sign over.

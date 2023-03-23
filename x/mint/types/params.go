@@ -73,11 +73,9 @@ func validateMintDenom(i interface{}) error {
 	if strings.TrimSpace(v) == "" {
 		return errors.New("mint denom cannot be blank")
 	}
-	if err := sdk.ValidateDenom(v); err != nil {
-		return err
-	}
+	err := sdk.ValidateDenom(v)
 
-	return nil
+	return err
 }
 
 func validateInflationRateChange(i interface{}) error {

@@ -3507,7 +3507,7 @@ func file_testpb_msg_proto_init() {
 	}
 	file_testpb_query_proto_init()
 	if !protoimpl.UnsafeEnabled {
-		file_testpb_msg_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_msg_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*MsgRequest); i {
 			case 0:
 				return &v.state
@@ -3519,7 +3519,7 @@ func file_testpb_msg_proto_init() {
 				return nil
 			}
 		}
-		file_testpb_msg_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_msg_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*MsgResponse); i {
 			case 0:
 				return &v.state

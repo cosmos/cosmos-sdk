@@ -205,7 +205,7 @@ func (c *container) getExplicitResolver(typ reflect.Type, key *moduleKey) (resol
 
 var stringType = reflect.TypeOf("")
 
-func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (interface{}, error) {
+func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (any, error) {
 	providerGraphNode := c.locationGraphNode(provider.Location, key)
 	hasModuleKeyParam := false
 	hasOwnModuleKeyParam := false
@@ -425,7 +425,7 @@ func (c *container) resolve(in providerInput, moduleKey *moduleKey, caller Locat
 	return res, nil
 }
 
-func (c *container) build(loc Location, outputs ...interface{}) error {
+func (c *container) build(loc Location, outputs ...any) error {
 	var providerIn []providerInput
 	for _, output := range outputs {
 		typ := reflect.TypeOf(output)

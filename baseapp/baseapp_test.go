@@ -438,7 +438,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	header := cmtproto.Header{Height: 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
+	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj any) error {
 		err, ok := recoveryObj.(error)
 		if !ok {
 			return nil

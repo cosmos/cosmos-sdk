@@ -33,7 +33,7 @@ type paramsV2 struct {
 	MaxRedelegationEntries uint32        `json:"max_redelegation_entries" yaml:"max_redelegation_entries"`
 }
 
-func validateUnbondingTime(i interface{}) error {
+func validateUnbondingTime(i any) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -46,7 +46,7 @@ func validateUnbondingTime(i interface{}) error {
 	return nil
 }
 
-func validateMaxValidators(i interface{}) error {
+func validateMaxValidators(i any) error {
 	_, ok := i.(uint16)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -55,7 +55,7 @@ func validateMaxValidators(i interface{}) error {
 	return nil
 }
 
-func validateBondDenom(i interface{}) error {
+func validateBondDenom(i any) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -68,7 +68,7 @@ func validateBondDenom(i interface{}) error {
 	return nil
 }
 
-func validateMaxRedelegationEntries(i interface{}) error {
+func validateMaxRedelegationEntries(i any) error {
 	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

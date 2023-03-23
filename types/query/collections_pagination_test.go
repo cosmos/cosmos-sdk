@@ -48,7 +48,7 @@ func TestCollectionPagination(t *testing.T) {
 	type test struct {
 		req        *PageRequest
 		expResp    *PageResponse
-		filter     func(key uint64, value uint64) bool
+		filter     func(key, value uint64) bool
 		expResults []collections.KeyValue[uint64, uint64]
 		wantErr    error
 	}
@@ -101,7 +101,7 @@ func TestCollectionPagination(t *testing.T) {
 			expResp: &PageResponse{
 				NextKey: encodeKey(5),
 			},
-			filter: func(key uint64, value uint64) bool {
+			filter: func(key, value uint64) bool {
 				return key%2 == 0
 			},
 			expResults: []collections.KeyValue[uint64, uint64]{
@@ -118,7 +118,7 @@ func TestCollectionPagination(t *testing.T) {
 			expResp: &PageResponse{
 				NextKey: encodeKey(7),
 			},
-			filter: func(key uint64, value uint64) bool {
+			filter: func(key, value uint64) bool {
 				return key%2 == 0
 			},
 			expResults: []collections.KeyValue[uint64, uint64]{

@@ -27,10 +27,10 @@ func (pcp *ParameterChangeProposal) GetTitle() string { return pcp.Title }
 func (pcp *ParameterChangeProposal) GetDescription() string { return pcp.Description }
 
 // ProposalRoute returns the routing key of a parameter change proposal.
-func (pcp *ParameterChangeProposal) ProposalRoute() string { return RouterKey }
+func (*ParameterChangeProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a parameter change proposal.
-func (pcp *ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
+func (*ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
 
 // ValidateBasic validates the parameter change proposal
 func (pcp *ParameterChangeProposal) ValidateBasic() error {

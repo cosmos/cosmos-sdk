@@ -14,19 +14,19 @@ package depinject
 // Inject uses the debug mode provided by AutoDebug which means there will be
 // verbose debugging information if there is an error and nothing upon success.
 // Use InjectDebug to configure debug behavior.
-func Inject(containerConfig Config, outputs ...interface{}) error {
+func Inject(containerConfig Config, outputs ...any) error {
 	loc := LocationFromCaller(1)
 	return inject(loc, AutoDebug(), containerConfig, outputs...)
 }
 
 // InjectDebug is a version of Inject which takes an optional DebugOption for
 // logging and visualization.
-func InjectDebug(debugOpt DebugOption, config Config, outputs ...interface{}) error {
+func InjectDebug(debugOpt DebugOption, config Config, outputs ...any) error {
 	loc := LocationFromCaller(1)
 	return inject(loc, debugOpt, config, outputs...)
 }
 
-func inject(loc Location, debugOpt DebugOption, config Config, outputs ...interface{}) error {
+func inject(loc Location, debugOpt DebugOption, config Config, outputs ...any) error {
 	cfg, err := newDebugConfig()
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func inject(loc Location, debugOpt DebugOption, config Config, outputs ...interf
 	return nil
 }
 
-func doInject(cfg *debugConfig, loc Location, debugOpt DebugOption, config Config, outputs ...interface{}) error {
+func doInject(cfg *debugConfig, loc Location, debugOpt DebugOption, config Config, outputs ...any) error {
 	if debugOpt != nil {
 		if err := debugOpt.applyConfig(cfg); err != nil {
 			return err

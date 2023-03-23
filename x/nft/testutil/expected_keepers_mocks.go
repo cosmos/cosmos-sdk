@@ -43,7 +43,7 @@ func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress
 }
 
 // SpendableCoins indicates an expected call of SpendableCoins.
-func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
 }
@@ -80,7 +80,7 @@ func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress)
 }
 
 // GetAccount indicates an expected call of GetAccount.
-func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
 }
@@ -94,7 +94,7 @@ func (m *MockAccountKeeper) GetModuleAddress(name string) types.AccAddress {
 }
 
 // GetModuleAddress indicates an expected call of GetModuleAddress.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddress), name)
 }

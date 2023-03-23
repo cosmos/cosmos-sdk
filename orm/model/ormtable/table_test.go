@@ -822,8 +822,8 @@ func assertTablesEqual(t assert.TestingT, table ormtable.Table, ctx, ctx2 contex
 	}
 }
 
-func protoValuesToInterfaces(ks []protoreflect.Value) []interface{} {
-	values := make([]interface{}, len(ks))
+func protoValuesToInterfaces(ks []protoreflect.Value) []any {
+	values := make([]any, len(ks))
 	for i := 0; i < len(ks); i++ {
 		values[i] = ks[i].Interface()
 	}

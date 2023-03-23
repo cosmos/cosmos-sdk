@@ -13,7 +13,7 @@ import (
 
 type interfaceMarshaler struct {
 	marshal   func(i proto.Message) ([]byte, error)
-	unmarshal func(bz []byte, ptr interface{}) error
+	unmarshal func(bz []byte, ptr any) error
 }
 
 func testInterfaceMarshaling(require *require.Assertions, cdc interfaceMarshaler, isAminoBin bool) {

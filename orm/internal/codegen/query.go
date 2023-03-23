@@ -284,7 +284,7 @@ func newWriter() *writer {
 	}
 }
 
-func (w *writer) F(format string, args ...interface{}) {
+func (w *writer) F(format string, args ...any) {
 	_, err := w.Write([]byte(w.indentStr))
 	if err != nil {
 		panic(err)

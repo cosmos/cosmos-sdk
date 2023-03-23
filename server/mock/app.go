@@ -129,13 +129,13 @@ func AppGenState(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.RawMe
     }
   ]
 }`)
-	return
+	return appState, nil
 }
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
 func AppGenStateEmpty(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.RawMessage) (appState json.RawMessage, err error) {
 	appState = json.RawMessage(``)
-	return
+	return appState, nil
 }
 
 // Manually write the handlers for this custom message
@@ -147,7 +147,7 @@ type MsgServerImpl struct {
 	capKeyMainStore *storetypes.KVStoreKey
 }
 
-func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) { //nolint:revive
+func _Msg_Test_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) { //nolint:revive
 	in := new(KVStoreTx)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{
 		Server:     srv,
 		FullMethod: "/KVStoreTx",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).Test(ctx, req.(*KVStoreTx))
 	}
 	return interceptor(ctx, in, info, handler)

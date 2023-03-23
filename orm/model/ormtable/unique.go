@@ -25,7 +25,7 @@ type uniqueKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (u uniqueKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
+func (u uniqueKeyIndex) List(ctx context.Context, prefixKey []any, options ...ormlist.Option) (Iterator, error) {
 	backend, err := u.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (u uniqueKeyIndex) List(ctx context.Context, prefixKey []interface{}, optio
 	return prefixIterator(backend.IndexStoreReader(), backend, u, u.GetKeyCodec(), prefixKey, options)
 }
 
-func (u uniqueKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+func (u uniqueKeyIndex) ListRange(ctx context.Context, from, to []any, options ...ormlist.Option) (Iterator, error) {
 	backend, err := u.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (u uniqueKeyIndex) ListRange(ctx context.Context, from, to []interface{}, o
 
 func (u uniqueKeyIndex) doNotImplement() {}
 
-func (u uniqueKeyIndex) Has(ctx context.Context, values ...interface{}) (found bool, err error) {
+func (u uniqueKeyIndex) Has(ctx context.Context, values ...any) (found bool, err error) {
 	backend, err := u.getReadBackend(ctx)
 	if err != nil {
 		return false, err
@@ -59,7 +59,7 @@ func (u uniqueKeyIndex) Has(ctx context.Context, values ...interface{}) (found b
 	return backend.IndexStoreReader().Has(key)
 }
 
-func (u uniqueKeyIndex) Get(ctx context.Context, message proto.Message, keyValues ...interface{}) (found bool, err error) {
+func (u uniqueKeyIndex) Get(ctx context.Context, message proto.Message, keyValues ...any) (found bool, err error) {
 	backend, err := u.getReadBackend(ctx)
 	if err != nil {
 		return false, err
@@ -88,7 +88,7 @@ func (u uniqueKeyIndex) Get(ctx context.Context, message proto.Message, keyValue
 	return u.primaryKey.get(backend, message, pk)
 }
 
-func (u uniqueKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
+func (u uniqueKeyIndex) DeleteBy(ctx context.Context, keyValues ...any) error {
 	it, err := u.List(ctx, keyValues)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func (u uniqueKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) 
 	return u.primaryKey.deleteByIterator(ctx, it)
 }
 
-func (u uniqueKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+func (u uniqueKeyIndex) DeleteRange(ctx context.Context, from, to []any) error {
 	it, err := u.ListRange(ctx, from, to)
 	if err != nil {
 		return err

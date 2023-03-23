@@ -69,7 +69,7 @@ func (c collValue[T, PT]) EncodeJSON(value T) ([]byte, error) {
 
 func (c collValue[T, PT]) DecodeJSON(b []byte) (value T, err error) {
 	err = c.cdc.UnmarshalJSON(b, PT(&value))
-	return
+	return value, err
 }
 
 func (c collValue[T, PT]) Stringify(value T) string {

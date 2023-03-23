@@ -621,7 +621,7 @@ func BenchmarkMarshalTo(b *testing.B) {
 	}
 }
 
-var sink interface{}
+var sink any
 
 func BenchmarkLegacyQuoMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
@@ -635,7 +635,7 @@ func BenchmarkLegacyQuoMut(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = (interface{})(nil)
+	sink = (any)(nil)
 }
 
 func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
@@ -650,7 +650,7 @@ func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = (interface{})(nil)
+	sink = (any)(nil)
 }
 
 func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
@@ -665,7 +665,7 @@ func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = (interface{})(nil)
+	sink = (any)(nil)
 }
 
 func TestFormatDec(t *testing.T) {

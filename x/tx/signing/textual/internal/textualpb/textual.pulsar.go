@@ -3624,7 +3624,7 @@ func file_textual_proto_init() {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_textual_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_textual_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*TextualData); i {
 			case 0:
 				return &v.state
@@ -3636,7 +3636,7 @@ func file_textual_proto_init() {
 				return nil
 			}
 		}
-		file_textual_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_textual_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*SignerData); i {
 			case 0:
 				return &v.state
@@ -3648,7 +3648,7 @@ func file_textual_proto_init() {
 				return nil
 			}
 		}
-		file_textual_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_textual_proto_msgTypes[2].Exporter = func(v any, i int) any {
 			switch v := v.(*Envelope); i {
 			case 0:
 				return &v.state

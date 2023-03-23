@@ -45,9 +45,9 @@ func TestNewWeightedProposalContent(t *testing.T) {
 
 type testContent struct{}
 
-func (t testContent) GetTitle() string       { return "" }
-func (t testContent) GetDescription() string { return "" }
-func (t testContent) ProposalRoute() string  { return "" }
-func (t testContent) ProposalType() string   { return "" }
-func (t testContent) ValidateBasic() error   { return nil }
-func (t testContent) String() string         { return "" }
+func (testContent) GetTitle() string       { return "" }
+func (testContent) GetDescription() string { return "" }
+func (testContent) ProposalRoute() string  { return "" }
+func (testContent) ProposalType() string   { return "" }
+func (testContent) ValidateBasic() error   { return nil }
+func (testContent) String() string         { return "" }

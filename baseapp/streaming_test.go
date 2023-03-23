@@ -29,15 +29,15 @@ func NewMockABCIListener(name string) MockABCIListener {
 	}
 }
 
-func (m MockABCIListener) ListenBeginBlock(_ context.Context, _ abci.RequestBeginBlock, _ abci.ResponseBeginBlock) error {
+func (MockABCIListener) ListenBeginBlock(_ context.Context, _ abci.RequestBeginBlock, _ abci.ResponseBeginBlock) error {
 	return nil
 }
 
-func (m MockABCIListener) ListenEndBlock(_ context.Context, _ abci.RequestEndBlock, _ abci.ResponseEndBlock) error {
+func (MockABCIListener) ListenEndBlock(_ context.Context, _ abci.RequestEndBlock, _ abci.ResponseEndBlock) error {
 	return nil
 }
 
-func (m MockABCIListener) ListenDeliverTx(_ context.Context, _ abci.RequestDeliverTx, _ abci.ResponseDeliverTx) error {
+func (MockABCIListener) ListenDeliverTx(_ context.Context, _ abci.RequestDeliverTx, _ abci.ResponseDeliverTx) error {
 	return nil
 }
 

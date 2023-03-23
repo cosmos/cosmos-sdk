@@ -60,7 +60,7 @@ func WrapError(err *Error, msg string) *Error {
 		Message:     err.rosErr.Message,
 		Description: err.rosErr.Description,
 		Retriable:   err.rosErr.Retriable,
-		Details: map[string]interface{}{
+		Details: map[string]any{
 			"info": msg,
 		},
 	}}
@@ -86,7 +86,7 @@ func fromCometToRosettaError(err *cmttypes.RPCError) *Error {
 	return &Error{rosErr: &types.Error{
 		Code:    http.StatusInternalServerError,
 		Message: err.Message,
-		Details: map[string]interface{}{
+		Details: map[string]any{
 			"info": err.Data,
 		},
 	}}

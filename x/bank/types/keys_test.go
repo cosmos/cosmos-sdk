@@ -12,11 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func cloneAppend(bz []byte, tail []byte) (res []byte) {
+func cloneAppend(bz, tail []byte) (res []byte) {
 	res = make([]byte, len(bz)+len(tail))
 	copy(res, bz)
 	copy(res[len(bz):], tail)
-	return
+	return res
 }
 
 func TestAddressFromBalancesStore(t *testing.T) {

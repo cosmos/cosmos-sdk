@@ -2389,7 +2389,7 @@ func file_testpb_test_proto_init() {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_testpb_test_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_test_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*TestRuntimeModule); i {
 			case 0:
 				return &v.state
@@ -2401,7 +2401,7 @@ func file_testpb_test_proto_init() {
 				return nil
 			}
 		}
-		file_testpb_test_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_test_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*TestModuleA); i {
 			case 0:
 				return &v.state
@@ -2413,7 +2413,7 @@ func file_testpb_test_proto_init() {
 				return nil
 			}
 		}
-		file_testpb_test_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_test_proto_msgTypes[2].Exporter = func(v any, i int) any {
 			switch v := v.(*TestModuleB); i {
 			case 0:
 				return &v.state
@@ -2425,7 +2425,7 @@ func file_testpb_test_proto_init() {
 				return nil
 			}
 		}
-		file_testpb_test_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_test_proto_msgTypes[3].Exporter = func(v any, i int) any {
 			switch v := v.(*TestUnregisteredModule); i {
 			case 0:
 				return &v.state
@@ -2437,7 +2437,7 @@ func file_testpb_test_proto_init() {
 				return nil
 			}
 		}
-		file_testpb_test_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_test_proto_msgTypes[4].Exporter = func(v any, i int) any {
 			switch v := v.(*TestNoModuleOptionModule); i {
 			case 0:
 				return &v.state
@@ -2449,7 +2449,7 @@ func file_testpb_test_proto_init() {
 				return nil
 			}
 		}
-		file_testpb_test_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_test_proto_msgTypes[5].Exporter = func(v any, i int) any {
 			switch v := v.(*TestNoGoImportModule); i {
 			case 0:
 				return &v.state

@@ -294,7 +294,7 @@ func newPrecedenceCommon(t *testing.T) precedenceCommon {
 	return retval
 }
 
-func (v precedenceCommon) setAll(t *testing.T, setFlag *string, setEnvVar *string, setConfigFile *string) {
+func (v precedenceCommon) setAll(t *testing.T, setFlag, setEnvVar, setConfigFile *string) {
 	if setFlag != nil {
 		if err := v.cmd.Flags().Set(v.flagName, *setFlag); err != nil {
 			t.Fatalf("Failed setting flag %q", v.flagName)
@@ -445,9 +445,9 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())
 }
 
-type mapGetter map[string]interface{}
+type mapGetter map[string]any
 
-func (m mapGetter) Get(key string) interface{} {
+func (m mapGetter) Get(key string) any {
 	return m[key]
 }
 

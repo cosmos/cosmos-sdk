@@ -5951,7 +5951,7 @@ func file_signers_proto_init() {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_signers_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*SimpleSigner); i {
 			case 0:
 				return &v.state
@@ -5963,7 +5963,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*RepeatedSigner); i {
 			case 0:
 				return &v.state
@@ -5975,7 +5975,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[2].Exporter = func(v any, i int) any {
 			switch v := v.(*NestedSigner); i {
 			case 0:
 				return &v.state
@@ -5987,7 +5987,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[3].Exporter = func(v any, i int) any {
 			switch v := v.(*RepeatedNestedSigner); i {
 			case 0:
 				return &v.state
@@ -5999,7 +5999,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[4].Exporter = func(v any, i int) any {
 			switch v := v.(*NestedRepeatedSigner); i {
 			case 0:
 				return &v.state
@@ -6011,7 +6011,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[5].Exporter = func(v any, i int) any {
 			switch v := v.(*RepeatedNestedRepeatedSigner); i {
 			case 0:
 				return &v.state
@@ -6023,7 +6023,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[6].Exporter = func(v any, i int) any {
 			switch v := v.(*BadSigner); i {
 			case 0:
 				return &v.state
@@ -6035,7 +6035,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[7].Exporter = func(v any, i int) any {
 			switch v := v.(*NoSignerOption); i {
 			case 0:
 				return &v.state
@@ -6047,7 +6047,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[8].Exporter = func(v any, i int) any {
 			switch v := v.(*NestedSigner_Inner); i {
 			case 0:
 				return &v.state
@@ -6059,7 +6059,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[9].Exporter = func(v any, i int) any {
 			switch v := v.(*RepeatedNestedSigner_Inner); i {
 			case 0:
 				return &v.state
@@ -6071,7 +6071,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[10].Exporter = func(v any, i int) any {
 			switch v := v.(*NestedRepeatedSigner_Inner); i {
 			case 0:
 				return &v.state
@@ -6083,7 +6083,7 @@ func file_signers_proto_init() {
 				return nil
 			}
 		}
-		file_signers_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_signers_proto_msgTypes[11].Exporter = func(v any, i int) any {
 			switch v := v.(*RepeatedNestedRepeatedSigner_Inner); i {
 			case 0:
 				return &v.state

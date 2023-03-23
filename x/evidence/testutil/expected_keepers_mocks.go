@@ -46,7 +46,7 @@ func (m *MockStakingKeeper) GetParams(ctx types0.Context) types1.Params {
 }
 
 // GetParams indicates an expected call of GetParams.
-func (mr *MockStakingKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) GetParams(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockStakingKeeper)(nil).GetParams), ctx)
 }
@@ -60,7 +60,7 @@ func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types0.Context, arg1 types0
 }
 
 // ValidatorByConsAddr indicates an expected call of ValidatorByConsAddr.
-func (mr *MockStakingKeeperMockRecorder) ValidatorByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) ValidatorByConsAddr(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorByConsAddr", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorByConsAddr), arg0, arg1)
 }
@@ -98,7 +98,7 @@ func (m *MockSlashingKeeper) GetPubkey(arg0 types0.Context, arg1 types.Address) 
 }
 
 // GetPubkey indicates an expected call of GetPubkey.
-func (mr *MockSlashingKeeperMockRecorder) GetPubkey(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) GetPubkey(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPubkey", reflect.TypeOf((*MockSlashingKeeper)(nil).GetPubkey), arg0, arg1)
 }
@@ -112,7 +112,7 @@ func (m *MockSlashingKeeper) HasValidatorSigningInfo(arg0 types0.Context, arg1 t
 }
 
 // HasValidatorSigningInfo indicates an expected call of HasValidatorSigningInfo.
-func (mr *MockSlashingKeeperMockRecorder) HasValidatorSigningInfo(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) HasValidatorSigningInfo(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasValidatorSigningInfo", reflect.TypeOf((*MockSlashingKeeper)(nil).HasValidatorSigningInfo), arg0, arg1)
 }
@@ -126,7 +126,7 @@ func (m *MockSlashingKeeper) IsTombstoned(arg0 types0.Context, arg1 types0.ConsA
 }
 
 // IsTombstoned indicates an expected call of IsTombstoned.
-func (mr *MockSlashingKeeperMockRecorder) IsTombstoned(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) IsTombstoned(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTombstoned", reflect.TypeOf((*MockSlashingKeeper)(nil).IsTombstoned), arg0, arg1)
 }
@@ -138,7 +138,7 @@ func (m *MockSlashingKeeper) Jail(arg0 types0.Context, arg1 types0.ConsAddress) 
 }
 
 // Jail indicates an expected call of Jail.
-func (mr *MockSlashingKeeperMockRecorder) Jail(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) Jail(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Jail", reflect.TypeOf((*MockSlashingKeeper)(nil).Jail), arg0, arg1)
 }
@@ -150,7 +150,7 @@ func (m *MockSlashingKeeper) JailUntil(arg0 types0.Context, arg1 types0.ConsAddr
 }
 
 // JailUntil indicates an expected call of JailUntil.
-func (mr *MockSlashingKeeperMockRecorder) JailUntil(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) JailUntil(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JailUntil", reflect.TypeOf((*MockSlashingKeeper)(nil).JailUntil), arg0, arg1, arg2)
 }
@@ -162,7 +162,7 @@ func (m *MockSlashingKeeper) Slash(arg0 types0.Context, arg1 types0.ConsAddress,
 }
 
 // Slash indicates an expected call of Slash.
-func (mr *MockSlashingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockSlashingKeeper)(nil).Slash), arg0, arg1, arg2, arg3, arg4)
 }
@@ -176,7 +176,7 @@ func (m *MockSlashingKeeper) SlashFractionDoubleSign(arg0 types0.Context) types0
 }
 
 // SlashFractionDoubleSign indicates an expected call of SlashFractionDoubleSign.
-func (mr *MockSlashingKeeperMockRecorder) SlashFractionDoubleSign(arg0 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) SlashFractionDoubleSign(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SlashFractionDoubleSign", reflect.TypeOf((*MockSlashingKeeper)(nil).SlashFractionDoubleSign), arg0)
 }
@@ -188,7 +188,7 @@ func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 types0.Context, arg1
 }
 
 // SlashWithInfractionReason indicates an expected call of SlashWithInfractionReason.
-func (mr *MockSlashingKeeperMockRecorder) SlashWithInfractionReason(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) SlashWithInfractionReason(arg0, arg1, arg2, arg3, arg4, arg5 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SlashWithInfractionReason", reflect.TypeOf((*MockSlashingKeeper)(nil).SlashWithInfractionReason), arg0, arg1, arg2, arg3, arg4, arg5)
 }
@@ -200,7 +200,7 @@ func (m *MockSlashingKeeper) Tombstone(arg0 types0.Context, arg1 types0.ConsAddr
 }
 
 // Tombstone indicates an expected call of Tombstone.
-func (mr *MockSlashingKeeperMockRecorder) Tombstone(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) Tombstone(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Tombstone", reflect.TypeOf((*MockSlashingKeeper)(nil).Tombstone), arg0, arg1)
 }
@@ -235,7 +235,7 @@ func (m *MockAccountKeeper) SetAccount(ctx types0.Context, acc types0.AccountI) 
 }
 
 // SetAccount indicates an expected call of SetAccount.
-func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), ctx, acc)
 }
@@ -272,7 +272,7 @@ func (m *MockBankKeeper) GetAllBalances(ctx types0.Context, addr types0.AccAddre
 }
 
 // GetAllBalances indicates an expected call of GetAllBalances.
-func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
 }
@@ -286,7 +286,7 @@ func (m *MockBankKeeper) MintCoins(ctx types0.Context, moduleName string, amt ty
 }
 
 // MintCoins indicates an expected call of MintCoins.
-func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, moduleName, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, moduleName, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MintCoins", reflect.TypeOf((*MockBankKeeper)(nil).MintCoins), ctx, moduleName, amt)
 }
@@ -300,7 +300,7 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types0.Context, sender
 }
 
 // SendCoinsFromModuleToAccount indicates an expected call of SendCoinsFromModuleToAccount.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }

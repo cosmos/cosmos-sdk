@@ -37,7 +37,7 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 // IsSendEnabledCoins mocks base method.
 func (m *MockBankKeeper) IsSendEnabledCoins(ctx types.Context, coins ...types.Coin) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx}
+	varargs := []any{ctx}
 	for _, a := range coins {
 		varargs = append(varargs, a)
 	}
@@ -47,9 +47,9 @@ func (m *MockBankKeeper) IsSendEnabledCoins(ctx types.Context, coins ...types.Co
 }
 
 // IsSendEnabledCoins indicates an expected call of IsSendEnabledCoins.
-func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoins(ctx interface{}, coins ...interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoins(ctx any, coins ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx}, coins...)
+	varargs := append([]any{ctx}, coins...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSendEnabledCoins", reflect.TypeOf((*MockBankKeeper)(nil).IsSendEnabledCoins), varargs...)
 }
 
@@ -62,7 +62,7 @@ func (m *MockBankKeeper) SendCoins(ctx types.Context, from, to types.AccAddress,
 }
 
 // SendCoins indicates an expected call of SendCoins.
-func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, from, to, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, from, to, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoins", reflect.TypeOf((*MockBankKeeper)(nil).SendCoins), ctx, from, to, amt)
 }
@@ -76,7 +76,7 @@ func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx types.Context, senderA
 }
 
 // SendCoinsFromAccountToModule indicates an expected call of SendCoinsFromAccountToModule.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAddr, recipientModule, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAddr, recipientModule, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromAccountToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromAccountToModule), ctx, senderAddr, recipientModule, amt)
 }

@@ -15,11 +15,11 @@ func Eq(message proto.Message) gomock.Matcher {
 }
 
 type protoEq struct {
-	message interface{}
+	message any
 	diff    string
 }
 
-func (p protoEq) Matches(x interface{}) bool {
+func (p protoEq) Matches(x any) bool {
 	p.diff = cmp.Diff(x, p.message, protocmp.Transform())
 	return len(p.diff) == 0
 }

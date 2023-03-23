@@ -45,7 +45,7 @@ func (m *MockBankKeeper) DenomMetadata(c context.Context, req *types.QueryDenomM
 }
 
 // DenomMetadata indicates an expected call of DenomMetadata.
-func (mr *MockBankKeeperMockRecorder) DenomMetadata(c, req interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) DenomMetadata(c, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadata", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadata), c, req)
 }

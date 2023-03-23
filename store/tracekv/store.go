@@ -36,10 +36,10 @@ type (
 
 	// traceOperation implements a traced KVStore operation
 	traceOperation struct {
-		Operation operation              `json:"operation"`
-		Key       string                 `json:"key"`
-		Value     string                 `json:"value"`
-		Metadata  map[string]interface{} `json:"metadata"`
+		Operation operation      `json:"operation"`
+		Key       string         `json:"key"`
+		Value     string         `json:"value"`
+		Metadata  map[string]any `json:"metadata"`
 	}
 )
 

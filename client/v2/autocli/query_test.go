@@ -294,13 +294,13 @@ func TestNotFoundErrors(t *testing.T) {
 type testClientConn struct {
 	*grpc.ClientConn
 	t            *testing.T
-	lastRequest  interface{}
-	lastResponse interface{}
+	lastRequest  any
+	lastResponse any
 	out          *bytes.Buffer
 	errorOut     *bytes.Buffer
 }
 
-func (t *testClientConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (t *testClientConn) Invoke(ctx context.Context, method string, args any, reply any, opts ...grpc.CallOption) error {
 	err := t.ClientConn.Invoke(ctx, method, args, reply, opts...)
 	t.lastRequest = args
 	t.lastResponse = reply

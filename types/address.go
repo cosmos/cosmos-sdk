@@ -229,7 +229,7 @@ func (aa AccAddress) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalYAML marshals to YAML using Bech32.
-func (aa AccAddress) MarshalYAML() (interface{}, error) {
+func (aa AccAddress) MarshalYAML() (any, error) {
 	return aa.String(), nil
 }
 
@@ -377,7 +377,7 @@ func (va ValAddress) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalYAML marshals to YAML using Bech32.
-func (va ValAddress) MarshalYAML() (interface{}, error) {
+func (va ValAddress) MarshalYAML() (any, error) {
 	return va.String(), nil
 }
 
@@ -532,7 +532,7 @@ func (ca ConsAddress) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalYAML marshals to YAML using Bech32.
-func (ca ConsAddress) MarshalYAML() (interface{}, error) {
+func (ca ConsAddress) MarshalYAML() (any, error) {
 	return ca.String(), nil
 }
 

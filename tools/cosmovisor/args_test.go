@@ -708,7 +708,7 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 	}
 }
 
-var sink interface{}
+var sink any
 
 func BenchmarkDetailString(b *testing.B) {
 	cfg := &Config{
@@ -731,5 +731,5 @@ func BenchmarkDetailString(b *testing.B) {
 	}
 
 	// Otherwise reset the sink.
-	sink = (interface{})(nil)
+	sink = (any)(nil)
 }

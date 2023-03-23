@@ -96,7 +96,7 @@ func depsFromBuildInfo() (deps []buildDep) {
 		deps = append(deps, buildDep{dep})
 	}
 
-	return
+	return deps
 }
 
 type buildDep struct {
@@ -111,5 +111,5 @@ func (d buildDep) String() string {
 	return fmt.Sprintf("%s@%s", d.Path, d.Version)
 }
 
-func (d buildDep) MarshalJSON() ([]byte, error)      { return json.Marshal(d.String()) }
-func (d buildDep) MarshalYAML() (interface{}, error) { return d.String(), nil }
+func (d buildDep) MarshalJSON() ([]byte, error) { return json.Marshal(d.String()) }
+func (d buildDep) MarshalYAML() (any, error)    { return d.String(), nil }

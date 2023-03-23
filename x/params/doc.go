@@ -29,7 +29,7 @@ Basic Usage:
 		bool my_param2 = 2;
 	}
 
-	func validateMyParam1(i interface{}) error {
+	func validateMyParam1(i any) error {
 		_, ok := i.(int64)
 		if !ok {
 			return fmt.Errorf("invalid parameter type: %T", i)
@@ -40,7 +40,7 @@ Basic Usage:
 		return nil
 	}
 
-	func validateMyParam2(i interface{}) error {
+	func validateMyParam2(i any) error {
 		_, ok := i.(bool)
 		if !ok {
 			return fmt.Errorf("invalid parameter type: %T", i)

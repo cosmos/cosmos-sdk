@@ -793,7 +793,7 @@ func (d *LegacyDec) UnmarshalJSON(bz []byte) error {
 }
 
 // MarshalYAML returns the YAML representation.
-func (d LegacyDec) MarshalYAML() (interface{}, error) {
+func (d LegacyDec) MarshalYAML() (any, error) {
 	return d.String(), nil
 }
 

@@ -124,7 +124,7 @@ func (m *MockAccountRetriever) EnsureExists(clientCtx client.Context, addr types
 }
 
 // EnsureExists indicates an expected call of EnsureExists.
-func (mr *MockAccountRetrieverMockRecorder) EnsureExists(clientCtx, addr interface{}) *gomock.Call {
+func (mr *MockAccountRetrieverMockRecorder) EnsureExists(clientCtx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureExists", reflect.TypeOf((*MockAccountRetriever)(nil).EnsureExists), clientCtx, addr)
 }
@@ -139,7 +139,7 @@ func (m *MockAccountRetriever) GetAccount(clientCtx client.Context, addr types0.
 }
 
 // GetAccount indicates an expected call of GetAccount.
-func (mr *MockAccountRetrieverMockRecorder) GetAccount(clientCtx, addr interface{}) *gomock.Call {
+func (mr *MockAccountRetrieverMockRecorder) GetAccount(clientCtx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountRetriever)(nil).GetAccount), clientCtx, addr)
 }
@@ -155,7 +155,7 @@ func (m *MockAccountRetriever) GetAccountNumberSequence(clientCtx client.Context
 }
 
 // GetAccountNumberSequence indicates an expected call of GetAccountNumberSequence.
-func (mr *MockAccountRetrieverMockRecorder) GetAccountNumberSequence(clientCtx, addr interface{}) *gomock.Call {
+func (mr *MockAccountRetrieverMockRecorder) GetAccountNumberSequence(clientCtx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountNumberSequence", reflect.TypeOf((*MockAccountRetriever)(nil).GetAccountNumberSequence), clientCtx, addr)
 }
@@ -171,7 +171,7 @@ func (m *MockAccountRetriever) GetAccountWithHeight(clientCtx client.Context, ad
 }
 
 // GetAccountWithHeight indicates an expected call of GetAccountWithHeight.
-func (mr *MockAccountRetrieverMockRecorder) GetAccountWithHeight(clientCtx, addr interface{}) *gomock.Call {
+func (mr *MockAccountRetrieverMockRecorder) GetAccountWithHeight(clientCtx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountWithHeight", reflect.TypeOf((*MockAccountRetriever)(nil).GetAccountWithHeight), clientCtx, addr)
 }

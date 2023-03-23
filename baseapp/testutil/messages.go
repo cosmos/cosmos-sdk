@@ -26,7 +26,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 var _ sdk.Msg = &MsgCounter{}
 
-func (msg *MsgCounter) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{} }
+func (*MsgCounter) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{} }
 func (msg *MsgCounter) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
@@ -36,7 +36,7 @@ func (msg *MsgCounter) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCounter2{}
 
-func (msg *MsgCounter2) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{} }
+func (*MsgCounter2) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{} }
 func (msg *MsgCounter2) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil

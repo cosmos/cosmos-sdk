@@ -40,6 +40,6 @@ func (p *ListenerGRPCPlugin) GRPCClient(
 	_ context.Context,
 	_ *plugin.GRPCBroker,
 	c *grpc.ClientConn,
-) (interface{}, error) {
+) (any, error) {
 	return &GRPCClient{client: NewABCIListenerServiceClient(c)}, nil
 }

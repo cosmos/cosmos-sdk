@@ -60,9 +60,9 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{keeper.GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
 	s.Require().NoError(err)
 
-	groupMemberByGroupIndex, err := orm.NewIndex(groupMemberTable, keeper.GroupMemberByGroupIndexPrefix, func(val interface{}) ([]interface{}, error) {
+	groupMemberByGroupIndex, err := orm.NewIndex(groupMemberTable, keeper.GroupMemberByGroupIndexPrefix, func(val any) ([]any, error) {
 		group := val.(*group.GroupMember).GroupId
-		return []interface{}{group}, nil
+		return []any{group}, nil
 	}, group.GroupMember{}.GroupId)
 	s.Require().NoError(err)
 

@@ -44,7 +44,7 @@ func (m *MockStakingKeeper) BondedRatio(ctx types.Context) types.Dec {
 }
 
 // BondedRatio indicates an expected call of BondedRatio.
-func (mr *MockStakingKeeperMockRecorder) BondedRatio(ctx interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) BondedRatio(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedRatio", reflect.TypeOf((*MockStakingKeeper)(nil).BondedRatio), ctx)
 }
@@ -58,7 +58,7 @@ func (m *MockStakingKeeper) StakingTokenSupply(ctx types.Context) math.Int {
 }
 
 // StakingTokenSupply indicates an expected call of StakingTokenSupply.
-func (mr *MockStakingKeeperMockRecorder) StakingTokenSupply(ctx interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) StakingTokenSupply(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StakingTokenSupply", reflect.TypeOf((*MockStakingKeeper)(nil).StakingTokenSupply), ctx)
 }
@@ -95,7 +95,7 @@ func (m *MockAccountKeeper) GetModuleAccount(ctx types.Context, moduleName strin
 }
 
 // GetModuleAccount indicates an expected call of GetModuleAccount.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, moduleName interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, moduleName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAccount), ctx, moduleName)
 }
@@ -109,7 +109,7 @@ func (m *MockAccountKeeper) GetModuleAddress(name string) types.AccAddress {
 }
 
 // GetModuleAddress indicates an expected call of GetModuleAddress.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddress), name)
 }
@@ -121,7 +121,7 @@ func (m *MockAccountKeeper) SetModuleAccount(arg0 types.Context, arg1 types.Modu
 }
 
 // SetModuleAccount indicates an expected call of SetModuleAccount.
-func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetModuleAccount), arg0, arg1)
 }
@@ -158,7 +158,7 @@ func (m *MockBankKeeper) MintCoins(ctx types.Context, name string, amt types.Coi
 }
 
 // MintCoins indicates an expected call of MintCoins.
-func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, name, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, name, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MintCoins", reflect.TypeOf((*MockBankKeeper)(nil).MintCoins), ctx, name, amt)
 }
@@ -172,7 +172,7 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderM
 }
 
 // SendCoinsFromModuleToAccount indicates an expected call of SendCoinsFromModuleToAccount.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
@@ -186,7 +186,7 @@ func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx types.Context, senderMo
 }
 
 // SendCoinsFromModuleToModule indicates an expected call of SendCoinsFromModuleToModule.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
 }

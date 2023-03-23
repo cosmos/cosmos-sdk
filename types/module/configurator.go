@@ -61,7 +61,7 @@ type configurator struct {
 }
 
 // RegisterService implements the grpc.Server interface.
-func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}) {
+func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss any) {
 	if c.registryCache == nil {
 		c.registryCache, c.err = proto.MergedRegistry()
 	}
@@ -85,7 +85,7 @@ func (c *configurator) Error() error {
 }
 
 // NewConfigurator returns a new Configurator instance
-func NewConfigurator(cdc codec.Codec, msgServer grpc.Server, queryServer grpc.Server) Configurator {
+func NewConfigurator(cdc codec.Codec, msgServer, queryServer grpc.Server) Configurator {
 	return &configurator{
 		cdc:         cdc,
 		msgServer:   msgServer,

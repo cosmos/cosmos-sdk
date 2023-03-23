@@ -70,7 +70,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	if app.initChainer == nil {
-		return
+		return abci.ResponseInitChain{}
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
@@ -162,7 +162,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]interface{}{"blockHeight": req.Header.Height},
+			map[string]any{"blockHeight": req.Header.Height},
 		))
 	}
 

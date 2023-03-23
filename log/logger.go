@@ -73,31 +73,31 @@ func NewCustomLogger(logger zerolog.Logger) Logger {
 
 // Info takes a message and a set of key/value pairs and logs with level INFO.
 // The key of the tuple must be a string.
-func (l zeroLogWrapper) Info(msg string, keyVals ...interface{}) {
+func (l zeroLogWrapper) Info(msg string, keyVals ...any) {
 	l.Logger.Info().Fields(keyVals).Msg(msg)
 }
 
 // Error takes a message and a set of key/value pairs and logs with level DEBUG.
 // The key of the tuple must be a string.
-func (l zeroLogWrapper) Error(msg string, keyVals ...interface{}) {
+func (l zeroLogWrapper) Error(msg string, keyVals ...any) {
 	l.Logger.Error().Fields(keyVals).Msg(msg)
 }
 
 // Debug takes a message and a set of key/value pairs and logs with level ERR.
 // The key of the tuple must be a string.
-func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
+func (l zeroLogWrapper) Debug(msg string, keyVals ...any) {
 	l.Logger.Debug().Fields(keyVals).Msg(msg)
 }
 
 // With returns a new wrapped logger with additional context provided by a set.
-func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
+func (l zeroLogWrapper) With(keyVals ...any) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
 	return zeroLogWrapper{&logger}
 }
 
 // Impl returns the underlying zerolog logger.
 // It can be used to used zerolog structured API directly instead of the wrapper.
-func (l zeroLogWrapper) Impl() interface{} {
+func (l zeroLogWrapper) Impl() any {
 	return l.Logger
 }
 

@@ -250,9 +250,9 @@ func (a table) Export(store types.KVStore, dest ModelSlicePtr) (uint64, error) {
 	return 0, nil
 }
 
-// Import clears the table and initializes it from the given data interface{}.
+// Import clears the table and initializes it from the given data any.
 // data should be a slice of structs that implement PrimaryKeyed.
-func (a table) Import(store types.KVStore, data interface{}, _ uint64) error {
+func (a table) Import(store types.KVStore, data any, _ uint64) error {
 	// Clear all data
 	keys := a.keys(store)
 	for _, key := range keys {

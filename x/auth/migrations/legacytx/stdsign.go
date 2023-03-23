@@ -105,7 +105,7 @@ func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
 }
 
 // MarshalYAML returns the YAML representation of the signature.
-func (ss StdSignature) MarshalYAML() (interface{}, error) {
+func (ss StdSignature) MarshalYAML() (any, error) {
 	pk := ""
 	if ss.PubKey != nil {
 		pk = ss.PubKey.String()

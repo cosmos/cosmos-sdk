@@ -181,7 +181,7 @@ func makeRandomAddressesAndPublicKeys(n int) (accL []sdk.AccAddress, pkL []*ed25
 	return accL, pkL
 }
 
-var sink, revert interface{}
+var sink, revert any
 
 func BenchmarkSanitizeBalances500(b *testing.B) {
 	benchmarkSanitizeBalances(b, 500)

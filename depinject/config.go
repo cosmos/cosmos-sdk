@@ -18,7 +18,7 @@ type Config interface {
 // internal packages and all of their input and output types must also be declared
 // and exported and not in internal packages. Note that generic type parameters
 // will not be checked, but they should also be exported so that codegen is possible.
-func Provide(providers ...interface{}) Config {
+func Provide(providers ...any) Config {
 	return containerConfig(func(ctr *container) error {
 		return provide(ctr, nil, providers)
 	})
@@ -30,7 +30,7 @@ func Provide(providers ...interface{}) Config {
 // internal packages and all of their input and output types must also be declared
 // and exported and not in internal packages. Note that generic type parameters
 // will not be checked, but they should also be exported so that codegen is possible.
-func ProvideInModule(moduleName string, providers ...interface{}) Config {
+func ProvideInModule(moduleName string, providers ...any) Config {
 	return containerConfig(func(ctr *container) error {
 		if moduleName == "" {
 			return errors.Errorf("expected non-empty module name")
@@ -40,7 +40,7 @@ func ProvideInModule(moduleName string, providers ...interface{}) Config {
 	})
 }
 
-func provide(ctr *container, key *moduleKey, providers []interface{}) error {
+func provide(ctr *container, key *moduleKey, providers []any) error {
 	for _, c := range providers {
 		rc, err := extractProviderDescriptor(c)
 		if err != nil {
@@ -62,7 +62,7 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 // internal packages and all of their input and output types must also be declared
 // and exported and not in internal packages. Note that generic type parameters
 // will not be checked, but they should also be exported so that codegen is possible.
-func Invoke(invokers ...interface{}) Config {
+func Invoke(invokers ...any) Config {
 	return containerConfig(func(ctr *container) error {
 		return invoke(ctr, nil, invokers)
 	})
@@ -77,7 +77,7 @@ func Invoke(invokers ...interface{}) Config {
 // internal packages and all of their input and output types must also be declared
 // and exported and not in internal packages. Note that generic type parameters
 // will not be checked, but they should also be exported so that codegen is possible.
-func InvokeInModule(moduleName string, invokers ...interface{}) Config {
+func InvokeInModule(moduleName string, invokers ...any) Config {
 	return containerConfig(func(ctr *container) error {
 		if moduleName == "" {
 			return errors.Errorf("expected non-empty module name")
@@ -87,7 +87,7 @@ func InvokeInModule(moduleName string, invokers ...interface{}) Config {
 	})
 }
 
-func invoke(ctr *container, key *moduleKey, invokers []interface{}) error {
+func invoke(ctr *container, key *moduleKey, invokers []any) error {
 	for _, c := range invokers {
 		rc, err := extractInvokerDescriptor(c)
 		if err != nil {
@@ -145,7 +145,7 @@ func bindInterface(ctr *container, inTypeName string, outTypeName string, module
 	return nil
 }
 
-func Supply(values ...interface{}) Config {
+func Supply(values ...any) Config {
 	loc := LocationFromCaller(1)
 	return containerConfig(func(ctr *container) error {
 		for _, v := range values {

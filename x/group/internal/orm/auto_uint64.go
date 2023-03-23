@@ -112,7 +112,7 @@ func (a AutoUInt64Table) PrefixScan(store storetypes.KVStore, start, end uint64)
 // this as an endpoint to the public without further limits. See `LimitIterator`
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
-func (a AutoUInt64Table) ReversePrefixScan(store storetypes.KVStore, start uint64, end uint64) (Iterator, error) {
+func (a AutoUInt64Table) ReversePrefixScan(store storetypes.KVStore, start, end uint64) (Iterator, error) {
 	return a.table.ReversePrefixScan(store, EncodeSequence(start), EncodeSequence(end))
 }
 
@@ -131,9 +131,9 @@ func (a AutoUInt64Table) Export(store storetypes.KVStore, dest ModelSlicePtr) (u
 	return a.seq.CurVal(store), nil
 }
 
-// Import clears the table and initializes it from the given data interface{}.
+// Import clears the table and initializes it from the given data any.
 // data should be a slice of structs that implement PrimaryKeyed.
-func (a AutoUInt64Table) Import(store storetypes.KVStore, data interface{}, seqValue uint64) error {
+func (a AutoUInt64Table) Import(store storetypes.KVStore, data any, seqValue uint64) error {
 	if err := a.seq.InitVal(store, seqValue); err != nil {
 		return errors.Wrap(err, "sequence")
 	}

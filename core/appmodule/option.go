@@ -18,7 +18,7 @@ func (f funcOption) apply(initializer *internal.ModuleInitializer) error {
 // Provide registers providers with the dependency injection system that will be
 // run within the module scope. See cosmossdk.io/depinject for
 // documentation on the dependency injection system.
-func Provide(providers ...interface{}) Option {
+func Provide(providers ...any) Option {
 	return funcOption(func(initializer *internal.ModuleInitializer) error {
 		initializer.Providers = append(initializer.Providers, providers...)
 		return nil
@@ -29,7 +29,7 @@ func Provide(providers ...interface{}) Option {
 // at the end of dependency graph configuration in the order in which it was defined. Invokers may not define output
 // parameters, although they may return an error, and all of their input parameters will be marked as optional so that
 // invokers impose no additional constraints on the dependency graph. Invoker functions should nil-check all inputs.
-func Invoke(invokers ...interface{}) Option {
+func Invoke(invokers ...any) Option {
 	return funcOption(func(initializer *internal.ModuleInitializer) error {
 		initializer.Invokers = append(initializer.Invokers, invokers...)
 		return nil

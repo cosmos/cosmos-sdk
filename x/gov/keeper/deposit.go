@@ -41,7 +41,7 @@ func (keeper Keeper) GetAllDeposits(ctx sdk.Context) (deposits v1.Deposits) {
 		return false
 	})
 
-	return
+	return deposits
 }
 
 // GetDeposits returns all the deposits of a proposal
@@ -51,7 +51,7 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits v
 		return false
 	})
 
-	return
+	return deposits
 }
 
 // DeleteAndBurnDeposits deletes and burns all the deposits on a specific proposal.

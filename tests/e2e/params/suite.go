@@ -33,7 +33,7 @@ type myParams struct{}
 
 func (p *myParams) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair([]byte("bar"), 1234, func(value interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("bar"), 1234, func(value any) error { return nil }),
 	}
 }
 

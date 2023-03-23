@@ -26,7 +26,7 @@ type AGenericStruct[A, B any] struct {
 
 type AStructWrapper AStruct
 
-type AnInterface interface{}
+type AnInterface any
 
 func TestTypeExpr(t *testing.T) {
 	expectTypeExpr(t, false, "bool")
@@ -66,7 +66,7 @@ func TestTypeExpr(t *testing.T) {
 	expectTypeExpr(t, (*AnInterface)(nil), "*codegen.AnInterface")
 }
 
-func expectTypeExpr(t *testing.T, value interface{}, expected string) {
+func expectTypeExpr(t *testing.T, value any, expected string) {
 	t.Helper()
 	g, err := NewFileGen(&ast.File{}, "")
 	assert.NilError(t, err)

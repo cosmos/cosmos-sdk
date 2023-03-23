@@ -245,7 +245,7 @@ func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals v1.Proposals) {
 		proposals = append(proposals, &proposal)
 		return false
 	})
-	return
+	return proposals
 }
 
 // GetProposalsFiltered retrieves proposals filtered by a given set of params which

@@ -51,7 +51,7 @@ type DecisionPolicy interface {
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
-func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, minExecutionPeriod time.Duration) DecisionPolicy {
+func NewThresholdDecisionPolicy(threshold string, votingPeriod, minExecutionPeriod time.Duration) DecisionPolicy {
 	return &ThresholdDecisionPolicy{threshold, &DecisionPolicyWindows{votingPeriod, minExecutionPeriod}}
 }
 
@@ -156,7 +156,7 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 var _ DecisionPolicy = &PercentageDecisionPolicy{}
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
-func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod time.Duration) DecisionPolicy {
+func NewPercentageDecisionPolicy(percentage string, votingPeriod, executionPeriod time.Duration) DecisionPolicy {
 	return &PercentageDecisionPolicy{percentage, &DecisionPolicyWindows{votingPeriod, executionPeriod}}
 }
 
@@ -290,8 +290,8 @@ func (g GroupPolicyInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
 }
 
-func (g GroupInfo) PrimaryKeyFields() []interface{} {
-	return []interface{}{g.Id}
+func (g GroupInfo) PrimaryKeyFields() []any {
+	return []any{g.Id}
 }
 
 // ValidateBasic does basic validation on group info.
@@ -314,14 +314,14 @@ func (g GroupInfo) ValidateBasic() error {
 	return nil
 }
 
-func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
+func (g GroupPolicyInfo) PrimaryKeyFields() []any {
 	addr := sdk.MustAccAddressFromBech32(g.Address)
 
-	return []interface{}{addr.Bytes()}
+	return []any{addr.Bytes()}
 }
 
-func (g Proposal) PrimaryKeyFields() []interface{} {
-	return []interface{}{g.Id}
+func (g Proposal) PrimaryKeyFields() []any {
+	return []any{g.Id}
 }
 
 // ValidateBasic does basic validation on group policy info.
@@ -352,10 +352,10 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 	return nil
 }
 
-func (g GroupMember) PrimaryKeyFields() []interface{} {
+func (g GroupMember) PrimaryKeyFields() []any {
 	addr := sdk.MustAccAddressFromBech32(g.Member.Address)
 
-	return []interface{}{g.GroupId, addr.Bytes()}
+	return []any{g.GroupId, addr.Bytes()}
 }
 
 // ValidateBasic does basic validation on group member.
@@ -417,10 +417,10 @@ func (g Proposal) ValidateBasic() error {
 	return nil
 }
 
-func (v Vote) PrimaryKeyFields() []interface{} {
+func (v Vote) PrimaryKeyFields() []any {
 	addr := sdk.MustAccAddressFromBech32(v.Voter)
 
-	return []interface{}{v.ProposalId, addr.Bytes()}
+	return []any{v.ProposalId, addr.Bytes()}
 }
 
 var _ orm.Validateable = Vote{}

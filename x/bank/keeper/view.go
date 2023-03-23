@@ -227,10 +227,10 @@ func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (sp
 	spendable, hasNeg := total.SafeSub(locked...)
 	if hasNeg {
 		spendable = sdk.NewCoins()
-		return
+		return spendable, total
 	}
 
-	return
+	return spendable, total
 }
 
 // ValidateBalance validates all balances for a given account address returning

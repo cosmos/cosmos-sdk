@@ -11,7 +11,7 @@ import (
 
 func Test_validateAuxFuncs(t *testing.T) {
 	type args struct {
-		i interface{}
+		i any
 	}
 	tests := []struct {
 		name    string

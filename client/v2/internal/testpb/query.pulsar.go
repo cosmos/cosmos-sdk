@@ -4082,7 +4082,7 @@ func file_testpb_query_proto_init() {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_testpb_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_query_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*EchoRequest); i {
 			case 0:
 				return &v.state
@@ -4094,7 +4094,7 @@ func file_testpb_query_proto_init() {
 				return nil
 			}
 		}
-		file_testpb_query_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_query_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*AMessage); i {
 			case 0:
 				return &v.state
@@ -4106,7 +4106,7 @@ func file_testpb_query_proto_init() {
 				return nil
 			}
 		}
-		file_testpb_query_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_testpb_query_proto_msgTypes[2].Exporter = func(v any, i int) any {
 			switch v := v.(*EchoResponse); i {
 			case 0:
 				return &v.state

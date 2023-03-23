@@ -40,7 +40,7 @@ func newTraceKVStore(w io.Writer) *tracekv.Store {
 
 func newEmptyTraceKVStore(w io.Writer) *tracekv.Store {
 	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
-	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
+	tc := types.TraceContext(map[string]any{"blockHeight": 64})
 
 	return tracekv.NewStore(memDB, w, tc)
 }

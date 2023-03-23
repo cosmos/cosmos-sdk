@@ -439,7 +439,7 @@ func (key *MemoryStoreKey) String() string {
 
 // TraceContext contains TraceKVStore context data. It will be written with
 // every trace operation.
-type TraceContext map[string]interface{}
+type TraceContext map[string]any
 
 // Clone clones tc into another instance of TraceContext.
 func (tc TraceContext) Clone() TraceContext {

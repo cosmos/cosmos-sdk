@@ -253,7 +253,7 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules            map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
+	Modules            map[string]any // any is used now to support the legacy AppModule as well as new core appmodule.AppModule.
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
@@ -263,7 +263,7 @@ type Manager struct {
 
 // NewManager creates a new Manager object.
 func NewManager(modules ...AppModule) *Manager {
-	moduleMap := make(map[string]interface{})
+	moduleMap := make(map[string]any)
 	modulesStr := make([]string, 0, len(modules))
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
@@ -282,7 +282,7 @@ func NewManager(modules ...AppModule) *Manager {
 // NewManagerFromMap creates a new Manager object from a map of module names to module implementations.
 // This method should be used for apps and modules which have migrated to the cosmossdk.io/core.appmodule.AppModule API.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
-	simpleModuleMap := make(map[string]interface{})
+	simpleModuleMap := make(map[string]any)
 	modulesStr := make([]string, 0, len(simpleModuleMap))
 	for name, module := range moduleMap {
 		simpleModuleMap[name] = module

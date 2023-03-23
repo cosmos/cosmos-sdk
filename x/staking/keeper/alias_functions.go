@@ -148,5 +148,5 @@ func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []types.Deleg
 		delegations = append(delegations, delegation)
 	}
 
-	return
+	return delegations
 }

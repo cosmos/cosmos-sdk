@@ -16,7 +16,7 @@ type CometZeroLogWrapper struct {
 // With returns a new wrapped logger with additional context provided by a set
 // of key/value tuples. The number of tuples must be even and the key of the
 // tuple must be a string.
-func (cmt CometZeroLogWrapper) With(keyVals ...interface{}) cmtlog.Logger {
+func (cmt CometZeroLogWrapper) With(keyVals ...any) cmtlog.Logger {
 	logger := cmt.Logger.With(keyVals...)
 	return CometZeroLogWrapper{logger}
 }

@@ -32,7 +32,7 @@ var _ gogogrpc.ClientConn = Context{}
 var fallBackCodec = codec.NewProtoCodec(failingInterfaceRegistry{})
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
+func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply any, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
 	// 1. either we're broadcasting a Tx, in which call we call CometBFT's broadcast endpoint directly,
 	// 2-1. or we are querying for state, in which case we call grpc if grpc client set.
@@ -154,7 +154,7 @@ type failingInterfaceRegistry struct{}
 // or encode a type which contains an interface field.
 var errCodecNotSet = errors.New("client: cannot encode or decode type which requires the application specific codec")
 
-func (f failingInterfaceRegistry) UnpackAny(_ *types.Any, _ interface{}) error {
+func (f failingInterfaceRegistry) UnpackAny(_ *types.Any, _ any) error {
 	return errCodecNotSet
 }
 
@@ -162,11 +162,11 @@ func (f failingInterfaceRegistry) Resolve(_ string) (proto.Message, error) {
 	return nil, errCodecNotSet
 }
 
-func (f failingInterfaceRegistry) RegisterInterface(_ string, _ interface{}, _ ...proto.Message) {
+func (f failingInterfaceRegistry) RegisterInterface(_ string, _ any, _ ...proto.Message) {
 	panic("cannot be called")
 }
 
-func (f failingInterfaceRegistry) RegisterImplementations(_ interface{}, _ ...proto.Message) {
+func (f failingInterfaceRegistry) RegisterImplementations(_ any, _ ...proto.Message) {
 	panic("cannot be called")
 }
 
@@ -178,6 +178,6 @@ func (f failingInterfaceRegistry) ListImplementations(_ string) []string {
 	panic("cannot be called")
 }
 
-func (f failingInterfaceRegistry) EnsureRegistered(_ interface{}) error {
+func (f failingInterfaceRegistry) EnsureRegistered(_ any) error {
 	panic("cannot be called")
 }

@@ -48,12 +48,12 @@ func TestCheckIsExportedType(t *testing.T) {
 	expectInvalidType(t, []graphviz.Attributes{}, "internal")
 }
 
-func expectValidType(t *testing.T, v interface{}) {
+func expectValidType(t *testing.T, v any) {
 	t.Helper()
 	assert.NilError(t, isExportedType(reflect.TypeOf(v)))
 }
 
-func expectInvalidType(t *testing.T, v interface{}, errContains string) {
+func expectInvalidType(t *testing.T, v any, errContains string) {
 	t.Helper()
 	assert.ErrorContains(t, isExportedType(reflect.TypeOf(v)), errContains)
 }

@@ -10,8 +10,8 @@ type TableExportable interface {
 	Export(store storetypes.KVStore, dest ModelSlicePtr) (uint64, error)
 
 	// Import clears the table and initializes it from the given data
-	// interface{}. data should be a slice of structs that implement
+	// any. data should be a slice of structs that implement
 	// PrimaryKeyed. The seqValue is optional and only
 	// used with tables that have an associated sequence.
-	Import(store storetypes.KVStore, data interface{}, seqValue uint64) error
+	Import(store storetypes.KVStore, data any, seqValue uint64) error
 }

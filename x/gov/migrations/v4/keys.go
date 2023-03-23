@@ -24,5 +24,5 @@ func VotingPeriodProposalKey(proposalID uint64) []byte {
 func GetProposalIDBytes(proposalID uint64) (proposalIDBz []byte) {
 	proposalIDBz = make([]byte, 8)
 	binary.BigEndian.PutUint64(proposalIDBz, proposalID)
-	return
+	return proposalIDBz
 }

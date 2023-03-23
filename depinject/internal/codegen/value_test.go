@@ -60,7 +60,7 @@ func TestValueExpr(t *testing.T) {
 	expectValueExpr(t, "abc", `"abc"`)
 }
 
-func expectValueExpr(t *testing.T, value interface{}, expected string) {
+func expectValueExpr(t *testing.T, value any, expected string) {
 	t.Helper()
 	g, err := NewFileGen(&ast.File{}, "")
 	assert.NilError(t, err)

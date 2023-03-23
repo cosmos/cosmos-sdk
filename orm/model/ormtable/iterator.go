@@ -49,7 +49,7 @@ type Iterator interface {
 	doNotImplement()
 }
 
-func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, prefix []interface{}, opts []listinternal.Option) (Iterator, error) {
+func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, prefix []any, opts []listinternal.Option) (Iterator, error) {
 	options := &listinternal.Options{}
 	listinternal.ApplyOptions(options, opts)
 	if err := options.Validate(); err != nil {
@@ -106,7 +106,7 @@ func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index c
 	return applyCommonIteratorOptions(res, options)
 }
 
-func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, start, end []interface{}, opts []listinternal.Option) (Iterator, error) {
+func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, start, end []any, opts []listinternal.Option) (Iterator, error) {
 	options := &listinternal.Options{}
 	listinternal.ApplyOptions(options, opts)
 	if err := options.Validate(); err != nil {

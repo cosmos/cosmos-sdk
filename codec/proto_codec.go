@@ -214,7 +214,7 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 //
 //	var x MyInterface
 //	err := cdc.UnmarshalInterface(bz, &x)
-func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
+func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr any) error {
 	unmarshalAny := &types.Any{}
 	err := pc.Unmarshal(bz, unmarshalAny)
 	if err != nil {
@@ -244,7 +244,7 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) 
 //
 //	var x MyInterface  // must implement proto.Message
 //	err := cdc.UnmarshalInterfaceJSON(&x, bz)
-func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface interface{}) error {
+func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface any) error {
 	marshalAny := &types.Any{}
 	err := pc.UnmarshalJSON(bz, marshalAny)
 	if err != nil {
@@ -256,7 +256,7 @@ func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface interface{}) error
 // UnpackAny implements AnyUnpacker.UnpackAny method,
 // it unpacks the value in any to the interface pointer passed in as
 // iface.
-func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
+func (pc *ProtoCodec) UnpackAny(any *types.Any, iface any) error {
 	return pc.interfaceRegistry.UnpackAny(any, iface)
 }
 
@@ -277,7 +277,7 @@ type grpcProtoCodec struct {
 	cdc *ProtoCodec
 }
 
-func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
+func (g grpcProtoCodec) Marshal(v any) ([]byte, error) {
 	switch m := v.(type) {
 	case proto.Message:
 		return proto.Marshal(m)
@@ -288,7 +288,7 @@ func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
 	}
 }
 
-func (g grpcProtoCodec) Unmarshal(data []byte, v interface{}) error {
+func (g grpcProtoCodec) Unmarshal(data []byte, v any) error {
 	switch m := v.(type) {
 	case proto.Message:
 		return proto.Unmarshal(data, m)
@@ -303,7 +303,7 @@ func (g grpcProtoCodec) Name() string {
 	return "cosmos-sdk-grpc-codec"
 }
 
-func assertNotNil(i interface{}) error {
+func assertNotNil(i any) error {
 	if i == nil {
 		return errors.New("can't marshal <nil> value")
 	}

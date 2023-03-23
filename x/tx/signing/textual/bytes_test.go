@@ -52,6 +52,6 @@ type bytesTest struct {
 }
 
 func (t *bytesTest) UnmarshalJSON(b []byte) error {
-	a := []interface{}{&t.base64, &t.hex}
+	a := []any{&t.base64, &t.hex}
 	return json.Unmarshal(b, &a)
 }

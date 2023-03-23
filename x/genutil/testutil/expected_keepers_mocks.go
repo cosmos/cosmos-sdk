@@ -48,7 +48,7 @@ func (m *MockStakingKeeper) ApplyAndReturnValidatorSetUpdates(arg0 types0.Contex
 }
 
 // ApplyAndReturnValidatorSetUpdates indicates an expected call of ApplyAndReturnValidatorSetUpdates.
-func (mr *MockStakingKeeperMockRecorder) ApplyAndReturnValidatorSetUpdates(arg0 interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) ApplyAndReturnValidatorSetUpdates(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyAndReturnValidatorSetUpdates", reflect.TypeOf((*MockStakingKeeper)(nil).ApplyAndReturnValidatorSetUpdates), arg0)
 }
@@ -83,7 +83,7 @@ func (m *MockAccountKeeper) IterateAccounts(ctx types0.Context, process func(typ
 }
 
 // IterateAccounts indicates an expected call of IterateAccounts.
-func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, process interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, process any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateAccounts", reflect.TypeOf((*MockAccountKeeper)(nil).IterateAccounts), ctx, process)
 }
@@ -97,7 +97,7 @@ func (m *MockAccountKeeper) NewAccount(arg0 types0.Context, arg1 types0.AccountI
 }
 
 // NewAccount indicates an expected call of NewAccount.
-func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAccount", reflect.TypeOf((*MockAccountKeeper)(nil).NewAccount), arg0, arg1)
 }
@@ -109,7 +109,7 @@ func (m *MockAccountKeeper) SetAccount(arg0 types0.Context, arg1 types0.AccountI
 }
 
 // SetAccount indicates an expected call of SetAccount.
-func (mr *MockAccountKeeperMockRecorder) SetAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) SetAccount(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), arg0, arg1)
 }
@@ -144,7 +144,7 @@ func (m *MockGenesisAccountsIterator) IterateGenesisAccounts(cdc *codec.LegacyAm
 }
 
 // IterateGenesisAccounts indicates an expected call of IterateGenesisAccounts.
-func (mr *MockGenesisAccountsIteratorMockRecorder) IterateGenesisAccounts(cdc, appGenesis, cb interface{}) *gomock.Call {
+func (mr *MockGenesisAccountsIteratorMockRecorder) IterateGenesisAccounts(cdc, appGenesis, cb any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateGenesisAccounts", reflect.TypeOf((*MockGenesisAccountsIterator)(nil).IterateGenesisAccounts), cdc, appGenesis, cb)
 }
@@ -179,7 +179,7 @@ func (m *MockGenesisBalancesIterator) IterateGenesisBalances(cdc codec.JSONCodec
 }
 
 // IterateGenesisBalances indicates an expected call of IterateGenesisBalances.
-func (mr *MockGenesisBalancesIteratorMockRecorder) IterateGenesisBalances(cdc, appGenesis, cb interface{}) *gomock.Call {
+func (mr *MockGenesisBalancesIteratorMockRecorder) IterateGenesisBalances(cdc, appGenesis, cb any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateGenesisBalances", reflect.TypeOf((*MockGenesisBalancesIterator)(nil).IterateGenesisBalances), cdc, appGenesis, cb)
 }

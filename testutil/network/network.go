@@ -281,8 +281,8 @@ type (
 	// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
 	// This is not to be confused with logging that may happen at an individual node or validator level
 	Logger interface {
-		Log(args ...interface{})
-		Logf(format string, args ...interface{})
+		Log(args ...any)
+		Logf(format string, args ...any)
 	}
 )
 
@@ -306,12 +306,12 @@ type CLILogger struct {
 }
 
 // Log logs given args.
-func (s CLILogger) Log(args ...interface{}) {
+func (s CLILogger) Log(args ...any) {
 	s.cmd.Println(args...)
 }
 
 // Logf logs given args according to a format specifier.
-func (s CLILogger) Logf(format string, args ...interface{}) {
+func (s CLILogger) Logf(format string, args ...any) {
 	s.cmd.Printf(format, args...)
 }
 

@@ -49,7 +49,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func validateNoOp(_ interface{}) error { return nil }
+func validateNoOp(_ any) error { return nil }
 
 func TestKeeper(t *testing.T) {
 	kvs := []struct {
@@ -148,7 +148,7 @@ func TestKeeper(t *testing.T) {
 	}
 }
 
-func indirect(ptr interface{}) interface{} {
+func indirect(ptr any) any {
 	return reflect.ValueOf(ptr).Elem().Interface()
 }
 
@@ -180,9 +180,9 @@ func TestSubspace(t *testing.T) {
 
 	kvs := []struct {
 		key   string
-		param interface{}
-		zero  interface{}
-		ptr   interface{}
+		param any
+		zero  any
+		ptr   any
 	}{
 		{"string", "test", "", new(string)},
 		{"bool", true, false, new(bool)},

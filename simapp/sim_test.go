@@ -335,7 +335,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	appOptions := viper.New()
 	if FlagEnableStreamingValue {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["streaming.abci.keys"] = []string{"*"}
 		m["streaming.abci.plugin"] = "abci_v1"
 		m["streaming.abci.stop-node-on-err"] = true

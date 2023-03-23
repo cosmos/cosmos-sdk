@@ -61,7 +61,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.NewQueryCmd()
 }
 
-func (am AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	proposal.RegisterInterfaces(registry)
 }
 
@@ -83,10 +83,10 @@ func NewAppModule(k keeper.Keeper) AppModule {
 var _ appmodule.AppModule = AppModule{}
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
+func (AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
+func (AppModule) IsAppModule() {}
 
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}

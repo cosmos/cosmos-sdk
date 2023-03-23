@@ -57,7 +57,7 @@ func (m *MockDB) Delete(arg0 []byte) error {
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockDBMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) Delete(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockDB)(nil).Delete), arg0)
 }
@@ -71,7 +71,7 @@ func (m *MockDB) DeleteSync(arg0 []byte) error {
 }
 
 // DeleteSync indicates an expected call of DeleteSync.
-func (mr *MockDBMockRecorder) DeleteSync(arg0 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) DeleteSync(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSync", reflect.TypeOf((*MockDB)(nil).DeleteSync), arg0)
 }
@@ -86,7 +86,7 @@ func (m *MockDB) Get(arg0 []byte) ([]byte, error) {
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockDBMockRecorder) Get(arg0 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) Get(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDB)(nil).Get), arg0)
 }
@@ -101,7 +101,7 @@ func (m *MockDB) Has(arg0 []byte) (bool, error) {
 }
 
 // Has indicates an expected call of Has.
-func (mr *MockDBMockRecorder) Has(arg0 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) Has(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockDB)(nil).Has), arg0)
 }
@@ -116,7 +116,7 @@ func (m *MockDB) Iterator(arg0, arg1 []byte) (db.Iterator, error) {
 }
 
 // Iterator indicates an expected call of Iterator.
-func (mr *MockDBMockRecorder) Iterator(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) Iterator(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockDB)(nil).Iterator), arg0, arg1)
 }
@@ -144,7 +144,7 @@ func (m *MockDB) NewBatchWithSize(arg0 int) db.Batch {
 }
 
 // NewBatchWithSize indicates an expected call of NewBatchWithSize.
-func (mr *MockDBMockRecorder) NewBatchWithSize(arg0 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) NewBatchWithSize(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewBatchWithSize", reflect.TypeOf((*MockDB)(nil).NewBatchWithSize), arg0)
 }
@@ -173,7 +173,7 @@ func (m *MockDB) ReverseIterator(arg0, arg1 []byte) (db.Iterator, error) {
 }
 
 // ReverseIterator indicates an expected call of ReverseIterator.
-func (mr *MockDBMockRecorder) ReverseIterator(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) ReverseIterator(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockDB)(nil).ReverseIterator), arg0, arg1)
 }
@@ -187,7 +187,7 @@ func (m *MockDB) Set(arg0, arg1 []byte) error {
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockDBMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) Set(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockDB)(nil).Set), arg0, arg1)
 }
@@ -201,7 +201,7 @@ func (m *MockDB) SetSync(arg0, arg1 []byte) error {
 }
 
 // SetSync indicates an expected call of SetSync.
-func (mr *MockDBMockRecorder) SetSync(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDBMockRecorder) SetSync(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSync", reflect.TypeOf((*MockDB)(nil).SetSync), arg0, arg1)
 }

@@ -46,7 +46,7 @@ type mockContext struct {
 	wantErr bool
 }
 
-func (m mockContext) Invoke(_ gocontext.Context, _ string, _ interface{}, reply interface{}, _ ...grpc.CallOption) (err error) {
+func (m mockContext) Invoke(_ gocontext.Context, _ string, _, reply any, _ ...grpc.CallOption) (err error) {
 	if m.wantErr {
 		return fmt.Errorf("mock err")
 	}

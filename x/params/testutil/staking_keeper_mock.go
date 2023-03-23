@@ -43,7 +43,7 @@ func (m *MockStakingKeeper) MaxValidators(ctx types.Context) uint32 {
 }
 
 // MaxValidators indicates an expected call of MaxValidators.
-func (mr *MockStakingKeeperMockRecorder) MaxValidators(ctx interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) MaxValidators(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaxValidators", reflect.TypeOf((*MockStakingKeeper)(nil).MaxValidators), ctx)
 }

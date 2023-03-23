@@ -429,7 +429,7 @@ type DefaultAnyResolver struct{}
 var _ jsonpb.AnyResolver = DefaultAnyResolver{}
 
 // Resolve is the AnyResolver.Resolve method.
-func (d DefaultAnyResolver) Resolve(typeURL string) (proto.Message, error) {
+func (DefaultAnyResolver) Resolve(typeURL string) (proto.Message, error) {
 	// Only the part of typeURL after the last slash is relevant.
 	mname := typeURL
 	if slash := strings.LastIndex(mname, "/"); slash >= 0 {

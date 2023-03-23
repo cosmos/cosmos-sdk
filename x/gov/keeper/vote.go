@@ -53,7 +53,7 @@ func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes v1.Votes) {
 		votes = append(votes, &vote)
 		return false
 	})
-	return
+	return votes
 }
 
 // GetVotes returns all the votes from a proposal
@@ -62,7 +62,7 @@ func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes v1.Vote
 		votes = append(votes, &vote)
 		return false
 	})
-	return
+	return votes
 }
 
 // GetVote gets the vote from an address on a specific proposal

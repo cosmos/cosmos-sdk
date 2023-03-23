@@ -256,7 +256,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 	return err
 }
 
-func jsonMarshal(w io.Writer, v interface{}) error {
+func jsonMarshal(w io.Writer, v any) error {
 	blob, err := json.Marshal(v)
 	if err != nil {
 		return err

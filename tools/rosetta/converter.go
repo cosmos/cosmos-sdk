@@ -62,7 +62,7 @@ type ToRosettaConverter interface {
 	// OpsAndSigners takes raw transaction bytes and returns rosetta operations and the expected signers
 	OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation, signers []*rosettatypes.AccountIdentifier, err error)
 	// Meta converts an sdk.Msg to rosetta metadata
-	Meta(msg sdk.Msg) (meta map[string]interface{}, err error)
+	Meta(msg sdk.Msg) (meta map[string]any, err error)
 	// SignerData returns account signing data from a queried any account
 	SignerData(anyAccount *codectypes.Any) (*SignerData, error)
 	// SigningComponents returns rosetta's components required to build a signable transaction
@@ -89,7 +89,7 @@ type ToSDKConverter interface {
 	// and returns the signed tx bytes
 	SignedTx(txBytes []byte, signatures []*rosettatypes.Signature) (signedTxBytes []byte, err error)
 	// Msg converts metadata to an sdk message
-	Msg(meta map[string]interface{}, msg sdk.Msg) (err error)
+	Msg(meta map[string]any, msg sdk.Msg) (err error)
 	// HashToTxType returns the transaction type (end block, begin block or deliver tx)
 	// and the real hash to query in order to get information
 	HashToTxType(hashBytes []byte) (txType TransactionType, realHash []byte)
@@ -210,7 +210,7 @@ func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx,
 }
 
 // Msg unmarshals the rosetta metadata to the given sdk.Msg
-func (c converter) Msg(meta map[string]interface{}, msg sdk.Msg) error {
+func (c converter) Msg(meta map[string]any, msg sdk.Msg) error {
 	metaBytes, err := json.Marshal(meta)
 	if err != nil {
 		return err
@@ -218,7 +218,7 @@ func (c converter) Msg(meta map[string]interface{}, msg sdk.Msg) error {
 	return c.cdc.UnmarshalJSON(metaBytes, msg)
 }
 
-func (c converter) Meta(msg sdk.Msg) (meta map[string]interface{}, err error) {
+func (c converter) Meta(msg sdk.Msg) (meta map[string]any, err error) {
 	b, err := c.cdc.MarshalJSON(msg)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
@@ -559,7 +559,7 @@ func (c converter) Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer {
 	for i, peer := range peers {
 		converted[i] = &rosettatypes.Peer{
 			PeerID: peer.NodeInfo.Moniker,
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"addr": peer.NodeInfo.ListenAddr,
 			},
 		}

@@ -70,9 +70,9 @@ type Client interface {
 
 	// PostTx posts txBytes to the node and returns the transaction identifier plus metadata related
 	// to the transaction itself.
-	PostTx(txBytes []byte) (res *types.TransactionIdentifier, meta map[string]interface{}, err error)
+	PostTx(txBytes []byte) (res *types.TransactionIdentifier, meta map[string]any, err error)
 	// ConstructionMetadataFromOptions builds metadata map from an option map
-	ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error)
+	ConstructionMetadataFromOptions(ctx context.Context, options map[string]any) (meta map[string]any, err error)
 	OfflineClient
 }
 

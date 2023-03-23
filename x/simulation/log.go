@@ -71,7 +71,7 @@ func createLogFile() *os.File {
 type DummyLogWriter struct{}
 
 // do nothing
-func (lw *DummyLogWriter) AddEntry(_ OperationEntry) {}
+func (*DummyLogWriter) AddEntry(_ OperationEntry) {}
 
 // do nothing
-func (lw *DummyLogWriter) PrintLogs() {}
+func (*DummyLogWriter) PrintLogs() {}

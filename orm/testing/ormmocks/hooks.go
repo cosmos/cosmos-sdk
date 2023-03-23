@@ -44,7 +44,7 @@ func (m *MockValidateHooks) ValidateDelete(arg0 context.Context, arg1 proto.Mess
 }
 
 // ValidateDelete indicates an expected call of ValidateDelete.
-func (mr *MockValidateHooksMockRecorder) ValidateDelete(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockValidateHooksMockRecorder) ValidateDelete(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateDelete", reflect.TypeOf((*MockValidateHooks)(nil).ValidateDelete), arg0, arg1)
 }
@@ -58,7 +58,7 @@ func (m *MockValidateHooks) ValidateInsert(arg0 context.Context, arg1 proto.Mess
 }
 
 // ValidateInsert indicates an expected call of ValidateInsert.
-func (mr *MockValidateHooksMockRecorder) ValidateInsert(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockValidateHooksMockRecorder) ValidateInsert(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateInsert", reflect.TypeOf((*MockValidateHooks)(nil).ValidateInsert), arg0, arg1)
 }
@@ -72,7 +72,7 @@ func (m *MockValidateHooks) ValidateUpdate(ctx context.Context, existing, new pr
 }
 
 // ValidateUpdate indicates an expected call of ValidateUpdate.
-func (mr *MockValidateHooksMockRecorder) ValidateUpdate(ctx, existing, new interface{}) *gomock.Call {
+func (mr *MockValidateHooksMockRecorder) ValidateUpdate(ctx, existing, new any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateUpdate", reflect.TypeOf((*MockValidateHooks)(nil).ValidateUpdate), ctx, existing, new)
 }
@@ -107,7 +107,7 @@ func (m *MockWriteHooks) OnDelete(arg0 context.Context, arg1 proto.Message) {
 }
 
 // OnDelete indicates an expected call of OnDelete.
-func (mr *MockWriteHooksMockRecorder) OnDelete(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockWriteHooksMockRecorder) OnDelete(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDelete", reflect.TypeOf((*MockWriteHooks)(nil).OnDelete), arg0, arg1)
 }
@@ -119,7 +119,7 @@ func (m *MockWriteHooks) OnInsert(arg0 context.Context, arg1 proto.Message) {
 }
 
 // OnInsert indicates an expected call of OnInsert.
-func (mr *MockWriteHooksMockRecorder) OnInsert(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockWriteHooksMockRecorder) OnInsert(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnInsert", reflect.TypeOf((*MockWriteHooks)(nil).OnInsert), arg0, arg1)
 }
@@ -131,7 +131,7 @@ func (m *MockWriteHooks) OnUpdate(ctx context.Context, existing, new proto.Messa
 }
 
 // OnUpdate indicates an expected call of OnUpdate.
-func (mr *MockWriteHooksMockRecorder) OnUpdate(ctx, existing, new interface{}) *gomock.Call {
+func (mr *MockWriteHooksMockRecorder) OnUpdate(ctx, existing, new any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnUpdate", reflect.TypeOf((*MockWriteHooks)(nil).OnUpdate), ctx, existing, new)
 }

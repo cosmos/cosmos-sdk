@@ -65,7 +65,7 @@ func TestExtractProviderDescriptor(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		ctr     interface{}
+		ctr     any
 		wantIn  []providerInput
 		wantOut []providerOutput
 		wantErr string

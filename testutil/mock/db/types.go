@@ -57,7 +57,7 @@ func (m *MockConnection) DeleteVersion(arg0 uint64) error {
 }
 
 // DeleteVersion indicates an expected call of DeleteVersion.
-func (mr *MockConnectionMockRecorder) DeleteVersion(arg0 interface{}) *gomock.Call {
+func (mr *MockConnectionMockRecorder) DeleteVersion(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVersion", reflect.TypeOf((*MockConnection)(nil).DeleteVersion), arg0)
 }
@@ -100,7 +100,7 @@ func (m *MockConnection) ReaderAt(arg0 uint64) (db.Reader, error) {
 }
 
 // ReaderAt indicates an expected call of ReaderAt.
-func (mr *MockConnectionMockRecorder) ReaderAt(arg0 interface{}) *gomock.Call {
+func (mr *MockConnectionMockRecorder) ReaderAt(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReaderAt", reflect.TypeOf((*MockConnection)(nil).ReaderAt), arg0)
 }
@@ -143,7 +143,7 @@ func (m *MockConnection) SaveVersion(arg0 uint64) error {
 }
 
 // SaveVersion indicates an expected call of SaveVersion.
-func (mr *MockConnectionMockRecorder) SaveVersion(arg0 interface{}) *gomock.Call {
+func (mr *MockConnectionMockRecorder) SaveVersion(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveVersion", reflect.TypeOf((*MockConnection)(nil).SaveVersion), arg0)
 }
@@ -224,7 +224,7 @@ func (m *MockReader) Get(arg0 []byte) ([]byte, error) {
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockReaderMockRecorder) Get(arg0 interface{}) *gomock.Call {
+func (mr *MockReaderMockRecorder) Get(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockReader)(nil).Get), arg0)
 }
@@ -239,7 +239,7 @@ func (m *MockReader) Has(key []byte) (bool, error) {
 }
 
 // Has indicates an expected call of Has.
-func (mr *MockReaderMockRecorder) Has(key interface{}) *gomock.Call {
+func (mr *MockReaderMockRecorder) Has(key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockReader)(nil).Has), key)
 }
@@ -254,7 +254,7 @@ func (m *MockReader) Iterator(start, end []byte) (db.Iterator, error) {
 }
 
 // Iterator indicates an expected call of Iterator.
-func (mr *MockReaderMockRecorder) Iterator(start, end interface{}) *gomock.Call {
+func (mr *MockReaderMockRecorder) Iterator(start, end any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockReader)(nil).Iterator), start, end)
 }
@@ -269,7 +269,7 @@ func (m *MockReader) ReverseIterator(start, end []byte) (db.Iterator, error) {
 }
 
 // ReverseIterator indicates an expected call of ReverseIterator.
-func (mr *MockReaderMockRecorder) ReverseIterator(start, end interface{}) *gomock.Call {
+func (mr *MockReaderMockRecorder) ReverseIterator(start, end any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockReader)(nil).ReverseIterator), start, end)
 }
@@ -320,7 +320,7 @@ func (m *MockWriter) Delete(arg0 []byte) error {
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockWriterMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+func (mr *MockWriterMockRecorder) Delete(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockWriter)(nil).Delete), arg0)
 }
@@ -348,7 +348,7 @@ func (m *MockWriter) Set(arg0, arg1 []byte) error {
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockWriterMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockWriterMockRecorder) Set(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockWriter)(nil).Set), arg0, arg1)
 }
@@ -399,7 +399,7 @@ func (m *MockReadWriter) Delete(arg0 []byte) error {
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockReadWriterMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Delete(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockReadWriter)(nil).Delete), arg0)
 }
@@ -428,7 +428,7 @@ func (m *MockReadWriter) Get(arg0 []byte) ([]byte, error) {
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockReadWriterMockRecorder) Get(arg0 interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Get(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockReadWriter)(nil).Get), arg0)
 }
@@ -443,7 +443,7 @@ func (m *MockReadWriter) Has(key []byte) (bool, error) {
 }
 
 // Has indicates an expected call of Has.
-func (mr *MockReadWriterMockRecorder) Has(key interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Has(key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockReadWriter)(nil).Has), key)
 }
@@ -458,7 +458,7 @@ func (m *MockReadWriter) Iterator(start, end []byte) (db.Iterator, error) {
 }
 
 // Iterator indicates an expected call of Iterator.
-func (mr *MockReadWriterMockRecorder) Iterator(start, end interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Iterator(start, end any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockReadWriter)(nil).Iterator), start, end)
 }
@@ -473,7 +473,7 @@ func (m *MockReadWriter) ReverseIterator(start, end []byte) (db.Iterator, error)
 }
 
 // ReverseIterator indicates an expected call of ReverseIterator.
-func (mr *MockReadWriterMockRecorder) ReverseIterator(start, end interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) ReverseIterator(start, end any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockReadWriter)(nil).ReverseIterator), start, end)
 }
@@ -487,7 +487,7 @@ func (m *MockReadWriter) Set(arg0, arg1 []byte) error {
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockReadWriterMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Set(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockReadWriter)(nil).Set), arg0, arg1)
 }
@@ -646,7 +646,7 @@ func (m *MockVersionSet) Equal(arg0 db.VersionSet) bool {
 }
 
 // Equal indicates an expected call of Equal.
-func (mr *MockVersionSetMockRecorder) Equal(arg0 interface{}) *gomock.Call {
+func (mr *MockVersionSetMockRecorder) Equal(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Equal", reflect.TypeOf((*MockVersionSet)(nil).Equal), arg0)
 }
@@ -660,7 +660,7 @@ func (m *MockVersionSet) Exists(arg0 uint64) bool {
 }
 
 // Exists indicates an expected call of Exists.
-func (mr *MockVersionSetMockRecorder) Exists(arg0 interface{}) *gomock.Call {
+func (mr *MockVersionSetMockRecorder) Exists(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exists", reflect.TypeOf((*MockVersionSet)(nil).Exists), arg0)
 }

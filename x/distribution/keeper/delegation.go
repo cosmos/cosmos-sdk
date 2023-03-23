@@ -51,7 +51,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingty
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards = difference.MulDecTruncate(stake)
-	return
+	return rewards
 }
 
 // calculate the total rewards accrued by a delegation
@@ -61,7 +61,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 
 	if startingInfo.Height == uint64(ctx.BlockHeight()) {
 		// started this height, no rewards yet
-		return
+		return sdk.DecCoins{}
 	}
 
 	startingPeriod := startingInfo.PreviousPeriod

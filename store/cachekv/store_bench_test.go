@@ -9,7 +9,7 @@ import (
 	"cosmossdk.io/store/dbadapter"
 )
 
-var sink interface{}
+var sink any
 
 const defaultValueSizeBz = 1 << 12
 

@@ -49,7 +49,7 @@ func newPubKey(pk string) (res cryptotypes.PubKey) {
 	return pubkey
 }
 
-func testEquivocationHandler(_ interface{}) types.Handler {
+func testEquivocationHandler(_ any) types.Handler {
 	return func(ctx sdk.Context, e exported.Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err

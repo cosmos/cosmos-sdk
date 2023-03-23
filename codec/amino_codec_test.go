@@ -42,7 +42,7 @@ func TestAminoCodecMarshalJSONIndent(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		input      interface{}
+		input      any
 		marshalErr bool
 		wantJSON   string
 	}{

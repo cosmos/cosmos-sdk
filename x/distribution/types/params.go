@@ -29,7 +29,7 @@ func (p Params) ValidateBasic() error {
 	return nil
 }
 
-func validateCommunityTax(i interface{}) error {
+func validateCommunityTax(i any) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -48,7 +48,7 @@ func validateCommunityTax(i interface{}) error {
 	return nil
 }
 
-func validateWithdrawAddrEnabled(i interface{}) error {
+func validateWithdrawAddrEnabled(i any) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

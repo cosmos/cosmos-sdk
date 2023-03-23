@@ -12,7 +12,7 @@ func (t tableGen) genIndexKeys() {
 	// interface that all keys must adhere to
 	t.P("type ", t.indexKeyInterfaceName(), " interface {")
 	t.P("id() uint32")
-	t.P("values() []interface{}")
+	t.P("values() []any")
 	t.P(t.param(t.indexKeyInterfaceName()), "()")
 	t.P("}")
 	t.P()
@@ -46,7 +46,7 @@ func (t tableGen) genValueFunc() {
 func (t tableGen) genIndexMethods(idxKeyName string) {
 	receiverFunc := fmt.Sprintf("func (x %s) ", idxKeyName)
 	t.P(receiverFunc, "id() uint32 { return ", t.table.Id, " /* primary key */ }")
-	t.P(receiverFunc, "values() []interface{} { return x.vs }")
+	t.P(receiverFunc, "values() []any { return x.vs }")
 	t.P(receiverFunc, t.param(t.indexKeyInterfaceName()), "() {}")
 	t.P()
 }
@@ -62,7 +62,7 @@ func (t tableGen) indexKeyInterfaceName() string {
 
 func (t tableGen) genIndexKey(idxKeyName string) {
 	t.P("type ", idxKeyName, " struct {")
-	t.P("vs []interface{}")
+	t.P("vs []any")
 	t.P("}")
 	t.P()
 }
@@ -103,7 +103,7 @@ func (t tableGen) genIndex(fields string, id uint32, isPrimaryKey bool) {
 	}
 
 	t.P("type ", idxKeyName, " struct {")
-	t.P("vs []interface{}")
+	t.P("vs []any")
 	t.P("}")
 
 	t.genIndexInterfaceMethods(id, idxKeyName)
@@ -116,7 +116,7 @@ func (t tableGen) genIndex(fields string, id uint32, isPrimaryKey bool) {
 func (t tableGen) genIndexInterfaceMethods(id uint32, indexStructName string) {
 	funPrefix := fmt.Sprintf("func (x %s) ", indexStructName)
 	t.P(funPrefix, "id() uint32 {return ", id, "}")
-	t.P(funPrefix, "values() []interface{} {return x.vs}")
+	t.P(funPrefix, "values() []any {return x.vs}")
 	t.P(funPrefix, t.param(t.indexKeyInterfaceName()), "() {}")
 	t.P()
 }
@@ -130,7 +130,7 @@ func (t tableGen) genWithMethods(indexStructName string, parts []string) {
 	funcName := "With" + strings.Join(camelParts, "")
 
 	t.P(funcPrefix, funcName, "(", t.fieldArgsFromStringSlice(parts), ") ", indexStructName, "{")
-	t.P("this.vs = []interface{}{", strings.Join(parts, ","), "}")
+	t.P("this.vs = []any{", strings.Join(parts, ","), "}")
 	t.P("return this")
 	t.P("}")
 	t.P()

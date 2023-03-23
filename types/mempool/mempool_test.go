@@ -36,7 +36,7 @@ func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
 func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(_ []byte, _ []byte) bool { panic("not implemented") }
+func (t testPubKey) VerifySignature(_, _ []byte) bool { panic("not implemented") }
 
 func (t testPubKey) Equals(_ cryptotypes.PubKey) bool { panic("not implemented") }
 

@@ -412,7 +412,7 @@ func (c *Client) Status(ctx context.Context) (*rosettatypes.SyncStatus, error) {
 	return c.converter.ToRosetta().SyncStatus(status), err
 }
 
-func (c *Client) PostTx(txBytes []byte) (*rosettatypes.TransactionIdentifier, map[string]interface{}, error) {
+func (c *Client) PostTx(txBytes []byte) (*rosettatypes.TransactionIdentifier, map[string]any, error) {
 	// sync ensures it will go through checkTx
 	res, err := c.tmRPC.BroadcastTxSync(context.Background(), txBytes)
 	if err != nil {
@@ -429,7 +429,7 @@ func (c *Client) PostTx(txBytes []byte) (*rosettatypes.TransactionIdentifier, ma
 	return &rosettatypes.TransactionIdentifier{
 			Hash: fmt.Sprintf("%X", res.Hash),
 		},
-		map[string]interface{}{
+		map[string]any{
 			Log: res.Log,
 		}, nil
 }
@@ -437,7 +437,7 @@ func (c *Client) PostTx(txBytes []byte) (*rosettatypes.TransactionIdentifier, ma
 // construction endpoints
 
 // ConstructionMetadataFromOptions builds the metadata given the options
-func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error) {
+func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options map[string]any) (meta map[string]any, err error) {
 	if len(options) == 0 {
 		return nil, crgerrs.ErrBadArgument
 	}

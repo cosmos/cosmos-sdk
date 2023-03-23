@@ -62,7 +62,7 @@ var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 func GetProposalIDBytes(proposalID uint64) (proposalIDBz []byte) {
 	proposalIDBz = make([]byte, 8)
 	binary.BigEndian.PutUint64(proposalIDBz, proposalID)
-	return
+	return proposalIDBz
 }
 
 // GetProposalIDFromBytes returns proposalID in uint64 format from a byte array
@@ -160,7 +160,7 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 	}
 
 	proposalID = GetProposalIDFromBytes(key[1+lenTime:])
-	return
+	return proposalID, endTime
 }
 
 func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
@@ -170,5 +170,5 @@ func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
 	proposalID = GetProposalIDFromBytes(key[1:9])
 	kv.AssertKeyAtLeastLength(key, 11)
 	addr = sdk.AccAddress(key[10:])
-	return
+	return proposalID, addr
 }

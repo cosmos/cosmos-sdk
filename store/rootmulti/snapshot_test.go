@@ -92,7 +92,7 @@ func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *rootmulti.Store {
 	return store
 }
 
-func assertStoresEqual(t *testing.T, expect, actual types.CommitKVStore, msgAndArgs ...interface{}) {
+func assertStoresEqual(t *testing.T, expect, actual types.CommitKVStore, msgAndArgs ...any) {
 	assert.Equal(t, expect.LastCommitID(), actual.LastCommitID())
 	expectIter := expect.Iterator(nil, nil)
 	expectMap := map[string][]byte{}

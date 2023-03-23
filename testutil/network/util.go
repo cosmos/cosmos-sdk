@@ -196,7 +196,7 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	return nil
 }
 
-func writeFile(name string, dir string, contents []byte) error {
+func writeFile(name, dir string, contents []byte) error {
 	file := filepath.Join(dir, name)
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -225,5 +225,5 @@ func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
 	portI := l.Addr().(*net.TCPAddr).Port
 	port = fmt.Sprintf("%d", portI)
 	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
-	return
+	return addr, port, closeFn, nil
 }

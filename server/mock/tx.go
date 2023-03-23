@@ -37,7 +37,7 @@ func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
 func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(_ []byte, _ []byte) bool { panic("not implemented") }
+func (t testPubKey) VerifySignature(_, _ []byte) bool { panic("not implemented") }
 
 func (t testPubKey) Equals(_ cryptotypes.PubKey) bool { panic("not implemented") }
 
@@ -53,7 +53,7 @@ func (msg *KVStoreTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error)
 	return res, nil
 }
 
-func (msg *KVStoreTx) VerifySignature(_ []byte, _ []byte) bool {
+func (msg *KVStoreTx) VerifySignature(_, _ []byte) bool {
 	panic("implement me")
 }
 

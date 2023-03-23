@@ -44,7 +44,7 @@ func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress)
 }
 
 // GetAccount indicates an expected call of GetAccount.
-func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
 }
@@ -58,7 +58,7 @@ func (m *MockAccountKeeper) GetModuleAccount(ctx types.Context, name string) typ
 }
 
 // GetModuleAccount indicates an expected call of GetModuleAccount.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, name interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAccount), ctx, name)
 }
@@ -72,7 +72,7 @@ func (m *MockAccountKeeper) GetModuleAddress(name string) types.AccAddress {
 }
 
 // GetModuleAddress indicates an expected call of GetModuleAddress.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddress), name)
 }
@@ -84,7 +84,7 @@ func (m *MockAccountKeeper) SetModuleAccount(arg0 types.Context, arg1 types.Modu
 }
 
 // SetModuleAccount indicates an expected call of SetModuleAccount.
-func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetModuleAccount), arg0, arg1)
 }
@@ -121,7 +121,7 @@ func (m *MockBankKeeper) BlockedAddr(addr types.AccAddress) bool {
 }
 
 // BlockedAddr indicates an expected call of BlockedAddr.
-func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockedAddr", reflect.TypeOf((*MockBankKeeper)(nil).BlockedAddr), addr)
 }
@@ -135,7 +135,7 @@ func (m *MockBankKeeper) GetAllBalances(ctx types.Context, addr types.AccAddress
 }
 
 // GetAllBalances indicates an expected call of GetAllBalances.
-func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
 }
@@ -149,7 +149,7 @@ func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx types.Context, senderA
 }
 
 // SendCoinsFromAccountToModule indicates an expected call of SendCoinsFromAccountToModule.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAddr, recipientModule, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAddr, recipientModule, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromAccountToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromAccountToModule), ctx, senderAddr, recipientModule, amt)
 }
@@ -163,7 +163,7 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderM
 }
 
 // SendCoinsFromModuleToAccount indicates an expected call of SendCoinsFromModuleToAccount.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
@@ -177,7 +177,7 @@ func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx types.Context, senderMo
 }
 
 // SendCoinsFromModuleToModule indicates an expected call of SendCoinsFromModuleToModule.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
 }
@@ -191,7 +191,7 @@ func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress
 }
 
 // SpendableCoins indicates an expected call of SpendableCoins.
-func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
 }
@@ -228,7 +228,7 @@ func (m *MockStakingKeeper) Delegation(arg0 types.Context, arg1 types.AccAddress
 }
 
 // Delegation indicates an expected call of Delegation.
-func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegation", reflect.TypeOf((*MockStakingKeeper)(nil).Delegation), arg0, arg1, arg2)
 }
@@ -242,7 +242,7 @@ func (m *MockStakingKeeper) GetAllDelegatorDelegations(ctx types.Context, delega
 }
 
 // GetAllDelegatorDelegations indicates an expected call of GetAllDelegatorDelegations.
-func (mr *MockStakingKeeperMockRecorder) GetAllDelegatorDelegations(ctx, delegator interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) GetAllDelegatorDelegations(ctx, delegator any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllDelegatorDelegations", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllDelegatorDelegations), ctx, delegator)
 }
@@ -256,7 +256,7 @@ func (m *MockStakingKeeper) GetAllSDKDelegations(ctx types.Context) []types0.Del
 }
 
 // GetAllSDKDelegations indicates an expected call of GetAllSDKDelegations.
-func (mr *MockStakingKeeperMockRecorder) GetAllSDKDelegations(ctx interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) GetAllSDKDelegations(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSDKDelegations", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllSDKDelegations), ctx)
 }
@@ -270,7 +270,7 @@ func (m *MockStakingKeeper) GetAllValidators(ctx types.Context) []types0.Validat
 }
 
 // GetAllValidators indicates an expected call of GetAllValidators.
-func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
 }
@@ -282,7 +282,7 @@ func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator type
 }
 
 // IterateDelegations indicates an expected call of IterateDelegations.
-func (mr *MockStakingKeeperMockRecorder) IterateDelegations(ctx, delegator, fn interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) IterateDelegations(ctx, delegator, fn any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateDelegations", reflect.TypeOf((*MockStakingKeeper)(nil).IterateDelegations), ctx, delegator, fn)
 }
@@ -294,7 +294,7 @@ func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int6
 }
 
 // IterateValidators indicates an expected call of IterateValidators.
-func (mr *MockStakingKeeperMockRecorder) IterateValidators(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) IterateValidators(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateValidators", reflect.TypeOf((*MockStakingKeeper)(nil).IterateValidators), arg0, arg1)
 }
@@ -308,7 +308,7 @@ func (m *MockStakingKeeper) Validator(arg0 types.Context, arg1 types.ValAddress)
 }
 
 // Validator indicates an expected call of Validator.
-func (mr *MockStakingKeeperMockRecorder) Validator(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) Validator(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validator", reflect.TypeOf((*MockStakingKeeper)(nil).Validator), arg0, arg1)
 }
@@ -322,7 +322,7 @@ func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types.Context, arg1 types.C
 }
 
 // ValidatorByConsAddr indicates an expected call of ValidatorByConsAddr.
-func (mr *MockStakingKeeperMockRecorder) ValidatorByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) ValidatorByConsAddr(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorByConsAddr", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorByConsAddr), arg0, arg1)
 }
@@ -357,7 +357,7 @@ func (m *MockStakingHooks) AfterDelegationModified(ctx types.Context, delAddr ty
 }
 
 // AfterDelegationModified indicates an expected call of AfterDelegationModified.
-func (mr *MockStakingHooksMockRecorder) AfterDelegationModified(ctx, delAddr, valAddr interface{}) *gomock.Call {
+func (mr *MockStakingHooksMockRecorder) AfterDelegationModified(ctx, delAddr, valAddr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDelegationModified", reflect.TypeOf((*MockStakingHooks)(nil).AfterDelegationModified), ctx, delAddr, valAddr)
 }
@@ -369,7 +369,7 @@ func (m *MockStakingHooks) AfterValidatorCreated(ctx types.Context, valAddr type
 }
 
 // AfterValidatorCreated indicates an expected call of AfterValidatorCreated.
-func (mr *MockStakingHooksMockRecorder) AfterValidatorCreated(ctx, valAddr interface{}) *gomock.Call {
+func (mr *MockStakingHooksMockRecorder) AfterValidatorCreated(ctx, valAddr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterValidatorCreated", reflect.TypeOf((*MockStakingHooks)(nil).AfterValidatorCreated), ctx, valAddr)
 }

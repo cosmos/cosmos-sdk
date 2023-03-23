@@ -57,7 +57,7 @@ type ConstructionPreprocessMetadata struct {
 	GasPrice string `json:"gas_price"`
 }
 
-func (c *ConstructionPreprocessMetadata) FromMetadata(meta map[string]interface{}) error {
+func (c *ConstructionPreprocessMetadata) FromMetadata(meta map[string]any) error {
 	return unmarshalMetadata(meta, c)
 }
 
@@ -69,11 +69,11 @@ type PreprocessOperationsOptionsResponse struct {
 	GasPrice        string   `json:"gas_price"`
 }
 
-func (c PreprocessOperationsOptionsResponse) ToMetadata() (map[string]interface{}, error) {
+func (c PreprocessOperationsOptionsResponse) ToMetadata() (map[string]any, error) {
 	return marshalMetadata(c)
 }
 
-func (c *PreprocessOperationsOptionsResponse) FromMetadata(meta map[string]interface{}) error {
+func (c *PreprocessOperationsOptionsResponse) FromMetadata(meta map[string]any) error {
 	return unmarshalMetadata(meta, c)
 }
 
@@ -95,10 +95,10 @@ type ConstructionMetadata struct {
 	Memo        string        `json:"memo"`
 }
 
-func (c ConstructionMetadata) ToMetadata() (map[string]interface{}, error) {
+func (c ConstructionMetadata) ToMetadata() (map[string]any, error) {
 	return marshalMetadata(c)
 }
 
-func (c *ConstructionMetadata) FromMetadata(meta map[string]interface{}) error {
+func (c *ConstructionMetadata) FromMetadata(meta map[string]any) error {
 	return unmarshalMetadata(meta, c)
 }

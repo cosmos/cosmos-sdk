@@ -32,12 +32,12 @@ func TestMetrics_InMem(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, gr.ContentType, "application/json")
 
-	jsonMetrics := make(map[string]interface{})
+	jsonMetrics := make(map[string]any)
 	require.NoError(t, json.Unmarshal(gr.Metrics, &jsonMetrics))
 
-	counters := jsonMetrics["Counters"].([]interface{})
-	require.Equal(t, counters[0].(map[string]interface{})["Count"].(float64), 10.0)
-	require.Equal(t, counters[0].(map[string]interface{})["Name"].(string), "test.dummy_counter")
+	counters := jsonMetrics["Counters"].([]any)
+	require.Equal(t, counters[0].(map[string]any)["Count"].(float64), 10.0)
+	require.Equal(t, counters[0].(map[string]any)["Name"].(string), "test.dummy_counter")
 }
 
 func TestMetrics_Prom(t *testing.T) {

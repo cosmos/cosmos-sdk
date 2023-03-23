@@ -53,13 +53,49 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
-  dogsled:
-    max-blank-identifiers: 3
-  maligned:
-    # print struct with more effective memory layout or not, false by default
-    suggest-new: true
-  nolintlint:
-    allow-unused: false
-    allow-leading-space: true
-    require-explanation: false
-    require-specific: false
+  gofumpt:
+    # Module path which contains the source code being formatted.
+    # Default: ""
+    module-path: github.com/cosmos/cosmos-sdk
+    # Choose whether to use the extra rules.
+    # Default: false
+    extra-rules: true
+  revive:
+    ignore-generated-header: true
+    severity: error
+    enable-all-rules: true
+    rules:
+      - name: function-result-limit
+        disabled: true
+      - name: argument-limit
+        disabled: true
+      - name: function-length
+        disabled: true
+      - name: cyclomatic
+        disabled: true
+      - name: file-header
+        disabled: true
+      - name: max-public-structs
+        disabled: true
+      - name: cognitive-complexity
+        disabled: true
+      - name: line-length-limit
+        disabled: true
+      - name: banned-characters
+        disabled: true
+      - name: unhandled-error
+        arguments : ["fmt.Printf", "fmt.Println"]
+      - name: add-constant
+        disabled: true
+      - name: flag-parameter
+        disabled: true
+      - name: comment-spacings
+        disabled: true
+      - name: deep-exit
+        disabled: true
+      - name: defer
+        disabled: true
+      - name: nested-structs
+        disabled: true
+      - name: early-return
+        disabled: true

@@ -47,7 +47,7 @@ func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, ke
 func (app *BaseApp) registerStreamingPlugin(
 	appOpts servertypes.AppOptions,
 	keys map[string]*storetypes.KVStoreKey,
-	streamingPlugin interface{},
+	streamingPlugin any,
 ) error {
 	v, ok := streamingPlugin.(storetypes.ABCIListener)
 	if !ok {

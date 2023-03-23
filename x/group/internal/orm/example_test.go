@@ -32,8 +32,8 @@ func NewTestKeeper(cdc codec.Codec) TestKeeper {
 	if err != nil {
 		panic(err.Error())
 	}
-	k.autoUInt64TableModelByMetadataIndex, err = NewIndex(k.autoUInt64Table, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
+	k.autoUInt64TableModelByMetadataIndex, err = NewIndex(k.autoUInt64Table, AutoUInt64TableModelByMetadataPrefix, func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Metadata}, nil
 	}, testdata.TableModel{}.Metadata)
 	if err != nil {
 		panic(err.Error())
@@ -43,20 +43,20 @@ func NewTestKeeper(cdc codec.Codec) TestKeeper {
 	if err != nil {
 		panic(err.Error())
 	}
-	k.primaryKeyTableModelByNameIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByNamePrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Name}, nil
+	k.primaryKeyTableModelByNameIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByNamePrefix, func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Name}, nil
 	}, testdata.TableModel{}.Name)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.primaryKeyTableModelByNumberIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByNumberPrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Number}, nil
+	k.primaryKeyTableModelByNumberIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByNumberPrefix, func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Number}, nil
 	}, testdata.TableModel{}.Number)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.primaryKeyTableModelByMetadataIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
+	k.primaryKeyTableModelByMetadataIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByMetadataPrefix, func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Metadata}, nil
 	}, testdata.TableModel{}.Metadata)
 	if err != nil {
 		panic(err.Error())

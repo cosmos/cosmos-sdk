@@ -32,7 +32,7 @@ func (k Keeper) DeleteDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAd
 }
 
 // iterate over delegator withdraw addrs
-func (k Keeper) IterateDelegatorWithdrawAddrs(ctx sdk.Context, handler func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool)) {
+func (k Keeper) IterateDelegatorWithdrawAddrs(ctx sdk.Context, handler func(del, addr sdk.AccAddress) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := storetypes.KVStorePrefixIterator(store, types.DelegatorWithdrawAddrPrefix)
 	defer iter.Close()
@@ -53,7 +53,7 @@ func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 		panic("Stored fee pool should not have been nil")
 	}
 	k.cdc.MustUnmarshal(b, &feePool)
-	return
+	return feePool
 }
 
 // set the global fee pool distribution info
@@ -89,7 +89,7 @@ func (k Keeper) GetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, de
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.GetDelegatorStartingInfoKey(val, del))
 	k.cdc.MustUnmarshal(b, &period)
-	return
+	return period
 }
 
 // set the starting info associated with a delegator
@@ -131,7 +131,7 @@ func (k Keeper) GetValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddres
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.GetValidatorHistoricalRewardsKey(val, period))
 	k.cdc.MustUnmarshal(b, &rewards)
-	return
+	return rewards
 }
 
 // set historical rewards for a particular period
@@ -192,7 +192,7 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx sdk.Context) (count uin
 		k.cdc.MustUnmarshal(iter.Value(), &rewards)
 		count += uint64(rewards.ReferenceCount)
 	}
-	return
+	return count
 }
 
 // get current rewards for a validator
@@ -200,7 +200,7 @@ func (k Keeper) GetValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress) 
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.GetValidatorCurrentRewardsKey(val))
 	k.cdc.MustUnmarshal(b, &rewards)
-	return
+	return rewards
 }
 
 // set current rewards for a validator
@@ -239,7 +239,7 @@ func (k Keeper) GetValidatorAccumulatedCommission(ctx sdk.Context, val sdk.ValAd
 		return types.ValidatorAccumulatedCommission{}
 	}
 	k.cdc.MustUnmarshal(b, &commission)
-	return
+	return commission
 }
 
 // set accumulated commission for a validator
@@ -282,7 +282,7 @@ func (k Keeper) GetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddre
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetValidatorOutstandingRewardsKey(val))
 	k.cdc.MustUnmarshal(bz, &rewards)
-	return
+	return rewards
 }
 
 // set validator outstanding rewards
@@ -332,7 +332,7 @@ func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 }
 
 // iterate over slash events between heights, inclusive
-func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValAddress, startingHeight uint64, endingHeight uint64,
+func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValAddress, startingHeight, endingHeight uint64,
 	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool),
 ) {
 	store := ctx.KVStore(k.storeKey)

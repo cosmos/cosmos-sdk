@@ -149,7 +149,7 @@ func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
 
 // Wrapf extends this error with an additional information.
 // It's a handy function to call Wrapf with sdk errors.
-func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
+func (e *Error) Wrapf(desc string, args ...any) error { return Wrapf(e, desc, args...) }
 
 func (e *Error) GRPCStatus() *grpcstatus.Status {
 	return grpcstatus.Newf(e.grpcCode, "codespace %s code %d: %s", e.codespace, e.code, e.desc)
@@ -196,7 +196,7 @@ func Wrap(err error, description string) error {
 //
 // This function works like Wrap function with additional functionality of
 // formatting the input as specified.
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(err error, format string, args ...any) error {
 	desc := fmt.Sprintf(format, args...)
 	return Wrap(err, desc)
 }
@@ -274,7 +274,7 @@ func Recover(err *error) {
 }
 
 // WithType is a helper to augment an error with a corresponding type message
-func WithType(err error, obj interface{}) error {
+func WithType(err error, obj any) error {
 	return Wrap(err, fmt.Sprintf("%T", obj))
 }
 

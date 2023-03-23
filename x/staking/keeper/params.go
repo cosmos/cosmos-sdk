@@ -40,7 +40,7 @@ func (k Keeper) BondDenom(ctx sdk.Context) string {
 // Currently, this returns a global variable that the app developer can tweak.
 // TODO: we might turn this into an on-chain param:
 // https://github.com/cosmos/cosmos-sdk/issues/8365
-func (k Keeper) PowerReduction() math.Int {
+func (Keeper) PowerReduction() math.Int {
 	return sdk.DefaultPowerReduction
 }
 

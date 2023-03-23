@@ -9,7 +9,7 @@ import (
 
 func TestKeyTableUnfurlsPointers(t *testing.T) {
 	tbl := NewKeyTable()
-	validator := func(_ interface{}) error {
+	validator := func(_ any) error {
 		return nil
 	}
 	tbl = tbl.RegisterType(ParamSetPair{

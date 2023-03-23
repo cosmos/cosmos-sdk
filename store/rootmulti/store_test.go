@@ -690,7 +690,7 @@ func TestTraceConcurrency(t *testing.T) {
 
 	b := &bytes.Buffer{}
 	key := multi.keysByName["store1"]
-	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
+	tc := types.TraceContext(map[string]any{"blockHeight": 64})
 
 	multi.SetTracer(b)
 	multi.SetTracingContext(tc)

@@ -230,7 +230,7 @@ func (c *debugConfig) dedentLogger() {
 	}
 }
 
-func (c debugConfig) logf(format string, args ...interface{}) {
+func (c debugConfig) logf(format string, args ...any) {
 	s := fmt.Sprintf(c.indentStr+format, args...)
 	for _, logger := range c.loggers {
 		logger(s)

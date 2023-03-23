@@ -230,7 +230,7 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 }
 
 // calculate total pages in an overflow safe manner
-func calcTotalPages(totalCount int64, limit int64) int64 {
+func calcTotalPages(totalCount, limit int64) int64 {
 	totalPages := int64(0)
 	if totalCount != 0 && limit != 0 {
 		if totalCount%limit > 0 {

@@ -5,7 +5,7 @@ import (
 )
 
 // TxExtensionOptionI defines the interface for tx extension options
-type ExtensionOptionI interface{}
+type ExtensionOptionI any
 
 // unpackTxExtensionOptionsI unpacks Any's to TxExtensionOptionI's.
 func unpackTxExtensionOptionsI(unpacker types.AnyUnpacker, anys []*types.Any) error {

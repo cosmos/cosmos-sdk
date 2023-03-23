@@ -41,7 +41,7 @@ func (i ExampleTableIterator) Value() (*ExampleTable, error) {
 
 type ExampleTableIndexKey interface {
 	id() uint32
-	values() []interface{}
+	values() []any
 	exampleTableIndexKey()
 }
 
@@ -49,79 +49,79 @@ type ExampleTableIndexKey interface {
 type ExampleTablePrimaryKey = ExampleTableU32I64StrIndexKey
 
 type ExampleTableU32I64StrIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleTableU32I64StrIndexKey) id() uint32            { return 0 }
-func (x ExampleTableU32I64StrIndexKey) values() []interface{} { return x.vs }
+func (x ExampleTableU32I64StrIndexKey) values() []any { return x.vs }
 func (x ExampleTableU32I64StrIndexKey) exampleTableIndexKey() {}
 
 func (this ExampleTableU32I64StrIndexKey) WithU32(u32 uint32) ExampleTableU32I64StrIndexKey {
-	this.vs = []interface{}{u32}
+	this.vs = []any{u32}
 	return this
 }
 
 func (this ExampleTableU32I64StrIndexKey) WithU32I64(u32 uint32, i64 int64) ExampleTableU32I64StrIndexKey {
-	this.vs = []interface{}{u32, i64}
+	this.vs = []any{u32, i64}
 	return this
 }
 
 func (this ExampleTableU32I64StrIndexKey) WithU32I64Str(u32 uint32, i64 int64, str string) ExampleTableU32I64StrIndexKey {
-	this.vs = []interface{}{u32, i64, str}
+	this.vs = []any{u32, i64, str}
 	return this
 }
 
 type ExampleTableU64StrIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleTableU64StrIndexKey) id() uint32            { return 1 }
-func (x ExampleTableU64StrIndexKey) values() []interface{} { return x.vs }
+func (x ExampleTableU64StrIndexKey) values() []any { return x.vs }
 func (x ExampleTableU64StrIndexKey) exampleTableIndexKey() {}
 
 func (this ExampleTableU64StrIndexKey) WithU64(u64 uint64) ExampleTableU64StrIndexKey {
-	this.vs = []interface{}{u64}
+	this.vs = []any{u64}
 	return this
 }
 
 func (this ExampleTableU64StrIndexKey) WithU64Str(u64 uint64, str string) ExampleTableU64StrIndexKey {
-	this.vs = []interface{}{u64, str}
+	this.vs = []any{u64, str}
 	return this
 }
 
 type ExampleTableStrU32IndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleTableStrU32IndexKey) id() uint32            { return 2 }
-func (x ExampleTableStrU32IndexKey) values() []interface{} { return x.vs }
+func (x ExampleTableStrU32IndexKey) values() []any { return x.vs }
 func (x ExampleTableStrU32IndexKey) exampleTableIndexKey() {}
 
 func (this ExampleTableStrU32IndexKey) WithStr(str string) ExampleTableStrU32IndexKey {
-	this.vs = []interface{}{str}
+	this.vs = []any{str}
 	return this
 }
 
 func (this ExampleTableStrU32IndexKey) WithStrU32(str string, u32 uint32) ExampleTableStrU32IndexKey {
-	this.vs = []interface{}{str, u32}
+	this.vs = []any{str, u32}
 	return this
 }
 
 type ExampleTableBzStrIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleTableBzStrIndexKey) id() uint32            { return 3 }
-func (x ExampleTableBzStrIndexKey) values() []interface{} { return x.vs }
+func (x ExampleTableBzStrIndexKey) values() []any { return x.vs }
 func (x ExampleTableBzStrIndexKey) exampleTableIndexKey() {}
 
 func (this ExampleTableBzStrIndexKey) WithBz(bz []byte) ExampleTableBzStrIndexKey {
-	this.vs = []interface{}{bz}
+	this.vs = []any{bz}
 	return this
 }
 
 func (this ExampleTableBzStrIndexKey) WithBzStr(bz []byte, str string) ExampleTableBzStrIndexKey {
-	this.vs = []interface{}{bz, str}
+	this.vs = []any{bz, str}
 	return this
 }
 
@@ -246,7 +246,7 @@ func (i ExampleAutoIncrementTableIterator) Value() (*ExampleAutoIncrementTable, 
 
 type ExampleAutoIncrementTableIndexKey interface {
 	id() uint32
-	values() []interface{}
+	values() []any
 	exampleAutoIncrementTableIndexKey()
 }
 
@@ -254,28 +254,28 @@ type ExampleAutoIncrementTableIndexKey interface {
 type ExampleAutoIncrementTablePrimaryKey = ExampleAutoIncrementTableIdIndexKey
 
 type ExampleAutoIncrementTableIdIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleAutoIncrementTableIdIndexKey) id() uint32                         { return 0 }
-func (x ExampleAutoIncrementTableIdIndexKey) values() []interface{}              { return x.vs }
+func (x ExampleAutoIncrementTableIdIndexKey) values() []any              { return x.vs }
 func (x ExampleAutoIncrementTableIdIndexKey) exampleAutoIncrementTableIndexKey() {}
 
 func (this ExampleAutoIncrementTableIdIndexKey) WithId(id uint64) ExampleAutoIncrementTableIdIndexKey {
-	this.vs = []interface{}{id}
+	this.vs = []any{id}
 	return this
 }
 
 type ExampleAutoIncrementTableXIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleAutoIncrementTableXIndexKey) id() uint32                         { return 1 }
-func (x ExampleAutoIncrementTableXIndexKey) values() []interface{}              { return x.vs }
+func (x ExampleAutoIncrementTableXIndexKey) values() []any              { return x.vs }
 func (x ExampleAutoIncrementTableXIndexKey) exampleAutoIncrementTableIndexKey() {}
 
 func (this ExampleAutoIncrementTableXIndexKey) WithX(x string) ExampleAutoIncrementTableXIndexKey {
-	this.vs = []interface{}{x}
+	this.vs = []any{x}
 	return this
 }
 
@@ -433,7 +433,7 @@ func (i ExampleTimestampIterator) Value() (*ExampleTimestamp, error) {
 
 type ExampleTimestampIndexKey interface {
 	id() uint32
-	values() []interface{}
+	values() []any
 	exampleTimestampIndexKey()
 }
 
@@ -441,28 +441,28 @@ type ExampleTimestampIndexKey interface {
 type ExampleTimestampPrimaryKey = ExampleTimestampIdIndexKey
 
 type ExampleTimestampIdIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleTimestampIdIndexKey) id() uint32                { return 0 }
-func (x ExampleTimestampIdIndexKey) values() []interface{}     { return x.vs }
+func (x ExampleTimestampIdIndexKey) values() []any     { return x.vs }
 func (x ExampleTimestampIdIndexKey) exampleTimestampIndexKey() {}
 
 func (this ExampleTimestampIdIndexKey) WithId(id uint64) ExampleTimestampIdIndexKey {
-	this.vs = []interface{}{id}
+	this.vs = []any{id}
 	return this
 }
 
 type ExampleTimestampTsIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleTimestampTsIndexKey) id() uint32                { return 1 }
-func (x ExampleTimestampTsIndexKey) values() []interface{}     { return x.vs }
+func (x ExampleTimestampTsIndexKey) values() []any     { return x.vs }
 func (x ExampleTimestampTsIndexKey) exampleTimestampIndexKey() {}
 
 func (this ExampleTimestampTsIndexKey) WithTs(ts *timestamppb.Timestamp) ExampleTimestampTsIndexKey {
-	this.vs = []interface{}{ts}
+	this.vs = []any{ts}
 	return this
 }
 
@@ -571,7 +571,7 @@ func (i SimpleExampleIterator) Value() (*SimpleExample, error) {
 
 type SimpleExampleIndexKey interface {
 	id() uint32
-	values() []interface{}
+	values() []any
 	simpleExampleIndexKey()
 }
 
@@ -579,28 +579,28 @@ type SimpleExampleIndexKey interface {
 type SimpleExamplePrimaryKey = SimpleExampleNameIndexKey
 
 type SimpleExampleNameIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x SimpleExampleNameIndexKey) id() uint32             { return 0 }
-func (x SimpleExampleNameIndexKey) values() []interface{}  { return x.vs }
+func (x SimpleExampleNameIndexKey) values() []any  { return x.vs }
 func (x SimpleExampleNameIndexKey) simpleExampleIndexKey() {}
 
 func (this SimpleExampleNameIndexKey) WithName(name string) SimpleExampleNameIndexKey {
-	this.vs = []interface{}{name}
+	this.vs = []any{name}
 	return this
 }
 
 type SimpleExampleUniqueIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x SimpleExampleUniqueIndexKey) id() uint32             { return 1 }
-func (x SimpleExampleUniqueIndexKey) values() []interface{}  { return x.vs }
+func (x SimpleExampleUniqueIndexKey) values() []any  { return x.vs }
 func (x SimpleExampleUniqueIndexKey) simpleExampleIndexKey() {}
 
 func (this SimpleExampleUniqueIndexKey) WithUnique(unique string) SimpleExampleUniqueIndexKey {
-	this.vs = []interface{}{unique}
+	this.vs = []any{unique}
 	return this
 }
 
@@ -720,7 +720,7 @@ func (i ExampleAutoIncFieldNameIterator) Value() (*ExampleAutoIncFieldName, erro
 
 type ExampleAutoIncFieldNameIndexKey interface {
 	id() uint32
-	values() []interface{}
+	values() []any
 	exampleAutoIncFieldNameIndexKey()
 }
 
@@ -728,15 +728,15 @@ type ExampleAutoIncFieldNameIndexKey interface {
 type ExampleAutoIncFieldNamePrimaryKey = ExampleAutoIncFieldNameFooIndexKey
 
 type ExampleAutoIncFieldNameFooIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x ExampleAutoIncFieldNameFooIndexKey) id() uint32                       { return 0 }
-func (x ExampleAutoIncFieldNameFooIndexKey) values() []interface{}            { return x.vs }
+func (x ExampleAutoIncFieldNameFooIndexKey) values() []any            { return x.vs }
 func (x ExampleAutoIncFieldNameFooIndexKey) exampleAutoIncFieldNameIndexKey() {}
 
 func (this ExampleAutoIncFieldNameFooIndexKey) WithFoo(foo uint64) ExampleAutoIncFieldNameFooIndexKey {
-	this.vs = []interface{}{foo}
+	this.vs = []any{foo}
 	return this
 }
 

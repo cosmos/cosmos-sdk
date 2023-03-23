@@ -224,7 +224,7 @@ func Paginate(
 // *[]Model Because of Go's type system, using []Model type would not work for us.
 // Instead we use a placeholder type and the validation is done during the
 // runtime.
-type ModelSlicePtr interface{}
+type ModelSlicePtr any
 
 // ReadAll consumes all values for the iterator and stores them in a new slice at the passed ModelSlicePtr.
 // The slice can be empty when the iterator does not return any values but not nil. The iterator
@@ -273,7 +273,7 @@ func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 // assertDest checks that the provided dest is not nil and a pointer to a slice.
 // It also verifies that the slice elements implement *codec.ProtoMarshaler.
 // It overwrites destRef and tmpSlice using reflection.
-func assertDest(dest ModelSlicePtr, destRef *reflect.Value, tmpSlice *reflect.Value) (reflect.Type, error) {
+func assertDest(dest ModelSlicePtr, destRef, tmpSlice *reflect.Value) (reflect.Type, error) {
 	if dest == nil {
 		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination must not be nil")
 	}
@@ -285,7 +285,7 @@ func assertDest(dest ModelSlicePtr, destRef *reflect.Value, tmpSlice *reflect.Va
 		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination must point to a slice")
 	}
 
-	// Since dest is just an interface{}, we overwrite destRef using reflection
+	// Since dest is just an any, we overwrite destRef using reflection
 	// to have an assignable copy of it.
 	*destRef = tp.Elem()
 	// We need to verify that we can call Set() on destRef.

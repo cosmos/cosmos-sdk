@@ -19,8 +19,8 @@ type ModuleInitializer struct {
 	ConfigGoType       reflect.Type
 	ConfigProtoMessage proto.Message
 	Error              error
-	Providers          []interface{}
-	Invokers           []interface{}
+	Providers          []any
+	Invokers           []any
 }
 
 // ModulesByProtoMessageName should be used to retrieve modules by their protobuf name.

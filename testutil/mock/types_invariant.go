@@ -41,7 +41,7 @@ func (m *MockInvariantRegistry) RegisterRoute(moduleName, route string, invar ty
 }
 
 // RegisterRoute indicates an expected call of RegisterRoute.
-func (mr *MockInvariantRegistryMockRecorder) RegisterRoute(moduleName, route, invar interface{}) *gomock.Call {
+func (mr *MockInvariantRegistryMockRecorder) RegisterRoute(moduleName, route, invar any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRoute", reflect.TypeOf((*MockInvariantRegistry)(nil).RegisterRoute), moduleName, route, invar)
 }

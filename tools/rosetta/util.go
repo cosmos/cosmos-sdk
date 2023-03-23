@@ -13,7 +13,7 @@ func timeToMilliseconds(t time.Time) int64 {
 }
 
 // unmarshalMetadata unmarshals the given meta to the target
-func unmarshalMetadata(meta map[string]interface{}, target interface{}) error {
+func unmarshalMetadata(meta map[string]any, target any) error {
 	b, err := json.Marshal(meta)
 	if err != nil {
 		return crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
@@ -27,13 +27,13 @@ func unmarshalMetadata(meta map[string]interface{}, target interface{}) error {
 	return nil
 }
 
-// marshalMetadata marshals the given interface to map[string]interface{}
-func marshalMetadata(o interface{}) (meta map[string]interface{}, err error) {
+// marshalMetadata marshals the given interface to map[string]any
+func marshalMetadata(o any) (meta map[string]any, err error) {
 	b, err := json.Marshal(o)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
 	}
-	meta = make(map[string]interface{})
+	meta = make(map[string]any)
 	err = json.Unmarshal(b, &meta)
 	if err != nil {
 		return nil, err

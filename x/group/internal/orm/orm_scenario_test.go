@@ -394,7 +394,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	}
 }
 
-func assertIndex(t *testing.T, store storetypes.KVStore, index Index, v testdata.TableModel, searchKey interface{}) {
+func assertIndex(t *testing.T, store storetypes.KVStore, index Index, v testdata.TableModel, searchKey any) {
 	it, err := index.Get(store, searchKey)
 	require.NoError(t, err)
 

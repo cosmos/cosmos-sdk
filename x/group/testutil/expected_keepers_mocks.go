@@ -45,7 +45,7 @@ func (m *MockAccountKeeper) GetAccount(arg0 types.Context, arg1 types.AccAddress
 }
 
 // GetAccount indicates an expected call of GetAccount.
-func (mr *MockAccountKeeperMockRecorder) GetAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) GetAccount(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), arg0, arg1)
 }
@@ -59,7 +59,7 @@ func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types.AccountI) 
 }
 
 // NewAccount indicates an expected call of NewAccount.
-func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAccount", reflect.TypeOf((*MockAccountKeeper)(nil).NewAccount), arg0, arg1)
 }
@@ -71,7 +71,7 @@ func (m *MockAccountKeeper) RemoveAccount(ctx types.Context, acc types.AccountI)
 }
 
 // RemoveAccount indicates an expected call of RemoveAccount.
-func (mr *MockAccountKeeperMockRecorder) RemoveAccount(ctx, acc interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) RemoveAccount(ctx, acc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAccount", reflect.TypeOf((*MockAccountKeeper)(nil).RemoveAccount), ctx, acc)
 }
@@ -83,7 +83,7 @@ func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types.AccountI) 
 }
 
 // SetAccount indicates an expected call of SetAccount.
-func (mr *MockAccountKeeperMockRecorder) SetAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) SetAccount(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), arg0, arg1)
 }
@@ -120,7 +120,7 @@ func (m *MockBankKeeper) GetAllBalances(ctx types.Context, addr types.AccAddress
 }
 
 // GetAllBalances indicates an expected call of GetAllBalances.
-func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
 }
@@ -134,7 +134,7 @@ func (m *MockBankKeeper) MintCoins(ctx types.Context, moduleName string, amt typ
 }
 
 // MintCoins indicates an expected call of MintCoins.
-func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, moduleName, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, moduleName, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MintCoins", reflect.TypeOf((*MockBankKeeper)(nil).MintCoins), ctx, moduleName, amt)
 }
@@ -149,7 +149,7 @@ func (m *MockBankKeeper) MultiSend(arg0 context.Context, arg1 *types0.MsgMultiSe
 }
 
 // MultiSend indicates an expected call of MultiSend.
-func (mr *MockBankKeeperMockRecorder) MultiSend(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) MultiSend(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MultiSend", reflect.TypeOf((*MockBankKeeper)(nil).MultiSend), arg0, arg1)
 }
@@ -164,7 +164,7 @@ func (m *MockBankKeeper) Send(arg0 context.Context, arg1 *types0.MsgSend) (*type
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockBankKeeperMockRecorder) Send(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) Send(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockBankKeeper)(nil).Send), arg0, arg1)
 }
@@ -178,7 +178,7 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderM
 }
 
 // SendCoinsFromModuleToAccount indicates an expected call of SendCoinsFromModuleToAccount.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
@@ -193,7 +193,7 @@ func (m *MockBankKeeper) SetSendEnabled(arg0 context.Context, arg1 *types0.MsgSe
 }
 
 // SetSendEnabled indicates an expected call of SetSendEnabled.
-func (mr *MockBankKeeperMockRecorder) SetSendEnabled(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SetSendEnabled(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSendEnabled", reflect.TypeOf((*MockBankKeeper)(nil).SetSendEnabled), arg0, arg1)
 }
@@ -207,7 +207,7 @@ func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress
 }
 
 // SpendableCoins indicates an expected call of SpendableCoins.
-func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
 }
@@ -222,7 +222,7 @@ func (m *MockBankKeeper) UpdateParams(arg0 context.Context, arg1 *types0.MsgUpda
 }
 
 // UpdateParams indicates an expected call of UpdateParams.
-func (mr *MockBankKeeperMockRecorder) UpdateParams(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) UpdateParams(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateParams", reflect.TypeOf((*MockBankKeeper)(nil).UpdateParams), arg0, arg1)
 }

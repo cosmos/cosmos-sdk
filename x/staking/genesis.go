@@ -35,7 +35,7 @@ func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.Ge
 		return false
 	})
 
-	return
+	return vals, returnErr
 }
 
 // ValidateGenesis validates the provided staking genesis state to ensure the

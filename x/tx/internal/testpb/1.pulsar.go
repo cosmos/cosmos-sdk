@@ -6798,7 +6798,7 @@ func file__1_proto_init() {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file__1_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file__1_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*A); i {
 			case 0:
 				return &v.state
@@ -6810,7 +6810,7 @@ func file__1_proto_init() {
 				return nil
 			}
 		}
-		file__1_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file__1_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*Foo); i {
 			case 0:
 				return &v.state
@@ -6822,7 +6822,7 @@ func file__1_proto_init() {
 				return nil
 			}
 		}
-		file__1_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file__1_proto_msgTypes[2].Exporter = func(v any, i int) any {
 			switch v := v.(*Bar); i {
 			case 0:
 				return &v.state
@@ -6834,7 +6834,7 @@ func file__1_proto_init() {
 				return nil
 			}
 		}
-		file__1_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file__1_proto_msgTypes[3].Exporter = func(v any, i int) any {
 			switch v := v.(*Baz); i {
 			case 0:
 				return &v.state
@@ -6846,7 +6846,7 @@ func file__1_proto_init() {
 				return nil
 			}
 		}
-		file__1_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file__1_proto_msgTypes[4].Exporter = func(v any, i int) any {
 			switch v := v.(*Qux); i {
 			case 0:
 				return &v.state
@@ -6858,7 +6858,7 @@ func file__1_proto_init() {
 				return nil
 			}
 		}
-		file__1_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file__1_proto_msgTypes[5].Exporter = func(v any, i int) any {
 			switch v := v.(*WeightedBallotOption); i {
 			case 0:
 				return &v.state
@@ -6870,7 +6870,7 @@ func file__1_proto_init() {
 				return nil
 			}
 		}
-		file__1_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file__1_proto_msgTypes[6].Exporter = func(v any, i int) any {
 			switch v := v.(*Ballot); i {
 			case 0:
 				return &v.state

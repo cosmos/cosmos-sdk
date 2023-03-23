@@ -38,7 +38,7 @@ type providerOutput struct {
 	Type reflect.Type
 }
 
-func extractProviderDescriptor(provider interface{}) (providerDescriptor, error) {
+func extractProviderDescriptor(provider any) (providerDescriptor, error) {
 	rctr, err := doExtractProviderDescriptor(provider)
 	if err != nil {
 		return providerDescriptor{}, err
@@ -46,7 +46,7 @@ func extractProviderDescriptor(provider interface{}) (providerDescriptor, error)
 	return postProcessProvider(rctr)
 }
 
-func extractInvokerDescriptor(provider interface{}) (providerDescriptor, error) {
+func extractInvokerDescriptor(provider any) (providerDescriptor, error) {
 	rctr, err := doExtractProviderDescriptor(provider)
 	if err != nil {
 		return providerDescriptor{}, err
@@ -61,7 +61,7 @@ func extractInvokerDescriptor(provider interface{}) (providerDescriptor, error) 
 	return postProcessProvider(rctr)
 }
 
-func doExtractProviderDescriptor(ctr interface{}) (providerDescriptor, error) {
+func doExtractProviderDescriptor(ctr any) (providerDescriptor, error) {
 	val := reflect.ValueOf(ctr)
 	typ := val.Type()
 	if typ.Kind() != reflect.Func {

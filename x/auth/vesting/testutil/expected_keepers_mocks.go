@@ -43,7 +43,7 @@ func (m *MockBankKeeper) BlockedAddr(addr types.AccAddress) bool {
 }
 
 // BlockedAddr indicates an expected call of BlockedAddr.
-func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockedAddr", reflect.TypeOf((*MockBankKeeper)(nil).BlockedAddr), addr)
 }
@@ -51,7 +51,7 @@ func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr interface{}) *gomock.Call
 // IsSendEnabledCoins mocks base method.
 func (m *MockBankKeeper) IsSendEnabledCoins(ctx types.Context, coins ...types.Coin) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx}
+	varargs := []any{ctx}
 	for _, a := range coins {
 		varargs = append(varargs, a)
 	}
@@ -61,9 +61,9 @@ func (m *MockBankKeeper) IsSendEnabledCoins(ctx types.Context, coins ...types.Co
 }
 
 // IsSendEnabledCoins indicates an expected call of IsSendEnabledCoins.
-func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoins(ctx interface{}, coins ...interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoins(ctx any, coins ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx}, coins...)
+	varargs := append([]any{ctx}, coins...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSendEnabledCoins", reflect.TypeOf((*MockBankKeeper)(nil).IsSendEnabledCoins), varargs...)
 }
 
@@ -76,7 +76,7 @@ func (m *MockBankKeeper) SendCoins(ctx types.Context, fromAddr, toAddr types.Acc
 }
 
 // SendCoins indicates an expected call of SendCoins.
-func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoins", reflect.TypeOf((*MockBankKeeper)(nil).SendCoins), ctx, fromAddr, toAddr, amt)
 }

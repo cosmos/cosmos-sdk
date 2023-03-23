@@ -91,7 +91,7 @@ func (m *MockAppModuleBasic) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1
 }
 
 // RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
@@ -103,7 +103,7 @@ func (m *MockAppModuleBasic) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 }
 
 // RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockAppModuleBasicMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+func (mr *MockAppModuleBasicMockRecorder) RegisterInterfaces(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterInterfaces), arg0)
 }
@@ -115,7 +115,7 @@ func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
 }
 
 // RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleBasicMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+func (mr *MockAppModuleBasicMockRecorder) RegisterLegacyAminoCodec(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterLegacyAminoCodec), arg0)
 }
@@ -189,7 +189,7 @@ func (m *MockHasGenesisBasics) DefaultGenesis(arg0 codec.JSONCodec) json.RawMess
 }
 
 // DefaultGenesis indicates an expected call of DefaultGenesis.
-func (mr *MockHasGenesisBasicsMockRecorder) DefaultGenesis(arg0 interface{}) *gomock.Call {
+func (mr *MockHasGenesisBasicsMockRecorder) DefaultGenesis(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultGenesis", reflect.TypeOf((*MockHasGenesisBasics)(nil).DefaultGenesis), arg0)
 }
@@ -203,7 +203,7 @@ func (m *MockHasGenesisBasics) ValidateGenesis(arg0 codec.JSONCodec, arg1 client
 }
 
 // ValidateGenesis indicates an expected call of ValidateGenesis.
-func (mr *MockHasGenesisBasicsMockRecorder) ValidateGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockHasGenesisBasicsMockRecorder) ValidateGenesis(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockHasGenesisBasics)(nil).ValidateGenesis), arg0, arg1, arg2)
 }
@@ -240,7 +240,7 @@ func (m *MockAppModuleGenesis) DefaultGenesis(arg0 codec.JSONCodec) json.RawMess
 }
 
 // DefaultGenesis indicates an expected call of DefaultGenesis.
-func (mr *MockAppModuleGenesisMockRecorder) DefaultGenesis(arg0 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) DefaultGenesis(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultGenesis", reflect.TypeOf((*MockAppModuleGenesis)(nil).DefaultGenesis), arg0)
 }
@@ -254,7 +254,7 @@ func (m *MockAppModuleGenesis) ExportGenesis(arg0 types1.Context, arg1 codec.JSO
 }
 
 // ExportGenesis indicates an expected call of ExportGenesis.
-func (mr *MockAppModuleGenesisMockRecorder) ExportGenesis(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) ExportGenesis(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockAppModuleGenesis)(nil).ExportGenesis), arg0, arg1)
 }
@@ -296,7 +296,7 @@ func (m *MockAppModuleGenesis) InitGenesis(arg0 types1.Context, arg1 codec.JSONC
 }
 
 // InitGenesis indicates an expected call of InitGenesis.
-func (mr *MockAppModuleGenesisMockRecorder) InitGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) InitGenesis(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockAppModuleGenesis)(nil).InitGenesis), arg0, arg1, arg2)
 }
@@ -322,7 +322,7 @@ func (m *MockAppModuleGenesis) RegisterGRPCGatewayRoutes(arg0 client.Context, ar
 }
 
 // RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockAppModuleGenesisMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
@@ -334,7 +334,7 @@ func (m *MockAppModuleGenesis) RegisterInterfaces(arg0 types0.InterfaceRegistry)
 }
 
 // RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockAppModuleGenesisMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) RegisterInterfaces(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterInterfaces), arg0)
 }
@@ -346,7 +346,7 @@ func (m *MockAppModuleGenesis) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino)
 }
 
 // RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleGenesisMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) RegisterLegacyAminoCodec(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterLegacyAminoCodec), arg0)
 }
@@ -360,7 +360,7 @@ func (m *MockAppModuleGenesis) ValidateGenesis(arg0 codec.JSONCodec, arg1 client
 }
 
 // ValidateGenesis indicates an expected call of ValidateGenesis.
-func (mr *MockAppModuleGenesisMockRecorder) ValidateGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) ValidateGenesis(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModuleGenesis)(nil).ValidateGenesis), arg0, arg1, arg2)
 }
@@ -397,7 +397,7 @@ func (m *MockHasGenesis) DefaultGenesis(arg0 codec.JSONCodec) json.RawMessage {
 }
 
 // DefaultGenesis indicates an expected call of DefaultGenesis.
-func (mr *MockHasGenesisMockRecorder) DefaultGenesis(arg0 interface{}) *gomock.Call {
+func (mr *MockHasGenesisMockRecorder) DefaultGenesis(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultGenesis", reflect.TypeOf((*MockHasGenesis)(nil).DefaultGenesis), arg0)
 }
@@ -411,7 +411,7 @@ func (m *MockHasGenesis) ExportGenesis(arg0 types1.Context, arg1 codec.JSONCodec
 }
 
 // ExportGenesis indicates an expected call of ExportGenesis.
-func (mr *MockHasGenesisMockRecorder) ExportGenesis(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockHasGenesisMockRecorder) ExportGenesis(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockHasGenesis)(nil).ExportGenesis), arg0, arg1)
 }
@@ -425,7 +425,7 @@ func (m *MockHasGenesis) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, 
 }
 
 // InitGenesis indicates an expected call of InitGenesis.
-func (mr *MockHasGenesisMockRecorder) InitGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockHasGenesisMockRecorder) InitGenesis(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockHasGenesis)(nil).InitGenesis), arg0, arg1, arg2)
 }
@@ -439,7 +439,7 @@ func (m *MockHasGenesis) ValidateGenesis(arg0 codec.JSONCodec, arg1 client.TxEnc
 }
 
 // ValidateGenesis indicates an expected call of ValidateGenesis.
-func (mr *MockHasGenesisMockRecorder) ValidateGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockHasGenesisMockRecorder) ValidateGenesis(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockHasGenesis)(nil).ValidateGenesis), arg0, arg1, arg2)
 }
@@ -516,7 +516,7 @@ func (m *MockAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *run
 }
 
 // RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
@@ -528,7 +528,7 @@ func (m *MockAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 }
 
 // RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+func (mr *MockAppModuleMockRecorder) RegisterInterfaces(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockAppModule)(nil).RegisterInterfaces), arg0)
 }
@@ -540,7 +540,7 @@ func (m *MockAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
 }
 
 // RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+func (mr *MockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
@@ -575,7 +575,7 @@ func (m *MockHasInvariants) RegisterInvariants(arg0 types1.InvariantRegistry) {
 }
 
 // RegisterInvariants indicates an expected call of RegisterInvariants.
-func (mr *MockHasInvariantsMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
+func (mr *MockHasInvariantsMockRecorder) RegisterInvariants(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockHasInvariants)(nil).RegisterInvariants), arg0)
 }
@@ -610,7 +610,7 @@ func (m *MockHasServices) RegisterServices(arg0 module.Configurator) {
 }
 
 // RegisterServices indicates an expected call of RegisterServices.
-func (mr *MockHasServicesMockRecorder) RegisterServices(arg0 interface{}) *gomock.Call {
+func (mr *MockHasServicesMockRecorder) RegisterServices(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockHasServices)(nil).RegisterServices), arg0)
 }
@@ -682,7 +682,7 @@ func (m *MockBeginBlockAppModule) BeginBlock(arg0 types1.Context, arg1 types.Req
 }
 
 // BeginBlock indicates an expected call of BeginBlock.
-func (mr *MockBeginBlockAppModuleMockRecorder) BeginBlock(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBeginBlockAppModuleMockRecorder) BeginBlock(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginBlock", reflect.TypeOf((*MockBeginBlockAppModule)(nil).BeginBlock), arg0, arg1)
 }
@@ -736,7 +736,7 @@ func (m *MockBeginBlockAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context,
 }
 
 // RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockBeginBlockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBeginBlockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockBeginBlockAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
@@ -748,7 +748,7 @@ func (m *MockBeginBlockAppModule) RegisterInterfaces(arg0 types0.InterfaceRegist
 }
 
 // RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockBeginBlockAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+func (mr *MockBeginBlockAppModuleMockRecorder) RegisterInterfaces(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockBeginBlockAppModule)(nil).RegisterInterfaces), arg0)
 }
@@ -760,7 +760,7 @@ func (m *MockBeginBlockAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmi
 }
 
 // RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockBeginBlockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+func (mr *MockBeginBlockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockBeginBlockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
@@ -797,7 +797,7 @@ func (m *MockEndBlockAppModule) EndBlock(arg0 types1.Context, arg1 types.Request
 }
 
 // EndBlock indicates an expected call of EndBlock.
-func (mr *MockEndBlockAppModuleMockRecorder) EndBlock(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockEndBlockAppModuleMockRecorder) EndBlock(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockEndBlockAppModule)(nil).EndBlock), arg0, arg1)
 }
@@ -851,7 +851,7 @@ func (m *MockEndBlockAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context, a
 }
 
 // RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockEndBlockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockEndBlockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockEndBlockAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
@@ -863,7 +863,7 @@ func (m *MockEndBlockAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry
 }
 
 // RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockEndBlockAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+func (mr *MockEndBlockAppModuleMockRecorder) RegisterInterfaces(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockEndBlockAppModule)(nil).RegisterInterfaces), arg0)
 }
@@ -875,7 +875,7 @@ func (m *MockEndBlockAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino
 }
 
 // RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockEndBlockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+func (mr *MockEndBlockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockEndBlockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }

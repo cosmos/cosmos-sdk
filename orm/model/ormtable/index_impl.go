@@ -25,7 +25,7 @@ type indexKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
+func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...any) error {
 	it, err := i.List(ctx, keyValues)
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) e
 	return i.primaryKey.deleteByIterator(ctx, it)
 }
 
-func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []any) error {
 	it, err := i.ListRange(ctx, from, to)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) 
 	return i.primaryKey.deleteByIterator(ctx, it)
 }
 
-func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
+func (i indexKeyIndex) List(ctx context.Context, prefixKey []any, options ...ormlist.Option) (Iterator, error) {
 	backend, err := i.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, option
 	return prefixIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, prefixKey, options)
 }
 
-func (i indexKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+func (i indexKeyIndex) ListRange(ctx context.Context, from, to []any, options ...ormlist.Option) (Iterator, error) {
 	backend, err := i.getReadBackend(ctx)
 	if err != nil {
 		return nil, err

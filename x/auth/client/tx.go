@@ -100,7 +100,7 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	}
 
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)

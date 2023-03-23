@@ -3,6 +3,7 @@ package autocli
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
@@ -159,7 +160,6 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
-
 func TestBinaryFile(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
@@ -167,9 +167,18 @@ func TestBinaryFile(t *testing.T) {
 		"--bz", "testdata/file.test", // no opt default value
 	)
 	lastReq := conn.lastRequest.(*testpb.EchoRequest)
-	assert.Equal(t, "this is just a test file", string(lastReq.Bz)) // shorthand got set
-}
+	assert.Equal(t, "this is just a test file", string(lastReq.Bz))
 
+	hexFileTest := hex.EncodeToString([]byte("this is just a test file"))
+	conn2 := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"--bz", hexFileTest, // no opt default value
+	)
+	lastReq = conn2.lastRequest.(*testpb.EchoRequest)
+	assert.Equal(t, "this is just a test file", string(lastReq.Bz))
+
+}
 
 func TestAddressValidation(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,

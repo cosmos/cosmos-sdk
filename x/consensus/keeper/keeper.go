@@ -14,17 +14,17 @@ import (
 var _ exported.ConsensusParamSetter = (*Keeper)(nil)
 
 type Keeper struct {
-	storeSvc storetypes.KVStoreService
-	cdc      codec.BinaryCodec
+	storeService storetypes.KVStoreService
+	cdc          codec.BinaryCodec
 
 	authority string
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeSvc storetypes.KVStoreService, authority string) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string) Keeper {
 	return Keeper{
-		storeSvc:  storeSvc,
-		cdc:       cdc,
-		authority: authority,
+		storeService: storeService,
+		cdc:          cdc,
+		authority:    authority,
 	}
 }
 
@@ -34,7 +34,7 @@ func (k *Keeper) GetAuthority() string {
 
 // Get gets the consensus parameters
 func (k *Keeper) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
-	store := k.storeSvc.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 
 	bz, err := store.Get(types.ParamStoreKeyConsensusParams)
 	if err != nil {
@@ -50,12 +50,12 @@ func (k *Keeper) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
 }
 
 func (k *Keeper) Has(ctx sdk.Context) (bool, error) {
-	store := k.storeSvc.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	return store.Has(types.ParamStoreKeyConsensusParams)
 }
 
 // Set sets the consensus parameters
 func (k *Keeper) Set(ctx sdk.Context, cp *cmtproto.ConsensusParams) error {
-	store := k.storeSvc.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	return store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
 }

@@ -33,9 +33,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-	storeSvc := runtime.NewKVStoreService(key)
+	storeService := runtime.NewKVStoreService(key)
 
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeSvc, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper

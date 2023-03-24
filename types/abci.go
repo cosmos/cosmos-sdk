@@ -19,9 +19,9 @@ type BeginBlocker func(ctx Context, req abci.RequestBeginBlock) (abci.ResponseBe
 // e.g. BFT timestamps rather than block height for any periodic EndBlock logic
 type EndBlocker func(ctx Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error)
 
-// Commiter runs code during commit after the block has been committed, and the `checkState` has been
-// branched for the new block.
-type Commiter func(ctx Context)
+// PrepareCheckStater runs code during commit after the block has been committed, and the `checkState`
+// has been branched for the new block.
+type PrepareCheckStater func(ctx Context)
 
 // Precommiter runs code during commit before the `deliverState` is reset.
 type Precommiter func(ctx Context)

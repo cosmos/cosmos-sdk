@@ -598,7 +598,7 @@ func TestABCI_EndBlock(t *testing.T) {
 	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
 }
 
-func TestBaseApp_Commit(t *testing.T) {
+func TestBaseApp_PrepareCheckState(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
@@ -615,14 +615,14 @@ func TestBaseApp_Commit(t *testing.T) {
 		ConsensusParams: cp,
 	})
 
-	wasCommiterCalled := false
-	app.SetCommiter(func(ctx sdk.Context) {
-		wasCommiterCalled = true
+	wasPrepareCheckStateCalled := false
+	app.SetPrepareCheckState(func(ctx sdk.Context) {
+		wasPrepareCheckStateCalled = true
 	})
 	app.Seal()
 
 	app.Commit()
-	require.Equal(t, true, wasCommiterCalled)
+	require.Equal(t, true, wasPrepareCheckStateCalled)
 }
 
 func TestBaseApp_Precommit(t *testing.T) {
@@ -1376,8 +1376,8 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	}
 }
 
-// Verifies that the Commiter is called with the checkState.
-func TestCommiterCalledWithCheckState(t *testing.T) {
+// Verifies that PrepareCheckState is called with the checkState.
+func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 	t.Parallel()
 
 	logger := log.NewTestLogger(t)
@@ -1385,16 +1385,16 @@ func TestCommiterCalledWithCheckState(t *testing.T) {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
-	wasCommiterCalled := false
-	app.SetCommiter(func(ctx sdk.Context) {
+	wasPrepareCheckStateCalled := false
+	app.SetPrepareCheckState(func(ctx sdk.Context) {
 		require.Equal(t, true, ctx.IsCheckTx())
-		wasCommiterCalled = true
+		wasPrepareCheckStateCalled = true
 	})
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
 	app.Commit()
 
-	require.Equal(t, true, wasCommiterCalled)
+	require.Equal(t, true, wasPrepareCheckStateCalled)
 }
 
 // Verifies that the Precommiter is called with the deliverState.

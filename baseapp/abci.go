@@ -492,8 +492,8 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// empty/reset the deliver state
 	app.deliverState = nil
 
-	if app.commiter != nil {
-		app.commiter(app.checkState.ctx)
+	if app.prepareCheckStater != nil {
+		app.prepareCheckStater(app.checkState.ctx)
 	}
 
 	var halt bool

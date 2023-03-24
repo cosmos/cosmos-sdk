@@ -8,10 +8,11 @@ import (
 
 // Common metric key constants
 const (
-	MetricKeyBeginBlocker = "begin_blocker"
-	MetricKeyEndBlocker   = "end_blocker"
-	MetricKeyCommiter     = "commiter"
-	MetricLabelNameModule = "module"
+	MetricKeyBeginBlocker       = "begin_blocker"
+	MetricKeyEndBlocker         = "end_blocker"
+	MetricKeyPrepareCheckStater = "prepare_check_stater"
+	MetricKeyPrecommiter        = "precommiter"
+	MetricLabelNameModule       = "module"
 )
 
 // NewLabel creates a new instance of Label with name and value

@@ -880,43 +880,31 @@ func (mr *MockEndBlockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockEndBlockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
-// MockCommitAppModule is a mock of CommitAppModule interface.
-type MockCommitAppModule struct {
+// MockPrepareCheckStateAppModule is a mock of PrepareCheckStateAppModule interface.
+type MockPrepareCheckStateAppModule struct {
 	ctrl     *gomock.Controller
-	recorder *MockCommitAppModuleMockRecorder
+	recorder *MockPrepareCheckStateAppModuleMockRecorder
 }
 
-// MockCommitAppModuleMockRecorder is the mock recorder for MockCommitAppModule.
-type MockCommitAppModuleMockRecorder struct {
-	mock *MockCommitAppModule
+// MockPrepareCheckStateAppModuleMockRecorder is the mock recorder for MockPrepareCheckStateAppModule.
+type MockPrepareCheckStateAppModuleMockRecorder struct {
+	mock *MockPrepareCheckStateAppModule
 }
 
-// NewMockCommitAppModule creates a new mock instance.
-func NewMockCommitAppModule(ctrl *gomock.Controller) *MockCommitAppModule {
-	mock := &MockCommitAppModule{ctrl: ctrl}
-	mock.recorder = &MockCommitAppModuleMockRecorder{mock}
+// NewMockPrepareCheckStateAppModule creates a new mock instance.
+func NewMockPrepareCheckStateAppModule(ctrl *gomock.Controller) *MockPrepareCheckStateAppModule {
+	mock := &MockPrepareCheckStateAppModule{ctrl: ctrl}
+	mock.recorder = &MockPrepareCheckStateAppModuleMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCommitAppModule) EXPECT() *MockCommitAppModuleMockRecorder {
+func (m *MockPrepareCheckStateAppModule) EXPECT() *MockPrepareCheckStateAppModuleMockRecorder {
 	return m.recorder
 }
 
-// Commit mocks base method.
-func (m *MockCommitAppModule) Commit(arg0 types1.Context) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Commit", arg0)
-}
-
-// Commit indicates an expected call of Commit.
-func (mr *MockCommitAppModuleMockRecorder) Commit(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockCommitAppModule)(nil).Commit), arg0)
-}
-
 // GetQueryCmd mocks base method.
-func (m *MockCommitAppModule) GetQueryCmd() *cobra.Command {
+func (m *MockPrepareCheckStateAppModule) GetQueryCmd() *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueryCmd")
 	ret0, _ := ret[0].(*cobra.Command)
@@ -924,13 +912,13 @@ func (m *MockCommitAppModule) GetQueryCmd() *cobra.Command {
 }
 
 // GetQueryCmd indicates an expected call of GetQueryCmd.
-func (mr *MockCommitAppModuleMockRecorder) GetQueryCmd() *gomock.Call {
+func (mr *MockPrepareCheckStateAppModuleMockRecorder) GetQueryCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockCommitAppModule)(nil).GetQueryCmd))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).GetQueryCmd))
 }
 
 // GetTxCmd mocks base method.
-func (m *MockCommitAppModule) GetTxCmd() *cobra.Command {
+func (m *MockPrepareCheckStateAppModule) GetTxCmd() *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTxCmd")
 	ret0, _ := ret[0].(*cobra.Command)
@@ -938,13 +926,13 @@ func (m *MockCommitAppModule) GetTxCmd() *cobra.Command {
 }
 
 // GetTxCmd indicates an expected call of GetTxCmd.
-func (mr *MockCommitAppModuleMockRecorder) GetTxCmd() *gomock.Call {
+func (mr *MockPrepareCheckStateAppModuleMockRecorder) GetTxCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockCommitAppModule)(nil).GetTxCmd))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).GetTxCmd))
 }
 
 // Name mocks base method.
-func (m *MockCommitAppModule) Name() string {
+func (m *MockPrepareCheckStateAppModule) Name() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Name")
 	ret0, _ := ret[0].(string)
@@ -952,45 +940,57 @@ func (m *MockCommitAppModule) Name() string {
 }
 
 // Name indicates an expected call of Name.
-func (mr *MockCommitAppModuleMockRecorder) Name() *gomock.Call {
+func (mr *MockPrepareCheckStateAppModuleMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockCommitAppModule)(nil).Name))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).Name))
+}
+
+// PrepareCheckState mocks base method.
+func (m *MockPrepareCheckStateAppModule) PrepareCheckState(arg0 types1.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "PrepareCheckState", arg0)
+}
+
+// PrepareCheckState indicates an expected call of PrepareCheckState.
+func (mr *MockPrepareCheckStateAppModuleMockRecorder) PrepareCheckState(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareCheckState", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).PrepareCheckState), arg0)
 }
 
 // RegisterGRPCGatewayRoutes mocks base method.
-func (m *MockCommitAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+func (m *MockPrepareCheckStateAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
 }
 
 // RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockCommitAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockPrepareCheckStateAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockCommitAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockCommitAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+func (m *MockPrepareCheckStateAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
 
 // RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockCommitAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+func (mr *MockPrepareCheckStateAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockCommitAppModule)(nil).RegisterInterfaces), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).RegisterInterfaces), arg0)
 }
 
 // RegisterLegacyAminoCodec mocks base method.
-func (m *MockCommitAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
+func (m *MockPrepareCheckStateAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }
 
 // RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockCommitAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+func (mr *MockPrepareCheckStateAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockCommitAppModule)(nil).RegisterLegacyAminoCodec), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // MockPrecommitAppModule is a mock of PrecommitAppModule interface.

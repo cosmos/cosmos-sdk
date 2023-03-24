@@ -167,12 +167,12 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
 }
 
-func (app *BaseApp) SetCommiter(commiter sdk.Commiter) {
+func (app *BaseApp) SetPrepareCheckState(prepareCheckStater sdk.PrepareCheckStater) {
 	if app.sealed {
-		panic("SetCommiter() on sealed BaseApp")
+		panic("SetPrepareCheckState() on sealed BaseApp")
 	}
 
-	app.commiter = commiter
+	app.prepareCheckStater = prepareCheckStater
 }
 
 func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {

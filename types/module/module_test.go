@@ -129,9 +129,9 @@ func TestManagerOrderSetters(t *testing.T) {
 	mm.SetOrderEndBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderEndBlockers)
 
-	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderCommiters)
-	mm.SetOrderCommiters("module3", "module2", "module1")
-	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderCommiters)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderPrepareCheckStaters)
+	mm.SetOrderPepareCheckStaters("module3", "module2", "module1")
+	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrepareCheckStaters)
 
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderPrecommiters)
 	mm.SetOrderPrecommiters("module3", "module2", "module1")
@@ -327,21 +327,21 @@ func TestManager_EndBlock(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestManager_Commit(t *testing.T) {
+func TestManager_PrepareCheckState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockCommitAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockCommitAppModule(mockCtrl)
+	mockAppModule1 := mock.NewMockPrepareCheckStateAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockPrepareCheckStateAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
 
-	mockAppModule1.EXPECT().Commit(gomock.Any()).Times(1)
-	mockAppModule2.EXPECT().Commit(gomock.Any()).Times(1)
-	mm.Commit(sdk.Context{})
+	mockAppModule1.EXPECT().PrepareCheckState(gomock.Any()).Times(1)
+	mockAppModule2.EXPECT().PrepareCheckState(gomock.Any()).Times(1)
+	mm.PrepareCheckState(sdk.Context{})
 }
 
 func TestManager_Precommit(t *testing.T) {

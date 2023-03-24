@@ -212,10 +212,11 @@ type EndBlockAppModule interface {
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
-// CommitAppModule is an extension interface that contains information about the AppModule and Commit.
-type CommitAppModule interface {
+// PrepareCheckStateAppModule is an extension interface that contains information about the AppModule
+// and PrepareCheckState.
+type PrepareCheckStateAppModule interface {
 	AppModule
-	Commit(sdk.Context)
+	PrepareCheckState(sdk.Context)
 }
 
 // PreommitAppModule is an extension interface that contains information about the AppModule and Precommit.
@@ -265,14 +266,14 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules            map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
-	OrderInitGenesis   []string
-	OrderExportGenesis []string
-	OrderBeginBlockers []string
-	OrderEndBlockers   []string
-	OrderCommiters     []string
-	OrderPrecommiters  []string
-	OrderMigrations    []string
+	Modules                  map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
+	OrderInitGenesis         []string
+	OrderExportGenesis       []string
+	OrderBeginBlockers       []string
+	OrderEndBlockers         []string
+	OrderPrepareCheckStaters []string
+	OrderPrecommiters        []string
+	OrderMigrations          []string
 }
 
 // NewManager creates a new Manager object.
@@ -285,13 +286,13 @@ func NewManager(modules ...AppModule) *Manager {
 	}
 
 	return &Manager{
-		Modules:            moduleMap,
-		OrderInitGenesis:   modulesStr,
-		OrderExportGenesis: modulesStr,
-		OrderBeginBlockers: modulesStr,
-		OrderCommiters:     modulesStr,
-		OrderPrecommiters:  modulesStr,
-		OrderEndBlockers:   modulesStr,
+		Modules:                  moduleMap,
+		OrderInitGenesis:         modulesStr,
+		OrderExportGenesis:       modulesStr,
+		OrderBeginBlockers:       modulesStr,
+		OrderPrepareCheckStaters: modulesStr,
+		OrderPrecommiters:        modulesStr,
+		OrderEndBlockers:         modulesStr,
 	}
 }
 
@@ -356,9 +357,9 @@ func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
 	m.OrderBeginBlockers = moduleNames
 }
 
-// SetOrderCommiters sets the order of set commiter calls
-func (m *Manager) SetOrderCommiters(moduleNames ...string) {
-	m.OrderCommiters = moduleNames
+// SetOrderPepareCheckStaters sets the order of set commiter calls
+func (m *Manager) SetOrderPepareCheckStaters(moduleNames ...string) {
+	m.OrderPrepareCheckStaters = moduleNames
 }
 
 // SetOrderPrecommiters sets the order of set precommiter calls
@@ -732,14 +733,14 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 	}, nil
 }
 
-// Commit performs commit functionality for all modules.
-func (m *Manager) Commit(ctx sdk.Context) {
-	for _, moduleName := range m.OrderCommiters {
-		module, ok := m.Modules[moduleName].(CommitAppModule)
+// PrepareCheckState performs functionality for preparing the check state for all modules.
+func (m *Manager) PrepareCheckState(ctx sdk.Context) {
+	for _, moduleName := range m.OrderPrepareCheckStaters {
+		module, ok := m.Modules[moduleName].(PrepareCheckStateAppModule)
 		if !ok {
 			continue
 		}
-		module.Commit(ctx)
+		module.PrepareCheckState(ctx)
 	}
 }
 

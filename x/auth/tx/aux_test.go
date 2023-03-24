@@ -97,6 +97,7 @@ func TestBuilderWithAux(t *testing.T) {
 		{"tipper mismatch", func() { tipperBuilder.SetTip(&txtypes.Tip{Tipper: "mismatch", Amount: tip.Amount}) }, true},
 		{"happy case", func() {}, false},
 	}
+	// Test that when adding another AuxSignerData, the 2nd data should match
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {

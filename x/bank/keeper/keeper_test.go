@@ -1773,7 +1773,7 @@ func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
 			require.Len(newParams.SendEnabled, 0)
 			require.Equal(def, newParams.DefaultSendEnabled)
 
-			for _, se := range params.SendEnabled {
+			for _, se := range params.SendEnabled { //nolint:staticcheck // SA1019: banktypes.SendEnabled is deprecated
 				actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
 				require.Equal(se.Enabled, actual, se.Denom)
 			}

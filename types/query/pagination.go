@@ -11,17 +11,19 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-// DefaultPage is the default `page` number for queries.
-// If the `page` number is not supplied, `DefaultPage` will be used.
-const DefaultPage = 1
+const (
+	// DefaultPage is the default `page` number for queries.
+	// If the `page` number is not supplied, `DefaultPage` will be used.
+	DefaultPage = 1
 
-// DefaultLimit is the default `limit` for queries
-// if the `limit` is not supplied, paginate will use `DefaultLimit`
-const DefaultLimit = 100
+	// DefaultLimit is the default `limit` for queries
+	// if the `limit` is not supplied, paginate will use `DefaultLimit`
+	DefaultLimit = 100
 
-// MaxLimit is the maximum limit the paginate function can handle
-// which equals the maximum value that can be stored in uint64
-const MaxLimit = math.MaxUint64
+	// MaxLimit is the maximum limit the paginate function can handle
+	// which equals the maximum value that can be stored in uint64
+	MaxLimit = math.MaxUint64
+)
 
 // ParsePagination validate PageRequest and returns page number & limit.
 func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {

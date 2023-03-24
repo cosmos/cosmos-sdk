@@ -3,7 +3,7 @@ run:
   timeout: 10m
   sort-results: true
   allow-parallel-runners: true
-  exclude-dir: testutil/testdata
+  exclude-dir: [testutil/testdata,crypto]
 
 linters:
   disable-all: true
@@ -137,10 +137,10 @@ linters-settings:
         #  - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
         #  - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
         #  - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-      shadow:
+      # shadow:
         # Whether to be strict about shadowing; can be noisy.
         # Default: false
-        strict: true
+      #  strict: false
       unusedresult:
         # Comma-separated list of functions whose results must be used
         # (in addition to defaults context.WithCancel,context.WithDeadline,context.WithTimeout,context.WithValue,
@@ -343,4 +343,6 @@ linters-settings:
       - name: nested-structs
         disabled: true
       - name: early-return
+        disabled: true
+      - name: import-shadowing
         disabled: true

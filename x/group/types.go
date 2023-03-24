@@ -16,39 +16,51 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
-// DecisionPolicyResult is the result of whether a proposal passes or not a
-// decision policy.
-type DecisionPolicyResult struct {
-	// Allow determines if the proposal is allowed to pass.
-	Allow bool
-	// Final determines if the tally result is final or not. If final, then
-	// votes are pruned, and the tally result is saved in the proposal's
-	// `FinalTallyResult` field.
-	Final bool
-}
+type (
 
-// DecisionPolicy is the persistent set of rules to determine the result of election on a proposal.
-type DecisionPolicy interface {
-	proto.Message
+	// DecisionPolicyResult is the result of whether a proposal passes or not a
+	// decision policy.
+	DecisionPolicyResult struct {
+		// Allow determines if the proposal is allowed to pass.
+		Allow bool
+		// Final determines if the tally result is final or not. If final, then
+		// votes are pruned, and the tally result is saved in the proposal's
+		// `FinalTallyResult` field.
+		Final bool
+	}
 
-	// GetVotingPeriod returns the duration after proposal submission where
-	// votes are accepted.
-	GetVotingPeriod() time.Duration
-	// GetMinExecutionPeriod returns the minimum duration after submission
-	// where we can execution a proposal. It can be set to 0 or to a value
-	// lesser than VotingPeriod to allow TRY_EXEC.
-	GetMinExecutionPeriod() time.Duration
-	// Allow defines policy-specific logic to allow a proposal to pass or not,
-	// based on its tally result, the group's total power and the time since
-	// the proposal was submitted.
-	Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error)
+	// DecisionPolicy is the persistent set of rules to determine the result of election on a proposal.
+	DecisionPolicy interface {
+		proto.Message
 
-	ValidateBasic() error
-	Validate(g GroupInfo, config Config) error
-}
+		// GetVotingPeriod returns the duration after proposal submission where
+		// votes are accepted.
+		GetVotingPeriod() time.Duration
+		// GetMinExecutionPeriod returns the minimum duration after submission
+		// where we can execution a proposal. It can be set to 0 or to a value
+		// lesser than VotingPeriod to allow TRY_EXEC.
+		GetMinExecutionPeriod() time.Duration
+		// Allow defines policy-specific logic to allow a proposal to pass or not,
+		// based on its tally result, the group's total power and the time since
+		// the proposal was submitted.
+		Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error)
 
-// Implements DecisionPolicy Interface
-var _ DecisionPolicy = &ThresholdDecisionPolicy{}
+		ValidateBasic() error
+		Validate(g GroupInfo, config Config) error
+	}
+)
+
+var (
+
+	// Validateable is an interface for validating a struct
+	_ orm.Validateable = Vote{}
+
+	// Implements DecisionPolicy Interface
+	_ DecisionPolicy = &ThresholdDecisionPolicy{}
+
+	// Implements DecisionPolicy Interface
+	_ DecisionPolicy = &PercentageDecisionPolicy{}
+)
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
 func NewThresholdDecisionPolicy(threshold string, votingPeriod, minExecutionPeriod time.Duration) DecisionPolicy {
@@ -151,9 +163,6 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	}
 	return nil
 }
-
-// Implements DecisionPolicy Interface
-var _ DecisionPolicy = &PercentageDecisionPolicy{}
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
 func NewPercentageDecisionPolicy(percentage string, votingPeriod, executionPeriod time.Duration) DecisionPolicy {
@@ -422,8 +431,6 @@ func (v Vote) PrimaryKeyFields() []any {
 
 	return []any{v.ProposalId, addr.Bytes()}
 }
-
-var _ orm.Validateable = Vote{}
 
 // ValidateBasic does basic validation on vote.
 func (v Vote) ValidateBasic() error {

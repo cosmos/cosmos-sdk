@@ -144,7 +144,7 @@ func (m *LegacyAminoPubKey) GetThreshold() uint {
 }
 
 // Type returns multisig type
-func (m *LegacyAminoPubKey) Type() string {
+func (*LegacyAminoPubKey) Type() string {
 	return "PubKeyMultisigThreshold"
 }
 

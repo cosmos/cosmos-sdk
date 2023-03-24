@@ -583,19 +583,19 @@ func (s *coinTestSuite) TestAddCoins() {
 // Tests that even if coins with repeated denominations are passed into .Add that they
 // are correctly coalesced. Please see issue https://github.com/cosmos/cosmos-sdk/issues/13234
 func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
-	A := sdk.Coins{
+	a := sdk.Coins{
 		{"den", sdk.NewInt(2)},
 		{"den", sdk.NewInt(3)},
 	}
-	B := sdk.Coins{
+	b := sdk.Coins{
 		{"den", sdk.NewInt(3)},
 		{"den", sdk.NewInt(2)},
 		{"den", sdk.NewInt(1)},
 	}
 
-	A = A.Sort()
-	B = B.Sort()
-	got := A.Add(B...)
+	a = a.Sort()
+	b = b.Sort()
+	got := a.Add(b...)
 
 	want := sdk.Coins{
 		{"den", sdk.NewInt(11)},

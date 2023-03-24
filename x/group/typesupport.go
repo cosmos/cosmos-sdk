@@ -7,10 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
-// MemberRequests defines a repeated slice of MemberRequest objects.
-type MemberRequests struct {
-	Members []MemberRequest
-}
+type (
+
+	// accAddresses is a slice of sdk.AccAddress
+	accAddresses []sdk.AccAddress
+
+	// MemberRequests defines a repeated slice of MemberRequest objects.
+	MemberRequests struct {
+		Members []MemberRequest
+	}
+)
 
 // ValidateBasic performs stateless validation on an array of members. On top
 // of validating each member individually, it also makes sure there are no
@@ -30,8 +36,6 @@ func (ms MemberRequests) ValidateBasic() error {
 	}
 	return nil
 }
-
-type accAddresses []sdk.AccAddress
 
 // ValidateBasic verifies that there's no duplicate address.
 // Individual account address validation has to be done separately.

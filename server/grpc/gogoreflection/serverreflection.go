@@ -470,8 +470,8 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 		default:
 			return status.Errorf(codes.InvalidArgument, "invalid MessageRequest: %v", in.MessageRequest)
 		}
-		if err := stream.Send(out); err != nil {
-			return err
-		}
+
+		err = stream.Send(out)
+		return err
 	}
 }

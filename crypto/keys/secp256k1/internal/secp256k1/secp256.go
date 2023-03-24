@@ -42,8 +42,6 @@ import (
 	"unsafe"
 )
 
-var context *C.secp256k1_context
-
 func init() {
 	// around 20 ms on a modern CPU.
 	context = C.secp256k1_context_create_sign_verify()
@@ -52,6 +50,8 @@ func init() {
 }
 
 var (
+	context *C.secp256k1_context
+
 	ErrInvalidMsgLen       = errors.New("invalid message length, need 32 bytes")
 	ErrInvalidSignatureLen = errors.New("invalid signature length")
 	ErrInvalidRecoveryID   = errors.New("invalid signature recovery id")

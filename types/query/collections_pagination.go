@@ -10,21 +10,24 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-// CollectionsPaginateOptions provides extra options for pagination in collections.
-type CollectionsPaginateOptions[K any] struct {
-	// Prefix allows to optionally set a prefix for the pagination.
-	Prefix *K
-}
+type (
 
-// Collection defines the minimum required API of a collection
-// to work with pagination.
-type Collection[K, V any] interface {
-	// IterateRaw allows to iterate over a raw set of byte keys.
-	IterateRaw(ctx context.Context, start, end []byte, order collections.Order) (collections.Iterator[K, V], error)
-	// KeyCodec exposes the KeyCodec of a collection, required to encode a collection key from and to bytes
-	// for pagination request and response.
-	KeyCodec() collcodec.KeyCodec[K]
-}
+	// CollectionsPaginateOptions provides extra options for pagination in collections.
+	CollectionsPaginateOptions[K any] struct {
+		// Prefix allows to optionally set a prefix for the pagination.
+		Prefix *K
+	}
+
+	// Collection defines the minimum required API of a collection
+	// to work with pagination.
+	Collection[K, V any] interface {
+		// IterateRaw allows to iterate over a raw set of byte keys.
+		IterateRaw(ctx context.Context, start, end []byte, order collections.Order) (collections.Iterator[K, V], error)
+		// KeyCodec exposes the KeyCodec of a collection, required to encode a collection key from and to bytes
+		// for pagination request and response.
+		KeyCodec() collcodec.KeyCodec[K]
+	}
+)
 
 // CollectionPaginate follows the same behaviour as Paginate but works on a Collection.
 func CollectionPaginate[K, V any, C Collection[K, V]](

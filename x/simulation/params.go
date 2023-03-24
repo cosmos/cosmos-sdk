@@ -21,6 +21,41 @@ const (
 	maxTimePerBlock int64 = 10000
 )
 
+type (
+
+	// Params define the parameters necessary for running the simulations
+	Params struct {
+		pastEvidenceFraction      float64
+		numKeys                   int
+		evidenceFraction          float64
+		initialLivenessWeightings []int
+		livenessTransitionMatrix  simulation.TransitionMatrix
+		blockSizeTransitionMatrix simulation.TransitionMatrix
+	}
+
+	// LegacyParamChange defines the object used for simulating parameter change proposals
+	LegacyParamChange struct {
+		subspace string
+		key      string
+		simValue simulation.SimValFn
+	}
+
+	// WeightedProposalMsg defines a common struct for proposal msgs defined by external modules (i.e outside gov)
+	WeightedProposalMsg struct {
+		appParamsKey   string                    // key used to retrieve the value of the weight from the simulation application params
+		defaultWeight  int                       // default weight
+		msgSimulatorFn simulation.MsgSimulatorFn // msg simulator function
+	}
+
+	// WeightedProposalContent defines a common struct for proposal content defined by external modules (i.e outside gov)
+	//
+	WeightedProposalContent struct {
+		appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
+		defaultWeight      int                           // default weight
+		contentSimulatorFn simulation.ContentSimulatorFn //nolint:staticcheck // content simulator function
+	}
+)
+
 // TODO: explain transitional matrix usage
 var (
 	// Currently there are 3 different liveness types,
@@ -39,16 +74,6 @@ var (
 		{0, 3, 99},
 	})
 )
-
-// Params define the parameters necessary for running the simulations
-type Params struct {
-	pastEvidenceFraction      float64
-	numKeys                   int
-	evidenceFraction          float64
-	initialLivenessWeightings []int
-	livenessTransitionMatrix  simulation.TransitionMatrix
-	blockSizeTransitionMatrix simulation.TransitionMatrix
-}
 
 func (p Params) PastEvidenceFraction() float64 {
 	return p.pastEvidenceFraction
@@ -88,13 +113,6 @@ func RandomParams(r *rand.Rand) Params {
 
 // Legacy param change proposals
 
-// LegacyParamChange defines the object used for simulating parameter change proposals
-type LegacyParamChange struct {
-	subspace string
-	key      string
-	simValue simulation.SimValFn
-}
-
 func (spc LegacyParamChange) Subspace() string {
 	return spc.subspace
 }
@@ -123,13 +141,6 @@ func NewSimLegacyParamChange(subspace, key string, simVal simulation.SimValFn) s
 
 // Proposal Msgs
 
-// WeightedProposalMsg defines a common struct for proposal msgs defined by external modules (i.e outside gov)
-type WeightedProposalMsg struct {
-	appParamsKey   string                    // key used to retrieve the value of the weight from the simulation application params
-	defaultWeight  int                       // default weight
-	msgSimulatorFn simulation.MsgSimulatorFn // msg simulator function
-}
-
 func NewWeightedProposalMsg(appParamsKey string, defaultWeight int, msgSimulatorFn simulation.MsgSimulatorFn) simulation.WeightedProposalMsg {
 	return &WeightedProposalMsg{appParamsKey: appParamsKey, defaultWeight: defaultWeight, msgSimulatorFn: msgSimulatorFn}
 }
@@ -147,15 +158,6 @@ func (w WeightedProposalMsg) MsgSimulatorFn() simulation.MsgSimulatorFn {
 }
 
 // Legacy Proposal Content
-
-// WeightedProposalContent defines a common struct for proposal content defined by external modules (i.e outside gov)
-//
-//nolint:staticcheck
-type WeightedProposalContent struct {
-	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
-	defaultWeight      int                           // default weight
-	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
-}
 
 func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent { //nolint:staticcheck
 	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}

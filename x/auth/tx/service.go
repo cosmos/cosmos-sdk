@@ -22,14 +22,23 @@ import (
 )
 
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
-type baseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
+type (
+	baseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
-// txServer is the server for the protobuf Tx service.
-type txServer struct {
-	clientCtx         client.Context
-	simulate          baseAppSimulateFn
-	interfaceRegistry codectypes.InterfaceRegistry
-}
+	// txServer is the server for the protobuf Tx service.
+	txServer struct {
+		clientCtx         client.Context
+		simulate          baseAppSimulateFn
+		interfaceRegistry codectypes.InterfaceRegistry
+	}
+
+	// protoTxProvider is a type which can provide a proto transaction. It is a
+	// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/10347
+	protoTxProvider interface {
+		GetProtoTx() *txtypes.Tx
+	}
+)
 
 // NewTxServer creates a new Tx service server.
 func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) txtypes.ServiceServer {
@@ -107,7 +116,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 }
 
 // GetTx implements the ServiceServer.GetTx RPC method.
-func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
+func (s txServer) GetTx(_ context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
@@ -136,13 +145,6 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		Tx:         protoTx,
 		TxResponse: result,
 	}, nil
-}
-
-// protoTxProvider is a type which can provide a proto transaction. It is a
-// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
-// ref: https://github.com/cosmos/cosmos-sdk/issues/10347
-type protoTxProvider interface {
-	GetProtoTx() *txtypes.Tx
 }
 
 // GetBlockWithTxs returns a block with decoded txs.

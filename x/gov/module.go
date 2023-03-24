@@ -38,16 +38,59 @@ import (
 
 const ConsensusVersion = 5
 
+type (
+	GovInputs struct {
+		depinject.In
+
+		Config           *modulev1.Module
+		Cdc              codec.Codec
+		Key              *store.KVStoreKey
+		ModuleKey        depinject.OwnModuleKey
+		MsgServiceRouter baseapp.MessageRouter
+
+		AccountKeeper      govtypes.AccountKeeper
+		BankKeeper         govtypes.BankKeeper
+		StakingKeeper      govtypes.StakingKeeper
+		DistributionKeeper govtypes.DistributionKeeper
+
+		// LegacySubspace is used solely for migration of x/params managed parameters
+		LegacySubspace govtypes.ParamSubspace
+	}
+
+	GovOutputs struct {
+		depinject.Out
+
+		Module       appmodule.AppModule
+		Keeper       *keeper.Keeper
+		HandlerRoute v1beta1.HandlerRoute
+	}
+
+	// AppModule implements an application module for the gov module.
+	AppModule struct {
+		AppModuleBasic
+
+		keeper        *keeper.Keeper
+		accountKeeper govtypes.AccountKeeper
+		bankKeeper    govtypes.BankKeeper
+
+		// legacySubspace is used solely for migration of x/params managed parameters
+		legacySubspace govtypes.ParamSubspace
+	}
+
+	// AppModuleBasic defines the basic application module used by the gov module.
+	AppModuleBasic struct {
+		cdc                    codec.Codec
+		legacyProposalHandlers []govclient.ProposalHandler // legacy proposal handlers which live in governance cli and rest
+	}
+)
+
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-)
 
-// AppModuleBasic defines the basic application module used by the gov module.
-type AppModuleBasic struct {
-	cdc                    codec.Codec
-	legacyProposalHandlers []govclient.ProposalHandler // legacy proposal handlers which live in governance cli and rest
-}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
+)
 
 // NewAppModuleBasic creates a new AppModuleBasic object
 func NewAppModuleBasic(legacyProposalHandlers []govclient.ProposalHandler) AppModuleBasic {
@@ -114,21 +157,9 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 }
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
-func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	v1.RegisterInterfaces(registry)
 	v1beta1.RegisterInterfaces(registry)
-}
-
-// AppModule implements an application module for the gov module.
-type AppModule struct {
-	AppModuleBasic
-
-	keeper        *keeper.Keeper
-	accountKeeper govtypes.AccountKeeper
-	bankKeeper    govtypes.BankKeeper
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace govtypes.ParamSubspace
 }
 
 // NewAppModule creates a new AppModule object
@@ -145,50 +176,17 @@ func NewAppModule(
 	}
 }
 
-var (
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
-)
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
+func (AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
+func (AppModule) IsAppModule() {}
 
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(ProvideModule, ProvideKeyTable),
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
-}
-
-//nolint:revive
-type GovInputs struct {
-	depinject.In
-
-	Config           *modulev1.Module
-	Cdc              codec.Codec
-	Key              *store.KVStoreKey
-	ModuleKey        depinject.OwnModuleKey
-	MsgServiceRouter baseapp.MessageRouter
-
-	AccountKeeper      govtypes.AccountKeeper
-	BankKeeper         govtypes.BankKeeper
-	StakingKeeper      govtypes.StakingKeeper
-	DistributionKeeper govtypes.DistributionKeeper
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace govtypes.ParamSubspace
-}
-
-//nolint:revive
-type GovOutputs struct {
-	depinject.Out
-
-	Module       appmodule.AppModule
-	Keeper       *keeper.Keeper
-	HandlerRoute v1beta1.HandlerRoute
 }
 
 func ProvideModule(in GovInputs) GovOutputs {
@@ -340,12 +338,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the gov content functions used to
 // simulate governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck
 	return simulation.ProposalContents()
 }
 
 // ProposalMsgs returns all the gov msgs used to simulate governance proposals.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return simulation.ProposalMsgs()
 }
 

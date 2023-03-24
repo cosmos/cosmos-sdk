@@ -13,6 +13,22 @@ const (
 	QuerySupplyOf    = "supply_of"
 )
 
+// QuerySupplyOfParams defines the params for the following queries:
+//
+// - 'custom/bank/totalSupplyOf'
+type (
+	QuerySupplyOfParams struct {
+		Denom string
+	}
+
+	// QueryTotalSupplyParams defines the params for the following queries:
+	//
+	// - 'custom/bank/totalSupply'
+	QueryTotalSupplyParams struct {
+		Page, Limit int
+	}
+)
+
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
 //
 //nolint:interfacer
@@ -43,23 +59,9 @@ func NewQuerySpendableBalanceByDenomRequest(addr sdk.AccAddress, denom string) *
 	return &QuerySpendableBalanceByDenomRequest{Address: addr.String(), Denom: denom}
 }
 
-// QueryTotalSupplyParams defines the params for the following queries:
-//
-// - 'custom/bank/totalSupply'
-type QueryTotalSupplyParams struct {
-	Page, Limit int
-}
-
 // NewQueryTotalSupplyParams creates a new instance to query the total supply
 func NewQueryTotalSupplyParams(page, limit int) QueryTotalSupplyParams {
 	return QueryTotalSupplyParams{page, limit}
-}
-
-// QuerySupplyOfParams defines the params for the following queries:
-//
-// - 'custom/bank/totalSupplyOf'
-type QuerySupplyOfParams struct {
-	Denom string
 }
 
 // NewQuerySupplyOfParams creates a new instance to query the total supply

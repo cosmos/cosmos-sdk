@@ -3,7 +3,7 @@ run:
   timeout: 10m
   sort-results: true
   allow-parallel-runners: true
-  exclude-dir: [testutil/testdata,crypto]
+  exclude-dir: [testutil/testdata,crypto/**]
 
 linters:
   disable-all: true

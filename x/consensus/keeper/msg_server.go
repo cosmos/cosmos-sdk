@@ -36,7 +36,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, err
 	}
 
-	k.Set(ctx, &consensusParams)
+	err := k.Set(ctx, &consensusParams)
 
-	return &types.MsgUpdateParamsResponse{}, nil
+	return &types.MsgUpdateParamsResponse{}, err
 }

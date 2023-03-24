@@ -14,6 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
+type (
+	PanicDecorator    struct{}
+	OutOfGasDecorator struct{}
+)
+
 func TestSetup(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
@@ -85,8 +90,6 @@ func TestRecoverPanic(t *testing.T) {
 	require.Panics(t, func() { antehandler(suite.ctx, tx, false) }, "Recovered from non-Out-of-Gas panic") //nolint:errcheck
 }
 
-type OutOfGasDecorator struct{}
-
 // AnteDecorator that will throw OutOfGas panic
 func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	overLimit := ctx.GasMeter().Limit() + 1
@@ -97,8 +100,6 @@ func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 	// not reached
 	return next(ctx, tx, simulate)
 }
-
-type PanicDecorator struct{}
 
 func (pd PanicDecorator) AnteHandle(_ sdk.Context, _ sdk.Tx, _ bool, _ sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	panic("random error")

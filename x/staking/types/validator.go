@@ -27,16 +27,30 @@ const (
 	MaxWebsiteLength         = 140
 	MaxSecurityContactLength = 140
 	MaxDetailsLength         = 280
+
+	// constant used in flags to indicate that description field should not be updated
+	DoNotModifyDesc = "[do-not-modify]"
 )
 
 var (
-	BondStatusUnspecified = BondStatus_name[int32(Unspecified)]
-	BondStatusUnbonded    = BondStatus_name[int32(Unbonded)]
-	BondStatusUnbonding   = BondStatus_name[int32(Unbonding)]
-	BondStatusBonded      = BondStatus_name[int32(Bonded)]
+	BondStatusUnspecified            = BondStatus_name[int32(Unspecified)]
+	BondStatusUnbonded               = BondStatus_name[int32(Unbonded)]
+	BondStatusUnbonding              = BondStatus_name[int32(Unbonding)]
+	BondStatusBonded                 = BondStatus_name[int32(Bonded)]
+	_                     ValidatorI = Validator{}
 )
 
-var _ ValidatorI = Validator{}
+type (
+
+	// ValidatorsByVotingPower implements sort.Interface for []Validator based on
+	// the VotingPower and Address fields.
+	// The validators are sorted first by their voting power (descending). Secondary index - Address (ascending).
+	// Copied from tendermint/types/validator_set.go
+	ValidatorsByVotingPower []Validator
+
+	// Validators is a collection of Validator
+	Validators []Validator
+)
 
 // NewValidator constructs a new Validator
 //
@@ -62,9 +76,6 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		UnbondingOnHoldRefCount: 0,
 	}, nil
 }
-
-// Validators is a collection of Validator
-type Validators []Validator
 
 func (v Validators) String() (out string) {
 	for _, val := range v {
@@ -102,12 +113,6 @@ func (v Validators) Less(i, j int) bool {
 func (v Validators) Swap(i, j int) {
 	v[i], v[j] = v[j], v[i]
 }
-
-// ValidatorsByVotingPower implements sort.Interface for []Validator based on
-// the VotingPower and Address fields.
-// The validators are sorted first by their voting power (descending). Secondary index - Address (ascending).
-// Copied from tendermint/types/validator_set.go
-type ValidatorsByVotingPower []Validator
 
 func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
 
@@ -173,9 +178,6 @@ func (v Validator) IsUnbonded() bool {
 func (v Validator) IsUnbonding() bool {
 	return v.GetStatus() == Unbonding
 }
-
-// constant used in flags to indicate that description field should not be updated
-const DoNotModifyDesc = "[do-not-modify]"
 
 func NewDescription(moniker, identity, website, securityContact, details string) Description {
 	return Description{

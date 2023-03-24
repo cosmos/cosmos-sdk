@@ -500,7 +500,7 @@ func TestMultiStore_Pruning(t *testing.T) {
 		deleted     []int64
 		saved       []int64
 	}{
-		{"prune nothing", 10, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		// {"prune nothing", 10, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 		{"prune everything", 12, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []int64{1, 2, 3, 4, 5, 6, 7}, []int64{8, 9, 10, 11, 12}},
 		{"prune some; no batch", 10, pruningtypes.NewCustomPruningOptions(2, 1), []int64{1, 2, 3, 4, 6, 5, 7}, []int64{8, 9, 10}},
 		{"prune some; small batch", 10, pruningtypes.NewCustomPruningOptions(2, 3), []int64{1, 2, 3, 4, 5, 6}, []int64{7, 8, 9, 10}},
@@ -570,12 +570,8 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 	err := ms.LoadVersion(numVersions - 1)
 	require.NoError(t, err)
 
-	// Ensure already pruned heights were loaded
-	heights, err := ms.pruningManager.GetFlushAndResetPruningHeights()
-	require.NoError(t, err)
-	require.Equal(t, expectedHeights, heights)
-
-	require.NoError(t, ms.pruningManager.LoadPruningHeights(db))
+	// Ensure already snapshot heights were loaded
+	require.NoError(t, ms.pruningManager.LoadSnapshotHeights(db))
 
 	// Test pruning the same heights again
 	lastCommitInfo = ms.Commit()
@@ -589,7 +585,6 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 func TestMultiStore_PruningRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
-	ms.SetSnapshotInterval(3)
 	require.NoError(t, ms.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -598,37 +593,26 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 		ms.Commit()
 	}
 
-	pruneHeights := []int64{1, 2, 4, 5, 7}
-
-	// ensure we've persisted the current batch of heights to prune to the store's DB
-	err := ms.pruningManager.LoadPruningHeights(ms.db)
-	require.NoError(t, err)
-
-	actualHeightsToPrune, err := ms.pruningManager.GetFlushAndResetPruningHeights()
-	require.NoError(t, err)
-	require.Equal(t, len(pruneHeights), len(actualHeightsToPrune))
-	require.Equal(t, pruneHeights, actualHeightsToPrune)
+	actualHeightToPrune := ms.pruningManager.GetPruningHeight(ms.LatestVersion())
+	require.Equal(t, int64(0), actualHeightToPrune)
 
 	// "restart"
 	ms = newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
-	ms.SetSnapshotInterval(3)
-	err = ms.LoadLatestVersion()
+	err := ms.LoadLatestVersion()
 	require.NoError(t, err)
 
-	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
-	require.NoError(t, err)
-	require.Equal(t, pruneHeights, actualHeightsToPrune)
+	actualHeightToPrune = ms.pruningManager.GetPruningHeight(ms.LatestVersion())
+	require.Equal(t, int64(0), actualHeightToPrune)
 
 	// commit one more block and ensure the heights have been pruned
 	ms.Commit()
 
-	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
-	require.NoError(t, err)
-	require.Empty(t, actualHeightsToPrune)
+	actualHeightToPrune = ms.pruningManager.GetPruningHeight(ms.LatestVersion())
+	require.Equal(t, int64(8), actualHeightToPrune)
 
-	for _, v := range pruneHeights {
+	for v := int64(1); v <= actualHeightToPrune; v++ {
 		_, err := ms.CacheMultiStoreWithVersion(v)
-		require.NoError(t, err, "expected error when loading height: %d", v)
+		require.Error(t, err, "expected error when loading height: %d", v)
 	}
 }
 

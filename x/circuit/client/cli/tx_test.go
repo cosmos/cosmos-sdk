@@ -1,13 +1,13 @@
 package cli_test
 
 import (
-	"context"
 	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cli "cosmossdk.io/x/circuit/client/cli"
 )
@@ -52,19 +52,16 @@ func (s *CLITestSuite) TestAuthorizeCircuitBreakerCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
+			cmd := cli.AuthorizeCircuitBreakerCmd()
 
-			cmd.SetContext(ctx)
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
-
-			err := cmd.Execute()
+			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
-				s.Require().Error(err)
+				s.Require().Error(err, out)
 			} else {
+				var txResp sdk.TxResponse
 				s.Require().NoError(err)
+				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 			}
 		})
 	}

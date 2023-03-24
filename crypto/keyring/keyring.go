@@ -57,13 +57,6 @@ var (
 	maxPassphraseEntryAttempts         = 3
 )
 
-const (
-	argon2Time    = 1
-	argon2Memory  = 64 * 1024
-	argon2Threads = 4
-	argon2KeyLen  = 32
-)
-
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
 type Keyring interface {
 	// Get the backend type used in the keyring config: "file", "os", "kwallet", "pass", "test", "memory".
@@ -762,7 +755,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			}
 
 			saltBytes := cometbftCrypto.CRandBytes(16)
-			passwordHash := argon2.IDKey([]byte(pass), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
+			passwordHash := argon2.IDKey([]byte(pass), saltBytes, crypto.Argon2Time, crypto.Argon2Memory, crypto.Argon2Threads, crypto.Argon2KeyLen)
 
 			if err := os.WriteFile(keyhashFilePath, passwordHash, 0o600); err != nil {
 				return "", err

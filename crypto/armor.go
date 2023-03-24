@@ -38,10 +38,10 @@ var (
 )
 
 const (
-	argon2Time    = 1
-	argon2Memory  = 64 * 1024
-	argon2Threads = 4
-	argon2KeyLen  = 32
+	Argon2Time    = 1
+	Argon2Memory  = 64 * 1024
+	Argon2Threads = 4
+	Argon2KeyLen  = 32
 )
 
 // BcryptSecurityParameter is security parameter var, and it can be changed within the lcd test.
@@ -165,12 +165,12 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
 
-	key := argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
+	key := argon2.IDKey([]byte(passphrase), saltBytes, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 
 	aead, err := chacha20poly1305.New(key)
 	if err != nil {
-		panic(errorsmod.Wrap(err, "error generating bcrypt key from passphrase"))
+		panic(errorsmod.Wrap(err, "error generating cypher from key"))
 	}
 
 	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead())
@@ -223,7 +223,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 	// Since the argon2 key derivation and chacha encryption was implemented together, it is not possible to have mixed kdf and encryption algorithms
 	switch kdf {
 	case kdfArgon2:
-		key = argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
+		key = argon2.IDKey([]byte(passphrase), saltBytes, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
 
 		aead, err := chacha20poly1305.New(key)
 		if err != nil {

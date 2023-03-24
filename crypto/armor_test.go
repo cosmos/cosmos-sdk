@@ -8,8 +8,7 @@ import (
 	"testing"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/crypto/armor"
-	"github.com/cometbft/cometbft/crypto/xsalsa20symmetric"
+	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -208,7 +206,7 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 		"kdf":  "bcrypt",
 		"salt": fmt.Sprintf("%X", saltBytes),
 	}
-	keyBcrypt, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // Legacy Ley gemeratopm
+	keyBcrypt, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // Legacy key generation
 	keyBcrypt = cmtcrypto.Sha256(keyBcrypt)
 
 	// bcrypt + xsalsa20symmetric
@@ -226,7 +224,7 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 		},
 		{
 			description: "Bcrypt + xsalsa20symmetric",
-			armor:       armor.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric),
+			armor:       crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric),
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {

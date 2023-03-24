@@ -48,7 +48,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 // Migrate2to3 migrates from consensus version 2 to version 3. Specifically, for each account
 // we index the account's ID to their address.
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
-	return v3.MigrateStore(ctx, m.keeper.storeSvc, m.keeper.cdc)
+	return v3.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
 }
 
 // Migrate3to4 migrates the x/auth module state from the consensus version 3 to
@@ -56,7 +56,7 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 // and managed by the x/params modules and stores them directly into the x/auth
 // module state.
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
-	return v4.Migrate(ctx, m.keeper.storeSvc, m.legacySubspace, m.keeper.cdc)
+	return v4.Migrate(ctx, m.keeper.storeService, m.legacySubspace, m.keeper.cdc)
 }
 
 // V45_SetAccount implements V45_SetAccount
@@ -65,7 +65,7 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 // NOTE: This is used for testing purposes only.
 func (m Migrator) V45_SetAccount(ctx sdk.Context, acc sdk.AccountI) error { //nolint:revive
 	addr := acc.GetAddress()
-	store := m.keeper.storeSvc.OpenKVStore(ctx)
+	store := m.keeper.storeService.OpenKVStore(ctx)
 
 	bz, err := m.keeper.MarshalAccount(acc)
 	if err != nil {

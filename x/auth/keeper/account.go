@@ -31,7 +31,7 @@ func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) sdk.Ac
 
 // HasAccount implements AccountKeeperI.
 func (ak AccountKeeper) HasAccount(ctx context.Context, addr sdk.AccAddress) bool {
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 	has, err := store.Has(types.AddressStoreKey(addr))
 	if err != nil {
 		panic(err)
@@ -41,7 +41,7 @@ func (ak AccountKeeper) HasAccount(ctx context.Context, addr sdk.AccAddress) boo
 
 // HasAccountAddressByID checks account address exists by id.
 func (ak AccountKeeper) HasAccountAddressByID(ctx context.Context, id uint64) bool {
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 	has, err := store.Has(types.AccountNumberStoreKey(id))
 	if err != nil {
 		panic(err)
@@ -51,7 +51,7 @@ func (ak AccountKeeper) HasAccountAddressByID(ctx context.Context, id uint64) bo
 
 // GetAccount implements AccountKeeperI.
 func (ak AccountKeeper) GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.AddressStoreKey(addr))
 	if err != nil {
 		panic(err)
@@ -66,7 +66,7 @@ func (ak AccountKeeper) GetAccount(ctx context.Context, addr sdk.AccAddress) sdk
 
 // GetAccountAddressById returns account address by id.
 func (ak AccountKeeper) GetAccountAddressByID(ctx context.Context, id uint64) string {
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.AccountNumberStoreKey(id))
 	if err != nil {
 		panic(err)
@@ -91,7 +91,7 @@ func (ak AccountKeeper) GetAllAccounts(ctx context.Context) (accounts []sdk.Acco
 // SetAccount implements AccountKeeperI.
 func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
 	addr := acc.GetAddress()
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 
 	bz, err := ak.MarshalAccount(acc)
 	if err != nil {
@@ -106,7 +106,7 @@ func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
 // NOTE: this will cause supply invariant violation if called
 func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
 	addr := acc.GetAddress()
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 	err := store.Delete(types.AddressStoreKey(addr))
 	if err != nil {
 		panic(err)
@@ -121,7 +121,7 @@ func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
 // IterateAccounts iterates over all the stored accounts and performs a callback function.
 // Stops iteration when callback returns true.
 func (ak AccountKeeper) IterateAccounts(ctx context.Context, cb func(account sdk.AccountI) (stop bool)) {
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.AddressStoreKeyPrefix, storetypes.PrefixEndBytes(types.AddressStoreKeyPrefix))
 	if err != nil {
 		panic(err)

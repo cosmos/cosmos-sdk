@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/types"
 )
 
@@ -149,6 +150,127 @@ func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Itera
 		var end []byte
 		if start != nil {
 			itr := prefixStore.Iterator(start, nil)
+			defer itr.Close()
+			if itr.Valid() {
+				itr.Next()
+				end = itr.Key()
+			}
+		}
+		return prefixStore.ReverseIterator(nil, end)
+	}
+	return prefixStore.Iterator(start, nil)
+}
+
+func PaginateCoreStore(
+	prefixStore corestore.KVStore,
+	pageRequest *PageRequest,
+	onResult func(key []byte, value []byte) error,
+) (*PageResponse, error) {
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
+	}
+
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
+	reverse := pageRequest.Reverse
+
+	if offset > 0 && key != nil {
+		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+	}
+
+	if limit == 0 {
+		limit = DefaultLimit
+
+		// count total results when the limit is zero/not supplied
+		countTotal = true
+	}
+
+	if len(key) != 0 {
+		iterator, err := getCoreStoreIterator(prefixStore, key, reverse)
+		if err != nil {
+			return nil, err
+		}
+		defer iterator.Close()
+
+		var count uint64
+		var nextKey []byte
+
+		for ; iterator.Valid(); iterator.Next() {
+
+			if count == limit {
+				nextKey = iterator.Key()
+				break
+			}
+			if iterator.Error() != nil {
+				return nil, iterator.Error()
+			}
+			err := onResult(iterator.Key(), iterator.Value())
+			if err != nil {
+				return nil, err
+			}
+
+			count++
+		}
+
+		return &PageResponse{
+			NextKey: nextKey,
+		}, nil
+	}
+
+	iterator, err := getCoreStoreIterator(prefixStore, nil, reverse)
+	if err != nil {
+		return nil, err
+	}
+	defer iterator.Close()
+
+	end := offset + limit
+
+	var count uint64
+	var nextKey []byte
+
+	for ; iterator.Valid(); iterator.Next() {
+		count++
+
+		if count <= offset {
+			continue
+		}
+		if count <= end {
+			err := onResult(iterator.Key(), iterator.Value())
+			if err != nil {
+				return nil, err
+			}
+		} else if count == end+1 {
+			nextKey = iterator.Key()
+
+			if !countTotal {
+				break
+			}
+		}
+		if iterator.Error() != nil {
+			return nil, iterator.Error()
+		}
+	}
+
+	res := &PageResponse{NextKey: nextKey}
+	if countTotal {
+		res.Total = count
+	}
+
+	return res, nil
+}
+
+func getCoreStoreIterator(prefixStore corestore.KVStore, start []byte, reverse bool) (db.Iterator, error) {
+	if reverse {
+		var end []byte
+		if start != nil {
+			itr, err := prefixStore.Iterator(start, nil)
+			if err != nil {
+				return nil, err
+			}
+
 			defer itr.Close()
 			if itr.Valid() {
 				itr.Next()

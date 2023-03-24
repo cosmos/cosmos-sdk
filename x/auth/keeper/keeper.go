@@ -9,11 +9,9 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,10 +57,9 @@ type AccountKeeperI interface {
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
-	storeSvc  corestore.KVStoreService
-	storeKey  storetypes.StoreKey
-	cdc       codec.BinaryCodec
-	permAddrs map[string]types.PermissionsForAddress
+	storeService corestore.KVStoreService
+	cdc          codec.BinaryCodec
+	permAddrs    map[string]types.PermissionsForAddress
 
 	// The prototypical AccountI constructor.
 	proto      func() sdk.AccountI
@@ -82,7 +79,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, proto func() sdk.AccountI,
+	cdc codec.BinaryCodec, storeService corestore.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -92,16 +89,13 @@ func NewAccountKeeper(
 
 	bech32Codec := NewBech32Codec(bech32Prefix)
 
-	storeSvc := runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey))
-
 	return AccountKeeper{
-		storeSvc:   storeSvc,
-		storeKey:   storeKey,
-		proto:      proto,
-		cdc:        cdc,
-		permAddrs:  permAddrs,
-		addressCdc: bech32Codec,
-		authority:  authority,
+		storeService: storeService,
+		proto:        proto,
+		cdc:          cdc,
+		permAddrs:    permAddrs,
+		addressCdc:   bech32Codec,
+		authority:    authority,
 	}
 }
 
@@ -145,7 +139,7 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 // If the global account number is not set, it initializes it with value 0.
 func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
 	var accNumber uint64
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 
 	bz, err := store.Get(types.GlobalAccountNumberKey)
 	if err != nil {

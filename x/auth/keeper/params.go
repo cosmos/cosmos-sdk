@@ -12,14 +12,14 @@ func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) erro
 		return err
 	}
 
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 	bz := ak.cdc.MustMarshal(&params)
 	return store.Set(types.ParamsKey, bz)
 }
 
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
-	store := ak.storeSvc.OpenKVStore(ctx)
+	store := ak.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.ParamsKey)
 	if err != nil {
 		panic(err)

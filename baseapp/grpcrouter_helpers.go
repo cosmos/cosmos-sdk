@@ -35,7 +35,7 @@ func NewQueryServerTestHelper(ctx sdk.Context, interfaceRegistry types.Interface
 }
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args, reply any, _ ...grpc.CallOption) error {
+func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
 	querier := q.Route(method)
 	if querier == nil {
 		return fmt.Errorf("handler not found for %s", method)
@@ -59,6 +59,6 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 }
 
 // NewStream implements the grpc ClientConn.NewStream method
-func (*QueryServiceTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
+func (q *QueryServiceTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("not supported")
 }

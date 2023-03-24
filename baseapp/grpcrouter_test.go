@@ -44,9 +44,9 @@ func TestGRPCQueryRouter(t *testing.T) {
 	require.Equal(t, "Hello Foo!", res2.Greeting)
 
 	spot := &testdata.Dog{Name: "Spot", Size_: "big"}
-	anyAnimal, err := types.NewAnyWithValue(spot)
+	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
-	res3, err := client.TestAny(context.Background(), &testdata.TestAnyRequest{AnyAnimal: anyAnimal})
+	res3, err := client.TestAny(context.Background(), &testdata.TestAnyRequest{AnyAnimal: any})
 	require.NoError(t, err)
 	require.NotNil(t, res3)
 	require.Equal(t, spot, res3.HasAnimal.Animal.GetCachedValue())
@@ -112,6 +112,8 @@ func TestQueryDataRaces_uniqueConnectionsToSameHandler(t *testing.T) {
 }
 
 func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GRPCQueryRouter) *baseapp.QueryServiceTestHelper) {
+	t.Helper()
+
 	t.Parallel()
 
 	qr := baseapp.NewGRPCQueryRouter()
@@ -162,9 +164,9 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 			require.Equal(t, "Hello Foo!", res2.Greeting)
 
 			spot := &testdata.Dog{Name: "Spot", Size_: "big"}
-			anyAnimal, err := types.NewAnyWithValue(spot)
+			any, err := types.NewAnyWithValue(spot)
 			require.NoError(t, err)
-			res3, err := client.TestAny(context.Background(), &testdata.TestAnyRequest{AnyAnimal: anyAnimal})
+			res3, err := client.TestAny(context.Background(), &testdata.TestAnyRequest{AnyAnimal: any})
 			require.NoError(t, err)
 			require.NotNil(t, res3)
 			require.Equal(t, spot, res3.HasAnimal.Animal.GetCachedValue())

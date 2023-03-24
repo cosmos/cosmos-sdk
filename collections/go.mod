@@ -51,3 +51,6 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// avoid version constrant issue
+replace github.com/nxadm/tail => github.com/nxadm/tail v1.4.8

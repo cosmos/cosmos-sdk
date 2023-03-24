@@ -66,3 +66,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/nxadm/tail => github.com/nxadm/tail v1.4.8

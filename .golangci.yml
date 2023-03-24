@@ -8,12 +8,14 @@ run:
 linters:
   disable-all: true
   enable:
+    - bodyclose
     - depguard
     - dogsled
     - exportloopref
     - goconst
     - gocritic
     - gofumpt
+    - grouper
     - gosec
     - gosimple
     - govet
@@ -24,6 +26,7 @@ linters:
     - staticcheck
     - revive
     - stylecheck
+    - thelper
     - typecheck
     - unconvert
     - unused
@@ -53,6 +56,247 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  thelper:
+    test:
+      # Check *testing.T is first param (or after context.Context) of helper function.
+      # Default: true
+      first: true
+      # Check *testing.T param has name t.
+      # Default: true
+      name: true
+      # Check t.Helper() begins helper function.
+      # Default: true
+      begin: true
+    benchmark:
+      # Check *testing.B is first param (or after context.Context) of helper function.
+      # Default: true
+      first: true
+      # Check *testing.B param has name b.
+      # Default: true
+      name: true
+      # Check b.Helper() begins helper function.
+      # Default: true
+      begin: true
+    tb:
+      # Check *testing.TB is first param (or after context.Context) of helper function.
+      # Default: true
+      first: true
+      # Check *testing.TB param has name tb.
+      # Default: true
+      name: true
+      # Check tb.Helper() begins helper function.
+      # Default: true
+      begin: true
+    fuzz:
+      # Check *testing.F is first param (or after context.Context) of helper function.
+      # Default: true
+      first: true
+      # Check *testing.F param has name f.
+      # Default: true
+      name: true
+      # Check f.Helper() begins helper function.
+      # Default: true
+      begin: true
+  grouper:
+    # Require the use of a single global 'const' declaration only.
+    # Default: false
+    const-require-single-const: true
+    # Require the use of grouped global 'const' declarations.
+    # Default: false
+    const-require-grouping: true
+    # Require the use of a single 'import' declaration only.
+    # Default: false
+    import-require-single-import: true
+    # Require the use of grouped 'import' declarations.
+    # Default: false
+    import-require-grouping: true
+    # Require the use of a single global 'type' declaration only.
+    # Default: false
+    type-require-single-type: true
+    # Require the use of grouped global 'type' declarations.
+    # Default: false
+    type-require-grouping: true
+    # Require the use of a single global 'var' declaration only.
+    # Default: false
+    var-require-single-var: true
+    # Require the use of grouped global 'var' declarations.
+    # Default: false
+    var-require-grouping: true
+  govet:
+    # Report about shadowed variables.
+    # Default: false
+    check-shadowing: false
+    # Settings per analyzer.
+    settings:
+      # Analyzer name, run `go tool vet help` to see all analyzers.
+      printf:
+        # Comma-separated list of print function names to check (in addition to default, see `go tool vet help printf`).
+        # Default: []
+        # funcs:
+        #  - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+        #  - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+        #  - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+        #  - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+      shadow:
+        # Whether to be strict about shadowing; can be noisy.
+        # Default: false
+        strict: true
+      unusedresult:
+        # Comma-separated list of functions whose results must be used
+        # (in addition to defaults context.WithCancel,context.WithDeadline,context.WithTimeout,context.WithValue,
+        # errors.New,fmt.Errorf,fmt.Sprint,fmt.Sprintf,sort.Reverse)
+        # Default []
+        funcs:
+          - pkg.MyFunc
+        # Comma-separated list of names of methods of type func() string whose results must be used
+        # (in addition to default Error,String)
+        # Default []
+        stringmethods:
+          - MyMethod
+    disable:
+      - fieldalignment
+    # Disable all analyzers.
+    # Default: false
+    disable-all: false
+    # Enable analyzers by name (in addition to default).
+    # Run `go tool vet help` to see all analyzers.
+    # Default: []
+    # Enable all analyzers.
+    # Default: false
+    enable-all: true
+    # Disable analyzers by name.
+    # Run `go tool vet help` to see all analyzers.
+    # Default: []
+    # disable:
+  gosec:
+    # To select a subset of rules to run.
+    # Available rules: https://github.com/securego/gosec#available-rules
+    # Default: [] - means include all rules
+    includes:
+      - G101 # Look for hard coded credentials
+      - G102 # Bind to all interfaces
+      - G103 # Audit the use of unsafe block
+      - G104 # Audit errors not checked
+      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
+      - G107 # Url provided to HTTP request as taint input
+      - G108 # Profiling endpoint automatically exposed on /debug/pprof
+      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
+      - G110 # Potential DoS vulnerability via decompression bomb
+      - G111 # Potential directory traversal
+      - G112 # Potential slowloris attack
+      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
+      - G114 # Use of net/http serve function that has no support for setting timeouts
+      - G201 # SQL query construction using format string
+      - G202 # SQL query construction using string concatenation
+      - G203 # Use of unescaped data in HTML templates
+      - G204 # Audit use of command execution
+      - G301 # Poor file permissions used when creating a directory
+      - G302 # Poor file permissions used with chmod
+      - G303 # Creating tempfile using a predictable path
+      - G304 # File path provided as taint input
+      - G305 # File traversal when extracting zip/tar archive
+      - G306 # Poor file permissions used when writing to a new file
+      - G307 # Deferring a method which returns an error
+      - G401 # Detect the usage of DES, RC4, MD5 or SHA1
+      - G402 # Look for bad TLS connection settings
+      - G403 # Ensure minimum RSA key length of 2048 bits
+      - G404 # Insecure random number source (rand)
+      - G501 # Import blocklist: crypto/md5
+      - G502 # Import blocklist: crypto/des
+      - G503 # Import blocklist: crypto/rc4
+      - G504 # Import blocklist: net/http/cgi
+      - G505 # Import blocklist: crypto/sha1
+      - G601 # Implicit memory aliasing of items from a range statement
+
+    # Exclude generated files
+    # Default: false
+    exclude-generated: true
+    # Filter out the issues with a lower severity than the given value.
+    # Valid options are: low, medium, high.
+    # Default: low
+    severity: medium
+    # Filter out the issues with a lower confidence than the given value.
+    # Valid options are: low, medium, high.
+    # Default: low
+    confidence: medium
+    # Concurrency value.
+    # Default: the number of logical CPUs usable by the current process.
+    concurrency: 12
+    # To specify the configuration of rules.
+    config:
+      # Globals are applicable to all rules.
+      global:
+        # If true, ignore #nosec in comments (and an alternative as well).
+        # Default: false
+        nosec: true
+        # Add an alternative comment prefix to #nosec (both will work at the same time).
+        # Default: ""
+        "#nosec": "#my-custom-nosec"
+        # Define whether nosec issues are counted as finding or not.
+        # Default: false
+        show-ignored: true
+        # Audit mode enables addition checks that for normal code analysis might be too nosy.
+        # Default: false
+        audit: true
+      G101:
+        # Regexp pattern for variables and constants to find.
+        # Default: "(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred"
+        pattern: "(?i)example"
+        # If true, complain about all cases (even with low entropy).
+        # Default: false
+        ignore_entropy: false
+        # Maximum allowed entropy of the string.
+        # Default: "80.0"
+        entropy_threshold: "80.0"
+        # Maximum allowed value of entropy/string length.
+        # Is taken into account if entropy >= entropy_threshold/2.
+        # Default: "3.0"
+        per_char_threshold: "3.0"
+        # Calculate entropy for first N chars of the string.
+        # Default: "16"
+        truncate: "32"
+      # Additional functions to ignore while checking unhandled errors.
+      # Following functions always ignored:
+      #   bytes.Buffer:
+      #     - Write
+      #     - WriteByte
+      #     - WriteRune
+      #     - WriteString
+      #   fmt:
+      #     - Print
+      #     - Printf
+      #     - Println
+      #     - Fprint
+      #     - Fprintf
+      #     - Fprintln
+      #   strings.Builder:
+      #     - Write
+      #     - WriteByte
+      #     - WriteRune
+      #     - WriteString
+      #   io.PipeWriter:
+      #     - CloseWithError
+      #   hash.Hash:
+      #     - Write
+      #   os:
+      #     - Unsetenv
+      # Default: {}
+      G104:
+        fmt:
+          - Fscanf
+      G111:
+        # Regexp pattern to find potential directory traversal.
+        # Default: "http\\.Dir\\(\"\\/\"\\)|http\\.Dir\\('\\/'\\)"
+        pattern: "custom\\.Dir\\(\\)"
+      # Maximum allowed permissions mode for os.Mkdir and os.MkdirAll
+      # Default: "0750"
+      G301: "0750"
+      # Maximum allowed permissions mode for os.OpenFile and os.Chmod
+      # Default: "0600"
+      G302: "0600"
+      # Maximum allowed permissions mode for os.WriteFile and ioutil.WriteFile
+      # Default: "0600"
+      G306: "0600"
   gofumpt:
     # Module path which contains the source code being formatted.
     # Default: ""

@@ -158,3 +158,5 @@ require (
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+
+replace github.com/nxadm/tail => github.com/nxadm/tail v1.4.8

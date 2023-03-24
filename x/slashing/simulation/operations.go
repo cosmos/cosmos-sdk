@@ -19,7 +19,7 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgUnjail = "op_weight_msg_unjail" //nolint:gosec
+	OpWeightMsgUnjail = "op_weight_msg_unjail"
 
 	DefaultWeightMsgUnjail = 100
 )

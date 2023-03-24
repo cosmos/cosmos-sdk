@@ -27,9 +27,9 @@ var (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgGrant = "op_weight_msg_grant"   //nolint:gosec
-	OpWeightRevoke   = "op_weight_msg_revoke"  //nolint:gosec
-	OpWeightExec     = "op_weight_msg_execute" //nolint:gosec
+	OpWeightMsgGrant = "op_weight_msg_grant"
+	OpWeightRevoke   = "op_weight_msg_revoke"
+	OpWeightExec     = "op_weight_msg_execute"
 )
 
 // authz operations weights

@@ -114,3 +114,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 )
+
+// avoid version constrants issues
+replace github.com/nxadm/tail => github.com/nxadm/tail v1.4.8

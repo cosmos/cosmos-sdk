@@ -37,6 +37,7 @@ type TestContext struct {
 }
 
 func DefaultContextWithDB(t *testing.T, key, tkey storetypes.StoreKey) TestContext {
+	t.Helper()
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)

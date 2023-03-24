@@ -100,7 +100,7 @@ func makeMinimalConfig() depinject.Config {
 
 type MsgKeyValueImpl struct{}
 
-func (MsgKeyValueImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
+func (m MsgKeyValueImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.KVStore(capKey2).Set(msg.Key, msg.Value)
 	return &baseapptestutil.MsgCreateKeyValueResponse{}, nil
@@ -158,6 +158,7 @@ func incrementCounter(ctx context.Context,
 	deliverKey []byte,
 	msg sdk.Msg,
 ) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(capKey)
 
@@ -200,6 +201,7 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 }
 
 func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
+	t.Helper()
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		counter, failOnAnte := parseTxMemo(t, tx)
@@ -223,6 +225,7 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 }
 
 func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+	t.Helper()
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
@@ -254,7 +257,7 @@ func (ps *paramStore) Has(_ context.Context) (bool, error) {
 	return ps.db.Has(ParamStoreKey)
 }
 
-func (ps paramStore) Get(_ sdk.Context) (*cmtproto.ConsensusParams, error) {
+func (ps paramStore) Get(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	bz, err := ps.db.Get(ParamStoreKey)
 	if err != nil {
 		return nil, err
@@ -273,6 +276,7 @@ func (ps paramStore) Get(_ sdk.Context) (*cmtproto.ConsensusParams, error) {
 }
 
 func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
+	t.Helper()
 	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
 	pubKey := privKey.PubKey()
 	err := builder.SetSignatures(
@@ -286,6 +290,8 @@ func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
 }
 
 func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight int64, expectedID storetypes.CommitID) {
+	t.Helper()
+
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
@@ -307,6 +313,8 @@ func getDeliverStateCtx(app *baseapp.BaseApp) sdk.Context {
 }
 
 func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
+	t.Helper()
+
 	txWithMemo, ok := tx.(sdk.TxWithMemo)
 	require.True(t, ok)
 
@@ -322,6 +330,8 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 }
 
 func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+	t.Helper()
+
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
 		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false}
@@ -337,6 +347,8 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 }
 
 func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
+	t.Helper()
+
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return 0
@@ -349,6 +361,8 @@ func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 }
 
 func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.Tx {
+	t.Helper()
+
 	builder := cfg.NewTxBuilder()
 	builder.SetMsgs(tx.GetMsgs()...)
 

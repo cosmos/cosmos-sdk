@@ -52,11 +52,11 @@ var (
 )
 
 type LegacyParamStore interface {
-	Get(ctx sdk.Context, key []byte, ptr any)
+	Get(ctx sdk.Context, key []byte, ptr interface{})
 	Has(ctx sdk.Context, key []byte) bool
 }
 
-func ValidateBlockParams(i any) error {
+func ValidateBlockParams(i interface{}) error {
 	v, ok := i.(cmtproto.BlockParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -73,7 +73,7 @@ func ValidateBlockParams(i any) error {
 	return nil
 }
 
-func ValidateEvidenceParams(i any) error {
+func ValidateEvidenceParams(i interface{}) error {
 	v, ok := i.(cmtproto.EvidenceParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -94,7 +94,7 @@ func ValidateEvidenceParams(i any) error {
 	return nil
 }
 
-func ValidateValidatorParams(i any) error {
+func ValidateValidatorParams(i interface{}) error {
 	v, ok := i.(cmtproto.ValidatorParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

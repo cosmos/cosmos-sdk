@@ -208,3 +208,6 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 )
+
+// version constraints
+replace github.com/nxadm/tail => github.com/nxadm/tail v1.4.8

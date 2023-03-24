@@ -14,7 +14,7 @@ func TestRecoveryChain(t *testing.T) {
 	}
 
 	createHandler := func(id int, handle bool) RecoveryHandler {
-		return func(_ any) error {
+		return func(_ interface{}) error {
 			if handle {
 				return createError(id)
 			}

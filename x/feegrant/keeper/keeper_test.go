@@ -180,6 +180,8 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	accAddr, err := codecaddress.NewBech32Codec("cosmos").StringToBytes(address)
 	suite.Require().NoError(err)
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(address).Return(accAddr, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(accAddr).Return(address, nil).AnyTimes()
 
 	// let's grant and revoke authorization to non existing account
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[3], accAddr, basic2)

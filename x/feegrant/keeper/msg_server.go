@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 )
 
@@ -40,6 +40,10 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 
 	if msg.Grantee == msg.Granter {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
+	}
+
+	if f, _ := k.GetAllowance(ctx, granter, grantee); f != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
 	allowance, err := msg.GetFeeAllowanceI()

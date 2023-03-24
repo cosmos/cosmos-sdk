@@ -37,12 +37,53 @@ const ConsensusVersion = 3
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the distribution module.
-type AppModuleBasic struct {
-	cdc codec.Codec
-}
+type (
+	AppModuleBasic struct {
+		cdc codec.Codec
+	}
+
+	// AppModule implements an application module for the distribution module.
+	AppModule struct {
+		AppModuleBasic
+
+		keeper        keeper.Keeper
+		accountKeeper types.AccountKeeper
+		bankKeeper    types.BankKeeper
+		stakingKeeper types.StakingKeeper
+
+		// legacySubspace is used solely for migration of x/params managed parameters
+		legacySubspace exported.Subspace
+	}
+
+	DistrInputs struct {
+		depinject.In
+
+		Config *modulev1.Module
+		Key    *store.KVStoreKey
+		Cdc    codec.Codec
+
+		AccountKeeper types.AccountKeeper
+		BankKeeper    types.BankKeeper
+		StakingKeeper types.StakingKeeper
+
+		// LegacySubspace is used solely for migration of x/params managed parameters
+		LegacySubspace exported.Subspace
+	}
+
+	DistrOutputs struct {
+		depinject.Out
+
+		DistrKeeper keeper.Keeper
+		Module      appmodule.AppModule
+		Hooks       staking.StakingHooksWrapper
+	}
+)
 
 // Name returns the distribution module's name.
 func (AppModuleBasic) Name() string {
@@ -92,19 +133,6 @@ func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 }
 
-// AppModule implements an application module for the distribution module.
-type AppModule struct {
-	AppModuleBasic
-
-	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	stakingKeeper types.StakingKeeper
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.Subspace
-}
-
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
@@ -120,16 +148,11 @@ func NewAppModule(
 	}
 }
 
-var (
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-)
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
+func (AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
+func (AppModule) IsAppModule() {}
 
 // Name returns the distribution module's name.
 func (AppModule) Name() string {
@@ -213,29 +236,6 @@ func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
 	)
-}
-
-type DistrInputs struct {
-	depinject.In
-
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
-
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
-}
-
-type DistrOutputs struct {
-	depinject.Out
-
-	DistrKeeper keeper.Keeper
-	Module      appmodule.AppModule
-	Hooks       staking.StakingHooksWrapper
 }
 
 func ProvideModule(in DistrInputs) DistrOutputs {

@@ -49,7 +49,37 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var ParamStoreKey = []byte("paramstore")
+var (
+	ParamStoreKey = []byte("paramstore")
+
+	_ baseapp.ParamStore = (*paramStore)(nil)
+)
+
+type (
+	CounterServerImplGasMeterOnly struct {
+		gas uint64
+	}
+
+	MsgKeyValueImpl struct{}
+
+	Counter2ServerImpl struct {
+		t          *testing.T
+		capKey     storetypes.StoreKey
+		deliverKey []byte
+	}
+
+	NoopCounterServerImpl struct{}
+
+	CounterServerImpl struct {
+		t          *testing.T
+		capKey     storetypes.StoreKey
+		deliverKey []byte
+	}
+
+	paramStore struct {
+		db *dbm.MemDB
+	}
+)
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
@@ -98,16 +128,10 @@ func makeMinimalConfig() depinject.Config {
 		}))
 }
 
-type MsgKeyValueImpl struct{}
-
 func (m MsgKeyValueImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.KVStore(capKey2).Set(msg.Key, msg.Value)
 	return &baseapptestutil.MsgCreateKeyValueResponse{}, nil
-}
-
-type CounterServerImplGasMeterOnly struct {
-	gas uint64
 }
 
 func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
@@ -123,8 +147,6 @@ func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg
 	return &baseapptestutil.MsgCreateCounterResponse{}, nil
 }
 
-type NoopCounterServerImpl struct{}
-
 func (m NoopCounterServerImpl) IncrementCounter(
 	_ context.Context,
 	_ *baseapptestutil.MsgCounter,
@@ -132,20 +154,8 @@ func (m NoopCounterServerImpl) IncrementCounter(
 	return &baseapptestutil.MsgCreateCounterResponse{}, nil
 }
 
-type CounterServerImpl struct {
-	t          *testing.T
-	capKey     storetypes.StoreKey
-	deliverKey []byte
-}
-
 func (m CounterServerImpl) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
 	return incrementCounter(ctx, m.t, m.capKey, m.deliverKey, msg)
-}
-
-type Counter2ServerImpl struct {
-	t          *testing.T
-	capKey     storetypes.StoreKey
-	deliverKey []byte
 }
 
 func (m Counter2ServerImpl) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter2) (*baseapptestutil.MsgCreateCounterResponse, error) {
@@ -237,12 +247,6 @@ func setIntOnStore(store storetypes.KVStore, key []byte, i int64) {
 	n := binary.PutVarint(bz, i)
 	store.Set(key, bz[:n])
 }
-
-type paramStore struct {
-	db *dbm.MemDB
-}
-
-var _ baseapp.ParamStore = (*paramStore)(nil)
 
 func (ps *paramStore) Set(_ context.Context, value *cmtproto.ConsensusParams) error {
 	bz, err := json.Marshal(value)

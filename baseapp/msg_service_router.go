@@ -15,18 +15,23 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// MessageRouter ADR 031 request type routing
-// https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-031-msg-service.md
-type MessageRouter interface {
-	Handler(msg sdk.Msg) MsgServiceHandler
-	HandlerByTypeURL(typeURL string) MsgServiceHandler
-}
+type (
+	// MessageRouter ADR 031 request type routing
+	// https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-031-msg-service.md
+	MessageRouter interface {
+		Handler(msg sdk.Msg) MsgServiceHandler
+		HandlerByTypeURL(typeURL string) MsgServiceHandler
+	}
 
-// MsgServiceRouter routes fully-qualified Msg service methods to their handler.
-type MsgServiceRouter struct {
-	interfaceRegistry codectypes.InterfaceRegistry
-	routes            map[string]MsgServiceHandler
-}
+	// MsgServiceRouter routes fully-qualified Msg service methods to their handler.
+	MsgServiceRouter struct {
+		interfaceRegistry codectypes.InterfaceRegistry
+		routes            map[string]MsgServiceHandler
+	}
+
+	// MsgServiceHandler defines a function type which handles Msg service message.
+	MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
+)
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
 
@@ -36,9 +41,6 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 		routes: map[string]MsgServiceHandler{},
 	}
 }
-
-// MsgServiceHandler defines a function type which handles Msg service message.
-type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {

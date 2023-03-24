@@ -7,9 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// PubKeyType defines an algorithm to derive key-pairs which can be used for cryptographic signing.
-type PubKeyType string
-
 const (
 	// MultiType implies that a pubkey is a multisignature
 	MultiType = PubKeyType("multi")
@@ -26,16 +23,21 @@ const (
 var Secp256k1 = secp256k1Algo{}
 
 type (
-	DeriveFn   func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error)
+	// DeriveFn defines an algorithm to derive key-pairs which can be used for cryptographic signing.
+	DeriveFn func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error)
+
+	// GenerateFn defines an algorithm to derive key-pairs which can be used for cryptographic signing.
 	GenerateFn func(bz []byte) types.PrivKey
+	// WalletGenerator defines an algorithm to derive key-pairs which can be used for cryptographic signing.
+	WalletGenerator interface {
+		Derive(mnemonic, bip39Passphrase, hdPath string) ([]byte, error)
+		Generate(bz []byte) types.PrivKey
+	}
+	// secp256k1Algo implements the WalletGenerator interface for secp256k1 keys.
+	secp256k1Algo struct{}
+	// PubKeyType defines an algorithm to derive key-pairs which can be used for cryptographic signing.
+	PubKeyType string
 )
-
-type WalletGenerator interface {
-	Derive(mnemonic, bip39Passphrase, hdPath string) ([]byte, error)
-	Generate(bz []byte) types.PrivKey
-}
-
-type secp256k1Algo struct{}
 
 func (s secp256k1Algo) Name() PubKeyType {
 	return Secp256k1Type

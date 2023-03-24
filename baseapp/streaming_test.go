@@ -15,7 +15,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ storetypes.ABCIListener = (*MockABCIListener)(nil)
+var (
+	_        storetypes.ABCIListener = (*MockABCIListener)(nil)
+	distKey1                         = storetypes.NewKVStoreKey("distKey1")
+)
 
 type MockABCIListener struct {
 	name      string
@@ -29,24 +32,22 @@ func NewMockABCIListener(name string) MockABCIListener {
 	}
 }
 
-func (m MockABCIListener) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+func (MockABCIListener) ListenBeginBlock(_ context.Context, _ abci.RequestBeginBlock, _ abci.ResponseBeginBlock) error {
 	return nil
 }
 
-func (m MockABCIListener) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (MockABCIListener) ListenEndBlock(_ context.Context, _ abci.RequestEndBlock, _ abci.ResponseEndBlock) error {
 	return nil
 }
 
-func (m MockABCIListener) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+func (MockABCIListener) ListenDeliverTx(_ context.Context, _ abci.RequestDeliverTx, _ abci.ResponseDeliverTx) error {
 	return nil
 }
 
-func (m *MockABCIListener) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
+func (m *MockABCIListener) ListenCommit(_ context.Context, _ abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	m.ChangeSet = changeSet
 	return nil
 }
-
-var distKey1 = storetypes.NewKVStoreKey("distKey1")
 
 func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	anteKey := []byte("ante-key")

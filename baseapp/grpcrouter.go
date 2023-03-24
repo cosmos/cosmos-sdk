@@ -15,17 +15,23 @@ import (
 )
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
-type GRPCQueryRouter struct {
-	routes      map[string]GRPCQueryHandler
-	cdc         encoding.Codec
-	serviceData []serviceData
-}
+type (
+	GRPCQueryRouter struct {
+		routes      map[string]GRPCQueryHandler
+		cdc         encoding.Codec
+		serviceData []serviceData
+	}
 
-// serviceData represents a gRPC service, along with its handler.
-type serviceData struct {
-	serviceDesc *grpc.ServiceDesc
-	handler     interface{}
-}
+	// serviceData represents a gRPC service, along with its handler.
+	serviceData struct {
+		serviceDesc *grpc.ServiceDesc
+		handler     interface{}
+	}
+
+	// GRPCQueryHandler defines a function type which handles ABCI Query requests
+	// using gRPC
+	GRPCQueryHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error)
+)
 
 var _ gogogrpc.Server = &GRPCQueryRouter{}
 
@@ -35,10 +41,6 @@ func NewGRPCQueryRouter() *GRPCQueryRouter {
 		routes: map[string]GRPCQueryHandler{},
 	}
 }
-
-// GRPCQueryHandler defines a function type which handles ABCI Query requests
-// using gRPC
-type GRPCQueryHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error)
 
 // Route returns the GRPCQueryHandler for a given query route path or nil
 // if not found
@@ -55,7 +57,7 @@ func (qrt *GRPCQueryRouter) Route(path string) GRPCQueryHandler {
 //
 // This functions PANICS:
 // - if a protobuf service is registered twice.
-func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler any) {
 	// adds a top-level query handler based on the gRPC service name
 	for _, method := range sd.Methods {
 		fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)

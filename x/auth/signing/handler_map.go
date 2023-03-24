@@ -9,13 +9,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SignModeHandlerMap is SignModeHandler that aggregates multiple SignModeHandler's into
-// a single handler
-type SignModeHandlerMap struct {
-	defaultMode      signing.SignMode
-	modes            []signing.SignMode
-	signModeHandlers map[signing.SignMode]SignModeHandler
-}
+type (
+	// SignModeHandlerMap is SignModeHandler that aggregates multiple SignModeHandler's into
+	// a single handler
+	SignModeHandlerMap struct {
+		defaultMode      signing.SignMode
+		modes            []signing.SignMode
+		signModeHandlers map[signing.SignMode]SignModeHandler
+	}
+)
 
 var _ SignModeHandler = SignModeHandlerMap{}
 

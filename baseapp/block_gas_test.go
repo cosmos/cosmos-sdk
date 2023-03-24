@@ -39,11 +39,13 @@ import (
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 
-type BlockGasImpl struct {
-	panicTx      bool
-	gasToConsume uint64
-	key          store.StoreKey
-}
+type (
+	BlockGasImpl struct {
+		panicTx      bool
+		gasToConsume uint64
+		key          store.StoreKey
+	}
+)
 
 func (m BlockGasImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

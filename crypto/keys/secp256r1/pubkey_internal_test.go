@@ -17,11 +17,14 @@ func TestPKSuite(t *testing.T) {
 	suite.Run(t, new(PKSuite))
 }
 
-type CommonSuite struct {
-	suite.Suite
-	pk *PubKey // cryptotypes.PubKey
-	sk cryptotypes.PrivKey
-}
+type (
+	CommonSuite struct {
+		suite.Suite
+		pk *PubKey // cryptotypes.PubKey
+		sk cryptotypes.PrivKey
+	}
+	PKSuite struct{ CommonSuite }
+)
 
 func (suite *CommonSuite) SetupSuite() {
 	sk, err := GenPrivKey()
@@ -29,8 +32,6 @@ func (suite *CommonSuite) SetupSuite() {
 	suite.sk = sk
 	suite.pk = sk.PubKey().(*PubKey)
 }
-
-type PKSuite struct{ CommonSuite }
 
 func (suite *PKSuite) TestString() {
 	require := suite.Require()

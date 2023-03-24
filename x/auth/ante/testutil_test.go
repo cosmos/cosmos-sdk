@@ -35,24 +35,46 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-// TestAccount represents an account used in the tests in x/auth/ante.
-type TestAccount struct {
-	acc  sdk.AccountI
-	priv cryptotypes.PrivKey
-}
+type (
 
-// AnteTestSuite is a test suite to be used with ante handler tests.
-type AnteTestSuite struct {
-	anteHandler    sdk.AnteHandler
-	ctx            sdk.Context
-	clientCtx      client.Context
-	txBuilder      client.TxBuilder
-	accountKeeper  keeper.AccountKeeper
-	bankKeeper     *authtestutil.MockBankKeeper
-	txBankKeeper   *txtestutil.MockBankKeeper
-	feeGrantKeeper *antetestutil.MockFeegrantKeeper
-	encCfg         moduletestutil.TestEncodingConfig
-}
+	// TestAccount represents an account used in the tests in x/auth/ante.
+	TestAccount struct {
+		acc  sdk.AccountI
+		priv cryptotypes.PrivKey
+	}
+
+	// AnteTestSuite is a test suite to be used with ante handler tests.
+	AnteTestSuite struct {
+		anteHandler    sdk.AnteHandler
+		ctx            sdk.Context
+		clientCtx      client.Context
+		txBuilder      client.TxBuilder
+		accountKeeper  keeper.AccountKeeper
+		bankKeeper     *authtestutil.MockBankKeeper
+		txBankKeeper   *txtestutil.MockBankKeeper
+		feeGrantKeeper *antetestutil.MockFeegrantKeeper
+		encCfg         moduletestutil.TestEncodingConfig
+	}
+
+	// TestCase represents a test case used in test tables.
+	TestCase struct {
+		desc     string
+		malleate func(*AnteTestSuite) TestCaseArgs
+		simulate bool
+		expPass  bool
+		expErr   error
+	}
+
+	TestCaseArgs struct {
+		chainID   string
+		accNums   []uint64
+		accSeqs   []uint64
+		feeAmount sdk.Coins
+		gasLimit  uint64
+		msgs      []sdk.Msg
+		privs     []cryptotypes.PrivKey
+	}
+)
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
@@ -122,25 +144,6 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	}
 
 	return accounts
-}
-
-// TestCase represents a test case used in test tables.
-type TestCase struct {
-	desc     string
-	malleate func(*AnteTestSuite) TestCaseArgs
-	simulate bool
-	expPass  bool
-	expErr   error
-}
-
-type TestCaseArgs struct {
-	chainID   string
-	accNums   []uint64
-	accSeqs   []uint64
-	feeAmount sdk.Coins
-	gasLimit  uint64
-	msgs      []sdk.Msg
-	privs     []cryptotypes.PrivKey
 }
 
 // DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a test case, for

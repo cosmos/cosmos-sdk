@@ -16,8 +16,21 @@ import (
 )
 
 var (
-	_ sdk.Msg            = &MsgCreateGroup{}
-	_ legacytx.LegacyMsg = &MsgCreateGroup{}
+	_ sdk.Msg                       = &MsgCreateGroup{}
+	_ legacytx.LegacyMsg            = &MsgCreateGroup{}
+	_ sdk.Msg                       = &MsgUpdateGroupAdmin{}
+	_ legacytx.LegacyMsg            = &MsgUpdateGroupAdmin{}
+	_ sdk.Msg                       = &MsgUpdateGroupMetadata{}
+	_ legacytx.LegacyMsg            = &MsgUpdateGroupMetadata{}
+	_ sdk.Msg                       = &MsgCreateGroupPolicy{}
+	_ legacytx.LegacyMsg            = &MsgCreateGroupPolicy{}
+	_ sdk.Msg                       = &MsgVote{}
+	_ legacytx.LegacyMsg            = &MsgVote{}
+	_ sdk.Msg                       = &MsgLeaveGroup{}
+	_ legacytx.LegacyMsg            = &MsgLeaveGroup{}
+	_ sdk.Msg                       = &MsgCreateGroupWithPolicy{}
+	_ legacytx.LegacyMsg            = &MsgCreateGroupWithPolicy{}
+	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 )
 
 // GetSignBytes Implements Msg.
@@ -60,11 +73,6 @@ func (m MemberRequest) ValidateBasic() error {
 	return nil
 }
 
-var (
-	_ sdk.Msg            = &MsgUpdateGroupAdmin{}
-	_ legacytx.LegacyMsg = &MsgUpdateGroupAdmin{}
-)
-
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupAdmin) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
@@ -103,11 +111,6 @@ func (m MsgUpdateGroupAdmin) ValidateBasic() error {
 func (m *MsgUpdateGroupAdmin) GetGroupID() uint64 {
 	return m.GroupId
 }
-
-var (
-	_ sdk.Msg            = &MsgUpdateGroupMetadata{}
-	_ legacytx.LegacyMsg = &MsgUpdateGroupMetadata{}
-)
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMetadata) GetSignBytes() []byte {
@@ -183,13 +186,6 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var (
-	_ sdk.Msg            = &MsgCreateGroupWithPolicy{}
-	_ legacytx.LegacyMsg = &MsgCreateGroupWithPolicy{}
-
-	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
-)
-
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
 func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMetadata, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
 	m := &MsgCreateGroupWithPolicy{
@@ -258,11 +254,6 @@ func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
 
 	return strictValidateMembers(m.Members)
 }
-
-var (
-	_ sdk.Msg            = &MsgCreateGroupPolicy{}
-	_ legacytx.LegacyMsg = &MsgCreateGroupPolicy{}
-)
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
@@ -660,11 +651,6 @@ func (m MsgWithdrawProposal) ValidateBasic() error {
 	return nil
 }
 
-var (
-	_ sdk.Msg            = &MsgVote{}
-	_ legacytx.LegacyMsg = &MsgVote{}
-)
-
 // GetSignBytes Implements Msg.
 func (m MsgVote) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
@@ -723,11 +709,6 @@ func (m MsgExec) ValidateBasic() error {
 	}
 	return nil
 }
-
-var (
-	_ sdk.Msg            = &MsgLeaveGroup{}
-	_ legacytx.LegacyMsg = &MsgLeaveGroup{}
-)
 
 // GetSignBytes Implements Msg
 func (m MsgLeaveGroup) GetSignBytes() []byte {

@@ -40,9 +40,20 @@ var (
 	_ simtypes.WeightedProposalContent = MockWeightedProposals{} //nolint:staticcheck
 )
 
-type MockWeightedProposals struct {
-	n int
-}
+type (
+	MockWeightedProposals struct {
+		n int
+	}
+
+	suite struct {
+		AccountKeeper      authkeeper.AccountKeeper
+		BankKeeper         bankkeeper.Keeper
+		GovKeeper          *keeper.Keeper
+		StakingKeeper      *stakingkeeper.Keeper
+		DistributionKeeper dk.Keeper
+		App                *runtime.App
+	}
+)
 
 func (m MockWeightedProposals) AppParamsKey() string {
 	return fmt.Sprintf("AppParamsKey-%d", m.n)
@@ -365,15 +376,6 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Voter)
 	require.True(t, len(msg.Options) >= 1)
 	require.Equal(t, simulation.TypeMsgVoteWeighted, sdk.MsgTypeURL(&msg))
-}
-
-type suite struct {
-	AccountKeeper      authkeeper.AccountKeeper
-	BankKeeper         bankkeeper.Keeper
-	GovKeeper          *keeper.Keeper
-	StakingKeeper      *stakingkeeper.Keeper
-	DistributionKeeper dk.Keeper
-	App                *runtime.App
 }
 
 // returns context and an app with updated mint keeper

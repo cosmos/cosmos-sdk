@@ -17,12 +17,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // TODO: remove this once we remove legacybech32
 )
 
 type addressTestSuite struct {
 	suite.Suite
 }
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyz"
 
 func TestAddressTestSuite(t *testing.T) {
 	suite.Run(t, new(addressTestSuite))
@@ -207,8 +209,6 @@ func (s *addressTestSuite) TestConsAddress() {
 	s.Require().Equal(types.ErrEmptyHexAddress, err)
 }
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyz"
-
 func RandString(n int) string {
 	b := make([]byte, n)
 	for i := range b {
@@ -222,8 +222,9 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 	pub := &ed25519.PubKey{Key: pubBz}
 	for length := 1; length < 10; length++ {
 		for times := 1; times < 20; times++ {
-			rand.Read(pub.Key[:])
+			_, err := rand.Read(pub.Key[:])
 			// Test if randomly generated prefix of a given length works
+			s.Require().NoError(err)
 			prefix := RandString(length)
 
 			// Assuming that GetConfig is not sealed.
@@ -237,7 +238,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				acc.String(),
 				prefix+types.PrefixAccount), acc.String())
 
-			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub)
+			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub) //nolint:staticcheck // SA1019: legacybech32.AccPK is deprecated: use bech32.PubKeyTypeAccPub
 			s.Require().True(strings.HasPrefix(
 				bech32Pub,
 				prefix+types.PrefixPublic))
@@ -251,7 +252,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				val.String(),
 				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub)
+			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub) //nolint:staticcheck // SA1019: legacybech32.ValPK is deprecated: use bech32.PubKeyTypeValPub
 			s.Require().True(strings.HasPrefix(
 				bech32ValPub,
 				prefix+types.PrefixValidator+types.PrefixPublic))
@@ -265,7 +266,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				cons.String(),
 				prefix+types.PrefixConsensus+types.PrefixAddress))
 
-			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub)
+			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub) //nolint:staticcheck // SA1019: legacybech32.ConsPK is deprecated: use bech32.PubKeyTypeConsPub
 			s.Require().True(strings.HasPrefix(
 				bech32ConsPub,
 				prefix+types.PrefixConsensus+types.PrefixPublic))

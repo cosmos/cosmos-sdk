@@ -11,37 +11,60 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// AppModuleSimulation defines the standard functions that every module should expose
-// for the SDK blockchain simulator
-type AppModuleSimulation interface {
-	// randomized genesis states
-	GenerateGenesisState(input *SimulationState)
+type (
 
-	// register a func to decode the each module's defined types from their corresponding store key
-	RegisterStoreDecoder(simulation.StoreDecoderRegistry)
+	// AppModuleSimulation defines the standard functions that every module should expose
+	// for the SDK blockchain simulator
 
-	// simulation operations (i.e msgs) with their respective weight
-	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
-}
+	AppModuleSimulation interface {
+		// randomized genesis states
+		GenerateGenesisState(input *SimulationState)
 
-// HasProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
-type HasProposalMsgs interface {
-	// msg functions used to simulate governance proposals
-	ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
-}
+		// register a func to decode the each module's defined types from their corresponding store key
+		RegisterStoreDecoder(simulation.StoreDecoderRegistry)
 
-// HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
-type HasProposalContents interface {
-	// content functions used to simulate governance proposals
-	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck
-}
+		// simulation operations (i.e msgs) with their respective weight
+		WeightedOperations(simState SimulationState) []simulation.WeightedOperation
+	}
 
-// SimulationManager defines a simulation manager that provides the high level utility
-// for managing and executing simulation functionalities for a group of modules
-type SimulationManager struct {
-	Modules       []AppModuleSimulation           // array of app modules; we use an array for deterministic simulation tests
-	StoreDecoders simulation.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
-}
+	// HasProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
+	HasProposalMsgs interface {
+		// msg functions used to simulate governance proposals
+		ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
+	}
+
+	// HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
+	HasProposalContents interface {
+		// content functions used to simulate governance proposals
+		ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck
+	}
+
+	// SimulationManager defines a simulation manager that provides the high level utility
+	// for managing and executing simulation functionalities for a group of modules
+	SimulationManager struct {
+		Modules       []AppModuleSimulation           // array of app modules; we use an array for deterministic simulation tests
+		StoreDecoders simulation.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
+	}
+
+	// SimulationState is the input parameters used on each of the module's randomized
+	// GenesisState generator function
+	SimulationState struct {
+		AppParams         simulation.AppParams
+		Cdc               codec.JSONCodec                // application codec
+		Rand              *rand.Rand                     // random number
+		GenState          map[string]json.RawMessage     // genesis state
+		Accounts          []simulation.Account           // simulation accounts
+		InitialStake      sdkmath.Int                    // initial coins per account
+		NumBonded         int64                          // number of initially bonded accounts
+		BondDenom         string                         // denom to be used as default
+		GenTimestamp      time.Time                      // genesis timestamp
+		UnbondTime        time.Duration                  // staking unbond time stored to use it as the slashing maximum evidence duration
+		LegacyParamChange []simulation.LegacyParamChange // simulated parameter changes from modules
+		//nolint:staticcheck
+		LegacyProposalContents []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
+		ProposalMsgs           []simulation.WeightedProposalMsg     // proposal msg generator functions with their default weight and app sim key
+	}
+)
 
 // NewSimulationManager creates a new SimulationManager object
 //
@@ -135,23 +158,4 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 	}
 
 	return wOps
-}
-
-// SimulationState is the input parameters used on each of the module's randomized
-// GenesisState generator function
-type SimulationState struct {
-	AppParams         simulation.AppParams
-	Cdc               codec.JSONCodec                // application codec
-	Rand              *rand.Rand                     // random number
-	GenState          map[string]json.RawMessage     // genesis state
-	Accounts          []simulation.Account           // simulation accounts
-	InitialStake      sdkmath.Int                    // initial coins per account
-	NumBonded         int64                          // number of initially bonded accounts
-	BondDenom         string                         // denom to be used as default
-	GenTimestamp      time.Time                      // genesis timestamp
-	UnbondTime        time.Duration                  // staking unbond time stored to use it as the slashing maximum evidence duration
-	LegacyParamChange []simulation.LegacyParamChange // simulated parameter changes from modules
-	//nolint:staticcheck
-	LegacyProposalContents []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
-	ProposalMsgs           []simulation.WeightedProposalMsg     // proposal msg generator functions with their default weight and app sim key
 }

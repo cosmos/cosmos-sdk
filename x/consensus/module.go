@@ -33,12 +33,42 @@ const ConsensusVersion = 1
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the consensus_param module.
-type AppModuleBasic struct {
-	cdc codec.Codec
-}
+type (
+	// AppModuleBasic defines the basic application module used by the consensus_param module.
+	AppModuleBasic struct {
+		cdc codec.Codec
+	}
+
+	// ConsensusInputs defines the inputs of the consensus module.
+	ConsensusInputs struct {
+		depinject.In
+
+		Config       *modulev1.Module
+		Cdc          codec.Codec
+		StoreService storetypes.KVStoreService
+	}
+
+	// ConsensusOutputs defines the outputs of the consensus module.
+	ConsensusOutputs struct {
+		depinject.Out
+
+		Keeper        keeper.Keeper
+		Module        appmodule.AppModule
+		BaseAppOption runtime.BaseAppOption
+	}
+
+	// AppModule implements an application module
+	AppModule struct {
+		AppModuleBasic
+
+		keeper keeper.Keeper
+	}
+)
 
 // Name returns the consensus_param module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
@@ -81,18 +111,6 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
-
-// AppModule implements an application module
-type AppModule struct {
-	AppModuleBasic
-
-	keeper keeper.Keeper
-}
-
-var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
-)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -138,24 +156,6 @@ func init() {
 		&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
 	)
-}
-
-//nolint:revive
-type ConsensusInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	StoreService storetypes.KVStoreService
-}
-
-//nolint:revive
-type ConsensusOutputs struct {
-	depinject.Out
-
-	Keeper        keeper.Keeper
-	Module        appmodule.AppModule
-	BaseAppOption runtime.BaseAppOption
 }
 
 func ProvideModule(in ConsensusInputs) ConsensusOutputs {

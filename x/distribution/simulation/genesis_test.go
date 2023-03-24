@@ -42,8 +42,8 @@ func TestRandomizedGenState(t *testing.T) {
 
 	dec1, _ := sdk.NewDecFromStr("0.210000000000000000")
 
-	require.Equal(t, sdk.ZeroDec(), distrGenesis.Params.BaseProposerReward)  //nolint:staticcheck // SA1019: distrGenesis.Params.BaseProposerReward is deprecated: Use BaseProposerReward instead.
-	require.Equal(t, sdk.ZeroDec(), distrGenesis.Params.BonusProposerReward) //nolint:staticcheck // SA1019: distrGenesis.Params.BonusProposerReward is deprecated: Use BaseProposerReward instead.
+	require.Equal(t, sdk.ZeroDec(), distrGenesis.Params.BaseProposerReward)  //nolint:staticcheck // SA1019: distrGenesis.Params.BaseProposerReward is deprecated: BaseProposerReward is deprecated
+	require.Equal(t, sdk.ZeroDec(), distrGenesis.Params.BonusProposerReward) //nolint:staticcheck // SA1019: distrGenesis.Params.BonusProposerReward is deprecated: BonusProposerReward is deprecated
 	require.Equal(t, dec1, distrGenesis.Params.CommunityTax)
 	require.Equal(t, true, distrGenesis.Params.WithdrawAddrEnabled)
 	require.Len(t, distrGenesis.DelegatorStartingInfos, 0)

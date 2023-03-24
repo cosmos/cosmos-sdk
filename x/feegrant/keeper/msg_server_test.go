@@ -8,7 +8,6 @@ import (
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/golang/mock/gomock"
 )
@@ -70,6 +69,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
+				suite.Require().NoError(err)
 
 				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAccAddr).Return(nil).AnyTimes()
 				suite.accountKeeper.EXPECT().StringToBytes(grantee).Return(granteeAccAddr, nil).AnyTimes()
@@ -153,6 +153,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
+					PeriodSpendLimit: suite.atom,
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
@@ -163,6 +164,26 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 			},
 			false,
 			"",
+		},
+		{
+			"error: fee allowance exists",
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
+					Basic: feegrant.BasicAllowance{
+						SpendLimit: suite.atom,
+						Expiration: &oneYear,
+					},
+					PeriodSpendLimit: suite.atom,
+				})
+				suite.Require().NoError(err)
+				return &feegrant.MsgGrantAllowance{
+					Granter:   suite.addrs[1].String(),
+					Grantee:   suite.addrs[2].String(),
+					Allowance: any,
+				}
+			},
+			true,
+			"fee allowance already exists",
 		},
 	}
 	for _, tc := range testCases {
@@ -235,12 +256,12 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 					Grantee: suite.addrs[1].String(),
 				})
 
-				atom := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(6000000)))
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
-						SpendLimit: atom,
+						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
+					PeriodSpendLimit: suite.atom,
 				})
 				suite.Require().NoError(err)
 				req := &feegrant.MsgGrantAllowance{

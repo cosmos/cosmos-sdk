@@ -18,12 +18,12 @@ import (
 	"cosmossdk.io/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -520,8 +520,6 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 }
 
 func (s *CLITestSuite) TestTxWithFeeGrant() {
-	// s.T().Skip() // TODO to re-enable in #12274
-
 	clientCtx := s.clientCtx
 	granter := s.addedGranter
 

@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
@@ -31,7 +31,7 @@ import (
 type TestSuite struct {
 	suite.Suite
 
-	module  module.BeginBlockAppModule
+	module  appmodule.HasBeginBlocker
 	keeper  *keeper.Keeper
 	handler govtypesv1beta1.Handler
 	ctx     sdk.Context
@@ -102,9 +102,8 @@ func VerifyDoUpgrade(t *testing.T) {
 	t.Log("Verify that a panic happens at the upgrade height")
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
@@ -112,7 +111,7 @@ func VerifyDoUpgrade(t *testing.T) {
 		return vm, nil
 	})
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	VerifyCleared(t, newCtx)
@@ -120,9 +119,8 @@ func VerifyDoUpgrade(t *testing.T) {
 
 func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
 	t.Log("Verify that a panic happens at the upgrade height")
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
@@ -130,7 +128,7 @@ func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName strin
 		return vm, nil
 	})
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	VerifyCleared(t, newCtx)
@@ -146,9 +144,8 @@ func TestHaltIfTooNew(t *testing.T) {
 	})
 
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 	require.Equal(t, 0, called)
 
@@ -156,16 +153,15 @@ func TestHaltIfTooNew(t *testing.T) {
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we no longer panic if the plan is on time")
 
 	futCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 3).WithBlockTime(time.Now())
-	req = abci.RequestBeginBlock{Header: futCtx.BlockHeader()}
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(futCtx, req)
+		s.module.BeginBlock(futCtx)
 	})
 	require.Equal(t, 1, called)
 
@@ -206,9 +202,8 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 func TestNoSpuriousUpgrades(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
-	req := abci.RequestBeginBlock{Header: s.ctx.BlockHeader()}
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(s.ctx, req)
+		s.module.BeginBlock(s.ctx)
 	})
 }
 
@@ -258,7 +253,6 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 
 	newCtx := s.ctx
 
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: skipOne}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 
@@ -267,7 +261,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	t.Log("Verify a second proposal also is being cleared")
@@ -276,7 +270,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 
 	newCtx = newCtx.WithBlockHeight(skipTwo)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	// To ensure verification is being done only after both upgrades are cleared
@@ -295,7 +289,6 @@ func TestUpgradeSkippingOne(t *testing.T) {
 
 	newCtx := s.ctx
 
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: skipOne}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 
@@ -305,7 +298,7 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	// Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	t.Log("Verify the second proposal is not skipped")
@@ -330,7 +323,6 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 
 	newCtx := s.ctx
 
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: skipOne}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 
@@ -340,7 +332,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	// Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	// A new proposal with height in skipUpgradeHeights
@@ -349,7 +341,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	// Setting block height of proposal test2
 	newCtx = newCtx.WithBlockHeight(skipTwo)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	t.Log("Verify a new proposal is not skipped")
@@ -367,12 +359,11 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 func TestUpgradeWithoutSkip(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 	t.Log("Verify if upgrade happens without skip upgrade")
 	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
+		s.module.BeginBlock(newCtx)
 	})
 
 	VerifyDoUpgrade(t)
@@ -417,20 +408,19 @@ func TestBinaryVersion(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		preRun      func() (sdk.Context, abci.RequestBeginBlock)
+		preRun      func() sdk.Context
 		expectPanic bool
 	}{
 		{
 			"test not panic: no scheduled upgrade or applied upgrade is present",
-			func() (sdk.Context, abci.RequestBeginBlock) {
-				req := abci.RequestBeginBlock{Header: s.ctx.BlockHeader()}
-				return s.ctx, req
+			func() sdk.Context {
+				return s.ctx
 			},
 			false,
 		},
 		{
 			"test not panic: upgrade handler is present for last applied upgrade",
-			func() (sdk.Context, abci.RequestBeginBlock) {
+			func() sdk.Context {
 				s.keeper.SetUpgradeHandler("test0", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
@@ -444,34 +434,32 @@ func TestBinaryVersion(t *testing.T) {
 					Height: 12,
 				})
 
-				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-				return newCtx, req
+				return newCtx
 			},
 			false,
 		},
 		{
 			"test panic: upgrade needed",
-			func() (sdk.Context, abci.RequestBeginBlock) {
+			func() sdk.Context {
 				err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test2", Height: 13}}) //nolint:staticcheck // we're testing deprecated code
 				require.NoError(t, err)
 
 				newCtx := s.ctx.WithBlockHeight(13)
-				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-				return newCtx, req
+				return newCtx
 			},
 			true,
 		},
 	}
 
 	for _, tc := range testCases {
-		ctx, req := tc.preRun()
+		ctx := tc.preRun()
 		if tc.expectPanic {
 			require.Panics(t, func() {
-				s.module.BeginBlock(ctx, req)
+				s.module.BeginBlock(ctx)
 			})
 		} else {
 			require.NotPanics(t, func() {
-				s.module.BeginBlock(ctx, req)
+				s.module.BeginBlock(ctx)
 			})
 		}
 	}
@@ -503,9 +491,8 @@ func TestDowngradeVerification(t *testing.T) {
 	})
 
 	// successful upgrade.
-	req := abci.RequestBeginBlock{Header: ctx.BlockHeader()}
 	require.NotPanics(t, func() {
-		m.BeginBlock(ctx, req)
+		m.BeginBlock(ctx)
 	})
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
@@ -552,14 +539,13 @@ func TestDowngradeVerification(t *testing.T) {
 			tc.preRun(k, ctx, name)
 		}
 
-		req := abci.RequestBeginBlock{Header: ctx.BlockHeader()}
 		if tc.expectPanic {
 			require.Panics(t, func() {
-				m.BeginBlock(ctx, req)
+				m.BeginBlock(ctx)
 			}, name)
 		} else {
 			require.NotPanics(t, func() {
-				m.BeginBlock(ctx, req)
+				m.BeginBlock(ctx)
 			}, name)
 		}
 	}

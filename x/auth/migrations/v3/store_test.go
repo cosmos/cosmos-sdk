@@ -45,7 +45,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	storeSvc := runtime.NewKVStoreService(storeKey)
+	storeService := runtime.NewKVStoreService(storeKey)
 
 	var accountKeeper keeper.AccountKeeper
 
@@ -56,7 +56,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
-	require.NoError(t, v4.Migrate(ctx, storeSvc, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
 	// new base account
 	senderPrivKey := secp256k1.GenPrivKey()

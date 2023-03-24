@@ -17,7 +17,7 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 
-	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -215,7 +215,7 @@ type AuthInputs struct {
 	depinject.In
 
 	Config       *modulev1.Module
-	StoreService storetypes.KVStoreService
+	StoreService store.KVStoreService
 	Cdc          codec.Codec
 
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`

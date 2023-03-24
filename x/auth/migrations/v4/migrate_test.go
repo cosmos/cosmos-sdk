@@ -37,13 +37,13 @@ func TestMigrate(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	storeSvc := runtime.NewKVStoreService(storeKey)
+	storeService := runtime.NewKVStoreService(storeKey)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
-	require.NoError(t, v4.Migrate(ctx, storeSvc, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
 	var res types.Params
-	bz, err := storeSvc.OpenKVStore(ctx).Get(v4.ParamsKey)
+	bz, err := storeService.OpenKVStore(ctx).Get(v4.ParamsKey)
 	require.NoError(t, err)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.Equal(t, legacySubspace.ps, res)

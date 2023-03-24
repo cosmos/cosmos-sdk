@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func mapAccountAddressToAccountID(ctx sdk.Context, storeSvc corestore.KVStoreService, cdc codec.BinaryCodec) error {
-	store := storeSvc.OpenKVStore(ctx)
+func mapAccountAddressToAccountID(ctx sdk.Context, storeService corestore.KVStoreService, cdc codec.BinaryCodec) error {
+	store := storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.AddressStoreKeyPrefix, storetypes.PrefixEndBytes(types.AddressStoreKeyPrefix))
 	if err != nil {
 		return err
@@ -31,6 +31,6 @@ func mapAccountAddressToAccountID(ctx sdk.Context, storeSvc corestore.KVStoreSer
 // MigrateStore performs in-place store migrations from v0.45 to v0.46. The
 // migration includes:
 // - Add an Account number as an index to get the account address
-func MigrateStore(ctx sdk.Context, storeKey corestore.KVStoreService, cdc codec.BinaryCodec) error {
-	return mapAccountAddressToAccountID(ctx, storeKey, cdc)
+func MigrateStore(ctx sdk.Context, storeService corestore.KVStoreService, cdc codec.BinaryCodec) error {
+	return mapAccountAddressToAccountID(ctx, storeService, cdc)
 }

@@ -49,7 +49,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	storeSvc := runtime.NewKVStoreService(storeKey)
+	storeService := runtime.NewKVStoreService(storeKey)
 
 	var (
 		accountKeeper keeper.AccountKeeper
@@ -65,7 +65,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
-	require.NoError(t, v4.Migrate(ctx, storeSvc, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
 	ctx = app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
 	stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())

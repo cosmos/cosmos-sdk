@@ -12,6 +12,11 @@ type AccountKeeper interface {
 	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
 	SetAccount(ctx sdk.Context, acc sdk.AccountI)
+
+	// StringToBytes decodes text to bytes
+	StringToBytes(text string) ([]byte, error)
+	// BytesToString encodes bytes to text
+	BytesToString(bz []byte) (string, error)
 }
 
 // BankKeeper defines the expected supply Keeper (noalias)

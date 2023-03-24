@@ -2,10 +2,13 @@ package runtime
 
 import (
 	"context"
+	"io"
 
 	"cosmossdk.io/core/store"
 
 	storetypes "cosmossdk.io/store/types"
+
+	dbm "github.com/cosmos/cosmos-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -89,4 +92,82 @@ func (store coreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
 // Exceptionally allowed for cachekv.Store, safe to write in the modules.
 func (store coreKVStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	return store.kvStore.ReverseIterator(start, end), nil
+}
+
+// Adapter
+var _ storetypes.KVStore = kvStoreAdapter{}
+
+type kvStoreAdapter struct {
+	store store.KVStore
+}
+
+// CacheWrap implements types.KVStore
+func (kvStoreAdapter) CacheWrap() storetypes.CacheWrap {
+	panic("unimplemented")
+}
+
+// CacheWrapWithTrace implements types.KVStore
+func (kvStoreAdapter) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+	panic("unimplemented")
+}
+
+// GetStoreType implements types.KVStore
+func (kvStoreAdapter) GetStoreType() storetypes.StoreType {
+	panic("unimplemented")
+}
+
+// Delete implements types.KVStore
+func (s kvStoreAdapter) Delete(key []byte) {
+	err := s.store.Delete(key)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// Get implements types.KVStore
+func (s kvStoreAdapter) Get(key []byte) []byte {
+	bz, err := s.store.Get(key)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+// Has implements types.KVStore
+func (s kvStoreAdapter) Has(key []byte) bool {
+	has, err := s.store.Has(key)
+	if err != nil {
+		panic(err)
+	}
+	return has
+}
+
+// Set implements types.KVStore
+func (s kvStoreAdapter) Set(key []byte, value []byte) {
+	err := s.store.Set(key, value)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// Iterator implements types.KVStore
+func (s kvStoreAdapter) Iterator(start []byte, end []byte) dbm.Iterator {
+	it, err := s.store.Iterator(start, end)
+	if err != nil {
+		panic(err)
+	}
+	return it
+}
+
+// ReverseIterator implements types.KVStore
+func (s kvStoreAdapter) ReverseIterator(start []byte, end []byte) dbm.Iterator {
+	it, err := s.store.ReverseIterator(start, end)
+	if err != nil {
+		panic(err)
+	}
+	return it
+}
+
+func KVStoreAdapter(store store.KVStore) storetypes.KVStore {
+	return &kvStoreAdapter{store}
 }

@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"cosmossdk.io/store/prefix"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -45,10 +47,10 @@ func (ak AccountKeeper) Accounts(ctx context.Context, req *types.QueryAccountsRe
 	}
 
 	store := ak.storeService.OpenKVStore(ctx)
-	accountsStore := runtime.NewPrefixStore(store, types.AddressStoreKeyPrefix)
+	accountsStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.AddressStoreKeyPrefix)
 
 	var accounts []*codectypes.Any
-	pageRes, err := query.PaginateCoreStore(accountsStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
 		account := ak.decodeAccount(value)
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {

@@ -11,7 +11,7 @@ The minimum gas prices a validator is willing to accept for processing a transac
 
 ## pruning
 
-Determines the pruning strategy to be used. The possible values are default, nothing, everything, and custom.
+Determines the pruning strategy to be used. The possible values are default, nothing, everything, and custom. Pruning only handles pruning of application state (application.db). To prune Comet databases please see [Cometbft docs](https://docs.cometbft.com/v0.37/)
 
 default: the last 362880 states are kept, pruning at 10 block intervals.
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node).
@@ -45,13 +45,13 @@ Defines the set of events to be indexed in the form {eventType}.{attributeKey}. 
 
 Sets the size of the IAVL tree cache (in number of nodes).
 
-## iavl-disable-fastnode
-
-Enables or disables the fast node feature of IAVL. Default is false.
+::: Warning
+Using this feature will increase ram consumption
+:::
 
 ## iavl-lazy-loading
 
-Enables or disables the lazy loading of the IAVL store. Default is false.
+Enables or disables the lazy loading of the IAVL store. Default is false. This feature is to be used for archive nodes, allowing them to have a faster start up time. 
 
 ## app-db-backend
 
@@ -88,6 +88,8 @@ Defines the database backend type to use for the application and snapshots DBs. 
 ## gRPC Web Configuration
 
 * enable: A boolean value that indicates whether the gRPC-web should be enabled. Note that gRPC must also be enabled for this configuration to have any effect.
+
+> Note: gRPCWeb is on the same port as the API (Default: 1317)
 
 # State Sync Configuration
 

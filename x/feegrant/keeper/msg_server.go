@@ -26,6 +26,10 @@ var _ feegrant.MsgServer = msgServer{}
 
 // GrantAllowance grants an allowance from the granter's funds to be used by the grantee.
 func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {
+	if msg.Grantee == msg.Granter {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
@@ -36,10 +40,6 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 	granter, err := k.authKeeper.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
-	}
-
-	if msg.Grantee == msg.Granter {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
 	if f, _ := k.GetAllowance(ctx, granter, grantee); f != nil {
@@ -65,6 +65,10 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 
 // RevokeAllowance revokes a fee allowance between a granter and grantee.
 func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevokeAllowance) (*feegrant.MsgRevokeAllowanceResponse, error) {
+	if msg.Grantee == msg.Granter {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
@@ -80,10 +84,6 @@ func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevok
 	err = k.Keeper.revokeAllowance(ctx, granter, grantee)
 	if err != nil {
 		return nil, err
-	}
-
-	if msg.Grantee == msg.Granter {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
 	}
 
 	return &feegrant.MsgRevokeAllowanceResponse{}, nil

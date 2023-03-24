@@ -8,6 +8,7 @@ import (
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/golang/mock/gomock"
 )
@@ -233,9 +234,11 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 					Granter: suite.addrs[0].String(),
 					Grantee: suite.addrs[1].String(),
 				})
+
+				atom := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(6000000)))
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
-						SpendLimit: suite.atom,
+						SpendLimit: atom,
 						Expiration: &oneYear,
 					},
 				})

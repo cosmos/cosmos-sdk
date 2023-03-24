@@ -101,22 +101,18 @@ type kvStoreAdapter struct {
 	store store.KVStore
 }
 
-// CacheWrap implements types.KVStore
 func (kvStoreAdapter) CacheWrap() storetypes.CacheWrap {
 	panic("unimplemented")
 }
 
-// CacheWrapWithTrace implements types.KVStore
 func (kvStoreAdapter) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
 	panic("unimplemented")
 }
 
-// GetStoreType implements types.KVStore
 func (kvStoreAdapter) GetStoreType() storetypes.StoreType {
 	panic("unimplemented")
 }
 
-// Delete implements types.KVStore
 func (s kvStoreAdapter) Delete(key []byte) {
 	err := s.store.Delete(key)
 	if err != nil {
@@ -124,7 +120,6 @@ func (s kvStoreAdapter) Delete(key []byte) {
 	}
 }
 
-// Get implements types.KVStore
 func (s kvStoreAdapter) Get(key []byte) []byte {
 	bz, err := s.store.Get(key)
 	if err != nil {
@@ -133,7 +128,6 @@ func (s kvStoreAdapter) Get(key []byte) []byte {
 	return bz
 }
 
-// Has implements types.KVStore
 func (s kvStoreAdapter) Has(key []byte) bool {
 	has, err := s.store.Has(key)
 	if err != nil {
@@ -142,7 +136,6 @@ func (s kvStoreAdapter) Has(key []byte) bool {
 	return has
 }
 
-// Set implements types.KVStore
 func (s kvStoreAdapter) Set(key []byte, value []byte) {
 	err := s.store.Set(key, value)
 	if err != nil {
@@ -150,7 +143,6 @@ func (s kvStoreAdapter) Set(key []byte, value []byte) {
 	}
 }
 
-// Iterator implements types.KVStore
 func (s kvStoreAdapter) Iterator(start []byte, end []byte) dbm.Iterator {
 	it, err := s.store.Iterator(start, end)
 	if err != nil {
@@ -159,7 +151,6 @@ func (s kvStoreAdapter) Iterator(start []byte, end []byte) dbm.Iterator {
 	return it
 }
 
-// ReverseIterator implements types.KVStore
 func (s kvStoreAdapter) ReverseIterator(start []byte, end []byte) dbm.Iterator {
 	it, err := s.store.ReverseIterator(start, end)
 	if err != nil {

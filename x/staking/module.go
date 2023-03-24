@@ -38,7 +38,6 @@ const (
 )
 
 var (
-	_ module.BeginBlockAppModule = AppModule{}
 	_ module.EndBlockAppModule   = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -128,7 +127,10 @@ func NewAppModule(
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -183,8 +185,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock returns the begin blocker for the staking module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	BeginBlocker(c, am.keeper)
+	return nil
 }
 
 // EndBlock returns the end blocker for the staking module. It returns no validator

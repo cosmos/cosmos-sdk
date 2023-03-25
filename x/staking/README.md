@@ -114,7 +114,7 @@ Validators can have one of three statuses
   tombstoning, an unbonding of all their delegations begins. All delegations must then wait the UnbondingTime
   before their tokens are moved to their accounts from the `BondedPool`.
 
-:::note
+:::warning
 Tombstoning is permanent, once tombstoned a validators consensus key can not be reused within the chain where the tombstoning happened. 
 :::
 

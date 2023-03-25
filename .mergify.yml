@@ -94,3 +94,11 @@ pull_request_rules:
       backport:
         branches:
           - v15.x
+  - name: backport patches to v16.x branch
+    conditions:
+      - base=osmosis-main
+      - label=A:backport/v16.x
+    actions:
+      backport:
+        branches:
+          - v16.x

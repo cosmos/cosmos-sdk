@@ -318,6 +318,22 @@ func (d LegacyDec) MulTruncateMut(d2 LegacyDec) LegacyDec {
 	return d
 }
 
+// multiplication round up at precision end.
+func (d LegacyDec) MulRoundUp(d2 LegacyDec) LegacyDec {
+	return d.ImmutOp(LegacyDec.MulRoundUpMut, d2)
+}
+
+// mutable multiplication with round up at precision end.
+func (d LegacyDec) MulRoundUpMut(d2 LegacyDec) LegacyDec {
+	d.i.Mul(d.i, d2.i)
+	chopPrecisionAndRoundUp(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return d
+}
+
 // multiplication
 func (d LegacyDec) MulInt(i Int) LegacyDec {
 	return d.ImmutOpInt(LegacyDec.MulIntMut, i)
@@ -919,7 +935,7 @@ func LegacyDecApproxEq(t *testing.T, d1, d2, tol LegacyDec) (*testing.T, bool, s
 
 // FormatDec formats a decimal (as encoded in protobuf) into a value-rendered
 // string following ADR-050. This function operates with string manipulation
-// (instead of manipulating the sdk.Dec object).
+// (instead of manipulating the sdkmath.LegacyDec object).
 func FormatDec(v string) (string, error) {
 	parts := strings.Split(v, ".")
 	if len(parts) > 2 {

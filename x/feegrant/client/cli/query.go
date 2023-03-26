@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd() *cobra.Command {
+func GetQueryCmd(ac address.Codec) *cobra.Command {
 	feegrantQueryCmd := &cobra.Command{
 		Use:                        feegrant.ModuleName,
 		Short:                      "Querying commands for the feegrant module",
@@ -24,16 +24,16 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	feegrantQueryCmd.AddCommand(
-		GetCmdQueryFeeGrant(),
-		GetCmdQueryFeeGrantsByGrantee(),
-		GetCmdQueryFeeGrantsByGranter(),
+		GetCmdQueryFeeGrant(ac),
+		GetCmdQueryFeeGrantsByGrantee(ac),
+		GetCmdQueryFeeGrantsByGranter(ac),
 	)
 
 	return feegrantQueryCmd
 }
 
 // GetCmdQueryFeeGrant returns cmd to query for a grant between granter and grantee.
-func GetCmdQueryFeeGrant() *cobra.Command {
+func GetCmdQueryFeeGrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant [granter] [grantee]",
 		Args:  cobra.ExactArgs(2),
@@ -50,21 +50,19 @@ $ %s query feegrant grant [granter] [grantee]
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := feegrant.NewQueryClient(clientCtx)
 
-			granterAddr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
+			if _, err := ac.StringToBytes(args[0]); err != nil {
 				return err
 			}
 
-			granteeAddr, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
+			if _, err := ac.StringToBytes(args[1]); err != nil {
 				return err
 			}
 
 			res, err := queryClient.Allowance(
 				cmd.Context(),
 				&feegrant.QueryAllowanceRequest{
-					Granter: granterAddr.String(),
-					Grantee: granteeAddr.String(),
+					Granter: args[0],
+					Grantee: args[1],
 				},
 			)
 			if err != nil {
@@ -81,7 +79,7 @@ $ %s query feegrant grant [granter] [grantee]
 }
 
 // GetCmdQueryFeeGrantsByGrantee returns cmd to query for all grants for a grantee.
-func GetCmdQueryFeeGrantsByGrantee() *cobra.Command {
+func GetCmdQueryFeeGrantsByGrantee(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants-by-grantee [grantee]",
 		Args:  cobra.ExactArgs(1),
@@ -97,7 +95,7 @@ $ %s query feegrant grants-by-grantee [grantee]
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := feegrant.NewQueryClient(clientCtx)
 
-			granteeAddr, err := sdk.AccAddressFromBech32(args[0])
+			_, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -110,7 +108,7 @@ $ %s query feegrant grants-by-grantee [grantee]
 			res, err := queryClient.Allowances(
 				cmd.Context(),
 				&feegrant.QueryAllowancesRequest{
-					Grantee:    granteeAddr.String(),
+					Grantee:    args[0],
 					Pagination: pageReq,
 				},
 			)
@@ -129,7 +127,7 @@ $ %s query feegrant grants-by-grantee [grantee]
 }
 
 // GetCmdQueryFeeGrantsByGranter returns cmd to query for all grants by a granter.
-func GetCmdQueryFeeGrantsByGranter() *cobra.Command {
+func GetCmdQueryFeeGrantsByGranter(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants-by-granter [granter]",
 		Args:  cobra.ExactArgs(1),
@@ -145,7 +143,7 @@ $ %s query feegrant grants-by-granter [granter]
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := feegrant.NewQueryClient(clientCtx)
 
-			granterAddr, err := sdk.AccAddressFromBech32(args[0])
+			_, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -158,7 +156,7 @@ $ %s query feegrant grants-by-granter [granter]
 			res, err := queryClient.AllowancesByGranter(
 				cmd.Context(),
 				&feegrant.QueryAllowancesByGranterRequest{
-					Granter:    granterAddr.String(),
+					Granter:    args[0],
 					Pagination: pageReq,
 				},
 			)

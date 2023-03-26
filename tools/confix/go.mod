@@ -157,4 +157,8 @@ require (
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(
-replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+replace (
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+	// TODO: remove replacement
+	"github.com/cosmos/cosmos-sdk" => "github.com/MalteHerrmann/cosmos-sdk" v0.46.0-beta2.0.20230319134659-6d80fdc6f38d
+)

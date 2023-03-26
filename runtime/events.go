@@ -34,8 +34,7 @@ func NewEventManager(ctx context.Context) event.Manager {
 // Emit emits an typed event that is defined in the protobuf file.
 // In the future these events will be added to consensus
 func (e Events) Emit(ctx context.Context, event protoiface.MessageV1) error {
-	e.EventManagerI.EmitTypedEvent(event)
-	return nil
+	return e.EventManagerI.EmitTypedEvent(event)
 }
 
 // EmitKV emits a key value pair event
@@ -56,7 +55,6 @@ func (e Events) EmitKV(ctx context.Context, eventType string, attrs ...event.Att
 // Emit emits an typed event that is defined in the protobuf file.
 // In the future these events will be added to consensus
 func (e Events) EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error {
-	e.EventManagerI.EmitTypedEvent(event)
 
-	return nil
+	return e.EventManagerI.EmitTypedEvent(event)
 }

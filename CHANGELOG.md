@@ -63,7 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (x/gov) [#]() Add proposal result log in `active_proposal` event. When a proposal passes but fails to execute, the proposal result is logged in the `active_proposal` event.
+* (x/gov) [#15554](https://github.com/cosmos/cosmos-sdk/pull/15554) Add proposal result log in `active_proposal` event. When a proposal passes but fails to execute, the proposal result is logged in the `active_proposal` event.
 * (mempool) [#15328](https://github.com/cosmos/cosmos-sdk/pull/15328) Improve the `PriorityNonceMempool`
     * Support generic transaction prioritization, instead of `ctx.Priority()`
     * Improve construction through the use of a single `PriorityNonceMempoolConfig` instead of option functions

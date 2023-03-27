@@ -441,7 +441,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("consensus key is nil: %w", err))
 	}
 
 	return cp

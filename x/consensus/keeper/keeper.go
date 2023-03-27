@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	ParamsPrefix = collections.NewPrefix([]byte{})
-	StoreKey     = "consensus"
+	// ParamsPrefix = collections.NewPrefix([]byte{})
+	ParamsPrefix = collections.NewPrefix("Consensus")
+	StoreKey     = "Consensus"
 )
 
 type Keeper struct {
@@ -33,7 +34,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, au
 	return Keeper{
 		storeService: storeService,
 		authority:    authority,
-		Params:       collections.NewItem(sb, ParamsPrefix, StoreKey, codec.CollValue[cmtproto.ConsensusParams](cdc)),
+		Params:       collections.NewItem(sb, ParamsPrefix, "Consensus", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
 }
 

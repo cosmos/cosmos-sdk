@@ -160,5 +160,5 @@ require (
 replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	// TODO: remove replacement
-	"github.com/cosmos/cosmos-sdk" => "github.com/MalteHerrmann/cosmos-sdk" v0.46.0-beta2.0.20230319134659-6d80fdc6f38d
+	github.com/cosmos/cosmos-sdk => github.com/MalteHerrmann/cosmos-sdk v0.46.0-beta2.0.20230327194722-9178f7be9f5a
 )

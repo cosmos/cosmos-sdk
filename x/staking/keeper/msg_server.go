@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"math/big"
 	"strconv"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -509,21 +511,21 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		return nil, types.ErrConsensusPubKeyAlreadyUsedForAValidator
 	}
 
-	// checks if the validator is exceeding parameter MaxConsPubKeyRotations by iterating ConsPubKeyRotationHistory
-	maxConsPubKeyRotations := k.MaxConsPubKeyRotations(ctx)
+	// checks if the validator is exceeding parameter MaxConsPubKeyRotations within the
+	// unbonding period by iterating ConsPubKeyRotationHistory
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	historyObjects := k.GetValidatorConsPubKeyRotationHistory(ctx, valAddr)
-	if len(historyObjects) >= int(maxConsPubKeyRotations) {
+	isExceedingLimit, rotationsMade := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
+	if isExceedingLimit {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
 	// checks if the signing account has enough balance to pay KeyRotationFee
 	// pays KeyRotationFee to community fund
-	rotationFee := k.KeyRotationFee(ctx)
+	rotationFee := k.getRotationFee(ctx, validator.GetBondedTokens(), rotationsMade)
 	sender := sdk.AccAddress(valAddr)
 
 	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, sdk.NewCoins(rotationFee))
@@ -570,4 +572,22 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	})
 
 	return res, err
+}
+
+// getRotationFee calculates and returns the fee for rotation based on the previous rotations
+// KeyRotationFee = (max(VotingPowerPercentage 100, 1) InitialKeyRotationFee) * 2^(number ofrotations in ConsPubKeyRotationHistory in recent unbonding period)
+func (k msgServer) getRotationFee(ctx sdk.Context, valBondedTokens math.Int, rotationsMade uint64) sdk.Coin {
+	totalBondedTokens := k.TotalBondedTokens(ctx)
+
+	valBondedPercent := (valBondedTokens.Quo(totalBondedTokens)).Mul(math.NewInt(100))
+
+	defaultMultiplier := sdk.NewInt(1)
+	if valBondedPercent.GT(defaultMultiplier) {
+		defaultMultiplier = valBondedPercent
+	}
+
+	fee := defaultMultiplier.Mul(k.KeyRotationFee(ctx).Amount)
+	rotationsMultiplier := sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(rotationsMade)), nil))
+	fee = fee.Mul(rotationsMultiplier)
+	return sdk.NewCoin(sdk.DefaultBondDenom, fee)
 }

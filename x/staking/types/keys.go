@@ -55,8 +55,10 @@ var (
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 
-	ValidatorConsPubKeyRotationHistoryKey = []byte{0x70} // prefix for consPubkey rotation history by validator
-	BlockConsPubKeyRotationHistoryKey     = []byte{0x71} // prefix for consPubkey rotation history by height
+	ValidatorConsPubKeyRotationHistoryKey       = []byte{0x70} // prefix for consPubkey rotation history by validator
+	BlockConsPubKeyRotationHistoryKey           = []byte{0x71} // prefix for consPubkey rotation history by height
+	ValidatorConsensusKeyRotationRecordQueueKey = []byte{0x72} // this key is used to set the unbonding period time on each rotation
+	ValidatorConsensusKeyRotationRecordIndexKey = []byte{0x73} // this key is used to restrict the validator next rotation within waiting (unbonding) period
 )
 
 // UnbondingType defines the type of unbonding operation
@@ -406,4 +408,19 @@ func GetBlockConsPubKeyRotationHistoryPrefix(height int64) []byte {
 	return append(
 		BlockConsPubKeyRotationHistoryKey,
 		sdk.Uint64ToBigEndian(uint64(height))...)
+}
+
+func GetConsKeyRotationHistoryKey(valAddr sdk.ValAddress, height uint64) []byte {
+	key := append(ValidatorConsPubKeyRotationHistoryKey, address.MustLengthPrefix(valAddr)...)
+	return append(key, []byte(sdk.Uint64ToBigEndian(height))...)
+}
+
+func GetConsKeyRotationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(ValidatorConsensusKeyRotationRecordQueueKey, bz...)
+}
+
+func GetConsKeyIndexKey(valAddr sdk.ValAddress, timestamp time.Time) []byte {
+	key := append(ValidatorConsensusKeyRotationRecordIndexKey, address.MustLengthPrefix(valAddr)...)
+	return append(key, sdk.FormatTimeBytes(timestamp)...)
 }

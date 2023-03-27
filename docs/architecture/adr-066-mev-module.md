@@ -1,7 +1,8 @@
-# ADR-066: Builder Module
+# ADR-066: MEV module
 
 ## Changelog
 
+* 2023-03-27 — rename x/builder to x/mev
 * 2023-03-22 — initial submission
 
 ## Status
@@ -10,7 +11,7 @@ PROPOSED
 
 ## Abstract
 
-This ADR proposes a new Cosmos SDK module — the **builder module** — which captures and redistributes MEV for Cosmos-based chains.
+This ADR proposes a new Cosmos SDK module — the **MEV module** — which offers a framework for chains to capture and redistribute MEV.
 
 The proposal ensures the sovereignty of chains to define approved builders, enforce preferences on block production, and specify exactly how profits are distributed. It does so by auctioning partial space in each block to an open market of builders, which maximizes aggregate value and network utility.
 
@@ -26,7 +27,7 @@ Several parties, including Mekatek, provide MEV solutions that are delivered as 
 
 ### Proposal
 
-We propose a standard, opt-in mechanism for Cosmos-based chains to capture MEV. It includes a new Cosmos SDK **builder module** and a **builder API** specification.
+We propose a standard, opt-in mechanism for Cosmos-based chains to capture MEV. It includes a new Cosmos SDK **MEV module** and a **builder API** specification.
 
 The proposal...
 
@@ -69,35 +70,35 @@ We believe that POB has a lot of good properties. (It’s very similar to this p
 
 ## Decision
 
-We propose a new builder module, which allows chains to auction partial block segments to off-chain builders.
+We propose a new MEV module, which allows chains to auction partial block segments to off-chain builders.
 
 It’s opt-in for both chains and validators. When enabled, it maintains the autonomy and authority of chains to set rules on block construction and profit distribution. It maximizes that profit, by creating an open and competitive market for third-party builders. And it defends against malicious behavior, like MEV stealing and censorship, with verifiable proofs of mutual builder and proposer commitments.
 
 ### Cosmos SDK module
 
-The builder module is implemented as a Cosmos SDK module. Chains can opt-in by wiring it up, like any other module. There are two main actors: proposers and builders.
+The MEV module is implemented as a Cosmos SDK module. Chains can opt-in by wiring it up, like any other module. There are two main actors: proposers and builders.
 
 ### Proposers
 
-Proposers are validators, when it’s their turn to build a block. Validators must explicitly opt-in to the builder module by sending a registration transaction on-chain. This creates a builder module specific identity for the validator, with a chain-of-trust from the validator’s operator (i.e. staking) address.
+Proposers are validators, when it’s their turn to build a block. Validators must explicitly opt-in to the MEV module by sending a registration transaction on-chain. This creates a MEV module specific identity for the validator, with a chain-of-trust from the validator’s operator (i.e. staking) address.
 
 ```bash
-simd tx builder register-proposer \
+simd tx mev register-proposer \
   ~/.simapp/config/builder_module_proposer_key.json \
   --from=cosmosvaloper1rf57ygfmfex8es8yhsde707x7x98p4l6nxmufs
 ```
 
-Registration produces a new key pair for the validator, which is stored on-disk rather than in the key ring. The builder module needs access to that private key to e.g. sign messages to builders, and modules don’t have access to the key ring.
+Registration produces a new key pair for the validator, which is stored on-disk rather than in the key ring. The MEV module needs access to that private key to e.g. sign messages to builders, and modules don’t have access to the key ring.
 
 ### PrepareProposal: Block Construction
 
-The core logic of the builder module is implemented in its PrepareProposal function.
+The core logic of the MEV module is implemented in its PrepareProposal function.
 
 PrepareProposal is an ABCI 1.0 method that’s called by Tendermint to produce the next block. By default, PrepareProposal returns a block built from the mempool transactions known to the proposer. We extend that default behavior, and run what is essentially a **spot auction** for part of the block space.
 
 The proposer first solicits bids for its block space from builders, by making an HTTP request to the bid endpoint of registered and approved builders. That request contains information about the block that’s up for auction, including preferences governing how blocks are constructed, which bids must satisfy.(A preference is a rule defined by the chain, defined by a unique ID, and enforced by a validation function.)
 
-Builders respond with a bid, containing a **hash** of the transactions they’d like to include in the block, and a promised payment to the network (via the builder module) if the bid is accepted.
+Builders respond with a bid, containing a **hash** of the transactions they’d like to include in the block, and a promised payment to the network (via the MEV module) if the bid is accepted.
 
 The proposer passes valid bids to a function that selects a winner. That function can be specified by the application; the default behavior is to select the highest-paying valid bid. The proposer then calls the winning builder’s commit endpoint, sending a verifiable commitment to include the winning bid in the block.
 
@@ -111,7 +112,7 @@ Any non-recoverable error during PrepareProposal immediately “fails fast” an
 
 ProcessProposal is another ABCI 1.0 method, called by the proposer and validators during consensus, to validate (and potentially reject) proposed blocks.
 
-The builder module defines a ProcessProposal method which looks for a commitment transaction. If it finds one, it verifies that the outer block satisfies the commitments in that transaction. Some checks are as follows.
+The MEV module defines a ProcessProposal method which looks for a commitment transaction. If it finds one, it verifies that the outer block satisfies the commitments in that transaction. Some checks are as follows.
 
 - The commitment’s prefix region and hash match the block data
 - The commitment’s segment region and hash match the block data
@@ -136,7 +137,7 @@ simd tx bank send \
   1000stake
 
 # Register the builder.
-simd tx builder register-builder \
+simd tx mev register-builder \
   --from=$(simd keys show -a builder-wallet) \
   --moniker="Turbo Builder" \
   --security-contact="security@turbobuilder.xyz" \
@@ -146,7 +147,7 @@ simd tx builder register-builder \
 
 A builder is uniquely defined by its wallet address. A registered builder is one-to-many with versioned API URLs, which should serve the corresponding builder API. Builder API v0 is defined below.
 
-Registered builders must be explicitly approved in order to receive bid requests from proposers. Builders are approved via a builder module consensus param called `AllowedBuilderAddresses`. The default (empty) value is treated as “default allow” and all registered builders will participate in auctions. The `MaxBuildersPerAuction` consensus param restricts the maximum number of builders that can participate in each auction. If more than this number of builders are registered, the builders for a given auction are chosen via a PRNG seeded with the block height. The default (zero) value means that the proposer will not run an auction at all, and will propose the default block containing only local mempool transactions.
+Registered builders must be explicitly approved in order to receive bid requests from proposers. Builders are approved via a MEV module consensus param called `AllowedBuilderAddresses`. The default (empty) value is treated as “default allow” and all registered builders will participate in auctions. The `MaxBuildersPerAuction` consensus param restricts the maximum number of builders that can participate in each auction. If more than this number of builders are registered, the builders for a given auction are chosen via a PRNG seeded with the block height. The default (zero) value means that the proposer will not run an auction at all, and will propose the default block containing only local mempool transactions.
 
 These parameters are modified by submitting (and approving) a governance proposal containing a `MsgUpdateParams` with the new values.
 
@@ -228,7 +229,7 @@ If the builder doesn’t want to bid on an auction, or cannot satisfy the prefer
 | height | string | The height from the request. |
 | preference_ids | array of string | The same preference IDs from the request, which the bid has satisfied. |
 | prefix_hash | string | A SHA256 hash of the prefix transactions from the request, in order, encoded as a base64 string. |
-| payment_promise | string | The payment that the builder promises to make to the builder module (and transitively the network) if this bid is accepted, as a string of the form <amount><denom> e.g. 1000stake. |
+| payment_promise | string | The payment that the builder promises to make to the MEV module (and transitively the network) if this bid is accepted, as a string of the form <amount><denom> e.g. 1000stake. |
 | segment_length | number | The number of transactions in the bid. |
 | segment_hash | string | A SHA256 hash of the serialized transactions of the bid, in order, encoded as a base64 string. |
 | segment_bytes | number | The number of bytes the transactions sum to. |
@@ -328,7 +329,7 @@ If a transaction is encoded as a base64 string, it must first be decoded to its 
 
 Every type defined by the builder API is signed by the sender, using the sender’s registered key. That’s the key returned by e.g. `simd query builder show-builder` or `show-proposer` as appropriate.
 
-The builder module automatically signs outgoing requests, and verifies the signature of incoming responses. Builders must verify the signatures of incoming requests, and sign outgoing responses.
+The MEV module automatically signs outgoing requests, and verifies the signature of incoming responses. Builders must verify the signatures of incoming requests, and sign outgoing responses.
 
 Signatures are made over a specific serialization of a value, commonly known as SignBytes. SignBytes must be deterministic and bijective in order for signatures to be valid. Most common serialization formats don’t provide these properties, and so cannot be used. In particular, Protocol Buffers is unsuitable as it [explicitly states that its output is unstable and non-deterministic](https://protobuf.dev/programming-guides/encoding/#implications).
 
@@ -354,15 +355,15 @@ The module implementation will include API request and response types, with meth
 
 ### Payment
 
-Bids include a promised payment, which will be transferred from the builder’s account to the x/builder module account if the bid wins the auction. Bids with invalid payments (e.g. insufficient funds) are considered invalid, and can result in consequences for the builder.
+Bids include a promised payment, which will be transferred from the builder’s account to the x/mev module account if the bid wins the auction. Bids with invalid payments (e.g. insufficient funds) are considered invalid, and can result in consequences for the builder.
 
 At the end of every block, payments are distributed according to an application-defined distribution function. By default, payments are transferred to the x/distribution module account and distributed to validators, delegators, etc. in the same way as fees.
 
 ### Preferences: Good MEV, Bad MEV
 
-MEV is often described as being either good or bad. A common example of bad MEV is sandwich attacks, which are a specific form of front-running. Chains must be able to define what they consider to be bad MEV, and those rules, commonly known as **preferences,** to must be enforced.
+MEV is often described as being either good or bad. A common example of bad MEV is sandwich attacks, which are a specific form of front-running. Chains must be able to define what they consider to be bad MEV, and those rules, commonly known as **preferences**, will be enforced.
 
-Sandwiching and front-running are not well-defined. They typically rely on application-specific types (e.g. pools), and detecting them is heuristic (i.e. approximate) and  potentially computationally expensive. Preferences are application-specific: what works for one chain may not work for another.
+Sandwiching and front-running are not well-defined. They typically rely on application-specific types (e.g. pools), and detecting them is heuristic (i.e. approximate) and potentially computationally expensive. Preferences are application-specific: what works for one chain may not work for another.
 
 We allow applications to define whatever preferences they like, as functions that validate a set of transactions and reject anything containing e.g. bad MEV. Those preferences are defined on-chain, enforced by the proposer as part of block construction, and verified by validators as part of consensus.
 
@@ -380,7 +381,7 @@ Evidence establishes specific, and typically narrow, facts. We don’t try to do
 
 ### Query Interface
 
-The **ProposerForHeight** query method takes a height, and returns the builder module proposer for that height, if the proposer is registered. That record includes a public key, which builders should use to verify the signature of received requests.
+The **ProposerForHeight** query method takes a height, and returns the MEV module proposer for that height, if the proposer is registered. That record includes a public key, which builders should use to verify the signature of received requests.
 
 ## Consequences
 
@@ -402,7 +403,7 @@ We are mostly done with an initial implementation of the module, and a reference
 
 ## Test Cases
 
-Both the prototype implementation of the module and the reference implementation of the builder API will contain comprehensive test suites.
+Both the prototype implementation of the module, and the reference implementation of the builder API, will contain comprehensive test suites.
 
 ## References
 

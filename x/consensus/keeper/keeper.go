@@ -23,7 +23,6 @@ var (
 
 type Keeper struct {
 	storeService storetypes.KVStoreService
-	cdc          codec.BinaryCodec
 
 	authority string
 	Params    collections.Item[cmtproto.ConsensusParams]
@@ -33,10 +32,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, au
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		storeService: storeService,
-		cdc:          cdc,
 		authority:    authority,
-
-		Params: collections.NewItem(sb, ParamsPrefix, StoreKey, codec.CollValue[cmtproto.ConsensusParams](cdc)),
+		Params:       collections.NewItem(sb, ParamsPrefix, StoreKey, codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
 }
 

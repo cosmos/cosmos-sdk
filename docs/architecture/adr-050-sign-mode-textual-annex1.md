@@ -6,6 +6,7 @@
 * Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 * Dec 01, 2022: Remove `Object: ` prefix on Any header screen.
 * Dec 13, 2022: Sign over bytes hash when bytes length > 32.
+* Mar 27, 2023: Update `Any` value renderer to omit message header screen.
 
 ## Status
 
@@ -188,21 +189,31 @@ See example above with `message Vote{}`.
 > <value rendered underlying message>
 ```
 
+There is however one exception: when the underlying message is a Protobuf message that does not have a custom encoding, then the message header screen is omitted, and one level of indentation is removed.
+
+Messages that have a custom encoding (including `google.protobuf.Timestamp`, `google.protobuf.Duration`, `google.protobuf.Any`, `cosmos.base.v1beta1.Coin` and messages who have an app-defined custom encoding) do not have this rule applied.
+
 #### Examples
 
+Message header screen is stripped, one-level of indentation removed:
 ```
-type.googleapis.com/cosmos.gov.v1.Vote
-> Vote object
->> Proposal id: 4
->> Vote: cosmos1abc...def
->> Options: 2 WeightedVoteOptions
->> Options (1/2): WeightedVoteOption object
->>> Option: Yes
->>> Weight: 0.7
->> Options (2/2): WeightedVoteOption object
->>> Option: No
->>> Weight: 0.3
->> End of Options
+/cosmos.gov.v1.Vote
+> Proposal id: 4
+> Vote: cosmos1abc...def
+> Options: 2 WeightedVoteOptions
+> Options (1/2): WeightedVoteOption object
+>> Option: Yes
+>> Weight: 0.7
+> Options (2/2): WeightedVoteOption object
+>> Option: No
+>> Weight: 0.3
+> End of Options
+```
+
+Message with custom encoding:
+```
+/cosmos.base.v1beta1.Coin
+> 10uatom
 ```
 
 ### `google.protobuf.Timestamp`

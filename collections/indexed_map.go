@@ -84,13 +84,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Set(ctx context.Context, pk Primary
 // it iterates over all the indexes and instructs them to remove all the references
 // associated with the removed value.
 func (m *IndexedMap[PrimaryKey, Value, Idx]) Remove(ctx context.Context, pk PrimaryKey) error {
-	oldValue, err := m.m.Get(ctx, pk)
-	if err != nil {
-		// TODO retain Map behaviour? which does not error in case we remove a non-existing object
-		return err
-	}
-
-	err = m.unref(ctx, pk, oldValue)
+	err := m.unref(ctx, pk)
 	if err != nil {
 		return err
 	}
@@ -125,7 +119,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk Primary
 	return nil
 }
 
-func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk PrimaryKey, value Value) error {
+func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk PrimaryKey) error {
 	for _, index := range m.Indexes.IndexesList() {
 		err := index.Unreference(ctx, pk, cachedGet[PrimaryKey, Value](m, ctx, pk))
 		if err != nil {

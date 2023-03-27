@@ -50,6 +50,8 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	// TODO: change to TOML
 	homeFilePath := filepath.Join(ctx.HomeDir, "config", "home.txt")
+	ctx = ctx.WithHomeFilePath(homeFilePath)
+
 	homeDir, err := ReadHomeDirFromFile(homeFilePath)
 	if err == nil {
 		ctx = ctx.WithHomeDir(homeDir)

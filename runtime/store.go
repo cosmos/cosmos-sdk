@@ -2,10 +2,13 @@ package runtime
 
 import (
 	"context"
+	"io"
 
 	"cosmossdk.io/core/store"
 
 	storetypes "cosmossdk.io/store/types"
+
+	dbm "github.com/cosmos/cosmos-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -89,4 +92,73 @@ func (store coreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
 // Exceptionally allowed for cachekv.Store, safe to write in the modules.
 func (store coreKVStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	return store.kvStore.ReverseIterator(start, end), nil
+}
+
+// Adapter
+var _ storetypes.KVStore = kvStoreAdapter{}
+
+type kvStoreAdapter struct {
+	store store.KVStore
+}
+
+func (kvStoreAdapter) CacheWrap() storetypes.CacheWrap {
+	panic("unimplemented")
+}
+
+func (kvStoreAdapter) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+	panic("unimplemented")
+}
+
+func (kvStoreAdapter) GetStoreType() storetypes.StoreType {
+	panic("unimplemented")
+}
+
+func (s kvStoreAdapter) Delete(key []byte) {
+	err := s.store.Delete(key)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s kvStoreAdapter) Get(key []byte) []byte {
+	bz, err := s.store.Get(key)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (s kvStoreAdapter) Has(key []byte) bool {
+	has, err := s.store.Has(key)
+	if err != nil {
+		panic(err)
+	}
+	return has
+}
+
+func (s kvStoreAdapter) Set(key []byte, value []byte) {
+	err := s.store.Set(key, value)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s kvStoreAdapter) Iterator(start []byte, end []byte) dbm.Iterator {
+	it, err := s.store.Iterator(start, end)
+	if err != nil {
+		panic(err)
+	}
+	return it
+}
+
+func (s kvStoreAdapter) ReverseIterator(start []byte, end []byte) dbm.Iterator {
+	it, err := s.store.ReverseIterator(start, end)
+	if err != nil {
+		panic(err)
+	}
+	return it
+}
+
+func KVStoreAdapter(store store.KVStore) storetypes.KVStore {
+	return &kvStoreAdapter{store}
 }

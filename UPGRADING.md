@@ -79,6 +79,15 @@ All the store imports are now renamed to use `cosmossdk.io/store` instead of `gi
 
 Capability was moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC V8 will contain the necessary changes to incorporate the new module location
 
+#### `x/consensus`
+
+The `NewKeeper` method now takes a `KVStoreService` instead of a `StoreKey`. When not using depinject, the `runtime.NewKVStoreService` method can be used to create a `KVStoreService` from a `StoreKey`.
+
+```diff
+- app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
++ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+```
+
 #### `x/gov`
 
 ##### Expedited Proposals

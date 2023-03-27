@@ -39,7 +39,7 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Context, 
 	switch {
 	// if no error it means the value existed, and we need to remove the old indexes
 	case err == nil:
-		err = m.Unreference(ctx, pk, oldValue)
+		err = m.unreference(ctx, pk, oldValue)
 		if err != nil {
 			return err
 		}
@@ -58,7 +58,15 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Context, 
 	return m.refKeys.Set(ctx, collections.Join(refKey, pk))
 }
 
-func (m *Multi[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, value Value) error {
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, getValue func() (Value, error)) error {
+	value, err := getValue()
+	if err != nil {
+		return err
+	}
+	return m.unreference(ctx, pk, value)
+}
+
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) unreference(ctx context.Context, pk PrimaryKey, value Value) error {
 	refKey, err := m.getRefKey(pk, value)
 	if err != nil {
 		return err

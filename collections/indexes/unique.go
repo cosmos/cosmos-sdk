@@ -36,7 +36,7 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Context,
 	switch {
 	// if no error it means the value existed, and we need to remove the old indexes
 	case err == nil:
-		err = i.Unreference(ctx, pk, oldValue)
+		err = i.unreference(ctx, pk, oldValue)
 		if err != nil {
 			return err
 		}
@@ -62,7 +62,15 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Context,
 	return i.refKeys.Set(ctx, refKey, pk)
 }
 
-func (i *Unique[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, value Value) error {
+func (i *Unique[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, getValue func() (Value, error)) error {
+	value, err := getValue()
+	if err != nil {
+		return err
+	}
+	return i.unreference(ctx, pk, value)
+}
+
+func (i *Unique[ReferenceKey, PrimaryKey, Value]) unreference(ctx context.Context, pk PrimaryKey, value Value) error {
 	refKey, err := i.getRefKey(pk, value)
 	if err != nil {
 		return err

@@ -22,7 +22,8 @@ type Index[PrimaryKey, Value any] interface {
 	// the previous old value, returns ErrNotFound if no value existed.
 	Reference(ctx context.Context, pk PrimaryKey, newValue Value, lazyOldValue func() (Value, error)) error
 	// Unreference removes the reference between the primary key and value.
-	Unreference(ctx context.Context, pk PrimaryKey, value Value) error
+	// If error is ErrNotFound then it means that the value did not exist before.
+	Unreference(ctx context.Context, pk PrimaryKey, lazyOldValue func() (Value, error)) error
 }
 
 // IndexedMap works like a Map but creates references between fields of Value and its PrimaryKey.
@@ -116,9 +117,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value) error {
 	for _, index := range m.Indexes.IndexesList() {
-		err := index.Reference(ctx, pk, value, func() (Value, error) {
-			return m.m.Get(ctx, pk)
-		})
+		err := index.Reference(ctx, pk, value, cachedGet[PrimaryKey, Value](m, ctx, pk))
 		if err != nil {
 			return err
 		}
@@ -128,10 +127,31 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk Primary
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk PrimaryKey, value Value) error {
 	for _, index := range m.Indexes.IndexesList() {
-		err := index.Unreference(ctx, pk, value)
+		err := index.Unreference(ctx, pk, cachedGet[PrimaryKey, Value](m, ctx, pk))
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// cachedGet returns a function that gets the value V, given the key K but
+// returns always the same result on multiple calls.
+func cachedGet[K, V any, M interface {
+	Get(ctx context.Context, key K) (V, error)
+}](m M, ctx context.Context, key K) func() (V, error) {
+	var (
+		value      V
+		err        error
+		calledOnce bool
+	)
+
+	return func() (V, error) {
+		if calledOnce {
+			return value, err
+		}
+		value, err = m.Get(ctx, key)
+		calledOnce = true
+		return value, err
+	}
 }

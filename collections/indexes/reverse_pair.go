@@ -60,7 +60,7 @@ func (i *ReversePair[K1, K2, Value]) Reference(ctx context.Context, pk collectio
 }
 
 // Unreference implements collections.Index
-func (i *ReversePair[K1, K2, Value]) Unreference(ctx context.Context, pk collections.Pair[K1, K2], _ Value) error {
+func (i *ReversePair[K1, K2, Value]) Unreference(ctx context.Context, pk collections.Pair[K1, K2], _ func() (Value, error)) error {
 	return i.refKeys.Remove(ctx, collections.Join(pk.K2(), pk.K1()))
 }
 

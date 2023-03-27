@@ -415,3 +415,9 @@ message ConsPubKeyRotationHistory {
   // height defines the block height at which the rotation event occured.
   uint64 height = 4;
 }
+
+// ValAddrsOfRotatedConsKeys contains the array of validator addresses which rotated their keys
+// This is to block the validator's next rotation till unbonding period.
+message ValAddrsOfRotatedConsKeys {
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

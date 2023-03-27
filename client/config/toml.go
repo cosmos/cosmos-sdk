@@ -47,8 +47,8 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
-// writeHomeDirToFile writes a given string to the given configuration file path.
-func writeHomeDirToFile(filepath, homedir string) error {
+// WriteHomeDirToFile writes a given string to the given configuration file path.
+func WriteHomeDirToFile(filepath, homedir string) error {
 	// TODO: implement TOML as on config.toml
 	var buffer bytes.Buffer
 	buffer.WriteString(homedir)

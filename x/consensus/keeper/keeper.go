@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	ParamsPrefix = collections.NewPrefix(0)
+	ParamsPrefix = collections.NewPrefix([]byte{})
 	StoreKey     = "consensus"
 )
 

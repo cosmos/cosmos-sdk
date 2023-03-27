@@ -34,7 +34,7 @@ type SignModeHandlerOptions struct {
 }
 
 // NewSignModeHandler returns a new SignModeHandler.
-func NewSignModeHandler(options SignModeHandlerOptions) SignModeHandler {
+func NewSignModeHandler(options SignModeHandlerOptions) (SignModeHandler, error) {
 	h := SignModeHandler{}
 
 	if options.FileResolver == nil {
@@ -50,12 +50,16 @@ func NewSignModeHandler(options SignModeHandlerOptions) SignModeHandler {
 	}
 
 	if options.SignersContext == nil {
-		h.signersContext = signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: h.fileResolver})
+		var err error
+		h.signersContext, err = signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: h.fileResolver})
+		if err != nil {
+			return h, err
+		}
 	} else {
 		h.signersContext = options.SignersContext
 	}
 
-	return h
+	return h, nil
 }
 
 var _ signing.SignModeHandler = SignModeHandler{}
@@ -84,8 +88,8 @@ func (h SignModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
 
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.
 func (h SignModeHandler) GetSignBytes(
-	_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
-
+	_ context.Context, signerData signing.SignerData, txData signing.TxData,
+) ([]byte, error) {
 	feePayer := txData.AuthInfo.Fee.Payer
 	if feePayer == "" {
 		fp, err := h.getFirstSigner(txData)

@@ -2,10 +2,11 @@ package aminojson
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
 	"math"
 	"time"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 const (

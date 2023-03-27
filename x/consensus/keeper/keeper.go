@@ -72,7 +72,9 @@ func (k Keeper) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	k.Params.Set(ctx, consensusParams)
+	if err := k.Params.Set(ctx, consensusParams); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }

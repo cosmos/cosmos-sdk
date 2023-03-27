@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"testing"
+	"time"
 
 	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -44,7 +45,7 @@ func DefaultContextWithDB(t *testing.T, key storetypes.StoreKey, tkey storetypes
 	err := cms.LoadLatestVersion()
 	assert.NoError(t, err)
 
-	ctx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 
 	return TestContext{ctx, db, cms}
 }

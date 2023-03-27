@@ -5,10 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/codec"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/testutil"
+	"github.com/cosmos/cosmos-sdk/x/group/module"
 )
 
 // TestGogoUnmarshalProposal tests some weird behavior in gogoproto
@@ -16,9 +15,8 @@ import (
 // This test serves as a showcase that we need to be careful when unmarshalling
 // multiple times into the same reference.
 func TestGogoUnmarshalProposal(t *testing.T) {
-	var cdc codec.Codec
-	err := depinject.Inject(testutil.AppConfig, &cdc)
-	require.NoError(t, err)
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	cdc := encodingConfig.Codec
 
 	p1 := group.Proposal{Proposers: []string{"foo"}}
 	p2 := group.Proposal{Proposers: []string{"bar"}}

@@ -22,9 +22,8 @@ func errUnknownField(typ string, tagNum int, wireType protowire.Type) error {
 	return decode.ErrUnknownField.Wrapf("%s: {TagNum: %d, WireType:%q}", typ, tagNum, wt)
 }
 
-func errMismatchedField(tagNum int, wireType protowire.Type, protoErr int) error {
-	return fmt.Errorf("could not consume field value for tagNum: %d, wireType: %q; %w",
-		tagNum, decode.WireTypeToString(wireType), protowire.ParseError(protoErr))
+func errMismatchedField(typ string, wireType protowire.Type) error {
+	return fmt.Errorf("invalid wire type %s for field %s", decode.WireTypeToString(wireType), typ)
 }
 
 var ProtoResolver = protoregistry.GlobalFiles
@@ -458,8 +457,10 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 					}),
 				},
 			},
-			recv:    new(testpb.TestVersion1),
-			wantErr: errMismatchedField(8, 7, -4),
+			recv: new(testpb.TestVersion1),
+			// behavior change from previous implementation: we allow mismatched wire -> proto types,
+			// but this will still error on ConsumeFieldValue
+			wantErr: fmt.Errorf(`could not consume field value for tagNum: 8, wireType: "unknown type: 7"; proto:%ccannot parse reserved wire type`, '\u00A0'),
 		},
 		{
 			name: "From nested proto message, message index 0",
@@ -592,9 +593,8 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 				Id:   289,
 				Name: "CustomerCustomerCustomerCustomerCustomer11111Customer1",
 			},
-			// TODO
-			// this case fails in the legacy code but not does not here, is this correct?
-			wantErr: errUnknownField("testpb.Customer1", 4, 5),
+			// behavior change from previous implementation: we allow mismatched wire -> proto types.
+			// wantErr: errMismatchedField("testpb.Customer1", 4, 5),
 		},
 		{
 			name: "Extra field that's non-existent in Customer1, along with Reserved set",

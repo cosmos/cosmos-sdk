@@ -80,11 +80,6 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		fmt.Printf("fieldName: %s, tagNum: %d, wireType: %s, n: %d\n",
 			fieldName, tagNum, WireTypeToString(wireType), n)
 
-		if !isWireTypeAssignable(wireType, fieldDesc.Kind()) {
-			return hasUnknownNonCriticals, fmt.Errorf(
-				"invalid wire type %s for field %s", WireTypeToString(wireType), fieldDesc.FullName())
-		}
-
 		fieldMessage := fieldDesc.Message()
 		// not message or group kind
 		if fieldMessage == nil {
@@ -150,6 +145,7 @@ func (twt *errUnknownField) Error() string {
 
 var _ error = (*errUnknownField)(nil)
 
+// WireTypeToString returns a string representation of the given protowire.Type.
 func WireTypeToString(wt protowire.Type) string {
 	switch wt {
 	case 0:
@@ -167,24 +163,4 @@ func WireTypeToString(wt protowire.Type) string {
 	default:
 		return fmt.Sprintf("unknown type: %d", wt)
 	}
-}
-
-func isWireTypeAssignable(wt protowire.Type, kind protoreflect.Kind) bool {
-	switch kind {
-	case protoreflect.Int32Kind, protoreflect.Int64Kind, protoreflect.Sint32Kind, protoreflect.Sint64Kind,
-		protoreflect.Uint32Kind, protoreflect.Uint64Kind,
-		protoreflect.BoolKind, protoreflect.EnumKind:
-		return wt == protowire.VarintType
-
-	case protoreflect.Fixed64Kind, protoreflect.Sfixed64Kind, protoreflect.DoubleKind:
-		return wt == protowire.Fixed64Type
-
-	case protoreflect.StringKind, protoreflect.BytesKind, protoreflect.MessageKind, protoreflect.GroupKind:
-		return wt == protowire.BytesType
-
-	case protoreflect.Fixed32Kind, protoreflect.Sfixed32Kind, protoreflect.FloatKind:
-		return wt == protowire.Fixed32Type
-	}
-
-	return false
 }

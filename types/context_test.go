@@ -135,7 +135,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 
 	// test consensus param
 	s.Require().Nil(ctx.ConsensusParams())
-	cp := &cmtproto.ConsensusParams{}
+	cp := cmtproto.ConsensusParams{}
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context

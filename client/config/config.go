@@ -57,24 +57,15 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
-	conf := DefaultConfig()
 
 	// when config.toml does not exist create and init with default values
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
-			return ctx, fmt.Errorf("couldn't make client config: %v", err)
-		}
-
-		if ctx.ChainID != "" {
-			conf.ChainID = ctx.ChainID // chain-id will be written to the client.toml while initiating the chain.
-		}
-
-		if err := writeConfigToFile(configFilePath, conf); err != nil {
-			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
+		if err := CreateNewConfigAtPath(configPath, ctx.ChainID); err != nil {
+			return ctx, nil
 		}
 	}
 
-	conf, err = getClientConfig(configPath, ctx.Viper)
+	conf, err := getClientConfig(configPath, ctx.Viper)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client config: %v", err)
 	}
@@ -101,4 +92,25 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 		WithBroadcastMode(conf.BroadcastMode)
 
 	return ctx, nil
+}
+
+// CreateNewConfigAtPath sets up a basic configuration structure in the given
+// directory.
+func CreateNewConfigAtPath(configPath string, chainID string) error {
+	configFilePath := filepath.Join(configPath, "client.toml")
+
+	if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
+		return fmt.Errorf("couldn't make client config: %v", err)
+	}
+
+	conf := DefaultConfig()
+	if chainID != "" {
+		conf.ChainID = chainID // chain-id will be written to the client.toml while initiating the chain.
+	}
+
+	if err := writeConfigToFile(configFilePath, conf); err != nil {
+		return fmt.Errorf("could not write client config to the file: %v", err)
+	}
+
+	return nil
 }

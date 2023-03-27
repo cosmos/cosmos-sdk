@@ -5,7 +5,6 @@ import (
 	"sort"
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"

@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/store v0.1.0-alpha.1
 	github.com/cometbft/cometbft v0.37.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321173237-fe77d4bca302
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230322203107-65e40ff4dacb
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
@@ -156,4 +156,3 @@ require (
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
-replace github.com/cosmos/cosmos-sdk => ../../

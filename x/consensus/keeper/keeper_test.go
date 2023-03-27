@@ -26,7 +26,6 @@ type KeeperTestSuite struct {
 	consensusParamsKeeper *consensusparamkeeper.Keeper
 
 	queryClient types.QueryClient
-	msgServer   types.MsgServer
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -43,9 +42,8 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	types.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, consensusparamkeeper.NewQuerier(keeper))
+	types.RegisterQueryServer(queryHelper, keeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
-	s.msgServer = consensusparamkeeper.NewMsgServerImpl(keeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -72,7 +70,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 				}
-				s.msgServer.UpdateParams(s.ctx, input)
+				s.consensusParamsKeeper.UpdateParams(s.ctx, input)
 			},
 			types.QueryParamsResponse{
 				Params: &cmtproto.ConsensusParams{
@@ -91,7 +89,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			s.SetupTest() // reset
 
 			tc.malleate()
-			res, err := s.queryClient.Params(s.ctx, &tc.req)
+			res, err := s.consensusParamsKeeper.GetParams(s.ctx, &tc.req)
 
 			if tc.expPass {
 				s.Require().NoError(err)
@@ -152,7 +150,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			_, err := s.msgServer.UpdateParams(s.ctx, tc.input)
+			_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, tc.input)
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expErrMsg)

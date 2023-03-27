@@ -46,21 +46,11 @@ func (k *Keeper) GetAuthority() string {
 
 // Querier
 
-var _ types.QueryServer = Querier{}
-
-// Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
-type Querier struct {
-	Keeper
-}
-
-// NewQuerier constructor for the Querier struct
-func NewQuerier(keeper Keeper) Querier {
-	return Querier{Keeper: keeper}
-}
+var _ types.QueryServer = Keeper{}
 
 // Params queries params of consensus module
-func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := k.Keeper.Params.Get(ctx)
+func (k Keeper) GetParams(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -70,19 +60,9 @@ func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*type
 
 // MsgServer
 
-type msgServer struct {
-	Keeper
-}
+var _ types.MsgServer = Keeper{}
 
-var _ types.MsgServer = msgServer{}
-
-// NewMsgServerImpl returns an implementation of the bank MsgServer interface
-// for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
-	return &msgServer{Keeper: keeper}
-}
-
-func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+func (k Keeper) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.GetAuthority() != req.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), req.Authority)
 	}

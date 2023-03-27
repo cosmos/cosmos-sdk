@@ -10,7 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 // Query defines the gRPC querier service.
 service Query {
   // Params queries the parameters of x/consensus_param module.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+  rpc GetParams(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/consensus/v1/params";
   }
 }

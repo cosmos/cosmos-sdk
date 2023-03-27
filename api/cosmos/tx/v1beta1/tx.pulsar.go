@@ -5360,7 +5360,7 @@ func (x *ModeInfo_Single) ProtoReflect() protoreflect.Message {
 }
 
 func (x *ModeInfo_Single) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[12]
+	mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5817,7 +5817,7 @@ func (x *ModeInfo_Multi) ProtoReflect() protoreflect.Message {
 }
 
 func (x *ModeInfo_Multi) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[13]
+	mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8158,362 +8158,6 @@ func (x *fastReflection_AuxSignerData) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var (
-	md_MsgFailureResponse protoreflect.MessageDescriptor
-)
-
-func init() {
-	file_cosmos_tx_v1beta1_tx_proto_init()
-	md_MsgFailureResponse = File_cosmos_tx_v1beta1_tx_proto.Messages().ByName("MsgFailureResponse")
-}
-
-var _ protoreflect.Message = (*fastReflection_MsgFailureResponse)(nil)
-
-type fastReflection_MsgFailureResponse MsgFailureResponse
-
-func (x *MsgFailureResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgFailureResponse)(x)
-}
-
-func (x *MsgFailureResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_MsgFailureResponse_messageType fastReflection_MsgFailureResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgFailureResponse_messageType{}
-
-type fastReflection_MsgFailureResponse_messageType struct{}
-
-func (x fastReflection_MsgFailureResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgFailureResponse)(nil)
-}
-func (x fastReflection_MsgFailureResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgFailureResponse)
-}
-func (x fastReflection_MsgFailureResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgFailureResponse
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_MsgFailureResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgFailureResponse
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgFailureResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgFailureResponse_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgFailureResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgFailureResponse)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgFailureResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgFailureResponse)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_MsgFailureResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgFailureResponse) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.v1beta1.MsgFailureResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.tx.v1beta1.MsgFailureResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgFailureResponse) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.v1beta1.MsgFailureResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.tx.v1beta1.MsgFailureResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgFailureResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.v1beta1.MsgFailureResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.tx.v1beta1.MsgFailureResponse does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgFailureResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.v1beta1.MsgFailureResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.tx.v1beta1.MsgFailureResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgFailureResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.v1beta1.MsgFailureResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.tx.v1beta1.MsgFailureResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgFailureResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.v1beta1.MsgFailureResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.tx.v1beta1.MsgFailureResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgFailureResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.tx.v1beta1.MsgFailureResponse", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgFailureResponse) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgFailureResponse) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_MsgFailureResponse) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgFailureResponse) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgFailureResponse)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgFailureResponse)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgFailureResponse)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgFailureResponse: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgFailureResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -9304,34 +8948,6 @@ func (x *AuxSignerData) GetSig() []byte {
 	return nil
 }
 
-// This is an empty message to be added as a response for failed messages
-// when dealing with non-atomic multi-msg txs.
-type MsgFailureResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *MsgFailureResponse) Reset() {
-	*x = MsgFailureResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *MsgFailureResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MsgFailureResponse) ProtoMessage() {}
-
-// Deprecated: Use MsgFailureResponse.ProtoReflect.Descriptor instead.
-func (*MsgFailureResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_tx_v1beta1_tx_proto_rawDescGZIP(), []int{11}
-}
-
 // Single is the mode info for a single signer. It is structured as a message
 // to allow for additional fields such as locale for SIGN_MODE_TEXTUAL in the
 // future
@@ -9347,7 +8963,7 @@ type ModeInfo_Single struct {
 func (x *ModeInfo_Single) Reset() {
 	*x = ModeInfo_Single{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[12]
+		mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9387,7 +9003,7 @@ type ModeInfo_Multi struct {
 func (x *ModeInfo_Multi) Reset() {
 	*x = ModeInfo_Multi{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[13]
+		mi := &file_cosmos_tx_v1beta1_tx_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9575,21 +9191,19 @@ var file_cosmos_tx_v1beta1_tx_proto_rawDesc = []byte{
 	0x0e, 0x32, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x73, 0x69,
 	0x67, 0x6e, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x53, 0x69,
 	0x67, 0x6e, 0x4d, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x6d, 0x6f, 0x64, 0x65, 0x12, 0x10, 0x0a, 0x03,
-	0x73, 0x69, 0x67, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x73, 0x69, 0x67, 0x22, 0x14,
-	0x0a, 0x12, 0x4d, 0x73, 0x67, 0x46, 0x61, 0x69, 0x6c, 0x75, 0x72, 0x65, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x42, 0xb4, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07,
-	0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2f, 0x74, 0x78, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x74, 0x78,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x54, 0x58, 0xaa, 0x02, 0x11,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x54, 0x78, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0xca, 0x02, 0x11, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x54, 0x78, 0x5c, 0x56, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x54,
-	0x78, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
-	0x54, 0x78, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x73, 0x69, 0x67, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x73, 0x69, 0x67, 0x42, 0xb4,
+	0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
+	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x78, 0x2f,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x74, 0x78, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0xa2, 0x02, 0x03, 0x43, 0x54, 0x58, 0xaa, 0x02, 0x11, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x54, 0x78, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x11, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x54, 0x78, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2,
+	0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x54, 0x78, 0x5c, 0x56, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x54, 0x78, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -9604,7 +9218,7 @@ func file_cosmos_tx_v1beta1_tx_proto_rawDescGZIP() []byte {
 	return file_cosmos_tx_v1beta1_tx_proto_rawDescData
 }
 
-var file_cosmos_tx_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_cosmos_tx_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_cosmos_tx_v1beta1_tx_proto_goTypes = []interface{}{
 	(*Tx)(nil),                       // 0: cosmos.tx.v1beta1.Tx
 	(*TxRaw)(nil),                    // 1: cosmos.tx.v1beta1.TxRaw
@@ -9617,35 +9231,34 @@ var file_cosmos_tx_v1beta1_tx_proto_goTypes = []interface{}{
 	(*Fee)(nil),                      // 8: cosmos.tx.v1beta1.Fee
 	(*Tip)(nil),                      // 9: cosmos.tx.v1beta1.Tip
 	(*AuxSignerData)(nil),            // 10: cosmos.tx.v1beta1.AuxSignerData
-	(*MsgFailureResponse)(nil),       // 11: cosmos.tx.v1beta1.MsgFailureResponse
-	(*ModeInfo_Single)(nil),          // 12: cosmos.tx.v1beta1.ModeInfo.Single
-	(*ModeInfo_Multi)(nil),           // 13: cosmos.tx.v1beta1.ModeInfo.Multi
-	(*anypb.Any)(nil),                // 14: google.protobuf.Any
-	(*v1beta12.Coin)(nil),            // 15: cosmos.base.v1beta1.Coin
-	(v1beta1.SignMode)(0),            // 16: cosmos.tx.signing.v1beta1.SignMode
-	(*v1beta11.CompactBitArray)(nil), // 17: cosmos.crypto.multisig.v1beta1.CompactBitArray
+	(*ModeInfo_Single)(nil),          // 11: cosmos.tx.v1beta1.ModeInfo.Single
+	(*ModeInfo_Multi)(nil),           // 12: cosmos.tx.v1beta1.ModeInfo.Multi
+	(*anypb.Any)(nil),                // 13: google.protobuf.Any
+	(*v1beta12.Coin)(nil),            // 14: cosmos.base.v1beta1.Coin
+	(v1beta1.SignMode)(0),            // 15: cosmos.tx.signing.v1beta1.SignMode
+	(*v1beta11.CompactBitArray)(nil), // 16: cosmos.crypto.multisig.v1beta1.CompactBitArray
 }
 var file_cosmos_tx_v1beta1_tx_proto_depIdxs = []int32{
 	4,  // 0: cosmos.tx.v1beta1.Tx.body:type_name -> cosmos.tx.v1beta1.TxBody
 	5,  // 1: cosmos.tx.v1beta1.Tx.auth_info:type_name -> cosmos.tx.v1beta1.AuthInfo
-	14, // 2: cosmos.tx.v1beta1.SignDocDirectAux.public_key:type_name -> google.protobuf.Any
+	13, // 2: cosmos.tx.v1beta1.SignDocDirectAux.public_key:type_name -> google.protobuf.Any
 	9,  // 3: cosmos.tx.v1beta1.SignDocDirectAux.tip:type_name -> cosmos.tx.v1beta1.Tip
-	14, // 4: cosmos.tx.v1beta1.TxBody.messages:type_name -> google.protobuf.Any
-	14, // 5: cosmos.tx.v1beta1.TxBody.extension_options:type_name -> google.protobuf.Any
-	14, // 6: cosmos.tx.v1beta1.TxBody.non_critical_extension_options:type_name -> google.protobuf.Any
+	13, // 4: cosmos.tx.v1beta1.TxBody.messages:type_name -> google.protobuf.Any
+	13, // 5: cosmos.tx.v1beta1.TxBody.extension_options:type_name -> google.protobuf.Any
+	13, // 6: cosmos.tx.v1beta1.TxBody.non_critical_extension_options:type_name -> google.protobuf.Any
 	6,  // 7: cosmos.tx.v1beta1.AuthInfo.signer_infos:type_name -> cosmos.tx.v1beta1.SignerInfo
 	8,  // 8: cosmos.tx.v1beta1.AuthInfo.fee:type_name -> cosmos.tx.v1beta1.Fee
 	9,  // 9: cosmos.tx.v1beta1.AuthInfo.tip:type_name -> cosmos.tx.v1beta1.Tip
-	14, // 10: cosmos.tx.v1beta1.SignerInfo.public_key:type_name -> google.protobuf.Any
+	13, // 10: cosmos.tx.v1beta1.SignerInfo.public_key:type_name -> google.protobuf.Any
 	7,  // 11: cosmos.tx.v1beta1.SignerInfo.mode_info:type_name -> cosmos.tx.v1beta1.ModeInfo
-	12, // 12: cosmos.tx.v1beta1.ModeInfo.single:type_name -> cosmos.tx.v1beta1.ModeInfo.Single
-	13, // 13: cosmos.tx.v1beta1.ModeInfo.multi:type_name -> cosmos.tx.v1beta1.ModeInfo.Multi
-	15, // 14: cosmos.tx.v1beta1.Fee.amount:type_name -> cosmos.base.v1beta1.Coin
-	15, // 15: cosmos.tx.v1beta1.Tip.amount:type_name -> cosmos.base.v1beta1.Coin
+	11, // 12: cosmos.tx.v1beta1.ModeInfo.single:type_name -> cosmos.tx.v1beta1.ModeInfo.Single
+	12, // 13: cosmos.tx.v1beta1.ModeInfo.multi:type_name -> cosmos.tx.v1beta1.ModeInfo.Multi
+	14, // 14: cosmos.tx.v1beta1.Fee.amount:type_name -> cosmos.base.v1beta1.Coin
+	14, // 15: cosmos.tx.v1beta1.Tip.amount:type_name -> cosmos.base.v1beta1.Coin
 	3,  // 16: cosmos.tx.v1beta1.AuxSignerData.sign_doc:type_name -> cosmos.tx.v1beta1.SignDocDirectAux
-	16, // 17: cosmos.tx.v1beta1.AuxSignerData.mode:type_name -> cosmos.tx.signing.v1beta1.SignMode
-	16, // 18: cosmos.tx.v1beta1.ModeInfo.Single.mode:type_name -> cosmos.tx.signing.v1beta1.SignMode
-	17, // 19: cosmos.tx.v1beta1.ModeInfo.Multi.bitarray:type_name -> cosmos.crypto.multisig.v1beta1.CompactBitArray
+	15, // 17: cosmos.tx.v1beta1.AuxSignerData.mode:type_name -> cosmos.tx.signing.v1beta1.SignMode
+	15, // 18: cosmos.tx.v1beta1.ModeInfo.Single.mode:type_name -> cosmos.tx.signing.v1beta1.SignMode
+	16, // 19: cosmos.tx.v1beta1.ModeInfo.Multi.bitarray:type_name -> cosmos.crypto.multisig.v1beta1.CompactBitArray
 	7,  // 20: cosmos.tx.v1beta1.ModeInfo.Multi.mode_infos:type_name -> cosmos.tx.v1beta1.ModeInfo
 	21, // [21:21] is the sub-list for method output_type
 	21, // [21:21] is the sub-list for method input_type
@@ -9793,18 +9406,6 @@ func file_cosmos_tx_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_tx_v1beta1_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgFailureResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cosmos_tx_v1beta1_tx_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ModeInfo_Single); i {
 			case 0:
 				return &v.state
@@ -9816,7 +9417,7 @@ func file_cosmos_tx_v1beta1_tx_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_tx_v1beta1_tx_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_tx_v1beta1_tx_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ModeInfo_Multi); i {
 			case 0:
 				return &v.state
@@ -9839,7 +9440,7 @@ func file_cosmos_tx_v1beta1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_tx_v1beta1_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

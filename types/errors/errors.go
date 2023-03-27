@@ -139,9 +139,6 @@ var (
 	// supplied.
 	ErrInvalidGasLimit = errorsmod.Register(RootCodespace, 41, "invalid gas limit")
 
-	// ErrMultiMsgFailure defines an error for when a multi-message transaction fails.
-	ErrMultiMsgFailure = errorsmod.Register(RootCodespace, 42, "all messages failed")
-
 	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = errorsmod.ErrPanic
 )

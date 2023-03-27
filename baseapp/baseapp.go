@@ -2,10 +2,9 @@ package baseapp
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"sort"
 	"strings"
-
-	"github.com/cosmos/cosmos-sdk/types/tx"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -31,9 +30,6 @@ type (
 	// Enum mode for app.runTx
 	runTxMode uint8
 
-	// Enum mode for app.runTx and app.runMsgs
-	MsgExecutionGuaranteeMode uint8
-
 	// StoreLoader defines a customizable function to control how we load the CommitMultiStore
 	// from disk. This is useful for state migration, when loading a datastore written with
 	// an older version of the software. In particular, if a module changed the substore key name
@@ -48,11 +44,6 @@ const (
 	runTxModeDeliver                      // Deliver a transaction
 	runTxPrepareProposal                  // Prepare a TM block proposal
 	runTxProcessProposal                  // Process a TM block proposal
-)
-
-const (
-	Atomic MsgExecutionGuaranteeMode = iota
-	NonAtomic
 )
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -741,17 +732,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// is a branch of a branch.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 
-	var msgExecutionGuaranteeMode MsgExecutionGuaranteeMode
-	if tx.IsNonAtomic() {
-		msgExecutionGuaranteeMode = NonAtomic
-	} else {
-		msgExecutionGuaranteeMode = Atomic
-	}
-
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
-	result, err = app.runMsgs(runMsgCtx, msgs, mode, msgExecutionGuaranteeMode)
+	result, err = app.runMsgs(runMsgCtx, msgs, mode, tx.IsNonAtomic())
 
 	if err == nil {
 		// Run optional postHandlers.
@@ -792,7 +776,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 // and DeliverTx. An error is returned if any single message fails or if a
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, execGuarantee MsgExecutionGuaranteeMode) (*sdk.Result, error) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, isNonAtomic bool) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
@@ -808,7 +792,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 
 		// When dealing with non-atomic execution, we want each message to has its own context
 		var writeFn func()
-		if execGuarantee == NonAtomic {
+		if isNonAtomic {
 			msgCtx, writeFn = ctx.CacheContext()
 		}
 
@@ -820,21 +804,22 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 		// ADR 031 request type routing
 		msgResult, err := handler(msgCtx, msg)
 		if err != nil {
-			if execGuarantee == NonAtomic {
-				value, err := codectypes.NewAnyWithValue(&tx.MsgFailureResponse{})
+			wrappedErr := errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
+			if isNonAtomic {
+				value, err := codectypes.NewAnyWithValue(&msgservice.MsgFailureResponse{Error: wrappedErr.Error()})
 				if err != nil {
 					return nil, err
 				}
 				msgResponses = append(msgResponses, value)
 				continue
 			}
-			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
+			return nil, wrappedErr
 		}
 		// at least one message was executed successfully
 		txSuccess = true
 
 		// Write the msg execution result to the context
-		if execGuarantee == NonAtomic {
+		if isNonAtomic {
 			writeFn()
 		}
 
@@ -864,7 +849,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, exe
 	}
 
 	if (mode == runTxModeDeliver || mode == runTxModeSimulate) && !txSuccess {
-		return nil, sdkerrors.ErrMultiMsgFailure.Wrapf("failed to execute all messages in a non-atomic multi-message")
+		return nil, ErrMultiMsgFailure.Wrapf("failed to execute all messages in a non-atomic multi-message")
 	}
 
 	data, err := makeABCIData(msgResponses)

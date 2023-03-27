@@ -169,6 +169,7 @@ func (ctx Context) WithChainID(chainID string) Context {
 
 // WithHomeFilePath returns a copy of the Context with HomeFilePath set.
 func (ctx Context) WithHomeFilePath(fp string) Context {
+	// TODO: remove this log
 	fmt.Println("returning context with home file path: ", fp)
 	if fp != "" {
 		ctx.HomeFilePath = fp

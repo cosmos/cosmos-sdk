@@ -8,7 +8,7 @@ require (
 	github.com/creachadair/tomledit v0.0.24
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
-	golang.org/x/exp v0.0.0-20230315142452-642cacee5cc0
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	gotest.tools/v3 v3.4.0
 )
 
@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/log v0.1.0 // indirect
-	cosmossdk.io/math v1.0.0-rc.0 // indirect
+	cosmossdk.io/math v1.0.0 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1 // indirect
 	cosmossdk.io/x/tx v0.3.1-0.20230321155358-6522dd1731b5 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -103,7 +103,7 @@ require (
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
@@ -143,8 +143,8 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
-	google.golang.org/grpc v1.53.0 // indirect
+	google.golang.org/genproto v0.0.0-20230320184635-7606e756e683 // indirect
+	google.golang.org/grpc v1.54.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

@@ -3,6 +3,8 @@ package baseapp
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"sort"
 	"strings"
 
@@ -524,6 +526,36 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 	return nil
 }
 
+// validate that the tx is not signed using SIGN_MODE_AMINO_JSON if the tx is nonAtomic
+func (app *BaseApp) validateNonAtomicSignMode(tx sdk.Tx) error {
+	if !tx.IsNonAtomic() {
+		return nil
+	}
+
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return errorsmod.Wrap(ErrBadNonAtomicSignature, "tx must be a SigVerifiableTx")
+	}
+
+	signatures, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return err
+	}
+
+	for _, signer := range signatures {
+		signMode, ok := signer.Data.(*signing.SingleSignatureData)
+		if !ok {
+			return errorsmod.Wrap(ErrBadNonAtomicSignature, "tx signature must be a SingleSignatureData")
+		}
+
+		if signMode.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+			return errorsmod.Wrap(ErrBadNonAtomicSignature, "tx must not be signed using SIGN_MODE_LEGACY_AMINO_JSON")
+		}
+	}
+
+	return nil
+}
+
 // validateBasicTxMsgs executes basic validator calls for messages.
 func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	if len(msgs) == 0 {
@@ -724,6 +756,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents, priority,
 				fmt.Errorf("failed to remove tx from mempool: %w", err)
+		}
+		err = app.validateNonAtomicSignMode(tx)
+		if err != nil {
+			return gInfo, nil, anteEvents, priority,
+				fmt.Errorf("invalid signature: %w", err)
 		}
 	}
 

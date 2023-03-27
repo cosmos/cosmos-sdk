@@ -34,7 +34,6 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		return hasUnknownNonCriticals, nil
 	}
 
-	//fieldDescProtoFromTagNum, _, err := getDescriptorInfo(desc, msg)
 	fields := desc.Fields()
 
 	for len(bz) > 0 {
@@ -42,9 +41,6 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		if m < 0 {
 			return hasUnknownNonCriticals, errors.New("invalid length")
 		}
-		fmt.Printf("tagNum: %d, wireType: %d, m: %d\n", tagNum, wireType, m)
-
-		//fieldDescProto, ok := fieldDescProtoFromTagNum[int32(tagNum)]
 
 		fieldDesc := fields.ByNumber(tagNum)
 		if fieldDesc == nil {
@@ -77,10 +73,6 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		if fieldDesc == nil {
 			continue
 		}
-
-		fieldName := fieldDesc.FullName()
-		fmt.Printf("fieldName: %s, tagNum: %d, wireType: %s, n: %d\n",
-			fieldName, tagNum, WireTypeToString(wireType), n)
 
 		fieldMessage := fieldDesc.Message()
 		// not message or group kind

@@ -7,7 +7,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
@@ -35,8 +34,6 @@ type fixture struct {
 	accountKeeper     authkeeper.AccountKeeper
 	interfaceRegistry codectypes.InterfaceRegistry
 	addrDels          []sdk.AccAddress
-	queryClient       slashingtypes.QueryClient
-	msgServer         slashingtypes.MsgServer
 }
 
 func initFixture(t assert.TestingT) *fixture {
@@ -65,14 +62,8 @@ func initFixture(t assert.TestingT) *fixture {
 	f.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), info1)
 	f.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, f.interfaceRegistry)
-	slashingtypes.RegisterQueryServer(queryHelper, f.slashingKeeper)
-	queryClient := slashingtypes.NewQueryClient(queryHelper)
-	f.queryClient = queryClient
-
 	f.addrDels = addrDels
 	f.ctx = ctx
-	f.msgServer = slashingkeeper.NewMsgServerImpl(f.slashingKeeper)
 
 	return f
 }

@@ -23,9 +23,11 @@ import (
 type IntegrationApp struct {
 	*baseapp.BaseApp
 
-	t       *testing.T
-	context sdk.Context
-	logger  log.Logger
+	t      *testing.T
+	ctx    sdk.Context
+	logger log.Logger
+
+	queryHelper *baseapp.QueryServiceTestHelper
 }
 
 func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *IntegrationApp {
@@ -56,9 +58,11 @@ func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, mod
 	return &IntegrationApp{
 		BaseApp: bApp,
 
-		t:       t,
-		logger:  logger,
-		context: ctx,
+		t:      t,
+		logger: logger,
+		ctx:    ctx,
+
+		queryHelper: baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
 	}
 }
 
@@ -70,7 +74,7 @@ func (app *IntegrationApp) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
 		return nil, fmt.Errorf("can't route message %+v", msg)
 	}
 
-	msgResult, err := handler(app.context, msg)
+	msgResult, err := handler(app.ctx, msg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute message: %w", err)
 	}
@@ -86,4 +90,12 @@ func (app *IntegrationApp) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
 	}
 
 	return response, nil
+}
+
+func (app *IntegrationApp) SDKContext() sdk.Context {
+	return app.ctx
+}
+
+func (app *IntegrationApp) QueryHelper() *baseapp.QueryServiceTestHelper {
+	return app.queryHelper
 }

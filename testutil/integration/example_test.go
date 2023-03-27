@@ -47,9 +47,10 @@ func TestIntegrationTestExample(t *testing.T) {
 
 	integrationApp := integration.NewIntegrationApp(t, keys, authModule, mintModule)
 
-	// register the message servers
+	// register the message and query servers
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
 	minttypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), mintkeeper.NewMsgServerImpl(mintKeeper))
+	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintKeeper)
 
 	// now we can use the application to test an mint message
 	result, err := integrationApp.RunMsg(&minttypes.MsgUpdateParams{

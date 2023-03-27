@@ -16,6 +16,11 @@ const bit11NonCritical = 1 << 10
 var anyDesc = (&anypb.Any{}).ProtoReflect().Descriptor()
 var anyFullName = anyDesc.FullName()
 
+func RejectUnknownFieldsStrict(bz []byte, msg protoreflect.MessageDescriptor, resolver protodesc.Resolver) error {
+	var _, err = RejectUnknownFields(bz, msg, false, resolver)
+	return err
+}
+
 // RejectUnknownFields rejects any bytes bz with an error that has unknown fields for the provided proto.Message type with an
 // option to allow non-critical fields (specified as those fields with bit 11) to pass through. In either case, the
 // hasUnknownNonCriticals will be set to true if non-critical fields were encountered during traversal. This flag can be
@@ -27,6 +32,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		return hasUnknownNonCriticals, nil
 	}
 
+	//fieldDescProtoFromTagNum, _, err := getDescriptorInfo(desc, msg)
 	fields := desc.Fields()
 
 	for len(bz) > 0 {
@@ -34,6 +40,9 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		if m < 0 {
 			return hasUnknownNonCriticals, errors.New("invalid length")
 		}
+		fmt.Printf("tagNum: %d, wireType: %d, m: %d\n", tagNum, wireType, m)
+
+		//fieldDescProto, ok := fieldDescProtoFromTagNum[int32(tagNum)]
 
 		fieldDesc := fields.ByNumber(tagNum)
 		if fieldDesc == nil {
@@ -47,7 +56,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 				// The tag is critical, so report it.
 				return hasUnknownNonCriticals, ErrUnknownField.Wrapf(
 					"%s: {TagNum: %d, WireType:%q}",
-					desc.FullName(), tagNum, wireTypeToString(wireType))
+					desc.FullName(), tagNum, WireTypeToString(wireType))
 			}
 		}
 
@@ -56,7 +65,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		n := protowire.ConsumeFieldValue(tagNum, wireType, bz)
 		if n < 0 {
 			err = fmt.Errorf("could not consume field value for tagNum: %d, wireType: %q; %w",
-				tagNum, wireTypeToString(wireType), protowire.ParseError(n))
+				tagNum, WireTypeToString(wireType), protowire.ParseError(n))
 			return hasUnknownNonCriticals, err
 		}
 		fieldBytes := bz[:n]
@@ -65,6 +74,15 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		// An unknown but non-critical field
 		if fieldDesc == nil {
 			continue
+		}
+
+		fieldName := fieldDesc.FullName()
+		fmt.Printf("fieldName: %s, tagNum: %d, wireType: %s, n: %d\n",
+			fieldName, tagNum, WireTypeToString(wireType), n)
+
+		if !isWireTypeAssignable(wireType, fieldDesc.Kind()) {
+			return hasUnknownNonCriticals, fmt.Errorf(
+				"invalid wire type %s for field %s", WireTypeToString(wireType), fieldDesc.FullName())
 		}
 
 		fieldMessage := fieldDesc.Message()
@@ -122,7 +140,7 @@ type errUnknownField struct {
 // String implements fmt.Stringer.
 func (twt *errUnknownField) String() string {
 	return fmt.Sprintf("errUnknownField %q: {TagNum: %d, WireType:%q}",
-		twt.Desc.FullName(), twt.TagNum, wireTypeToString(twt.WireType))
+		twt.Desc.FullName(), twt.TagNum, WireTypeToString(twt.WireType))
 }
 
 // Error implements the error interface.
@@ -132,7 +150,7 @@ func (twt *errUnknownField) Error() string {
 
 var _ error = (*errUnknownField)(nil)
 
-func wireTypeToString(wt protowire.Type) string {
+func WireTypeToString(wt protowire.Type) string {
 	switch wt {
 	case 0:
 		return "varint"
@@ -149,4 +167,24 @@ func wireTypeToString(wt protowire.Type) string {
 	default:
 		return fmt.Sprintf("unknown type: %d", wt)
 	}
+}
+
+func isWireTypeAssignable(wt protowire.Type, kind protoreflect.Kind) bool {
+	switch kind {
+	case protoreflect.Int32Kind, protoreflect.Int64Kind, protoreflect.Sint32Kind, protoreflect.Sint64Kind,
+		protoreflect.Uint32Kind, protoreflect.Uint64Kind,
+		protoreflect.BoolKind, protoreflect.EnumKind:
+		return wt == protowire.VarintType
+
+	case protoreflect.Fixed64Kind, protoreflect.Sfixed64Kind, protoreflect.DoubleKind:
+		return wt == protowire.Fixed64Type
+
+	case protoreflect.StringKind, protoreflect.BytesKind, protoreflect.MessageKind, protoreflect.GroupKind:
+		return wt == protowire.BytesType
+
+	case protoreflect.Fixed32Kind, protoreflect.Sfixed32Kind, protoreflect.FloatKind:
+		return wt == protowire.Fixed32Type
+	}
+
+	return false
 }

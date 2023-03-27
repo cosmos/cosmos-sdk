@@ -118,7 +118,8 @@ func TestFileStreamingService(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	testStreamingService, err := NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
+	var err error
+	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
 	require.Nil(t, err)
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)

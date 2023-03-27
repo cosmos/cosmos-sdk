@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Create a file with all core Cosmos SDK pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
@@ -103,7 +103,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
@@ -182,7 +182,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -205,7 +205,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Display go version
         run: go version
       - name: Install runsim
@@ -222,7 +222,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Display go version
         run: go version
       - uses: technote-space/get-diff-action@v6.0.1

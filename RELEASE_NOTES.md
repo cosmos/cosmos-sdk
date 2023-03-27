@@ -1,8 +1,8 @@
-# Cosmos SDK v0.46.7 Release Notes
+# Cosmos SDK v0.46.11 Release Notes
 
-This release introduces bug fixes and improvements. Notably, the upgrade to Tendermint [v0.34.24](https://github.com/tendermint/tendermint/releases/tag/v0.34.24).
-
-Please read the release notes of [v0.46.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.5) if you are upgrading from `<=0.46.4`.
+The SDK sets its minimum version to Go 1.19. This is not because the SDK uses new Go 1.19 functionalities, but to signal that we recommend chains to upgrade to Go 1.19 — Go 1.18 is not supported by the Go Team anymore.
+Note, that SDK recommends chains to use the same Go version across all of their network.
+We recommend, as well, chains to perform a **coordinated upgrade** when migrating from Go 1.18 to Go 1.19.
 
 A critical vulnerability has been fixed in the group module. For safety, `v0.46.5` and `v0.46.6` are retracted, even though chains not using the group module are not affected. When using the group module, please upgrade immediately to `v0.46.7`.
 

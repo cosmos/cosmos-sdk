@@ -833,7 +833,7 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 			} else {
 				require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 			}
-			// ToDo check the errors for each message
+
 			resData := sdk.TxMsgData{}
 			err = proto.Unmarshal(res.Data, &resData)
 			require.NoError(t, err)
@@ -844,7 +844,7 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 					if success {
 						require.Equal(t, "/MsgCreateCounterResponse", resData.MsgResponses[i].TypeUrl)
 					} else {
-						require.Equal(t, "/cosmos.tx.v1beta1.MsgFailureResponse", resData.MsgResponses[i].TypeUrl)
+						require.Equal(t, "/cosmos.msg.v1.MsgFailureResponse", resData.MsgResponses[i].TypeUrl)
 					}
 				}
 			}

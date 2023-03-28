@@ -17,6 +17,11 @@ const (
 
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
+
+	// MissedBlockWindowChunkSize defines the chunk size of a missed block window
+	// bit array. Chunks are used to reduce the size and write overhead of IAVL
+	// nodes.
+	MissedBlockWindowChunkSize int16 = 1024 // 2^10
 )
 
 // Keys for slashing store

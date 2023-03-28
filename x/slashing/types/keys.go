@@ -37,7 +37,7 @@ const (
 //
 // - 0x01<consAddrLen (1 Byte)><consAddress_Bytes>: ValidatorSigningInfo
 //
-// - 0x02<consAddrLen (1 Byte)><consAddress_Bytes><chunk_index>: bitmap_chunk (MissedBlockBitmapChunkSize bytes)
+// - 0x02<consAddrLen (1 Byte)><consAddress_Bytes><chunk_index>: bitmap_chunk
 //
 // - 0x03<accAddrLen (1 Byte)><accAddr_Bytes>: cryptotypes.PubKey
 

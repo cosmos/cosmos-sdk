@@ -74,7 +74,7 @@ When not using depinject, the `runtime.NewKVStoreService` method can be used to 
 ```diff
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
   appCodec,
-+ keys[consensusparamtypes.StoreKey]
+- keys[consensusparamtypes.StoreKey]
 + runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 )

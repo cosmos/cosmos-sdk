@@ -4,10 +4,12 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/circuit/types"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"cosmossdk.io/x/circuit/types"
 )
 
 var addresses = []string{
@@ -27,7 +29,7 @@ type fixture struct {
 
 func setupFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("circuit")
-	keeperX := NewKeeper(mockStoreKey, addresses[0], testutil.NewBech32Codec())
+	keeperX := NewKeeper(mockStoreKey, addresses[0], addresscodec.NewBech32Codec("cosmos"))
 	mockMsgURL := "mock_url"
 	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})

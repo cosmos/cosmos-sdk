@@ -3,10 +3,10 @@ package keeper
 import (
 	proto "github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 )
 
 // Keeper defines the circuit module's keeper.
@@ -15,11 +15,11 @@ type Keeper struct {
 
 	authority []byte
 
-	addressCodec sdkaddress.Codec
+	addressCodec address.Codec
 }
 
 // NewKeeper constructs a new Circuit Keeper instance
-func NewKeeper(storeKey storetypes.StoreKey, authority string, addressCodec sdkaddress.Codec) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, authority string, addressCodec address.Codec) Keeper {
 	auth, err := addressCodec.StringToBytes(authority)
 	if err != nil {
 		panic(err)

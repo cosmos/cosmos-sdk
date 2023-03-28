@@ -7,6 +7,7 @@ import (
 	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	store "cosmossdk.io/store/types"
@@ -17,7 +18,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"

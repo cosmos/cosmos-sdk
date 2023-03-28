@@ -9,6 +9,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gotest.tools/v3/assert"
@@ -24,7 +25,7 @@ type fixture struct {
 
 func initFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	k := keeper.NewKeeper(mockStoreKey, "mock_address", testutil.NewBech32Codec())
+	k := keeper.NewKeeper(mockStoreKey, "mock_address", addresscodec.NewBech32Codec("cosmos"))
 
 	return &fixture{
 		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),

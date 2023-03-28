@@ -1,8 +1,10 @@
 package autocli
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"context"
 	"fmt"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -41,6 +43,7 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Version:    options.Version,
 	}
 
+	cmd.SetContext(context.Background())
 	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err
@@ -108,11 +111,9 @@ func (b *Builder) enhanceCommandCommon(cmd *cobra.Command, moduleOptions map[str
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	var err error
 	outputType := cmd.Flag(flags.FlagOutput)
-	if outputType == nil {
-		return fmt.Errorf("output flag not found")
-
-	}
-	if outputType.Value.String() == "text" {
+	// if the output type is text, convert the json to yaml
+	// if output type is json or nil, default to json
+	if outputType != nil && outputType.Value.String() == "text" {
 		out, err = yaml.JSONToYAML(out)
 		if err != nil {
 			return err

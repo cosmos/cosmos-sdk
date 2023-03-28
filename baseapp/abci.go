@@ -67,7 +67,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		err := app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+		err := app.StoreConsensusParams(app.deliverState.ctx, *req.ConsensusParams)
 		if err != nil {
 			panic(err)
 		}
@@ -239,9 +239,8 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
-	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
-		res.ConsensusParamUpdates = cp
-	}
+	cp := app.GetConsensusParams(app.deliverState.ctx)
+	res.ConsensusParamUpdates = &cp
 
 	// call the streaming service hook with the EndBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
@@ -880,7 +879,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.
 	cp := app.GetConsensusParams(app.deliverState.ctx)
-	if cp != nil && cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
+	if cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
 

@@ -13,5 +13,3 @@ Additionally, the SDK includes in-place migrations for its core modules. These i
 Migration from a version older than the two last major releases is not supported.
 
 When migrating from a previous version, refer to the `UPGRADING.md` and the `CHANGELOG` of the version you are migrating to.
-
-This document contains all the migration guides to update your app and modules to the current Cosmos SDK.

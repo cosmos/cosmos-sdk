@@ -69,7 +69,7 @@ func NewBaseSendKeeper(
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseSendKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := ak.StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
@@ -120,7 +120,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 		return err
 	}
 
-	inAddress, err := sdk.AccAddressFromBech32(input.Address)
+	inAddress, err := k.ak.StringToBytes(input.Address)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 	)
 
 	for _, out := range outputs {
-		outAddress, err := sdk.AccAddressFromBech32(out.Address)
+		outAddress, err := k.ak.StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}

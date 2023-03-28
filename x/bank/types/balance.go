@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"sort"
 
+	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
@@ -13,8 +14,8 @@ import (
 var _ exported.GenesisBalance = (*Balance)(nil)
 
 // GetAddress returns the account address of the Balance object.
-func (b Balance) GetAddress() sdk.AccAddress {
-	return sdk.MustAccAddressFromBech32(b.Address)
+func (b Balance) GetAddress(ac address.Codec) ([]byte, error) {
+	return ac.StringToBytes(b.Address)
 }
 
 // GetCoins returns the account coins of the Balance object.

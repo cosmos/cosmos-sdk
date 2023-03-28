@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -128,12 +129,14 @@ func TestBalance_GetAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt := tt
+		ac := address.NewBech32Codec("cosmos")
 		t.Run(tt.name, func(t *testing.T) {
 			b := bank.Balance{Address: tt.Address}
 			if tt.wantPanic {
-				require.Panics(t, func() { b.GetAddress() })
+				require.Panics(t, func() { b.GetAddress(ac) })
 			} else {
-				require.False(t, b.GetAddress().Empty())
+				_, err := b.GetAddress(ac)
+				require.Error(t, err)
 			}
 		})
 	}
@@ -165,7 +168,13 @@ func TestSanitizeBalances(t *testing.T) {
 		for j := i + 1; j < len(sorted); j++ {
 			aj := sorted[j]
 
-			if got := bytes.Compare(ai.GetAddress(), aj.GetAddress()); got > 0 {
+			ac := address.NewBech32Codec("cosmos")
+
+			aiAddr, err := ai.GetAddress(ac)
+			require.NoError(t, err)
+			ajAddr, err := aj.GetAddress(ac)
+			require.NoError(t, err)
+			if got := bytes.Compare(aiAddr, ajAddr); got > 0 {
 				t.Errorf("Balance(%d) > Balance(%d)", i, j)
 			}
 		}

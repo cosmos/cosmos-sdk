@@ -1,6 +1,7 @@
 package exported
 
 import (
+	"cosmossdk.io/core/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -8,7 +9,7 @@ import (
 // GenesisBalance defines a genesis balance interface that allows for account
 // address and balance retrieval.
 type GenesisBalance interface {
-	GetAddress() sdk.AccAddress
+	GetAddress(address.Codec) ([]byte, error)
 	GetCoins() sdk.Coins
 }
 

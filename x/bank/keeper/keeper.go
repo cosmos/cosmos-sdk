@@ -48,6 +48,11 @@ type Keeper interface {
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
+	// StringToBytes decodes text to bytes
+	StringToBytes(text string) ([]byte, error)
+	// BytesToString encodes bytes to text
+	BytesToString(bz []byte) (string, error)
+
 	types.QueryServer
 }
 
@@ -90,7 +95,7 @@ func NewBaseKeeper(
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := ak.StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
@@ -466,4 +471,12 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	_ = k.Supply.Walk(ctx, nil, func(s string, m math.Int) bool {
 		return cb(sdk.NewCoin(s, m))
 	})
+}
+
+func (k BaseKeeper) StringToBytes(s string) ([]byte, error) {
+	return k.ak.StringToBytes(s)
+}
+
+func (k BaseKeeper) BytesToString(s []byte) (string, error) {
+	return k.ak.BytesToString(s)
 }

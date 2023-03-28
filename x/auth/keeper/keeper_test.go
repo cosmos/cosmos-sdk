@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
+
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -46,6 +48,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
 
@@ -60,7 +63,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
-		key,
+		storeService,
 		types.ProtoBaseAccount,
 		maccPerms,
 		"cosmos",

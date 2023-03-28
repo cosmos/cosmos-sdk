@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/log v0.1.0 // indirect
-	cosmossdk.io/math v1.0.0-rc.0 // indirect
+	cosmossdk.io/math v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
@@ -87,7 +87,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/exp v0.0.0-20230315142452-642cacee5cc0 // indirect
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect

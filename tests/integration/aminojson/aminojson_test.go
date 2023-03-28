@@ -415,9 +415,11 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
 		"auth/module_account": {
 			gogo: &authtypes.ModuleAccount{
-				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: []string{}},
+				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: []string{},
+			},
 			pulsar: &authapi.ModuleAccount{
-				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}},
+				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{},
+			},
 			roundTripUnequal: true,
 		},
 		"auth/base_account": {
@@ -426,9 +428,11 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		},
 		"authz/msg_grant": {
 			gogo: &authztypes.MsgGrant{
-				Grant: authztypes.Grant{Expiration: &now, Authorization: genericAuth}},
+				Grant: authztypes.Grant{Expiration: &now, Authorization: genericAuth},
+			},
 			pulsar: &authzapi.MsgGrant{
-				Grant: &authzapi.Grant{Expiration: timestamppb.New(now), Authorization: genericAuthPulsar}},
+				Grant: &authzapi.Grant{Expiration: timestamppb.New(now), Authorization: genericAuthPulsar},
+			},
 		},
 		"authz/msg_update_params": {
 			gogo:   &authtypes.MsgUpdateParams{Params: authtypes.Params{TxSigLimit: 10}},
@@ -482,12 +486,14 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"consensus/evidence_params/big_duration": {
 			gogo: &gov_v1beta1_types.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
 			pulsar: &gov_v1beta1_api.VotingParams{VotingPeriod: &durationpb.Duration{
-				Seconds: rapidproto.MaxDurationSeconds, Nanos: 999999999}},
+				Seconds: rapidproto.MaxDurationSeconds, Nanos: 999999999,
+			}},
 		},
 		"consensus/evidence_params/too_big_duration": {
 			gogo: &gov_v1beta1_types.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
 			pulsar: &gov_v1beta1_api.VotingParams{VotingPeriod: &durationpb.Duration{
-				Seconds: rapidproto.MaxDurationSeconds + 1, Nanos: 999999999}},
+				Seconds: rapidproto.MaxDurationSeconds + 1, Nanos: 999999999,
+			}},
 			pulsarMarshalFails: true,
 		},
 		// amino.dont_omitempty + empty/nil lists produce some surprising results
@@ -521,7 +527,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"slashing/params/dec": {
 			gogo: &slashingtypes.Params{
 				DowntimeJailDuration: 1e9 + 7,
-				MinSignedPerWindow:   types.NewDec(10)},
+				MinSignedPerWindow:   types.NewDec(10),
+			},
 			pulsar: &slashingapi.Params{
 				DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7},
 				MinSignedPerWindow:   dec10bz,
@@ -548,11 +555,13 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo: &stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{"foo"}},
-				}},
+				},
+			},
 			pulsar: &stakingapi.StakeAuthorization{
 				Validators: &stakingapi.StakeAuthorization_AllowList{
 					AllowList: &stakingapi.StakeAuthorization_Validators{Address: []string{"foo"}},
-				}},
+				},
+			},
 		},
 		"vesting/base_account_empty": {
 			gogo:   &vestingtypes.BaseVestingAccount{BaseAccount: &authtypes.BaseAccount{}},
@@ -663,6 +672,26 @@ func TestSendAuthorization(t *testing.T) {
 	// at this point, pulsar.SpendLimit = [], and gogo.SpendLimit = nil, but they will both marshal to `[]`
 	// this is *only* possible because of Cosmos SDK's custom MarshalJSON method for Coins
 	require.Equal(t, string(legacyAminoJson), string(aminoJson))
+}
+
+func TestDecimalMutation(t *testing.T) {
+	encCfg := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{})
+	rates := &stakingtypes.CommissionRates{}
+	rateBz, _ := encCfg.Amino.MarshalJSON(rates)
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	_, err := gogoproto.Marshal(rates)
+	require.NoError(t, err)
+	rateBz, _ = encCfg.Amino.MarshalJSON(rates)
+
+	// these assertions show behavior prior to the merge of https://github.com/cosmos/cosmos-sdk/pull/15506
+	// and should be updated to reflect the new behavior once a release of math is made and updated in ./tests/go.mod
+	// require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	// require.Equal(t,
+	// 	`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
+	// 	string(rateBz))
+
+	// new behavior
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
 }
 
 func postFixPulsarMessage(msg proto.Message) {

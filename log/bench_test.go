@@ -27,7 +27,7 @@ func BenchmarkLoggers(b *testing.B) {
 		{name: "single string", keyVals: []any{"foo", "bar"}},
 	}
 
-	benchCases := append(nopCases, []benchCase{ //nolint:gocritic // we intend to append to a different slice.
+	benchCases := append(nopCases, []benchCase{
 		{
 			name:    "single small int",
 			keyVals: []any{"foo", 1},

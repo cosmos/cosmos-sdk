@@ -24,6 +24,7 @@ linters:
     - staticcheck
     - revive
     - stylecheck
+    - thelper
     - typecheck
     - unconvert
     - unused
@@ -53,15 +54,16 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  gocritic:
+    disabled-checks:
+      - appendAssign
+      - ifElseChain
   gofumpt:
     # Choose whether to use the extra rules.
     # Default: false
     extra-rules: true
   dogsled:
     max-blank-identifiers: 4
-  maligned:
-    # print struct with more effective memory layout or not, false by default
-    suggest-new: true
   nolintlint:
     allow-unused: false
     allow-leading-space: true

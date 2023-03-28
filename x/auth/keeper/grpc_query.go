@@ -35,7 +35,7 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	ctx := sdk.UnwrapSDKContext(c)
 	address := ak.GetAccountAddressByID(ctx, accID)
 	if len(address) == 0 {
-		return nil, status.Errorf(codes.ErrNotFound, "account address not found with account number %d", req.Id)
+		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
 
 	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
@@ -84,7 +84,7 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 	}
 	account := ak.GetAccount(ctx, addr)
 	if account == nil {
-		return nil, status.Errorf(codes.ErrNotFound, "account %s not found", req.Address)
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
 	any, err := codectypes.NewAnyWithValue(account)
@@ -126,7 +126,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	for _, moduleName := range sortedPermAddrs {
 		account := ak.GetModuleAccount(ctx, moduleName)
 		if account == nil {
-			return nil, status.Errorf(codes.ErrNotFound, "account %s not found", moduleName)
+			return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
 		}
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
@@ -153,7 +153,7 @@ func (ak AccountKeeper) ModuleAccountByName(c context.Context, req *types.QueryM
 
 	account := ak.GetModuleAccount(ctx, moduleName)
 	if account == nil {
-		return nil, status.Errorf(codes.ErrNotFound, "account %s not found", moduleName)
+		return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
 	}
 	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
@@ -229,7 +229,7 @@ func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccou
 
 	account := ak.GetAccount(ctx, addr)
 	if account == nil {
-		return nil, status.Errorf(codes.ErrNotFound, "account %s not found", req.Address)
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
 	pkAny, err := codectypes.NewAnyWithValue(account.GetPubKey())

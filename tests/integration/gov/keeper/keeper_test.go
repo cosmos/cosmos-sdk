@@ -36,6 +36,7 @@ type fixture struct {
 // new app.StakingKeeper in `createValidators` which is used in most of the
 // gov keeper tests.
 func initFixture(t *testing.T) *fixture {
+	t.Helper()
 	f := &fixture{}
 
 	app := simapp.Setup(t, false)

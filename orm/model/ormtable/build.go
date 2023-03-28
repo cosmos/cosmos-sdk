@@ -109,7 +109,7 @@ func Build(options Options) (Table, error) {
 		}
 	case singletonDesc != nil:
 		if singletonDesc.Id == 0 {
-			return nil, ormerrors.ErrInvalidTableId.Wrapf("%s", messageDescriptor.FullName())
+			return nil, ormerrors.ErrInvalidTableID.Wrapf("%s", messageDescriptor.FullName())
 		}
 
 		prefix := encodeutil.AppendVarUInt32(options.Prefix, singletonDesc.Id)
@@ -134,7 +134,7 @@ func Build(options Options) (Table, error) {
 
 	tableID := tableDesc.Id
 	if tableID == 0 {
-		return nil, ormerrors.ErrInvalidTableId.Wrapf("table %s", messageDescriptor.FullName())
+		return nil, ormerrors.ErrInvalidTableID.Wrapf("table %s", messageDescriptor.FullName())
 	}
 
 	prefix := options.Prefix
@@ -174,11 +174,11 @@ func Build(options Options) (Table, error) {
 	for _, idxDesc := range tableDesc.Index {
 		id := idxDesc.Id
 		if id == 0 || id >= indexIDLimit {
-			return nil, ormerrors.ErrInvalidIndexId.Wrapf("index on table %s with fields %s, invalid id %d", messageDescriptor.FullName(), idxDesc.Fields, id)
+			return nil, ormerrors.ErrInvalidIndexID.Wrapf("index on table %s with fields %s, invalid id %d", messageDescriptor.FullName(), idxDesc.Fields, id)
 		}
 
 		if _, ok := table.entryCodecsByID[id]; ok {
-			return nil, ormerrors.ErrDuplicateIndexId.Wrapf("id %d on table %s", id, messageDescriptor.FullName())
+			return nil, ormerrors.ErrDuplicateIndexID.Wrapf("id %d on table %s", id, messageDescriptor.FullName())
 		}
 
 		idxFields := fieldnames.CommaSeparatedFieldNames(idxDesc.Fields)

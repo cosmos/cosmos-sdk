@@ -37,7 +37,7 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 
 	evidence, _ := k.GetEvidence(ctx, decodedHash)
 	if evidence == nil {
-		return nil, status.Errorf(codes.ErrNotFound, "evidence %s not found", req.Hash)
+		return nil, status.Errorf(codes.NotFound, "evidence %s not found", req.Hash)
 	}
 
 	msg, ok := evidence.(proto.Message)

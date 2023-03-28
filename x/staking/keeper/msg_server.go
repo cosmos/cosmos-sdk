@@ -409,7 +409,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, status.Errorf(
-			codes.ErrNotFound,
+			codes.NotFound,
 			"unbonding delegation with delegator %s not found for validator %s",
 			msg.DelegatorAddress, msg.ValidatorAddress,
 		)

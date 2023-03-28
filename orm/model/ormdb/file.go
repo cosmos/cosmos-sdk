@@ -77,7 +77,7 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 
 		id := table.ID()
 		if _, ok := schema.tablesByID[id]; ok {
-			return nil, ormerrors.ErrInvalidTableId.Wrapf("duplicate ID %d for %s", id, tableName)
+			return nil, ormerrors.ErrInvalidTableID.Wrapf("duplicate ID %d for %s", id, tableName)
 		}
 		schema.tablesByID[id] = table
 

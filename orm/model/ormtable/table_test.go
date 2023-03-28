@@ -763,9 +763,7 @@ func (m *IndexModel) Less(i, j int) bool {
 }
 
 func (m *IndexModel) Swap(i, j int) {
-	x := m.data[i]
-	m.data[i] = m.data[j]
-	m.data[j] = x
+	m.data[i], m.data[j] = m.data[j], m.data[i]
 }
 
 var _ sort.Interface = &IndexModel{}

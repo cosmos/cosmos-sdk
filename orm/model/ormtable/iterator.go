@@ -67,7 +67,7 @@ func prefixIterator(iteratorStore kv.ErrReadOnlyStore, backend ReadBackend, inde
 		var start []byte
 		if len(options.Cursor) != 0 {
 			// must start right after cursor
-			start = append(options.Cursor, 0x0) //nolint:gocritic // we'd like to append to this slice
+			start = append(options.Cursor, 0x0) 
 		} else {
 			start = prefixBz
 		}
@@ -137,7 +137,7 @@ func rangeIterator(iteratorStore kv.ErrReadOnlyStore, reader ReadBackend, index 
 	var res Iterator
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
-			startBz = append(options.Cursor, 0) //nolint:gocritic // we'd like to append to this slice
+			startBz = append(options.Cursor, 0) 
 		}
 
 		if fullEndKey {

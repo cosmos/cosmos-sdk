@@ -99,7 +99,7 @@ func FromGRPCToRosettaError(err error) *Error {
 		return WrapError(ErrUnknown, err.Error())
 	}
 	switch status.Code() {
-	case grpccodes.ErrNotFound:
+	case grpccodes.NotFound:
 		return WrapError(ErrErrNotFound, status.Message())
 	case grpccodes.FailedPrecondition:
 		return WrapError(ErrBadArgument, status.Message())

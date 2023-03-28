@@ -510,7 +510,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 }
 
 func wrapKeyErrNotFound(err error, msg string) error {
-	if err == keyring.ErrKeyErrNotFound {
+	if err == keyring.ErrKeyNotFound {
 		return errorsmod.Wrap(sdkerrors.ErrKeyErrNotFound, msg)
 	}
 	return err
@@ -827,19 +827,19 @@ func (ks keystore) writeRecord(k *Record) error {
 // In case of inconsistent keyring, it recovers it automatically.
 func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 	_, errAddr := ks.db.Get(addrHexKeyAsString(addr))
-	if errAddr != nil && !errors.Is(errAddr, keyring.ErrKeyErrNotFound) {
+	if errAddr != nil && !errors.Is(errAddr, keyring.ErrKeyNotFound) {
 		return false, errAddr
 	}
 
 	_, errInfo := ks.db.Get(infoKey(name))
 	if errInfo == nil {
 		return true, nil // uid lookup succeeds - info exists
-	} else if !errors.Is(errInfo, keyring.ErrKeyErrNotFound) {
+	} else if !errors.Is(errInfo, keyring.ErrKeyNotFound) {
 		return false, errInfo // received unexpected error - returns
 	}
 
 	// looking for an issue, record with meta (getByAddress) exists, but record with public key itself does not
-	if errAddr == nil && errors.Is(errInfo, keyring.ErrKeyErrNotFound) {
+	if errAddr == nil && errors.Is(errInfo, keyring.ErrKeyNotFound) {
 		fmt.Fprintf(os.Stderr, "address \"%s\" exists but pubkey itself does not\n", hex.EncodeToString(addr.Bytes()))
 		fmt.Fprintln(os.Stderr, "recreating pubkey record")
 		err := ks.db.Remove(addrHexKeyAsString(addr))

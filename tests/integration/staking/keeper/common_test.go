@@ -28,6 +28,7 @@ func init() {
 // createTestInput Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
 func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
+	t.Helper()
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
@@ -43,6 +44,7 @@ func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Cont
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
+	t.Helper()
 	return t, exp.MinEqual(&got), "expected:\n%v\ngot:\n%v", exp, got
 }
 

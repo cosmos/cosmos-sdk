@@ -89,6 +89,7 @@ func BenchmarkProtoUnmarshal_parallel(b *testing.B) {
 }
 
 func benchmarkProtoUnmarshal(b *testing.B, parallel bool) {
+	b.Helper()
 	b.ReportAllocs()
 
 	if !parallel {

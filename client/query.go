@@ -119,7 +119,7 @@ func sdkErrorToGRPCError(resp abci.ResponseQuery) error {
 	case sdkerrors.ErrUnauthorized.ABCICode():
 		return status.Error(codes.Unauthenticated, resp.Log)
 	case sdkerrors.ErrKeyErrNotFound.ABCICode():
-		return status.Error(codes.ErrNotFound, resp.Log)
+		return status.Error(codes.NotFound, resp.Log)
 	default:
 		return status.Error(codes.Unknown, resp.Log)
 	}

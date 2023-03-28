@@ -1245,26 +1245,26 @@ func TestBalanceTrackingEvents(t *testing.T) {
 	for _, e := range f.ctx.EventManager().ABCIEvents() {
 		switch e.Type {
 		case types.EventTypeCoinBurn:
-			burnedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			burnedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			assert.NilError(t, err)
 			supply = supply.Sub(burnedCoins...)
 
 		case types.EventTypeCoinMint:
-			mintedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			mintedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			assert.NilError(t, err)
 			supply = supply.Add(mintedCoins...)
 
 		case types.EventTypeCoinSpent:
-			coinsSpent, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			coinsSpent, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			assert.NilError(t, err)
-			spender, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			spender, err := sdk.AccAddressFromBech32(e.Attributes[0].Value)
 			assert.NilError(t, err)
 			balances[spender.String()] = balances[spender.String()].Sub(coinsSpent...)
 
 		case types.EventTypeCoinReceived:
-			coinsRecv, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			coinsRecv, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			assert.NilError(t, err)
-			receiver, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			receiver, err := sdk.AccAddressFromBech32(e.Attributes[0].Value)
 			assert.NilError(t, err)
 			balances[receiver.String()] = balances[receiver.String()].Add(coinsRecv...)
 		}
@@ -1799,8 +1799,8 @@ func TestMigrator_Migrate3to4(t *testing.T) {
 			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
 			assert.NilError(t, migrator.Migrate3to4(ctx))
 			newParams := bankKeeper.GetParams(ctx)
-			assert.Assert(t, len(newParams.SendEnabled) == 0)
-			for _, se := range params.SendEnabled {
+			assert.Assert(t, len(newParams.SendEnabled) == 0) //nolint:staticcheck // SA1019: types.Params.SendEnabled is deprecated: Use SendEnabled instead.
+			for _, se := range params.SendEnabled {           //nolint:staticcheck // SA1019: types.Params.SendEnabled is deprecated: Use SendEnabled instead.
 				actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
 				assert.Equal(t, se.Enabled, actual, se.Denom)
 			}
@@ -1814,7 +1814,7 @@ func TestSetParams(t *testing.T) {
 
 	ctx, bankKeeper := f.ctx, f.bankKeeper
 	params := types.NewParams(true)
-	params.SendEnabled = []*types.SendEnabled{
+	params.SendEnabled = []*types.SendEnabled{ //nolint:staticcheck // SA1019: types.Params.SendEnabled is deprecated: Use SendEnabled instead.
 		{Denom: "paramscointrue", Enabled: true},
 		{Denom: "paramscoinfalse", Enabled: false},
 	}
@@ -1823,7 +1823,7 @@ func TestSetParams(t *testing.T) {
 	t.Run("stored params are as expected", func(t *testing.T) {
 		actual := bankKeeper.GetParams(ctx)
 		assert.Assert(t, actual.DefaultSendEnabled, "DefaultSendEnabled")
-		assert.Assert(t, len(actual.SendEnabled) == 0, "SendEnabled")
+		assert.Assert(t, len(actual.SendEnabled) == 0, "SendEnabled") //nolint:staticcheck // SA1019: types.Params.SendEnabled is deprecated: Use SendEnabled instead.
 	})
 
 	t.Run("send enabled params converted to store", func(t *testing.T) {

@@ -90,6 +90,7 @@ func initFixture(t assert.TestingT) *fixture {
 }
 
 func setAccountBalance(t *testing.T, f *fixture, addr sdk.AccAddress, amount int64) json.RawMessage {
+	t.Helper()
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, addr)
 	f.accountKeeper.SetAccount(f.ctx, acc)
 

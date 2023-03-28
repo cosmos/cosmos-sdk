@@ -18,6 +18,7 @@ import (
 )
 
 func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) *testClientConn {
+	t.Helper()
 	server := grpc.NewServer()
 	testpb.RegisterQueryServer(server, &testEchoServer{})
 	reflectionv2alpha1.RegisterReflectionServiceServer(server, &testReflectionServer{})

@@ -13,14 +13,14 @@ func IsErrNotFound(err error) bool {
 }
 
 var (
-	ErrInvalidTableId                   = errors.New(codespace, 1, "invalid or missing table or single id, need a non-zero value")
+	ErrInvalidTableID                   = errors.New(codespace, 1, "invalid or missing table or single id, need a non-zero value")
 	ErrMissingPrimaryKey                = errors.New(codespace, 2, "table is missing primary key")
 	ErrErrInvalidKeyFieldsDefinition    = errors.New(codespace, 3, "invalid field definition for key")
 	ErrIDuplicateKeyField               = errors.New(codespace, 4, "duplicate field in key")
 	ErrFieldErrNotFound                 = errors.New(codespace, 5, "field not found")
 	ErrInvalidAutoIncrementKey          = errors.New(codespace, 6, "an auto-increment primary key must specify a single uint64 field")
-	ErrInvalidIndexId                   = errors.New(codespace, 7, "invalid or missing index id, need a value >= 0 and < 32768")
-	ErrDuplicateIndexId                 = errors.New(codespace, 8, "duplicate index id")
+	ErrInvalidIndexID                   = errors.New(codespace, 7, "invalid or missing index id, need a value >= 0 and < 32768")
+	ErrDuplicateIndexID                 = errors.New(codespace, 8, "duplicate index id")
 	ErrPrimaryKeyErrConstraintViolation = errors.New(codespace, 9, "object with primary key already exists")
 	ErrPrimaryKeyInvalidOnUpdate        = errors.New(codespace, 11, "can't update object with missing or invalid primary key")
 	ErrAutoIncrementKeyAlreadySet       = errors.New(codespace, 12, "can't create with auto-increment primary key already set")

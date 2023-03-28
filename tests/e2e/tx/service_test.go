@@ -824,7 +824,7 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 	encodedTx, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
-	invalidTxBytes := append(encodedTx, byte(0o00))
+	invalidTxBytes := append(encodedTx, byte(0o00)) 
 
 	testCases := []struct {
 		name      string
@@ -866,7 +866,7 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 	encodedTxBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
-	invalidTxBytes := append(encodedTxBytes, byte(0o00))
+	invalidTxBytes := append(encodedTxBytes, byte(0o00)) 
 
 	testCases := []struct {
 		name      string
@@ -1000,7 +1000,7 @@ func (s *E2ETestSuite) readTestAminoTxBinary() ([]byte, *legacytx.StdTx) {
 func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	encodedTx, stdTx := s.readTestAminoTxBinary()
 
-	invalidTxBytes := append(encodedTx, byte(0o00))
+	invalidTxBytes := append(encodedTx, byte(0o00)) 
 
 	testCases := []struct {
 		name      string
@@ -1039,7 +1039,7 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
 	encodedTx, stdTx := s.readTestAminoTxBinary()
 
-	invalidTxBytes := append(encodedTx, byte(0o00))
+	invalidTxBytes := append(encodedTx, byte(0o00)) 
 
 	testCases := []struct {
 		name      string
@@ -1124,7 +1124,7 @@ type protoTxProvider interface {
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
 // Deprecated: It's used for testing the deprecated Simulate gRPC endpoint
 // using a proto Tx field and for testing the TxEncode endpoint.
-func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
+func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) {
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)

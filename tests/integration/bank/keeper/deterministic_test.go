@@ -57,6 +57,7 @@ type deterministicFixture struct {
 }
 
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
+	t.Helper()
 	f := &deterministicFixture{}
 
 	var interfaceRegistry codectypes.InterfaceRegistry

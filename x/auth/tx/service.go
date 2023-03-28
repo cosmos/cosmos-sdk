@@ -121,7 +121,7 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	result, err := QueryTx(s.clientCtx, req.Hash)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			return nil, status.Errorf(codes.ErrNotFound, "tx not found: %s", req.Hash)
+			return nil, status.Errorf(codes.NotFound, "tx not found: %s", req.Hash)
 		}
 
 		return nil, err

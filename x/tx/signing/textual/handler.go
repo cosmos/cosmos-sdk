@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -20,6 +22,8 @@ import (
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
 
+const specVersion = 0
+
 // CoinMetadataQueryFn defines a function that queries state for the coin denom
 // metadata. It is meant to be passed as an argument into `NewSignModeHandler`.
 type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error)
@@ -27,13 +31,28 @@ type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.M
 // ValueRendererCreator is a function returning a textual.
 type ValueRendererCreator func(protoreflect.FieldDescriptor) ValueRenderer
 
-// SignModeHandler holds the configuration for dispatching
-// to specific value renderers for SIGN_MODE_TEXTUAL.
-type SignModeHandler struct {
+// SignModeOptions are options to be passed to Textual's sign mode handler.
+type SignModeOptions struct {
 	// coinMetadataQuerier defines a function to query the coin metadata from
 	// state. It should use bank module's `DenomsMetadata` gRPC query to fetch
 	// each denom's associated metadata, either using the bank keeper (for
 	// server-side code) or a gRPC query client (for client-side code).
+	CoinMetadataQuerier CoinMetadataQueryFn
+
+	// FileResolver are the protobuf files to use for resolving message
+	// descriptors. If it is nil, the global protobuf registry will be used.
+	FileResolver *protoregistry.Files
+
+	// TypeResolver are the protobuf type resolvers to use for resolving message
+	// types. If it is nil, then a dynamicpb will be used on top of FileResolver.
+	TypeResolver protoregistry.MessageTypeResolver
+}
+
+// SignModeHandler holds the configuration for dispatching
+// to specific value renderers for SIGN_MODE_TEXTUAL.
+type SignModeHandler struct {
+	fileResolver        *protoregistry.Files
+	typeResolver        protoregistry.MessageTypeResolver
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.
 	scalars map[string]ValueRendererCreator
@@ -47,10 +66,31 @@ type SignModeHandler struct {
 }
 
 // NewSignModeHandler returns a new SignModeHandler which generates sign bytes and provides  value renderers.
-func NewSignModeHandler(q CoinMetadataQueryFn) *SignModeHandler {
-	t := &SignModeHandler{coinMetadataQuerier: q}
+func NewSignModeHandler(o SignModeOptions) (*SignModeHandler, error) {
+	if o.CoinMetadataQuerier == nil {
+		return nil, fmt.Errorf("coinMetadataQuerier must be non-empty")
+	}
+	if o.FileResolver == nil {
+		o.FileResolver = protoregistry.GlobalFiles
+	}
+	if o.TypeResolver == nil {
+		o.TypeResolver = protoregistry.GlobalTypes
+	}
+
+	t := &SignModeHandler{
+		coinMetadataQuerier: o.CoinMetadataQuerier,
+		fileResolver:        o.FileResolver,
+		typeResolver:        o.TypeResolver,
+	}
 	t.init()
-	return t
+
+	return t, nil
+}
+
+// SpecVersion returns the spec version this SignModeHandler implementation
+// is following.
+func (r *SignModeHandler) SpecVersion() uint64 {
+	return specVersion
 }
 
 // GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.
@@ -186,3 +226,48 @@ func (r *SignModeHandler) Mode() signingv1beta1.SignMode {
 }
 
 var _ signing.SignModeHandler = &SignModeHandler{}
+
+// getValueFromFieldName is an utility function to get the protoreflect.Value of a
+// proto Message from its field name.
+func getValueFromFieldName(m proto.Message, fieldName string) protoreflect.Value {
+	fd := m.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name(fieldName))
+
+	return m.ProtoReflect().Get(fd)
+}
+
+// coerceToMessage initializes the given desiredMsg (presented as a protov2
+// concrete message) with the values of givenMsg.
+//
+// If givenMsg is a protov2 concrete message of the same type, then it will
+// fast-path to be initialized to the same pointer value.
+// For a dynamicpb message it checks that the names match then uses proto
+// reflection to initialize the fields of desiredMsg.
+// Otherwise throws an error.
+//
+// Example:
+//
+// // Assume `givenCoin` is a dynamicpb.Message representing a Coin
+// coin := &basev1beta1.Coin{}
+// err := coerceToMessage(givenCoin, coin)
+// if err != nil { /* handler error */ }
+// fmt.Println(coin) // Will have the same field values as `givenCoin`
+func coerceToMessage(givenMsg, desiredMsg proto.Message) error {
+	if reflect.TypeOf(givenMsg) == reflect.TypeOf(desiredMsg) {
+		// Below is a way of saying "*desiredMsg = *givenMsg" using go reflect
+		reflect.Indirect(reflect.ValueOf(desiredMsg)).Set(reflect.Indirect(reflect.ValueOf(givenMsg)))
+		return nil
+	}
+
+	givenName, desiredName := givenMsg.ProtoReflect().Descriptor().FullName(), desiredMsg.ProtoReflect().Descriptor().FullName()
+	if givenName != desiredName {
+		return fmt.Errorf("expected dynamicpb.Message with FullName %s, got %s", desiredName, givenName)
+	}
+
+	desiredFields := desiredMsg.ProtoReflect().Descriptor().Fields()
+	for i := 0; i < desiredFields.Len(); i++ {
+		fd := desiredFields.Get(i)
+		desiredMsg.ProtoReflect().Set(fd, getValueFromFieldName(givenMsg, string(fd.Name())))
+	}
+
+	return nil
+}

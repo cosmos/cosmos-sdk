@@ -67,7 +67,7 @@ func AllowanceByExpTimeKey(exp *time.Time) []byte {
 }
 
 // ParseAddressesFromFeeAllowanceKey extracts and returns the granter, grantee from the given key.
-func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddress) {
+func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee []byte) {
 	// key is of format:
 	// 0x00<granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes>
 	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, 1, 1) // ignore key[0] since it is a prefix key
@@ -80,7 +80,7 @@ func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddr
 }
 
 // ParseAddressesFromFeeAllowanceQueueKey extracts and returns the granter, grantee from the given key.
-func ParseAddressesFromFeeAllowanceQueueKey(key []byte) (granter, grantee sdk.AccAddress) {
+func ParseAddressesFromFeeAllowanceQueueKey(key []byte) (granter, grantee []byte) {
 	lenTime := len(sdk.FormatTimeBytes(time.Now()))
 
 	// key is of format:

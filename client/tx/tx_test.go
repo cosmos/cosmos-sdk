@@ -6,13 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,6 +19,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -30,13 +29,8 @@ import (
 )
 
 func newTestTxConfig(t *testing.T) (client.TxConfig, codec.Codec) {
-	var (
-		pcdc codec.ProtoCodecMarshaler
-		cdc  codec.Codec
-	)
-	err := depinject.Inject(clienttestutil.TestConfig, &pcdc, &cdc)
-	require.NoError(t, err)
-	return authtx.NewTxConfig(pcdc, authtx.DefaultSignModes), cdc
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	return authtx.NewTxConfig(codec.NewProtoCodec(encodingConfig.InterfaceRegistry), authtx.DefaultSignModes), encodingConfig.Codec
 }
 
 // mockContext is a mock client.Context to return abitrary simulation response, used to

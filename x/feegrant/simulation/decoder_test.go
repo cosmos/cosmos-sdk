@@ -6,14 +6,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/feegrant/simulation"
-	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 var (
@@ -23,8 +22,8 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	var cdc codec.Codec
-	depinject.Inject(feegranttestutil.AppConfig, &cdc)
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	cdc := encodingConfig.Codec
 	dec := simulation.NewDecodeStore(cdc)
 
 	grant, err := feegrant.NewGrant(granterAddr, granteeAddr, &feegrant.BasicAllowance{

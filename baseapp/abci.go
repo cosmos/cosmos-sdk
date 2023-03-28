@@ -62,19 +62,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.setState(runTxModeDeliver, initHeader)
 	app.setState(runTxModeCheck, initHeader)
 
-	// Use an empty header for prepare and process proposal states. The header
-	// will be overwritten for the first block (see getContextForProposal()) and
-	// cleaned up on every Commit(). Only the ChainID is needed so it's set in
-	// the context.
-	emptyHeader := cmtproto.Header{ChainID: req.ChainId}
-	app.setState(runTxPrepareProposal, emptyHeader)
-	app.setState(runTxProcessProposal, emptyHeader)
-
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+		err := app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if app.initChainer == nil {
@@ -277,6 +272,10 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal method not set")
 	}
 
+	// always reset state given that PrepareProposal can timeout and be called again
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
+	app.setState(runTxPrepareProposal, emptyHeader)
+
 	// CometBFT must never call PrepareProposal with a height of 0.
 	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
@@ -329,6 +328,16 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 	if app.processProposal == nil {
 		panic("app.ProcessProposal is not set")
 	}
+
+	// CometBFT must never call ProcessProposal with a height of 0.
+	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	if req.Height < 1 {
+		panic("ProcessProposal called with invalid height")
+	}
+
+	// always reset state given that ProcessProposal can timeout and be called again
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
+	app.setState(runTxProcessProposal, emptyHeader)
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(app.voteInfos).
@@ -478,12 +487,6 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
-
-	// Reset state to the latest committed but with an empty header to avoid
-	// leaking the header from the last block.
-	emptyHeader := cmtproto.Header{ChainID: app.chainID}
-	app.setState(runTxPrepareProposal, emptyHeader)
-	app.setState(runTxProcessProposal, emptyHeader)
 
 	// empty/reset the deliver state
 	app.deliverState = nil

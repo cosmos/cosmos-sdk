@@ -2,6 +2,12 @@ package autocli
 
 import (
 	"bytes"
+	"context"
+	"net"
+	"testing"
+
+	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
+	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
@@ -9,13 +15,12 @@ import (
 	"gotest.tools/v3/assert"
 
 	"google.golang.org/grpc/credentials/insecure"
-	"net"
-	"testing"
 )
 
 func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) *testClientConn {
 	server := grpc.NewServer()
 	testpb.RegisterQueryServer(server, &testEchoServer{})
+	reflectionv2alpha1.RegisterReflectionServiceServer(server, &testReflectionServer{})
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	assert.NilError(t, err)
 	go func() {
@@ -41,6 +46,10 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 		errorOut:   &bytes.Buffer{},
 	}
 	b := &Builder{
+		Builder: flag.Builder{
+			GetClientConn: func() (grpc.ClientConnInterface, error) {
+				return conn, nil
+			}},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
 		},
@@ -57,3 +66,17 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 	cmd.Execute()
 	return conn
 }
+
+type testReflectionServer struct {
+	reflectionv2alpha1.UnimplementedReflectionServiceServer
+}
+
+func (t testReflectionServer) GetConfigurationDescriptor(_ context.Context, client *reflectionv2alpha1.GetConfigurationDescriptorRequest) (*reflectionv2alpha1.GetConfigurationDescriptorResponse, error) {
+	return &reflectionv2alpha1.GetConfigurationDescriptorResponse{
+		Config: &reflectionv2alpha1.ConfigurationDescriptor{
+			Bech32AccountAddressPrefix: "cosmos",
+		},
+	}, nil
+}
+
+var _ reflectionv2alpha1.ReflectionServiceServer = testReflectionServer{}

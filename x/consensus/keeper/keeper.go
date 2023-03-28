@@ -16,11 +16,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-var (
-	// ParamsPrefix = collections.NewPrefix([]byte{})
-	ParamsPrefix = collections.NewPrefix("Consensus")
-	StoreKey     = "Consensus"
-)
+var StoreKey = "Consensus"
 
 type Keeper struct {
 	storeService storetypes.KVStoreService
@@ -34,7 +30,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, au
 	return Keeper{
 		storeService: storeService,
 		authority:    authority,
-		Params:       collections.NewItem(sb, ParamsPrefix, "Consensus", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+		Params:       collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
 }
 

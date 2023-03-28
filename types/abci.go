@@ -23,7 +23,7 @@ type EndBlocker func(ctx Context, req abci.RequestEndBlock) (abci.ResponseEndBlo
 // has been branched for the new block.
 type PrepareCheckStater func(ctx Context)
 
-// Precommiter runs code during commit before the `deliverState` is reset.
+// Precommiter runs code during commit immediately before the `deliverState` is written to the `rootMultiStore`.
 type Precommiter func(ctx Context)
 
 // PeerFilter responds to p2p filtering queries from Tendermint

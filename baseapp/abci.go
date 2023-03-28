@@ -457,6 +457,10 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
+	if app.precommiter != nil {
+		app.precommiter(app.deliverState.ctx)
+	}
+
 	rms, ok := app.cms.(*rootmulti.Store)
 	if ok {
 		rms.SetCommitHeader(header)
@@ -464,7 +468,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	// Write the DeliverTx state into branched storage and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
-	// MultiStore (app.cms) so when Commit() is called is persists those values.
+	// MultiStore (app.cms) so when Commit() is called it persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
 
@@ -493,10 +497,6 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
-
-	if app.precommiter != nil {
-		app.precommiter(app.deliverState.ctx)
-	}
 
 	// empty/reset the deliver state
 	app.deliverState = nil

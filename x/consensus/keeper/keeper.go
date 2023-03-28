@@ -5,6 +5,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,15 +18,17 @@ var _ exported.ConsensusParamSetter = (*Keeper)(nil)
 type Keeper struct {
 	storeService storetypes.KVStoreService
 	cdc          codec.BinaryCodec
+	event        event.Service
 
 	authority string
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
 	return Keeper{
 		storeService: storeService,
 		cdc:          cdc,
 		authority:    authority,
+		event:        em,
 	}
 }
 

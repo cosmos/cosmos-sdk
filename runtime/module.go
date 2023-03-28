@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -206,6 +205,6 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 	return transientStoreService{key: storeKey}
 }
 
-func ProvideEventService(ctx context.Context, app *AppBuilder) event.Service {
+func ProvideEventService() event.Service {
 	return EventService{}
 }

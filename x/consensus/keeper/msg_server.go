@@ -5,6 +5,7 @@ import (
 
 	cmttypes "github.com/cometbft/cometbft/types"
 
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,7 +37,15 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, err
 	}
 
-	k.Set(ctx, &consensusParams)
+	if err := k.Set(ctx, &consensusParams); err != nil {
+		return nil, err
+	}
+
+	k.event.EventManager(goCtx).EmitKV(
+		goCtx,
+		"update_consensus_params",
+		event.Attribute{Key: "authority", Value: req.Authority},
+		event.Attribute{Key: "parameters", Value: consensusParams.String()})
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }

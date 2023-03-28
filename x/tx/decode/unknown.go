@@ -3,6 +3,7 @@ package decode
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
@@ -98,7 +99,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 				return hasUnknownNonCriticals, err
 			}
 
-			msgName := MessageNameFromTypeURL(a.TypeUrl)
+			msgName := protoreflect.FullName(strings.TrimPrefix(a.TypeUrl, "/"))
 			msgDesc, err := resolver.FindDescriptorByName(msgName)
 			if err != nil {
 				return hasUnknownNonCriticals, err

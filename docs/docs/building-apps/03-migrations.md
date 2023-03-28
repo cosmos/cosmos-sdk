@@ -5,7 +5,7 @@ sidebar_position: 1
 # Migrations
 
 :::note
-This document describes how to upgrade your application. If you are looking specifically for the changes to perform between SDK versions, see the [SDK migrations documentation](https://docs.cosmos.network/main/migrations/intro)
+This document describes how to upgrade your application. If you are looking specifically for the changes to perform between SDK versions, see the [SDK migrations documentation](https://docs.cosmos.network/main/migrations/intro).
 :::
 
 ## Pre-Upgrade Handling

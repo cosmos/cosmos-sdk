@@ -35,4 +35,6 @@ var (
 	ErrLegacyToRecord = errors.New("unable to convert LegacyInfo to Record")
 	// ErrUnknownLegacyType is raised when a LegacyInfo type is unknown.
 	ErrUnknownLegacyType = errors.New("unknown LegacyInfo type")
+	// ErrBackendKeyringIncompatible is raised when a headless system try to prompt a password by using backend os for keyring
+	ErrBackendKeyringIncompatible = errors.New("incompatible keyring backend")
 )

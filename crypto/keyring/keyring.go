@@ -183,6 +183,15 @@ func New(
 		err error
 	)
 
+	if backend == BackendOS {
+		// Check if system is headless in the case of backend is OS
+		// If the system is headless when creating a keyring collection the process will fail
+		// see https://github.com/cosmos/gaia/issues/870
+		if len(os.Getenv("DISPLAY")) == 0 {
+			return nil, errorsmod.Wrap(ErrBackendKeyringIncompatible, "Keyring with the selected 'os' backend is not supported on a headless system. Choose 'file' instead.")
+		}
+	}
+
 	switch backend {
 	case BackendMemory:
 		return NewInMemory(cdc, opts...), err

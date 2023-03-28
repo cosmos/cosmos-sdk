@@ -29,19 +29,6 @@ type IntegrationTestApp struct {
 	QueryServiceHelper *baseapp.QueryServiceTestHelper
 }
 
-// func createIntegrationTestRegistry(msgs ...proto.Message) codectypes.InterfaceRegistry {
-// 	interfaceRegistry := codectypes.NewInterfaceRegistry()
-// 	interfaceRegistry.RegisterInterface("sdk.Msg",
-// 		(*sdk.Msg)(nil),
-// 		msgs...,
-// 	)
-// 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), msgs...)
-// 	fmt.Println("msgs: ", msgs)
-// 	fmt.Println("interface registry: ", interfaceRegistry.ListAllInterfaces())
-
-// 	return interfaceRegistry
-// }
-
 func SetupTestApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *IntegrationTestApp {
 	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
@@ -52,8 +39,6 @@ func SetupTestApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules 
 	}
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
-	// testStore := storetypes.NewKVStoreKey("test")
-
 	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abcitypes.RequestInitChain) (abcitypes.ResponseInitChain, error) {
 		return abcitypes.ResponseInitChain{}, nil
 	}
@@ -65,9 +50,7 @@ func SetupTestApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules 
 	router := baseapp.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(router)
-
 	assert.NilError(t, bApp.LoadLatestVersion())
-	// testdata.RegisterMsgServer(bApp.MsgServiceRouter(), )
 
 	ctx := bApp.NewContext(true, cmtproto.Header{})
 

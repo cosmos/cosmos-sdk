@@ -109,27 +109,6 @@ func (t tableGen) iteratorName() string {
 	return t.msg.GoIdent.GoName + "Iterator"
 }
 
-func (t tableGen) getSig() string {
-	res := "Get" + t.msg.GoIdent.GoName + "("
-	res += t.fieldsArgs(t.primaryKeyFields.Names())
-	res += ") (*" + t.QualifiedGoIdent(t.msg.GoIdent) + ", error)"
-	return res
-}
-
-func (t tableGen) hasSig() string {
-	t.P("Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error)")
-	return ""
-}
-
-func (t tableGen) listSig() string {
-	res := "List" + t.msg.GoIdent.GoName + "("
-	res += t.indexKeyInterfaceName()
-	res += ") ("
-	res += t.iteratorName()
-	res += ", error)"
-	return res
-}
-
 func (t tableGen) fieldArgsFromStringSlice(names []string) string {
 	args := make([]string, len(names))
 	for i, name := range names {

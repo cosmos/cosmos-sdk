@@ -41,10 +41,10 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 		// this allows us to use imported messages, such as timestamppb.Timestamp
 		// in iterators.
 		value := values[i]
-		switch value.(type) {
+		switch value.(type) { //nolint:gocritic,gosimple // we'd like to keep this a switch statement
 		case protoreflect.ProtoMessage:
 			if !reflect.ValueOf(value).IsNil() {
-				value = value.(protoreflect.ProtoMessage).ProtoReflect()
+				value = value.(protoreflect.ProtoMessage).ProtoReflect() //nolint:gosimple //  desired type assertion
 			} else {
 				value = nil
 			}

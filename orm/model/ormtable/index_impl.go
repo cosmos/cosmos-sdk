@@ -120,6 +120,6 @@ func (i indexKeyIndex) readValueFromIndexKey(backend ReadBackend, primaryKey []p
 	return nil
 }
 
-func (p indexKeyIndex) Fields() string {
-	return p.fields.String()
+func (i indexKeyIndex) Fields() string {
+	return i.fields.String()
 }

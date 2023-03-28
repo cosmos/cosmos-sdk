@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func (t tableGen) genIndexKeys() {
@@ -43,45 +42,8 @@ func (t tableGen) genValueFunc() {
 	t.P("}")
 }
 
-func (t tableGen) genIndexMethods(idxKeyName string) {
-	receiverFunc := fmt.Sprintf("func (x %s) ", idxKeyName)
-	t.P(receiverFunc, "id() uint32 { return ", t.table.Id, " /* primary key */ }")
-	t.P(receiverFunc, "values() []interface{} { return x.vs }")
-	t.P(receiverFunc, t.param(t.indexKeyInterfaceName()), "() {}")
-	t.P()
-}
-
-func (t tableGen) genIndexInterfaceGuard(idxKeyName string) {
-	t.P("var _ ", t.indexKeyInterfaceName(), " = ", idxKeyName, "{}")
-	t.P()
-}
-
 func (t tableGen) indexKeyInterfaceName() string {
 	return t.msg.GoIdent.GoName + "IndexKey"
-}
-
-func (t tableGen) genIndexKey(idxKeyName string) {
-	t.P("type ", idxKeyName, " struct {")
-	t.P("vs []interface{}")
-	t.P("}")
-	t.P()
-}
-
-func (t tableGen) indexKeyParts(names []protoreflect.Name) string {
-	cnames := make([]string, len(names))
-	for i, name := range names {
-		cnames[i] = strcase.ToCamel(string(name))
-	}
-	return strings.Join(cnames, "")
-}
-
-func (t tableGen) indexKeyName(names []protoreflect.Name) string {
-	cnames := make([]string, len(names))
-	for i, name := range names {
-		cnames[i] = strcase.ToCamel(string(name))
-	}
-	joinedNames := strings.Join(cnames, "")
-	return t.msg.GoIdent.GoName + joinedNames + "IndexKey"
 }
 
 func (t tableGen) indexStructName(fields []string) string {

@@ -37,7 +37,7 @@ func (b BoolCodec) Compare(v1, v2 protoreflect.Value) int {
 	if v2.IsValid() {
 		b2 = v2.Bool()
 	}
-	if b1 == b2 {
+	if b1 == b2 { //nolint:gocritic // we'd like to keep this if-else chain
 		return 0
 	} else if b1 {
 		return -1

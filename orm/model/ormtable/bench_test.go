@@ -45,32 +45,32 @@ func bench(b *testing.B, newBackend func(testing.TB) ormtable.Backend) {
 		b.StopTimer()
 		ctx := ormtable.WrapContextDefault(newBackend(b))
 		b.StartTimer()
-		benchInsert(b, ctx)
+		benchInsert(ctx, b)
 	})
 	b.Run("update", func(b *testing.B) {
 		b.StopTimer()
 		ctx := ormtable.WrapContextDefault(newBackend(b))
-		benchInsert(b, ctx)
+		benchInsert(ctx, b)
 		b.StartTimer()
-		benchUpdate(b, ctx)
+		benchUpdate(ctx, b)
 	})
 	b.Run("get", func(b *testing.B) {
 		b.StopTimer()
 		ctx := ormtable.WrapContextDefault(newBackend(b))
-		benchInsert(b, ctx)
+		benchInsert(ctx, b)
 		b.StartTimer()
-		benchGet(b, ctx)
+		benchGet(ctx, b)
 	})
 	b.Run("delete", func(b *testing.B) {
 		b.StopTimer()
 		ctx := ormtable.WrapContextDefault(newBackend(b))
-		benchInsert(b, ctx)
+		benchInsert(ctx, b)
 		b.StartTimer()
-		benchDelete(b, ctx)
+		benchDelete(ctx, b)
 	})
 }
 
-func benchInsert(b *testing.B, ctx context.Context) {
+func benchInsert(ctx context.Context, b *testing.B) {
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Insert(ctx, &testpb.Balance{
@@ -81,7 +81,7 @@ func benchInsert(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchUpdate(b *testing.B, ctx context.Context) {
+func benchUpdate(ctx context.Context, b *testing.B) {
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Update(ctx, &testpb.Balance{
@@ -92,7 +92,7 @@ func benchUpdate(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchGet(b *testing.B, ctx context.Context) {
+func benchGet(ctx context.Context, b *testing.B) {
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		balance, err := balanceTable.Get(ctx, fmt.Sprintf("acct%d", i), "bar")
@@ -101,7 +101,7 @@ func benchGet(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchDelete(b *testing.B, ctx context.Context) {
+func benchDelete(ctx context.Context, b *testing.B) {
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Delete(ctx, &testpb.Balance{

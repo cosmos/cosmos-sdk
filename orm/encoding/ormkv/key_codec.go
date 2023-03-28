@@ -177,7 +177,7 @@ func (cdc *KeyCodec) CompareKeys(values1, values2 []protoreflect.Value) int {
 	}
 
 	// values are equal but arrays of different length
-	if j == k {
+	if j == k { //nolint:gocritic // we'd like to keep this if-else chain
 		return 0
 	} else if j < k {
 		return -1
@@ -247,7 +247,7 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 		y := end[i]
 
 		cmp = fieldCdc.Compare(x, y)
-		if cmp > 0 {
+		if cmp > 0 { //nolint:gocritic // we'd like to keep this if-else chain
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 				"start must be before end for field %s",
 				cdc.fieldDescriptors[i].FullName(),

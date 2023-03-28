@@ -74,10 +74,6 @@ func (f fileGen) genStoreStruct(stores []*protogen.Message) {
 	f.P("}")
 }
 
-func (f fileGen) storeAccessorName() string {
-	return f.storeInterfaceName()
-}
-
 func (f fileGen) storeInterfaceName() string {
 	return strcase.ToCamel(f.fileShortName()) + "Store"
 }
@@ -102,14 +98,6 @@ func fileShortName(file *protogen.File) string {
 
 func (f fileGen) messageTableInterfaceName(m *protogen.Message) string {
 	return m.GoIdent.GoName + "Table"
-}
-
-func (f fileGen) messageReaderInterfaceName(m *protogen.Message) string {
-	return m.GoIdent.GoName + "Reader"
-}
-
-func (f fileGen) messageTableVar(m *protogen.Message) string {
-	return f.param(m.GoIdent.GoName + "Table")
 }
 
 func (f fileGen) param(name string) string {

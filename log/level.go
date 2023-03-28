@@ -21,7 +21,7 @@ const defaultLogLevelKey = "*"
 // Example:
 // ParseLogLevel("consensus:debug,mempool:debug,*:error")
 //
-// This function attemps to keep the same behavior as the CometBFT ParseLogLevel
+// This function attempts to keep the same behavior as the CometBFT ParseLogLevel
 // However the level `none` is replaced by `disabled`.
 func ParseLogLevel(levelStr string) (FilterFunc, error) {
 	if levelStr == "" {

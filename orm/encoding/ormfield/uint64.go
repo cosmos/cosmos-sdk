@@ -49,7 +49,7 @@ func compareUint(v1, v2 protoreflect.Value) int {
 	if v2.IsValid() {
 		y = v2.Uint()
 	}
-	if x == y {
+	if x == y { //nolint:gocritic // we'd like to keep this if-else chain
 		return 0
 	} else if x < y {
 		return -1

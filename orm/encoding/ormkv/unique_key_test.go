@@ -46,9 +46,8 @@ func TestUniqueKeyCodec(t *testing.T) {
 		if isTrivialUniqueKey {
 			assert.ErrorContains(t, err, "no new uniqueness constraint")
 			return
-		} else {
-			assert.NilError(t, err)
 		}
+		assert.NilError(t, err)
 
 		for i := 0; i < 100; i++ {
 			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i))

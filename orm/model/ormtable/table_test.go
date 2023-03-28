@@ -473,7 +473,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// now let's update some things
 	for i := 0; i < 5; i++ {
-		data[i].U64 = data[i].U64 * 2
+		data[i].U64 *= 2
 		data[i].Bz = []byte(data[i].Str)
 		err = store.Update(ctx, data[i])
 		assert.NilError(t, err)
@@ -513,7 +513,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 	store2 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
-	assertTablesEqual(t, table, ctx, store2)
+	assertTablesEqual(ctx, store2, t, table)
 
 	// let's delete item 5
 	err = store.DeleteBy(ctx, testpb.ExampleTableU32I64StrIndexKey{}.WithU32I64Str(7, -2, "abe"))
@@ -796,10 +796,10 @@ func TestJSONExportImport(t *testing.T) {
 	store2 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 
-	assertTablesEqual(t, table, store, store2)
+	assertTablesEqual(store, store2, t, table)
 }
 
-func assertTablesEqual(t assert.TestingT, table ormtable.Table, ctx, ctx2 context.Context) {
+func assertTablesEqual(ctx, ctx2 context.Context, t assert.TestingT, table ormtable.Table) {
 	it, err := table.List(ctx, nil)
 	assert.NilError(t, err)
 	it2, err := table.List(ctx2, nil)

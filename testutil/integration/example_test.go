@@ -6,6 +6,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -27,7 +28,7 @@ func TestIntegrationTestExample(t *testing.T) {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
-		keys[authtypes.StoreKey],
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		"cosmos",

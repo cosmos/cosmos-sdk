@@ -277,7 +277,7 @@ decision based on the vote extensions.
 #### Vote Extension Persistence
 
 In order to make any data derived from vote extensions persistent, we propose to
-to allow application developers to "merge" the `processProposalState` into the
+allow application developers to "merge" the `processProposalState` into the
 `finalizeState`, such that when processing transactions during `FinalizeBlock`,
 the base state includes any state changes from processing votes extensions
 (see [`FinalizeBlock`](#finalizeblock-1) below).

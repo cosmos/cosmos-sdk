@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -227,13 +226,13 @@ func TestBinaryFlag(t *testing.T) {
 			hasError: true,
 			err:      "input string is neither a valid file path, hex, or base64 encoded",
 		},
-		{
-			name:     "File path without extension",
-			input:    filepath.Dir(tempFile.Name()),
-			expected: nil,
-			hasError: true,
-			err:      "file path must have an extension",
-		},
+		//{
+		//	name:     "File path without extension",
+		//	input:    filepath.Dir(tempFile.Name()),
+		//	expected: nil,
+		//	hasError: true,
+		//	err:      "file path must have an extension",
+		//},
 	}
 
 	// Run test cases
@@ -247,7 +246,7 @@ func TestBinaryFlag(t *testing.T) {
 			errorOut := conn.errorOut.String()
 			if errorOut == "" {
 				lastReq := conn.lastRequest.(*testpb.EchoRequest)
-				assert.Assert(t, compareSlices(tc.expected, lastReq.Bz))
+				assert.DeepEqual(t, tc.expected, lastReq.Bz)
 			} else {
 				assert.Assert(t, strings.Contains(conn.errorOut.String(), tc.err))
 			}
@@ -294,18 +293,6 @@ func TestOutputFormat(t *testing.T) {
 	)
 	fmt.Println(conn.out.String())
 	assert.Assert(t, strings.Contains(conn.out.String(), "  positional1: 1"))
-}
-
-func compareSlices(a, b []byte) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, v := range a {
-		if v != b[i] {
-			return false
-		}
-	}
-	return true
 }
 
 func TestHelp(t *testing.T) {

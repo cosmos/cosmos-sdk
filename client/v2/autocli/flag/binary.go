@@ -2,9 +2,13 @@ package flag
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"os"
+	"path/filepath"
+
+	"github.com/cockroachdb/errors"
 )
 
 type binaryType struct{}
@@ -31,22 +35,21 @@ func (f *fileBinaryValue) String() string {
 }
 
 func (f *fileBinaryValue) Set(s string) error {
-	var err error
 	var value []byte
-	// check if file exist
-	_, err = os.Stat(s)
-	if err == nil {
-		// open file at path s
+	var err error
+
+	if _, err = os.Stat(s); err == nil {
+		if filepath.Ext(s) == "" {
+			return errors.New("file path must have an extension")
+		}
 		value, err = os.ReadFile(s)
 		if err != nil {
 			return err
 		}
+	} else if value, err = hex.DecodeString(s); err == nil {
+	} else if value, err = base64.StdEncoding.DecodeString(s); err == nil {
 	} else {
-		// s is not a file path, so it must be hex encoded
-		value, err = hex.DecodeString(s)
-		if err != nil {
-			return err
-		}
+		return errors.New("input string is neither a valid file path, hex, or base64 encoded")
 	}
 	f.value = value
 	return nil

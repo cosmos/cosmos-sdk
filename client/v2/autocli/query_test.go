@@ -3,8 +3,9 @@ package autocli
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -179,24 +180,81 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
-func TestBinaryFile(t *testing.T) {
-	conn := testExecCommon(t, buildModuleQueryCommand,
-		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
-		"--bz", "testdata/file.test", // no opt default value
-	)
-	lastReq := conn.lastRequest.(*testpb.EchoRequest)
-	assert.Equal(t, "this is just a test file", string(lastReq.Bz))
+func TestBinaryFlag(t *testing.T) {
+	// Create a temporary file with some content
+	tempFile, err := os.Open("testdata/file.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := []byte("this is just a test file")
+	if err := tempFile.Close(); err != nil {
+		t.Fatal(err)
+	}
 
-	hexFileTest := hex.EncodeToString([]byte("this is just a test file"))
-	conn2 := testExecCommon(t, buildModuleQueryCommand,
-		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
-		"--bz", hexFileTest, // no opt default value
-	)
-	lastReq = conn2.lastRequest.(*testpb.EchoRequest)
-	assert.Equal(t, "this is just a test file", string(lastReq.Bz))
+	// Test cases
+	tests := []struct {
+		name     string
+		input    string
+		expected []byte
+		hasError bool
+		err      string
+	}{
+		{
+			name:     "Valid file path with extension",
+			input:    tempFile.Name(),
+			expected: content,
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Valid hex-encoded string",
+			input:    "68656c6c6f20776f726c64",
+			expected: []byte("hello world"),
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Valid base64-encoded string",
+			input:    "SGVsbG8gV29ybGQ=",
+			expected: []byte("Hello World"),
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Invalid input (not a file path or encoded string)",
+			input:    "not a file or encoded string",
+			expected: nil,
+			hasError: true,
+			err:      "input string is neither a valid file path, hex, or base64 encoded",
+		},
+		{
+			name:     "File path without extension",
+			input:    filepath.Dir(tempFile.Name()),
+			expected: nil,
+			hasError: true,
+			err:      "file path must have an extension",
+		},
+	}
 
+	// Run test cases
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			conn := testExecCommon(t, buildModuleQueryCommand,
+				"echo",
+				"1", "abc", `{"denom":"foo","amount":"1"}`,
+				"--bz", tc.input,
+			)
+			errorOut := conn.errorOut.String()
+			fmt.Println(errorOut)
+			if errorOut == "" {
+				lastReq := conn.lastRequest.(*testpb.EchoRequest)
+				assert.Assert(t, compareSlices(tc.expected, lastReq.Bz))
+			} else {
+				assert.Assert(t, strings.Contains(conn.errorOut.String(), tc.err))
+			}
+		})
+
+	}
 }
 
 func TestAddressValidation(t *testing.T) {
@@ -237,6 +295,18 @@ func TestOutputFormat(t *testing.T) {
 	)
 	fmt.Println(conn.out.String())
 	assert.Assert(t, strings.Contains(conn.out.String(), "  positional1: 1"))
+}
+
+func compareSlices(a, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func TestHelp(t *testing.T) {

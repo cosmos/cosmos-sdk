@@ -2,6 +2,153 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
+<<<<<<< HEAD
+=======
+## [Unreleased]
+
+### Migration to CometBFT (Part 2)
+
+The Cosmos SDK has migrated in its previous versions, to CometBFT.
+Some functions have been renamed to reflect the naming change.
+
+Following an exhaustive list:
+
+* `client.TendermintRPC` -> `client.CometRPC`
+* `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+* `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
+* Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
+
+Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
+However, these commands and flags is still supported for backward compatibility.
+
+For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
+
+Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
+
+* The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
+* The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
+
+### Configuration
+
+A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
+
+```bash
+simd config migrate v0.48
+```
+
+More information about [confix](https://docs.cosmos.network/main/tooling/confix).
+
+#### gRPC-Web
+
+gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
+The possibility to listen to a different address has been removed, as well as its settings.
+Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
+
+#### Database Support
+
+ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
+
+### Protobuf
+
+The SDK is in the process of removing all `gogoproto` annotations.
+
+#### Stringer
+
+The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
+[Verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the modified `String()` methods and double-check that they are not used in state-machine code.
+
+### SimApp
+
+#### Module Assertions
+
+Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
+This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+
+### Modules Keepers
+
+The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
+
+* `x/auth`
+* `x/consensus`
+
+When not using depinject, the `runtime.NewKVStoreService` method can be used to create a `KVStoreService` from a `StoreKey`:
+
+```diff
+app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+  appCodec,
+- keys[consensusparamtypes.StoreKey]
++ runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
+  authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+)
+```
+
+
+### Packages
+
+#### Store
+
+References to `types/store.go` which contained aliases for store types have been remapped to point to appropriate  store/types, hence the `types/store.go` file is no longer needed and has been removed.
+
+##### Extract Store to a standalone module
+
+The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
+
+### Modules
+
+#### `x/auth`
+
+Methods in the `AccountKeeper` now use `context.Context` instead of `sdk.Context`. Any module that has an interface for it will need to update and re-generate mocks if needed.
+
+#### `x/capability`
+
+Capability was moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC V8 will contain the necessary changes to incorporate the new module location
+
+#### `x/gov`
+
+##### Expedited Proposals
+
+The `gov` v1 module has been updated to support the ability to expedite governance proposals. When a proposal is expedited, the voting period will be shortened to `ExpeditedVotingPeriod` parameter. An expedited proposal must have an higher voting threshold than a classic proposal, that threshold is defined with the `ExpeditedThreshold` parameter.
+
+##### Cancelling Proposals
+
+The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
+
+```text
+	1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
+	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
+```
+
+By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
+
+#### `x/evidence`
+
+##### Extract evidence to a standalone module
+
+The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
+
+#### `x/nft`
+
+##### Extract nft to a standalone module
+
+The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+
+#### x/feegrant
+
+##### Extract feegrant to a standalone module
+
+The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
+All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
+
+#### `x/upgrade`
+
+##### Extract upgrade to a standalone module
+
+The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
+
+>>>>>>> 22621995b (docs: re-arrange and clarify migration docs (#15575))
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Migration to CometBFT (Part 1)

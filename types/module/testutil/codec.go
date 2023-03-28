@@ -21,7 +21,7 @@ type TestEncodingConfig struct {
 }
 
 func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig {
-	cdc := codec.NewLegacyAmino()
+	aminoCodec := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
 
@@ -29,7 +29,7 @@ func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig
 		InterfaceRegistry: interfaceRegistry,
 		Codec:             codec,
 		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
-		Amino:             cdc,
+		Amino:             aminoCodec,
 	}
 
 	mb := module.NewBasicManager(modules...)

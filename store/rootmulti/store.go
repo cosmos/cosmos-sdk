@@ -10,12 +10,8 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-<<<<<<< HEAD
 	"github.com/cometbft/cometbft/libs/log"
-=======
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
->>>>>>> ee9774af2 (feat: auto-set block timestamp for historical queries (#15448))
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
@@ -71,24 +67,12 @@ type Store struct {
 	lazyLoading         bool
 	initialVersion      int64
 	removalMap          map[types.StoreKey]bool
-<<<<<<< HEAD
-
-	traceWriter       io.Writer
-	traceContext      types.TraceContext
-	traceContextMutex sync.Mutex
-
-	interBlockCache types.MultiStorePersistentCache
-
-	listeners map[types.StoreKey][]types.WriteListener
-=======
 	traceWriter         io.Writer
 	traceContext        types.TraceContext
 	traceContextMutex   sync.Mutex
 	interBlockCache     types.MultiStorePersistentCache
-	listeners           map[types.StoreKey]*types.MemoryListener
-	metrics             metrics.StoreMetrics
+	listeners           map[types.StoreKey][]types.WriteListener
 	commitHeader        cmtproto.Header
->>>>>>> ee9774af2 (feat: auto-set block timestamp for historical queries (#15448))
 }
 
 var (
@@ -1044,14 +1028,14 @@ func (rs *Store) GetCommitInfo(ver int64) (*types.CommitInfo, error) {
 
 	bz, err := rs.db.Get([]byte(cInfoKey))
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to get commit info")
+		return nil, errors.Wrap(err, "failed to get commit info")
 	} else if bz == nil {
 		return nil, errors.New("no commit info found")
 	}
 
 	cInfo := &types.CommitInfo{}
 	if err = cInfo.Unmarshal(bz); err != nil {
-		return nil, errorsmod.Wrap(err, "failed unmarshal commit info")
+		return nil, errors.Wrap(err, "failed unmarshal commit info")
 	}
 
 	return cInfo, nil
@@ -1153,28 +1137,6 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 	}
 }
 
-<<<<<<< HEAD
-// Gets commitInfo from disk.
-func getCommitInfo(db dbm.DB, ver int64) (*types.CommitInfo, error) {
-	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
-
-	bz, err := db.Get([]byte(cInfoKey))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get commit info")
-	} else if bz == nil {
-		return nil, errors.New("no commit info found")
-	}
-
-	cInfo := &types.CommitInfo{}
-	if err = cInfo.Unmarshal(bz); err != nil {
-		return nil, errors.Wrap(err, "failed unmarshal commit info")
-	}
-
-	return cInfo, nil
-}
-
-=======
->>>>>>> ee9774af2 (feat: auto-set block timestamp for historical queries (#15448))
 func flushCommitInfo(batch dbm.Batch, version int64, cInfo *types.CommitInfo) {
 	bz, err := cInfo.Marshal()
 	if err != nil {

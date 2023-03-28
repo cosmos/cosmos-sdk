@@ -66,16 +66,16 @@ This is no longer the case, the assertion has been loosened to only require modu
 
 The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
 
-- `x/auth`
-- `x/consensus`
+* `x/auth`
+* `x/consensus`
 
 When not using depinject, the `runtime.NewKVStoreService` method can be used to create a `KVStoreService` from a `StoreKey`:
 
 ```diff
-- app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
-+ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
   appCodec,
-  runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
+- keys[consensusparamtypes.StoreKey]
++ runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 )
 ```

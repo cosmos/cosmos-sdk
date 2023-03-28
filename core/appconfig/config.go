@@ -84,7 +84,7 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 					module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
 			}
 
-			return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s\n\n%s",
+			return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to configure app wiring for a module here: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",
 				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
 		}
 

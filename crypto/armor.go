@@ -227,7 +227,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 
 		aead, err := chacha20poly1305.New(key)
 		if err != nil {
-			return privKey, errorsmod.Wrap(err, "Error generating aead cypher from key.")
+			return privKey, errorsmod.Wrap(err, "Error generating aead cypher for key.")
 		} else if len(encBytes) < aead.NonceSize() {
 			return privKey, errorsmod.Wrap(nil, "Encrypted bytes length is smaller than aead nonce size.")
 		}
@@ -240,7 +240,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 	default:
 		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 		if err != nil {
-			return privKey, errorsmod.Wrap(err, "Error generating bcrypt key from passphrase.")
+			return privKey, errorsmod.Wrap(err, "Error generating bcrypt cypher for key.")
 		}
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)

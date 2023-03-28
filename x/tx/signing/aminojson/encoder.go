@@ -99,7 +99,6 @@ func keyFieldEncoder(_ *Encoder, msg protoreflect.Message, w io.Writer) error {
 
 	_, err := fmt.Fprintf(w, `"%s"`, base64.StdEncoding.EncodeToString(bz))
 	return err
-
 }
 
 type moduleAccountPretty struct {

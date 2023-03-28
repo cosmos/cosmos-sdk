@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -125,7 +126,7 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant()
+	cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
 
@@ -412,7 +413,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant()
+			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -436,10 +437,12 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 	}
 
+	addressCodec := codecaddress.NewBech32Codec("cosmos")
 	// Create new fee grant specifically to test amino.
-	aminoGrantee, err := sdk.AccAddressFromBech32("cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00")
+	encodedGrantee := "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00"
+	aminoGrantee, err := addressCodec.StringToBytes(encodedGrantee)
 	s.Require().NoError(err)
-	s.createGrant(granter, aminoGrantee)
+	s.createGrant(granter, sdk.AccAddress(aminoGrantee))
 
 	testCases := []struct {
 		name         string
@@ -489,7 +492,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 			append(
 				[]string{
 					granter.String(),
-					aminoGrantee.String(),
+					encodedGrantee,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -503,7 +506,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeFeegrant()
+			cmd := cli.NewCmdRevokeFeegrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -517,8 +520,6 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 }
 
 func (s *CLITestSuite) TestTxWithFeeGrant() {
-	// s.T().Skip() // TODO to re-enable in #12274
-
 	clientCtx := s.clientCtx
 	granter := s.addedGranter
 
@@ -548,7 +549,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant()
+	cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 
 	var res sdk.TxResponse
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -705,7 +706,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant()
+			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -760,7 +761,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 					commonFlags...,
 				)
 
-				cmd := cli.NewCmdFeeGrant()
+				cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 

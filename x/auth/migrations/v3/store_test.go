@@ -11,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,7 +45,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	store := ctx.KVStore(storeKey)
+	storeService := runtime.NewKVStoreService(storeKey)
 
 	var accountKeeper keeper.AccountKeeper
 
@@ -55,7 +56,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
-	require.NoError(t, v4.Migrate(ctx, store, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
 	// new base account
 	senderPrivKey := secp256k1.GenPrivKey()

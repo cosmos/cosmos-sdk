@@ -10,6 +10,7 @@ import (
 )
 
 func checkAminoJSON(t *testing.T, src, dst interface{}, isNil bool) {
+	t.Helper()
 	// Marshal to JSON bytes.
 	js, err := cdc.MarshalJSON(src)
 	require.Nil(t, err, "%+v", err)

@@ -187,6 +187,7 @@ func TestBuilderWithAux(t *testing.T) {
 }
 
 func makeTipperTxBuilder(t *testing.T) (clienttx.AuxTxBuilder, []byte) {
+	t.Helper()
 	tipperBuilder := clienttx.NewAuxTxBuilder()
 	tipperBuilder.SetAddress(tipperAddr.String())
 	tipperBuilder.SetAccountNumber(1)

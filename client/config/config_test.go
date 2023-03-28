@@ -23,6 +23,7 @@ const (
 
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
+	t.Helper()
 	home := t.TempDir()
 	chainId := "test-chain" //nolint:revive
 	clientCtx := client.Context{}.

@@ -92,6 +92,7 @@ func TestDiffKVStores(t *testing.T) {
 }
 
 func checkDiffResults(t *testing.T, store1, store2 storetypes.KVStore) {
+	t.Helper()
 	kvAs1, kvBs1 := DiffKVStores(store1, store2, nil)
 	kvAs2, kvBs2 := DiffKVStores(store1, store2, nil)
 	assert.DeepEqual(t, kvAs1, kvAs2)
@@ -99,6 +100,7 @@ func checkDiffResults(t *testing.T, store1, store2 storetypes.KVStore) {
 }
 
 func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
+	t.Helper()
 	db := dbm.NewMemDB()
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 

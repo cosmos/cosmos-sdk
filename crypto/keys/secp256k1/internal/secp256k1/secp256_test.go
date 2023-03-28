@@ -51,6 +51,7 @@ func randSig() []byte {
 // tests for malleability
 // highest bit of signature ECDSA s value must be 0, in the 33th byte
 func compactSigCheck(t *testing.T, sig []byte) {
+	t.Helper()
 	b := int(sig[32])
 	if b < 0 {
 		t.Errorf("highest bit is negative: %d", b)
@@ -148,6 +149,7 @@ func TestRandomMessagesWithRandomKeys(t *testing.T) {
 }
 
 func signAndRecoverWithRandomMessages(t *testing.T, keys func() ([]byte, []byte)) {
+	t.Helper()
 	for i := 0; i < TestCount; i++ {
 		pubkey1, seckey := keys()
 		msg := csprngEntropy(32)

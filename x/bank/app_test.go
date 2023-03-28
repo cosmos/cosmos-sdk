@@ -98,6 +98,7 @@ type suite struct {
 }
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
+	t.Helper()
 	res := suite{}
 
 	var genAccounts []simtestutil.GenesisAccount
@@ -128,6 +129,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 
 // CheckBalance checks the balance of an account.
 func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper) {
+	t.Helper()
 	ctxCheck := baseApp.NewContext(true, cmtproto.Header{})
 	require.True(t, balances.Equal(keeper.GetAllBalances(ctxCheck, addr)))
 }

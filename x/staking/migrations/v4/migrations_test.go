@@ -130,6 +130,7 @@ func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.Val
 }
 
 func getUBD(t *testing.T, accAddr sdk.AccAddress, valAddr sdk.ValAddress, store storetypes.KVStore, cdc codec.BinaryCodec) types.UnbondingDelegation {
+	t.Helper()
 	// get the unbonding delegations
 	var ubdRes types.UnbondingDelegation
 	ubdbz := store.Get(getUBDKey(accAddr, valAddr))

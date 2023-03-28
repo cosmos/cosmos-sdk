@@ -436,7 +436,7 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
 func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams {
 	if app.paramStore == nil {
-		panic("param store not set")
+		return cmtproto.ConsensusParams{}
 	}
 
 	cp, err := app.paramStore.Get(ctx)

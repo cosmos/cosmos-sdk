@@ -1420,8 +1420,7 @@ type ValidatorSigningInfo struct {
 	StartHeight int64 `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty"`
 	// Index which is incremented every time a validator is bonded in a block and
 	// _may_ have signed a pre-commit or not. This in conjunction with the
-	// signed_blocks_window param determines the index in the missed block bit
-	// array.
+	// signed_blocks_window param determines the index in the missed block bitmap.
 	IndexOffset int64 `protobuf:"varint,3,opt,name=index_offset,json=indexOffset,proto3" json:"index_offset,omitempty"`
 	// Timestamp until which the validator is jailed due to liveness downtime.
 	JailedUntil *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3" json:"jailed_until,omitempty"`
@@ -1430,7 +1429,7 @@ type ValidatorSigningInfo struct {
 	// configured misbehavior.
 	Tombstoned bool `protobuf:"varint,5,opt,name=tombstoned,proto3" json:"tombstoned,omitempty"`
 	// A counter of missed (unsigned) blocks. It is used to avoid unnecessary
-	// reads in the missed block bit array.
+	// reads in the missed block bitmap.
 	MissedBlocksCounter int64 `protobuf:"varint,6,opt,name=missed_blocks_counter,json=missedBlocksCounter,proto3" json:"missed_blocks_counter,omitempty"`
 }
 

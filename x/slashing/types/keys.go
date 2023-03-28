@@ -18,10 +18,18 @@ const (
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
 
-	// MissedBlockWindowChunkSize defines the chunk size of a missed block window
-	// bit array. Chunks are used to reduce the size and write overhead of IAVL
-	// nodes.
-	MissedBlockWindowChunkSize int16 = 1024 // 2^10
+	// MissedBlockBitmapChunkSize defines the chunk size of a missed block bitmap.
+	// Chunks are used to reduce the storage and write overhead of IAVL nodes.
+	//
+	// For a bitmap of N items, i.e. a validator's signed block window, the amount
+	// of write complexity per write with a factor of f being the overhead of
+	// IAVL being un-optimized, i.e. 2-4, is as follows:
+	//
+	// ChunkSize + (f * 256 <IAVL leaf hash>) + 256 * log_2(N / ChunkSize)
+	//
+	// As for the storage overhead, with the same factor f, it is as follows:
+	// (N - 256) + (N / ChunkSize) * (512 * f)
+	MissedBlockBitmapChunkSize int64 = 1024 // 2^10
 )
 
 // Keys for slashing store
@@ -29,15 +37,15 @@ const (
 //
 // - 0x01<consAddrLen (1 Byte)><consAddress_Bytes>: ValidatorSigningInfo
 //
-// - 0x02<consAddrLen (1 Byte)><consAddress_Bytes><period_Bytes>: bool
+// - 0x02<consAddrLen (1 Byte)><consAddress_Bytes><chunk_index>: bitmap_chunk (MissedBlockBitmapChunkSize bytes)
 //
 // - 0x03<accAddrLen (1 Byte)><accAddr_Bytes>: cryptotypes.PubKey
 
 var (
-	ParamsKey                             = []byte{0x00} // Prefix for params key
-	ValidatorSigningInfoKeyPrefix         = []byte{0x01} // Prefix for signing info
-	ValidatorMissedBlockBitArrayKeyPrefix = []byte{0x02} // Prefix for missed block bit array
-	AddrPubkeyRelationKeyPrefix           = []byte{0x03} // Prefix for address-pubkey relation
+	ParamsKey                           = []byte{0x00} // Prefix for params key
+	ValidatorSigningInfoKeyPrefix       = []byte{0x01} // Prefix for signing info
+	ValidatorMissedBlockBitmapKeyPrefix = []byte{0x02} // Prefix for missed block bitmap
+	AddrPubkeyRelationKeyPrefix         = []byte{0x03} // Prefix for address-pubkey relation
 )
 
 // ValidatorSigningInfoKey - stored by *Consensus* address (not operator address)
@@ -54,17 +62,19 @@ func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	return sdk.ConsAddress(addr)
 }
 
-// ValidatorMissedBlockBitArrayPrefixKey - stored by *Consensus* address (not operator address)
-func ValidatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
-	return append(ValidatorMissedBlockBitArrayKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
+// ValidatorMissedBlockBitmapPrefixKey returns the key prefix for a validator's
+// missed block bitmap.
+func ValidatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
+	return append(ValidatorMissedBlockBitmapKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
-// ValidatorMissedBlockBitArrayKey - stored by *Consensus* address (not operator address)
-func ValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(i))
+// ValidatorMissedBlockBitmapKey returns the key for a validator's missed block
+// bitmap chunk.
+func ValidatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, uint64(chunkIndex))
 
-	return append(ValidatorMissedBlockBitArrayPrefixKey(v), b...)
+	return append(ValidatorMissedBlockBitmapPrefixKey(v), bz...)
 }
 
 // AddrPubkeyRelationKey gets pubkey relation key used to get the pubkey from the address

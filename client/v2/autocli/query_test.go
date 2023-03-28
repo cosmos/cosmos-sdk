@@ -159,7 +159,6 @@ func TestJSONParsing(t *testing.T) {
 		"-u", "27", // shorthand
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
-
 }
 
 func TestOptions(t *testing.T) {

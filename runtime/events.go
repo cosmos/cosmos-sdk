@@ -55,6 +55,5 @@ func (e Events) EmitKV(ctx context.Context, eventType string, attrs ...event.Att
 // Emit emits an typed event that is defined in the protobuf file.
 // In the future these events will be added to consensus
 func (e Events) EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error {
-
 	return e.EventManagerI.EmitTypedEvent(event)
 }

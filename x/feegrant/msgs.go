@@ -81,7 +81,6 @@ func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRe
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgRevokeAllowance) ValidateBasic() error {
-
 	return nil
 }
 

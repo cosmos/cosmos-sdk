@@ -65,9 +65,9 @@ The SDK provides small helpers for quickly setting up an integration tests. Thes
 
 ### Example
 
-Here, we will walkthrough the integration tests of the `x/evidence` module.
-
-<!-- todo with actual commit -->
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/julien/integration/testutil/integration/example_test.go#L21-L65
+```
 
 ## Deterministic and Regression tests	
 

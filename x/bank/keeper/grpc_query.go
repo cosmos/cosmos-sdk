@@ -244,7 +244,7 @@ func (k BaseKeeper) DenomOwners(
 	pageRes, err := query.FilteredPaginate(
 		denomPrefixStore,
 		req.Pagination,
-		func(key []byte, _ []byte, accumulate bool) (bool, error) {
+		func(key, _ []byte, accumulate bool) (bool, error) {
 			if accumulate {
 				address, _, err := types.AddressAndDenomFromBalancesStore(key)
 				if err != nil {

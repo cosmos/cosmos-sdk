@@ -160,14 +160,8 @@ var (
 	// Examples: not DB domain error, file writing etc...
 	ErrIO = Register(RootCodespace, 39, "Internal IO error")
 
-<<<<<<< HEAD
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
-=======
-	// ErrAppConfig defines an error occurred if application configuration is
-	// misconfigured.
-	ErrAppConfig = errorsmod.Register(RootCodespace, 40, "error in app.toml")
->>>>>>> ee9774af2 (feat: auto-set block timestamp for historical queries (#15448))
 
 	// ErrInvalidGasLimit defines an error when an invalid GasWanted value is
 	// supplied.

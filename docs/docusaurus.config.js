@@ -400,6 +400,10 @@ const config = {
             from: ["/main/run-node/cosmovisor"],
             to: "/main/tooling/cosmovisor",
           },
+          {
+            from: ["/main/migrations/pre-upgrade"],
+            to: "/main/building-apps/app-upgrade",
+          },
         ],
       },
     ],

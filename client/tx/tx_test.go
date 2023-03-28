@@ -29,6 +29,7 @@ import (
 )
 
 func newTestTxConfig(t *testing.T) (client.TxConfig, codec.Codec) {
+	t.Helper()
 	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	return authtx.NewTxConfig(codec.NewProtoCodec(encodingConfig.InterfaceRegistry), authtx.DefaultSignModes), encodingConfig.Codec
 }

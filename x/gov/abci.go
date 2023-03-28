@@ -85,18 +85,25 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			// message is logged.
 			cacheCtx, writeCache := ctx.CacheContext()
 			messages, err := proposal.GetMsgs()
-			if err == nil {
-				for idx, msg = range messages {
-					handler := keeper.Router().Handler(msg)
+			if err != nil {
+				proposal.Status = v1.StatusFailed
+				tagValue = types.AttributeValueProposalFailed
+				logMsg = fmt.Sprintf("passed proposal (%v) failed to execute; msgs: %s", proposal, err)
 
-					var res *sdk.Result
-					res, err = handler(cacheCtx, msg)
-					if err != nil {
-						break
-					}
+				break
+			}
 
-					events = append(events, res.GetEvents()...)
+			// execute all messages
+			for idx, msg = range messages {
+				handler := keeper.Router().Handler(msg)
+
+				var res *sdk.Result
+				res, err = handler(cacheCtx, msg)
+				if err != nil {
+					break
 				}
+
+				events = append(events, res.GetEvents()...)
 			}
 
 			// `err == nil` when all handlers passed.
@@ -146,6 +153,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		logger.Info(
 			"proposal tallied",
 			"proposal", proposal.Id,
+			"status", proposal.Status.String(),
 			"expedited", proposal.Expedited,
 			"title", proposal.Title,
 			"results", logMsg,
@@ -156,8 +164,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				types.EventTypeActiveProposal,
 				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
+				sdk.NewAttribute(types.AttributeKeyProposalLog, logMsg),
 			),
 		)
+
 		return false
 	})
 }

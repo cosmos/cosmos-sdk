@@ -402,7 +402,7 @@ const config = {
           },
           {
             from: ["/main/migrations/pre-upgrade"],
-            to: "/main/building-apps/migrations",
+            to: "/main/building-apps/app-upgrade",
           },
         ],
       },

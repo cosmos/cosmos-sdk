@@ -31,12 +31,6 @@ cp -r ./architecture ./docs
 
 ## Add spec documentation
 cp -r ./spec ./docs
-<<<<<<< HEAD
-=======
-
-## Add rfc documentation
-cp -r ./rfc ./docs
 
 ## Add SDK migration documentation
 cp -r ../UPGRADING.md ./docs/migrations/02-upgrading.md
->>>>>>> 22621995b (docs: re-arrange and clarify migration docs (#15575))

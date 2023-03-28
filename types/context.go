@@ -35,7 +35,7 @@ type Context struct {
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice          DecCoins
-	consParams           *cmtproto.ConsensusParams
+	consParams           cmtproto.ConsensusParams
 	eventManager         EventManagerI
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
@@ -79,8 +79,8 @@ func (c Context) HeaderHash() []byte {
 	return hash
 }
 
-func (c Context) ConsensusParams() *cmtproto.ConsensusParams {
-	return proto.Clone(c.consParams).(*cmtproto.ConsensusParams)
+func (c Context) ConsensusParams() cmtproto.ConsensusParams {
+	return c.consParams
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -239,7 +239,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *cmtproto.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params cmtproto.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }

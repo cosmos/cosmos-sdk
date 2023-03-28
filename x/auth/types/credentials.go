@@ -55,7 +55,7 @@ func (m *ModuleCredential) Bytes() []byte {
 }
 
 // VerifySignature returns always false, making the account unclaimable
-func (m *ModuleCredential) VerifySignature(_ []byte, _ []byte) bool {
+func (m *ModuleCredential) VerifySignature(_, _ []byte) bool {
 	return false
 }
 

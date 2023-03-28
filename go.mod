@@ -166,8 +166,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/store => ./store
-	cosmossdk.io/x/tx => ./x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

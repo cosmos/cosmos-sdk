@@ -2,7 +2,13 @@
 sidebar_position: 1
 ---
 
-# Pre-Upgrade Handling
+# Migrations
+
+:::note
+This document describes how to upgrade your application. If you are looking specifically for the changes to perform between SDK versions, see the [SDK migrations documentation](https://docs.cosmos.network/main/migrations/intro)
+:::
+
+## Pre-Upgrade Handling
 
 Cosmovisor supports custom pre-upgrade handling. Use pre-upgrade handling when you need to implement application config changes that are required in the newer version before you perform the upgrade.
 

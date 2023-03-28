@@ -2,10 +2,16 @@
 sidebar_position: 1
 ---
 
-# Introduction to Migrations
+# SDK Migrations
+
+To smoothen the update to the latest stable release, the SDK includes a CLI command for hard-fork migrations (under the `<appd> genesis migrate` subcommand). 
+Additionally, the SDK includes in-place migrations for its core modules. These in-place migrations are useful to migrate between major releases.
+
+* Hard-fork migrations are supported from the last major release to the current one.
+* In-place module migrations are supported from the two last major releases to the current one.
+
+Migration from a version older than the two last major releases is not supported.
+
+When migrating from a previous version, refer to the `UPGRADING.md` and the `CHANGELOG` of the version you are migrating to.
 
 This document contains all the migration guides to update your app and modules to the current Cosmos SDK.
-
-1. Chain Upgrade Guide to v0.47:
-   * See [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/UPGRADING.md) for breaking changes and deprecations upgrade instructions.
-   * See [Release Notes](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/RELEASE_NOTES.md) and [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/CHANGELOG.md) for the exhaustive list of API and State Machine breaking changes.

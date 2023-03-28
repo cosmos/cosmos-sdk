@@ -657,3 +657,42 @@ func TestCacheWraps(t *testing.T) {
 	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
 	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
 }
+
+func TestChangeSets(t *testing.T) {
+	db := dbm.NewMemDB()
+	treeSize := 1000
+	treeVersion := int64(10)
+	targetVersion := int64(7)
+	tree, err := iavl.NewMutableTree(db, cacheSize, false)
+	require.NoError(t, err)
+
+	for j := int64(0); j < treeVersion; j++ {
+		for i := 0; i < treeSize; i++ {
+			key := randBytes(4)
+			value := randBytes(50)
+			_, err := tree.Set(key, value)
+			require.NoError(t, err)
+		}
+		_, _, err := tree.SaveVersion()
+		require.NoError(t, err)
+	}
+
+	changeSets := []*iavl.ChangeSet{}
+	iavlStore := UnsafeNewStore(tree)
+	commitID := iavlStore.LastCommitID()
+
+	require.NoError(t, iavlStore.TraverseStateChanges(targetVersion+1, treeVersion, func(v int64, cs *iavl.ChangeSet) error {
+		changeSets = append(changeSets, cs)
+		return nil
+	}))
+	require.NoError(t, iavlStore.LoadVersionForOverwriting(targetVersion))
+
+	for i, cs := range changeSets {
+		v, err := iavlStore.SaveChangeSet(cs)
+		require.NoError(t, err)
+		require.Equal(t, v, targetVersion+int64(i+1))
+	}
+
+	restoreCommitID := iavlStore.LastCommitID()
+	require.Equal(t, commitID, restoreCommitID)
+}

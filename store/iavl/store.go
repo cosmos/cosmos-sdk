@@ -393,6 +393,12 @@ func (st *Store) TraverseStateChanges(startVersion, endVersion int64, fn func(ve
 	return st.tree.TraverseStateChanges(startVersion, endVersion, fn)
 }
 
+// SaveChangeSet saves a ChangeSet to the tree.
+// It is used to replay a ChangeSet as a new version.
+func (st *Store) SaveChangeSet(changeSet *iavl.ChangeSet) (int64, error) {
+	return st.tree.SaveChangeSet(changeSet)
+}
+
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it

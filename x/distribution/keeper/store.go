@@ -32,7 +32,7 @@ func (k Keeper) DeleteDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAd
 }
 
 // iterate over delegator withdraw addrs
-func (k Keeper) IterateDelegatorWithdrawAddrs(ctx sdk.Context, handler func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool)) {
+func (k Keeper) IterateDelegatorWithdrawAddrs(ctx sdk.Context, handler func(del, addr sdk.AccAddress) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := storetypes.KVStorePrefixIterator(store, types.DelegatorWithdrawAddrPrefix)
 	defer iter.Close()
@@ -332,7 +332,7 @@ func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 }
 
 // iterate over slash events between heights, inclusive
-func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValAddress, startingHeight uint64, endingHeight uint64,
+func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValAddress, startingHeight, endingHeight uint64,
 	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool),
 ) {
 	store := ctx.KVStore(k.storeKey)

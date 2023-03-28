@@ -127,7 +127,7 @@ func AppendLengthPrefixedBytes(args ...[]byte) []byte {
 }
 
 // ParseLengthPrefixedBytes panics when store key length is not equal to the given length.
-func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]byte, int) {
+func ParseLengthPrefixedBytes(key []byte, startIndex, sliceLength int) ([]byte, int) {
 	neededLength := startIndex + sliceLength
 	endIndex := neededLength - 1
 	kv.AssertKeyAtLeastLength(key, neededLength)

@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Migrations
+# Application upgrade
 
 :::note
 This document describes how to upgrade your application. If you are looking specifically for the changes to perform between SDK versions, see the [SDK migrations documentation](https://docs.cosmos.network/main/migrations/intro).

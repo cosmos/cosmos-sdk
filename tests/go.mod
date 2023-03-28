@@ -161,6 +161,22 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+<<<<<<< HEAD
+=======
+// Here are the short-lived replace for tests
+// Replace here are pending PRs, or version to be tagged.
+// It must be in sync with SimApp temporary replaces
+replace (
+	// TODO tag all extracted modules after SDK refactor
+	cosmossdk.io/store => ../store
+	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/upgrade => ../x/upgrade
+)
+
+// Below are the long-lived replace for tests.
+>>>>>>> ee9774af2 (feat: auto-set block timestamp for historical queries (#15448))
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp

@@ -162,6 +162,24 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+<<<<<<< HEAD
+=======
+// Here are the short-lived replace from the SimApp
+// Replace here are pending PRs, or version to be tagged
+replace (
+	// TODO tag all extracted modules after SDK refactor
+	cosmossdk.io/api => ../api
+	cosmossdk.io/store => ../store
+	cosmossdk.io/tools/confix => ../tools/confix
+	cosmossdk.io/tools/rosetta => ../tools/rosetta
+	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/upgrade => ../x/upgrade
+)
+
+// Below are the long-lived replace of the SimApp
+>>>>>>> ee9774af2 (feat: auto-set block timestamp for historical queries (#15448))
 replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

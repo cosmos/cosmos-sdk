@@ -82,7 +82,7 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
 	supply, err := k.store.SupplyTable().Get(ctx, denom)
-	if err != nil && !ormerrors.IsNotFound(err) {
+	if err != nil && !ormerrors.IsErrNotFound(err) {
 		return err
 	}
 
@@ -128,7 +128,7 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
 	balance, err := k.store.BalanceTable().Get(ctx, acct, denom)
 	if err != nil {
-		if ormerrors.IsNotFound(err) {
+		if ormerrors.IsErrNotFound(err) {
 			return 0, nil
 		}
 
@@ -140,7 +140,7 @@ func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error)
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 	supply, err := k.store.SupplyTable().Get(ctx, denom)
 	if supply == nil {
-		if ormerrors.IsNotFound(err) {
+		if ormerrors.IsErrNotFound(err) {
 			return 0, nil
 		}
 
@@ -151,7 +151,7 @@ func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
 	balance, err := k.store.BalanceTable().Get(ctx, acct, denom)
-	if err != nil && !ormerrors.IsNotFound(err) {
+	if err != nil && !ormerrors.IsErrNotFound(err) {
 		return err
 	}
 
@@ -250,7 +250,7 @@ func TestModuleDB(t *testing.T) {
 `
 	source, err = genesis.SourceFromRawJSON(json.RawMessage(badJSON))
 	assert.NilError(t, err)
-	assert.ErrorIs(t, db.GenesisHandler().ValidateGenesis(source), ormerrors.JSONValidationError)
+	assert.ErrorIs(t, db.GenesisHandler().ValidateGenesis(source), ormerrors.ErrJSONValidationError)
 
 	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)

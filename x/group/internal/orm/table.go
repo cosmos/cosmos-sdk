@@ -83,14 +83,14 @@ func (a table) Create(store types.KVStore, rowID RowID, obj proto.Message) error
 }
 
 // Update updates the given object under the rowID key. It expects the key to
-// exists already and fails with an `sdkerrors.ErrNotFound` otherwise. Any caller must
+// exists already and fails with an `sdkerrors.ErrErrNotFound` otherwise. Any caller must
 // therefore make sure that this contract is fulfilled. Parameters must not be
 // nil.
 //
 // Update triggers all "after set" hooks that may add or remove secondary index keys.
 func (a table) Update(store types.KVStore, rowID RowID, newValue proto.Message) error {
 	if !a.Has(store, rowID) {
-		return sdkerrors.ErrNotFound
+		return sdkerrors.ErrErrNotFound
 	}
 
 	return a.Set(store, rowID, newValue)
@@ -144,7 +144,7 @@ func assertValid(obj proto.Message) error {
 }
 
 // Delete removes the object under the rowID key. It expects the key to exists
-// already and fails with a `sdkerrors.ErrNotFound` otherwise. Any caller must therefore
+// already and fails with a `sdkerrors.ErrErrNotFound` otherwise. Any caller must therefore
 // make sure that this contract is fulfilled.
 //
 // Delete iterates through the registered callbacks that remove secondary index
@@ -177,11 +177,11 @@ func (a table) Has(store types.KVStore, key RowID) bool {
 }
 
 // GetOne load the object persisted for the given RowID into the dest parameter.
-// If none exists or `rowID==nil` then `sdkerrors.ErrNotFound` is returned instead.
+// If none exists or `rowID==nil` then `sdkerrors.ErrErrNotFound` is returned instead.
 // Parameters must not be nil - we don't allow creation of values with empty keys.
 func (a table) GetOne(store types.KVStore, rowID RowID, dest proto.Message) error {
 	if len(rowID) == 0 {
-		return sdkerrors.ErrNotFound
+		return sdkerrors.ErrErrNotFound
 	}
 	x := NewTypeSafeRowGetter(a.prefix, a.model, a.cdc)
 	return x(store, rowID, dest)

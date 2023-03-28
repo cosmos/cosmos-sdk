@@ -217,7 +217,7 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 
 	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
+		return nil, status.Errorf(codes.ErrNotFound, "client metadata for denom %s", req.Denom)
 	}
 
 	return &types.QueryDenomMetadataResponse{

@@ -69,7 +69,7 @@ func (a PrimaryKeyTable) Create(store storetypes.KVStore, obj PrimaryKeyed) erro
 }
 
 // Update updates the given object under the primary key. It expects the key to
-// exists already and fails with an `ErrNotFound` otherwise. Any caller must
+// exists already and fails with an `ErrErrNotFound` otherwise. Any caller must
 // therefore make sure that this contract is fulfilled. Parameters must not be
 // nil.
 //
@@ -89,7 +89,7 @@ func (a PrimaryKeyTable) Set(store storetypes.KVStore, newValue PrimaryKeyed) er
 }
 
 // Delete removes the object. It expects the primary key to exists already and
-// fails with a `ErrNotFound` otherwise. Any caller must therefore make sure
+// fails with a `ErrErrNotFound` otherwise. Any caller must therefore make sure
 // that this contract is fulfilled.
 //
 // Delete iterates through the registered callbacks that remove secondary index
@@ -112,7 +112,7 @@ func (a PrimaryKeyTable) Contains(store storetypes.KVStore, obj PrimaryKeyed) bo
 }
 
 // GetOne loads the object persisted for the given primary Key into the dest parameter.
-// If none exists `ErrNotFound` is returned instead. Parameters must not be nil.
+// If none exists `ErrErrNotFound` is returned instead. Parameters must not be nil.
 func (a PrimaryKeyTable) GetOne(store storetypes.KVStore, primKey RowID, dest proto.Message) error {
 	return a.table.GetOne(store, primKey, dest)
 }

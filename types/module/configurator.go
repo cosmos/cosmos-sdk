@@ -135,14 +135,14 @@ func (c *configurator) runModuleMigrations(ctx sdk.Context, moduleName string, f
 
 	moduleMigrationsMap, found := c.migrations[moduleName]
 	if !found {
-		return errorsmod.Wrapf(sdkerrors.ErrNotFound, "no migrations found for module %s", moduleName)
+		return errorsmod.Wrapf(sdkerrors.ErrErrNotFound, "no migrations found for module %s", moduleName)
 	}
 
 	// Run in-place migrations for the module sequentially until toVersion.
 	for i := fromVersion; i < toVersion; i++ {
 		migrateFn, found := moduleMigrationsMap[i]
 		if !found {
-			return errorsmod.Wrapf(sdkerrors.ErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)
+			return errorsmod.Wrapf(sdkerrors.ErrErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)
 		}
 		ctx.Logger().Info(fmt.Sprintf("migrating module %s from version %d to version %d", moduleName, i, i+1))
 

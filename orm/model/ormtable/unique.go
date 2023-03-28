@@ -118,7 +118,7 @@ func (u uniqueKeyIndex) onInsert(store kv.Store, message protoreflect.Message) e
 	}
 
 	if has {
-		return ormerrors.UniqueKeyViolation.Wrapf("%q", u.fields)
+		return ormerrors.ErrUniqueKeyViolation.Wrapf("%q", u.fields)
 	}
 
 	return store.Set(k, v)
@@ -143,7 +143,7 @@ func (u uniqueKeyIndex) onUpdate(store kv.Store, new, existing protoreflect.Mess
 	}
 
 	if has {
-		return ormerrors.UniqueKeyViolation.Wrapf("%q", u.fields)
+		return ormerrors.ErrUniqueKeyViolation.Wrapf("%q", u.fields)
 	}
 
 	existingKey, err := keyCodec.EncodeKey(existingValues)
@@ -180,7 +180,7 @@ func (u uniqueKeyIndex) readValueFromIndexKey(store ReadBackend, primaryKey []pr
 	}
 
 	if !found {
-		return ormerrors.UnexpectedError.Wrapf("can't find primary key")
+		return ormerrors.ErrUnexpectedError.Wrapf("can't find primary key")
 	}
 
 	return nil

@@ -460,7 +460,7 @@ func (s *E2ETestSuite) TestTxUpdateGroupAdmin() {
 			false,
 			"not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 	}
 
@@ -670,7 +670,7 @@ func (s *E2ETestSuite) TestTxUpdateGroupMembers() {
 			false,
 			"not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1020,7 +1020,7 @@ func (s *E2ETestSuite) TestTxCreateGroupPolicy() {
 			false,
 			"not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 		{
 			"invalid percentage decision policy with negative value",
@@ -1156,7 +1156,7 @@ func (s *E2ETestSuite) TestTxUpdateGroupPolicyAdmin() {
 			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1271,7 +1271,7 @@ func (s *E2ETestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 		{
 			"invalid percentage decision policy with negative value",
@@ -1416,7 +1416,7 @@ func (s *E2ETestSuite) TestTxUpdateGroupPolicyMetadata() {
 			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1610,7 +1610,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 			false,
 			"group policy: not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1777,7 +1777,7 @@ func (s *E2ETestSuite) TestTxVote() {
 			false,
 			"proposal: not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 		{
 			"metadata too long",
@@ -2091,7 +2091,7 @@ func (s *E2ETestSuite) TestTxExec() {
 			false,
 			"proposal: not found",
 			&sdk.TxResponse{},
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 	}
 
@@ -2228,7 +2228,7 @@ func (s *E2ETestSuite) TestTxLeaveGroup() {
 			),
 			false,
 			"group: not found",
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 		{
 			"valid case",
@@ -2256,7 +2256,7 @@ func (s *E2ETestSuite) TestTxLeaveGroup() {
 			),
 			false,
 			"is not part of group",
-			sdkerrors.ErrNotFound.ABCICode(),
+			sdkerrors.ErrErrNotFound.ABCICode(),
 		},
 		{
 			"can leave group policy threshold is more than group weight",

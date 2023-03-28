@@ -451,7 +451,7 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 func (ks keystore) Rename(oldName, newName string) error {
 	_, err := ks.Key(newName)
 	if err == nil {
-		return errorsmod.Wrap(ErrKeyAlreadyExists, fmt.Sprintf("rename failed, %s", newName))
+		return errorsmod.Wrap(ErrKeyErrAlreadyExists, fmt.Sprintf("rename failed, %s", newName))
 	}
 
 	armor, err := ks.ExportPrivKeyArmor(oldName, passPhrase)
@@ -499,19 +499,19 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
+		return nil, wrapKeyErrNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
+		return nil, wrapKeyErrNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	return ks.Key(string(ik.Data))
 }
 
-func wrapKeyNotFound(err error, msg string) error {
-	if err == keyring.ErrKeyNotFound {
-		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, msg)
+func wrapKeyErrNotFound(err error, msg string) error {
+	if err == keyring.ErrKeyErrNotFound {
+		return errorsmod.Wrap(sdkerrors.ErrKeyErrNotFound, msg)
 	}
 	return err
 }
@@ -793,7 +793,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 	if exists {
-		return errorsmod.Wrap(ErrKeyAlreadyExists, key)
+		return errorsmod.Wrap(ErrKeyErrAlreadyExists, key)
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)
@@ -823,23 +823,23 @@ func (ks keystore) writeRecord(k *Record) error {
 }
 
 // existsInDb returns (true, nil) if either addr or name exist is in keystore DB.
-// On the other hand, it returns (false, error) if Get method returns error different from keyring.ErrKeyNotFound
+// On the other hand, it returns (false, error) if Get method returns error different from keyring.ErrKeyErrNotFound
 // In case of inconsistent keyring, it recovers it automatically.
 func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 	_, errAddr := ks.db.Get(addrHexKeyAsString(addr))
-	if errAddr != nil && !errors.Is(errAddr, keyring.ErrKeyNotFound) {
+	if errAddr != nil && !errors.Is(errAddr, keyring.ErrKeyErrNotFound) {
 		return false, errAddr
 	}
 
 	_, errInfo := ks.db.Get(infoKey(name))
 	if errInfo == nil {
 		return true, nil // uid lookup succeeds - info exists
-	} else if !errors.Is(errInfo, keyring.ErrKeyNotFound) {
+	} else if !errors.Is(errInfo, keyring.ErrKeyErrNotFound) {
 		return false, errInfo // received unexpected error - returns
 	}
 
 	// looking for an issue, record with meta (getByAddress) exists, but record with public key itself does not
-	if errAddr == nil && errors.Is(errInfo, keyring.ErrKeyNotFound) {
+	if errAddr == nil && errors.Is(errInfo, keyring.ErrKeyErrNotFound) {
 		fmt.Fprintf(os.Stderr, "address \"%s\" exists but pubkey itself does not\n", hex.EncodeToString(addr.Bytes()))
 		fmt.Fprintln(os.Stderr, "recreating pubkey record")
 		err := ks.db.Remove(addrHexKeyAsString(addr))
@@ -921,11 +921,11 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	// 1. get the key.
 	item, err := ks.db.Get(key)
 	if err != nil {
-		return nil, wrapKeyNotFound(err, key)
+		return nil, wrapKeyErrNotFound(err, key)
 	}
 
 	if len(item.Data) == 0 {
-		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, key)
+		return nil, errorsmod.Wrap(sdkerrors.ErrKeyErrNotFound, key)
 	}
 
 	// 2. Try to deserialize using proto

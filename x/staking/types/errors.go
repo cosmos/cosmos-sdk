@@ -48,6 +48,6 @@ var (
 	ErrNoHistoricalInfo                = errors.Register(ModuleName, 38, "no historical info found")
 	ErrEmptyValidatorPubKey            = errors.Register(ModuleName, 39, "empty validator public key")
 	ErrCommissionLTMinRate             = errors.Register(ModuleName, 40, "commission cannot be less than min rate")
-	ErrUnbondingNotFound               = errors.Register(ModuleName, 41, "unbonding operation not found")
+	ErrUnbondingErrNotFound            = errors.Register(ModuleName, 41, "unbonding operation not found")
 	ErrUnbondingOnHoldRefCountNegative = errors.Register(ModuleName, 42, "cannot un-hold unbonding operation that is not on hold")
 )

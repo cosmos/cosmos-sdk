@@ -168,7 +168,7 @@ func (s *MempoolTestSuite) TestMaxTx() {
 	require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
 }
 
-func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
+func (s *MempoolTestSuite) TestTxErrNotFoundOnSender() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
@@ -190,5 +190,5 @@ func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	err := mp.Insert(ctx, txSender)
 	require.NoError(t, err)
 	err = mp.Remove(tx)
-	require.Equal(t, mempool.ErrTxNotFound, err)
+	require.Equal(t, mempool.ErrTxErrNotFound, err)
 }

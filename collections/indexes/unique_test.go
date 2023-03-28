@@ -42,5 +42,5 @@ func TestUniqueIndex(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(1), id)
 	_, err = ui.MatchExact(ctx, 1_1) // assert old reference was removed
-	require.ErrorIs(t, err, collections.ErrNotFound)
+	require.ErrorIs(t, err, collections.ErrErrNotFound)
 }

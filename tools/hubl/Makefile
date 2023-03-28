@@ -3,9 +3,9 @@
 all: hubl test
 
 hubl:
-	go build -mod=readonly ./cmd/hubl
+	go build -mod=ErrReadOnly ./cmd/hubl
 
 test:
-	go test -mod=readonly -race ./...
+	go test -mod=ErrReadOnly -race ./...
 
 .PHONY: all hubl test

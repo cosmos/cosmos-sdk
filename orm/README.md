@@ -254,7 +254,7 @@ type BalanceTable interface {
     Save(ctx context.Context, balance *Balance) error
     Delete(ctx context.Context, balance *Balance) error
     Has(ctx context.Context, acocunt []byte, denom string) (found bool, err error)
-    // Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
+    // Get returns nil and an error which responds true to ormerrors.IsErrNotFound() if the record was not found.
     Get(ctx context.Context, acocunt []byte, denom string) (*Balance, error)
     List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
     ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
@@ -282,7 +282,7 @@ So to work with the `BalanceTable` in a keeper method we could use code like thi
 ```go
 func (k keeper) AddBalance(ctx context.Context, acct []byte, denom string, amount uint64) error {
     balance, err := k.db.BalanceTable().Get(ctx, acct, denom)
-    if err != nil && !ormerrors.IsNotFound(err) {
+    if err != nil && !ormerrors.IsErrNotFound(err) {
         return err
     }
 

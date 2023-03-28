@@ -25,7 +25,7 @@ func NewItem[V any](
 	return item
 }
 
-// Get gets the item, if it is not set it returns an ErrNotFound error.
+// Get gets the item, if it is not set it returns an ErrErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.
 func (i Item[V]) Get(ctx context.Context) (V, error) {
 	return (Map[noKey, V])(i).Get(ctx, noKey{})

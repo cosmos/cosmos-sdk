@@ -738,8 +738,8 @@ func gRPCErrorToSDKError(err error) error {
 	}
 
 	switch status.Code() {
-	case codes.NotFound:
-		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
+	case codes.ErrNotFound:
+		return errorsmod.Wrap(sdkerrors.ErrKeyErrNotFound, err.Error())
 	case codes.InvalidArgument:
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	case codes.FailedPrecondition:

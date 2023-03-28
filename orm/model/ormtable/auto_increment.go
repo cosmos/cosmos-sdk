@@ -78,7 +78,7 @@ func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message 
 
 	if val == 0 {
 		if mode == saveModeUpdate {
-			return 0, ormerrors.PrimaryKeyInvalidOnUpdate
+			return 0, ormerrors.ErrPrimaryKeyInvalidOnUpdate
 		}
 
 		mode = saveModeInsert
@@ -90,7 +90,7 @@ func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message 
 		messageRef.Set(t.autoIncField, protoreflect.ValueOfUint64(newPK))
 	} else {
 		if mode == saveModeInsert {
-			return 0, ormerrors.AutoIncrementKeyAlreadySet
+			return 0, ormerrors.ErrAutoIncrementKeyAlreadySet
 		}
 
 		mode = saveModeUpdate
@@ -99,7 +99,7 @@ func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message 
 	return newPK, t.tableImpl.doSave(ctx, writer, message, mode)
 }
 
-func (t *autoIncrementTable) curSeqValue(kv kv.ReadonlyStore) (uint64, error) {
+func (t *autoIncrementTable) curSeqValue(kv kv.ErrReadOnlyStore) (uint64, error) {
 	bz, err := kv.Get(t.seqCodec.Prefix())
 	if err != nil {
 		return 0, err

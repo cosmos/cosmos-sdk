@@ -25,7 +25,7 @@ func (s Sequence) Peek(ctx context.Context) (uint64, error) {
 	switch {
 	case err == nil:
 		return n, nil
-	case errors.Is(err, ErrNotFound):
+	case errors.Is(err, ErrErrNotFound):
 		return DefaultSequenceStart, nil
 	default:
 		return 0, err

@@ -257,7 +257,7 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 	assert.Assert(t, customCommandCalled)
 }
 
-func TestNotFoundErrors(t *testing.T) {
+func TestErrNotFoundErrors(t *testing.T) {
 	b := &Builder{}
 
 	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {

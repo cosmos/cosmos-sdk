@@ -64,7 +64,7 @@ func setUsed(err *Error) {
 
 // ABCIError will resolve an error code/log from an abci result into
 // an error message. If the code is registered, it will map it back to
-// the canonical error, so we can do eg. ErrNotFound.Is(err) on something
+// the canonical error, so we can do eg. ErrErrNotFound.Is(err) on something
 // we get back from an external API.
 //
 // This should *only* be used in clients, not in the server side.

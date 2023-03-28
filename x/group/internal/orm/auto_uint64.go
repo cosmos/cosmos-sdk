@@ -48,7 +48,7 @@ func (a AutoUInt64Table) Create(store storetypes.KVStore, obj proto.Message) (ui
 }
 
 // Update updates the given object under the rowID key. It expects the key to
-// exists already and fails with an `ErrNotFound` otherwise. Any caller must
+// exists already and fails with an `ErrErrNotFound` otherwise. Any caller must
 // therefore make sure that this contract is fulfilled. Parameters must not be
 // nil.
 //
@@ -59,7 +59,7 @@ func (a AutoUInt64Table) Update(store storetypes.KVStore, rowID uint64, newValue
 }
 
 // Delete removes the object under the rowID key. It expects the key to exists already
-// and fails with a `ErrNotFound` otherwise. Any caller must therefore make sure that this contract
+// and fails with a `ErrErrNotFound` otherwise. Any caller must therefore make sure that this contract
 // is fulfilled.
 //
 // Delete iterates though the registered callbacks and removes secondary index keys by them.
@@ -73,7 +73,7 @@ func (a AutoUInt64Table) Has(store storetypes.KVStore, rowID uint64) bool {
 }
 
 // GetOne load the object persisted for the given RowID into the dest parameter.
-// If none exists `ErrNotFound` is returned instead. Parameters must not be nil.
+// If none exists `ErrErrNotFound` is returned instead. Parameters must not be nil.
 func (a AutoUInt64Table) GetOne(store storetypes.KVStore, rowID uint64, dest proto.Message) (RowID, error) {
 	rawRowID := EncodeSequence(rowID)
 	if err := a.table.GetOne(store, rawRowID, dest); err != nil {

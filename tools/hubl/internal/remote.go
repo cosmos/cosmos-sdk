@@ -236,5 +236,5 @@ func (d dynamicTypeResolver) FindExtensionByNumber(message protoreflect.FullName
 		}
 	}
 
-	return nil, protoregistry.NotFound
+	return nil, protoregistry.ErrNotFound
 }

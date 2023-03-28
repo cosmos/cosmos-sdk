@@ -22,7 +22,7 @@ var (
 	ErrInvalidSignalMsg        = errors.Register(ModuleName, 14, "signal message is invalid")
 	ErrMetadataTooLong         = errors.Register(ModuleName, 15, "metadata too long")
 	ErrMinDepositTooSmall      = errors.Register(ModuleName, 16, "minimum deposit is too small")
-	ErrProposalNotFound        = errors.Register(ModuleName, 17, "proposal is not found")
+	ErrProposalErrNotFound     = errors.Register(ModuleName, 17, "proposal is not found")
 	ErrInvalidProposer         = errors.Register(ModuleName, 18, "invalid proposer")
 	ErrNoDeposits              = errors.Register(ModuleName, 19, "no deposits found")
 	ErrVotingPeriodEnded       = errors.Register(ModuleName, 20, "voting period already ended")

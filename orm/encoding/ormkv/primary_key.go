@@ -77,11 +77,11 @@ func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	pkEntry, ok := entry.(*PrimaryKeyEntry)
 	if !ok {
-		return nil, nil, ormerrors.BadDecodeEntry.Wrapf("expected %T, got %T", &PrimaryKeyEntry{}, entry)
+		return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("expected %T, got %T", &PrimaryKeyEntry{}, entry)
 	}
 
 	if pkEntry.TableName != p.messageType.Descriptor().FullName() {
-		return nil, nil, ormerrors.BadDecodeEntry.Wrapf(
+		return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf(
 			"wrong table name, got %s, expected %s",
 			pkEntry.TableName,
 			p.messageType.Descriptor().FullName(),

@@ -204,12 +204,12 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 
 	senderTxs, found := snm.senders[sender]
 	if !found {
-		return ErrTxNotFound
+		return ErrTxErrNotFound
 	}
 
 	res := senderTxs.Remove(nonce)
 	if res == nil {
-		return ErrTxNotFound
+		return ErrTxErrNotFound
 	}
 
 	if senderTxs.Len() == 0 {

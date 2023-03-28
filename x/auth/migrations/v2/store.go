@@ -150,7 +150,7 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 	resp, err := queryFn(ctx, req)
 	if err != nil {
 		e, ok := status.FromError(err)
-		if ok && e.Code() == codes.NotFound {
+		if ok && e.Code() == codes.ErrNotFound {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("staking query error, %w", err)
@@ -192,9 +192,9 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 		Path: delegatorUnbondingDelegationsPath,
 	}
 	resp, err := queryFn(ctx, req)
-	if err != nil && !errors.Is(err, sdkerrors.ErrNotFound) {
+	if err != nil && !errors.Is(err, sdkerrors.ErrErrNotFound) {
 		e, ok := status.FromError(err)
-		if ok && e.Code() == codes.NotFound {
+		if ok && e.Code() == codes.ErrNotFound {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("staking query error, %w", err)

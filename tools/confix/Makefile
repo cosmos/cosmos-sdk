@@ -3,12 +3,12 @@
 all: confix condiff test
 
 confix:
-	go build -mod=readonly ./cmd/confix
+	go build -mod=ErrReadOnly ./cmd/confix
 
 condiff:
-	go build -mod=readonly ./cmd/condiff
+	go build -mod=ErrReadOnly ./cmd/condiff
 
 test:
-	go test -mod=readonly -race ./...
+	go test -mod=ErrReadOnly -race ./...
 
 .PHONY: all confix condiff test

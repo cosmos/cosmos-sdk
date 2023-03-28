@@ -115,7 +115,7 @@ func TestCreate(t *testing.T) {
 			var loaded testdata.TableModel
 			err = myTable.GetOne(store, spec.rowID, &loaded)
 			if spec.expErr != nil {
-				require.True(t, sdkerrors.ErrNotFound.Is(err))
+				require.True(t, sdkerrors.ErrErrNotFound.Is(err))
 				return
 			}
 			require.NoError(t, err)
@@ -196,7 +196,7 @@ func TestDelete(t *testing.T) {
 		},
 		"not found": {
 			rowID:  []byte("not-found"),
-			expErr: sdkerrors.ErrNotFound,
+			expErr: sdkerrors.ErrErrNotFound,
 		},
 	}
 	for msg, spec := range specs {
@@ -225,13 +225,13 @@ func TestDelete(t *testing.T) {
 
 			// then
 			var loaded testdata.TableModel
-			if spec.expErr == sdkerrors.ErrNotFound {
+			if spec.expErr == sdkerrors.ErrErrNotFound {
 				require.NoError(t, myTable.GetOne(store, EncodeSequence(1), &loaded))
 				assert.Equal(t, initValue, loaded)
 			} else {
 				err := myTable.GetOne(store, EncodeSequence(1), &loaded)
 				require.Error(t, err)
-				require.Equal(t, err, sdkerrors.ErrNotFound)
+				require.Equal(t, err, sdkerrors.ErrErrNotFound)
 			}
 		})
 	}

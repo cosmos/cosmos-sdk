@@ -167,7 +167,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
+		return nil, sdkerrors.ErrErrNotFound.Wrap("fee-grant not found")
 	}
 
 	var feegrant feegrant.Grant

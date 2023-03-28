@@ -99,7 +99,7 @@ func metadataExists(err error) error {
 
 	// This means we didn't find any metadata for this denom. Returning
 	// empty metadata.
-	if status.Code() == codes.NotFound {
+	if status.Code() == codes.ErrNotFound {
 		return nil
 	}
 

@@ -274,31 +274,31 @@ func (s Subspace) Name() string {
 }
 
 // Wrapper of Subspace, provides immutable functions only
-type ReadOnlySubspace struct {
+type ErrReadOnlySubspace struct {
 	s Subspace
 }
 
 // Get delegates a read-only Get call to the Subspace.
-func (ros ReadOnlySubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+func (ros ErrReadOnlySubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	ros.s.Get(ctx, key, ptr)
 }
 
 // GetRaw delegates a read-only GetRaw call to the Subspace.
-func (ros ReadOnlySubspace) GetRaw(ctx sdk.Context, key []byte) []byte {
+func (ros ErrReadOnlySubspace) GetRaw(ctx sdk.Context, key []byte) []byte {
 	return ros.s.GetRaw(ctx, key)
 }
 
 // Has delegates a read-only Has call to the Subspace.
-func (ros ReadOnlySubspace) Has(ctx sdk.Context, key []byte) bool {
+func (ros ErrReadOnlySubspace) Has(ctx sdk.Context, key []byte) bool {
 	return ros.s.Has(ctx, key)
 }
 
 // Modified delegates a read-only Modified call to the Subspace.
-func (ros ReadOnlySubspace) Modified(ctx sdk.Context, key []byte) bool {
+func (ros ErrReadOnlySubspace) Modified(ctx sdk.Context, key []byte) bool {
 	return ros.s.Modified(ctx, key)
 }
 
 // Name delegates a read-only Name call to the Subspace.
-func (ros ReadOnlySubspace) Name() string {
+func (ros ErrReadOnlySubspace) Name() string {
 	return ros.s.Name()
 }

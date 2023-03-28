@@ -77,7 +77,7 @@ func (k Querier) Validator(c context.Context, req *types.QueryValidatorRequest) 
 	ctx := sdk.UnwrapSDKContext(c)
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "validator %s not found", req.ValidatorAddr)
+		return nil, status.Errorf(codes.ErrNotFound, "validator %s not found", req.ValidatorAddr)
 	}
 
 	return &types.QueryValidatorResponse{Validator: validator}, nil
@@ -198,7 +198,7 @@ func (k Querier) Delegation(c context.Context, req *types.QueryDelegationRequest
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, status.Errorf(
-			codes.NotFound,
+			codes.ErrNotFound,
 			"delegation with delegator %s not found for validator %s",
 			req.DelegatorAddr, req.ValidatorAddr)
 	}
@@ -239,7 +239,7 @@ func (k Querier) UnbondingDelegation(c context.Context, req *types.QueryUnbondin
 	unbond, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, status.Errorf(
-			codes.NotFound,
+			codes.ErrNotFound,
 			"unbonding delegation with delegator %s not found for validator %s",
 			req.DelegatorAddr, req.ValidatorAddr)
 	}
@@ -366,7 +366,7 @@ func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInf
 	ctx := sdk.UnwrapSDKContext(c)
 	hi, found := k.GetHistoricalInfo(ctx, req.Height)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "historical info for height %d not found", req.Height)
+		return nil, status.Errorf(codes.ErrNotFound, "historical info for height %d not found", req.Height)
 	}
 
 	return &types.QueryHistoricalInfoResponse{Hist: &hi}, nil
@@ -485,7 +485,7 @@ func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegations
 	redel, found := k.GetRedelegation(ctx, delAddr, srcValAddr, dstValAddr)
 	if !found {
 		return nil, status.Errorf(
-			codes.NotFound,
+			codes.ErrNotFound,
 			"redelegation not found for delegator address %s from validator address %s",
 			req.DelegatorAddr, req.SrcValidatorAddr)
 	}

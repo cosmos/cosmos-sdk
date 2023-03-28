@@ -82,13 +82,13 @@ func TestIndexedMap(t *testing.T) {
 	require.Equal(t, "2", pk)
 
 	_, err = im.Indexes.Vat.Get(ctx, 1)
-	require.ErrorIs(t, err, collections.ErrNotFound)
+	require.ErrorIs(t, err, collections.ErrErrNotFound)
 
 	// test removal
 	err = im.Remove(ctx, "2")
 	require.NoError(t, err)
 	_, err = im.Indexes.Vat.Get(ctx, 2)
-	require.ErrorIs(t, err, collections.ErrNotFound)
+	require.ErrorIs(t, err, collections.ErrErrNotFound)
 
 	// test iteration
 	iter, err := im.Iterate(ctx, nil)

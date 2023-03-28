@@ -333,7 +333,7 @@ func (i *PriorityNonceIterator[C]) Tx() sdk.Tx {
 
 // Select returns a set of transactions from the mempool, ordered by priority
 // and sender-nonce in O(n) time. The passed in list of transactions are ignored.
-// This is a readonly operation, the mempool is not modified.
+// This is a ErrReadOnly operation, the mempool is not modified.
 //
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
@@ -430,7 +430,7 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}
 	score, ok := mp.scores[scoreKey]
 	if !ok {
-		return ErrTxNotFound
+		return ErrTxErrNotFound
 	}
 	tk := txMeta[C]{nonce: nonce, priority: score.priority, sender: sender, weight: score.weight}
 

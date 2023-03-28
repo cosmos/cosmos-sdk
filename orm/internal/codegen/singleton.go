@@ -79,7 +79,7 @@ func (s singletonGen) genConstructor() {
 	s.P("func New", iface, "(db ", ormTablePkg.Ident("Schema"), ") (", iface, ", error) {")
 	s.P("table := db.GetTable(&", s.msg.GoIdent.GoName, "{})")
 	s.P("if table == nil {")
-	s.P("return nil, ", ormErrPkg.Ident("TableNotFound.Wrap"), "(string((&", s.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")
+	s.P("return nil, ", ormErrPkg.Ident("ErrTableErrNotFound.Wrap"), "(string((&", s.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")
 	s.P("}")
 	s.P("return &", s.messageTableReceiverName(s.msg), "{table}, nil")
 	s.P("}")

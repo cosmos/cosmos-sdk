@@ -99,8 +99,8 @@ func FromGRPCToRosettaError(err error) *Error {
 		return WrapError(ErrUnknown, err.Error())
 	}
 	switch status.Code() {
-	case grpccodes.NotFound:
-		return WrapError(ErrNotFound, status.Message())
+	case grpccodes.ErrNotFound:
+		return WrapError(ErrErrNotFound, status.Message())
 	case grpccodes.FailedPrecondition:
 		return WrapError(ErrBadArgument, status.Message())
 	case grpccodes.InvalidArgument:
@@ -148,10 +148,10 @@ var (
 	ErrInvalidMemo  = RegisterError(11, "invalid memo", false, "returned when the memo is invalid")
 	// ErrBadArgument is returned when the request is malformed
 	ErrBadArgument = RegisterError(400, "bad argument", false, "request is malformed")
-	// ErrNotFound is returned when the required object was not found
+	// ErrErrNotFound is returned when the required object was not found
 	// retry is set to true because something that is not found now
 	// might be found later, example: a TX
-	ErrNotFound = RegisterError(404, "not found", true, "returned when the node does not find what the client is asking for")
+	ErrErrNotFound = RegisterError(404, "not found", true, "returned when the node does not find what the client is asking for")
 	// ErrInternal is returned when the node is experiencing internal errors
 	ErrInternal = RegisterError(500, "internal error", false, "returned when the node experiences internal errors")
 	// ErrBadGateway is returned when there are problems interacting with the nodes

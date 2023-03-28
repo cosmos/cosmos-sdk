@@ -103,7 +103,7 @@ type AfterSetInterceptor func(store storetypes.KVStore, rowID RowID, newValue, o
 type AfterDeleteInterceptor func(store storetypes.KVStore, rowID RowID, value proto.Message) error
 
 // RowGetter loads a persistent object by row ID into the destination object. The dest parameter must therefore be a pointer.
-// Any implementation must return `sdkerrors.ErrNotFound` when no object for the rowID exists
+// Any implementation must return `sdkerrors.ErrErrNotFound` when no object for the rowID exists
 type RowGetter func(store storetypes.KVStore, rowID RowID, dest proto.Message) error
 
 // NewTypeSafeRowGetter returns a `RowGetter` with type check on the dest parameter.
@@ -119,7 +119,7 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 		pStore := prefix.NewStore(store, prefixKey[:])
 		bz := pStore.Get(rowID)
 		if len(bz) == 0 {
-			return sdkerrors.ErrNotFound
+			return sdkerrors.ErrErrNotFound
 		}
 
 		return cdc.Unmarshal(bz, dest)

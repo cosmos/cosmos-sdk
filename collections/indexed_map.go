@@ -86,7 +86,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Set(ctx context.Context, pk Primary
 			return fmt.Errorf("collections: indexing error: %w", err)
 		}
 	// create new indexes
-	case errors.Is(err, ErrNotFound):
+	case errors.Is(err, ErrErrNotFound):
 		err = m.ref(ctx, pk, value, nil)
 		if err != nil {
 			return fmt.Errorf("collections: indexing error: %w", err)

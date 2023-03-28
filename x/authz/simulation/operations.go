@@ -179,7 +179,7 @@ func SimulateMsgRevoke(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.B
 
 		granterAcc, ok := simtypes.FindAccount(accs, granterAddr)
 		if !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "account not found"), nil, sdkerrors.ErrNotFound.Wrapf("account not found")
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "account not found"), nil, sdkerrors.ErrErrNotFound.Wrapf("account not found")
 		}
 
 		spendableCoins := bk.SpendableCoins(ctx, granterAddr)
@@ -251,11 +251,11 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ban
 
 		grantee, ok := simtypes.FindAccount(accs, granteeAddr)
 		if !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.ErrNotFound.Wrapf("grantee account not found")
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.ErrErrNotFound.Wrapf("grantee account not found")
 		}
 
 		if _, ok := simtypes.FindAccount(accs, granterAddr); !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.ErrNotFound.Wrapf("granter account not found")
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.ErrErrNotFound.Wrapf("granter account not found")
 		}
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)

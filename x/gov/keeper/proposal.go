@@ -114,7 +114,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer string) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return errorsmod.Wrapf(types.ErrProposalNotFound, "proposal_id %d", proposalID)
+		return errorsmod.Wrapf(types.ErrProposalErrNotFound, "proposal_id %d", proposalID)
 	}
 
 	// Checking proposal have proposer or not because old proposal doesn't have proposer field,

@@ -54,18 +54,18 @@ var (
 // non-terminal segment of a multi-part key.
 func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, error) {
 	if field == nil {
-		return nil, ormerrors.InvalidKeyField.Wrap("nil field")
+		return nil, ormerrors.ErrInvalidKeyField.Wrap("nil field")
 	}
 	if field.IsList() {
-		return nil, ormerrors.InvalidKeyField.Wrapf("repeated field %s", field.FullName())
+		return nil, ormerrors.ErrInvalidKeyField.Wrapf("repeated field %s", field.FullName())
 	}
 
 	if field.ContainingOneof() != nil {
-		return nil, ormerrors.InvalidKeyField.Wrapf("oneof field %s", field.FullName())
+		return nil, ormerrors.ErrInvalidKeyField.Wrapf("oneof field %s", field.FullName())
 	}
 
 	if field.HasOptionalKeyword() {
-		return nil, ormerrors.InvalidKeyField.Wrapf("optional field %s", field.FullName())
+		return nil, ormerrors.ErrInvalidKeyField.Wrapf("optional field %s", field.FullName())
 	}
 
 	switch field.Kind() {
@@ -105,9 +105,9 @@ func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, erro
 		case durationFullName:
 			return DurationCodec{}, nil
 		default:
-			return nil, ormerrors.InvalidKeyField.Wrapf("%s of type %s", field.FullName(), msgName)
+			return nil, ormerrors.ErrInvalidKeyField.Wrapf("%s of type %s", field.FullName(), msgName)
 		}
 	default:
-		return nil, ormerrors.InvalidKeyField.Wrapf("%s of kind %s", field.FullName(), field.Kind())
+		return nil, ormerrors.ErrInvalidKeyField.Wrapf("%s of kind %s", field.FullName(), field.Kind())
 	}
 }

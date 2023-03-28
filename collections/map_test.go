@@ -19,7 +19,7 @@ func TestMap(t *testing.T) {
 	require.False(t, has)
 	// test get error
 	_, err = m.Get(ctx, 1)
-	require.ErrorIs(t, err, ErrNotFound)
+	require.ErrorIs(t, err, ErrErrNotFound)
 
 	// test set/get
 	err = m.Set(ctx, 1, 100)

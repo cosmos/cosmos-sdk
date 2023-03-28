@@ -261,12 +261,12 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 
 	// no unbondingID set
 	err := s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
+	s.Require().ErrorIs(err, types.ErrUnbondingErrNotFound)
 
 	// unbonding delegation
 	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_UnbondingDelegation)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
+	s.Require().ErrorIs(err, types.ErrUnbondingErrNotFound)
 
 	ubd := types.NewUnbondingDelegation(
 		delAddrs[0],
@@ -291,7 +291,7 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 	unbondingID++
 	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_Redelegation)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
+	s.Require().ErrorIs(err, types.ErrUnbondingErrNotFound)
 
 	red := types.NewRedelegation(
 		delAddrs[0],
@@ -317,7 +317,7 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 	unbondingID++
 	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_ValidatorUnbonding)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
+	s.Require().ErrorIs(err, types.ErrUnbondingErrNotFound)
 
 	val := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
 	s.stakingKeeper.SetValidator(s.ctx, val)

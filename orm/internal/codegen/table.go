@@ -24,7 +24,7 @@ type tableGen struct {
 	ormTable         ormtable.Table
 }
 
-const notFoundDocs = " returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found."
+const ErrNotFoundDocs = " returns nil and an error which responds true to ormerrors.IsErrNotFound() if the record was not found."
 
 func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1.TableDescriptor) (*tableGen, error) {
 	t := &tableGen{fileGen: fileGen, msg: msg, table: table, fields: map[protoreflect.Name]*protogen.Field{}}
@@ -68,7 +68,7 @@ func (t tableGen) getTableInterface() {
 	t.P("Save(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Delete(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error)")
-	t.P("// Get", notFoundDocs)
+	t.P("// Get", ErrNotFoundDocs)
 	t.P("Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", t.QualifiedGoIdent(t.msg.GoIdent), ", error)")
 
 	for _, idx := range t.uniqueIndexes {
@@ -101,7 +101,7 @@ func (t tableGen) uniqueIndexSig(idxFields string) (string, string, string) {
 func (t tableGen) genUniqueIndexSig(idx *ormv1.SecondaryIndexDescriptor) {
 	hasSig, getSig, getFuncName := t.uniqueIndexSig(idx.Fields)
 	t.P(hasSig)
-	t.P("// ", getFuncName, notFoundDocs)
+	t.P("// ", getFuncName, ErrNotFoundDocs)
 	t.P(getSig)
 }
 
@@ -185,7 +185,7 @@ func (t tableGen) genTableImpl() {
 	t.P("return nil, err")
 	t.P("}")
 	t.P("if !found {")
-	t.P("return nil, ", ormErrPkg.Ident("NotFound"))
+	t.P("return nil, ", ormErrPkg.Ident("ErrNotFound"))
 	t.P("}")
 	t.P("return &", varName, ", nil")
 	t.P("}")
@@ -221,7 +221,7 @@ func (t tableGen) genTableImpl() {
 		t.P("return nil, err")
 		t.P("}")
 		t.P("if !found {")
-		t.P("return nil, ", ormErrPkg.Ident("NotFound"))
+		t.P("return nil, ", ormErrPkg.Ident("ErrNotFound"))
 		t.P("}")
 		t.P("return &", varName, ", nil")
 		t.P("}")
@@ -269,7 +269,7 @@ func (t tableGen) genConstructor() {
 	t.P("func New", iface, "(db ", ormTablePkg.Ident("Schema"), ") (", iface, ", error) {")
 	t.P("table := db.GetTable(&", t.msg.GoIdent.GoName, "{})")
 	t.P("if table == nil {")
-	t.P("return nil,", ormErrPkg.Ident("TableNotFound.Wrap"), "(string((&", t.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")
+	t.P("return nil,", ormErrPkg.Ident("ErrTableErrNotFound.Wrap"), "(string((&", t.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")
 	t.P("}")
 	if t.table.PrimaryKey.AutoIncrement {
 		t.P(

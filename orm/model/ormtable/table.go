@@ -67,7 +67,7 @@ type Table interface {
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
 	//
-	// If a unique key constraint is violated, ormerrors.UniqueKeyViolation
+	// If a unique key constraint is violated, ormerrors.ErrUniqueKeyViolation
 	// (or an error wrapping it) will be returned.
 	Save(context context.Context, message proto.Message) error
 
@@ -75,14 +75,14 @@ type Table interface {
 	// an unique key violation. See Save for more details on behavior.
 	//
 	// If an entity with the same primary key exists, an error wrapping
-	// ormerrors.AlreadyExists will be returned.
+	// ormerrors.ErrAlreadyExists will be returned.
 	Insert(ctx context.Context, message proto.Message) error
 
 	// Update updates the provided entry in the store and fails if an entry
 	// with a matching primary key does not exist. See Save for more details
 	// on behavior.
 	//
-	// If an entity with the same primary key does not exist, ormerrors.NotFound
+	// If an entity with the same primary key does not exist, ormerrors.ErrNotFound
 	// (or an error wrapping it) will be returned.
 	Update(ctx context.Context, message proto.Message) error
 

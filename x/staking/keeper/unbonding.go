@@ -213,7 +213,7 @@ func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, 
 func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
 	unbondingType, found := k.GetUnbondingType(ctx, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	switch unbondingType {
@@ -230,7 +230,7 @@ func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
 			return err
 		}
 	default:
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	return nil
@@ -239,12 +239,12 @@ func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
 func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) error {
 	ubd, found := k.GetUnbondingDelegationByUnbondingID(ctx, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	i, found := unbondingDelegationEntryArrayIndex(ubd, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	// The entry must be on hold
@@ -297,12 +297,12 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) error {
 	red, found := k.GetRedelegationByUnbondingID(ctx, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	i, found := redelegationEntryArrayIndex(red, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	// The entry must be on hold
@@ -337,7 +337,7 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) error {
 func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) error {
 	val, found := k.GetValidatorByUnbondingID(ctx, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	if val.UnbondingOnHoldRefCount <= 0 {
@@ -360,7 +360,7 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) error 
 func (k Keeper) PutUnbondingOnHold(ctx sdk.Context, id uint64) error {
 	unbondingType, found := k.GetUnbondingType(ctx, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 	switch unbondingType {
 	case types.UnbondingType_UnbondingDelegation:
@@ -376,7 +376,7 @@ func (k Keeper) PutUnbondingOnHold(ctx sdk.Context, id uint64) error {
 			return err
 		}
 	default:
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	return nil
@@ -385,12 +385,12 @@ func (k Keeper) PutUnbondingOnHold(ctx sdk.Context, id uint64) error {
 func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) error {
 	ubd, found := k.GetUnbondingDelegationByUnbondingID(ctx, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	i, found := unbondingDelegationEntryArrayIndex(ubd, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	ubd.Entries[i].UnbondingOnHoldRefCount++
@@ -402,12 +402,12 @@ func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) er
 func (k Keeper) putRedelegationEntryOnHold(ctx sdk.Context, id uint64) error {
 	red, found := k.GetRedelegationByUnbondingID(ctx, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	i, found := redelegationEntryArrayIndex(red, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	red.Entries[i].UnbondingOnHoldRefCount++
@@ -419,7 +419,7 @@ func (k Keeper) putRedelegationEntryOnHold(ctx sdk.Context, id uint64) error {
 func (k Keeper) putValidatorOnHold(ctx sdk.Context, id uint64) error {
 	val, found := k.GetValidatorByUnbondingID(ctx, id)
 	if !found {
-		return types.ErrUnbondingNotFound
+		return types.ErrUnbondingErrNotFound
 	}
 
 	val.UnbondingOnHoldRefCount++

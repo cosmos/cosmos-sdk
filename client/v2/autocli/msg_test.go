@@ -278,7 +278,7 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 	assert.ErrorContains(t, err, "can't find service un-existent-service")
 }
 
-func TestNotFoundErrorsMsg(t *testing.T) {
+func TestErrNotFoundErrorsMsg(t *testing.T) {
 	b := &Builder{}
 	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transitions commands for the %s module", moduleName))

@@ -121,7 +121,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			switch err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&groupMember), &prevGroupMember); {
 			case err == nil:
 				found = true
-			case sdkerrors.ErrNotFound.Is(err):
+			case sdkerrors.ErrErrNotFound.Is(err):
 				found = false
 			default:
 				return errorsmod.Wrap(err, "get group member")
@@ -136,7 +136,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			if newMemberWeight.IsZero() {
 				// We can't delete a group member that doesn't already exist.
 				if !found {
-					return errorsmod.Wrap(sdkerrors.ErrNotFound, "unknown member")
+					return errorsmod.Wrap(sdkerrors.ErrErrNotFound, "unknown member")
 				}
 
 				previousMemberWeight, err := math.NewPositiveDecFromString(prevGroupMember.Member.Weight)
@@ -876,8 +876,8 @@ func (k Keeper) getGroupMember(ctx sdk.Context, member *group.GroupMember) (*gro
 		orm.PrimaryKey(member), &groupMember); {
 	case err == nil:
 		break
-	case sdkerrors.ErrNotFound.Is(err):
-		return nil, sdkerrors.ErrNotFound.Wrapf("%s is not part of group %d", member.Member.Address, member.GroupId)
+	case sdkerrors.ErrErrNotFound.Is(err):
+		return nil, sdkerrors.ErrErrNotFound.Wrapf("%s is not part of group %d", member.Member.Address, member.GroupId)
 	default:
 		return nil, err
 	}

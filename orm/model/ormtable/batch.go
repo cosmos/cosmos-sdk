@@ -14,12 +14,12 @@ func newBatchIndexCommitmentWriter(store Backend) *batchIndexCommitmentWriter {
 	return &batchIndexCommitmentWriter{
 		Backend: store,
 		commitmentWriter: &batchStoreWriter{
-			ReadonlyStore: store.CommitmentStoreReader(),
-			curBuf:        make([]*batchWriterEntry, 0, capacity),
+			ErrReadOnlyStore: store.CommitmentStoreReader(),
+			curBuf:           make([]*batchWriterEntry, 0, capacity),
 		},
 		indexWriter: &batchStoreWriter{
-			ReadonlyStore: store.IndexStoreReader(),
-			curBuf:        make([]*batchWriterEntry, 0, capacity),
+			ErrReadOnlyStore: store.IndexStoreReader(),
+			curBuf:           make([]*batchWriterEntry, 0, capacity),
 		},
 	}
 }
@@ -95,7 +95,7 @@ type batchWriterEntry struct {
 }
 
 type batchStoreWriter struct {
-	kv.ReadonlyStore
+	kv.ErrReadOnlyStore
 	prevBufs [][]*batchWriterEntry
 	curBuf   []*batchWriterEntry
 }

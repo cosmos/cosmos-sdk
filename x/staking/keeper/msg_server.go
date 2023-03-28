@@ -409,7 +409,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, status.Errorf(
-			codes.NotFound,
+			codes.ErrNotFound,
 			"unbonding delegation with delegator %s not found for validator %s",
 			msg.DelegatorAddress, msg.ValidatorAddress,
 		)
@@ -428,7 +428,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		}
 	}
 	if unbondEntryIndex == -1 {
-		return nil, sdkerrors.ErrNotFound.Wrapf("unbonding delegation entry is not found at block height %d", msg.CreationHeight)
+		return nil, sdkerrors.ErrErrNotFound.Wrapf("unbonding delegation entry is not found at block height %d", msg.CreationHeight)
 	}
 
 	if unbondEntry.Balance.LT(msg.Amount.Amount) {

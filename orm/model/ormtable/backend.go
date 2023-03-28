@@ -10,10 +10,10 @@ import (
 // ReadBackend defines the type used for read-only ORM operations.
 type ReadBackend interface {
 	// CommitmentStoreReader returns the reader for the commitment store.
-	CommitmentStoreReader() kv.ReadonlyStore
+	CommitmentStoreReader() kv.ErrReadOnlyStore
 
 	// IndexStoreReader returns the reader for the index store.
-	IndexStoreReader() kv.ReadonlyStore
+	IndexStoreReader() kv.ErrReadOnlyStore
 
 	private()
 }
@@ -51,23 +51,23 @@ type Backend interface {
 // used for all operations.
 type ReadBackendOptions struct {
 	// CommitmentStoreReader is a reader for the commitment store.
-	CommitmentStoreReader kv.ReadonlyStore
+	CommitmentStoreReader kv.ErrReadOnlyStore
 
 	// IndexStoreReader is an optional reader for the index store.
 	// If it is nil the CommitmentStoreReader will be used.
-	IndexStoreReader kv.ReadonlyStore
+	IndexStoreReader kv.ErrReadOnlyStore
 }
 
 type readBackend struct {
-	commitmentReader kv.ReadonlyStore
-	indexReader      kv.ReadonlyStore
+	commitmentReader kv.ErrReadOnlyStore
+	indexReader      kv.ErrReadOnlyStore
 }
 
-func (r readBackend) CommitmentStoreReader() kv.ReadonlyStore {
+func (r readBackend) CommitmentStoreReader() kv.ErrReadOnlyStore {
 	return r.commitmentReader
 }
 
-func (r readBackend) IndexStoreReader() kv.ReadonlyStore {
+func (r readBackend) IndexStoreReader() kv.ErrReadOnlyStore {
 	return r.indexReader
 }
 
@@ -112,11 +112,11 @@ func (c backend) WithWriteHooks(hooks WriteHooks) Backend {
 
 func (backend) private() {}
 
-func (c backend) CommitmentStoreReader() kv.ReadonlyStore {
+func (c backend) CommitmentStoreReader() kv.ErrReadOnlyStore {
 	return c.commitmentStore
 }
 
-func (c backend) IndexStoreReader() kv.ReadonlyStore {
+func (c backend) IndexStoreReader() kv.ErrReadOnlyStore {
 	return c.indexStore
 }
 

@@ -88,5 +88,5 @@ func TestUniqueKeyCodec(t *testing.T) {
 func TestTrivialUnique(t *testing.T) {
 	_, err := ormkv.NewUniqueKeyCodec(nil, (&testpb.ExampleTable{}).ProtoReflect().Type(),
 		[]protoreflect.Name{"u32", "str"}, []protoreflect.Name{"str", "u32"})
-	assert.ErrorIs(t, err, ormerrors.InvalidTableDefinition)
+	assert.ErrorIs(t, err, ormerrors.ErrInvalidTableDefinition)
 }

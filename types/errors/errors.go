@@ -72,8 +72,8 @@ var (
 	// ErrTxTooLarge defines an ABCI typed error where tx is too large.
 	ErrTxTooLarge = errorsmod.Register(RootCodespace, 21, "tx too large")
 
-	// ErrKeyNotFound defines an error when the key doesn't exist
-	ErrKeyNotFound = errorsmod.Register(RootCodespace, 22, "key not found")
+	// ErrKeyErrNotFound defines an error when the key doesn't exist
+	ErrKeyErrNotFound = errorsmod.Register(RootCodespace, 22, "key not found")
 
 	// ErrWrongPassword defines an error when the key password is invalid.
 	ErrWrongPassword = errorsmod.Register(RootCodespace, 23, "invalid account password")
@@ -125,8 +125,8 @@ var (
 	// supported.
 	ErrNotSupported = errorsmod.Register(RootCodespace, 37, "feature not supported")
 
-	// ErrNotFound defines an error when requested entity doesn't exist in the state.
-	ErrNotFound = errorsmod.Register(RootCodespace, 38, "not found")
+	// ErrErrNotFound defines an error when requested entity doesn't exist in the state.
+	ErrErrNotFound = errorsmod.Register(RootCodespace, 38, "not found")
 
 	// ErrIO should be used to wrap internal errors caused by external operation.
 	// Examples: not DB domain error, file writing etc...

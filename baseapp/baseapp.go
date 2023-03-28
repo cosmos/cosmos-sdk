@@ -712,7 +712,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		}
 	} else if mode == runTxModeDeliver {
 		err = app.mempool.Remove(tx)
-		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+		if err != nil && !errors.Is(err, mempool.ErrTxErrNotFound) {
 			return gInfo, nil, anteEvents, priority,
 				fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
@@ -958,7 +958,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			bz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
 				err := h.mempool.Remove(memTx)
-				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				if err != nil && !errors.Is(err, mempool.ErrTxErrNotFound) {
 					panic(err)
 				}
 			} else {

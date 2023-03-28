@@ -41,10 +41,10 @@ func TestTypeSafeRowGetter(t *testing.T) {
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
 			expObj:       md,
 		},
-		"unknown rowID should return sdkerrors.ErrNotFound": {
+		"unknown rowID should return sdkerrors.ErrErrNotFound": {
 			srcRowID:     EncodeSequence(2),
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
-			expErr:       sdkerrors.ErrNotFound,
+			expErr:       sdkerrors.ErrErrNotFound,
 		},
 		"wrong type should cause sdkerrors.ErrInvalidType": {
 			srcRowID:     EncodeSequence(1),

@@ -38,6 +38,6 @@ type Iterator interface {
 }
 
 var (
-	ErrTxNotFound           = errors.New("tx not found in mempool")
+	ErrTxErrNotFound        = errors.New("tx not found in mempool")
 	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
 )

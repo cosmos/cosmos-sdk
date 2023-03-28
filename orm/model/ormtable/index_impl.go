@@ -114,7 +114,7 @@ func (i indexKeyIndex) readValueFromIndexKey(backend ReadBackend, primaryKey []p
 	}
 
 	if !found {
-		return ormerrors.UnexpectedError.Wrapf("can't find primary key")
+		return ormerrors.ErrUnexpectedError.Wrapf("can't find primary key")
 	}
 
 	return nil

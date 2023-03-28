@@ -33,7 +33,7 @@ func (s GenesisState) Validate() error {
 
 		// check that group with group policy's GroupId exists
 		if _, exists := groups[g.GroupId]; !exists {
-			return errorsmod.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group with GroupId %d doesn't exist", g.GroupId))
+			return errorsmod.Wrap(sdkerrors.ErrErrNotFound, fmt.Sprintf("group with GroupId %d doesn't exist", g.GroupId))
 		}
 
 		if err := g.ValidateBasic(); err != nil {
@@ -46,7 +46,7 @@ func (s GenesisState) Validate() error {
 
 		// check that group with group member's GroupId exists
 		if _, exists := groups[g.GroupId]; !exists {
-			return errorsmod.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group member with GroupId %d doesn't exist", g.GroupId))
+			return errorsmod.Wrap(sdkerrors.ErrErrNotFound, fmt.Sprintf("group member with GroupId %d doesn't exist", g.GroupId))
 		}
 
 		if err := g.ValidateBasic(); err != nil {
@@ -59,7 +59,7 @@ func (s GenesisState) Validate() error {
 
 		// check that group policy with proposal address exists
 		if _, exists := groupPolicies[p.GroupPolicyAddress]; !exists {
-			return errorsmod.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group policy account with address %s doesn't correspond to proposal address", p.GroupPolicyAddress))
+			return errorsmod.Wrap(sdkerrors.ErrErrNotFound, fmt.Sprintf("group policy account with address %s doesn't correspond to proposal address", p.GroupPolicyAddress))
 		}
 
 		if err := p.ValidateBasic(); err != nil {
@@ -76,7 +76,7 @@ func (s GenesisState) Validate() error {
 
 		// check that proposal exists
 		if _, exists := proposals[v.ProposalId]; !exists {
-			return errorsmod.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("proposal with ProposalId %d doesn't exist", v.ProposalId))
+			return errorsmod.Wrap(sdkerrors.ErrErrNotFound, fmt.Sprintf("proposal with ProposalId %d doesn't exist", v.ProposalId))
 		}
 	}
 	return nil

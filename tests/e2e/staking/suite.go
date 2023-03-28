@@ -1393,7 +1393,7 @@ func (s *E2ETestSuite) TestNewCancelUnbondingDelegationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, sdkerrors.ErrNotFound.ABCICode(), &sdk.TxResponse{},
+			false, sdkerrors.ErrErrNotFound.ABCICode(), &sdk.TxResponse{},
 		},
 		{
 			"Invalid unbonding amount (higher than the unbonding amount)",
@@ -1427,7 +1427,7 @@ func (s *E2ETestSuite) TestNewCancelUnbondingDelegationCmd() {
 		s.Run(tc.name, func() {
 			cmd := cli.NewCancelUnbondingDelegation()
 			clientCtx := val.ClientCtx
-			if !tc.expectErr && tc.expectedCode != sdkerrors.ErrNotFound.ABCICode() {
+			if !tc.expectErr && tc.expectedCode != sdkerrors.ErrErrNotFound.ABCICode() {
 				getCreationHeight := func() int64 {
 					// fethichg the unbonding delegations
 					resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", val.APIAddress, val.Address.String()))

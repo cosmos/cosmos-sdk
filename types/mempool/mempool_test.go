@@ -182,7 +182,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	// removing a tx not in the mempool should error
 	s.resetMempool()
 	require.NoError(t, s.mempool.Insert(ctx, txs[0]))
-	require.ErrorIs(t, s.mempool.Remove(txs[1]), mempool.ErrTxNotFound)
+	require.ErrorIs(t, s.mempool.Remove(txs[1]), mempool.ErrTxErrNotFound)
 
 	// inserting a tx with a different priority should overwrite the old tx
 	newPriorityTx := testTx{

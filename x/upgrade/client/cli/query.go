@@ -144,7 +144,7 @@ func GetModuleVersionsCmd() *cobra.Command {
 			}
 
 			if res.ModuleVersions == nil {
-				return errors.ErrNotFound
+				return errors.ErrErrNotFound
 			}
 
 			return clientCtx.PrintProto(res)

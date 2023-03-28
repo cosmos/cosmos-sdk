@@ -175,7 +175,7 @@ func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
 	// if the key is not there or if we have a problem with a keyring itself then we move to a
 	// fallback: searching for key by address.
 
-	if err == nil || !errorsmod.IsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
+	if err == nil || !errorsmod.IsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyErrNotFound) {
 		return k, err
 	}
 

@@ -39,7 +39,7 @@ func (q Keeper) Proposal(c context.Context, req *v1.QueryProposalRequest) (*v1.Q
 
 	proposal, found := q.GetProposal(ctx, req.ProposalId)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+		return nil, status.Errorf(codes.ErrNotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 
 	return &v1.QueryProposalResponse{Proposal: &proposal}, nil
@@ -269,7 +269,7 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 
 	proposal, ok := q.GetProposal(ctx, req.ProposalId)
 	if !ok {
-		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+		return nil, status.Errorf(codes.ErrNotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 
 	var tallyResult v1.TallyResult

@@ -194,7 +194,7 @@ func TestTimestampIndex(t *testing.T) {
 }
 
 // check that the ormkv.Entry's decode and encode to the same bytes
-func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.ReadonlyStore) {
+func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.ErrReadOnlyStore) {
 	it, err := store.Iterator(nil, nil)
 	assert.NilError(t, err)
 	for it.Valid() {
@@ -703,7 +703,7 @@ func TableDataGen[T proto.Message](elemGen *rapid.Generator[T], n int) *rapid.Ge
 		for i := 0; i < n; {
 			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i))
 			err := table.Insert(store, message)
-			if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
+			if sdkerrors.IsOf(err, ormerrors.ErrPrimaryKeyErrConstraintViolation, ormerrors.ErrUniqueKeyViolation) {
 				continue
 			} else if err != nil {
 				panic(err)
@@ -780,7 +780,7 @@ func TestJSONExportImport(t *testing.T) {
 	for i := 0; i < 100; {
 		x := testutil.GenA.Example()
 		err = table.Insert(store, x)
-		if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
+		if sdkerrors.IsOf(err, ormerrors.ErrPrimaryKeyErrConstraintViolation, ormerrors.ErrUniqueKeyViolation) {
 			continue
 		} else {
 			assert.NilError(t, err)
@@ -831,7 +831,7 @@ func protoValuesToInterfaces(ks []protoreflect.Value) []interface{} {
 	return values
 }
 
-func TestReadonly(t *testing.T) {
+func TestErrReadOnly(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
@@ -841,7 +841,7 @@ func TestReadonly(t *testing.T) {
 		IndexStoreReader:      dbm.NewMemDB(),
 	})
 	ctx := ormtable.WrapContextDefault(readBackend)
-	assert.ErrorIs(t, ormerrors.ReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))
+	assert.ErrorIs(t, ormerrors.ErrReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))
 }
 
 func TestInsertReturningFieldName(t *testing.T) {

@@ -3,9 +3,9 @@
 all: cosmovisor test
 
 cosmovisor:
-	go build -mod=readonly ./cmd/cosmovisor
+	go build -mod=ErrReadOnly ./cmd/cosmovisor
 
 test:
-	go test -mod=readonly -race ./...
+	go test -mod=ErrReadOnly -race ./...
 
 .PHONY: all cosmovisor test

@@ -486,7 +486,7 @@ func TestExportPrivKey(t *testing.T) {
 			createKey: func(keystore Keyring) (*Record, string, error) {
 				return nil, "", nil
 			},
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -737,7 +737,7 @@ func TestExportPubkey(t *testing.T) {
 				return r.GetPubKey()
 			},
 			codec:       cdc,
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 		{
 			name:      "previous space on export uid",
@@ -748,7 +748,7 @@ func TestExportPubkey(t *testing.T) {
 				return r.GetPubKey()
 			},
 			codec:       cdc,
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 		{
 			name:      "export uid with suffix space",
@@ -759,7 +759,7 @@ func TestExportPubkey(t *testing.T) {
 				return r.GetPubKey()
 			},
 			codec:       cdc,
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 		{
 			name:      "correct in memory export",
@@ -781,7 +781,7 @@ func TestExportPubkey(t *testing.T) {
 				return r.GetPubKey()
 			},
 			codec:       cdc,
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 		{
 			name:      "in memory previous space on export uid",
@@ -792,7 +792,7 @@ func TestExportPubkey(t *testing.T) {
 				return r.GetPubKey()
 			},
 			codec:       cdc,
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 		{
 			name:      "in memory export uid with suffix space",
@@ -803,7 +803,7 @@ func TestExportPubkey(t *testing.T) {
 				return r.GetPubKey()
 			},
 			codec:       cdc,
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -1410,9 +1410,9 @@ func TestAltKeyring_Get(t *testing.T) {
 		{
 			name:        "not found key",
 			backend:     BackendTest,
-			uid:         "notFoundUid",
-			uidToFind:   "notFound",
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			uid:         "ErrNotFoundUid",
+			uidToFind:   "ErrNotFound",
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 		{
 			name:        "in memory correct get",
@@ -1424,9 +1424,9 @@ func TestAltKeyring_Get(t *testing.T) {
 		{
 			name:        "in memory not found key",
 			backend:     BackendMemory,
-			uid:         "notFoundUid",
-			uidToFind:   "notFound",
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			uid:         "ErrNotFoundUid",
+			uidToFind:   "ErrNotFound",
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -1470,11 +1470,11 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 		{
 			name:    "not found key",
 			backend: BackendTest,
-			uid:     "notFoundUid",
+			uid:     "ErrNotFoundUid",
 			getAddres: func(k *Record) (sdk.AccAddress, error) {
 				return nil, nil
 			},
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -1519,8 +1519,8 @@ func TestAltKeyring_Delete(t *testing.T) {
 			name:        "not found delete",
 			backend:     BackendTest,
 			uid:         "deleteKey",
-			uidToDelete: "notFound",
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			uidToDelete: "ErrNotFound",
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 		{
 			name:        "in memory correct delete",
@@ -1533,8 +1533,8 @@ func TestAltKeyring_Delete(t *testing.T) {
 			name:        "in memory not found delete",
 			backend:     BackendMemory,
 			uid:         "inMemoryDeleteKey",
-			uidToDelete: "notFound",
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			uidToDelete: "ErrNotFound",
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -1585,11 +1585,11 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 		{
 			name:    "not found",
 			backend: BackendTest,
-			uid:     "notFoundUid",
+			uid:     "ErrNotFoundUid",
 			getAddres: func(k *Record) (sdk.AccAddress, error) {
 				return nil, nil
 			},
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 		{
 			name:    "in memory correct delete",
@@ -1603,11 +1603,11 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 		{
 			name:    "in memory not found",
 			backend: BackendMemory,
-			uid:     "inMemoryNotFoundUid",
+			uid:     "inMemoryErrNotFoundUid",
 			getAddres: func(k *Record) (sdk.AccAddress, error) {
 				return nil, nil
 			},
-			expectedErr: sdkerrors.ErrKeyNotFound,
+			expectedErr: sdkerrors.ErrKeyErrNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -1927,7 +1927,7 @@ func TestRenameKey(t *testing.T) {
 				newKeyRecord(t, kr, key1)
 				newKeyRecord(t, kr, key2)
 				err := kr.Rename(key2, key1)
-				require.True(t, errors.Is(err, ErrKeyAlreadyExists))
+				require.True(t, errors.Is(err, ErrKeyErrAlreadyExists))
 				assertKeysExist(t, kr, key1, key2) // keys should still exist after failed rename
 			},
 		},
@@ -1937,7 +1937,7 @@ func TestRenameKey(t *testing.T) {
 				keyName := "keyName"
 				newKeyRecord(t, kr, keyName)
 				err := kr.Rename(keyName, keyName)
-				require.True(t, errors.Is(err, ErrKeyAlreadyExists))
+				require.True(t, errors.Is(err, ErrKeyErrAlreadyExists))
 				assertKeysExist(t, kr, keyName)
 			},
 		},

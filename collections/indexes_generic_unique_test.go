@@ -62,11 +62,11 @@ func TestGenericUniqueIndex(t *testing.T) {
 
 	// the updated balance does not contain nft with id 0
 	_, err = ui.Get(ctx, 0)
-	require.ErrorIs(t, err, ErrNotFound)
+	require.ErrorIs(t, err, ErrErrNotFound)
 
 	// unreferencing clears all the indexes
 	err = ui.Unreference(ctx, "cosmosAddr1", nftBalance{nftIDs: []uint64{1}})
 	require.NoError(t, err)
 	_, err = ui.Get(ctx, 1)
-	require.ErrorIs(t, err, ErrNotFound)
+	require.ErrorIs(t, err, ErrErrNotFound)
 }

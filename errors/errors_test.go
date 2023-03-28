@@ -209,9 +209,9 @@ func (s *errorsTestSuite) TestABCIError() {
 
 func (s *errorsTestSuite) TestGRPCStatus() {
 	s.Require().Equal(codes.Unknown, grpcstatus.Code(errInternal))
-	s.Require().Equal(codes.NotFound, grpcstatus.Code(ErrNotFound))
+	s.Require().Equal(codes.ErrNotFound, grpcstatus.Code(ErrErrNotFound))
 
-	status, ok := grpcstatus.FromError(ErrNotFound)
+	status, ok := grpcstatus.FromError(ErrErrNotFound)
 	s.Require().True(ok)
 	s.Require().Equal("codespace testtesttest code 38: not found", status.Message())
 
@@ -219,7 +219,7 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 	s.Require().Equal(codes.Unimplemented, grpcstatus.Code(ErrNotSupported.Wrap("test")))
 	s.Require().Equal(codes.FailedPrecondition, grpcstatus.Code(ErrConflict.Wrapf("test %s", "foo")))
 
-	status, ok = grpcstatus.FromError(ErrNotFound.Wrap("test"))
+	status, ok = grpcstatus.FromError(ErrErrNotFound.Wrap("test"))
 	s.Require().True(ok)
 	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
 }
@@ -245,7 +245,7 @@ var (
 	ErrInvalidRequest          = Register(testCodespace, 18, "invalid request")
 	ErrMempoolIsFull           = Register(testCodespace, 20, "mempool is full")
 	ErrTxTooLarge              = Register(testCodespace, 21, "tx too large")
-	ErrKeyNotFound             = Register(testCodespace, 22, "key not found")
+	ErrKeyErrNotFound          = Register(testCodespace, 22, "key not found")
 	ErrorInvalidSigner         = Register(testCodespace, 24, "tx intended signer does not match the given signer")
 	ErrInvalidChainID          = Register(testCodespace, 28, "invalid chain-id")
 	ErrInvalidType             = Register(testCodespace, 29, "invalid type")
@@ -254,6 +254,6 @@ var (
 	ErrLogic                   = Register(testCodespace, 35, "internal logic error")
 	ErrConflict                = RegisterWithGRPCCode(testCodespace, 36, codes.FailedPrecondition, "conflict")
 	ErrNotSupported            = RegisterWithGRPCCode(testCodespace, 37, codes.Unimplemented, "feature not supported")
-	ErrNotFound                = RegisterWithGRPCCode(testCodespace, 38, codes.NotFound, "not found")
+	ErrErrNotFound             = RegisterWithGRPCCode(testCodespace, 38, codes.ErrNotFound, "not found")
 	ErrIO                      = Register(testCodespace, 39, "Internal IO error")
 )

@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	// ErrNotFound is returned when the provided key is not present in the StorageProvider.
-	ErrNotFound = errors.New("collections: not found")
+	// ErrErrNotFound is returned when the provided key is not present in the StorageProvider.
+	ErrErrNotFound = errors.New("collections: not found")
 	// ErrEncoding is returned when something fails during key or value encoding/decoding.
 	ErrEncoding = codec.ErrEncoding
 	// ErrConflict is returned when there are conflicts, for example in UniqueIndex.

@@ -397,7 +397,7 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 			if err != nil {
 				out.MessageResponse = &rpb.ServerReflectionResponse_ErrorResponse{
 					ErrorResponse: &rpb.ErrorResponse{
-						ErrorCode:    int32(codes.NotFound),
+						ErrorCode:    int32(codes.ErrNotFound),
 						ErrorMessage: err.Error(),
 					},
 				}
@@ -411,7 +411,7 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 			if err != nil {
 				out.MessageResponse = &rpb.ServerReflectionResponse_ErrorResponse{
 					ErrorResponse: &rpb.ErrorResponse{
-						ErrorCode:    int32(codes.NotFound),
+						ErrorCode:    int32(codes.ErrNotFound),
 						ErrorMessage: err.Error(),
 					},
 				}
@@ -427,7 +427,7 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 			if err != nil {
 				out.MessageResponse = &rpb.ServerReflectionResponse_ErrorResponse{
 					ErrorResponse: &rpb.ErrorResponse{
-						ErrorCode:    int32(codes.NotFound),
+						ErrorCode:    int32(codes.ErrNotFound),
 						ErrorMessage: err.Error(),
 					},
 				}
@@ -441,7 +441,7 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 			if err != nil {
 				out.MessageResponse = &rpb.ServerReflectionResponse_ErrorResponse{
 					ErrorResponse: &rpb.ErrorResponse{
-						ErrorCode:    int32(codes.NotFound),
+						ErrorCode:    int32(codes.ErrNotFound),
 						ErrorMessage: err.Error(),
 					},
 				}

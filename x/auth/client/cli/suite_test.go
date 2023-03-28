@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -46,6 +48,8 @@ type CLITestSuite struct {
 	clientCtx client.Context
 	val       sdk.AccAddress
 	val1      sdk.AccAddress
+
+	ac address.Codec
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -99,6 +103,8 @@ func (s *CLITestSuite) SetupSuite() {
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
+
+	s.ac = addresscodec.NewBech32Codec("cosmos")
 }
 
 func (s *CLITestSuite) TestCLIValidateSignatures() {
@@ -456,6 +462,7 @@ func (s *CLITestSuite) TestCLIMultisignInsufficientCosigners() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
@@ -544,6 +551,7 @@ func (s *CLITestSuite) TestCLIMultisignSortSignatures() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
@@ -617,6 +625,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
@@ -658,6 +667,7 @@ func (s *CLITestSuite) TestCLIMultisign() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
@@ -731,6 +741,7 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 		sdk.NewCoins(
 			sdk.NewCoin("stake", sdk.NewInt(1)),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
@@ -1266,7 +1277,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 }
 
 func (s *CLITestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
-	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr)
+	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr, s.ac)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -1285,5 +1296,5 @@ func (s *CLITestSuite) createBankMsg(clientCtx client.Context, toAddr sdk.AccAdd
 	}
 
 	flags = append(flags, extraFlags...)
-	return clitestutil.MsgSendExec(clientCtx, s.val, toAddr, amount, flags...)
+	return clitestutil.MsgSendExec(clientCtx, s.val, toAddr, amount, s.ac, flags...)
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -21,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/client/cli"
 	nftmodule "cosmossdk.io/x/nft/module"
@@ -75,6 +77,8 @@ type CLITestSuite struct {
 	ctx       context.Context
 
 	owner sdk.AccAddress
+
+	ac address.Codec
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -119,6 +123,8 @@ func (s *CLITestSuite) SetupSuite() {
 	nftDataBz, err := s.encCfg.Codec.MarshalJSON(&nftGenesis)
 	s.Require().NoError(err)
 	genesisState[nft.ModuleName] = nftDataBz
+
+	s.ac = codecaddress.NewBech32Codec("cosmos")
 
 	s.initAccount()
 }
@@ -229,6 +235,6 @@ func (s *CLITestSuite) initAccount() {
 	s.Require().NoError(err)
 
 	amount := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200)))
-	_, err = clitestutil.MsgSendExec(ctx, accounts[0].Address, s.owner, amount, args...)
+	_, err = clitestutil.MsgSendExec(ctx, accounts[0].Address, s.owner, amount, s.ac, args...)
 	s.Require().NoError(err)
 }

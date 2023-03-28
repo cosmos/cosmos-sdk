@@ -12,8 +12,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -46,6 +48,8 @@ type CLITestSuite struct {
 	clientCtx client.Context
 	grantee   []sdk.AccAddress
 	addrs     []sdk.AccAddress
+
+	ac address.Codec
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -152,6 +156,8 @@ func (s *CLITestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+
+	s.ac = addresscodec.NewBech32Codec("cosmos")
 }
 
 func (s *CLITestSuite) createAccount(uid string) sdk.AccAddress {
@@ -172,7 +178,7 @@ func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 		s.clientCtx,
 		val[0].Address,
 		grantee,
-		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200))), s.ac, fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 	)
@@ -738,6 +744,7 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 		val[0].Address,
 		grantee,
 		tokens,
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
@@ -835,6 +842,7 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 		val[0].Address,
 		allowedAddr,
 		tokens,
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
@@ -849,6 +857,7 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 		val[0].Address,
 		notAllowedAddr,
 		tokens,
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),

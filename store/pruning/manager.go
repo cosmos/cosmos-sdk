@@ -101,21 +101,24 @@ func (m *Manager) SetSnapshotInterval(snapshotInterval uint64) {
 
 // GetPruningHeight returns the height which can prune upto if it is able to prune at the given height.
 func (m *Manager) GetPruningHeight(height int64) int64 {
-	if m.opts.Interval > 0 && m.opts.GetPruningStrategy() != types.PruningNothing && height%int64(m.opts.Interval) == 0 {
+	if m.opts.GetPruningStrategy() != types.PruningNothing && m.opts.Interval > 0 && height%int64(m.opts.Interval) == 0 && height > int64(m.opts.KeepRecent) {
 		pruneHeight := height - 1 - int64(m.opts.KeepRecent) // we should keep the current height at least
 
 		m.pruneSnapshotHeightsMx.RLock()
 		defer m.pruneSnapshotHeightsMx.RUnlock()
-
-		if len(m.pruneSnapshotHeights) > 0 {
-			// the snapshot `m.pruneSnapshotHeights[0]` is already operated,
-			// so we can prune upto `m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1`
-			snHeight := m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1
-			if snHeight < pruneHeight {
-				pruneHeight = snHeight
+		// Consider the snapshot height
+		// - snapshotInterval is zero as that means that all heights should be pruned.
+		if m.snapshotInterval > 0 {
+			if len(m.pruneSnapshotHeights) > 0 {
+				// the snapshot `m.pruneSnapshotHeights[0]` is already operated,
+				// so we can prune upto `m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1`
+				snHeight := m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1
+				if snHeight < pruneHeight {
+					pruneHeight = snHeight
+				}
+			} else { // the length should be greater than zero
+				return 0
 			}
-		} else {
-			return 0
 		}
 		return pruneHeight
 	}

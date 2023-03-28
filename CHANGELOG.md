@@ -63,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (crypto) [#3129](https://github.com/cosmos/cosmos-sdk/pull/3129) New armor and keyring key derivation uses aead and encryption uses chacha20poly
 * (mempool) [#15328](https://github.com/cosmos/cosmos-sdk/pull/15328) Improve the `PriorityNonceMempool`
     * Support generic transaction prioritization, instead of `ctx.Priority()`
     * Improve construction through the use of a single `PriorityNonceMempoolConfig` instead of option functions

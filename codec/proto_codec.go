@@ -39,9 +39,13 @@ var (
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
+	getSignersCtx, err := signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: interfaceRegistry})
+	if err != nil {
+		panic(err)
+	}
 	return &ProtoCodec{
 		interfaceRegistry: interfaceRegistry,
-		getSignersCtx:     signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: interfaceRegistry}),
+		getSignersCtx:     getSignersCtx,
 	}
 }
 

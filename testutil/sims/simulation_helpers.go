@@ -131,7 +131,7 @@ func GetSimulationLog(storeName string, sdr simtypes.StoreDecoderRegistry, kvAs,
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes.
-func DiffKVStores(a storetypes.KVStore, b storetypes.KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
+func DiffKVStores(a, b storetypes.KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
 	iterA := a.Iterator(nil, nil)
 
 	defer iterA.Close()

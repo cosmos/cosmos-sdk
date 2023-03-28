@@ -5,6 +5,7 @@
 package testutil
 
 import (
+	context "context"
 	reflect "reflect"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -72,7 +73,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)

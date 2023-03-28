@@ -20,7 +20,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-type IntegrationApp struct {
+type App struct {
 	*baseapp.BaseApp
 
 	t      *testing.T
@@ -30,7 +30,7 @@ type IntegrationApp struct {
 	queryHelper *baseapp.QueryServiceTestHelper
 }
 
-func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *IntegrationApp {
+func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *App {
 	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 
@@ -55,7 +55,7 @@ func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, mod
 
 	ctx := bApp.NewContext(true, cmtproto.Header{})
 
-	return &IntegrationApp{
+	return &App{
 		BaseApp: bApp,
 
 		t:      t,
@@ -66,7 +66,7 @@ func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, mod
 	}
 }
 
-func (app *IntegrationApp) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
+func (app *App) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
 	app.logger.Info("Running msg", "msg", msg.String())
 
 	handler := app.MsgServiceRouter().Handler(msg)
@@ -92,10 +92,10 @@ func (app *IntegrationApp) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
 	return response, nil
 }
 
-func (app *IntegrationApp) SDKContext() sdk.Context {
+func (app *App) SDKContext() sdk.Context {
 	return app.ctx
 }
 
-func (app *IntegrationApp) QueryHelper() *baseapp.QueryServiceTestHelper {
+func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 	return app.queryHelper
 }

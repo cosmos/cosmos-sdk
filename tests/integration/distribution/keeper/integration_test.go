@@ -19,7 +19,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -102,7 +101,7 @@ func TestIntegrationCommunityPoolSpend(t *testing.T) {
 		},
 		{
 			name: "invalid recipient",
-			msg: &types.MsgCommunityPoolSpend{
+			msg: &distrtypes.MsgCommunityPoolSpend{
 				Authority: distrKeeper.GetAuthority(),
 				Recipient: "invalid",
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
@@ -112,7 +111,7 @@ func TestIntegrationCommunityPoolSpend(t *testing.T) {
 		},
 		{
 			name: "valid message",
-			msg: &types.MsgCommunityPoolSpend{
+			msg: &distrtypes.MsgCommunityPoolSpend{
 				Authority: distrKeeper.GetAuthority(),
 				Recipient: recipient.String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
@@ -129,6 +128,9 @@ func TestIntegrationCommunityPoolSpend(t *testing.T) {
 			} else {
 				assert.NilError(t, err)
 				assert.Assert(t, res != nil)
+				result := distrtypes.MsgCommunityPoolSpend{}
+				err = cdc.Unmarshal(res[0].Value, &result)
+				assert.NilError(t, err)
 			}
 		})
 	}

@@ -101,7 +101,6 @@ func (app *IntegrationTestApp) ExecMsgs(msgs ...sdk.Msg) ([]*codectypes.Any, err
 
 		var result *codectypes.Any
 		if len(r.MsgResponses) != 0 {
-			fmt.Printf("r.MsgResponses[0].Value: %v\n", r.MsgResponses[0].Value)
 			msgResponse := r.MsgResponses[0]
 			if msgResponse == nil {
 				return nil, fmt.Errorf("got nil Msg response for msg %s", msg)

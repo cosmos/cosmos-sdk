@@ -440,6 +440,12 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	// validate that the proposal fails/has been rejected
 	gov.EndBlocker(ctx, suite.GovKeeper)
 
+	// check proposal events
+	events := ctx.EventManager().Events()
+	attr, eventOk := events.GetAttributes(types.AttributeKeyProposalLog)
+	require.True(t, eventOk)
+	require.Contains(t, attr[0].Value, "failed on execution")
+
 	proposal, ok := suite.GovKeeper.GetProposal(ctx, proposal.Id)
 	require.True(t, ok)
 	require.Equal(t, v1.StatusFailed, proposal.Status)

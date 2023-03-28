@@ -34,13 +34,18 @@ func (f *fileBinaryValue) String() string {
 	return string(f.value)
 }
 
+// Set implements the flag.Value interface for binary files.
+//If the input string is a valid file path the file path most have a file extension, it will read the file.
+//If the input string is a valid hex or base64 encoded string, it will decode the string.
+//If the input string is neither a valid file path, hex, or base64 encoded,
+// it will return an error.
 func (f *fileBinaryValue) Set(s string) error {
 	var value []byte
 	var err error
 
 	if _, err = os.Stat(s); err == nil {
 		if filepath.Ext(s) == "" {
-			return errors.New("file path must have an extension")
+			return errors.New("file path must have an extension try renaming the file to include an extension")
 		}
 		value, err = os.ReadFile(s)
 		if err != nil {

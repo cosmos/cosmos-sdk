@@ -50,7 +50,7 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
 	cp := ctx.ConsensusParams()
-	if cp != nil && cp.Evidence != nil {
+	if cp.Evidence != nil {
 		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
 			logger.Info(
 				"ignored equivocation; evidence too old",

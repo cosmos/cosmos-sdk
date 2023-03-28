@@ -1,57 +1,57 @@
 package config
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/cosmos/cosmos-sdk/client"
+	"gotest.tools/v3/assert"
 )
 
 // TestWriteReadHomeDirToFromFile tests if a given home directory path can be written to
 // the corresponding configuration file and if the written information can be read from file.
 func TestWriteReadHomeDirToFromFile(t *testing.T) {
 	testFolder := t.TempDir()
-	defaultHomeDir := filepath.Join(testFolder, "test1")
-	// TODO: Change to TOML
-	homeFilePath := filepath.Join(defaultHomeDir, "config", "home.txt")
+	newHome := "path/to/new/home"
+	defaultConfigPath := filepath.Join(testFolder, "config")
+	err := os.MkdirAll(defaultConfigPath, os.ModePerm)
+	assert.NilError(t, err, "expected no error creating the default configuration path")
+
+	// create empty context with viper setup for parsing the home.toml file
+	ctx := client.Context{}.WithViper("")
 
 	testcases := []struct {
-		name        string
-		homeDir     string
-		expPass     bool
-		errContains string
+		name         string
+		homeFilePath string
+		expPass      bool
+		errContains  string
 	}{
 		{
-			"pass - valid folder path",
-			filepath.Join(testFolder, "test2"),
-			false,
-			"",
+			name:         "pass - valid folder path",
+			homeFilePath: filepath.Join(defaultConfigPath, "home.toml"),
+			expPass:      true,
 		},
 		{
-			"fail - invalid folder path",
-			"invalid-path!",
-			false,
-			"no such file or directory",
+			name:         "fail - invalid folder path",
+			homeFilePath: "invalid/path!",
+			expPass:      false,
+			errContains:  "no such file or directory",
 		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := writeHomeDirToFile(homeFilePath, tc.homeDir)
+			err := WriteHomeDirToFile(tc.homeFilePath, newHome)
 			if tc.expPass {
-				require.NoErrorf(t, err, "no error expected when writing home dir to file")
-				homeDir, err := ReadHomeDirFromFile(homeFilePath)
-				require.NoError(t, err, "expected no error reading the home dir from the configuration file")
-				require.Equal(t,
-					tc.homeDir,
-					homeDir,
-					"expected home dir read from configuration file to equal the testcase filename",
+				assert.NilError(t, err, "no error expected when writing home dir to file")
+				homeDir, err := ReadHomeDirFromFile(defaultConfigPath, ctx.Viper)
+				assert.NilError(t, err, "expected no error reading the home dir from the configuration file")
+				assert.Equal(t, homeDir, newHome,
+					"expected home dir read from configuration file to be %q; got: %q", newHome, homeDir,
 				)
 			} else {
-				require.Error(t, err, "expected error when writing home dir to file")
-				require.ErrorContains(t, err,
-					tc.errContains,
-					"expected error message to contain %s",
-					tc.errContains,
+				assert.ErrorContains(t, err, tc.errContains,
+					"expected error message to contain %s", tc.errContains,
 				)
 			}
 		})

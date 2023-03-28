@@ -52,7 +52,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	homeFilePath := filepath.Join(ctx.HomeDir, "config", "home.txt")
 	ctx = ctx.WithHomeFilePath(homeFilePath)
 
-	homeDir, err := ReadHomeDirFromFile(homeFilePath)
+	homeDir, err := ReadHomeDirFromFile(homeFilePath, ctx.Viper)
 	if err == nil {
 		ctx = ctx.WithHomeDir(homeDir)
 	}

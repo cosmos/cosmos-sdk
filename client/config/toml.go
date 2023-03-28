@@ -9,7 +9,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-const defaultConfigTemplate = `# This is a TOML config file.
+const (
+	defaultConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
 ###############################################################################
@@ -27,6 +28,17 @@ node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
 `
+
+	defaultHomeTemplate = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+###############################################################################
+###                            Home Configuration                             ###
+###############################################################################
+
+# The currently configured home directory
+home-dir = "{{ .HomeDir }}"`
+)
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
 // configFilePath.
@@ -47,30 +59,45 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
-// WriteHomeDirToFile writes a given string to the given configuration file path.
-func WriteHomeDirToFile(filepath, homedir string) error {
-	// TODO: implement TOML as on config.toml
-	var buffer bytes.Buffer
-	buffer.WriteString(homedir)
+// HomeDirConfig is a struct that contains the home directory and defines the mapping
+// for the TOML writer.
+type HomeDirConfig struct {
+	HomeDir string `mapstructure:"home-dir" json:"home-dir"`
+}
 
-	err := os.WriteFile(filepath, buffer.Bytes(), 0o600)
-	return err
+// WriteHomeDirToFile parses homeDirTemplate, renders the template with the given new home directory
+// and writes it to the given file.
+func WriteHomeDirToFile(filePath, homeDir string) error {
+	var buffer bytes.Buffer
+
+	tmpl := template.New("homeDirFileTemplate")
+	homeTemplate, err := tmpl.Parse(defaultHomeTemplate)
+	if err != nil {
+		return err
+	}
+
+	homeDirConfig := HomeDirConfig{HomeDir: homeDir}
+	if err := homeTemplate.Execute(&buffer, homeDirConfig); err != nil {
+		return err
+	}
+	return os.WriteFile(filePath, buffer.Bytes(), 0o600)
 }
 
 // ReadHomeDirFromFile tries to return the currently stored home directory from the
 // given file
-func ReadHomeDirFromFile(filePath string) (string, error) {
-	if _, err := os.Stat(filePath); err != nil {
+func ReadHomeDirFromFile(filePath string, v *viper.Viper) (string, error) {
+	homeDirConfig := HomeDirConfig{}
+	v.AddConfigPath(filePath)
+	v.SetConfigName("home")
+	v.SetConfigType("toml")
+
+	if err := v.ReadInConfig(); err != nil {
 		return "", err
 	}
-
-	homeDirBz, err := os.ReadFile(filePath)
-	if err != nil {
+	if err := v.Unmarshal(&homeDirConfig); err != nil {
 		return "", err
 	}
-
-	homeDir := string(homeDirBz)
-	return homeDir, nil
+	return homeDirConfig.HomeDir, nil
 }
 
 // getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig

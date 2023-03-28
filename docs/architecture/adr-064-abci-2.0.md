@@ -113,7 +113,11 @@ non-nil `ResponseExtendVote.VoteExtension`.
 
 Recall, an implementation of `ExtendVoteHandler` does NOT need to be deterministic,
 however, given a set of vote extensions, `VerifyVoteExtensionHandler` must be
-deterministic, otherwise the chain may suffer from liveness faults.
+deterministic, otherwise the chain may suffer from liveness faults. In addition,
+recall CometBFT proceeds in rounds for each height, so if a decision cannot be
+made about about a block proposal at a given height, CometBFT will proceed to the
+next round and thus will execute `ExtendVote` and `VerifyVoteExtension` again for
+the new round for each validator until 2/3 valid pre-commits can be obtained.
 
 Given the broad scope of potential implementations and use-cases of vote extensions,
 and how to verify them, most applications should choose to implement the handlers

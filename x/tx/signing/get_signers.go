@@ -28,6 +28,8 @@ type GetSignersOptions struct {
 	ProtoFiles ProtoFileResolver
 }
 
+// ProtoFileResolver is a protodesc.Resolver that also allows iterating over all
+// files descriptors. It is a subset of the methods supported by protoregistry.Files.
 type ProtoFileResolver interface {
 	protodesc.Resolver
 	RangeFiles(func(protoreflect.FileDescriptor) bool)

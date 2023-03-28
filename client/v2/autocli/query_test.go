@@ -245,7 +245,6 @@ func TestBinaryFlag(t *testing.T) {
 				"--bz", tc.input,
 			)
 			errorOut := conn.errorOut.String()
-			fmt.Println(errorOut)
 			if errorOut == "" {
 				lastReq := conn.lastRequest.(*testpb.EchoRequest)
 				assert.Assert(t, compareSlices(tc.expected, lastReq.Bz))

@@ -65,11 +65,15 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	}
 
 	logger := zerolog.New(output).With().Timestamp().Logger()
+
+	if logCfg.Level != zerolog.NoLevel {
+		logger = logger.Level(logCfg.Level)
+	}
+
 	return zeroLogWrapper{&logger}
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
-// NOTE: For creating a custom logger with a filter, use the NewFilterWriter function as wrapper around the output.
 func NewCustomLogger(logger zerolog.Logger) Logger {
 	return zeroLogWrapper{&logger}
 }

@@ -9,7 +9,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) {
+func checkAminoJSON(t *testing.T, src, dst interface{}, isNil bool) {
 	// Marshal to JSON bytes.
 	js, err := cdc.MarshalJSON(src)
 	require.Nil(t, err, "%+v", err)

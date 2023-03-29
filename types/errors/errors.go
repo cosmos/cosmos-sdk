@@ -132,7 +132,8 @@ var (
 	// Examples: not DB domain error, file writing etc...
 	ErrIO = errorsmod.Register(RootCodespace, 39, "Internal IO error")
 
-	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
+	// ErrAppConfig defines an error occurred if application configuration is
+	// misconfigured.
 	ErrAppConfig = errorsmod.Register(RootCodespace, 40, "error in app.toml")
 
 	// ErrInvalidGasLimit defines an error when an invalid GasWanted value is

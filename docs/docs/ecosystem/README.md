@@ -16,7 +16,7 @@ See the official [`ibc-go` documentation](https://ibc.cosmos.network).
 
 >CosmWasm is written as a module that can plug into the Cosmos SDK. This means that anyone currently building a blockchain using the Cosmos SDK can quickly and easily add CosmWasm smart contracting support to their chain, without adjusting existing logic.
 
-Read more about writing smart contracts with CosmWasm at their [documentation site](https://docs.cosmwasm.com/docs/1.0/), or visit [the repository](https://github.com/CosmWasm/cosmwasm).
+Read more about writing smart contracts with CosmWasm at their [documentation site](https://book.cosmwasm.com/), or visit [the repository](https://github.com/CosmWasm/cosmwasm).
 
 ## EVM
 

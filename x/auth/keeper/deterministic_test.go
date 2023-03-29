@@ -9,10 +9,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
+	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,6 +28,7 @@ type DeterministicTestSuite struct {
 	suite.Suite
 
 	key           *storetypes.KVStoreKey
+	storeService  corestore.KVStoreService
 	ctx           sdk.Context
 	queryClient   types.QueryClient
 	accountKeeper keeper.AccountKeeper
@@ -48,6 +51,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
 
@@ -62,7 +66,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
-		key,
+		storeService,
 		types.ProtoBaseAccount,
 		maccPerms,
 		"cosmos",
@@ -74,6 +78,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	suite.key = key
+	suite.storeService = storeService
 	suite.maccPerms = maccPerms
 }
 
@@ -281,7 +286,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
-			suite.key,
+			suite.storeService,
 			types.ProtoBaseAccount,
 			maccPerms,
 			"cosmos",
@@ -327,7 +332,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
-			suite.key,
+			suite.storeService,
 			types.ProtoBaseAccount,
 			maccPerms,
 			"cosmos",

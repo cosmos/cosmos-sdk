@@ -9,15 +9,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// AminoCodec defines a codec that utilizes Codec for both binary and JSON
-// encoding.
+// Deprecated: AminoCodec defines a codec that utilizes Codec for both binary and JSON
+// encoding. Any usage of amino should be done using the LegacyAmino type directly.
+// Usage of amino with the Codec type is not well-supported and may be removed in the future.
 type AminoCodec struct {
 	*LegacyAmino
 }
 
 var _ Codec = &AminoCodec{}
 
-// NewAminoCodec returns a reference to a new AminoCodec
+// Deprecated: NewAminoCodec returns a reference to a new AminoCodec
 func NewAminoCodec(codec *LegacyAmino) *AminoCodec {
 	return &AminoCodec{LegacyAmino: codec}
 }
@@ -140,6 +141,10 @@ func (ac *AminoCodec) GetMsgV1Signers(proto.Message) ([]string, protov2.Message,
 
 func (ac *AminoCodec) GetMsgV2Signers(protov2.Message) ([]string, error) {
 	return nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) InterfaceRegistry() types.InterfaceRegistry {
+	panic("amino codec does not support interface registry")
 }
 
 func (ac *AminoCodec) private() {}

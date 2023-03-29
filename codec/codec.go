@@ -20,6 +20,8 @@ type (
 		BinaryCodec
 		JSONCodec
 
+		InterfaceRegistry() types.InterfaceRegistry
+
 		// GetMsgAnySigners returns the signers of the given message encoded in a protobuf Any
 		// as well as the decoded google.golang.org/protobuf/proto.Message that was used to
 		// extract the signers so that this can be used in other contexts.

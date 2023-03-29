@@ -150,8 +150,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/capability) [#15344](https://github.com/cosmos/cosmos-sdk/pull/15344) Capability module was removed and is now housed in [IBC-GO](https://github.com/cosmos/ibc-go). 
 * [#15299](https://github.com/cosmos/cosmos-sdk/pull/15299) remove `StdTx` transaction and signing APIs. No SDK version has actually supported `StdTx` since before Stargate.
 * [#15600](https://github.com/cosmos/cosmos-sdk/pull/15600) add support for getting signers to `codec.Codec` and protoregistry support to `InterfaceRegistry`:
-  * `Codec` is now a private interface and the methods `GetMsgAnySigners`, `GetMsgV1Signers`, and `GetMsgV2Signers` were added
+  * `Codec` is now a private interface and has the methods `InterfaceRegistry`, `GetMsgAnySigners`, `GetMsgV1Signers`, and `GetMsgV2Signers` which will fail when using `AminoCodec`
   * `InterfaceRegistry` is now a private interface and implements `protodesc.Resolver` plus the `RangeFiles` method
+  * `AminoCodec` is marked as deprecated.
 
 ### Client Breaking Changes
 

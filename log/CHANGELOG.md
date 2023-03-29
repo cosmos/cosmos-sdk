@@ -31,8 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<!-- ## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.0.0) - 2023-0X-XX -->
-<!-- Wait for https://github.com/rs/zerolog/pull/527 to be merged -->
+## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.0.0) - 2023-0X-XX
+
+* [#15601](https://github.com/cosmos/cosmos-sdk/pull/15601) Add `NewLoggerWithFilter` which creates a logger that filters out log messages given their level and module.
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v0.1.0) - 2023-03-13
 

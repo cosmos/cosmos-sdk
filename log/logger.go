@@ -42,12 +42,6 @@ type zeroLogWrapper struct {
 	*zerolog.Logger
 }
 
-// NewNopLogger returns a new logger that does nothing.
-func NewNopLogger() Logger {
-	// The custom nopLogger is about 3x faster than a zeroLogWrapper with zerolog.Nop().
-	return nopLogger{}
-}
-
 // NewLogger returns a new logger that writes to the given destination.
 //
 // Typical usage from a main function is:
@@ -55,16 +49,22 @@ func NewNopLogger() Logger {
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
-func NewLogger(dst io.Writer) Logger {
-	output := zerolog.ConsoleWriter{Out: dst, TimeFormat: time.Kitchen}
-	logger := zerolog.New(output).With().Timestamp().Logger()
-	return zeroLogWrapper{&logger}
-}
+func NewLogger(dst io.Writer, options ...LoggerOption) Logger {
+	logCfg := defaultLoggerConfig
+	for _, opt := range options {
+		opt(&logCfg)
+	}
 
-// NewLoggerWithFilter returns a new logger that filters out all key/value pairs that do not match the filter.
-func NewLoggerWithFilter(dst io.Writer, filter FilterFunc) Logger {
-	output := zerolog.ConsoleWriter{Out: dst, TimeFormat: time.Kitchen}
-	logger := zerolog.New(NewFilterWriter(output, filter)).With().Timestamp().Logger()
+	output := dst
+	if !logCfg.OutputJSON {
+		output = zerolog.ConsoleWriter{Out: dst, TimeFormat: time.Kitchen}
+	}
+
+	if logCfg.Filter != nil {
+		output = NewFilterWriter(output, logCfg.Filter)
+	}
+
+	logger := zerolog.New(output).With().Timestamp().Logger()
 	return zeroLogWrapper{&logger}
 }
 
@@ -104,6 +104,12 @@ func (l zeroLogWrapper) Impl() interface{} {
 	return l.Logger
 }
 
+// NewNopLogger returns a new logger that does nothing.
+func NewNopLogger() Logger {
+	// The custom nopLogger is about 3x faster than a zeroLogWrapper with zerolog.Nop().
+	return nopLogger{}
+}
+
 // nopLogger is a Logger that does nothing when called.
 // See the "specialized nop logger" benchmark and compare with the "zerolog nop logger" benchmark.
 // The custom implementation is about 3x faster.
@@ -113,4 +119,4 @@ func (nopLogger) Info(string, ...any)  {}
 func (nopLogger) Error(string, ...any) {}
 func (nopLogger) Debug(string, ...any) {}
 func (nopLogger) With(...any) Logger   { return nopLogger{} }
-func (nopLogger) Impl() any            { return nopLogger{} }
+func (nopLogger) Impl() any            { return zerolog.Nop() }

@@ -16,7 +16,7 @@ func TestFilteredWriter(t *testing.T) {
 	filter, err := log.ParseLogLevel(level)
 	assert.NilError(t, err)
 
-	logger := log.NewLoggerWithFilter(checkBuf, filter)
+	logger := log.NewLogger(checkBuf, log.FilterLoggerOption(filter))
 	logger.Debug("this log line should be displayed", log.ModuleKey, "consensus")
 	assert.Check(t, strings.Contains(checkBuf.String(), "this log line should be displayed"))
 	checkBuf.Reset()

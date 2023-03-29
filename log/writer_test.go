@@ -10,18 +10,17 @@ import (
 )
 
 func TestFilteredWriter(t *testing.T) {
-	checkBuf := new(bytes.Buffer)
+	buf := new(bytes.Buffer)
 
 	level := "consensus:debug,mempool:debug,*:error"
 	filter, err := log.ParseLogLevel(level)
 	assert.NilError(t, err)
 
-	logger := log.NewLogger(checkBuf, log.FilterOption(filter))
+	logger := log.NewLogger(buf, log.FilterOption(filter))
 	logger.Debug("this log line should be displayed", log.ModuleKey, "consensus")
-	assert.Check(t, strings.Contains(checkBuf.String(), "this log line should be displayed"))
-	checkBuf.Reset()
+	assert.Check(t, strings.Contains(buf.String(), "this log line should be displayed"))
+	buf.Reset()
 
 	logger.Debug("this log line should be filtered", log.ModuleKey, "server")
-	assert.Check(t, !strings.Contains(checkBuf.String(), "this log line should be filtered"))
-	checkBuf.Reset()
+	assert.Check(t, buf.Len() == 0)
 }

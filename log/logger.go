@@ -45,7 +45,8 @@ type zeroLogWrapper struct {
 // NewLogger returns a new logger that writes to the given destination.
 //
 // Typical usage from a main function is:
-// logger := log.NewLogger(os.Stderr)
+//
+//	logger := log.NewLogger(os.Stderr)
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
@@ -123,4 +124,4 @@ func (nopLogger) Info(string, ...any)  {}
 func (nopLogger) Error(string, ...any) {}
 func (nopLogger) Debug(string, ...any) {}
 func (nopLogger) With(...any) Logger   { return nopLogger{} }
-func (nopLogger) Impl() any            { return zerolog.Nop() }
+func (nopLogger) Impl() any            { return nopLogger{} }

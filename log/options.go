@@ -26,6 +26,7 @@ func FilterOption(filter FilterFunc) Option {
 }
 
 // LevelOption sets the level for the Logger.
+// Messages with a lower level will be discarded.
 func LevelOption(level zerolog.Level) Option {
 	return func(cfg *Config) {
 		cfg.Level = level
@@ -33,6 +34,7 @@ func LevelOption(level zerolog.Level) Option {
 }
 
 // OutputJSONOption sets the output of the logger to JSON.
+// By default, the logger outputs to a human-readable format.
 func OutputJSONOption() Option {
 	return func(cfg *Config) {
 		cfg.OutputJSON = true

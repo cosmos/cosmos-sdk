@@ -35,7 +35,7 @@ const (
 	//
 	// As for the storage overhead, with the same factor f, it is as follows:
 	// (N - 256) + (N / ChunkSize) * (512 * f)
-	MissedBlockBitmapChunkSize int64 = 1024 // 2^10 bits
+	MissedBlockBitmapChunkSize = 1024 // 2^10 bits
 )
 
 // Keys for slashing store

@@ -51,6 +51,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 		validator.ConsensusPubkey,
 		newConsPub,
 		uint64(ctx.BlockHeight()),
+		stakingKeeper.KeyRotationFee(ctx),
 	)
 
 	historyObjects = stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, valAddr)
@@ -64,6 +65,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 		newConsPub,
 		newConsPub2,
 		uint64(ctx.BlockHeight())+1,
+		stakingKeeper.KeyRotationFee(ctx),
 	)
 
 	historyObjects = stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, valAddr)

@@ -512,6 +512,7 @@ func NewSimApp(
 
 	// At startup, after all modules have been registered, check that all prot
 	// annotations are correct.
+	fmt.Println("simapp - validating proto annotations")
 	protoFiles, err := proto.MergedRegistry()
 	if err != nil {
 		panic(err)

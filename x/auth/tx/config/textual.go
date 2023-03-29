@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -23,6 +24,8 @@ import (
 //	clientCtx := client.GetClientContextFromCmd(cmd)
 //	txt := tx.NewTextualWithGRPCConn(clientCtxx)
 func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (*textual.SignModeHandler, error) {
+	fmt.Println("NewTextualWithGRPCConn RegisterService")
+
 	protoFiles, err := gogoproto.MergedRegistry()
 	if err != nil {
 		return nil, err
@@ -51,6 +54,8 @@ func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (*textual.SignMod
 // other, this function could probably be deprecated in favor of
 // `NewTextualWithGRPCConn`.
 func NewTextualWithBankKeeper(bk BankKeeper) (*textual.SignModeHandler, error) {
+	fmt.Println("NewTextualWithBankKeeper RegisterService")
+
 	protoFiles, err := gogoproto.MergedRegistry()
 	if err != nil {
 		return nil, err

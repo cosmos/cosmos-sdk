@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/cosmos/gogoproto/proto"
@@ -15,6 +16,7 @@ type ReflectionService struct {
 }
 
 func NewReflectionService() (*ReflectionService, error) {
+	fmt.Println("NewReflectionService")
 	fds, err := proto.MergedFileDescriptors()
 	if err != nil {
 		return nil, err

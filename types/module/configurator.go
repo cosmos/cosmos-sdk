@@ -63,6 +63,7 @@ type configurator struct {
 // RegisterService implements the grpc.Server interface.
 func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}) {
 	if c.registryCache == nil {
+		fmt.Println("module configurator RegisterService")
 		c.registryCache, c.err = proto.MergedRegistry()
 	}
 

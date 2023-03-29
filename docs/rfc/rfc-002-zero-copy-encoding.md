@@ -15,8 +15,21 @@ tooling was much higher and the client experience and performance were considere
 
 In [ADR 033: Protobuf-based Inter-Module Communication](./../architecture/adr-033-protobuf-inter-module-comm.md), the
 idea of cross-language/VM inter-module
-communication was considered again. And in the discussions around [ADR 054: Semver Compatible SDK Modules](./../architecture/adr-054-semver-compatible-modules.md),
+communication was considered again. And in the discussions surrounding [ADR 054: Semver Compatible SDK Modules](./../architecture/adr-054-semver-compatible-modules.md),
 it was determined that multi-language/VM support in the SDK is a near term priority.
+
+While we could do cross-language/VM inter-module communication with protobuf binary or even JSON, the performance
+overhead is deemed to be too high because:
+* we are proposing replacing keeper calls with inter-module message calls and the overhead of even the inter-module
+routing checks has come into question by some SDK users without even considering the possible overhead of encoding.
+Effectively we would be replacing function calls with encoding. One of the SDK's primary objectives currently is
+improving performance, and we want to avoid inter-module calls from becoming a big step backward.
+* we want Rust code to be able to operate in highly resource constrained virtual machines so whatever we can do to
+reduce performance overhead as well as the size of generated code will make it easier and more feasible to deploy
+first-class integrations with these virtual machines.
+
+Thus, the agreement after the discussions around [ADR 054](./../architecture/adr-054-semver-compatible-modules.md)
+was to pursue a performant zero-copy encoding which is suitable for usage in highly resource constrained environments.
 
 ## Proposal
 

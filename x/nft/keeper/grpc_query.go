@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/nft"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -174,8 +175,8 @@ func (k Keeper) Classes(goCtx context.Context, r *nft.QueryClassesRequest) (*nft
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	store := ctx.KVStore(k.storeKey)
-	classStore := prefix.NewStore(store, ClassKey)
+	store := k.storeService.OpenKVStore(ctx)
+	classStore := prefix.NewStore(runtime.KVStoreAdapter(store), ClassKey)
 
 	var classes []*nft.Class
 	pageRes, err := query.Paginate(classStore, r.Pagination, func(_, value []byte) error {

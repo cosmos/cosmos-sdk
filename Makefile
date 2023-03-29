@@ -381,7 +381,12 @@ lint:
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
 	@sh ./scripts/go-lint-all.sh
 
-.PHONY: lint
+lint-fix:
+	@echo "--> Running linter"
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@sh ./scripts/go-lint-all.sh --fix
+
+.PHONY: lint lint-fix
 
 ###############################################################################
 ###                                Protobuf                                 ###

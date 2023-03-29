@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func AssertError(t *testing.T, err error, expectedErr error, expectedErrMsg string) {
+func AssertError(t *testing.T, err, expectedErr error, expectedErrMsg string) {
 	switch {
 	case expectedErr != nil:
 		require.ErrorIs(t, err, expectedErr)

@@ -897,7 +897,7 @@ type (
 
 // doUpdateGroupPolicy first makes sure that the group policy admin initiated the group policy update,
 // before performing the group policy update and emitting an event.
-func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin string, action groupPolicyActionFn, note string) error {
+func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy, admin string, action groupPolicyActionFn, note string) error {
 	groupPolicyInfo, err := k.getGroupPolicyInfo(ctx, groupPolicy)
 	if err != nil {
 		return errorsmod.Wrap(err, "load group policy")
@@ -975,7 +975,7 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 
 // assertMetadataLength returns an error if given metadata length
 // is greater than a pre-defined maxMetadataLen.
-func (k Keeper) assertMetadataLength(metadata string, description string) error {
+func (k Keeper) assertMetadataLength(metadata, description string) error {
 	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return errorsmod.Wrapf(errors.ErrMaxLimit, description)
 	}

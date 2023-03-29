@@ -17,7 +17,7 @@ import (
 // message where signers are specified by the cosmos.msg.v1.signer protobuf
 // option.
 type GetSignersContext struct {
-	protoFiles      protodesc.Resolver
+	protoFiles      ProtoFileResolver
 	getSignersFuncs map[protoreflect.FullName]getSignersFunc
 }
 
@@ -25,7 +25,14 @@ type GetSignersContext struct {
 type GetSignersOptions struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
-	ProtoFiles protodesc.Resolver
+	ProtoFiles ProtoFileResolver
+}
+
+// ProtoFileResolver is a protodesc.Resolver that also allows iterating over all
+// files descriptors. It is a subset of the methods supported by protoregistry.Files.
+type ProtoFileResolver interface {
+	protodesc.Resolver
+	RangeFiles(func(protoreflect.FileDescriptor) bool)
 }
 
 // NewGetSignersContext creates a new GetSignersContext using the provided options.
@@ -60,13 +67,8 @@ func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, 
 // - it will pre-populate the context's internal cache for getSignersFuncs
 // so that calling it in antehandlers will be faster.
 func (c *GetSignersContext) init() error {
-	fs, ok := c.protoFiles.(*protoregistry.Files)
-	if !ok {
-		return fmt.Errorf("expected *protoregistry.Files in GetSignersContext, got %T", c.protoFiles)
-	}
-
 	var errs []error
-	fs.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
+	c.protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		for i := 0; i < fd.Services().Len(); i++ {
 			sd := fd.Services().Get(i)
 			// We use the heuristic that services named "Msg" are exactly the

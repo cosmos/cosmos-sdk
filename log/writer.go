@@ -6,17 +6,19 @@ import (
 	"io"
 )
 
+// NewFilterWriter returns a writer that filters out all key/value pairs that do not match the filter.
+// If the filter is nil, the writer will pass all events through.
+// The filter function is called with the module and level of the event.
 func NewFilterWriter(parent io.Writer, filter FilterFunc) io.Writer {
-	return &FilterWriter{parent, filter}
+	return &filterWriter{parent, filter}
 }
 
-// FilterWriter is a writer that filters out all key/value pairs that do not match the filter.
-type FilterWriter struct {
+type filterWriter struct {
 	parent io.Writer
 	filter FilterFunc
 }
 
-func (fw *FilterWriter) Write(p []byte) (n int, err error) {
+func (fw *filterWriter) Write(p []byte) (n int, err error) {
 	if fw.filter == nil {
 		return fw.parent.Write(p)
 	}

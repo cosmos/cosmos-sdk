@@ -14,9 +14,6 @@ const defaultLogLevelKey = "*"
 // When the filter returns true, the log entry is discarded.
 type FilterFunc func(key, level string) bool
 
-// NoFilterFunc is a filter that does not filter any log level
-var NoFilterFunc = func(key, level string) bool { return false }
-
 // ParseLogLevel parses complex log level
 // A comma-separated list of module:level pairs with an optional *:level pair
 // (* means all other modules).

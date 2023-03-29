@@ -10,12 +10,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) SetConsPubKeyRotationHistory(ctx sdk.Context, valAddr sdk.ValAddress, oldPubKey, newPubKey *codectypes.Any, height uint64) {
+// SetConsPubKeyRotationHistory sets the history item of consensus key rotation of a validator
+func (k Keeper) SetConsPubKeyRotationHistory(ctx sdk.Context, valAddr sdk.ValAddress,
+	oldPubKey, newPubKey *codectypes.Any, height uint64, fee sdk.Coin) {
 	history := types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr.String(),
 		OldConsPubkey:   oldPubKey,
 		NewConsPubkey:   newPubKey,
 		Height:          height,
+		Fee:             fee,
 	}
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetValidatorConsPubKeyRotationHistoryKey(history)
@@ -72,6 +75,8 @@ func (k Keeper) GetConsKeyQueue(ctx sdk.Context, ts time.Time) types.ValAddrsOfR
 	return valAddrs
 }
 
+// SetConsKeyQueue sets array of rotated validator addresses to a key of current block time + unbonding period
+// this is to keep track of rotations made within the unbonding period
 func (k Keeper) SetConsKeyQueue(ctx sdk.Context, ts time.Time, valAddr sdk.ValAddress) {
 	operKeys := k.GetConsKeyQueue(ctx, ts)
 	operKeys.Addresses = append(operKeys.Addresses, valAddr.String())
@@ -81,6 +86,7 @@ func (k Keeper) SetConsKeyQueue(ctx sdk.Context, ts time.Time, valAddr sdk.ValAd
 	store.Set(key, bz)
 }
 
+// SetConsKeyIndex sets empty bytes with the key (validatoraddress+sum(current_block_time, unbondtime))
 func (k Keeper) SetConsKeyIndex(ctx sdk.Context, valAddr sdk.ValAddress, ts time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetConsKeyIndexKey(valAddr, ts)

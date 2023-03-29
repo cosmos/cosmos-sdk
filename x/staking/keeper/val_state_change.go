@@ -204,7 +204,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
 
-	// rotationFee := k.KeyRotationFee(ctx)
 	// ApplyAndReturnValidatorSetUpdates checks if there is ConsPubKeyRotationHistory
 	// with ConsPubKeyRotationHistory.RotatedHeight == ctx.BlockHeight() and if so, generates 2 ValidatorUpdate,
 	// one for a remove validator and one for create new validator
@@ -240,10 +239,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			Power:  validator.ConsensusPower(powerReduction),
 		})
 
-		// err = k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, rotationFee)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		err = k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, history.Fee)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// TODO: at previousVotes Iteration logic of AllocateTokens, previousVote using OldConsPubKey

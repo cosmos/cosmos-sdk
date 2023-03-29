@@ -1568,6 +1568,7 @@ var (
 	fd_Envelope_extension_options              protoreflect.FieldDescriptor
 	fd_Envelope_non_critical_extension_options protoreflect.FieldDescriptor
 	fd_Envelope_hash_of_raw_bytes              protoreflect.FieldDescriptor
+	fd_Envelope_non_atomic                     protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1591,6 +1592,7 @@ func init() {
 	fd_Envelope_extension_options = md_Envelope.Fields().ByName("extension_options")
 	fd_Envelope_non_critical_extension_options = md_Envelope.Fields().ByName("non_critical_extension_options")
 	fd_Envelope_hash_of_raw_bytes = md_Envelope.Fields().ByName("hash_of_raw_bytes")
+	fd_Envelope_non_atomic = md_Envelope.Fields().ByName("non_atomic")
 }
 
 var _ protoreflect.Message = (*fastReflection_Envelope)(nil)
@@ -1766,6 +1768,12 @@ func (x *fastReflection_Envelope) Range(f func(protoreflect.FieldDescriptor, pro
 			return
 		}
 	}
+	if x.NonAtomic != false {
+		value := protoreflect.ValueOfBool(x.NonAtomic)
+		if !f(fd_Envelope_non_atomic, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1817,6 +1825,8 @@ func (x *fastReflection_Envelope) Has(fd protoreflect.FieldDescriptor) bool {
 		return len(x.NonCriticalExtensionOptions) != 0
 	case "Envelope.hash_of_raw_bytes":
 		return x.HashOfRawBytes != ""
+	case "Envelope.non_atomic":
+		return x.NonAtomic != false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Envelope"))
@@ -1869,6 +1879,8 @@ func (x *fastReflection_Envelope) Clear(fd protoreflect.FieldDescriptor) {
 		x.NonCriticalExtensionOptions = nil
 	case "Envelope.hash_of_raw_bytes":
 		x.HashOfRawBytes = ""
+	case "Envelope.non_atomic":
+		x.NonAtomic = false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Envelope"))
@@ -1957,6 +1969,9 @@ func (x *fastReflection_Envelope) Get(descriptor protoreflect.FieldDescriptor) p
 	case "Envelope.hash_of_raw_bytes":
 		value := x.HashOfRawBytes
 		return protoreflect.ValueOfString(value)
+	case "Envelope.non_atomic":
+		value := x.NonAtomic
+		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Envelope"))
@@ -2025,6 +2040,8 @@ func (x *fastReflection_Envelope) Set(fd protoreflect.FieldDescriptor, value pro
 		x.NonCriticalExtensionOptions = *clv.list
 	case "Envelope.hash_of_raw_bytes":
 		x.HashOfRawBytes = value.Interface().(string)
+	case "Envelope.non_atomic":
+		x.NonAtomic = value.Bool()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Envelope"))
@@ -2108,6 +2125,8 @@ func (x *fastReflection_Envelope) Mutable(fd protoreflect.FieldDescriptor) proto
 		panic(fmt.Errorf("field timeout_height of message Envelope is not mutable"))
 	case "Envelope.hash_of_raw_bytes":
 		panic(fmt.Errorf("field hash_of_raw_bytes of message Envelope is not mutable"))
+	case "Envelope.non_atomic":
+		panic(fmt.Errorf("field non_atomic of message Envelope is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Envelope"))
@@ -2164,6 +2183,8 @@ func (x *fastReflection_Envelope) NewField(fd protoreflect.FieldDescriptor) prot
 		return protoreflect.ValueOfList(&_Envelope_17_list{list: &list})
 	case "Envelope.hash_of_raw_bytes":
 		return protoreflect.ValueOfString("")
+	case "Envelope.non_atomic":
+		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Envelope"))
@@ -2313,6 +2334,9 @@ func (x *fastReflection_Envelope) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 2 + l + runtime.Sov(uint64(l))
 		}
+		if x.NonAtomic {
+			n += 3
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -2341,6 +2365,18 @@ func (x *fastReflection_Envelope) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.NonAtomic {
+			i--
+			if x.NonAtomic {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0x98
 		}
 		if len(x.HashOfRawBytes) > 0 {
 			i -= len(x.HashOfRawBytes)
@@ -3116,6 +3152,26 @@ func (x *fastReflection_Envelope) ProtoMethods() *protoiface.Methods {
 				}
 				x.HashOfRawBytes = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 19:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NonAtomic", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.NonAtomic = bool(v != 0)
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -3165,7 +3221,7 @@ const (
 )
 
 // TextualData represents all the information needed to generate
-// the textual SignDoc (which is []Screen encoded to XBOR). It is meant to be
+// the textual SignDoc (which is []Screen encoded to CBOR). It is meant to be
 // used as an internal type in Textual's implementations.
 type TextualData struct {
 	state         protoimpl.MessageState
@@ -3228,7 +3284,8 @@ func (x *TextualData) GetSignerData() *SignerData {
 // isn't included in the transaction body itself.
 //
 // It is the same struct as signing.SignerData, but only used internally
-// in Textual because we need it as a proto.Message.
+// in Textual because we need it as a proto.Message. If that struct is updated,
+// then this proto SignerData also needs to be modified.
 type SignerData struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3345,6 +3402,7 @@ type Envelope struct {
 	ExtensionOptions            []*anypb.Any           `protobuf:"bytes,16,rep,name=extension_options,json=extensionOptions,proto3" json:"extension_options,omitempty"`
 	NonCriticalExtensionOptions []*anypb.Any           `protobuf:"bytes,17,rep,name=non_critical_extension_options,json=nonCriticalExtensionOptions,proto3" json:"non_critical_extension_options,omitempty"`
 	HashOfRawBytes              string                 `protobuf:"bytes,18,opt,name=hash_of_raw_bytes,json=hashOfRawBytes,proto3" json:"hash_of_raw_bytes,omitempty"`
+	NonAtomic                   bool                   `protobuf:"varint,19,opt,name=non_atomic,json=nonAtomic,proto3" json:"non_atomic,omitempty"`
 }
 
 func (x *Envelope) Reset() {
@@ -3493,6 +3551,13 @@ func (x *Envelope) GetHashOfRawBytes() string {
 	return ""
 }
 
+func (x *Envelope) GetNonAtomic() bool {
+	if x != nil {
+		return x.NonAtomic
+	}
+	return false
+}
+
 var File_textual_proto protoreflect.FileDescriptor
 
 var file_textual_proto_rawDesc = []byte{
@@ -3525,7 +3590,7 @@ var file_textual_proto_rawDesc = []byte{
 	0x12, 0x2d, 0x0a, 0x07, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x05, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x06, 0x70, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x22,
-	0xfc, 0x05, 0x0a, 0x08, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70, 0x65, 0x12, 0x19, 0x0a, 0x08,
+	0x9b, 0x06, 0x0a, 0x08, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70, 0x65, 0x12, 0x19, 0x0a, 0x08,
 	0x63, 0x68, 0x61, 0x69, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
 	0x63, 0x68, 0x61, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x25, 0x0a, 0x0e, 0x61, 0x63, 0x63, 0x6f, 0x75,
 	0x6e, 0x74, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
@@ -3572,12 +3637,14 @@ var file_textual_proto_rawDesc = []byte{
 	0x63, 0x61, 0x6c, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x4f, 0x70, 0x74, 0x69,
 	0x6f, 0x6e, 0x73, 0x12, 0x29, 0x0a, 0x11, 0x68, 0x61, 0x73, 0x68, 0x5f, 0x6f, 0x66, 0x5f, 0x72,
 	0x61, 0x77, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x12, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e,
-	0x68, 0x61, 0x73, 0x68, 0x4f, 0x66, 0x52, 0x61, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x42, 0x3c,
-	0x42, 0x0c, 0x54, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
-	0x5a, 0x2a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x74,
-	0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e,
-	0x61, 0x6c, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x68, 0x61, 0x73, 0x68, 0x4f, 0x66, 0x52, 0x61, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x12, 0x1d,
+	0x0a, 0x0a, 0x6e, 0x6f, 0x6e, 0x5f, 0x61, 0x74, 0x6f, 0x6d, 0x69, 0x63, 0x18, 0x13, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x09, 0x6e, 0x6f, 0x6e, 0x41, 0x74, 0x6f, 0x6d, 0x69, 0x63, 0x42, 0x3e, 0x42,
+	0x0c, 0x54, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
+	0x2c, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x78, 0x2f,
+	0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72,
+	0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x70, 0x62, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

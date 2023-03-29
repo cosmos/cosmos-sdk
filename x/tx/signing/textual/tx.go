@@ -75,6 +75,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		PublicKey:                   textualData.SignerData.PubKey,
 		Message:                     txBody.Messages,
 		Memo:                        txBody.Memo,
+		NonAtomic:                   txBody.NonAtomic,
 		Fees:                        txAuthInfo.Fee.Amount,
 		FeePayer:                    txAuthInfo.Fee.Payer,
 		FeeGranter:                  txAuthInfo.Fee.Granter,
@@ -234,6 +235,7 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		Messages:                    envelope.Message,
 		Memo:                        envelope.Memo,
 		TimeoutHeight:               envelope.TimeoutHeight,
+		NonAtomic:                   envelope.NonAtomic,
 		ExtensionOptions:            envelope.ExtensionOptions,
 		NonCriticalExtensionOptions: envelope.NonCriticalExtensionOptions,
 	}

@@ -2,11 +2,12 @@ package baseapp
 
 import (
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"sort"
-	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"

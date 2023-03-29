@@ -1,8 +1,10 @@
 package iavl
 
 import (
+	"bytes"
 	crand "crypto/rand"
 	"fmt"
+	"sort"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -662,13 +664,20 @@ func TestChangeSets(t *testing.T) {
 	db := dbm.NewMemDB()
 	treeSize := 1000
 	treeVersion := int64(10)
-	targetVersion := int64(7)
+	targetVersion := int64(6)
 	tree, err := iavl.NewMutableTree(db, cacheSize, false)
 	require.NoError(t, err)
 
 	for j := int64(0); j < treeVersion; j++ {
+		keys := [][]byte{}
 		for i := 0; i < treeSize; i++ {
-			key := randBytes(4)
+			keys = append(keys, randBytes(4))
+		}
+		sort.Slice(keys, func(p, q int) bool {
+			return bytes.Compare(keys[p], keys[q]) < 0
+		})
+		for i := 0; i < treeSize; i++ {
+			key := keys[i]
 			value := randBytes(50)
 			_, err := tree.Set(key, value)
 			require.NoError(t, err)

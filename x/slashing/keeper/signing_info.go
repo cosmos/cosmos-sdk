@@ -57,39 +57,6 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 	}
 }
 
-// // IterateValidatorMissedBlockBitArray iterates over the signed blocks window
-// // and performs a callback function
-// func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
-// 	address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool),
-// ) {
-// 	store := ctx.KVStore(k.storeKey)
-// 	index := int64(0)
-// 	// Array may be sparse
-// 	for ; index < k.SignedBlocksWindow(ctx); index++ {
-// 		var missed gogotypes.BoolValue
-// 		bz := store.Get(types.ValidatorMissedBlockBitArrayKey(address, index))
-// 		if bz == nil {
-// 			continue
-// 		}
-
-// 		k.cdc.MustUnmarshal(bz, &missed)
-// 		if handler(index, missed.Value) {
-// 			break
-// 		}
-// 	}
-// }
-
-// // GetValidatorMissedBlocks returns array of missed blocks for given validator Cons address
-// func (k Keeper) GetValidatorMissedBlocks(ctx sdk.Context, address sdk.ConsAddress) []types.MissedBlock {
-// 	missedBlocks := []types.MissedBlock{}
-// 	k.IterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
-// 		missedBlocks = append(missedBlocks, types.NewMissedBlock(index, missed))
-// 		return false
-// 	})
-
-// 	return missedBlocks
-// }
-
 // JailUntil attempts to set a validator's JailedUntil attribute in its signing
 // info. It will panic if the signing info does not exist for the validator.
 func (k Keeper) JailUntil(ctx sdk.Context, consAddr sdk.ConsAddress, jailTime time.Time) {

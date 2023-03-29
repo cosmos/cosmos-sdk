@@ -112,7 +112,7 @@ func (a AutoUInt64Table) PrefixScan(store storetypes.KVStore, start, end uint64)
 // this as an endpoint to the public without further limits. See `LimitIterator`
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
-func (a AutoUInt64Table) ReversePrefixScan(store storetypes.KVStore, start uint64, end uint64) (Iterator, error) {
+func (a AutoUInt64Table) ReversePrefixScan(store storetypes.KVStore, start, end uint64) (Iterator, error) {
 	return a.table.ReversePrefixScan(store, EncodeSequence(start), EncodeSequence(end))
 }
 

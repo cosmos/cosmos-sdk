@@ -414,6 +414,8 @@ message ConsPubKeyRotationHistory {
   google.protobuf.Any new_cons_pubkey = 3 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   // height defines the block height at which the rotation event occured.
   uint64 height = 4;
+  // fee holds the amount of fee deduced for the rotation.
+  cosmos.base.v1beta1.Coin fee = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // ValAddrsOfRotatedConsKeys contains the array of validator addresses which rotated their keys

@@ -176,7 +176,7 @@ func (pubKey *PubKey) Bytes() []byte {
 	return pubKey.Key
 }
 
-func (pubKey *PubKey) VerifySignature(msg []byte, sig []byte) bool {
+func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 	// make sure we use the same algorithm to sign
 	if len(sig) != SignatureSize {
 		return false

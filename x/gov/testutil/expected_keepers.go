@@ -3,6 +3,8 @@
 package testutil
 
 import (
+	context "context"
+
 	math "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +17,7 @@ import (
 type AccountKeeper interface {
 	types.AccountKeeper
 
-	IterateAccounts(ctx sdk.Context, cb func(account sdk.AccountI) (stop bool))
+	IterateAccounts(ctx context.Context, cb func(account sdk.AccountI) (stop bool))
 }
 
 // BankKeeper extends gov's actual expected BankKeeper with additional

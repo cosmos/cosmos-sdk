@@ -78,11 +78,11 @@ func newIbcCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(getIBCDenom(ibcPath, ibcBaseDenom), amt)
 }
 
-func getIBCDenom(path string, baseDenom string) string {
+func getIBCDenom(path, baseDenom string) string {
 	return fmt.Sprintf("%s/%s", "ibc", hex.EncodeToString(getIBCHash(path, baseDenom)))
 }
 
-func getIBCHash(path string, baseDenom string) []byte {
+func getIBCHash(path, baseDenom string) []byte {
 	hash := sha256.Sum256([]byte(path + "/" + baseDenom))
 	return hash[:]
 }
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
 }
 
-func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender *authtypes.ModuleAccount, receiver *authtypes.ModuleAccount) {
+func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender, receiver *authtypes.ModuleAccount) {
 	suite.authKeeper.EXPECT().GetModuleAddress(sender.Name).Return(sender.GetAddress())
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, receiver.Name).Return(receiver)
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, sender.GetAddress()).Return(sender)
@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.Accoun
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc sdk.AccountI, mAcc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc sdk.Account
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
-func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc sdk.AccountI, mAcc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
@@ -504,14 +504,14 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	require.Empty(suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
 
 	suite.mockInputOutputCoins([]sdk.AccountI{authtypes.NewBaseAccountWithAddress(accAddrs[0])}, []sdk.AccAddress{accAddrs[1]})
-	inputs := []banktypes.Input{
-		{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+	input := banktypes.Input{
+		Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
 	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
 	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[1])
@@ -524,37 +524,35 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-	inputs := []banktypes.Input{
-		{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
+	input := banktypes.Input{
+		Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
 	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 		{Address: accAddrs[2].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	require.Error(suite.bankKeeper.InputOutputCoins(ctx, inputs, []banktypes.Output{}))
+	require.Error(suite.bankKeeper.InputOutputCoins(ctx, input, []banktypes.Output{}))
 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
-	require.Error(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	require.Error(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], balances))
 
-	insufficientInputs := []banktypes.Input{
-		{
-			Address: accAddrs[0].String(),
-			Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
-		},
+	insufficientInput := banktypes.Input{
+		Address: accAddrs[0].String(),
+		Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
 	}
 	insufficientOutputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 		{Address: accAddrs[2].String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 	}
 
-	require.Error(suite.bankKeeper.InputOutputCoins(ctx, insufficientInputs, insufficientOutputs))
+	require.Error(suite.bankKeeper.InputOutputCoins(ctx, insufficientInput, insufficientOutputs))
 
 	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[1:3])
-	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
@@ -762,11 +760,9 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-	inputs := []banktypes.Input{
-		{
-			Address: accAddrs[0].String(),
-			Coins:   coins,
-		},
+	input := banktypes.Input{
+		Address: accAddrs[0].String(),
+		Coins:   coins,
 	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[2].String(), Coins: newCoins},
@@ -774,7 +770,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
-	require.Error(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	require.Error(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	events := ctx.EventManager().ABCIEvents()
 	require.Equal(0, len(events))
@@ -784,7 +780,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))))
 
 	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
-	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
 	require.Equal(12, len(events)) // 12 events because account funding causes extra minting + coin_spent + coin_recv events
@@ -809,7 +805,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 
 	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
-	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
 	require.Equal(30, len(events)) // 27 due to account funding + coin_spent + coin_recv events

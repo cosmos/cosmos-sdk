@@ -7,6 +7,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
@@ -46,9 +47,10 @@ func (AppModuleBasic) Name() string {
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	nft.RegisterMsgServer(cfg.MsgServer(), am.keeper)
-	nft.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	nft.RegisterMsgServer(registrar, am.keeper)
+	nft.RegisterQueryServer(registrar, am.keeper)
+	return nil
 }
 
 // RegisterLegacyAminoCodec registers the nft module's types for the given codec.
@@ -113,7 +115,10 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak nft.AccountKeeper, b
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -124,13 +129,6 @@ func (am AppModule) IsAppModule() {}
 // Name returns the nft module's name.
 func (AppModule) Name() string {
 	return nft.ModuleName
-}
-
-// RegisterInvariants does nothing, there are no invariants to enforce
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
 }
 
 // InitGenesis performs genesis initialization for the nft module. It returns

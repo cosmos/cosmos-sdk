@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -158,8 +159,10 @@ func initKeepersWithmAccPerms(f *fixture, blockedAddrs map[string]bool) (authkee
 	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 	maccPerms[randomPerm] = []string{"random"}
+
+	storeService := runtime.NewKVStoreService(f.fetchStoreKey(authtypes.StoreKey).(*storetypes.KVStoreKey))
 	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, f.fetchStoreKey(types.StoreKey), authtypes.ProtoBaseAccount,
+		appCodec, storeService, authtypes.ProtoBaseAccount,
 		maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	bankKeeper := keeper.NewBaseKeeper(
@@ -426,14 +429,14 @@ func TestInputOutputNewAccount(t *testing.T) {
 	assert.Assert(t, f.accountKeeper.GetAccount(ctx, addr2) == nil)
 	assert.Assert(t, f.bankKeeper.GetAllBalances(ctx, addr2).Empty())
 
-	inputs := []types.Input{
-		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+	input := types.Input{
+		Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
 	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	assert.NilError(t, f.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	assert.NilError(t, f.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
 	acc2Balances := f.bankKeeper.GetAllBalances(ctx, addr2)
@@ -460,8 +463,8 @@ func TestInputOutputCoins(t *testing.T) {
 	acc3 := f.accountKeeper.NewAccountWithAddress(ctx, addr3)
 	f.accountKeeper.SetAccount(ctx, acc3)
 
-	input := []types.Input{
-		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
+	input := types.Input{
+		Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
 	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
@@ -473,11 +476,9 @@ func TestInputOutputCoins(t *testing.T) {
 
 	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, balances))
 
-	insufficientInput := []types.Input{
-		{
-			Address: addr1.String(),
-			Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
-		},
+	insufficientInput := types.Input{
+		Address: addr1.String(),
+		Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
 	}
 	insufficientOutputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
@@ -722,11 +723,9 @@ func TestMsgMultiSendEvents(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-	input := []types.Input{
-		{
-			Address: addr.String(),
-			Coins:   coins,
-		},
+	input := types.Input{
+		Address: addr.String(),
+		Coins:   coins,
 	}
 	outputs := []types.Output{
 		{Address: addr3.String(), Coins: newCoins},
@@ -1198,8 +1197,9 @@ func TestBalanceTrackingEvents(t *testing.T) {
 
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
+	storeService := runtime.NewKVStoreService(f.fetchStoreKey(authtypes.StoreKey).(*storetypes.KVStoreKey))
 	f.accountKeeper = authkeeper.NewAccountKeeper(
-		f.appCodec, f.fetchStoreKey(authtypes.StoreKey),
+		f.appCodec, storeService,
 		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -1328,9 +1328,10 @@ func TestMintCoinRestrictions(t *testing.T) {
 
 	maccPerms := make(map[string][]string)
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+	storeService := runtime.NewKVStoreService(f.fetchStoreKey(authtypes.StoreKey).(*storetypes.KVStoreKey))
 
 	f.accountKeeper = authkeeper.NewAccountKeeper(
-		f.appCodec, f.fetchStoreKey(authtypes.StoreKey),
+		f.appCodec, storeService,
 		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)

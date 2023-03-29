@@ -5,7 +5,7 @@ var defaultLoggerConfig = LoggerConfig{
 	OutputJSON: false,
 }
 
-// LoggerConfig defines configuration for the logger
+// LoggerConfig defines configuration for the logger.
 type LoggerConfig struct {
 	Filter     FilterFunc
 	OutputJSON bool
@@ -13,14 +13,14 @@ type LoggerConfig struct {
 
 type LoggerOption func(*LoggerConfig)
 
-// FilterLoggerOption sets the filter for the Logger
+// FilterLoggerOption sets the filter for the Logger.
 func FilterLoggerOption(filter FilterFunc) LoggerOption {
 	return func(cfg *LoggerConfig) {
 		cfg.Filter = filter
 	}
 }
 
-// OutputJSONLoggerOption sets the output of the Logger to JSON
+// OutputJSONLoggerOption sets the output of the logger to JSON.
 func OutputJSONLoggerOption() LoggerOption {
 	return func(cfg *LoggerConfig) {
 		cfg.OutputJSON = true

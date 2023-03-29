@@ -83,8 +83,7 @@ complements [buf lint](https://docs.buf.build/lint/overview):
 * all enum values must be `<= 255`. Any enum in a blockchain application which needs more than 256 values is probably
   doing something very wrong.
 * all oneof's must be the *only* element in their containing message and must start at field number `1` and be added in
-  continuous ascending order - this makes it possible to quickly check for unknown values, but also Rust enums don't
-  allow specifying discriminant values manually
+  continuous ascending order - this makes it possible to quickly check for unknown values
 * all `oneof` field numbers must be `<= 255`. Any `oneof` which needs more field cases is probably doing something very
   wrong.
 

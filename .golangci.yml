@@ -8,6 +8,7 @@ run:
 linters:
   disable-all: true
   enable:
+    - bodyclose
     - depguard
     - dogsled
     - exportloopref
@@ -21,12 +22,15 @@ linters:
     - misspell
     - nakedret
     - nolintlint
+    - thelper
+    - paralleltest
     - staticcheck
     - revive
     - stylecheck
     - typecheck
     - unconvert
     - unused
+    - varcheck
 
 issues:
   exclude-rules:
@@ -53,6 +57,107 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  gocritic:
+    # Which checks should be enabled; can't be combined with 'disabled-checks'.
+    # See https://go-critic.github.io/overview#checks-overview.
+    # To check which checks are enabled run `GL_DEBUG=gocritic golangci-lint run`.
+    # By default, list of stable checks is used.
+    enabled-checks:
+      - nestingReduce
+      - unnamedResult
+      - ruleguard
+      - truncateCmp
+    # Which checks should be disabled; can't be combined with 'enabled-checks'.
+    # Default: []
+    disabled-checks:
+      - regexpMust
+    # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
+    # See https://github.com/go-critic/go-critic#usage -> section "Tags".
+    # Default: []
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+    # Settings passed to gocritic.
+    # The settings key is the name of a supported gocritic checker.
+    # The list of supported checkers can be find in https://go-critic.github.io/overview.
+    settings:
+      # Must be valid enabled check name.
+      captLocal:
+        # Whether to restrict checker to params only.
+        # Default: true
+        paramsOnly: false
+      elseif:
+        # Whether to skip balanced if-else pairs.
+        # Default: true
+        skipBalanced: false
+      hugeParam:
+        # Size in bytes that makes the warning trigger.
+        # Default: 80
+        sizeThreshold: 70
+      nestingReduce:
+        # Min number of statements inside a branch to trigger a warning.
+        # Default: 5
+        bodyWidth: 4
+      rangeExprCopy:
+        # Size in bytes that makes the warning trigger.
+        # Default: 512
+        sizeThreshold: 516
+        # Whether to check test functions
+        # Default: true
+        skipTestFuncs: false
+      rangeValCopy:
+        # Size in bytes that makes the warning trigger.
+        # Default: 128
+        sizeThreshold: 32
+        # Whether to check test functions.
+        # Default: true
+        skipTestFuncs: false
+      ruleguard:
+        # Determines the behavior when an error occurs while parsing ruleguard files.
+        # If flag is not set, log error and skip rule files that contain an error.
+        # If flag is set, the value must be a comma-separated list of error conditions.
+        # - 'all':    fail on all errors.
+        # - 'import': ruleguard rule imports a package that cannot be found.
+        # - 'dsl':    gorule file does not comply with the ruleguard DSL.
+        # Default: ""
+        failOn: dsl
+        # Comma-separated list of file paths containing ruleguard rules.
+        # If a path is relative, it is relative to the directory where the golangci-lint command is executed.
+        # The special '${configDir}' variable is substituted with the absolute directory containing the golangci config file.
+        # Glob patterns such as 'rules-*.go' may be specified.
+        # Default: ""
+        rules: '${configDir}/ruleguard/rules-*.go,${configDir}/myrule1.go'
+]
+      tooManyResultsChecker:
+        # Maximum number of results.
+        # Default: 5
+        maxResults: 10
+      truncateCmp:
+        # Whether to skip int/uint/uintptr types.
+        # Default: true
+        skipArchDependent: false
+      underef:
+        # Whether to skip (*x).method() calls where x is a pointer receiver.
+        # Default: true
+        skipRecvDeref: false
+      unnamedResult:
+        # Whether to check exported functions.
+        # Default: false
+        checkExported: true
+   staticcheck:
+    checks: ["all"]
+  paralleltest:
+    # Ignore missing calls to `t.Parallel()` and only report incorrect uses of it.
+    # Default: false
+    ignore-missing: true
+  misspell:
+    # Correct spellings using locale preferences for US or UK.
+    # Setting locale to US will correct the British spelling of 'colour' to 'color'.
+    # Default is to use a neutral variety of English.
+    locale: US
   gofumpt:
     # Choose whether to use the extra rules.
     # Default: false
@@ -62,8 +167,13 @@ linters-settings:
   maligned:
     # print struct with more effective memory layout or not, false by default
     suggest-new: true
+   varcheck:
+    # Check usage of exported fields and variables.
+    # Default: false
+    exported-fields: false
   nolintlint:
     allow-unused: false
+    allow-no-explanation: false
     allow-leading-space: true
     require-explanation: false
     require-specific: false

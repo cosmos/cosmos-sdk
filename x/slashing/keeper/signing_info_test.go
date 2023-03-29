@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,7 +54,7 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	require.Equal(sInfo.JailedUntil, jailTime)
 }
 
-func (s *KeeperTestSuite) TestValidatorMissedBlockBitArray() {
+func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
@@ -67,25 +68,29 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitArray() {
 		missed bool
 	}{
 		{
-			name:   "missed block with false",
+			name:   "missed block",
 			index:  50,
 			missed: false,
 		},
 		{
-			name:   "missed block with true",
+			name:   "signed block",
 			index:  51,
 			missed: true,
 		},
 	}
+
 	for ind, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			keeper.SetValidatorMissedBlockBitArray(ctx, consAddr, tc.index, tc.missed)
-			missed := keeper.GetValidatorMissedBlockBitArray(ctx, consAddr, tc.index)
+			keeper.SetMissedBlockBitmapValue(ctx, consAddr, tc.index, tc.missed)
 
+			missed, err := keeper.GetMissedBlockBitmapValue(ctx, consAddr, tc.index)
+			require.NoError(err)
 			require.Equal(missed, tc.missed)
+
 			missedBlocks := keeper.GetValidatorMissedBlocks(ctx, consAddr)
-			require.Equal(len(missedBlocks), ind+1)
+			fmt.Println(missedBlocks)
+			require.Equal(len(missedBlocks), slashingtypes.MissedBlockBitmapChunkSize)
 			require.Equal(missedBlocks[ind].Index, tc.index)
 			require.Equal(missedBlocks[ind].Missed, tc.missed)
 		})

@@ -3,7 +3,8 @@ module cosmossdk.io/x/tx
 go 1.20
 
 require (
-	cosmossdk.io/api v0.3.1
+    // Temporarily pointing to a commit in the branch that has the tx changes we need. This needs to be updated when merged
+	cosmossdk.io/api v0.0.0-20230329110751-2b00f6763066
 	cosmossdk.io/core v0.6.1-0.20230309163709-87da587416ba
 	cosmossdk.io/math v1.0.0-rc.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3

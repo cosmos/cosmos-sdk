@@ -1,7 +1,8 @@
 ---
 name: Epic
 about: Create an epic/user
-
+title: "[Epic]: "
+labels: T:Epic
 ---
 
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺ 

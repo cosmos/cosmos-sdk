@@ -49,8 +49,8 @@ type zeroLogWrapper struct {
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
-func NewLogger(dst io.Writer, options ...LoggerOption) Logger {
-	logCfg := defaultLoggerConfig
+func NewLogger(dst io.Writer, options ...Option) Logger {
+	logCfg := defaultConfig
 	for _, opt := range options {
 		opt(&logCfg)
 	}

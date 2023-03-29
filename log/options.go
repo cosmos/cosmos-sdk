@@ -1,28 +1,28 @@
 package log
 
-var defaultLoggerConfig = LoggerConfig{
+var defaultConfig = Config{
 	Filter:     nil,
 	OutputJSON: false,
 }
 
 // LoggerConfig defines configuration for the logger.
-type LoggerConfig struct {
+type Config struct {
 	Filter     FilterFunc
 	OutputJSON bool
 }
 
-type LoggerOption func(*LoggerConfig)
+type Option func(*Config)
 
-// FilterLoggerOption sets the filter for the Logger.
-func FilterLoggerOption(filter FilterFunc) LoggerOption {
-	return func(cfg *LoggerConfig) {
+// FilterOption sets the filter for the Logger.
+func FilterOption(filter FilterFunc) Option {
+	return func(cfg *Config) {
 		cfg.Filter = filter
 	}
 }
 
-// OutputJSONLoggerOption sets the output of the logger to JSON.
-func OutputJSONLoggerOption() LoggerOption {
-	return func(cfg *LoggerConfig) {
+// OutputJSONOption sets the output of the logger to JSON.
+func OutputJSONOption() Option {
+	return func(cfg *Config) {
 		cfg.OutputJSON = true
 	}
 }

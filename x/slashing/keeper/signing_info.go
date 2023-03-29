@@ -4,6 +4,8 @@ import (
 	"time"
 
 	storetypes "cosmossdk.io/store/types"
+	"github.com/bits-and-blooms/bitset"
+	"github.com/cockroachdb/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -160,46 +162,73 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 
 // ============================================================================
 
-// GetMissedBlockBitmapValue returns a validator's missed block bitmap value at
-// the given index, where index is the block height offset in the signing window.
-func (k Keeper) GetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress, index int64) bool {
-	// assume index provided is non-zero based
-	pos := index - 1
-
-	// get the chunk or "word" in the logical bitmap
-	chunkIndex := pos / types.MissedBlockBitmapChunkSize
-
-	// get the position in the chunk of the logical bitmap
-	bitIndex := pos % types.MissedBlockBitmapChunkSize
-
+// GetMissedBlockBitmapChunk gets the bitmap chunk at the given chunk index for
+// a validator's missed block signing window.
+func (k Keeper) GetMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress, chunkIndex int64) []byte {
 	store := ctx.KVStore(k.storeKey)
 	chunk := store.Get(types.ValidatorMissedBlockBitmapKey(addr, chunkIndex))
-
-	return chunk[bitIndex] == 1
+	return chunk
 }
 
-// SetMissedBlockBitmapValue sets a validator's missed block bitmap value at the
-// given index, where index is the block height offset in the signing window.
-// If missed=true, the bit is set to 1, otherwise it is set to 0.
-func (k Keeper) SetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress, index int64, missed bool) {
-	// assume index provided is non-zero based
-	pos := index - 1
-
-	// get the chunk or "word" in the logical bitmap
-	chunkIndex := pos / types.MissedBlockBitmapChunkSize
-
-	// get the position in the chunk of the logical bitmap
-	bitIndex := pos % types.MissedBlockBitmapChunkSize
-
+// SetMissedBlockBitmapChunk sets the bitmap chunk at the given chunk index for
+// a validator's missed block signing window.
+func (k Keeper) SetMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress, chunkIndex int64, chunk []byte) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.ValidatorMissedBlockBitmapKey(addr, chunkIndex)
+	store.Set(key, chunk)
+}
 
-	chunk := store.Get(key)
-	if missed {
-		chunk[bitIndex] = 1
-	} else {
-		chunk[bitIndex] = 0
+// GetMissedBlockBitmapValue returns true if a validator missed signing a block
+// at the given index and false otherwise. The index provided is assumed to be
+// the index in the range [0, SignedBlocksWindow), which represents the bitmap
+// where each bit represents a height, and is determined by the validator's
+// IndexOffset modulo SignedBlocksWindow. This index is used to fetch the chunk
+// in the bitmap and the relative bit in that chunk.
+func (k Keeper) GetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress, index int64) (bool, error) {
+	// get the chunk or "word" in the logical bitmap
+	chunkIndex := index / types.MissedBlockBitmapChunkSize
+
+	bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
+	chunk := k.GetMissedBlockBitmapChunk(ctx, addr, chunkIndex)
+	if err := bs.UnmarshalBinary(chunk); err != nil {
+		return false, errors.Wrapf(err, "failed to decode bitmap chunk; index: %d", index)
 	}
 
-	store.Set(key, chunk)
+	// get the bit position in the chunk of the logical bitmap
+	bitIndex := index % types.MissedBlockBitmapChunkSize
+	return bs.Test(uint(bitIndex)), nil
+}
+
+// SetMissedBlockBitmapValue sets, i.e. flips, a bit in the validator's missed
+// block bitmap. When missed=true, the bit is set, otherwise it set to zero. The
+// index provided is assumed to be the index in the range [0, SignedBlocksWindow),
+// which represents the bitmap where each bit represents a height, and is
+// determined by the validator's IndexOffset modulo SignedBlocksWindow. This
+// index is used to fetch the chunk in the bitmap and the relative bit in that
+// chunk.
+func (k Keeper) SetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress, index int64, missed bool) error {
+	// get the chunk or "word" in the logical bitmap
+	chunkIndex := index / types.MissedBlockBitmapChunkSize
+
+	bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
+	bz := k.GetMissedBlockBitmapChunk(ctx, addr, chunkIndex)
+	if err := bs.UnmarshalBinary(bz); err != nil {
+		return errors.Wrapf(err, "failed to decode bitmap chunk; index: %d", index)
+	}
+
+	// get the bit position in the chunk of the logical bitmap
+	bitIndex := uint(index % types.MissedBlockBitmapChunkSize)
+	if missed {
+		bs.Set(bitIndex)
+	} else {
+		bs.Clear(bitIndex)
+	}
+
+	chunk, err := bs.MarshalBinary()
+	if err != nil {
+		return errors.Wrapf(err, "failed to encode bitmap chunk; index: %d", index)
+	}
+
+	k.SetMissedBlockBitmapChunk(ctx, addr, chunkIndex, chunk)
+	return nil
 }

@@ -18,8 +18,14 @@ const (
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
 
-	// MissedBlockBitmapChunkSize defines the chunk size of a missed block bitmap.
-	// Chunks are used to reduce the storage and write overhead of IAVL nodes.
+	// MissedBlockBitmapChunkSize defines the chunk size, in number of bits, of a
+	// validator missed block bitmap. Chunks are used to reduce the storage and
+	// write overhead of IAVL nodes. The total size of the bitmap is roughly in
+	// the range [0, SignedBlocksWindow) where each bit represents a block. A
+	// validator's IndexOffset modulo the SignedBlocksWindow is used to retrieve
+	// the chunk in that bitmap range. Once the chunk is retrieved, the same index
+	// is used to check or flip a bit, where if a bit is set, it indicates the
+	// validator missed that block.
 	//
 	// For a bitmap of N items, i.e. a validator's signed block window, the amount
 	// of write complexity per write with a factor of f being the overhead of
@@ -29,7 +35,7 @@ const (
 	//
 	// As for the storage overhead, with the same factor f, it is as follows:
 	// (N - 256) + (N / ChunkSize) * (512 * f)
-	MissedBlockBitmapChunkSize int64 = 1024 // 2^10
+	MissedBlockBitmapChunkSize int64 = 1024 // 2^10 bits
 )
 
 // Keys for slashing store

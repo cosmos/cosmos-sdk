@@ -97,6 +97,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (simtestutil) [#15305](https://github.com/cosmos/cosmos-sdk/pull/15305) Add `AppStateFnWithExtendedCb` with callback function to extend rawState.
 * (x/distribution) [#15462](https://github.com/cosmos/cosmos-sdk/pull/15462) Add delegator address to the event for withdrawing delegation rewards
 * (x/consensus) [#15553](https://github.com/cosmos/cosmos-sdk/pull/15553) Migrate consensus module to use collections
+* (baseapp) [#15038](https://github.com/cosmos/cosmos-sdk/pull/15038) Add non-atomic option for multi-message transactions
 
 ### State Machine Breaking
 

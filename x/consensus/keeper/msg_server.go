@@ -41,11 +41,13 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, err
 	}
 
-	k.event.EventManager(goCtx).EmitKV(
+	if err := k.event.EventManager(goCtx).EmitKV(
 		goCtx,
 		"update_consensus_params",
 		event.Attribute{Key: "authority", Value: req.Authority},
-		event.Attribute{Key: "parameters", Value: consensusParams.String()})
+		event.Attribute{Key: "parameters", Value: consensusParams.String()}); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }

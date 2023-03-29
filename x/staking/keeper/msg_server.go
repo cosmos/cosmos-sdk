@@ -511,13 +511,18 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		return nil, types.ErrConsensusPubKeyAlreadyUsedForAValidator
 	}
 
-	// checks if the validator is exceeding parameter MaxConsPubKeyRotations within the
-	// unbonding period by iterating ConsPubKeyRotationHistory
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
+	validator, found := k.Keeper.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// checks if the validator is exceeding parameter MaxConsPubKeyRotations within the
+	// unbonding period by iterating ConsPubKeyRotationHistory
 	isExceedingLimit, rotationsMade := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
 	if isExceedingLimit {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
@@ -531,11 +536,6 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, sdk.NewCoins(rotationFee))
 	if err != nil {
 		return nil, err
-	}
-
-	validator, found := k.Keeper.GetValidator(ctx, valAddr)
-	if !found {
-		return nil, types.ErrNoValidatorFound
 	}
 
 	if sdk.AccAddress(validator.GetOperator()).String() != sender.String() {
@@ -564,12 +564,13 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	k.SetValidator(ctx, val)
 
 	// Add ConsPubKeyRotationHistory for tracking rotation
-	k.SetConsPubKeyRotationHistory(ctx, types.ConsPubKeyRotationHistory{
-		OperatorAddress: validator.GetOperator().String(),
-		OldConsPubkey:   oldConsensusPubKey,
-		NewConsPubkey:   msg.NewPubkey,
-		Height:          uint64(ctx.BlockHeight()),
-	})
+	k.SetConsPubKeyRotationHistory(
+		ctx,
+		validator.GetOperator(),
+		oldConsensusPubKey,
+		msg.NewPubkey,
+		uint64(ctx.BlockHeight()),
+	)
 
 	return res, err
 }
@@ -585,9 +586,9 @@ func (k msgServer) getRotationFee(ctx sdk.Context, valBondedTokens math.Int, rot
 	if valBondedPercent.GT(defaultMultiplier) {
 		defaultMultiplier = valBondedPercent
 	}
-
 	fee := defaultMultiplier.Mul(k.KeyRotationFee(ctx).Amount)
 	rotationsMultiplier := sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(rotationsMade)), nil))
 	fee = fee.Mul(rotationsMultiplier)
+
 	return sdk.NewCoin(sdk.DefaultBondDenom, fee)
 }

@@ -220,7 +220,7 @@ func TestRotateConsPubKey(t *testing.T) {
 		expErrMsg     string
 	}{
 		{
-			Name:          "not existing validator check",
+			Name:          "non existing validator check",
 			sender:        addrs[1],
 			validator:     valAddrs[1],
 			newPubKey:     pks[1],
@@ -243,7 +243,7 @@ func TestRotateConsPubKey(t *testing.T) {
 			newPubKey:     PKs[498],
 			rotationLimit: 1,
 			Pass:          false,
-			expErrMsg:     "exceeding maximum consensus pubkey rotations",
+			expErrMsg:     "exceeding maximum consensus pubkey rotations within unbonding period",
 		},
 	}
 

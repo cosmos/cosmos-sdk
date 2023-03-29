@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -419,11 +420,15 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 }
 
 func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
-	ctx, keeper, msgServer, bk := s.ctx, s.stakingKeeper, s.msgServer, s.bankKeeper
+	ctx, keeper, msgServer, bk, ak := s.ctx, s.stakingKeeper, s.msgServer, s.bankKeeper, s.accountKeeper
 	require := s.Require()
 
 	powers := []int64{10, 20}
 	var validators [2]stakingtypes.Validator
+
+	bonedPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
+	ak.EXPECT().GetModuleAccount(gomock.Any(), stakingtypes.BondedPoolName).Return(bonedPool).AnyTimes()
+	bk.EXPECT().GetBalance(gomock.Any(), bonedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))).AnyTimes()
 
 	for i, power := range powers {
 		valAddr := sdk.ValAddress(PKs[i].Address().Bytes())

@@ -11,6 +11,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -41,6 +42,7 @@ type VestingTestSuite struct {
 
 func (s *VestingTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
@@ -51,7 +53,7 @@ func (s *VestingTestSuite) SetupTest() {
 	s.bankKeeper = vestingtestutil.NewMockBankKeeper(ctrl)
 	s.accountKeeper = authkeeper.NewAccountKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		"cosmos",

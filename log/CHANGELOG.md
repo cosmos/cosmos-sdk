@@ -33,7 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.0.0) - 2023-03-29
 
-* [#15601](https://github.com/cosmos/cosmos-sdk/pull/15601) Add `NewLoggerWithFilter` which creates a logger that filters out log messages given their level and module.
+* [#15601](https://github.com/cosmos/cosmos-sdk/pull/15601) Introduce logger options. These options allow to configure the logger with filters, different level and output format.
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v0.1.0) - 2023-03-13
 

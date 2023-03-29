@@ -1,7 +1,12 @@
 package codec
 
 import (
+	"fmt"
+
 	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // AminoCodec defines a codec that utilizes Codec for both binary and JSON
@@ -124,3 +129,17 @@ func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
 func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
+
+func (ac *AminoCodec) GetMsgAnySigners(*types.Any) ([]string, protov2.Message, error) {
+	return nil, nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) GetMsgV1Signers(proto.Message) ([]string, protov2.Message, error) {
+	return nil, nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) GetMsgV2Signers(protov2.Message) ([]string, error) {
+	return nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) private() {}

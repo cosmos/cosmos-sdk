@@ -28,7 +28,7 @@ improving performance, and we want to avoid inter-module calls from becoming a b
 reduce performance overhead as well as the size of generated code will make it easier and more feasible to deploy
 first-class integrations with these virtual machines.
 
-Thus, the agreement after the discussions around [ADR 054](./../architecture/adr-054-semver-compatible-modules.md)
+Thus, the agreement when the [ADR 054](./../architecture/adr-054-semver-compatible-modules.md) working group concluded
 was to pursue a performant zero-copy encoding which is suitable for usage in highly resource constrained environments.
 
 ## Proposal

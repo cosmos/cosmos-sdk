@@ -40,9 +40,9 @@ const (
 	runTxModeCheck       runTxMode = iota // Check a transaction
 	runTxModeReCheck                      // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                     // Simulate a transaction
-	runTxModeDeliver                      // Deliver a transaction
-	runTxPrepareProposal                  // Prepare a TM block proposal
-	runTxProcessProposal                  // Process a TM block proposal
+	runTxModeFinalize                     // Finalize a block
+	runTxPrepareProposal                  // Prepare a block proposal
+	runTxProcessProposal                  // Process a  block proposal
 )
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -66,10 +66,10 @@ type BaseApp struct { //nolint: maligned
 	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
 	postHandler     sdk.PostHandler            // post handler, optional, e.g. for tips
 	initChainer     sdk.InitChainer            // initialize state with validators and state blob
-	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
+	beginBlocker    sdk.LegacyBeginBlocker     // logic to run before any txs
 	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
 	prepareProposal sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
-	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
+	endBlocker      sdk.LegacyEndBlocker       // logic to run after all txs, and to determine valset changes
 	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
 	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
 	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
@@ -79,12 +79,13 @@ type BaseApp struct { //nolint: maligned
 
 	// volatile states:
 	//
-	// checkState is set on InitChain and reset on Commit
-	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
+	// - checkState is set on InitChain and reset on Commit
+	// - finalizeBlockState is set on InitChain and FinalizeBlock and set to nil
+	// on Commit.
 	checkState           *state // for CheckTx
-	deliverState         *state // for DeliverTx
 	processProposalState *state // for ProcessProposal
 	prepareProposalState *state // for PrepareProposal
+	finalizeBlockState   *state // for FinalizeBlock
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache storetypes.MultiStorePersistentCache
@@ -150,8 +151,6 @@ type BaseApp struct { //nolint: maligned
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
 // variadic number of option functions, which act on the BaseApp to set
 // configuration choices.
-//
-// NOTE: The db is used to store the version number for now.
 func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
@@ -415,18 +414,18 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 
 	switch mode {
 	case runTxModeCheck:
-		// Minimum gas prices are also set. It is set on InitChain and reset on Commit.
 		baseState.ctx = baseState.ctx.WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices)
 		app.checkState = baseState
-	case runTxModeDeliver:
-		// It is set on InitChain and BeginBlock and set to nil on Commit.
-		app.deliverState = baseState
+
+	case runTxModeFinalize:
+		app.finalizeBlockState = baseState
+
 	case runTxPrepareProposal:
-		// It is set on InitChain and Commit.
 		app.prepareProposalState = baseState
+
 	case runTxProcessProposal:
-		// It is set on InitChain and Commit.
 		app.processProposalState = baseState
+
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
@@ -447,15 +446,17 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 	return cp
 }
 
-// StoreConsensusParams sets the consensus parameters to the baseapp's param store.
+// StoreConsensusParams sets the consensus parameters to the BaseApp's param
+// store.
+//
+// NOTE: We're explicitly not storing the CometBFT app_version in the param store.
+// It's stored instead in the x/upgrade store, with its own bump logic.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
 
 	return app.paramStore.Set(ctx, cp)
-	// We're explicitly not storing the CometBFT app_version in the param store. It's
-	// stored instead in the x/upgrade store, with its own bump logic.
 }
 
 // AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
@@ -531,13 +532,10 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-// Returns the application's deliverState if app is in runTxModeDeliver,
-// prepareProposalState if app is in runTxPrepareProposal, processProposalState
-// if app is in runTxProcessProposal, and checkState otherwise.
 func (app *BaseApp) getState(mode runTxMode) *state {
 	switch mode {
-	case runTxModeDeliver:
-		return app.deliverState
+	case runTxModeFinalize:
+		return app.finalizeBlockState
 
 	case runTxPrepareProposal:
 		return app.prepareProposalState

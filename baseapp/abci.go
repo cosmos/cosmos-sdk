@@ -10,16 +10,15 @@ import (
 	"syscall"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/rootmulti"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
-
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/rootmulti"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -53,21 +52,21 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	if req.InitialHeight > 1 {
 		app.initialHeight = req.InitialHeight
 		initHeader = cmtproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
-		err := app.cms.SetInitialVersion(req.InitialHeight)
-		if err != nil {
+
+		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
 			panic(err)
 		}
 	}
 
 	// initialize states with a correct header
-	app.setState(runTxModeDeliver, initHeader)
+	app.setState(runTxModeFinalize, initHeader)
 	app.setState(runTxModeCheck, initHeader)
 
-	// Store the consensus params in the BaseApp's paramstore. Note, this must be
-	// done after the deliver state and context have been set as it's persisted
+	// Store the consensus params in the BaseApp's param store. Note, this must be
+	// done after the finalizeBlockState and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		err := app.StoreConsensusParams(app.deliverState.ctx, *req.ConsensusParams)
+		err := app.StoreConsensusParams(app.finalizeBlockState.ctx, *req.ConsensusParams)
 		if err != nil {
 			panic(err)
 		}
@@ -78,14 +77,13 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
-	res, err := app.initChainer(app.deliverState.ctx, req)
+	res, err := app.initChainer(app.finalizeBlockState.ctx, req)
 	if err != nil {
 		panic(err)
 	}
 
-	// sanity check
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(res.Validators) {
 			panic(
@@ -118,8 +116,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		appHash = emptyHash[:]
 	}
 
-	// NOTE: We don't commit, but BeginBlock for block `initial_height` starts from this
-	// deliverState.
+	// NOTE: We don't commit, but FinalizeBlock for block at height initial_height
+	// starts from this state.
 	return abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,

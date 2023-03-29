@@ -38,7 +38,7 @@ func BeginBlocker(k *keeper.Keeper, ctx sdk.Context) {
 				var appVersion uint64
 
 				cp := ctx.ConsensusParams()
-				if cp != nil && cp.Version != nil {
+				if cp.Version != nil {
 					appVersion = cp.Version.App
 				}
 

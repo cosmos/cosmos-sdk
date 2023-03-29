@@ -102,8 +102,8 @@ func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
+	types.RegisterMsgServer(registrar, am.keeper)
+	types.RegisterQueryServer(registrar, am.keeper)
 	return nil
 }
 
@@ -168,7 +168,7 @@ func ProvideModule(in ConsensusInputs) ConsensusOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String())
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
-		app.SetParamStore(&k)
+		app.SetParamStore(k.Params)
 	}
 
 	return ConsensusOutputs{

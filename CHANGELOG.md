@@ -105,6 +105,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (x/simulation) [#15585](https://github.com/cosmos/cosmos-sdk/pull/15585) createBlockSimulator and runQueuedOperations now begin with the testing parameter, in accordance with the thelper linter. 
 * (x/auth) [#15517](https://github.com/cosmos/cosmos-sdk/pull/15517) `NewAccountKeeper` now takes a `KVStoreService` instead of a `StoreKey` and methods in the `Keeper` now take a `context.Context` instead of a `sdk.Context`. 
 * (x/consensus) [#15517](https://github.com/cosmos/cosmos-sdk/pull/15517) `NewKeeper` now takes a `KVStoreService` instead of a `StoreKey`.
 * (x/bank) [#15477](https://github.com/cosmos/cosmos-sdk/pull/15477) `banktypes.NewMsgMultiSend` and `keeper.InputOutputCoins` only accept one input.

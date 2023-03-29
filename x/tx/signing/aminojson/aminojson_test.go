@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -75,6 +76,13 @@ func TestAminoJsonSignMode(t *testing.T) {
 			},
 			error: "fee cannot be nil",
 		},
+		{
+			name: "tipper is signer",
+			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
+				opts.Tip.Tipper = opts.SignerAddress
+				return opts
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -94,4 +102,16 @@ func TestAminoJsonSignMode(t *testing.T) {
 		})
 	}
 
+}
+
+func TestNewSignModeHandler(t *testing.T) {
+	handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
+	require.NotNil(t, handler)
+	aj := aminojson.NewAminoJSON()
+	handler = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
+		FileResolver: protoregistry.GlobalFiles,
+		TypeResolver: protoregistry.GlobalTypes,
+		Encoder:      &aj,
+	})
+	require.NotNil(t, handler)
 }

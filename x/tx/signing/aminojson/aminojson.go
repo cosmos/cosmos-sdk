@@ -23,28 +23,28 @@ type SignModeHandler struct {
 
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
-	fileResolver protodesc.Resolver
-	typeResolver protoregistry.MessageTypeResolver
-	encoder      *Encoder
+	FileResolver protodesc.Resolver
+	TypeResolver protoregistry.MessageTypeResolver
+	Encoder      *Encoder
 }
 
 // NewSignModeHandler returns a new SignModeHandler.
 func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 	h := &SignModeHandler{}
-	if options.fileResolver == nil {
+	if options.FileResolver == nil {
 		h.fileResolver = protoregistry.GlobalFiles
 	} else {
-		h.fileResolver = options.fileResolver
+		h.fileResolver = options.FileResolver
 	}
-	if options.typeResolver == nil {
+	if options.TypeResolver == nil {
 		h.typeResolver = protoregistry.GlobalTypes
 	} else {
-		h.typeResolver = options.typeResolver
+		h.typeResolver = options.TypeResolver
 	}
-	if options.encoder == nil {
+	if options.Encoder == nil {
 		h.encoder = NewAminoJSON()
 	} else {
-		h.encoder = *options.encoder
+		h.encoder = *options.Encoder
 	}
 	return h
 }

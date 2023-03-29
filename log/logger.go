@@ -61,12 +61,15 @@ func NewLogger(dst io.Writer) Logger {
 	return zeroLogWrapper{&logger}
 }
 
-// NewLoggerWithKV is shorthand for NewLogger(dst).With(key, value).
-func NewLoggerWithKV(dst io.Writer, key, value string) Logger {
-	return NewLogger(dst).With(key, value)
+// NewLoggerWithFilter returns a new logger that filters out all key/value pairs that do not match the filter.
+func NewLoggerWithFilter(dst io.Writer, filter FilterFunc) Logger {
+	output := zerolog.ConsoleWriter{Out: dst, TimeFormat: time.Kitchen}
+	logger := zerolog.New(NewFilterWriter(output, filter)).With().Timestamp().Logger()
+	return zeroLogWrapper{&logger}
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
+// NOTE: For creating a custom logger with a filter, use the NewFilterWriter function as wrapper around the output.
 func NewCustomLogger(logger zerolog.Logger) Logger {
 	return zeroLogWrapper{&logger}
 }
@@ -99,35 +102,6 @@ func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 // It can be used to used zerolog structured API directly instead of the wrapper.
 func (l zeroLogWrapper) Impl() interface{} {
 	return l.Logger
-}
-
-// FilterKeys returns a new logger that filters out all key/value pairs that do not match the filter.
-// This functions assumes that the logger is a zerolog.Logger, which is the case for the logger returned by log.NewLogger().
-// NOTE: filtering has a performance impact on the logger.
-func FilterKeys(logger Logger, filter FilterFunc) Logger {
-	zl, ok := logger.Impl().(*zerolog.Logger)
-	if !ok {
-		panic("logger is not a zerolog.Logger")
-	}
-
-	filteredLogger := zl.Hook(zerolog.HookFunc(func(e *zerolog.Event, lvl zerolog.Level, _ string) {
-		// TODO(@julienrbrt) wait for https://github.com/rs/zerolog/pull/527 to be merged
-		// keys, err := e.GetKeys()
-		// if err != nil {
-		// 	panic(err)
-		// }
-
-		keys := []string{}
-
-		for _, key := range keys {
-			if filter(key, lvl.String()) {
-				e.Discard()
-				break
-			}
-		}
-	}))
-
-	return NewCustomLogger(filteredLogger)
 }
 
 // nopLogger is a Logger that does nothing when called.

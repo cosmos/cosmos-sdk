@@ -20,6 +20,7 @@ type (
 		BinaryCodec
 		JSONCodec
 
+		// InterfaceRegistry returns the interface registry.
 		InterfaceRegistry() types.InterfaceRegistry
 
 		// GetMsgAnySigners returns the signers of the given message encoded in a protobuf Any

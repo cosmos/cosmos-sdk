@@ -357,16 +357,6 @@ func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
 	m.OrderBeginBlockers = moduleNames
 }
 
-// SetOrderPepareCheckStaters sets the order of set commiter calls
-func (m *Manager) SetOrderPepareCheckStaters(moduleNames ...string) {
-	m.OrderPrepareCheckStaters = moduleNames
-}
-
-// SetOrderPrecommiters sets the order of set precommiter calls
-func (m *Manager) SetOrderPrecommiters(moduleNames ...string) {
-	m.OrderPrecommiters = moduleNames
-}
-
 // SetOrderEndBlockers sets the order of set end-blocker calls
 func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames,
@@ -376,6 +366,28 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 			return !hasEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
+}
+
+// SetOrderPrepareCheckStaters sets the order of set commiter calls
+func (m *Manager) SetOrderPrepareCheckStaters(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderPrepareCheckStaters", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasPrepareCheckState := module.(PrepareCheckStateAppModule)
+			return !hasPrepareCheckState
+		})
+	m.OrderPrepareCheckStaters = moduleNames
+}
+
+// SetOrderPrecommiters sets the order of set precommiter calls
+func (m *Manager) SetOrderPrecommiters(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderPrecommiters", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasPrecommit := module.(PrecommitAppModule)
+			return !hasPrecommit
+		})
+	m.OrderPrecommiters = moduleNames
 }
 
 // SetOrderMigrations sets the order of migrations to be run. If not set

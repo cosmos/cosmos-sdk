@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v0.1.0
 	cosmossdk.io/math v1.0.0
-	cosmossdk.io/store v0.1.0-alpha.1
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
 	cosmossdk.io/tools/rosetta v0.2.0
 	cosmossdk.io/x/evidence v0.1.0
@@ -38,7 +38,7 @@ require (
 	cloud.google.com/go/storage v1.30.0 // indirect
 	cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/x/tx v0.3.1-0.20230321155358-6522dd1731b5 // indirect
+	cosmossdk.io/x/tx v0.5.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -195,6 +195,7 @@ require (
 replace (
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/api => ../api
+	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	cosmossdk.io/x/evidence => ../x/evidence

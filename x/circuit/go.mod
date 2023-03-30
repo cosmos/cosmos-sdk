@@ -3,9 +3,9 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.20
 
 require (
-	cosmossdk.io/store v0.1.0-alpha.1
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321173237-fe77d4bca302
-	github.com/cosmos/gogoproto v1.4.6
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330094838-d21f58c638d5
+	github.com/cosmos/gogoproto v1.4.7
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.54.0
 	gotest.tools/v3 v3.4.0
@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/log v0.1.0 // indirect
+	cosmossdk.io/log v1.0.0 // indirect
 	cosmossdk.io/math v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect

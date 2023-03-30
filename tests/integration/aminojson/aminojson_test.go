@@ -299,9 +299,9 @@ var (
 		genType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, genOpts),
 
 		// upgrade
+		genType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, genOpts),       // nolint:staticcheck // testing legacy code path
+		genType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, genOpts.WithDisallowNil()), // nolint:staticcheck // testing legacy code path
 		genType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, genOpts.WithDisallowNil()),
-		genType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, genOpts.WithDisallowNil()),
-		genType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, genOpts),
 		genType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, genOpts.WithDisallowNil()),
 		genType(&upgradetypes.MsgCancelUpgrade{}, &upgradeapi.MsgCancelUpgrade{}, genOpts),
 
@@ -346,12 +346,12 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 			fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
 			rapid.Check(t, func(t *rapid.T) {
 				// uncomment to debug; catch a panic and inspect application state
-				//defer func() {
+				// defer func() {
 				//	if r := recover(); r != nil {
 				//		//fmt.Printf("Panic: %+v\n", r)
 				//		t.FailNow()
 				//	}
-				//}()
+				// }()
 
 				msg := gen.Draw(t, "msg")
 				postFixPulsarMessage(msg)
@@ -368,11 +368,11 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				err = encCfg.Codec.Unmarshal(protoBz, gogo)
 				require.NoError(t, err)
 
-				legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
+				legacyAminoJSON, err := encCfg.Amino.MarshalJSON(gogo)
 				require.NoError(t, err)
-				aminoJson, err := aj.Marshal(msg)
+				aminoJSON, err := aj.Marshal(msg)
 				require.NoError(t, err)
-				require.Equal(t, string(legacyAminoJson), string(aminoJson))
+				require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
 
 				// test amino json signer handler equivalence
 				gogoMsg, ok := gogo.(types.Msg)
@@ -668,6 +668,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.NoError(t, err)
 
 			newGogoBytes, err := encCfg.Amino.MarshalJSON(newGogo)
+			require.NoError(t, err)
 			if tc.roundTripUnequal {
 				require.NotEqual(t, string(gogoBytes), string(newGogoBytes))
 				return
@@ -744,6 +745,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.NoError(t, err)
 
 	err = proto.Unmarshal(protoBz, sanityPulsar)
+	require.NoError(t, err)
 
 	// !!!
 	//  empty []string is not the same as nil []string.  this is a bug in gogo.
@@ -755,17 +757,19 @@ func TestSendAuthorization(t *testing.T) {
 	require.NotNil(t, pulsar.SpendLimit)
 	require.Zero(t, len(pulsar.SpendLimit))
 
-	legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
-	aminoJson, err := aj.Marshal(sanityPulsar)
+	legacyAminoJSON, err := encCfg.Amino.MarshalJSON(gogo)
+	require.NoError(t, err)
+	aminoJSON, err := aj.Marshal(sanityPulsar)
+	require.NoError(t, err)
 
-	require.Equal(t, string(legacyAminoJson), string(aminoJson))
+	require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
 
-	aminoJson, err = aj.Marshal(pulsar)
+	aminoJSON, err = aj.Marshal(pulsar)
 	require.NoError(t, err)
 
 	// at this point, pulsar.SpendLimit = [], and gogo.SpendLimit = nil, but they will both marshal to `[]`
 	// this is *only* possible because of Cosmos SDK's custom MarshalJSON method for Coins
-	require.Equal(t, string(legacyAminoJson), string(aminoJson))
+	require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
 }
 
 func TestDecimalMutation(t *testing.T) {
@@ -789,8 +793,7 @@ func TestDecimalMutation(t *testing.T) {
 }
 
 func postFixPulsarMessage(msg proto.Message) {
-	switch m := msg.(type) {
-	case *authapi.ModuleAccount:
+	if m, ok := msg.(*authapi.ModuleAccount); ok {
 		if m.BaseAccount == nil {
 			m.BaseAccount = &authapi.BaseAccount{}
 		}

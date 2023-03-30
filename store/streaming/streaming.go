@@ -28,7 +28,7 @@ func GetPluginEnvKey(name string) string {
 	return fmt.Sprintf("%s_%s", pluginEnvKeyPrefix, strings.ToUpper(name))
 }
 
-func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
+func NewStreamingPlugin(name, logLevel string) (interface{}, error) {
 	logger := hclog.New(&hclog.LoggerOptions{
 		Output: hclog.DefaultOutput,
 		Level:  toHclogLevel(logLevel),

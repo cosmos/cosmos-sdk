@@ -91,7 +91,7 @@ func doUnbondingDelegation(
 	addrDels []sdk.AccAddress,
 	addrVals []sdk.ValAddress,
 	hookCalled *bool,
-) (completionTime time.Time, bondedAmt math.Int, notBondedAmt math.Int) {
+) (completionTime time.Time, bondedAmt, notBondedAmt math.Int) {
 	// UNDELEGATE
 	// Save original bonded and unbonded amounts
 	bondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount

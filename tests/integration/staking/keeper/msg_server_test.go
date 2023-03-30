@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -201,92 +202,216 @@ func TestRotateConsPubKey(t *testing.T) {
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 	bondDenom := stakingKeeper.BondDenom(ctx)
 
-	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 300))
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-	pks := []cryptotypes.PubKey{PKs[0], PKs[499]}
+	params := stakingKeeper.GetParams(ctx)
+	params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
+	params.MaxConsPubkeyRotations = types.DefaultMaxConsPubKeyRotations
+	err = stakingKeeper.SetParams(ctx, params)
+	assert.NilError(t, err)
 
-	val1 := testutil.NewValidator(t, valAddrs[0], pks[0])
-	stakingKeeper.SetValidator(ctx, val1)
-	stakingKeeper.SetValidatorByConsAddr(ctx, val1)
-	stakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 1000000))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+
+	validators := stakingKeeper.GetAllValidators(ctx)
+	require.Len(t, validators, 1)
+
+	// create 5 validators
+	for i := 0; i < 5; i++ {
+		val := testutil.NewValidator(t, valAddrs[i], PKs[i])
+		stakingKeeper.SetValidator(ctx, val)
+		stakingKeeper.SetValidatorByConsAddr(ctx, val)
+		stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+	}
+
+	keyRotationFee := stakingKeeper.KeyRotationFee(ctx)
+
+	validators = stakingKeeper.GetAllValidators(ctx)
+	require.GreaterOrEqual(t, len(validators), 5)
+	validators = validators[1:]
 
 	testCases := []struct {
-		Name          string
-		Pass          bool
-		sender        sdk.AccAddress
-		validator     sdk.ValAddress
-		newPubKey     cryptotypes.PubKey
-		rotationLimit uint64
-		expErrMsg     string
+		name           string
+		malleate       func() sdk.Context
+		pass           bool
+		validator      sdk.ValAddress
+		newPubKey      cryptotypes.PubKey
+		expErrMsg      string
+		expHistoryObjs int
+		fees           sdk.Coin
 	}{
 		{
-			Name:          "non existing validator check",
-			sender:        addrs[1],
-			validator:     valAddrs[1],
-			newPubKey:     pks[1],
-			rotationLimit: 10,
-			Pass:          false,
-			expErrMsg:     "validator does not exist",
+			name: "successful consensus pubkey rotation",
+			malleate: func() sdk.Context {
+				return ctx
+			},
+			validator:      validators[0].GetOperator(),
+			newPubKey:      PKs[499],
+			pass:           true,
+			expHistoryObjs: 1,
+			fees:           keyRotationFee,
 		},
 		{
-			Name:          "successful consensus pubkey rotation",
-			sender:        addrs[0],
-			validator:     val1.GetOperator(),
-			newPubKey:     pks[1],
-			rotationLimit: 1,
-			Pass:          true,
+			name: "non existing validator check",
+			malleate: func() sdk.Context {
+				return ctx
+			},
+			validator: sdk.ValAddress("non_existing_val"),
+			newPubKey: PKs[498],
+			pass:      false,
+			expErrMsg: "validator does not exist",
 		},
 		{
-			Name:          "consensus pubkey rotation limit check",
-			sender:        addrs[0],
-			validator:     val1.GetOperator(),
-			newPubKey:     PKs[498],
-			rotationLimit: 1,
-			Pass:          false,
-			expErrMsg:     "exceeding maximum consensus pubkey rotations within unbonding period",
+			name: "pubkey already associated with another validator",
+			malleate: func() sdk.Context {
+				return ctx
+			},
+			validator: validators[0].GetOperator(),
+			newPubKey: validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey),
+			pass:      false,
+			expErrMsg: "consensus pubkey is already used for a validator",
+		},
+		{
+			name: "consensus pubkey rotation limit check",
+			malleate: func() sdk.Context {
+				params := stakingKeeper.GetParams(ctx)
+				params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
+				params.MaxConsPubkeyRotations = 1
+				err := stakingKeeper.SetParams(ctx, params)
+				require.NoError(t, err)
+
+				msg, err := types.NewMsgRotateConsPubKey(
+					validators[1].GetOperator(),
+					PKs[498],
+				)
+				require.NoError(t, err)
+				_, err = msgServer.RotateConsPubKey(ctx, msg)
+				require.NoError(t, err)
+
+				return ctx
+			},
+			validator: validators[1].GetOperator(),
+			newPubKey: PKs[497],
+			pass:      false,
+			expErrMsg: "exceeding maximum consensus pubkey rotations within unbonding period",
+		},
+		{
+			name: "two rotations within unbonding period",
+			malleate: func() sdk.Context {
+				params := stakingKeeper.GetParams(ctx)
+				params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
+				params.MaxConsPubkeyRotations = 2
+				err := stakingKeeper.SetParams(ctx, params)
+				require.NoError(t, err)
+
+				msg, err := types.NewMsgRotateConsPubKey(
+					validators[2].GetOperator(),
+					PKs[497],
+				)
+				require.NoError(t, err)
+				_, err = msgServer.RotateConsPubKey(ctx, msg)
+				require.NoError(t, err)
+				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+				return ctx
+			},
+			validator:      validators[2].GetOperator(),
+			newPubKey:      PKs[496],
+			pass:           true,
+			fees:           calculateFee(keyRotationFee, 1),
+			expHistoryObjs: 2,
+		},
+		{
+			name: "limit reached, but should rotate after the unbonding period",
+			malleate: func() sdk.Context {
+				params := stakingKeeper.GetParams(ctx)
+				params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
+				params.MaxConsPubkeyRotations = 1
+				err := stakingKeeper.SetParams(ctx, params)
+				require.NoError(t, err)
+
+				msg, err := types.NewMsgRotateConsPubKey(
+					validators[3].GetOperator(),
+					PKs[495],
+				)
+
+				require.NoError(t, err)
+				_, err = msgServer.RotateConsPubKey(ctx, msg)
+				require.NoError(t, err)
+				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+				// this shouldn't remove the existing keys from waiting queue since unbonding time isn't reached
+				stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockHeader().Time)
+
+				msg, err = types.NewMsgRotateConsPubKey(
+					validators[3].GetOperator(),
+					PKs[494],
+				)
+
+				require.NoError(t, err)
+				_, err = msgServer.RotateConsPubKey(ctx, msg)
+				require.Error(t, err)
+
+				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+				newCtx := ctx.WithBlockTime(ctx.BlockHeader().Time.Add(stakingKeeper.UnbondingTime(ctx)))
+				newCtx = newCtx.WithBlockHeight(newCtx.BlockHeight() + 1)
+				// this should remove keys from waiting queue since unbonding time is reached
+				stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx, newCtx.BlockHeader().Time)
+
+				return newCtx
+			},
+			validator:      validators[3].GetOperator(),
+			newPubKey:      PKs[494],
+			pass:           true,
+			expErrMsg:      "",
+			expHistoryObjs: 2,
+			fees:           keyRotationFee,
 		},
 	}
 
 	for _, testCase := range testCases {
-		params := stakingKeeper.GetParams(ctx)
-		params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 1000)
-		params.MaxConsPubkeyRotations = testCase.rotationLimit
-		err := stakingKeeper.SetParams(ctx, params)
-		require.NoError(t, err)
+		t.Run(testCase.name, func(t *testing.T) {
 
-		oldDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
-		msg, err := types.NewMsgRotateConsPubKey(
-			sdk.ValAddress(testCase.sender),
-			testCase.newPubKey,
-		)
-		require.NoError(t, err)
-
-		_, err = msgServer.RotateConsPubKey(ctx, msg)
-
-		if testCase.Pass {
-
+			newCtx := testCase.malleate()
+			oldDistrBalance := bankKeeper.GetBalance(newCtx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
+			msg, err := types.NewMsgRotateConsPubKey(
+				testCase.validator,
+				testCase.newPubKey,
+			)
 			require.NoError(t, err)
 
-			// rotation fee payment from sender to distrtypes
-			newDistrBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
-			require.Equal(t, newDistrBalance, oldDistrBalance.Add(params.KeyRotationFee))
+			_, err = msgServer.RotateConsPubKey(newCtx, msg)
 
-			// validator consensus pubkey update check
-			validator, found := stakingKeeper.GetValidator(ctx, testCase.validator)
-			require.True(t, found)
+			if testCase.pass {
 
-			consAddr, err := validator.GetConsAddr()
-			require.NoError(t, err)
-			require.Equal(t, consAddr.String(), sdk.ConsAddress(testCase.newPubKey.Address()).String())
+				require.NoError(t, err)
 
-			// consensus rotation history set check
-			historyObjects := stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, testCase.validator)
-			require.Len(t, historyObjects, 1)
-			historyObjects = stakingKeeper.GetBlockConsPubKeyRotationHistory(ctx, ctx.BlockHeight())
-			require.Len(t, historyObjects, 1)
-		} else {
-			require.Error(t, err)
-			require.Equal(t, err.Error(), testCase.expErrMsg)
-		}
+				// rotation fee payment from sender to distrtypes
+				newDistrBalance := bankKeeper.GetBalance(newCtx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
+				require.Equal(t, newDistrBalance, oldDistrBalance.Add(testCase.fees))
+
+				// validator consensus pubkey update check
+				validator, found := stakingKeeper.GetValidator(newCtx, testCase.validator)
+				require.True(t, found)
+
+				consAddr, err := validator.GetConsAddr()
+				require.NoError(t, err)
+				require.Equal(t, consAddr.String(), sdk.ConsAddress(testCase.newPubKey.Address()).String())
+
+				// consensus rotation history set check
+				historyObjects := stakingKeeper.GetValidatorConsPubKeyRotationHistory(newCtx, testCase.validator)
+				require.Len(t, historyObjects, testCase.expHistoryObjs)
+				historyObjects = stakingKeeper.GetBlockConsPubKeyRotationHistory(newCtx, newCtx.BlockHeight())
+				require.Len(t, historyObjects, 1)
+			} else {
+				require.Error(t, err)
+				require.Equal(t, err.Error(), testCase.expErrMsg)
+			}
+		})
 	}
+}
+
+func calculateFee(fee sdk.Coin, rotationsMade int64) sdk.Coin {
+	fees := sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(rotationsMade)), nil))
+	fees = fee.Amount.Mul(fees)
+	return sdk.NewCoin(fee.Denom, fees)
 }

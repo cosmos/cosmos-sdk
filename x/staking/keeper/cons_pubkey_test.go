@@ -236,12 +236,9 @@ func (s *KeeperTestSuite) setValidators(n int) {
 		val0AccAddr := sdk.AccAddress(addrVals[i].Bytes())
 		selfDelegation := types.NewDelegation(val0AccAddr, addrVals[i], issuedShares)
 		stakingKeeper.SetDelegation(ctx, selfDelegation)
+		stakingKeeper.SetValidatorByConsAddr(ctx, val)
 	}
 
 	validators := stakingKeeper.GetAllValidators(ctx)
 	s.Require().Len(validators, n)
-
-	for i := 0; i < n; i++ {
-		stakingKeeper.SetValidatorByConsAddr(ctx, validators[i])
-	}
 }

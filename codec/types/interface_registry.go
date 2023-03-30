@@ -65,7 +65,10 @@ type InterfaceRegistry interface {
 	// the entire FileDescriptorSet.
 	RangeFiles(f func(protoreflect.FileDescriptor) bool)
 
-	private()
+	// mustEmbedInterfaceRegistry requires that all implementations of InterfaceRegistry embed an official implementation
+	// from this package. This allows new methods to be added to the InterfaceRegistry interface without breaking
+	// backwards compatibility.
+	mustEmbedInterfaceRegistry()
 }
 
 // UnpackInterfacesMessage is meant to extend protobuf types (which implement
@@ -311,7 +314,7 @@ func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error
 	return msg, nil
 }
 
-func (registry *interfaceRegistry) private() {}
+func (registry *interfaceRegistry) mustEmbedInterfaceRegistry() {}
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces
 // on x if x implements UnpackInterfacesMessage

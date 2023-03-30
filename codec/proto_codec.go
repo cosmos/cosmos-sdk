@@ -314,7 +314,7 @@ func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
 	return &grpcProtoCodec{cdc: pc}
 }
 
-func (pc *ProtoCodec) private() {}
+func (pc *ProtoCodec) mustEmbedCodec() {}
 
 var errUnknownProtoType = errors.New("codec: unknown proto type") // sentinel error
 

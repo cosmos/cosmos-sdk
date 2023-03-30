@@ -18,7 +18,8 @@ type AminoCodec struct {
 
 var _ Codec = &AminoCodec{}
 
-// Deprecated: NewAminoCodec returns a reference to a new AminoCodec
+// Deprecated: NewAminoCodec returns a reference to a new AminoCodec.
+// Use NewLegacyAmino instead.
 func NewAminoCodec(codec *LegacyAmino) *AminoCodec {
 	return &AminoCodec{LegacyAmino: codec}
 }
@@ -147,4 +148,4 @@ func (ac *AminoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	panic("amino codec does not support interface registry")
 }
 
-func (ac *AminoCodec) private() {}
+func (ac *AminoCodec) mustEmbedCodec() {}

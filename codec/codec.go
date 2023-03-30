@@ -36,7 +36,9 @@ type (
 		// signers so that this can be used in other contexts.
 		GetMsgV1Signers(msg proto.Message) ([]string, protov2.Message, error)
 
-		private()
+		// mustEmbedCodec requires that all implementations of Codec embed an official implementation from the codec
+		// package. This allows new methods to be added to the Codec interface without breaking backwards compatibility.
+		mustEmbedCodec()
 	}
 
 	BinaryCodec interface {

@@ -98,7 +98,6 @@ func ProvideApp() (
 	}
 	appBuilder := &AppBuilder{app}
 
-	fmt.Println("Registering interfaces in ProvideApp")
 	protoFiles, err := proto.MergedRegistry()
 	if err != nil {
 		panic(err)

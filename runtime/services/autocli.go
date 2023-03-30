@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
@@ -114,7 +113,6 @@ func (a *autocliConfigurator) RegisterMigration(string, uint64, module.Migration
 
 func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	if a.registryCache == nil {
-		fmt.Println("autocliConfigurator RegisterService")
 		a.registryCache, a.err = proto.MergedRegistry()
 	}
 

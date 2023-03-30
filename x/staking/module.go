@@ -205,7 +205,7 @@ func init() {
 	)
 }
 
-type StakingInputs struct {
+type StakingInputs struct { //nolint:revive // ignore struct name linting
 	depinject.In
 
 	Config        *modulev1.Module
@@ -219,7 +219,7 @@ type StakingInputs struct {
 }
 
 // Dependency Injection Outputs
-type StakingOutputs struct {
+type StakingOutputs struct { //nolint:revive // ignore struct name linting
 	depinject.Out
 
 	StakingKeeper *keeper.Keeper

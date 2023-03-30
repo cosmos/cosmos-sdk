@@ -212,7 +212,7 @@ func init() {
 	)
 }
 
-type SlashingInputs struct {
+type SlashingInputs struct { //nolint:revive // ignore struct name linting
 	depinject.In
 
 	Config      *modulev1.Module
@@ -228,7 +228,7 @@ type SlashingInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-type SlashingOutputs struct {
+type SlashingOutputs struct { //nolint:revive // ignore struct name linting
 	depinject.Out
 
 	Keeper keeper.Keeper

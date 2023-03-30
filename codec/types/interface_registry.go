@@ -114,7 +114,7 @@ func NewInterfaceRegistry() InterfaceRegistry {
 	return NewInterfaceRegistryWithProtoFiles(protoFiles)
 }
 
-// NewInterfaceRegistry returns a new InterfaceRegistry with the specified *protoregistry.Files instance.
+// NewInterfaceRegistryWithProtoFiles returns a new InterfaceRegistry with the specified *protoregistry.Files instance.
 func NewInterfaceRegistryWithProtoFiles(files *protoregistry.Files) InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},

@@ -37,7 +37,7 @@ func TestHistoricalInfo(t *testing.T) {
 	require.NotPanics(t, func() {
 		value = legacy.Cdc.MustMarshal(&hi)
 	})
-	require.NotNil(t, value, "Marshalled HistoricalInfo is nil")
+	require.NotNil(t, value, "Marshaled HistoricalInfo is nil")
 
 	recv, err := types.UnmarshalHistoricalInfo(codec.NewAminoCodec(legacy.Cdc), value)
 	require.Nil(t, err, "Unmarshalling HistoricalInfo failed")

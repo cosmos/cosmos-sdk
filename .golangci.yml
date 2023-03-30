@@ -53,6 +53,11 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  misspell:
+    # Correct spellings using locale preferences for US or UK.
+    # Setting locale to US will correct the British spelling of 'colour' to 'color'.
+    # Default is to use a neutral variety of English.
+    locale: US
   gofumpt:
     # Choose whether to use the extra rules.
     # Default: false

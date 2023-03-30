@@ -105,11 +105,11 @@ func Build(options Options) (Table, error) {
 	switch {
 	case tableDesc != nil:
 		if singletonDesc != nil {
-			return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("message %s cannot be declared as both a table and a singleton", messageDescriptor.FullName())
+			return nil, ormerrors.InvalidTableDefinition.Wrapf("message %s cannot be declared as both a table and a singleton", messageDescriptor.FullName())
 		}
 	case singletonDesc != nil:
 		if singletonDesc.Id == 0 {
-			return nil, ormerrors.ErrInvalidTableID.Wrapf("%s", messageDescriptor.FullName())
+			return nil, ormerrors.InvalidTableId.Wrapf("%s", messageDescriptor.FullName())
 		}
 
 		prefix := encodeutil.AppendVarUInt32(options.Prefix, singletonDesc.Id)
@@ -129,12 +129,12 @@ func Build(options Options) (Table, error) {
 
 		return &singleton{table}, nil
 	default:
-		return nil, ormerrors.ErrNoTableDescriptor.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
+		return nil, ormerrors.NoTableDescriptor.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
 	}
 
 	tableID := tableDesc.Id
 	if tableID == 0 {
-		return nil, ormerrors.ErrInvalidTableID.Wrapf("table %s", messageDescriptor.FullName())
+		return nil, ormerrors.InvalidTableId.Wrapf("table %s", messageDescriptor.FullName())
 	}
 
 	prefix := options.Prefix
@@ -143,14 +143,14 @@ func Build(options Options) (Table, error) {
 	table.tableID = tableID
 
 	if tableDesc.PrimaryKey == nil {
-		return nil, ormerrors.ErrMissingPrimaryKey.Wrap(string(messageDescriptor.FullName()))
+		return nil, ormerrors.MissingPrimaryKey.Wrap(string(messageDescriptor.FullName()))
 	}
 
 	pkFields := fieldnames.CommaSeparatedFieldNames(tableDesc.PrimaryKey.Fields)
 	table.primaryKeyIndex.fields = pkFields
 	pkFieldNames := pkFields.Names()
 	if len(pkFieldNames) == 0 {
-		return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("empty primary key fields for %s", messageDescriptor.FullName())
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("empty primary key fields for %s", messageDescriptor.FullName())
 	}
 
 	pkPrefix := encodeutil.AppendVarUInt32(prefix, primaryKeyID)
@@ -174,11 +174,11 @@ func Build(options Options) (Table, error) {
 	for _, idxDesc := range tableDesc.Index {
 		id := idxDesc.Id
 		if id == 0 || id >= indexIDLimit {
-			return nil, ormerrors.ErrInvalidIndexID.Wrapf("index on table %s with fields %s, invalid id %d", messageDescriptor.FullName(), idxDesc.Fields, id)
+			return nil, ormerrors.InvalidIndexId.Wrapf("index on table %s with fields %s, invalid id %d", messageDescriptor.FullName(), idxDesc.Fields, id)
 		}
 
 		if _, ok := table.entryCodecsByID[id]; ok {
-			return nil, ormerrors.ErrDuplicateIndexID.Wrapf("id %d on table %s", id, messageDescriptor.FullName())
+			return nil, ormerrors.DuplicateIndexId.Wrapf("id %d on table %s", id, messageDescriptor.FullName())
 		}
 
 		idxFields := fieldnames.CommaSeparatedFieldNames(idxDesc.Fields)
@@ -273,7 +273,7 @@ func Build(options Options) (Table, error) {
 	if tableDesc.PrimaryKey.AutoIncrement {
 		autoIncField := pkCodec.GetFieldDescriptors()[0]
 		if len(pkFieldNames) != 1 && autoIncField.Kind() != protoreflect.Uint64Kind {
-			return nil, ormerrors.ErrInvalidAutoIncrementKey.Wrapf("field %s", autoIncField.FullName())
+			return nil, ormerrors.InvalidAutoIncrementKey.Wrapf("field %s", autoIncField.FullName())
 		}
 
 		seqPrefix := encodeutil.AppendVarUInt32(prefix, seqID)

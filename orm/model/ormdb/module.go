@@ -146,7 +146,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 		}
 
 		if id == 0 {
-			return nil, ormerrors.ErrInvalidFileDescriptorID.Wrapf("for %s", fileDescriptor.Path())
+			return nil, ormerrors.InvalidFileDescriptorID.Wrapf("for %s", fileDescriptor.Path())
 		}
 
 		opts := fileDescriptorDBOptions{
@@ -165,7 +165,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 		db.filesByID[id] = fdSchema
 		for name, table := range fdSchema.tablesByName {
 			if _, ok := db.tablesByName[name]; ok {
-				return nil, ormerrors.ErrUnexpectedError.Wrapf("duplicate table %s", name)
+				return nil, ormerrors.UnexpectedError.Wrapf("duplicate table %s", name)
 			}
 
 			db.tablesByName[name] = table
@@ -188,12 +188,12 @@ func (m moduleDB) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 	}
 
 	if id > math.MaxUint32 {
-		return nil, ormerrors.ErrUnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
+		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
 	fileSchema, ok := m.filesByID[uint32(id)]
 	if !ok {
-		return nil, ormerrors.ErrUnexpectedDecodePrefix.Wrapf("can't find FileDescriptor schema with id %d", id)
+		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find FileDescriptor schema with id %d", id)
 	}
 
 	return fileSchema.DecodeEntry(k, v)
@@ -203,7 +203,7 @@ func (m moduleDB) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	tableName := entry.GetTableName()
 	table, ok := m.tablesByName[tableName]
 	if !ok {
-		return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("can't find table %s", tableName)
+		return nil, nil, ormerrors.BadDecodeEntry.Wrapf("can't find table %s", tableName)
 	}
 
 	return table.EncodeEntry(entry)

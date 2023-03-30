@@ -95,7 +95,7 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 
 	if haveExisting {
 		if mode == saveModeInsert {
-			return ormerrors.ErrOrmAlreadyExists.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
+			return ormerrors.AlreadyExists.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 
 		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
@@ -106,7 +106,7 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 		}
 	} else {
 		if mode == saveModeUpdate {
-			return ormerrors.ErrNotFound.Wrapf("%q", mref.Descriptor().FullName())
+			return ormerrors.NotFound.Wrapf("%q", mref.Descriptor().FullName())
 		}
 
 		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
@@ -203,7 +203,7 @@ func (tableImpl) startDecodeJSON(reader io.Reader) (*json.Decoder, error) {
 	}
 
 	if token != json.Delim('[') {
-		return nil, ormerrors.ErrJSONImportError.Wrapf("expected [ got %s", token)
+		return nil, ormerrors.JSONImportError.Wrapf("expected [ got %s", token)
 	}
 
 	return decoder, nil
@@ -220,7 +220,7 @@ func (t tableImpl) doDecodeJSON(decoder *json.Decoder, onFirst func(message json
 		var rawJSON json.RawMessage
 		err := decoder.Decode(&rawJSON)
 		if err != nil {
-			return ormerrors.ErrJSONImportError.Wrapf("%s", err)
+			return ormerrors.JSONImportError.Wrapf("%s", err)
 		}
 
 		if first {
@@ -251,7 +251,7 @@ func (t tableImpl) doDecodeJSON(decoder *json.Decoder, onFirst func(message json
 	}
 
 	if token != json.Delim(']') {
-		return ormerrors.ErrJSONImportError.Wrapf("expected ] got %s", token)
+		return ormerrors.JSONImportError.Wrapf("expected ] got %s", token)
 	}
 
 	return nil
@@ -360,12 +360,12 @@ func (t tableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 	}
 
 	if id > math.MaxUint32 {
-		return nil, ormerrors.ErrUnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
+		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
 	idx, ok := t.entryCodecsByID[uint32(id)]
 	if !ok {
-		return nil, ormerrors.ErrUnexpectedDecodePrefix.Wrapf("can't find field with id %d", id)
+		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find field with id %d", id)
 	}
 
 	return idx.DecodeEntry(k, v)
@@ -378,12 +378,12 @@ func (t tableImpl) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	case *ormkv.IndexKeyEntry:
 		idx, ok := t.indexesByFields[fieldnames.FieldsFromNames(entry.Fields)]
 		if !ok {
-			return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("can't find index with fields %s", entry.Fields)
+			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("can't find index with fields %s", entry.Fields)
 		}
 
 		return idx.EncodeEntry(entry)
 	default:
-		return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("%s", entry)
+		return nil, nil, ormerrors.BadDecodeEntry.Wrapf("%s", entry)
 	}
 }
 

@@ -106,7 +106,7 @@ func (this balanceTable) Get(ctx context.Context, address string, denom string) 
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &balance, nil
 }
@@ -136,7 +136,7 @@ var _ BalanceTable = balanceTable{}
 func NewBalanceTable(db ormtable.Schema) (BalanceTable, error) {
 	table := db.GetTable(&Balance{})
 	if table == nil {
-		return nil, ormerrors.ErrTableNotFound.Wrap(string((&Balance{}).ProtoReflect().Descriptor().FullName()))
+		return nil, ormerrors.TableNotFound.Wrap(string((&Balance{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return balanceTable{table}, nil
 }
@@ -220,7 +220,7 @@ func (this supplyTable) Get(ctx context.Context, denom string) (*Supply, error) 
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &supply, nil
 }
@@ -250,7 +250,7 @@ var _ SupplyTable = supplyTable{}
 func NewSupplyTable(db ormtable.Schema) (SupplyTable, error) {
 	table := db.GetTable(&Supply{})
 	if table == nil {
-		return nil, ormerrors.ErrTableNotFound.Wrap(string((&Supply{}).ProtoReflect().Descriptor().FullName()))
+		return nil, ormerrors.TableNotFound.Wrap(string((&Supply{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return supplyTable{table}, nil
 }

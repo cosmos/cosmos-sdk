@@ -50,7 +50,7 @@ func TestScenario(t *testing.T) {
 		&testkv.EntryCodecDebugger{
 			EntryCodec: table,
 			Print: func(s string) {
-				debugBuf.WriteString(s + "\n") //nolint:errcheck,revive // we're going to pass the whole function
+				debugBuf.WriteString(s + "\n") //nolint:errcheck // we're going to pass the whole function
 			},
 		},
 	)
@@ -91,7 +91,7 @@ func TestPaginationLimitCountTotal(t *testing.T) {
 
 	it, err = store.List(ctx, &testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{Limit: 1, CountTotal: true}))
 	assert.NilError(t, err)
-	for it.Next() { //nolint:revive // we need this empty block here
+	for it.Next() {
 	}
 	pr := it.PageResponse()
 	assert.Check(t, pr != nil)
@@ -705,7 +705,7 @@ func TableDataGen[T proto.Message](elemGen *rapid.Generator[T], n int) *rapid.Ge
 		for i := 0; i < n; {
 			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i))
 			err := table.Insert(store, message)
-			if sdkerrors.IsOf(err, ormerrors.ErrPrimaryKeyConstraintViolation, ormerrors.ErrUniqueKeyViolation) {
+			if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
 				continue
 			} else if err != nil {
 				panic(err)
@@ -780,7 +780,7 @@ func TestJSONExportImport(t *testing.T) {
 	for i := 0; i < 100; {
 		x := testutil.GenA.Example()
 		err = table.Insert(store, x)
-		if sdkerrors.IsOf(err, ormerrors.ErrPrimaryKeyConstraintViolation, ormerrors.ErrUniqueKeyViolation) {
+		if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
 			continue
 		}
 		assert.NilError(t, err)
@@ -841,7 +841,7 @@ func TestReadonly(t *testing.T) {
 		IndexStoreReader:      dbm.NewMemDB(),
 	})
 	ctx := ormtable.WrapContextDefault(readBackend)
-	assert.ErrorIs(t, ormerrors.ErrReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))
+	assert.ErrorIs(t, ormerrors.ReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))
 }
 
 func TestInsertReturningFieldName(t *testing.T) {

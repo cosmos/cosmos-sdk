@@ -197,7 +197,7 @@ func TestModuleDB(t *testing.T) {
 		backend,
 		&testkv.EntryCodecDebugger{
 			EntryCodec: db,
-			Print:      func(s string) { debugBuf.WriteString(s + "\n") }, //nolint:errcheck,revive // ignore error
+			Print:      func(s string) { debugBuf.WriteString(s + "\n") }, //nolint:errcheck // ignore error
 		},
 	))
 
@@ -250,7 +250,7 @@ func TestModuleDB(t *testing.T) {
 `
 	source, err = genesis.SourceFromRawJSON(json.RawMessage(badJSON))
 	assert.NilError(t, err)
-	assert.ErrorIs(t, db.GenesisHandler().ValidateGenesis(source), ormerrors.ErrJSONValidationError)
+	assert.ErrorIs(t, db.GenesisHandler().ValidateGenesis(source), ormerrors.JSONValidationError)
 
 	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)

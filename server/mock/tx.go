@@ -121,7 +121,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
-	if len(split) == 1 { 
+	if len(split) == 1 {
 		k := split[0]
 		tx = &KVStoreTx{k, k, txBytes, nil}
 	} else if len(split) == 2 {

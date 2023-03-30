@@ -310,11 +310,13 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	sort.Strings(modulesStr)
 
 	return &Manager{
-		Modules:            simpleModuleMap,
-		OrderInitGenesis:   modulesStr,
-		OrderExportGenesis: modulesStr,
-		OrderBeginBlockers: modulesStr,
-		OrderEndBlockers:   modulesStr,
+		Modules:                  simpleModuleMap,
+		OrderInitGenesis:         modulesStr,
+		OrderExportGenesis:       modulesStr,
+		OrderBeginBlockers:       modulesStr,
+		OrderEndBlockers:         modulesStr,
+		OrderPrecommiters:        modulesStr,
+		OrderPrepareCheckStaters: modulesStr,
 	}
 }
 

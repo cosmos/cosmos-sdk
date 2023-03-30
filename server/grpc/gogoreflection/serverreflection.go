@@ -290,8 +290,8 @@ func fileDescWithDependencies(fd *dpb.FileDescriptorProto, sentFileDescriptors m
 }
 
 // fileDescEncodingByFilename finds the file descriptor for given filename,
-// finds all of its previously unsent transitive dependencies, does marshalling
-// on them, and returns the marshalled result.
+// finds all of its previously unsent transitive dependencies, does marshaling
+// on them, and returns the marshaled result.
 func (s *serverReflectionServer) fileDescEncodingByFilename(name string, sentFileDescriptors map[string]bool) ([][]byte, error) {
 	enc := getFileDescriptor(name)
 	if enc == nil {
@@ -324,7 +324,7 @@ func parseMetadata(meta interface{}) ([]byte, bool) {
 
 // fileDescEncodingContainingSymbol finds the file descriptor containing the
 // given symbol, finds all of its previously unsent transitive dependencies,
-// does marshalling on them, and returns the marshalled result. The given symbol
+// does marshaling on them, and returns the marshaled result. The given symbol
 // can be a type, a service or a method.
 func (s *serverReflectionServer) fileDescEncodingContainingSymbol(name string, sentFileDescriptors map[string]bool) ([][]byte, error) {
 	_, symbols := s.getSymbols()
@@ -349,7 +349,7 @@ func (s *serverReflectionServer) fileDescEncodingContainingSymbol(name string, s
 
 // fileDescEncodingContainingExtension finds the file descriptor containing
 // given extension, finds all of its previously unsent transitive dependencies,
-// does marshalling on them, and returns the marshalled result.
+// does marshaling on them, and returns the marshaled result.
 func (s *serverReflectionServer) fileDescEncodingContainingExtension(typeName string, extNum int32, sentFileDescriptors map[string]bool) ([][]byte, error) {
 	st, err := typeForName(typeName)
 	if err != nil {

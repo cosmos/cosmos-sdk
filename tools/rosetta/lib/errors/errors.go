@@ -133,7 +133,7 @@ var (
 	ErrOffline = RegisterError(1, "cannot query endpoint in offline mode", false, "returned when querying an online endpoint in offline mode")
 	// ErrNetworkNotSupported is returned when there is an attempt to query a network which is not supported
 	ErrNetworkNotSupported = RegisterError(2, "network is not supported", false, "returned when querying a non supported network")
-	// ErrCodec is returned when there's an error while marshalling or unmarshalling data
+	// ErrCodec is returned when there's an error while marshaling or unmarshalling data
 	ErrCodec = RegisterError(3, "encode/decode error", true, "returned when there are errors encoding or decoding information to and from the node")
 	// ErrInvalidOperation is returned when the operation supplied to rosetta is not a valid one
 	ErrInvalidOperation = RegisterError(4, "invalid operation", false, "returned when the operation is not valid")

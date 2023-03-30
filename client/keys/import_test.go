@@ -94,7 +94,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
 
 			keyfile := filepath.Join(kbHome, "key.asc")
-			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0o644)) //nolint:gosec
+			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0o600))
 
 			defer func() {
 				_ = os.RemoveAll(kbHome)

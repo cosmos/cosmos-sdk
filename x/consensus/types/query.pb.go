@@ -30,21 +30,21 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // QueryParamsRequest defines the request type for querying x/consensus parameters.
-type QueryGetParamsRequest struct {
+type QueryParamsRequest struct {
 }
 
-func (m *QueryGetParamsRequest) Reset()         { *m = QueryGetParamsRequest{} }
-func (m *QueryGetParamsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetParamsRequest) ProtoMessage()    {}
-func (*QueryGetParamsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
+func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsRequest) ProtoMessage()    {}
+func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bf54d1e5df04cee9, []int{0}
 }
-func (m *QueryGetParamsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetParamsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryParamsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -54,38 +54,38 @@ func (m *QueryGetParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *QueryGetParamsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetParamsRequest.Merge(m, src)
+func (m *QueryParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsRequest.Merge(m, src)
 }
-func (m *QueryGetParamsRequest) XXX_Size() int {
+func (m *QueryParamsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetParamsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetParamsRequest.DiscardUnknown(m)
+func (m *QueryParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetParamsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
 // QueryParamsResponse defines the response type for querying x/consensus parameters.
-type QueryGetParamsResponse struct {
+type QueryParamsResponse struct {
 	// params are the tendermint consensus params stored in the consensus module.
 	// Please note that `params.version` is not populated in this response, it is
 	// tracked separately in the x/upgrade module.
 	Params *types.ConsensusParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 }
 
-func (m *QueryGetParamsResponse) Reset()         { *m = QueryGetParamsResponse{} }
-func (m *QueryGetParamsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGetParamsResponse) ProtoMessage()    {}
-func (*QueryGetParamsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
+func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsResponse) ProtoMessage()    {}
+func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bf54d1e5df04cee9, []int{1}
 }
-func (m *QueryGetParamsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetParamsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryParamsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -95,19 +95,19 @@ func (m *QueryGetParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *QueryGetParamsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetParamsResponse.Merge(m, src)
+func (m *QueryParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsResponse.Merge(m, src)
 }
-func (m *QueryGetParamsResponse) XXX_Size() int {
+func (m *QueryParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetParamsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetParamsResponse.DiscardUnknown(m)
+func (m *QueryParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetParamsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
 
-func (m *QueryGetParamsResponse) GetParams() *types.ConsensusParams {
+func (m *QueryParamsResponse) GetParams() *types.ConsensusParams {
 	if m != nil {
 		return m.Params
 	}
@@ -115,32 +115,32 @@ func (m *QueryGetParamsResponse) GetParams() *types.ConsensusParams {
 }
 
 func init() {
-	proto.RegisterType((*QueryGetParamsRequest)(nil), "cosmos.consensus.v1.QueryGetParamsRequest")
-	proto.RegisterType((*QueryGetParamsResponse)(nil), "cosmos.consensus.v1.QueryGetParamsResponse")
+	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.consensus.v1.QueryParamsRequest")
+	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.consensus.v1.QueryParamsResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/consensus/v1/query.proto", fileDescriptor_bf54d1e5df04cee9) }
 
 var fileDescriptor_bf54d1e5df04cee9 = []byte{
-	// 283 bytes of a gzipped FileDescriptorProto
+	// 279 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4f, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0xce, 0xcf, 0x2b, 0x4e, 0xcd, 0x2b, 0x2e, 0x2d, 0xd6, 0x2f, 0x33, 0xd4,
 	0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x86, 0x28, 0xd0,
 	0x83, 0x2b, 0xd0, 0x2b, 0x33, 0x94, 0x92, 0x49, 0xcf, 0xcf, 0x4f, 0xcf, 0x49, 0xd5, 0x4f, 0x2c,
 	0xc8, 0xd4, 0x4f, 0xcc, 0xcb, 0xcb, 0x2f, 0x49, 0x2c, 0xc9, 0xcc, 0xcf, 0x2b, 0x86, 0x68, 0x91,
 	0x92, 0x2d, 0x49, 0xcd, 0x4b, 0x49, 0x2d, 0xca, 0xcd, 0xcc, 0x2b, 0xd1, 0x2f, 0xa9, 0x2c, 0x48,
-	0x2d, 0xd6, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x4a, 0x2b, 0x89, 0x73, 0x89, 0x06, 0x82, 0x2c,
-	0x70, 0x4f, 0x2d, 0x09, 0x00, 0x8b, 0x07, 0xa5, 0x16, 0x96, 0xa6, 0x16, 0x97, 0x28, 0x05, 0x73,
-	0x89, 0xa1, 0x4b, 0x14, 0x17, 0x80, 0xac, 0x15, 0xb2, 0xe4, 0x62, 0x83, 0x18, 0x21, 0xc1, 0xa8,
-	0xc0, 0xa8, 0xc1, 0x6d, 0xa4, 0xa8, 0x87, 0xb0, 0x42, 0x0f, 0x6c, 0x85, 0x9e, 0x33, 0xcc, 0x7d,
-	0x50, 0xad, 0x50, 0x0d, 0x46, 0x93, 0x19, 0xb9, 0x58, 0xc1, 0xa6, 0x0a, 0x75, 0x32, 0x72, 0x71,
-	0xc2, 0x8d, 0x16, 0xd2, 0xd2, 0xc3, 0xe2, 0x31, 0x3d, 0xac, 0x0e, 0x93, 0xd2, 0x26, 0x4a, 0x2d,
-	0xc4, 0xad, 0x4a, 0xca, 0x4d, 0x97, 0x9f, 0x4c, 0x66, 0x92, 0x15, 0x92, 0xd6, 0xc7, 0x16, 0xb4,
-	0x10, 0x57, 0x39, 0x79, 0x9c, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72,
-	0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x5e,
-	0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0x2e, 0xc2, 0x00, 0x10, 0xa5, 0x5b, 0x9c,
-	0x92, 0xad, 0x5f, 0x81, 0x64, 0x1a, 0xd8, 0xdf, 0x49, 0x6c, 0xe0, 0x40, 0x35, 0x06, 0x04, 0x00,
-	0x00, 0xff, 0xff, 0x0b, 0x34, 0xfb, 0xad, 0xc9, 0x01, 0x00, 0x00,
+	0x2d, 0xd6, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x4a, 0x2b, 0x89, 0x70, 0x09, 0x05, 0x82, 0x2c,
+	0x08, 0x00, 0x0b, 0x06, 0xa5, 0x16, 0x96, 0xa6, 0x16, 0x97, 0x28, 0x05, 0x70, 0x09, 0xa3, 0x88,
+	0x16, 0x17, 0x80, 0x2c, 0x14, 0xb2, 0xe4, 0x62, 0x83, 0x68, 0x96, 0x60, 0x54, 0x60, 0xd4, 0xe0,
+	0x36, 0x52, 0xd4, 0x43, 0x18, 0xae, 0x07, 0x36, 0x5c, 0xcf, 0x19, 0xe6, 0x32, 0xa8, 0x56, 0xa8,
+	0x06, 0xa3, 0x2e, 0x46, 0x2e, 0x56, 0xb0, 0x91, 0x42, 0x0d, 0x8c, 0x5c, 0x6c, 0x10, 0x49, 0x21,
+	0x75, 0x3d, 0x2c, 0xfe, 0xd1, 0xc3, 0x74, 0x8f, 0x94, 0x06, 0x61, 0x85, 0x10, 0x27, 0x2a, 0x29,
+	0x37, 0x5d, 0x7e, 0x32, 0x99, 0x49, 0x56, 0x48, 0x5a, 0x1f, 0x5b, 0x58, 0x42, 0x1c, 0xe3, 0xe4,
+	0x71, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c,
+	0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x7a, 0xe9, 0x99, 0x25, 0x19,
+	0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0x08, 0x03, 0x40, 0x94, 0x6e, 0x71, 0x4a, 0xb6, 0x7e, 0x05,
+	0x92, 0x69, 0x60, 0xef, 0x26, 0xb1, 0x81, 0x43, 0xd1, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x1b,
+	0xa2, 0x35, 0xa1, 0xba, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -156,7 +156,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
 	// Params queries the parameters of x/consensus_param module.
-	GetParams(ctx context.Context, in *QueryGetParamsRequest, opts ...grpc.CallOption) (*QueryGetParamsResponse, error)
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
 type queryClient struct {
@@ -167,9 +167,9 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) GetParams(ctx context.Context, in *QueryGetParamsRequest, opts ...grpc.CallOption) (*QueryGetParamsResponse, error) {
-	out := new(QueryGetParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.consensus.v1.Query/GetParams", in, out, opts...)
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+	out := new(QueryParamsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.consensus.v1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,35 +179,35 @@ func (c *queryClient) GetParams(ctx context.Context, in *QueryGetParamsRequest, 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries the parameters of x/consensus_param module.
-	GetParams(context.Context, *QueryGetParamsRequest) (*QueryGetParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) GetParams(ctx context.Context, req *QueryGetParamsRequest) (*QueryGetParamsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetParams not implemented")
+func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_GetParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetParamsRequest)
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GetParams(ctx, in)
+		return srv.(QueryServer).Params(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.consensus.v1.Query/GetParams",
+		FullMethod: "/cosmos.consensus.v1.Query/Params",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetParams(ctx, req.(*QueryGetParamsRequest))
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -217,15 +217,15 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetParams",
-			Handler:    _Query_GetParams_Handler,
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "cosmos/consensus/v1/query.proto",
 }
 
-func (m *QueryGetParamsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryParamsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -235,12 +235,12 @@ func (m *QueryGetParamsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryParamsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -248,7 +248,7 @@ func (m *QueryGetParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetParamsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -258,12 +258,12 @@ func (m *QueryGetParamsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryParamsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -294,7 +294,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryGetParamsRequest) Size() (n int) {
+func (m *QueryParamsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -303,7 +303,7 @@ func (m *QueryGetParamsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryGetParamsResponse) Size() (n int) {
+func (m *QueryParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -322,7 +322,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryGetParamsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -345,10 +345,10 @@ func (m *QueryGetParamsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetParamsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryParamsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -372,7 +372,7 @@ func (m *QueryGetParamsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGetParamsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -395,10 +395,10 @@ func (m *QueryGetParamsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetParamsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryParamsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

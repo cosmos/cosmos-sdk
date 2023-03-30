@@ -65,7 +65,7 @@ type TestZip []*TestFile
 
 func NewTestZip(testFiles ...*TestFile) TestZip {
 	tz := make([]*TestFile, len(testFiles))
-	for i, tf := range testFiles { //nolint:gosimple
+	for i, tf := range testFiles {
 		tz[i] = tf
 	}
 	return tz

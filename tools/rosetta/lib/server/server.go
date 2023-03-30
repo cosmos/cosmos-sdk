@@ -45,7 +45,7 @@ type Server struct {
 
 func (h Server) Start() error {
 	h.logger.Info(fmt.Sprintf("Rosetta server listening on add %s", h.addr))
-	return http.ListenAndServe(h.addr, h.h) //nolint:gosec
+	return http.ListenAndServe(h.addr, h.h) //nolint:gosec // we don't care about the security of the server, users should proxy
 }
 
 func NewServer(settings Settings) (Server, error) {

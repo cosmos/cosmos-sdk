@@ -42,14 +42,14 @@ func ValuesOf(values ...any) []protoreflect.Value {
 		// This allows us to use imported messages, such as timestamppb.Timestamp
 		// in iterators.
 		value := values[i]
-		switch value.(type) {
-		case protoreflect.ProtoMessage:
+		if pm, ok := value.(protoreflect.ProtoMessage); ok {
 			if !reflect.ValueOf(value).IsNil() {
-				value = value.(protoreflect.ProtoMessage).ProtoReflect()
+				value = pm.ProtoReflect()
 			} else {
 				value = nil
 			}
 		}
+
 		res[i] = protoreflect.ValueOf(value)
 	}
 	return res

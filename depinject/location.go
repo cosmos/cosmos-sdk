@@ -121,5 +121,5 @@ func splitFuncName(function string) (pname, fname string) {
 		pname = unescaped
 	}
 
-	return
+	return pname, fname
 }

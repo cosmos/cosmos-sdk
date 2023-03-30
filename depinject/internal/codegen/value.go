@@ -118,9 +118,9 @@ func (g *FileGen) ValueExpr(value reflect.Value) (ast.Expr, error) {
 			}
 
 			return &ast.UnaryExpr{Op: token.AND, X: v}, nil
-		} else {
-			return nil, fmt.Errorf("invalid type %s", typ)
 		}
+		return nil, fmt.Errorf("invalid type %s", typ)
+
 	case reflect.Invalid, reflect.Uintptr, reflect.Chan, reflect.Func, reflect.Interface, reflect.UnsafePointer:
 		return nil, fmt.Errorf("invalid type %s", typ)
 

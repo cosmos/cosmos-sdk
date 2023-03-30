@@ -220,61 +220,61 @@ func newDebugConfig() (*debugConfig, error) {
 	}, nil
 }
 
-func (c *debugConfig) indentLogger() {
-	c.indentStr = c.indentStr + " "
+func (d *debugConfig) indentLogger() {
+	d.indentStr += " "
 }
 
-func (c *debugConfig) dedentLogger() {
-	if len(c.indentStr) > 0 {
-		c.indentStr = c.indentStr[1:]
+func (d *debugConfig) dedentLogger() {
+	if len(d.indentStr) > 0 {
+		d.indentStr = d.indentStr[1:]
 	}
 }
 
-func (c debugConfig) logf(format string, args ...interface{}) {
-	s := fmt.Sprintf(c.indentStr+format, args...)
-	for _, logger := range c.loggers {
+func (d debugConfig) logf(format string, args ...interface{}) {
+	s := fmt.Sprintf(d.indentStr+format, args...)
+	for _, logger := range d.loggers {
 		logger(s)
 	}
 }
 
-func (c *debugConfig) generateGraph() {
-	dotStr := c.graph.String()
-	if c.logVisualizer {
-		c.logf("DOT Graph: %s", dotStr)
+func (d *debugConfig) generateGraph() {
+	dotStr := d.graph.String()
+	if d.logVisualizer {
+		d.logf("DOT Graph: %s", dotStr)
 	}
 
-	for _, v := range c.visualizers {
+	for _, v := range d.visualizers {
 		v(dotStr)
 	}
 }
 
-func (c *debugConfig) addFuncVisualizer(f func(string)) {
-	c.visualizers = append(c.visualizers, func(dot string) {
+func (d *debugConfig) addFuncVisualizer(f func(string)) {
+	d.visualizers = append(d.visualizers, func(dot string) {
 		f(dot)
 	})
 }
 
-func (c *debugConfig) enableLogVisualizer() {
-	c.logVisualizer = true
+func (d *debugConfig) enableLogVisualizer() {
+	d.logVisualizer = true
 }
 
-func (c *debugConfig) addFileVisualizer(filename string) {
-	c.visualizers = append(c.visualizers, func(_ string) {
-		dotStr := c.graph.String()
-		err := os.WriteFile(filename, []byte(dotStr), 0o644)
+func (d *debugConfig) addFileVisualizer(filename string) {
+	d.visualizers = append(d.visualizers, func(_ string) {
+		dotStr := d.graph.String()
+		err := os.WriteFile(filename, []byte(dotStr), 0o600)
 		if err != nil {
-			c.logf("Error saving graphviz file %s: %+v", filename, err)
+			d.logf("Error saving graphviz file %s: %+v", filename, err)
 		} else {
 			path, err := filepath.Abs(filename)
 			if err == nil {
-				c.logf("Saved graph of container to %s", path)
+				d.logf("Saved graph of container to %s", path)
 			}
 		}
 	})
 }
 
-func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) *graphviz.Node {
-	graph := c.moduleSubGraph(key)
+func (d *debugConfig) locationGraphNode(location Location, key *moduleKey) *graphviz.Node {
+	graph := d.moduleSubGraph(key)
 	name := location.Name()
 	node, found := graph.FindOrCreateNode(name)
 	if found {
@@ -286,9 +286,9 @@ func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) *grap
 	return node
 }
 
-func (c *debugConfig) typeGraphNode(typ reflect.Type) *graphviz.Node {
+func (d *debugConfig) typeGraphNode(typ reflect.Type) *graphviz.Node {
 	name := moreUsefulTypeString(typ)
-	node, found := c.graph.FindOrCreateNode(name)
+	node, found := d.graph.FindOrCreateNode(name)
 	if found {
 		return node
 	}
@@ -319,23 +319,22 @@ func moreUsefulTypeString(ty reflect.Type) string {
 	}
 }
 
-func (c *debugConfig) moduleSubGraph(key *moduleKey) *graphviz.Graph {
+func (d *debugConfig) moduleSubGraph(key *moduleKey) *graphviz.Graph {
 	if key == nil {
 		// return the root graph
-		return c.graph
-	} else {
-		gname := fmt.Sprintf("cluster_%s", key.name)
-		graph, found := c.graph.FindOrCreateSubGraph(gname)
-		if !found {
-			graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
-			graph.SetPenWidth("0.5")
-			graph.SetFontSize("12.0")
-			graph.SetStyle("rounded")
-		}
-		return graph
+		return d.graph
 	}
+	gname := fmt.Sprintf("cluster_%s", key.name)
+	graph, found := d.graph.FindOrCreateSubGraph(gname)
+	if !found {
+		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
+		graph.SetPenWidth("0.5")
+		graph.SetFontSize("12.0")
+		graph.SetStyle("rounded")
+	}
+	return graph
 }
 
-func (c *debugConfig) addGraphEdge(from, to *graphviz.Node) {
-	_ = c.graph.CreateEdge(from, to)
+func (d *debugConfig) addGraphEdge(from, to *graphviz.Node) {
+	_ = d.graph.CreateEdge(from, to)
 }

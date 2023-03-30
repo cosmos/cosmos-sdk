@@ -37,8 +37,6 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 }
 
 // UpgradedConsensusState implements the Query/UpgradedConsensusState gRPC method
-//
-//nolint:staticcheck
 func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -47,7 +45,7 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 		return &types.QueryUpgradedConsensusStateResponse{}, nil
 	}
 
-	return &types.QueryUpgradedConsensusStateResponse{
+	return &types.QueryUpgradedConsensusStateResponse{ //nolint:staticcheck // SA1019: types.QueryUpgradedConsensusStateResponse is deprecated: Use QueryUpgradedConsensusStateResponseV1 instead - this is a test, however
 		UpgradedConsensusState: consState,
 	}, nil
 }

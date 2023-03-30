@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set +e
 
 export pwd=$(pwd)
 

@@ -177,8 +177,8 @@ func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptoty
 	if !found {
 		return nil
 	}
-	// k.RemoveValidatorSigningInfo(ctx, sdk.ConsAddress(oldPubKey.Address()))
 	k.SetValidatorSigningInfo(ctx, sdk.ConsAddress(newPubKey.Address()), signingInfo)
+	k.RemoveValidatorSigningInfo(ctx, sdk.ConsAddress(oldPubKey.Address()))
 
 	// Migrate ValidatorMissedBlockBitArray from oldPubKey to newPubKey
 	missedBlocks := k.GetValidatorMissedBlocks(ctx, sdk.ConsAddress(oldPubKey.Address()))

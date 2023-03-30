@@ -88,7 +88,7 @@ func (f *location) Format(w fmt.State, c rune) {
 
 const _vendor = "/vendor/"
 
-func splitFuncName(function string) (pname string, fname string) {
+func splitFuncName(function string) (pname, fname string) {
 	if len(function) == 0 {
 		return
 	}

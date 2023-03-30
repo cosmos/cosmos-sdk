@@ -366,7 +366,7 @@ func NewSimApp(
 		),
 	)
 
-	app.NFTKeeper = nftkeeper.NewKeeper(keys[nftkeeper.StoreKey], appCodec, app.AccountKeeper, app.BankKeeper)
+	app.NFTKeeper = nftkeeper.NewKeeper(runtime.NewKVStoreService(keys[nftkeeper.StoreKey]), appCodec, app.AccountKeeper, app.BankKeeper)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(

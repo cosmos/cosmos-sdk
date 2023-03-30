@@ -33,7 +33,7 @@ type ChainInfo struct {
 	Config        *ChainConfig
 }
 
-func NewChainInfo(configDir string, chain string, config *ChainConfig) *ChainInfo {
+func NewChainInfo(configDir, chain string, config *ChainConfig) *ChainInfo {
 	return &ChainInfo{
 		ConfigDir: configDir,
 		Chain:     chain,

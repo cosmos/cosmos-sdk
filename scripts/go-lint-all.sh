@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+
+set -eu
 
 export pwd=$(pwd)
 
 for modfile in $(find . -name go.mod); do
- echo "Updating $modfile"
+
+ echo "linting $(dirname $modfile)"
  DIR=$(dirname $modfile)
- (cd $DIR; golangci-lint run ./... --fix -c $pwd/.golangci.yml)
+ (cd $DIR; golangci-lint run ./... -c $pwd/.golangci.yml $@)
 done

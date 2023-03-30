@@ -15,6 +15,7 @@ import (
 	nfttestutil "cosmossdk.io/x/nft/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,6 +51,7 @@ func (s *TestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 
@@ -59,7 +61,7 @@ func (s *TestSuite) SetupTest() {
 	bankKeeper := nfttestutil.NewMockBankKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress("nft").Return(s.addrs[0]).AnyTimes()
 
-	nftKeeper := keeper.NewKeeper(key, s.encCfg.Codec, accountKeeper, bankKeeper)
+	nftKeeper := keeper.NewKeeper(storeService, s.encCfg.Codec, accountKeeper, bankKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)
 

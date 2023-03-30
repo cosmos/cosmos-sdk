@@ -14,13 +14,15 @@ import (
 
 const bit11NonCritical = 1 << 10
 
-var anyDesc = (&anypb.Any{}).ProtoReflect().Descriptor()
-var anyFullName = anyDesc.FullName()
+var (
+	anyDesc     = (&anypb.Any{}).ProtoReflect().Descriptor()
+	anyFullName = anyDesc.FullName()
+)
 
 // RejectUnknownFieldsStrict operates by the same rules as RejectUnknownFields, but returns an error if any unknown
 // non-critical fields are encountered.
 func RejectUnknownFieldsStrict(bz []byte, msg protoreflect.MessageDescriptor, resolver protodesc.Resolver) error {
-	var _, err = RejectUnknownFields(bz, msg, false, resolver)
+	_, err := RejectUnknownFields(bz, msg, false, resolver)
 	return err
 }
 

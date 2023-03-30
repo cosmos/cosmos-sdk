@@ -13,6 +13,7 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/depinject"
 
 	storetypes "cosmossdk.io/store/types"
@@ -63,6 +64,7 @@ func init() {
 			ProvideKVStoreService,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
+			ProvideEventService,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -201,4 +203,8 @@ func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.M
 func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
 	storeKey := ProvideTransientStoreKey(key, app)
 	return transientStoreService{key: storeKey}
+}
+
+func ProvideEventService() event.Service {
+	return EventService{}
 }

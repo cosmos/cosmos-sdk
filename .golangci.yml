@@ -75,7 +75,7 @@ linters-settings:
   gosimple:
     # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
-    checks: ["all"]
+    checks: ["all,-S1034"]
 
   gocritic:
     # Which checks should be enabled; can't be combined with 'disabled-checks'.

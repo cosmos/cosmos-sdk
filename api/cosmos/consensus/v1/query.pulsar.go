@@ -15,23 +15,23 @@ import (
 )
 
 var (
-	md_QueryParamsRequest protoreflect.MessageDescriptor
+	md_QueryGetParamsRequest protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_consensus_v1_query_proto_init()
-	md_QueryParamsRequest = File_cosmos_consensus_v1_query_proto.Messages().ByName("QueryParamsRequest")
+	md_QueryGetParamsRequest = File_cosmos_consensus_v1_query_proto.Messages().ByName("QueryGetParamsRequest")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryParamsRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryGetParamsRequest)(nil)
 
-type fastReflection_QueryParamsRequest QueryParamsRequest
+type fastReflection_QueryGetParamsRequest QueryGetParamsRequest
 
-func (x *QueryParamsRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryParamsRequest)(x)
+func (x *QueryGetParamsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetParamsRequest)(x)
 }
 
-func (x *QueryParamsRequest) slowProtoReflect() protoreflect.Message {
+func (x *QueryGetParamsRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_consensus_v1_query_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -43,43 +43,43 @@ func (x *QueryParamsRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryParamsRequest_messageType fastReflection_QueryParamsRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryParamsRequest_messageType{}
+var _fastReflection_QueryGetParamsRequest_messageType fastReflection_QueryGetParamsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetParamsRequest_messageType{}
 
-type fastReflection_QueryParamsRequest_messageType struct{}
+type fastReflection_QueryGetParamsRequest_messageType struct{}
 
-func (x fastReflection_QueryParamsRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryParamsRequest)(nil)
+func (x fastReflection_QueryGetParamsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetParamsRequest)(nil)
 }
-func (x fastReflection_QueryParamsRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryParamsRequest)
+func (x fastReflection_QueryGetParamsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetParamsRequest)
 }
-func (x fastReflection_QueryParamsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryParamsRequest
+func (x fastReflection_QueryGetParamsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetParamsRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryParamsRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryParamsRequest
+func (x *fastReflection_QueryGetParamsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetParamsRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryParamsRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryParamsRequest_messageType
+func (x *fastReflection_QueryGetParamsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetParamsRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryParamsRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryParamsRequest)
+func (x *fastReflection_QueryGetParamsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryGetParamsRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryParamsRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryParamsRequest)(x)
+func (x *fastReflection_QueryGetParamsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetParamsRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -87,7 +87,7 @@ func (x *fastReflection_QueryParamsRequest) Interface() protoreflect.ProtoMessag
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryParamsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryGetParamsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -101,13 +101,13 @@ func (x *fastReflection_QueryParamsRequest) Range(f func(protoreflect.FieldDescr
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryParamsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryGetParamsRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -117,13 +117,13 @@ func (x *fastReflection_QueryParamsRequest) Has(fd protoreflect.FieldDescriptor)
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryParamsRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryGetParamsRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -133,13 +133,13 @@ func (x *fastReflection_QueryParamsRequest) Clear(fd protoreflect.FieldDescripto
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryParamsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryGetParamsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -153,13 +153,13 @@ func (x *fastReflection_QueryParamsRequest) Get(descriptor protoreflect.FieldDes
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryParamsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryGetParamsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -173,36 +173,36 @@ func (x *fastReflection_QueryParamsRequest) Set(fd protoreflect.FieldDescriptor,
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryParamsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryGetParamsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryParamsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryGetParamsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryParamsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryGetParamsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.QueryParamsRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.QueryGetParamsRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -210,7 +210,7 @@ func (x *fastReflection_QueryParamsRequest) WhichOneof(d protoreflect.OneofDescr
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryParamsRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryGetParamsRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -221,7 +221,7 @@ func (x *fastReflection_QueryParamsRequest) GetUnknown() protoreflect.RawFields 
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryParamsRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryGetParamsRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -233,7 +233,7 @@ func (x *fastReflection_QueryParamsRequest) SetUnknown(fields protoreflect.RawFi
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryParamsRequest) IsValid() bool {
+func (x *fastReflection_QueryGetParamsRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -243,9 +243,9 @@ func (x *fastReflection_QueryParamsRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryParamsRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryGetParamsRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryParamsRequest)
+		x := input.Message.Interface().(*QueryGetParamsRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -267,7 +267,7 @@ func (x *fastReflection_QueryParamsRequest) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryParamsRequest)
+		x := input.Message.Interface().(*QueryGetParamsRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -297,7 +297,7 @@ func (x *fastReflection_QueryParamsRequest) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryParamsRequest)
+		x := input.Message.Interface().(*QueryGetParamsRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -329,10 +329,10 @@ func (x *fastReflection_QueryParamsRequest) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryParamsRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetParamsRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -371,25 +371,25 @@ func (x *fastReflection_QueryParamsRequest) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_QueryParamsResponse        protoreflect.MessageDescriptor
-	fd_QueryParamsResponse_params protoreflect.FieldDescriptor
+	md_QueryGetParamsResponse        protoreflect.MessageDescriptor
+	fd_QueryGetParamsResponse_params protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_consensus_v1_query_proto_init()
-	md_QueryParamsResponse = File_cosmos_consensus_v1_query_proto.Messages().ByName("QueryParamsResponse")
-	fd_QueryParamsResponse_params = md_QueryParamsResponse.Fields().ByName("params")
+	md_QueryGetParamsResponse = File_cosmos_consensus_v1_query_proto.Messages().ByName("QueryGetParamsResponse")
+	fd_QueryGetParamsResponse_params = md_QueryGetParamsResponse.Fields().ByName("params")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryParamsResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryGetParamsResponse)(nil)
 
-type fastReflection_QueryParamsResponse QueryParamsResponse
+type fastReflection_QueryGetParamsResponse QueryGetParamsResponse
 
-func (x *QueryParamsResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryParamsResponse)(x)
+func (x *QueryGetParamsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetParamsResponse)(x)
 }
 
-func (x *QueryParamsResponse) slowProtoReflect() protoreflect.Message {
+func (x *QueryGetParamsResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_consensus_v1_query_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -401,43 +401,43 @@ func (x *QueryParamsResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryParamsResponse_messageType fastReflection_QueryParamsResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryParamsResponse_messageType{}
+var _fastReflection_QueryGetParamsResponse_messageType fastReflection_QueryGetParamsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetParamsResponse_messageType{}
 
-type fastReflection_QueryParamsResponse_messageType struct{}
+type fastReflection_QueryGetParamsResponse_messageType struct{}
 
-func (x fastReflection_QueryParamsResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryParamsResponse)(nil)
+func (x fastReflection_QueryGetParamsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetParamsResponse)(nil)
 }
-func (x fastReflection_QueryParamsResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryParamsResponse)
+func (x fastReflection_QueryGetParamsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetParamsResponse)
 }
-func (x fastReflection_QueryParamsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryParamsResponse
+func (x fastReflection_QueryGetParamsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetParamsResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryParamsResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryParamsResponse
+func (x *fastReflection_QueryGetParamsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetParamsResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryParamsResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryParamsResponse_messageType
+func (x *fastReflection_QueryGetParamsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetParamsResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryParamsResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryParamsResponse)
+func (x *fastReflection_QueryGetParamsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryGetParamsResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryParamsResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryParamsResponse)(x)
+func (x *fastReflection_QueryGetParamsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetParamsResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -445,10 +445,10 @@ func (x *fastReflection_QueryParamsResponse) Interface() protoreflect.ProtoMessa
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryParamsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryGetParamsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Params != nil {
 		value := protoreflect.ValueOfMessage(x.Params.ProtoReflect())
-		if !f(fd_QueryParamsResponse_params, value) {
+		if !f(fd_QueryGetParamsResponse_params, value) {
 			return
 		}
 	}
@@ -465,15 +465,15 @@ func (x *fastReflection_QueryParamsResponse) Range(f func(protoreflect.FieldDesc
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryParamsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryGetParamsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.QueryParamsResponse.params":
+	case "cosmos.consensus.v1.QueryGetParamsResponse.params":
 		return x.Params != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -483,15 +483,15 @@ func (x *fastReflection_QueryParamsResponse) Has(fd protoreflect.FieldDescriptor
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryParamsResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryGetParamsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.QueryParamsResponse.params":
+	case "cosmos.consensus.v1.QueryGetParamsResponse.params":
 		x.Params = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -501,16 +501,16 @@ func (x *fastReflection_QueryParamsResponse) Clear(fd protoreflect.FieldDescript
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryParamsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryGetParamsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.consensus.v1.QueryParamsResponse.params":
+	case "cosmos.consensus.v1.QueryGetParamsResponse.params":
 		value := x.Params
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -524,15 +524,15 @@ func (x *fastReflection_QueryParamsResponse) Get(descriptor protoreflect.FieldDe
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryParamsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryGetParamsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.QueryParamsResponse.params":
+	case "cosmos.consensus.v1.QueryGetParamsResponse.params":
 		x.Params = value.Message().Interface().(*types.ConsensusParams)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -546,44 +546,44 @@ func (x *fastReflection_QueryParamsResponse) Set(fd protoreflect.FieldDescriptor
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryParamsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryGetParamsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.QueryParamsResponse.params":
+	case "cosmos.consensus.v1.QueryGetParamsResponse.params":
 		if x.Params == nil {
 			x.Params = new(types.ConsensusParams)
 		}
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryParamsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryGetParamsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.QueryParamsResponse.params":
+	case "cosmos.consensus.v1.QueryGetParamsResponse.params":
 		m := new(types.ConsensusParams)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryGetParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.QueryGetParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryParamsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryGetParamsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.QueryParamsResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.QueryGetParamsResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -591,7 +591,7 @@ func (x *fastReflection_QueryParamsResponse) WhichOneof(d protoreflect.OneofDesc
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryParamsResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryGetParamsResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -602,7 +602,7 @@ func (x *fastReflection_QueryParamsResponse) GetUnknown() protoreflect.RawFields
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryParamsResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryGetParamsResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -614,7 +614,7 @@ func (x *fastReflection_QueryParamsResponse) SetUnknown(fields protoreflect.RawF
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryParamsResponse) IsValid() bool {
+func (x *fastReflection_QueryGetParamsResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -624,9 +624,9 @@ func (x *fastReflection_QueryParamsResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryParamsResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryGetParamsResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryParamsResponse)
+		x := input.Message.Interface().(*QueryGetParamsResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -652,7 +652,7 @@ func (x *fastReflection_QueryParamsResponse) ProtoMethods() *protoiface.Methods 
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryParamsResponse)
+		x := input.Message.Interface().(*QueryGetParamsResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -696,7 +696,7 @@ func (x *fastReflection_QueryParamsResponse) ProtoMethods() *protoiface.Methods 
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryParamsResponse)
+		x := input.Message.Interface().(*QueryGetParamsResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -728,10 +728,10 @@ func (x *fastReflection_QueryParamsResponse) ProtoMethods() *protoiface.Methods 
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryParamsResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetParamsResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -821,14 +821,14 @@ const (
 )
 
 // QueryParamsRequest defines the request type for querying x/consensus parameters.
-type QueryParamsRequest struct {
+type QueryGetParamsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *QueryParamsRequest) Reset() {
-	*x = QueryParamsRequest{}
+func (x *QueryGetParamsRequest) Reset() {
+	*x = QueryGetParamsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_consensus_v1_query_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -836,19 +836,19 @@ func (x *QueryParamsRequest) Reset() {
 	}
 }
 
-func (x *QueryParamsRequest) String() string {
+func (x *QueryGetParamsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryParamsRequest) ProtoMessage() {}
+func (*QueryGetParamsRequest) ProtoMessage() {}
 
-// Deprecated: Use QueryParamsRequest.ProtoReflect.Descriptor instead.
-func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryGetParamsRequest.ProtoReflect.Descriptor instead.
+func (*QueryGetParamsRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_query_proto_rawDescGZIP(), []int{0}
 }
 
 // QueryParamsResponse defines the response type for querying x/consensus parameters.
-type QueryParamsResponse struct {
+type QueryGetParamsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -859,8 +859,8 @@ type QueryParamsResponse struct {
 	Params *types.ConsensusParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 }
 
-func (x *QueryParamsResponse) Reset() {
-	*x = QueryParamsResponse{}
+func (x *QueryGetParamsResponse) Reset() {
+	*x = QueryGetParamsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_consensus_v1_query_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -868,18 +868,18 @@ func (x *QueryParamsResponse) Reset() {
 	}
 }
 
-func (x *QueryParamsResponse) String() string {
+func (x *QueryGetParamsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryParamsResponse) ProtoMessage() {}
+func (*QueryGetParamsResponse) ProtoMessage() {}
 
-// Deprecated: Use QueryParamsResponse.ProtoReflect.Descriptor instead.
-func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryGetParamsResponse.ProtoReflect.Descriptor instead.
+func (*QueryGetParamsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_query_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *QueryParamsResponse) GetParams() *types.ConsensusParams {
+func (x *QueryGetParamsResponse) GetParams() *types.ConsensusParams {
 	if x != nil {
 		return x.Params
 	}
@@ -896,35 +896,36 @@ var file_cosmos_consensus_v1_query_proto_rawDesc = []byte{
 	0x70, 0x69, 0x2f, 0x61, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74,
 	0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x14, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x50, 0x0a, 0x13, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x39, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x21, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79,
-	0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x50, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x32, 0x8d, 0x01, 0x0a, 0x05,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x83, 0x01, 0x0a, 0x09, 0x47, 0x65, 0x74, 0x50, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e,
-	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75,
-	0x73, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0xc5, 0x01, 0x0a, 0x17,
-	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65,
-	0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
-	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
-	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x63, 0x6f, 0x6e, 0x73,
-	0x65, 0x6e, 0x73, 0x75, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x58, 0xaa, 0x02, 0x13,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
-	0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e,
-	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x74, 0x6f, 0x22, 0x17, 0x0a, 0x15, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x53, 0x0a, 0x16,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x39, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d,
+	0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
+	0x73, 0x75, 0x73, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x32, 0x93, 0x01, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x89, 0x01, 0x0a, 0x09,
+	0x47, 0x65, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63,
+	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x47, 0x65, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2f, 0x76, 0x31,
+	0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0xc5, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
+	0x2e, 0x76, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65,
+	0x6e, 0x73, 0x75, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75,
+	0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x56, 0x31, 0xca,
+	0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
+	0x75, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43,
+	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x3a, 0x3a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -941,14 +942,14 @@ func file_cosmos_consensus_v1_query_proto_rawDescGZIP() []byte {
 
 var file_cosmos_consensus_v1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cosmos_consensus_v1_query_proto_goTypes = []interface{}{
-	(*QueryParamsRequest)(nil),    // 0: cosmos.consensus.v1.QueryParamsRequest
-	(*QueryParamsResponse)(nil),   // 1: cosmos.consensus.v1.QueryParamsResponse
-	(*types.ConsensusParams)(nil), // 2: tendermint.types.ConsensusParams
+	(*QueryGetParamsRequest)(nil),  // 0: cosmos.consensus.v1.QueryGetParamsRequest
+	(*QueryGetParamsResponse)(nil), // 1: cosmos.consensus.v1.QueryGetParamsResponse
+	(*types.ConsensusParams)(nil),  // 2: tendermint.types.ConsensusParams
 }
 var file_cosmos_consensus_v1_query_proto_depIdxs = []int32{
-	2, // 0: cosmos.consensus.v1.QueryParamsResponse.params:type_name -> tendermint.types.ConsensusParams
-	0, // 1: cosmos.consensus.v1.Query.GetParams:input_type -> cosmos.consensus.v1.QueryParamsRequest
-	1, // 2: cosmos.consensus.v1.Query.GetParams:output_type -> cosmos.consensus.v1.QueryParamsResponse
+	2, // 0: cosmos.consensus.v1.QueryGetParamsResponse.params:type_name -> tendermint.types.ConsensusParams
+	0, // 1: cosmos.consensus.v1.Query.GetParams:input_type -> cosmos.consensus.v1.QueryGetParamsRequest
+	1, // 2: cosmos.consensus.v1.Query.GetParams:output_type -> cosmos.consensus.v1.QueryGetParamsResponse
 	2, // [2:3] is the sub-list for method output_type
 	1, // [1:2] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -963,7 +964,7 @@ func file_cosmos_consensus_v1_query_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_consensus_v1_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryParamsRequest); i {
+			switch v := v.(*QueryGetParamsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -975,7 +976,7 @@ func file_cosmos_consensus_v1_query_proto_init() {
 			}
 		}
 		file_cosmos_consensus_v1_query_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryParamsResponse); i {
+			switch v := v.(*QueryGetParamsResponse); i {
 			case 0:
 				return &v.state
 			case 1:

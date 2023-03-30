@@ -42,7 +42,7 @@ type GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value any] str
 }
 
 // NewGenericMultiIndex instantiates a GenericMultiIndex, given
-// schema, Prefix, humanised name, the key codec used to encode the referencing key
+// schema, Prefix, humanized name, the key codec used to encode the referencing key
 // to bytes, the key codec used to encode the referenced key to bytes and a function
 // which given the primary key and a value of an object being saved or removed in IndexedMap
 // returns all the possible IndexReference of that object.

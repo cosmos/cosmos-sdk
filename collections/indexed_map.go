@@ -40,10 +40,10 @@ type IndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]] struct {
 }
 
 // NewIndexedMap instantiates a new IndexedMap. Accepts a SchemaBuilder, a Prefix,
-// a humanised name that defines the name of the collection, the primary key codec
+// a humanized name that defines the name of the collection, the primary key codec
 // which is basically what IndexedMap uses to encode the primary key to bytes,
 // the value codec which is what the IndexedMap uses to encode the value.
-// Then it expects the initialised indexes.
+// Then it expects the initialized indexes.
 func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
 	schema *SchemaBuilder,
 	prefix Prefix,
@@ -105,7 +105,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Set(ctx context.Context, pk Primary
 func (m *IndexedMap[PrimaryKey, Value, Idx]) Remove(ctx context.Context, pk PrimaryKey) error {
 	oldValue, err := m.m.Get(ctx, pk)
 	if err != nil {
-		// TODO retain Map behaviour? which does not error in case we remove a non-existing object
+		// TODO retain Map behavior? which does not error in case we remove a non-existing object
 		return err
 	}
 

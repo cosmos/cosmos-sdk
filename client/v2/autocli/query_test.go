@@ -318,7 +318,7 @@ type testClientConn struct {
 	errorOut     *bytes.Buffer
 }
 
-func (t *testClientConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (t *testClientConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
 	err := t.ClientConn.Invoke(ctx, method, args, reply, opts...)
 	t.lastRequest = args
 	t.lastResponse = reply

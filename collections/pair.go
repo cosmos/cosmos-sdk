@@ -261,7 +261,7 @@ func (p *PairRange[K1, K2]) Descending() *PairRange[K1, K2] {
 	return p
 }
 
-func (p *PairRange[K1, K2]) RangeValues() (start *RangeKey[Pair[K1, K2]], end *RangeKey[Pair[K1, K2]], order Order, err error) {
+func (p *PairRange[K1, K2]) RangeValues() (start, end *RangeKey[Pair[K1, K2]], order Order, err error) {
 	if p.err != nil {
 		return nil, nil, 0, err
 	}

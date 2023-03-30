@@ -176,8 +176,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 				panic(err)
 			}
 
-			switch res := in.MessageResponse.(type) {
-			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
+			if res, ok := in.MessageResponse.(*grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse); ok {
 				processFileDescriptorsResponse(res, fdMap)
 			}
 		}

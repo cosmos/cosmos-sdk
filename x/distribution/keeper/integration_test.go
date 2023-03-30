@@ -107,7 +107,7 @@ func TestMsgUpdateParams(t *testing.T) {
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper, distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	testCases := []struct {
 		name      string
@@ -209,6 +209,8 @@ func TestMsgUpdateParams(t *testing.T) {
 			} else {
 				assert.NilError(t, err)
 				assert.Assert(t, res != nil)
+
+				// check the result
 				result := distrtypes.MsgUpdateParams{}
 				err = f.cdc.Unmarshal(res[0].Value, &result)
 				assert.NilError(t, err)
@@ -228,16 +230,16 @@ func TestCommunityPoolSpend(t *testing.T) {
 
 	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
 
-	f.distrKeeper.SetParams(integrationApp.Ctx, distrtypes.DefaultParams())
-	f.distrKeeper.SetFeePool(integrationApp.Ctx, distrtypes.FeePool{
+	f.distrKeeper.SetParams(integrationApp.SDKContext(), distrtypes.DefaultParams())
+	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(100)}),
 	})
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.Ctx, int64(100))
-	f.bankKeeper.MintCoins(integrationApp.Ctx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.SDKContext(), int64(100))
+	f.bankKeeper.MintCoins(integrationApp.SDKContext(), distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper, distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	recipient := sdk.AccAddress([]byte("addr1"))
 
@@ -286,6 +288,8 @@ func TestCommunityPoolSpend(t *testing.T) {
 			} else {
 				assert.NilError(t, err)
 				assert.Assert(t, res != nil)
+
+				// check the result
 				result := distrtypes.MsgCommunityPoolSpend{}
 				err = f.cdc.Unmarshal(res[0].Value, &result)
 				assert.NilError(t, err)
@@ -305,39 +309,39 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 
 	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
 
-	f.distrKeeper.SetParams(integrationApp.Ctx, distrtypes.DefaultParams())
-	f.distrKeeper.SetFeePool(integrationApp.Ctx, distrtypes.FeePool{
+	f.distrKeeper.SetParams(integrationApp.SDKContext(), distrtypes.DefaultParams())
+	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(100)}),
 	})
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.Ctx, int64(10000))
-	f.bankKeeper.MintCoins(integrationApp.Ctx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.SDKContext(), int64(10000))
+	f.bankKeeper.MintCoins(integrationApp.SDKContext(), distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
 
 	// Set default staking params
-	f.stakingKeeper.SetParams(integrationApp.Ctx, stakingtypes.DefaultParams())
+	f.stakingKeeper.SetParams(integrationApp.SDKContext(), stakingtypes.DefaultParams())
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper, distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	addr := sdk.AccAddress([]byte("addr"))
 	addr1 := sdk.AccAddress(PKS[0].Address())
 	valAddr1 := sdk.ValAddress(addr1)
 
 	// send funds to val addr
-	tokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.Ctx, int64(1000))
-	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.Ctx, distrtypes.ModuleName, sdk.AccAddress(valAddr1), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tokens)))
+	tokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.SDKContext(), int64(1000))
+	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.SDKContext(), distrtypes.ModuleName, sdk.AccAddress(valAddr1), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tokens)))
 
 	// send funds from module to addr to perform DepositValidatorRewardsPool
-	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.Ctx, distrtypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tokens)))
+	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.SDKContext(), distrtypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tokens)))
 
-	tstaking := stakingtestutil.NewHelper(t, integrationApp.Ctx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, integrationApp.SDKContext(), f.stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddr1, valConsPk0, sdk.NewInt(100), true)
 
 	// mint a non-staking token and send to an account
 	amt := sdk.NewCoins(sdk.NewInt64Coin("foo", 500))
-	f.bankKeeper.MintCoins(integrationApp.Ctx, distrtypes.ModuleName, amt)
-	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.Ctx, distrtypes.ModuleName, addr, amt)
+	f.bankKeeper.MintCoins(integrationApp.SDKContext(), distrtypes.ModuleName, amt)
+	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.SDKContext(), distrtypes.ModuleName, addr, amt)
 
 	testCases := []struct {
 		name      string
@@ -350,7 +354,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
 				Authority:        addr.String(),
 				ValidatorAddress: valAddr1.String(),
-				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(integrationApp.Ctx), sdk.NewInt(100))),
+				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(integrationApp.SDKContext()), sdk.NewInt(100))),
 			},
 		},
 		{
@@ -366,7 +370,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
 				Authority:        addr.String(),
 				ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String(),
-				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(integrationApp.Ctx), sdk.NewInt(100))),
+				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(integrationApp.SDKContext()), sdk.NewInt(100))),
 			},
 			expErr:    true,
 			expErrMsg: "validator does not exist",
@@ -387,11 +391,16 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 				assert.NilError(t, err)
 
 				// check validator outstanding rewards
-				outstandingRewards := f.distrKeeper.GetValidatorOutstandingRewards(integrationApp.Ctx, valAddr)
+				outstandingRewards := f.distrKeeper.GetValidatorOutstandingRewards(integrationApp.SDKContext(), valAddr)
 				for _, c := range tc.msg.Amount {
 					x := outstandingRewards.Rewards.AmountOf(c.Denom)
 					assert.DeepEqual(t, x, sdk.NewDecFromInt(c.Amount))
 				}
+
+				// check the result
+				result := distrtypes.MsgDepositValidatorRewardsPoolResponse{}
+				err = f.cdc.Unmarshal(res[0].Value, &result)
+				assert.NilError(t, err)
 			}
 		})
 	}

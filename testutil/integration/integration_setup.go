@@ -24,9 +24,8 @@ import (
 type IntegrationTestApp struct {
 	*baseapp.BaseApp
 	t                  *testing.T
-	InterfaceRegistry  codectypes.InterfaceRegistry
-	Ctx                sdk.Context
-	QueryServiceHelper *baseapp.QueryServiceTestHelper
+	ctx                sdk.Context
+	queryServiceHelper *baseapp.QueryServiceTestHelper
 }
 
 func SetupTestApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *IntegrationTestApp {
@@ -59,10 +58,17 @@ func SetupTestApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules 
 	return &IntegrationTestApp{
 		BaseApp:            bApp,
 		t:                  t,
-		InterfaceRegistry:  interfaceRegistry,
-		Ctx:                ctx,
-		QueryServiceHelper: queryHelper,
+		ctx:                ctx,
+		queryServiceHelper: queryHelper,
 	}
+}
+
+func (app *IntegrationTestApp) SDKContext() sdk.Context {
+	return app.ctx
+}
+
+func (app *IntegrationTestApp) QueryServiceHelper() *baseapp.QueryServiceTestHelper {
+	return app.queryServiceHelper
 }
 
 func (app *IntegrationTestApp) ExecMsgs(msgs ...sdk.Msg) ([]*codectypes.Any, error) {
@@ -73,7 +79,7 @@ func (app *IntegrationTestApp) ExecMsgs(msgs ...sdk.Msg) ([]*codectypes.Any, err
 		if handler == nil {
 			return nil, fmt.Errorf("no message handler found for %q", sdk.MsgTypeURL(msg))
 		}
-		r, err := handler(app.Ctx, msg)
+		r, err := handler(app.ctx, msg)
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}

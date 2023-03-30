@@ -4,8 +4,10 @@
 package cosmovisor_test
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 

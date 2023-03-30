@@ -33,4 +33,3 @@ require (
 )
 
 replace cosmossdk.io/api => ../../api
-g

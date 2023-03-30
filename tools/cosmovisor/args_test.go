@@ -616,7 +616,6 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 				}
 				assert.Equal(t, tc.expectedErrCount, errCount, "error count")
 			}
-
 			assert.Equal(t, tc.expectedCfg, cfg, "config")
 		})
 	}

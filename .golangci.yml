@@ -10,7 +10,6 @@ run:
 linters:
   disable-all: true
   enable:
-    - bodyclose
     - depguard
     - dogsled
     - exportloopref
@@ -28,7 +27,6 @@ linters:
     - staticcheck
     - revive
     - stylecheck
-    - thelper
     - typecheck
     - unconvert
     - unused

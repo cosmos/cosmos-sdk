@@ -78,11 +78,11 @@ func newIbcCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(getIBCDenom(ibcPath, ibcBaseDenom), amt)
 }
 
-func getIBCDenom(path string, baseDenom string) string {
+func getIBCDenom(path, baseDenom string) string {
 	return fmt.Sprintf("%s/%s", "ibc", hex.EncodeToString(getIBCHash(path, baseDenom)))
 }
 
-func getIBCHash(path string, baseDenom string) []byte {
+func getIBCHash(path, baseDenom string) []byte {
 	hash := sha256.Sum256([]byte(path + "/" + baseDenom))
 	return hash[:]
 }
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
 }
 
-func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender *authtypes.ModuleAccount, receiver *authtypes.ModuleAccount) {
+func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender, receiver *authtypes.ModuleAccount) {
 	suite.authKeeper.EXPECT().GetModuleAddress(sender.Name).Return(sender.GetAddress())
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, receiver.Name).Return(receiver)
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, sender.GetAddress()).Return(sender)
@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.Accoun
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc sdk.AccountI, mAcc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc sdk.Account
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
-func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc sdk.AccountI, mAcc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)

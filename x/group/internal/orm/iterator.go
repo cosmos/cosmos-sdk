@@ -273,7 +273,7 @@ func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 // assertDest checks that the provided dest is not nil and a pointer to a slice.
 // It also verifies that the slice elements implement *codec.ProtoMarshaler.
 // It overwrites destRef and tmpSlice using reflection.
-func assertDest(dest ModelSlicePtr, destRef *reflect.Value, tmpSlice *reflect.Value) (reflect.Type, error) {
+func assertDest(dest ModelSlicePtr, destRef, tmpSlice *reflect.Value) (reflect.Type, error) {
 	if dest == nil {
 		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination must not be nil")
 	}

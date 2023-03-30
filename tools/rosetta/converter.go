@@ -24,7 +24,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -338,8 +337,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	default:
 		return nil, false
 	case banktypes.EventTypeCoinSpent:
-		spender := sdk.MustAccAddressFromBech32(string(event.Attributes[0].Value))
-		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
+		spender := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
+		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)
 		}
@@ -349,8 +348,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 		accountIdentifier = spender.String()
 
 	case banktypes.EventTypeCoinReceived:
-		receiver := sdk.MustAccAddressFromBech32(string(event.Attributes[0].Value))
-		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
+		receiver := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
+		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)
 		}
@@ -362,7 +361,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	// rosetta does not have the concept of burning coins, so we need to mock
 	// the burn as a send to an address that cannot be resolved to anything
 	case banktypes.EventTypeCoinBurn:
-		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
+		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)
 		}
@@ -433,7 +432,7 @@ func (c converter) Amounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*r
 
 // AddOperationIndexes adds the indexes to operations adhering to specific rules:
 // operations related to messages will be always before than the balance ones
-func AddOperationIndexes(msgOps []*rosettatypes.Operation, balanceOps []*rosettatypes.Operation) (finalOps []*rosettatypes.Operation) {
+func AddOperationIndexes(msgOps, balanceOps []*rosettatypes.Operation) (finalOps []*rosettatypes.Operation) {
 	lenMsgOps := len(msgOps)
 	lenBalanceOps := len(balanceOps)
 	finalOps = make([]*rosettatypes.Operation, 0, lenMsgOps+lenBalanceOps)
@@ -755,7 +754,7 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 
 // SignerData converts the given any account to signer data
 func (c converter) SignerData(anyAccount *codectypes.Any) (*SignerData, error) {
-	var acc auth.AccountI
+	var acc sdk.AccountI
 	err := c.ir.UnpackAny(anyAccount, &acc)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())

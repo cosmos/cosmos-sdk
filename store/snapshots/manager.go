@@ -236,7 +236,7 @@ func (m *Manager) List() ([]*types.Snapshot, error) {
 
 // LoadChunk loads a chunk into a byte slice, mirroring ABCI LoadChunk. It can be called
 // concurrently with other operations. If the chunk does not exist, nil is returned.
-func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte, error) {
+func (m *Manager) LoadChunk(height uint64, format, chunk uint32) ([]byte, error) {
 	reader, err := m.store.LoadChunk(height, format, chunk)
 	if err != nil {
 		return nil, err

@@ -1,16 +1,14 @@
 package main
 
 import (
-	"github.com/stretchr/testify/suite"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"cosmossdk.io/tools/cosmovisor"
 )
 
-type HelpTestSuite struct {
-	suite.Suite
-}
-
-func (s *HelpTestSuite) TestGetHelpText() {
+func TestGetHelpText(t *testing.T) {
 	expectedPieces := []string{
 		"Cosmovisor",
 		cosmovisor.EnvName, cosmovisor.EnvHome,
@@ -19,6 +17,6 @@ func (s *HelpTestSuite) TestGetHelpText() {
 
 	actual := GetHelpText()
 	for _, piece := range expectedPieces {
-		s.Assert().Contains(actual, piece)
+		assert.Contains(t, actual, piece)
 	}
 }

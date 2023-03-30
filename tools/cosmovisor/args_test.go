@@ -609,15 +609,13 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			cfg, err := GetConfigFromEnv()
 			if tc.expectedErrCount == 0 {
 				assert.NoError(t, err)
-			}
-			if assert.Error(t, err) {
+			} else if assert.Error(t, err) {
 				errCount := 1
 				if multi, isMulti := err.(*errors.MultiError); isMulti {
 					errCount = multi.Len()
 				}
 				assert.Equal(t, tc.expectedErrCount, errCount, "error count")
 			}
-
 			assert.Equal(t, tc.expectedCfg, cfg, "config")
 		})
 	}

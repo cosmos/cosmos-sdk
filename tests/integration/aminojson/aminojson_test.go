@@ -293,6 +293,8 @@ var (
 		genType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, genOpts),
 
 		// upgrade
+		genType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, genOpts),       // nolint:staticcheck // testing legacy code path
+		genType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, genOpts.WithDisallowNil()), // nolint:staticcheck // testing legacy code path
 		genType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, genOpts.WithDisallowNil()),
 		genType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, genOpts.WithDisallowNil()),
 		genType(&upgradetypes.MsgCancelUpgrade{}, &upgradeapi.MsgCancelUpgrade{}, genOpts),

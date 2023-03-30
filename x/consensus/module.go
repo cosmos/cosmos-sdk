@@ -170,7 +170,7 @@ func ProvideModule(in ConsensusInputs) ConsensusOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager)
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
-		app.SetParamStore(k.Params)
+		app.SetParamStore(k.ParamsStore)
 	}
 
 	return ConsensusOutputs{

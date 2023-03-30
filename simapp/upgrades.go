@@ -20,18 +20,6 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			// If a chain has gone go through v0.47.x to migrate its modules params away from x/params,
-			// then it should use params.MigrateModuleFromParams to the SDK modules.
-
-			// params.MigrateModuleFromParams(
-			// 	ctx,
-			// 	runtime.NewKVStoreService(app.kvStoreKeys()[authtypes.ModuleName]),
-			// 	app.GetSubspace(authtypes.ModuleName),
-			// 	app.appCodec,
-			// 	authtypes.Params{},
-			// 	authtypes.ParamsKey,
-			// )
-
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)

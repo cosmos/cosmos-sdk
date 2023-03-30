@@ -27,9 +27,9 @@ var (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgGrant = "op_weight_msg_grant"   //nolint:gosec
-	OpWeightRevoke   = "op_weight_msg_revoke"  //nolint:gosec
-	OpWeightExec     = "op_weight_msg_execute" //nolint:gosec
+	OpWeightMsgGrant = "op_weight_msg_grant"
+	OpWeightRevoke   = "op_weight_msg_revoke"
+	OpWeightExec     = "op_weight_msg_execute"
 )
 
 // authz operations weights
@@ -114,7 +114,7 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 
 		var expiration *time.Time
 		t1 := simtypes.RandTimestamp(r)
-		if !t1.Before(ctx.BlockTime()) {
+		if t1.After(ctx.BlockTime()) {
 			expiration = &t1
 		}
 		randomAuthz := generateRandomAuthorization(r, spendLimit)

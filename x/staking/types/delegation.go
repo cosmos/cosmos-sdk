@@ -85,7 +85,7 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 
 // IsMature - is the current entry mature
 func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
-	return !e.CompletionTime.After(currentTime)
+	return e.CompletionTime.Before(currentTime)
 }
 
 // OnHold - is the current entry on hold due to external modules
@@ -205,7 +205,7 @@ func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balanc
 
 // IsMature - is the current entry mature
 func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
-	return !e.CompletionTime.After(currentTime)
+	return e.CompletionTime.Before(currentTime)
 }
 
 // OnHold - is the current entry on hold due to external modules

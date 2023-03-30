@@ -11,7 +11,7 @@ import (
 // and custom headers
 // An error is returned if the request or reading the body fails.
 func GetRequestWithHeaders(url string, headers map[string]string) ([]byte, error) {
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}

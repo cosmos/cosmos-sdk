@@ -46,7 +46,7 @@ func TestPrefixRangeProperty(t *testing.T) {
 				// index, one greater at overflow and 0 from
 				// then on
 				for i, b := range start {
-					if i < overflowIndex { //nolint:gocritic // ifElseChain: rewrite if-else to switch statement
+					if i < overflowIndex {
 						require.Equal(t, b, end[i])
 					} else if i == overflowIndex {
 						require.Equal(t, b+1, end[i])

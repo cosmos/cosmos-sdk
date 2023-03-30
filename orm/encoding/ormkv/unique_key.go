@@ -24,11 +24,11 @@ var _ IndexCodec = &UniqueKeyCodec{}
 // provided message descriptor, index and primary key fields.
 func NewUniqueKeyCodec(prefix []byte, messageType protoreflect.MessageType, indexFields, primaryKeyFields []protoreflect.Name) (*UniqueKeyCodec, error) {
 	if len(indexFields) == 0 {
-		return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("index fields are empty")
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("index fields are empty")
 	}
 
 	if len(primaryKeyFields) == 0 {
-		return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("primary key fields are empty")
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("primary key fields are empty")
 	}
 
 	keyCodec, err := NewKeyCodec(prefix, messageType, indexFields)
@@ -66,7 +66,7 @@ func NewUniqueKeyCodec(prefix []byte, messageType protoreflect.MessageType, inde
 	// If there is nothing in the value we have a trivial unique index
 	// which shouldn't actually be a unique index at all.
 	if len(valueFields) == 0 {
-		return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("unique index %s on table %s introduces no new uniqueness constraint not already in the primary key and should not be marked as unique",
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("unique index %s on table %s introduces no new uniqueness constraint not already in the primary key and should not be marked as unique",
 			indexFields, messageType.Descriptor().FullName())
 	}
 
@@ -140,7 +140,7 @@ func (u UniqueKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	indexEntry, ok := entry.(*IndexKeyEntry)
 	if !ok {
-		return nil, nil, ormerrors.ErrBadDecodeEntry
+		return nil, nil, ormerrors.BadDecodeEntry
 	}
 	k, err = u.keyCodec.EncodeKey(indexEntry.IndexValues)
 	if err != nil {
@@ -149,7 +149,7 @@ func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 
 	n := len(indexEntry.PrimaryKey)
 	if n != len(u.pkFieldOrder) {
-		return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("wrong primary key length")
+		return nil, nil, ormerrors.BadDecodeEntry.Wrapf("wrong primary key length")
 	}
 
 	var values []protoreflect.Value
@@ -161,7 +161,7 @@ func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 			values = append(values, value)
 			// Does not go in values, but we need to verify that the value in index values matches the primary key value.
 		} else if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
-			return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
+			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
 		}
 	}
 

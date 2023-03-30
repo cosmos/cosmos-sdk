@@ -113,7 +113,7 @@ func (p primaryKeyIndex) getWriteBackend(ctx context.Context) (Backend, error) {
 		return writeBackend, nil
 	}
 
-	return nil, ormerrors.ErrReadOnly
+	return nil, ormerrors.ReadOnly
 }
 
 func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protoreflect.Value) error {

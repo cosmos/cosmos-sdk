@@ -34,7 +34,7 @@ func TestAutoIncrementScenario(t *testing.T) {
 		testkv.NewSharedMemBackend(),
 		&testkv.EntryCodecDebugger{
 			EntryCodec: table,
-			Print:      func(s string) { debugBuf.WriteString(s + "\n") }, //nolint:errcheck,revive // ignore errors
+			Print:      func(s string) { debugBuf.WriteString(s + "\n") }, //nolint:errcheck // ignore errors
 		},
 	)
 	runAutoIncrementScenario(ormtable.WrapContextDefault(store), t, autoTable)

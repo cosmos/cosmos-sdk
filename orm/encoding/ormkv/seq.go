@@ -23,7 +23,7 @@ var _ EntryCodec = &SeqCodec{}
 
 func (s SeqCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	if !bytes.Equal(k, s.prefix) {
-		return nil, ormerrors.ErrUnexpectedDecodePrefix
+		return nil, ormerrors.UnexpectedDecodePrefix
 	}
 
 	x, err := s.DecodeValue(v)
@@ -40,11 +40,11 @@ func (s SeqCodec) DecodeEntry(k, v []byte) (Entry, error) {
 func (s SeqCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	seqEntry, ok := entry.(*SeqEntry)
 	if !ok {
-		return nil, nil, ormerrors.ErrBadDecodeEntry
+		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
 	if seqEntry.TableName != s.messageType {
-		return nil, nil, ormerrors.ErrBadDecodeEntry
+		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
 	return s.prefix, s.EncodeValue(seqEntry.Value), nil

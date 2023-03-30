@@ -137,7 +137,7 @@ func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index con
 	var res Iterator
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
-			startBz = append(options.Cursor, 0)
+			startBz = append(options.Cursor, 0) //nolint:gocritic // we intend to append in this way
 		}
 
 		if fullEndKey {

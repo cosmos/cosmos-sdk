@@ -12,6 +12,7 @@ func IsNotFound(err error) bool {
 	return errors.IsOf(err, NotFound)
 }
 
+//nolint:revive // we don't want to use the default error codes
 var (
 	InvalidTableId                = errors.New(codespace, 1, "invalid or missing table or single id, need a non-zero value")
 	MissingPrimaryKey             = errors.New(codespace, 2, "table is missing primary key")

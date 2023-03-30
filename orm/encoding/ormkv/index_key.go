@@ -20,11 +20,11 @@ var _ IndexCodec = &IndexKeyCodec{}
 // provided message descriptor, index and primary key fields.
 func NewIndexKeyCodec(prefix []byte, messageType protoreflect.MessageType, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
 	if len(indexFields) == 0 {
-		return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("index fields are empty")
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("index fields are empty")
 	}
 
 	if len(primaryKeyFields) == 0 {
-		return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("primary key fields are empty")
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("primary key fields are empty")
 	}
 
 	indexFieldMap := map[protoreflect.Name]int{}
@@ -101,11 +101,11 @@ func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 func (cdc IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	indexEntry, ok := entry.(*IndexKeyEntry)
 	if !ok {
-		return nil, nil, ormerrors.ErrBadDecodeEntry
+		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
 	if indexEntry.TableName != cdc.messageType.Descriptor().FullName() {
-		return nil, nil, ormerrors.ErrBadDecodeEntry
+		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
 	bz, err := cdc.KeyCodec.EncodeKey(indexEntry.IndexValues)

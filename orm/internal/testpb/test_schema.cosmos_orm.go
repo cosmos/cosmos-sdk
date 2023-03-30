@@ -156,7 +156,7 @@ func (this exampleTableTable) Get(ctx context.Context, u32 uint32, i64 int64, st
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &exampleTable, nil
 }
@@ -178,7 +178,7 @@ func (this exampleTableTable) GetByU64Str(ctx context.Context, u64 uint64, str s
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &exampleTable, nil
 }
@@ -208,7 +208,7 @@ var _ ExampleTableTable = exampleTableTable{}
 func NewExampleTableTable(db ormtable.Schema) (ExampleTableTable, error) {
 	table := db.GetTable(&ExampleTable{})
 	if table == nil {
-		return nil, ormerrors.ErrTableNotFound.Wrap(string((&ExampleTable{}).ProtoReflect().Descriptor().FullName()))
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleTable{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return exampleTableTable{table}, nil
 }
@@ -318,7 +318,7 @@ func (this exampleAutoIncrementTableTable) Get(ctx context.Context, id uint64) (
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &exampleAutoIncrementTable, nil
 }
@@ -338,7 +338,7 @@ func (this exampleAutoIncrementTableTable) GetByX(ctx context.Context, x string)
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &exampleAutoIncrementTable, nil
 }
@@ -368,7 +368,7 @@ var _ ExampleAutoIncrementTableTable = exampleAutoIncrementTableTable{}
 func NewExampleAutoIncrementTableTable(db ormtable.Schema) (ExampleAutoIncrementTableTable, error) {
 	table := db.GetTable(&ExampleAutoIncrementTable{})
 	if table == nil {
-		return nil, ormerrors.ErrTableNotFound.Wrap(string((&ExampleAutoIncrementTable{}).ProtoReflect().Descriptor().FullName()))
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleAutoIncrementTable{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return exampleAutoIncrementTableTable{table.(ormtable.AutoIncrementTable)}, nil
 }
@@ -398,7 +398,7 @@ func (x exampleSingletonTable) Save(ctx context.Context, exampleSingleton *Examp
 func NewExampleSingletonTable(db ormtable.Schema) (ExampleSingletonTable, error) {
 	table := db.GetTable(&ExampleSingleton{})
 	if table == nil {
-		return nil, ormerrors.ErrTableNotFound.Wrap(string((&ExampleSingleton{}).ProtoReflect().Descriptor().FullName()))
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleSingleton{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return &exampleSingletonTable{table}, nil
 }
@@ -505,7 +505,7 @@ func (this exampleTimestampTable) Get(ctx context.Context, id uint64) (*ExampleT
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &exampleTimestamp, nil
 }
@@ -535,7 +535,7 @@ var _ ExampleTimestampTable = exampleTimestampTable{}
 func NewExampleTimestampTable(db ormtable.Schema) (ExampleTimestampTable, error) {
 	table := db.GetTable(&ExampleTimestamp{})
 	if table == nil {
-		return nil, ormerrors.ErrTableNotFound.Wrap(string((&ExampleTimestamp{}).ProtoReflect().Descriptor().FullName()))
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleTimestamp{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return exampleTimestampTable{table.(ormtable.AutoIncrementTable)}, nil
 }
@@ -635,7 +635,7 @@ func (this simpleExampleTable) Get(ctx context.Context, name string) (*SimpleExa
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &simpleExample, nil
 }
@@ -655,7 +655,7 @@ func (this simpleExampleTable) GetByUnique(ctx context.Context, unique string) (
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &simpleExample, nil
 }
@@ -685,7 +685,7 @@ var _ SimpleExampleTable = simpleExampleTable{}
 func NewSimpleExampleTable(db ormtable.Schema) (SimpleExampleTable, error) {
 	table := db.GetTable(&SimpleExample{})
 	if table == nil {
-		return nil, ormerrors.ErrTableNotFound.Wrap(string((&SimpleExample{}).ProtoReflect().Descriptor().FullName()))
+		return nil, ormerrors.TableNotFound.Wrap(string((&SimpleExample{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return simpleExampleTable{table}, nil
 }
@@ -779,7 +779,7 @@ func (this exampleAutoIncFieldNameTable) Get(ctx context.Context, foo uint64) (*
 		return nil, err
 	}
 	if !found {
-		return nil, ormerrors.ErrNotFound
+		return nil, ormerrors.NotFound
 	}
 	return &exampleAutoIncFieldName, nil
 }
@@ -809,7 +809,7 @@ var _ ExampleAutoIncFieldNameTable = exampleAutoIncFieldNameTable{}
 func NewExampleAutoIncFieldNameTable(db ormtable.Schema) (ExampleAutoIncFieldNameTable, error) {
 	table := db.GetTable(&ExampleAutoIncFieldName{})
 	if table == nil {
-		return nil, ormerrors.ErrTableNotFound.Wrap(string((&ExampleAutoIncFieldName{}).ProtoReflect().Descriptor().FullName()))
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleAutoIncFieldName{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return exampleAutoIncFieldNameTable{table.(ormtable.AutoIncrementTable)}, nil
 }

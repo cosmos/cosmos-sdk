@@ -78,7 +78,7 @@ func (t *autoIncrementTable) saveAutoIncrement(ctx context.Context, backend Back
 
 	if val == 0 {
 		if mode == saveModeUpdate {
-			return 0, ormerrors.ErrPrimaryKeyInvalidOnUpdate
+			return 0, ormerrors.PrimaryKeyInvalidOnUpdate
 		}
 
 		mode = saveModeInsert
@@ -90,7 +90,7 @@ func (t *autoIncrementTable) saveAutoIncrement(ctx context.Context, backend Back
 		messageRef.Set(t.autoIncField, protoreflect.ValueOfUint64(newPK))
 	} else {
 		if mode == saveModeInsert {
-			return 0, ormerrors.ErrAutoIncrementKeyAlreadySet
+			return 0, ormerrors.AutoIncrementKeyAlreadySet
 		}
 
 		mode = saveModeUpdate

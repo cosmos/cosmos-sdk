@@ -10,6 +10,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +49,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	store := ctx.KVStore(storeKey)
+	storeService := runtime.NewKVStoreService(storeKey)
 
 	var (
 		accountKeeper keeper.AccountKeeper
@@ -64,7 +65,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
-	require.NoError(t, v4.Migrate(ctx, store, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
 	ctx = app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
 	stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
@@ -640,7 +641,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	}
 }
 
-func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, addr sdk.AccAddress, expDelVesting sdk.Coins, expDelFree sdk.Coins) {
+func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, addr sdk.AccAddress, expDelVesting, expDelFree sdk.Coins) {
 	t.Helper()
 	baseAccount := ak.GetAccount(ctx, addr)
 	vDA, ok := baseAccount.(exported.VestingAccount)

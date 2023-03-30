@@ -85,7 +85,7 @@ type hashed struct {
 // cost. If the cost given is less than MinCost, the cost will be set to
 // DefaultCost, instead. Use CompareHashAndPassword, as defined in this package,
 // to compare the returned hashed password with its cleartext version.
-func GenerateFromPassword(salt []byte, password []byte, cost uint32) ([]byte, error) {
+func GenerateFromPassword(salt, password []byte, cost uint32) ([]byte, error) {
 	if len(salt) != maxSaltSize {
 		return nil, fmt.Errorf("salt len must be %v", maxSaltSize)
 	}
@@ -129,7 +129,7 @@ func Cost(hashedPassword []byte) (uint32, error) {
 	return p.cost, nil
 }
 
-func newFromPassword(salt []byte, password []byte, cost uint32) (*hashed, error) {
+func newFromPassword(salt, password []byte, cost uint32) (*hashed, error) {
 	if cost < MinCost {
 		cost = DefaultCost
 	}

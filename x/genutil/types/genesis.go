@@ -142,7 +142,7 @@ type ConsensusGenesis struct {
 
 // NewConsensusGenesis returns a ConsensusGenesis with given values.
 // It takes a proto consensus params so it can called from server export command.
-func NewConsensusGenesis(params *cmtproto.ConsensusParams, validators []cmttypes.GenesisValidator) *ConsensusGenesis {
+func NewConsensusGenesis(params cmtproto.ConsensusParams, validators []cmttypes.GenesisValidator) *ConsensusGenesis {
 	return &ConsensusGenesis{
 		Params: &cmttypes.ConsensusParams{
 			Block: cmttypes.BlockParams{

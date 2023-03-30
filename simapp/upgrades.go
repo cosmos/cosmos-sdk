@@ -36,21 +36,21 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		var keyTable paramstypes.KeyTable
 		switch subspace.Name() {
 		case authtypes.ModuleName:
-			keyTable = authtypes.ParamKeyTable()
+			keyTable = authtypes.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		case banktypes.ModuleName:
-			keyTable = banktypes.ParamKeyTable()
+			keyTable = banktypes.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		case stakingtypes.ModuleName:
-			keyTable = stakingtypes.ParamKeyTable()
+			keyTable = stakingtypes.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		case minttypes.ModuleName:
-			keyTable = minttypes.ParamKeyTable()
+			keyTable = minttypes.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		case distrtypes.ModuleName:
-			keyTable = distrtypes.ParamKeyTable()
+			keyTable = distrtypes.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		case slashingtypes.ModuleName:
-			keyTable = slashingtypes.ParamKeyTable()
+			keyTable = slashingtypes.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		case govtypes.ModuleName:
 			keyTable = govv1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		case crisistypes.ModuleName:
-			keyTable = crisistypes.ParamKeyTable()
+			keyTable = crisistypes.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 		}
 
 		if !subspace.HasKeyTable() {

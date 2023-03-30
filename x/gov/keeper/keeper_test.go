@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) reset() {
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
+	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
 
 	tp := TestProposal
 	_, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
@@ -93,7 +93,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
+	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
 
 	// create test proposals
 	tp := TestProposal

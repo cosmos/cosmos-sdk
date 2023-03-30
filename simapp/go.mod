@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230309163709-87da587416ba
 	cosmossdk.io/core v0.6.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/log v0.1.0
+	cosmossdk.io/log v1.0.0
 	cosmossdk.io/math v1.0.0
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
@@ -20,7 +20,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.48.0
-	github.com/cosmos/gogoproto v1.4.6
+	github.com/cosmos/gogoproto v1.4.7
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1

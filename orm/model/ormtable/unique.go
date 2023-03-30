@@ -198,7 +198,7 @@ var (
 // isNonTrivialUniqueKey checks if unique key fields are non-trivial, meaning that they
 // don't contain the full primary key. If they contain the full primary key, then
 // we can just use a regular index because there is no new unique constraint.
-func isNonTrivialUniqueKey(fields []protoreflect.Name, primaryKeyFields []protoreflect.Name) bool {
+func isNonTrivialUniqueKey(fields, primaryKeyFields []protoreflect.Name) bool {
 	have := map[protoreflect.Name]bool{}
 	for _, field := range fields {
 		have[field] = true

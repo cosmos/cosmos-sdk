@@ -128,7 +128,7 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 // encrypt/decrypt with armor
 
 // Encrypt and armor the private key.
-func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo string) string {
+func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
 		"kdf":  "bcrypt",
@@ -147,7 +147,7 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 // encrypt the given privKey with the passphrase using a randomly
 // generated salt and the xsalsa20 cipher. returns the salt and the
 // encrypted priv key.
-func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
+func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
 	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
@@ -161,7 +161,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes [
 }
 
 // UnarmorDecryptPrivKey returns the privkey byte slice, a string of the algo type, and an error
-func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptotypes.PrivKey, algo string, err error) {
+func UnarmorDecryptPrivKey(armorStr, passphrase string) (privKey cryptotypes.PrivKey, algo string, err error) {
 	blockType, header, encBytes, err := DecodeArmor(armorStr)
 	if err != nil {
 		return privKey, "", err
@@ -193,7 +193,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 	return privKey, header[headerType], err
 }
 
-func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey cryptotypes.PrivKey, err error) {
+func decryptPrivKey(saltBytes, encBytes []byte, passphrase string) (privKey cryptotypes.PrivKey, err error) {
 	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
 		return privKey, errorsmod.Wrap(err, "error generating bcrypt key from passphrase")

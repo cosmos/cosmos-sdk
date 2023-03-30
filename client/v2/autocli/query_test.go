@@ -163,7 +163,6 @@ func TestJSONParsing(t *testing.T) {
 		"-u", "27", // shorthand
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
-
 }
 
 func TestOptions(t *testing.T) {
@@ -393,7 +392,7 @@ type testClientConn struct {
 	errorOut     *bytes.Buffer
 }
 
-func (t *testClientConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (t *testClientConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
 	err := t.ClientConn.Invoke(ctx, method, args, reply, opts...)
 	t.lastRequest = args
 	t.lastResponse = reply

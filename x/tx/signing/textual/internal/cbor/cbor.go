@@ -22,7 +22,7 @@ const (
 	majorSimple     byte = 7
 )
 
-func encodeFirstByte(major byte, extra byte) byte {
+func encodeFirstByte(major, extra byte) byte {
 	return (major << 5) | extra&0x1F
 }
 

@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
-	store "cosmossdk.io/store/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -186,9 +186,9 @@ func init() {
 type NftInputs struct {
 	depinject.In
 
-	Key      *store.KVStoreKey
-	Cdc      codec.Codec
-	Registry cdctypes.InterfaceRegistry
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	Registry     cdctypes.InterfaceRegistry
 
 	AccountKeeper nft.AccountKeeper
 	BankKeeper    nft.BankKeeper
@@ -202,7 +202,7 @@ type NftOutputs struct {
 }
 
 func ProvideModule(in NftInputs) NftOutputs {
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.AccountKeeper, in.BankKeeper)
+	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.AccountKeeper, in.BankKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 
 	return NftOutputs{NFTKeeper: k, Module: m}

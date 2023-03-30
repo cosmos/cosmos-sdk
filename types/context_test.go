@@ -134,8 +134,8 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().True(ctx.IsReCheckTx())
 
 	// test consensus param
-	s.Require().Nil(ctx.ConsensusParams())
-	cp := &cmtproto.ConsensusParams{}
+	s.Require().Equal(cmtproto.ConsensusParams{}, ctx.ConsensusParams())
+	cp := cmtproto.ConsensusParams{}
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context

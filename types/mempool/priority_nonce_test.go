@@ -464,7 +464,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 		seed, s.iterations, duration.Milliseconds())
 }
 
-func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
+func genRandomTxs(seed int64, countTx, countAccount int) (res []testTx) {
 	maxPriority := 100
 	r := rand.New(rand.NewSource(seed))
 	accounts := simtypes.RandomAccounts(r, countAccount)
@@ -491,7 +491,7 @@ func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
 
 // since there are multiple valid ordered graph traversals for a given set of txs strict
 // validation against the ordered txs generated from this function is not possible as written
-func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffled []testTx) {
+func genOrderedTxs(seed int64, maxTx, numAcc int) (ordered, shuffled []testTx) {
 	r := rand.New(rand.NewSource(seed))
 	accountNonces := make(map[string]uint64)
 	prange := 10

@@ -54,7 +54,7 @@ func SaveConfig(configDir string, config *Config) error {
 	}
 
 	configPath := configFilename(configDir)
-	if err := os.WriteFile(configPath, buf.Bytes(), 0o644); err != nil {
+	if err := os.WriteFile(configPath, buf.Bytes(), 0o600); err != nil {
 		return err
 	}
 

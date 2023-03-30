@@ -54,7 +54,7 @@ func TxValidateSignaturesExec(clientCtx client.Context, filename string) (testut
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetValidateSignaturesCommand(), args)
 }
 
-func TxMultiSignExec(clientCtx client.Context, from string, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
+func TxMultiSignExec(clientCtx client.Context, from, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
 		filename,
@@ -97,7 +97,7 @@ func QueryAccountExec(clientCtx client.Context, address fmt.Stringer, extraArgs 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAccountCmd(), append(args, extraArgs...))
 }
 
-func TxMultiSignBatchExec(clientCtx client.Context, filename string, from string, sigFile1 string, sigFile2 string, extraArgs ...string) (testutil.BufferWriter, error) {
+func TxMultiSignBatchExec(clientCtx client.Context, filename, from, sigFile1, sigFile2 string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		filename,

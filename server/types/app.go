@@ -73,7 +73,7 @@ type (
 		// Height is the app's latest block height.
 		Height int64
 		// ConsensusParams are the exported consensus params for ABCI.
-		ConsensusParams *cmtproto.ConsensusParams
+		ConsensusParams cmtproto.ConsensusParams
 	}
 
 	// AppExporter is a function that dumps all app state to

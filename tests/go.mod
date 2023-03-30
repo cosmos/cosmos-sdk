@@ -9,11 +9,11 @@ require (
 	cosmossdk.io/log v0.1.0
 	cosmossdk.io/math v1.0.0
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
-	cosmossdk.io/store v0.1.0-alpha.1
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
-	cosmossdk.io/x/tx v0.3.1-0.20230321155358-6522dd1731b5
+	cosmossdk.io/x/tx v0.5.0
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cometbft/cometbft v0.37.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
@@ -191,6 +191,7 @@ require (
 // It must be in sync with SimApp temporary replaces
 replace (
 	// TODO tag all extracted modules after SDK refactor
+	cosmossdk.io/store => ../store
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft

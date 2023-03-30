@@ -26,6 +26,7 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Skip("disable till comet fixes data races")
 	s.T().Log("setting up integration test suite")
 
 	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
@@ -44,6 +45,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestStatusCommand() {
+	s.T().Skip("data race in comet is causing this to fail")
 	val0 := s.network.Validators[0]
 	cmd := rpc.StatusCommand()
 
@@ -55,6 +57,7 @@ func (s *IntegrationTestSuite) TestStatusCommand() {
 }
 
 func (s *IntegrationTestSuite) TestCLIQueryConn() {
+	s.T().Skip("data race in comet is causing this to fail")
 	var header metadata.MD
 
 	testClient := testdata.NewQueryClient(s.network.Validators[0].ClientCtx)
@@ -70,6 +73,7 @@ func (s *IntegrationTestSuite) TestCLIQueryConn() {
 }
 
 func (s *IntegrationTestSuite) TestQueryABCIHeight() {
+	s.T().Skip("data race in comet is causing this to fail")
 	testCases := []struct {
 		name      string
 		reqHeight int64

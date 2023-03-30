@@ -820,7 +820,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, isN
 			break
 		}
 
-		// When dealing with non-atomic execution, we want each message to has its own context
+		// When dealing with non-atomic execution, we want each message to have its own context
 		var writeFn func()
 		if isNonAtomic {
 			msgCtx, writeFn = ctx.CacheContext()

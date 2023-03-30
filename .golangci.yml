@@ -64,488 +64,139 @@ linters-settings:
     extra-rules: true
   dogsled:
     max-blank-identifiers: 5
-
-  gosec:
-    # To select a subset of rules to run.
-    # Available rules: https://github.com/securego/gosec#available-rules
-    # Default: [] - means include all rules
-    includes:
-      # - G101 # Look for hard coded credentials
-      - G102 # Bind to all interfaces
-      - G103 # Audit the use of unsafe block
-      - G104 # Audit errors not checked
-      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
-      - G107 # Url provided to HTTP request as taint input
-      - G108 # Profiling endpoint automatically exposed on /debug/pprof
-      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
-      - G110 # Potential DoS vulnerability via decompression bomb
-      - G111 # Potential directory traversal
-      - G112 # Potential slowloris attack
-      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
-      - G114 # Use of net/http serve function that has no support for setting timeouts
-      - G201 # SQL query construction using format string
-      - G202 # SQL query construction using string concatenation
-      - G203 # Use of unescaped data in HTML templates
-      - G204 # Audit use of command execution
-      - G301 # Poor file permissions used when creating a directory
-      - G302 # Poor file permissions used with chmod
-      - G303 # Creating tempfile using a predictable path
-      - G304 # File path provided as taint input
-      - G305 # File traversal when extracting zip/tar archive
-      - G306 # Poor file permissions used when writing to a new file
-      - G307 # Deferring a method which returns an error
-      - G401 # Detect the usage of DES, RC4, MD5 or SHA1
-      - G402 # Look for bad TLS connection settings
-      - G403 # Ensure minimum RSA key length of 2048 bits
-      - G404 # Insecure random number source (rand)
-      - G501 # Import blocklist: crypto/md5
-      - G502 # Import blocklist: crypto/des
-      - G503 # Import blocklist: crypto/rc4
-      - G504 # Import blocklist: net/http/cgi
-      - G505 # Import blocklist: crypto/sha1
-      - G601 # Implicit memory aliasing of items from a range statement
-    # To specify a set of rules to explicitly exclude.
-    # Available rules: https://github.com/securego/gosec#available-rules
-    # Default: []
-    # Exclude generated files
-    # Default: false
-    exclude-generated: false
-    # Filter out the issues with a lower severity than the given value.
-    # Valid options are: low, medium, high.
-    # Default: low
-    severity: low
-    # Filter out the issues with a lower confidence than the given value.
-    # Valid options are: low, medium, high.
-    # Default: low
-    confidence: low
-    # Concurrency value.
-    # Default: the number of logical CPUs usable by the current process.
-    concurrency: 12
-    # To specify the configuration of rules.
-    config:
-      # Globals are applicable to all rules.
-      global:
-        # If true, ignore #nosec in comments (and an alternative as well).
-        # Default: false
-        nosec: false
-        # Add an alternative comment prefix to #nosec (both will work at the same time).
-        # Default: ""
-        "#nosec": "#my-custom-nosec"
-        # Define whether nosec issues are counted as finding or not.
-        # Default: false
-        show-ignored: true
-        # Audit mode enables addition checks that for normal code analysis might be too nosy.
-        # Default: false
-        audit: false
-      # G101:
-      # Regexp pattern for variables and constants to find.
-      # Default: "(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred"
-      #  pattern: "(?i)example"
-      # If true, complain about all cases (even with low entropy).
-      # Default: false
-      #  ignore_entropy: false
-      # Maximum allowed entropy of the string.
-      # Default: "80.0"
-      #  entropy_threshold: "80.0"
-      # Maximum allowed value of entropy/string length.
-      # Is taken into account if entropy >= entropy_threshold/2.
-      # Default: "3.0"
-      #  per_char_threshold: "3.0"
-      # Calculate entropy for first N chars of the string.
-      # Default: "16"
-      #  truncate: "16"
-      # Additional functions to ignore while checking unhandled errors.
-      # Following functions always ignored:
-      #   bytes.Buffer:
-      #     - Write
-      #     - WriteByte
-      #     - WriteRune
-      #     - WriteString
-      #   fmt:
-      #     - Print
-      #     - Printf
-      #     - Println
-      #     - Fprint
-      #     - Fprintf
-      #     - Fprintln
-      #   strings.Builder:
-      #     - Write
-      #     - WriteByte
-      #     - WriteRune
-      #     - WriteString
-      #   io.PipeWriter:
-      #     - CloseWithError
-      #   hash.Hash:
-      #     - Write
-      #   os:
-      #     - Unsetenv
-      # Default: {}
-      G104:
-        fmt:
-          - Fscanf
-      G111:
-        # Regexp pattern to find potential directory traversal.
-        # Default: "http\\.Dir\\(\"\\/\"\\)|http\\.Dir\\('\\/'\\)"
-        pattern: "custom\\.Dir\\(\\)"
-      # Maximum allowed permissions mode for os.Mkdir and os.MkdirAll
-      # Default: "0750"
-      G301: "0750"
-      # Maximum allowed permissions mode for os.OpenFile and os.Chmod
-      # Default: "0600"
-      G302: "0600"
-      # Maximum allowed permissions mode for os.WriteFile and ioutil.WriteFile
-      # Default: "0600"
-      G306: "0600"
+  maligned:
+    # print struct with more effective memory layout or not, false by default
+    suggest-new: true
   nolintlint:
     allow-unused: false
     allow-leading-space: true
     require-explanation: true
     require-specific: false
-#  revive:
-#    # Maximum number of open files at the same time.
-#    # See https://github.com/mgechev/revive#command-line-flags
-#    # Defaults to unlimited.
-#    # When set to false, ignores files with "GENERATED" header, similar to golint.
-#    # See https://github.com/mgechev/revive#available-rules for details.
-#    # Default: false
-#    ignore-generated-header: true
-#    # Sets the default severity.
-#    # See https://github.com/mgechev/revive#configuration
-#    # Default: warning
-#    severity: warning
-#    # Enable all available rules.
-#    # Default: false
-#    enable-all-rules: false
-#    # Sets the default failure confidence.
-#    # This means that linting errors with less than 0.8 confidence will be ignored.
-#    # Default: 0.8
-#    confidence: 0.8
-#    rules:
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#add-constant
-#      - name: add-constant
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - maxLitCount: "3"
-#            allowStrs: '""'
-#            allowInts: "0,1,2"
-#            allowFloats: "0.0,0.,1.0,1.,2.0,2."
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#argument-limit
-#      - name: argument-limit
-#        severity: warning
-#        disabled: false
-#        arguments: [4]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#atomic
-#      - name: atomic
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#banned-characters
-#      - name: banned-characters
-#        severity: warning
-#        disabled: false
-#        arguments: ["Ω", "Σ", "σ", "7"]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#bare-return
-#      - name: bare-return
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#blank-imports
-#      - name: blank-imports
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#bool-literal-in-expr
-#      - name: bool-literal-in-expr
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#call-to-gc
-#      - name: call-to-gc
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#cognitive-complexity
-#      - name: cognitive-complexity
-#        severity: warning
-#        disabled: false
-#        arguments: [7]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#comment-spacings
-#      - name: comment-spacings
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - mypragma
-#          - otherpragma
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#confusing-naming
-#      - name: confusing-naming
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#confusing-results
-#      - name: confusing-results
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#constant-logical-expr
-#      - name: constant-logical-expr
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#context-as-argument
-#      - name: context-as-argument
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - allowTypesBefore: "*testing.T,*github.com/user/repo/testing.Harness"
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#context-keys-type
-#      - name: context-keys-type
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#cyclomatic
-#      - name: cyclomatic
-#        severity: warning
-#        disabled: false
-#        arguments: [3]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#datarace
-#      - name: datarace
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#deep-exit
-#      - name: deep-exit
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#defer
-#      - name: defer
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - ["call-chain", "loop"]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#dot-imports
-#      - name: dot-imports
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#duplicated-imports
-#      - name: duplicated-imports
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#early-return
-#      - name: early-return
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#empty-block
-#      - name: empty-block
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#empty-lines
-#      - name: empty-lines
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#error-naming
-#      - name: error-naming
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#error-return
-#      - name: error-return
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#error-strings
-#      - name: error-strings
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#errorf
-#      - name: errorf
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#exported
-#      - name: exported
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - "checkPrivateReceivers"
-#          - "sayRepetitiveInsteadOfStutters"
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#file-header
-#      - name: file-header
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - This is the text that must appear at the top of source files.
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#flag-parameter
-#      - name: flag-parameter
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-result-limit
-#      - name: function-result-limit
-#        severity: warning
-#        disabled: false
-#        arguments: [2]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-length
-#      - name: function-length
-#        severity: warning
-#        disabled: false
-#        arguments: [10, 0]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#get-return
-#      - name: get-return
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#identical-branches
-#      - name: identical-branches
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#if-return
-#      - name: if-return
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#increment-decrement
-#      - name: increment-decrement
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#indent-error-flow
-#      - name: indent-error-flow
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#imports-blacklist
-#      - name: imports-blacklist
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - "crypto/md5"
-#          - "crypto/sha1"
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#import-shadowing
-#      - name: import-shadowing
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#line-length-limit
-#      - name: line-length-limit
-#        severity: warning
-#        disabled: false
-#        arguments: [80]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#max-public-structs
-#      - name: max-public-structs
-#        severity: warning
-#        disabled: false
-#        arguments: [3]
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#modifies-parameter
-#      - name: modifies-parameter
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#modifies-value-receiver
-#      - name: modifies-value-receiver
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#nested-structs
-#      - name: nested-structs
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#optimize-operands-order
-#      - name: optimize-operands-order
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#package-comments
-#      - name: package-comments
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#range
-#      - name: range
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#range-val-in-closure
-#      - name: range-val-in-closure
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#range-val-address
-#      - name: range-val-address
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#receiver-naming
-#      - name: receiver-naming
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#redefines-builtin-id
-#      - name: redefines-builtin-id
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#string-of-int
-#      - name: string-of-int
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#string-format
-#      - name: string-format
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - - "core.WriteError[1].Message"
-#            - "/^([^A-Z]|$)/"
-#            - must not start with a capital letter
-#          - - "fmt.Errorf[0]"
-#            - '/(^|[^\.!?])$/'
-#            - must not end in punctuation
-#          - - panic
-#            - '/^[^\n]*$/'
-#            - must not contain line breaks
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#struct-tag
-#      - name: struct-tag
-#        arguments:
-#          - "json,inline"
-#          - "bson,outline,gnu"
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#superfluous-else
-#      - name: superfluous-else
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#time-equal
-#      - name: time-equal
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#time-naming
-#      - name: time-naming
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#var-naming
-#      - name: var-naming
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - ["ID"] # AllowList
-#          - ["VM"] # DenyList
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#var-declaration
-#      - name: var-declaration
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unconditional-recursion
-#      - name: unconditional-recursion
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unexported-naming
-#      - name: unexported-naming
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unexported-return
-#      - name: unexported-return
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unhandled-error
-#      - name: unhandled-error
-#        severity: warning
-#        disabled: false
-#        arguments:
-#          - "fmt.Printf"
-#          - "myFunction"
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unnecessary-stmt
-#      - name: unnecessary-stmt
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unreachable-code
-#      - name: unreachable-code
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unused-parameter
-#      - name: unused-parameter
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unused-receiver
-#      - name: unused-receiver
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#useless-break
-#      - name: useless-break
-#        severity: warning
-#        disabled: false
-#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#waitgroup-by-value
-#      - name: waitgroup-by-value
-#        severity: warning
-#        disabled: false
-#
+  gosimple:
+    # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
+    # Default: ["*"]
+    checks: ["all,-S1034"]
+
+  gocritic:
+    # Which checks should be enabled; can't be combined with 'disabled-checks'.
+    # See https://go-critic.github.io/overview#checks-overview.
+    # To check which checks are enabled run `GL_DEBUG=gocritic golangci-lint run`.
+    # By default, list of stable checks is used.
+    #    enabled-checks:
+    #      - nestingReduce
+    #      - unnamedResult
+    #      - ruleguard
+    #      - truncateCmp
+    # Which checks should be disabled; can't be combined with 'enabled-checks'.
+    # Default: []
+    disabled-checks:
+      - regexpMust
+      - ifElseChain
+      - singleCaseSwitch
+      - appendAssign
+      - typeSwitchVar
+    # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
+    # See https://github.com/go-critic/go-critic#usage -> section "Tags".
+    # Default: []
+#    enabled-tags:
+#      - diagnostic
+#      - style
+#      - performance
+#      - experimental
+#      - opinionated
+#    disabled-tags:
+#      - diagnostic
+#      - style
+#      - performance
+#      - experimental
+#      - opinionated
+#    # Settings passed to gocritic.
+#    # The settings key is the name of a supported gocritic checker.
+#    # The list of supported checkers can be find in https://go-critic.github.io/overview.
+#    settings:
+#      # Must be valid enabled check name.
+#      captLocal:
+#        # Whether to restrict checker to params only.
+#        # Default: true
+#        paramsOnly: false
+#      elseif:
+#        # Whether to skip balanced if-else pairs.
+#        # Default: true
+#        skipBalanced: false
+#      hugeParam:
+#        # Size in bytes that makes the warning trigger.
+#        # Default: 80
+#        sizeThreshold: 70
+#      nestingReduce:
+#        # Min number of statements inside a branch to trigger a warning.
+#        # Default: 5
+#        bodyWidth: 4
+#      rangeExprCopy:
+#        # Size in bytes that makes the warning trigger.
+#        # Default: 512
+#        sizeThreshold: 516
+#        # Whether to check test functions
+#        # Default: true
+#        skipTestFuncs: false
+#      rangeValCopy:
+#        # Size in bytes that makes the warning trigger.
+#        # Default: 128
+#        sizeThreshold: 32
+#        # Whether to check test functions.
+#        # Default: true
+#        skipTestFuncs: false
+#      ruleguard:
+#        # Enable debug to identify which 'Where' condition was rejected.
+#        # The value of the parameter is the name of a function in a ruleguard file.
+#        #
+#        # When a rule is evaluated:
+#        # If:
+#        #   The Match() clause is accepted; and
+#        #   One of the conditions in the Where() clause is rejected,
+#        # Then:
+#        #   ruleguard prints the specific Where() condition that was rejected.
+#        #
+#        # The flag is passed to the ruleguard 'debug-group' argument.
+#        # Default: ""
+#        debug: "emptyDecl"
+#        # Deprecated, use 'failOn' param.
+#        # If set to true, identical to failOn='all', otherwise failOn=''
+#        failOnError: false
+#        # Determines the behavior when an error occurs while parsing ruleguard files.
+#        # If flag is not set, log error and skip rule files that contain an error.
+#        # If flag is set, the value must be a comma-separated list of error conditions.
+#        # - 'all':    fail on all errors.
+#        # - 'import': ruleguard rule imports a package that cannot be found.
+#        # - 'dsl':    gorule file does not comply with the ruleguard DSL.
+#        # Default: ""
+#        failOn: dsl
+#        # Comma-separated list of file paths containing ruleguard rules.
+#        # If a path is relative, it is relative to the directory where the golangci-lint command is executed.
+#        # The special '${configDir}' variable is substituted with the absolute directory containing the golangci config file.
+#        # Glob patterns such as 'rules-*.go' may be specified.
+#        # Default: ""
+#        rules: "${configDir}/ruleguard/rules-*.go,${configDir}/myrule1.go"
+#        # Comma-separated list of enabled groups or skip empty to enable everything.
+#        # Tags can be defined with # character prefix.
+#        # Default: "<all>"
+#        enable: "myGroupName,#myTagName"
+#        # Comma-separated list of disabled groups or skip empty to enable everything.
+#        # Tags can be defined with # character prefix.
+#        # Default: ""
+#        disable: "myGroupName,#myTagName"
+#      tooManyResultsChecker:
+#        # Maximum number of results.
+#        # Default: 5
+#        maxResults: 10
+#      truncateCmp:
+#        # Whether to skip int/uint/uintptr types.
+#        # Default: true
+#        skipArchDependent: false
+#      underef:
+#        # Whether to skip (*x).method() calls where x is a pointer receiver.
+#        # Default: true
+#        skipRecvDeref: false
+#      unnamedResult:
+#        # Whether to check exported functions.
+#        # Default: false
+#        checkExported: true

@@ -281,7 +281,7 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 func TestNotFoundErrorsMsg(t *testing.T) {
 	b := &Builder{}
 	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transitions commands for the %s module", moduleName))
+		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err

@@ -1,7 +1,6 @@
 package hd_test
 
 import (
-	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -185,6 +184,8 @@ func TestDeriveHDPathRange(t *testing.T) {
 	}
 }
 
+/* EXAMPLES FOR REFERENCE BELOW
+
 func ExampleStringifyPathParams() {
 	path := hd.NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
@@ -303,3 +304,5 @@ func TestDerivePrivateKeyForPathDoNotCrash(t *testing.T) {
 		})
 	}
 }
+
+*/

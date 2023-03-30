@@ -27,7 +27,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.LegacyParam
 		panic("param changes array is empty")
 	}
 
-	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content { //nolint:staticcheck
+	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content { //nolint:staticcheck // SA1019: simulation.Content is deprecated: LegacyContent is deprecated
 		numChanges := simulation.RandIntBetween(r, 1, maxSimultaneousParamChanges)
 		paramChanges := make([]proposal.ParamChange, numChanges)
 

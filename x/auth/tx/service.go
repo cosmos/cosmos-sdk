@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // we need to use the old proto package, this package is what gives us compatibility magic
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

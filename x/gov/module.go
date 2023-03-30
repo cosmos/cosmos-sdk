@@ -163,8 +163,7 @@ func init() {
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
-//nolint:revive
-type GovInputs struct {
+type GovInputs struct { //nolint:revive // ignore the revive exported naming rules here
 	depinject.In
 
 	Config           *modulev1.Module

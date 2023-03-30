@@ -21,7 +21,6 @@ var (
 	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	gas     = uint64(10000)
 	msg     = testdata.NewTestMsg(addr1, addr2)
-	memo    = "foo"
 	timeout = uint64(10)
 )
 

@@ -152,7 +152,7 @@ func (w WeightedProposalMsg) MsgSimulatorFn() simulation.MsgSimulatorFn {
 type WeightedProposalContent struct {
 	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
 	defaultWeight      int                           // default weight
-	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function //nolint:staticcheck // SA1019: simulation.ContentSimulatorFn is deprecated: use MsgSimulatorFn instead
+	contentSimulatorFn simulation.ContentSimulatorFn //nolint:staticcheck // SA1019: simulation.ContentSimulatorFn is deprecated: use MsgSimulatorFn instead
 }
 
 func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent { //nolint:staticcheck // SA1019: simulation.ContentSimulatorFn is deprecated: use MsgSimulatorFn instead
@@ -167,7 +167,7 @@ func (w WeightedProposalContent) DefaultWeight() int {
 	return w.defaultWeight
 }
 
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
+func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn { //nolint:staticcheck // SA1019: simulation.ContentSimulatorFn is deprecated: use MsgSimulatorFn instead
 	return w.contentSimulatorFn
 }
 

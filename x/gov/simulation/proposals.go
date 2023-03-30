@@ -30,8 +30,8 @@ func SimulateTextProposal(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk
 }
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents() []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{
+func ProposalContents() []simtypes.WeightedProposalContent { //nolint:staticcheck // SA1019: simtypes.WeightedProposalContent is deprecated: LegacyWeightedProposalContent is deprecated
+	return []simtypes.WeightedProposalContent{ //nolint:staticcheck // SA1019: simtypes.WeightedProposalContent is deprecated: LegacyWeightedProposalContent is deprecated
 		simulation.NewWeightedProposalContent(
 			OpWeightMsgDeposit,
 			DefaultWeightTextProposal,
@@ -41,7 +41,7 @@ func ProposalContents() []simtypes.WeightedProposalContent {
 }
 
 // SimulateTextProposalContent returns a random text proposal content.
-func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
+func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content { //nolint:staticcheck // SA1019: simtypes.Content is deprecated: LegacyContent is deprecated
 	return v1beta1.NewTextProposal(
 		simtypes.RandStringOfLength(r, 140),
 		simtypes.RandStringOfLength(r, 5000),

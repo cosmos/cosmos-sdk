@@ -168,9 +168,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type AuthzInputs struct {
-	depinject.In
+type AuthzInputs struct { //nolint:revive // ignore revive's exported naming rules here for clarity
 
 	Key              *store.KVStoreKey
 	Cdc              codec.Codec
@@ -180,8 +178,7 @@ type AuthzInputs struct {
 	MsgServiceRouter baseapp.MessageRouter
 }
 
-//nolint:revive
-type AuthzOutputs struct {
+type AuthzOutputs struct { //nolint:revive // ignore revive's exported naming rules here for clarity
 	depinject.Out
 
 	AuthzKeeper keeper.Keeper

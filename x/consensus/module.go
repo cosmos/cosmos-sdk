@@ -141,7 +141,6 @@ func init() {
 	)
 }
 
-//nolint:revive
 type ConsensusInputs struct { //nolint:revive // ignore revive's exported namint rules here
 	depinject.In
 

@@ -261,9 +261,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	// Randomly shuffle validators, sort, and check it is equal to original sort
 	for i := 0; i < 10; i++ {
 		rand.Shuffle(10, func(i, j int) {
-			it := vals[i] //nolint:gocritic
-			vals[i] = vals[j]
-			vals[j] = it
+			vals[i], vals[j] = vals[j], vals[i]
 		})
 
 		types.Validators(vals).Sort()

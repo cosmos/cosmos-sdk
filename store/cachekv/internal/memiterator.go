@@ -60,7 +60,7 @@ func newMemIterator(start, end []byte, items BTree, ascending bool) *memIterator
 	return mi
 }
 
-func (mi *memIterator) Domain() (start []byte, end []byte) {
+func (mi *memIterator) Domain() (start, end []byte) {
 	return mi.start, mi.end
 }
 

@@ -24,7 +24,7 @@ type pairKeyCodec[K1, K2 any] interface {
 // NewMultiPair instantiates a new MultiPair index.
 // NOTE: when using this function you will need to type hint: doing NewMultiPair[Value]()
 // Example: if the value of the indexed map is string, you need to do NewMultiPair[string](...)
-func NewMultiPair[Value any, K1, K2 any](
+func NewMultiPair[Value, K1, K2 any](
 	sb *collections.SchemaBuilder,
 	prefix collections.Prefix,
 	name string,

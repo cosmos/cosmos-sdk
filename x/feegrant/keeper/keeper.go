@@ -180,7 +180,7 @@ func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddres
 }
 
 // getGrant returns entire grant between both accounts
-func (k Keeper) getGrant(ctx context.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
+func (k Keeper) getGrant(ctx context.Context, granter, grantee sdk.AccAddress) (*feegrant.Grant, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	bz, err := store.Get(key)

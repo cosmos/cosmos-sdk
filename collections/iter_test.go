@@ -175,7 +175,7 @@ func TestWalk(t *testing.T) {
 	}
 
 	u := uint64(0)
-	err = m.Walk(ctx, nil, func(key uint64, value uint64) bool {
+	err = m.Walk(ctx, nil, func(key, value uint64) bool {
 		if key == 5 {
 			return true
 		}

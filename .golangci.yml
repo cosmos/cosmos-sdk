@@ -63,7 +63,7 @@ linters-settings:
     # Default: false
     extra-rules: true
   dogsled:
-    max-blank-identifiers: 3
+    max-blank-identifiers: 5
   maligned:
     # print struct with more effective memory layout or not, false by default
     suggest-new: true

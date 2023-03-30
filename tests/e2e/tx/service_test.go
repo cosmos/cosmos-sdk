@@ -1124,7 +1124,7 @@ type protoTxProvider interface {
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
 // Deprecated: It's used for testing the deprecated Simulate gRPC endpoint
 // using a proto Tx field and for testing the TxEncode endpoint.
-func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
+func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) {
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)

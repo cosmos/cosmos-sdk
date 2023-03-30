@@ -3,9 +3,7 @@ run:
   timeout: 10m
   sort-results: true
   allow-parallel-runners: true
-  skip-dirs:
-    - crypto
-    - testutil/testdata
+  exclude-dir: testutil/testdata
 
 linters:
   disable-all: true
@@ -16,7 +14,6 @@ linters:
     - goconst
     - gocritic
     - gofumpt
-    - grouper
     - gosec
     - gosimple
     - govet
@@ -56,20 +53,15 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
-
   misspell:
     # Correct spellings using locale preferences for US or UK.
     # Setting locale to US will correct the British spelling of 'colour' to 'color'.
     # Default is to use a neutral variety of English.
     locale: US
   gofumpt:
-    # Module path which contains the source code being formatted.
-    # Default: ""
-    module-path: github.com/cosmos/cosmos-sdk
     # Choose whether to use the extra rules.
     # Default: false
     extra-rules: true
-
   dogsled:
     max-blank-identifiers: 3
   maligned:

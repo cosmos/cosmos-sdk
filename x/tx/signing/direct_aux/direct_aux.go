@@ -6,25 +6,25 @@ import (
 
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+
 	"cosmossdk.io/x/tx/signing"
 )
 
 // SignModeHandler is the SIGN_MODE_DIRECT_AUX implementation of signing.SignModeHandler.
 type SignModeHandler struct {
 	signersContext *signing.GetSignersContext
-	fileResolver   protodesc.Resolver
+	fileResolver   signing.ProtoFileResolver
 	typeResolver   protoregistry.MessageTypeResolver
 }
 
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
 	// FileResolver is the protodesc.Resolver to use for resolving proto files when unpacking any messages.
-	FileResolver protodesc.Resolver
+	FileResolver signing.ProtoFileResolver
 
 	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving proto types when unpacking any messages.
 	TypeResolver protoregistry.MessageTypeResolver

@@ -258,7 +258,7 @@ func encodeCollKey[K, V any, C Collection[K, V]](coll C, key K) ([]byte, error) 
 	return buffer, err
 }
 
-func getCollIter[K, V any, C Collection[K, V]](ctx context.Context, coll C, prefix []byte, start []byte, reverse bool) (collections.Iterator[K, V], error) {
+func getCollIter[K, V any, C Collection[K, V]](ctx context.Context, coll C, prefix, start []byte, reverse bool) (collections.Iterator[K, V], error) {
 	var end []byte
 	if prefix != nil {
 		start = append(prefix, start...)

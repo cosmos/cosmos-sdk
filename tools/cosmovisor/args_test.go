@@ -371,7 +371,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	absPath, perr := filepath.Abs(relPath)
 	s.Require().NoError(perr)
 
-	newConfig := func(home, name string, downloadBin, restartUpgrade bool, restartDelay int, skipBackup bool, dataBackupPath string, interval int, preupgradeMaxRetries int, disableLogs bool) *Config {
+	newConfig := func(home, name string, downloadBin, restartUpgrade bool, restartDelay int, skipBackup bool, dataBackupPath string, interval, preupgradeMaxRetries int, disableLogs bool) *Config {
 		return &Config{
 			Home:                  home,
 			Name:                  name,

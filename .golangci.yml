@@ -3,17 +3,21 @@ run:
   timeout: 10m
   sort-results: true
   allow-parallel-runners: true
-  exclude-dir: testutil/testdata
+  skip-dirs:
+    - crypto
+    - testutil/testdata
 
 linters:
   disable-all: true
   enable:
+    - bodyclose
     - depguard
     - dogsled
     - exportloopref
     - goconst
     - gocritic
     - gofumpt
+    - grouper
     - gosec
     - gosimple
     - govet
@@ -24,6 +28,7 @@ linters:
     - staticcheck
     - revive
     - stylecheck
+    - thelper
     - typecheck
     - unconvert
     - unused
@@ -53,22 +58,344 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
-  misspell:
-    # Correct spellings using locale preferences for US or UK.
-    # Setting locale to US will correct the British spelling of 'colour' to 'color'.
-    # Default is to use a neutral variety of English.
-    locale: US
+  dogsled:
+    # Checks assignments with too many blank identifiers.
+    # Default: 2
+    max-blank-identifiers: 4
+  thelper:
+    test:
+      # Check *testing.T is first param (or after context.Context) of helper function.
+      # Default: true
+      first: true
+      # Check *testing.T param has name t.
+      # Default: true
+      name: true
+      # Check t.Helper() begins helper function.
+      # Default: true
+      begin: true
+    benchmark:
+      # Check *testing.B is first param (or after context.Context) of helper function.
+      # Default: true
+      first: true
+      # Check *testing.B param has name b.
+      # Default: true
+      name: true
+      # Check b.Helper() begins helper function.
+      # Default: true
+      begin: true
+    tb:
+      # Check *testing.TB is first param (or after context.Context) of helper function.
+      # Default: true
+      first: true
+      # Check *testing.TB param has name tb.
+      # Default: true
+      name: true
+      # Check tb.Helper() begins helper function.
+      # Default: true
+      begin: true
+    fuzz:
+      # Check *testing.F is first param (or after context.Context) of helper function.
+      # Default: true
+      first: true
+      # Check *testing.F param has name f.
+      # Default: true
+      name: true
+      # Check f.Helper() begins helper function.
+      # Default: true
+      begin: true
+  govet:
+    # Report about shadowed variables.
+    # Default: false
+    check-shadowing: false
+    # Settings per analyzer.
+    settings:
+      unusedresult:
+        # Comma-separated list of functions whose results must be used
+        # (in addition to defaults context.WithCancel,context.WithDeadline,context.WithTimeout,context.WithValue,
+        # errors.New,fmt.Errorf,fmt.Sprint,fmt.Sprintf,sort.Reverse)
+        # Default []
+        funcs:
+          - pkg.MyFunc
+        # Comma-separated list of names of methods of type func() string whose results must be used
+        # (in addition to default Error,String)
+        # Default []
+        stringmethods:
+          - MyMethod
+    disable:
+      - fieldalignment
+      - shadow
+    # Disable all analyzers.
+    # Default: false
+    disable-all: false
+    # Enable analyzers by name (in addition to default).
+    # Run `go tool vet help` to see all analyzers.
+    # Default: []
+    # Enable all analyzers.
+    # Default: false
+    enable-all: true
+    # Disable analyzers by name.
+    # Run `go tool vet help` to see all analyzers.
+    # Default: []
+    # disable:
+  gosec:
+    # To select a subset of rules to run.
+    # Available rules: https://github.com/securego/gosec#available-rules
+    # Default: [] - means include all rules
+    includes:
+      - G101 # Look for hard coded credentials
+      - G102 # Bind to all interfaces
+      - G103 # Audit the use of unsafe block
+      - G104 # Audit errors not checked
+      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
+      - G107 # Url provided to HTTP request as taint input
+      - G108 # Profiling endpoint automatically exposed on /debug/pprof
+      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
+      - G110 # Potential DoS vulnerability via decompression bomb
+      - G111 # Potential directory traversal
+      - G112 # Potential slowloris attack
+      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
+      - G114 # Use of net/http serve function that has no support for setting timeouts
+      - G201 # SQL query construction using format string
+      - G202 # SQL query construction using string concatenation
+      - G203 # Use of unescaped data in HTML templates
+      - G204 # Audit use of command execution
+      - G301 # Poor file permissions used when creating a directory
+      - G302 # Poor file permissions used with chmod
+      - G303 # Creating tempfile using a predictable path
+      - G304 # File path provided as taint input
+      - G305 # File traversal when extracting zip/tar archive
+      - G306 # Poor file permissions used when writing to a new file
+      - G307 # Deferring a method which returns an error
+      - G401 # Detect the usage of DES, RC4, MD5 or SHA1
+      - G402 # Look for bad TLS connection settings
+      - G403 # Ensure minimum RSA key length of 2048 bits
+      - G404 # Insecure random number source (rand)
+      - G501 # Import blocklist: crypto/md5
+      - G502 # Import blocklist: crypto/des
+      - G503 # Import blocklist: crypto/rc4
+      - G504 # Import blocklist: net/http/cgi
+      - G505 # Import blocklist: crypto/sha1
+      - G601 # Implicit memory aliasing of items from a range statement
+
+    # Exclude generated files
+    # Default: false
+    exclude-generated: true
+    # Filter out the issues with a lower severity than the given value.
+    # Valid options are: low, medium, high.
+    # Default: low
+    severity: low
+    # Filter out the issues with a lower confidence than the given value.
+    # Valid options are: low, medium, high.
+    # Default: low
+    confidence: low
+    # Concurrency value.
+    # Default: the number of logical CPUs usable by the current process.
+    concurrency: 12
+    # To specify the configuration of rules.
+    config:
+      # Globals are applicable to all rules.
+      global:
+        # If true, ignore #nosec in comments (and an alternative as well).
+        # Default: false
+        nosec: true
+        # Add an alternative comment prefix to #nosec (both will work at the same time).
+        # Default: ""
+        "#nosec": "#my-custom-nosec"
+        # Define whether nosec issues are counted as finding or not.
+        # Default: false
+        show-ignored: true
+        # Audit mode enables addition checks that for normal code analysis might be too nosy.
+        # Default: false
+        audit: true
+      G101:
+        # Regexp pattern for variables and constants to find.
+        # Default: "(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred"
+        pattern: "(?i)example"
+        # If true, complain about all cases (even with low entropy).
+        # Default: false
+        ignore_entropy: false
+        # Maximum allowed entropy of the string.
+        # Default: "80.0"
+        entropy_threshold: "80.0"
+        # Maximum allowed value of entropy/string length.
+        # Is taken into account if entropy >= entropy_threshold/2.
+        # Default: "3.0"
+        per_char_threshold: "3.0"
+        # Calculate entropy for first N chars of the string.
+        # Default: "16"
+        truncate: "32"
+      # Additional functions to ignore while checking unhandled errors.
+      # Following functions always ignored:
+      #   bytes.Buffer:
+      #     - Write
+      #     - WriteByte
+      #     - WriteRune
+      #     - WriteString
+      #   fmt:
+      #     - Print
+      #     - Printf
+      #     - Println
+      #     - Fprint
+      #     - Fprintf
+      #     - Fprintln
+      #   strings.Builder:
+      #     - Write
+      #     - WriteByte
+      #     - WriteRune
+      #     - WriteString
+      #   io.PipeWriter:
+      #     - CloseWithError
+      #   hash.Hash:
+      #     - Write
+      #   os:
+      #     - Unsetenv
+      # Default: {}
+      G104:
+        fmt:
+          - Fscanf
+      G111:
+        # Regexp pattern to find potential directory traversal.
+        # Default: "http\\.Dir\\(\"\\/\"\\)|http\\.Dir\\('\\/'\\)"
+        pattern: "custom\\.Dir\\(\\)"
+      # Maximum allowed permissions mode for os.Mkdir and os.MkdirAll
+      # Default: "0750"
+      G301: "0750"
+      # Maximum allowed permissions mode for os.OpenFile and os.Chmod
+      # Default: "0600"
+      G302: "0600"
+      # Maximum allowed permissions mode for os.WriteFile and ioutil.WriteFile
+      # Default: "0600"
+      G306: "0600"
   gofumpt:
+    # Module path which contains the source code being formatted.
+    # Default: ""
+    module-path: github.com/cosmos/cosmos-sdk
     # Choose whether to use the extra rules.
     # Default: false
     extra-rules: true
-  dogsled:
-    max-blank-identifiers: 3
-  maligned:
-    # print struct with more effective memory layout or not, false by default
-    suggest-new: true
-  nolintlint:
-    allow-unused: false
-    allow-leading-space: true
-    require-explanation: false
-    require-specific: false
+
+  gocritic:
+    # Which checks should be enabled; can't be combined with 'disabled-checks'.
+    # See https://go-critic.github.io/overview#checks-overview.
+    # To check which checks are enabled run `GL_DEBUG=gocritic golangci-lint run`.
+    # By default, list of stable checks is used.
+    # Which checks should be disabled; can't be combined with 'enabled-checks'.
+    # Default: []
+    disabled-checks:
+      - regexpMust
+      - singleCaseSwitch
+      - ifElseChain
+      - typeSwitchVar
+      - hugeParam
+      - rangeValCopy
+      - appendAssign
+      - nestingReduce
+
+    # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
+    # See https://github.com/go-critic/go-critic#usage -> section "Tags".
+    # Default: []
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+
+    # Settings passed to gocritic.
+    # The settings key is the name of a supported gocritic checker.
+    # The list of supported checkers can be find in https://go-critic.github.io/overview.
+    settings:
+      # Must be valid enabled check name.
+      captLocal:
+        # Whether to restrict checker to params only.
+        # Default: true
+        paramsOnly: false
+      elseif:
+        # Whether to skip balanced if-else pairs.
+        # Default: true
+        skipBalanced: false
+      nestingReduce:
+        # Min number of statements inside a branch to trigger a warning.
+        # Default: 5
+        bodyWidth: 4
+      rangeExprCopy:
+        # Size in bytes that makes the warning trigger.
+        # Default: 512
+        sizeThreshold: 516
+        # Whether to check test functions
+        # Default: true
+        skipTestFuncs: false
+      rangeValCopy:
+        # Size in bytes that makes the warning trigger.
+        # Default: 128
+        sizeThreshold: 32
+        # Whether to check test functions.
+        # Default: true
+        skipTestFuncs: false
+
+      tooManyResultsChecker:
+        # Maximum number of results.
+        # Default: 5
+        maxResults: 10
+      truncateCmp:
+        # Whether to skip int/uint/uintptr types.
+        # Default: true
+        skipArchDependent: false
+      underef:
+        # Whether to skip (*x).method() calls where x is a pointer receiver.
+        # Default: true
+        skipRecvDeref: false
+      unnamedResult:
+        # Whether to check exported functions.
+        # Default: false
+        checkExported: true
+
+  gosimple:
+    # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
+    # Default: ["*"]
+    checks: ["all", "-S1034"]
+  revive:
+    ignore-generated-header: true
+    severity: error
+    enable-all-rules: true
+    rules:
+      - name: function-result-limit
+        disabled: true
+      - name: argument-limit
+        disabled: true
+      - name: function-length
+        disabled: true
+      - name: cyclomatic
+        disabled: true
+      - name: file-header
+        disabled: true
+      - name: max-public-structs
+        disabled: true
+      - name: cognitive-complexity
+        disabled: true
+      - name: line-length-limit
+        disabled: true
+      - name: banned-characters
+        disabled: true
+      - name: unhandled-error
+        arguments: ["fmt.Printf", "fmt.Println"]
+      - name: add-constant
+        disabled: true
+      - name: flag-parameter
+        disabled: true
+      - name: comment-spacings
+        disabled: true
+      - name: deep-exit
+        disabled: true
+      - name: defer
+        disabled: true
+      - name: nested-structs
+        disabled: true
+      - name: early-return
+        disabled: true
+      - name: import-shadowing
+        disabled: true
+      - name: modifies-value-receiver
+        disabled: true
+      - name: unnecessary-stmt
+        disabled: true

@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.9.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321173237-fe77d4bca302
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330094838-d21f58c638d5
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.54.0
@@ -22,7 +22,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/log v1.0.0 // indirect
 	cosmossdk.io/math v1.0.0 // indirect
-	cosmossdk.io/store v0.1.0-alpha.1 // indirect
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect

@@ -89,7 +89,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			s.SetupTest() // reset
 
 			tc.malleate()
-			res, err := s.consensusParamsKeeper.GetParams(s.ctx, &tc.req)
+			res, err := s.consensusParamsKeeper.Params(s.ctx, &tc.req)
 
 			if tc.expPass {
 				s.Require().NoError(err)

@@ -5,6 +5,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
@@ -21,7 +22,6 @@ import (
 func TestIntegrationTestExample(t *testing.T) {
 	// in this example we are testing the integration of the following modules:
 	// - mint, which directly depends on auth, bank and staking
-
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, mint.AppModuleBasic{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
@@ -43,17 +43,20 @@ func TestIntegrationTestExample(t *testing.T) {
 	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, keys[minttypes.StoreKey], nil, accountKeeper, nil, authtypes.FeeCollectorName, authority)
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil, nil)
 
-	integrationApp := integration.NewIntegrationApp(t, keys, authModule, mintModule)
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), keys, authModule, mintModule)
 
 	// register the message and query servers
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
 	minttypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), mintkeeper.NewMsgServerImpl(mintKeeper))
 	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintKeeper)
 
+	params := minttypes.DefaultParams()
+	params.BlocksPerYear = 10000
+
 	// now we can use the application to test an mint message
 	result, err := integrationApp.RunMsg(&minttypes.MsgUpdateParams{
 		Authority: authority,
-		Params:    minttypes.DefaultParams(),
+		Params:    params,
 	})
 	assert.NilError(t, err)
 	assert.Assert(t, result != nil)
@@ -62,4 +65,7 @@ func TestIntegrationTestExample(t *testing.T) {
 	resp := minttypes.MsgUpdateParamsResponse{}
 	err = encodingCfg.Codec.Unmarshal(result.Value, &resp)
 	assert.NilError(t, err)
+
+	// we can also check the state of the application
+	assert.DeepEqual(t, mintKeeper.GetParams(integrationApp.SDKContext()), params)
 }

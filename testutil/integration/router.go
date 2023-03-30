@@ -2,11 +2,9 @@ package integration
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -23,15 +21,13 @@ import (
 type App struct {
 	*baseapp.BaseApp
 
-	t      *testing.T
 	ctx    sdk.Context
 	logger log.Logger
 
 	queryHelper *baseapp.QueryServiceTestHelper
 }
 
-func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *App {
-	logger := log.NewTestLogger(t)
+func NewIntegrationApp(name string, logger log.Logger, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -41,7 +37,7 @@ func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, mod
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
 
-	bApp := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder())
+	bApp := baseapp.NewBaseApp(fmt.Sprintf("integration-app-%s", name), logger, db, txConfig.TxDecoder())
 	bApp.MountKVStores(keys)
 	bApp.SetInitChainer(func(ctx sdk.Context, req types.RequestInitChain) (types.ResponseInitChain, error) {
 		return types.ResponseInitChain{}, nil
@@ -51,17 +47,17 @@ func NewIntegrationApp(t *testing.T, keys map[string]*storetypes.KVStoreKey, mod
 	router.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(router)
 
-	assert.NilError(t, bApp.LoadLatestVersion())
+	if err := bApp.LoadLatestVersion(); err != nil {
+		panic(err)
+	}
 
 	ctx := bApp.NewContext(true, cmtproto.Header{})
 
 	return &App{
 		BaseApp: bApp,
 
-		t:      t,
-		logger: logger,
-		ctx:    ctx,
-
+		logger:      logger,
+		ctx:         ctx,
 		queryHelper: baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
 	}
 }

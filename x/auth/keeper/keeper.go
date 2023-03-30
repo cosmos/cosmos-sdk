@@ -251,7 +251,7 @@ func (ak AccountKeeper) decodeAccount(bz []byte) sdk.AccountI {
 }
 
 // MarshalAccount protobuf serializes an Account interface
-func (ak AccountKeeper) MarshalAccount(accountI sdk.AccountI) ([]byte, error) {
+func (ak AccountKeeper) MarshalAccount(accountI sdk.AccountI) ([]byte, error) { //nolint:interfacer
 	return ak.cdc.MarshalInterface(accountI)
 }
 

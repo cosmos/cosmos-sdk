@@ -17,6 +17,8 @@ import (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec // these are not hardcoded credentials
 const (
 	DefaultWeightMsgCreateValidator           int = 100
 	DefaultWeightMsgEditValidator             int = 5

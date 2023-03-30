@@ -111,12 +111,13 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			Use:   chain,
 			Short: fmt.Sprintf("Commands for the %s chain", chain),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				if reconfig {
+				switch {
+				case reconfig:
 					return reconfigure(cmd, config, configDir, chain)
-				} else if update {
+				case update:
 					cmd.Printf("Updating autocli data for %s\n", chain)
 					return chainInfo.Load(true)
-				} else {
+				default:
 					return cmd.Help()
 				}
 			},

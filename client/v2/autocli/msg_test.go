@@ -17,7 +17,7 @@ import (
 )
 
 var buildModuleMsgCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transitions commands for the %s module", moduleName))
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 
 	err := b.AddMsgServiceCommands(cmd, testCmdMsgDesc)
 	return cmd, err

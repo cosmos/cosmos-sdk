@@ -216,8 +216,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type MintInputs struct {
+type MintInputs struct { //nolint:revive // ignore the revive naming conventions here
 	depinject.In
 
 	ModuleKey              depinject.OwnModuleKey
@@ -234,8 +233,7 @@ type MintInputs struct {
 	StakingKeeper types.StakingKeeper
 }
 
-//nolint:revive
-type MintOutputs struct {
+type MintOutputs struct { //nolint:revive // ignore the revive naming conventions here
 	depinject.Out
 
 	MintKeeper keeper.Keeper

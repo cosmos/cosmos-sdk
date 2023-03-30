@@ -291,7 +291,7 @@ func floatDecimalPlaces(t *rapid.T, f float64) uint32 {
 	// Subtract exponent from base and check if negative
 	if res := basePlaces - exp; res <= 0 {
 		return 0
-	} else { //nolint:revive
+	} else {
 		return uint32(res)
 	}
 }

@@ -5,14 +5,13 @@ import (
 	"math"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 )
 
 // TestFieldSpec defines a test field against the testpb.ExampleTable message.
@@ -33,7 +32,7 @@ var TestFieldSpecs = []TestFieldSpec{
 	{
 		"str",
 		rapid.String().Filter(func(x string) bool {
-			// filter out null terminators
+			// Filter out null terminators.
 			return strings.IndexByte(x, 0) < 0
 		}).AsAny(),
 	},
@@ -81,7 +80,7 @@ var TestFieldSpecs = []TestFieldSpec{
 		"ts",
 		rapid.Custom(func(t *rapid.T) protoreflect.Message {
 			isNil := rapid.Float32().Draw(t, "isNil")
-			if isNil >= 0.95 { // draw a nil 5% of the time
+			if isNil >= 0.95 { // Draw a nil 5% of the time.
 				return nil
 			}
 			seconds := rapid.Int64Range(-9999999999, 9999999999).Draw(t, "seconds")

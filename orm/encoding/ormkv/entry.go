@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -18,7 +17,7 @@ type Entry interface {
 	// proto message name) this entry corresponds to.
 	GetTableName() protoreflect.FullName
 
-	// to allow new methods to be added without breakage, this interface
+	// To allow new methods to be added without breakage, this interface
 	// shouldn't be implemented outside this package,
 	// see https://go.dev/blog/module-compatibility
 	doNotImplement()
@@ -43,14 +42,13 @@ func (p *PrimaryKeyEntry) GetTableName() protoreflect.FullName {
 func (p *PrimaryKeyEntry) String() string {
 	if p.Value == nil {
 		return fmt.Sprintf("PK %s %s -> _", p.TableName, fmtValues(p.Key))
-	} else {
-		valBz, err := stablejson.Marshal(p.Value)
-		valStr := string(valBz)
-		if err != nil {
-			valStr = fmt.Sprintf("ERR %v", err)
-		}
-		return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), valStr)
 	}
+	valBz, err := stablejson.Marshal(p.Value)
+	valStr := string(valBz)
+	if err != nil {
+		valStr = fmt.Sprintf("ERR %v", err)
+	}
+	return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), valStr)
 }
 
 func fmtValues(values []protoreflect.Value) string {
@@ -66,7 +64,7 @@ func fmtValues(values []protoreflect.Value) string {
 	return strings.Join(parts, "/")
 }
 
-func (p *PrimaryKeyEntry) doNotImplement() {}
+func (*PrimaryKeyEntry) doNotImplement() {}
 
 // IndexKeyEntry represents a logically decoded index entry.
 type IndexKeyEntry struct {
@@ -83,7 +81,7 @@ type IndexKeyEntry struct {
 	IndexValues []protoreflect.Value
 
 	// PrimaryKey represents the primary key values, it is empty if this is a
-	// prefix key
+	// prefix key.
 	PrimaryKey []protoreflect.Value
 }
 
@@ -91,9 +89,9 @@ func (i *IndexKeyEntry) GetTableName() protoreflect.FullName {
 	return i.TableName
 }
 
-func (i *IndexKeyEntry) doNotImplement() {}
+func (*IndexKeyEntry) doNotImplement() {}
 
-func (i *IndexKeyEntry) string() string {
+func (i *IndexKeyEntry) returnString() string {
 	return fmt.Sprintf("%s %s : %s -> %s", i.TableName, fmtFields(i.Fields), fmtValues(i.IndexValues), fmtValues(i.PrimaryKey))
 }
 
@@ -107,10 +105,9 @@ func fmtFields(fields []protoreflect.Name) string {
 
 func (i *IndexKeyEntry) String() string {
 	if i.IsUnique {
-		return fmt.Sprintf("UNIQ %s", i.string())
-	} else {
-		return fmt.Sprintf("IDX %s", i.string())
+		return fmt.Sprintf("UNIQ %s", i.returnString())
 	}
+	return fmt.Sprintf("IDX %s", i.returnString())
 }
 
 // SeqEntry represents a sequence for tables with auto-incrementing primary keys.
@@ -126,7 +123,7 @@ func (s *SeqEntry) GetTableName() protoreflect.FullName {
 	return s.TableName
 }
 
-func (s *SeqEntry) doNotImplement() {}
+func (*SeqEntry) doNotImplement() {}
 
 func (s *SeqEntry) String() string {
 	return fmt.Sprintf("SEQ %s %d", s.TableName, s.Value)

@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type KeyCodec struct {
@@ -43,7 +41,7 @@ func NewKeyCodec(prefix []byte, messageType protoreflect.MessageType, fieldNames
 		nonTerminal := i != n-1
 		field := messageFields.ByName(fieldNames[i])
 		if field == nil {
-			return nil, ormerrors.FieldNotFound.Wrapf("field %s on %s", fieldNames[i], messageType.Descriptor().FullName())
+			return nil, ormerrors.ErrFieldNotFound.Wrapf("field %s on %s", fieldNames[i], messageType.Descriptor().FullName())
 		}
 		cdc, err := ormfield.GetCodec(field, nonTerminal)
 		if err != nil {
@@ -89,11 +87,11 @@ func (cdc *KeyCodec) EncodeKey(values []protoreflect.Value) ([]byte, error) {
 
 	n := len(values)
 	if n > len(cdc.fieldCodecs) {
-		return nil, ormerrors.IndexOutOfBounds.Wrapf("cannot encode %d values into %d fields", n, len(cdc.fieldCodecs))
+		return nil, ormerrors.ErrIndexOutOfBounds.Wrapf("cannot encode %d values into %d fields", n, len(cdc.fieldCodecs))
 	}
 
 	for i := 0; i < n; i++ {
-		if err = cdc.fieldCodecs[i].Encode(values[i], w); err != nil {
+		if err := cdc.fieldCodecs[i].Encode(values[i], w); err != nil {
 			return nil, err
 		}
 	}
@@ -170,13 +168,13 @@ func (cdc *KeyCodec) CompareKeys(values1, values2 []protoreflect.Value) int {
 	var cmp int
 	for i := 0; i < n; i++ {
 		cmp = cdc.fieldCodecs[i].Compare(values1[i], values2[i])
-		// any non-equal parts determine our ordering
+		// Any non-equal parts determine our ordering.
 		if cmp != 0 {
 			return cmp
 		}
 	}
 
-	// values are equal but arrays of different length
+	// Values are equal but arrays of different length.
 	if j == k {
 		return 0
 	} else if j < k {
@@ -192,7 +190,7 @@ func (cdc KeyCodec) ComputeKeyBufferSize(values []protoreflect.Value) (int, erro
 	size := cdc.fixedSize
 	n := len(values)
 	for _, sz := range cdc.variableSizers {
-		// handle prefix key encoding case where don't need all the sizers
+		// Handle prefix key encoding case where don't need all the sizers.
 		if sz.i >= n {
 			return size, nil
 		}
@@ -235,7 +233,7 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 	}
 
 	if longest > len(cdc.fieldCodecs) {
-		return ormerrors.IndexOutOfBounds
+		return ormerrors.ErrIndexOutOfBounds
 	}
 
 	i := 0
@@ -248,13 +246,13 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 
 		cmp = fieldCdc.Compare(x, y)
 		if cmp > 0 {
-			return ormerrors.InvalidRangeIterationKeys.Wrapf(
+			return ormerrors.ErrInvalidRangeIterationKeys.Wrapf(
 				"start must be before end for field %s",
 				cdc.fieldDescriptors[i].FullName(),
 			)
 		} else if !fieldCdc.IsOrdered() && cmp != 0 {
 			descriptor := cdc.fieldDescriptors[i]
-			return ormerrors.InvalidRangeIterationKeys.Wrapf(
+			return ormerrors.ErrInvalidRangeIterationKeys.Wrapf(
 				"field %s of kind %s doesn't support ordered range iteration",
 				descriptor.FullName(),
 				descriptor.Kind(),
@@ -264,16 +262,16 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 		}
 	}
 
-	// the last prefix value must not be equal if the key lengths are the same
+	// The last prefix value must not be equal if the key lengths are the same.
 	if lenStart == lenEnd {
 		if cmp == 0 {
-			return ormerrors.InvalidRangeIterationKeys
+			return ormerrors.ErrInvalidRangeIterationKeys
 		}
 	} else {
-		// check any remaining values in start or end
+		// Check any remaining values in start or end.
 		for j := i; j < longest; j++ {
 			if !cdc.fieldCodecs[j].IsOrdered() {
-				return ormerrors.InvalidRangeIterationKeys.Wrapf(
+				return ormerrors.ErrInvalidRangeIterationKeys.Wrapf(
 					"field %s of kind %s doesn't support ordered range iteration",
 					cdc.fieldDescriptors[j].FullName(),
 					cdc.fieldDescriptors[j].Kind(),

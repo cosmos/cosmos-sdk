@@ -11,7 +11,7 @@ import (
 // FixedUint64Codec encodes uint64 values as 8-byte big-endian integers.
 type FixedUint64Codec struct{}
 
-func (u FixedUint64Codec) FixedBufferSize() int {
+func (FixedUint64Codec) FixedBufferSize() int {
 	return 8
 }
 
@@ -19,21 +19,21 @@ func (u FixedUint64Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 	return u.FixedBufferSize(), nil
 }
 
-func (u FixedUint64Codec) IsOrdered() bool {
+func (FixedUint64Codec) IsOrdered() bool {
 	return true
 }
 
-func (u FixedUint64Codec) Compare(v1, v2 protoreflect.Value) int {
+func (FixedUint64Codec) Compare(v1, v2 protoreflect.Value) int {
 	return compareUint(v1, v2)
 }
 
-func (u FixedUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
+func (FixedUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
 	var x uint64
 	err := binary.Read(r, binary.BigEndian, &x)
 	return protoreflect.ValueOfUint64(x), err
 }
 
-func (u FixedUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
+func (FixedUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	var x uint64
 	if value.IsValid() {
 		x = value.Uint()
@@ -61,12 +61,12 @@ func compareUint(v1, v2 protoreflect.Value) int {
 // CompactUint64Codec encodes uint64 values using EncodeCompactUint64.
 type CompactUint64Codec struct{}
 
-func (c CompactUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
+func (CompactUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
 	x, err := DecodeCompactUint64(r)
 	return protoreflect.ValueOfUint64(x), err
 }
 
-func (c CompactUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
+func (CompactUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	var x uint64
 	if value.IsValid() {
 		x = value.Uint()
@@ -75,15 +75,15 @@ func (c CompactUint64Codec) Encode(value protoreflect.Value, w io.Writer) error 
 	return err
 }
 
-func (c CompactUint64Codec) Compare(v1, v2 protoreflect.Value) int {
+func (CompactUint64Codec) Compare(v1, v2 protoreflect.Value) int {
 	return compareUint(v1, v2)
 }
 
-func (c CompactUint64Codec) IsOrdered() bool {
+func (CompactUint64Codec) IsOrdered() bool {
 	return true
 }
 
-func (c CompactUint64Codec) FixedBufferSize() int {
+func (CompactUint64Codec) FixedBufferSize() int {
 	return 9
 }
 
@@ -100,12 +100,12 @@ func (c CompactUint64Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 // fit in 4, and values less than 2^46 will fit in 6.
 func EncodeCompactUint64(x uint64) []byte {
 	switch {
-	case x < 16384: // 2^14
+	case x < 16384: // 2^14.
 		buf := make([]byte, 2)
 		buf[0] = byte(x >> 8)
 		buf[1] = byte(x)
 		return buf
-	case x < 1073741824: // 2^30
+	case x < 1073741824: // 2^30.
 		buf := make([]byte, 4)
 		buf[0] = 0x40
 		buf[0] |= byte(x >> 24)
@@ -113,7 +113,7 @@ func EncodeCompactUint64(x uint64) []byte {
 		buf[2] = byte(x >> 8)
 		buf[3] = byte(x)
 		return buf
-	case x < 70368744177664: // 2^46
+	case x < 70368744177664: // 2^46.
 		buf := make([]byte, 6)
 		buf[0] = 0x80
 		buf[0] |= byte(x >> 40)

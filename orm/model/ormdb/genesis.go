@@ -18,9 +18,9 @@ type appModuleGenesisWrapper struct {
 	moduleDB
 }
 
-func (m appModuleGenesisWrapper) IsOnePerModuleType() {}
+func (appModuleGenesisWrapper) IsOnePerModuleType() {}
 
-func (m appModuleGenesisWrapper) IsAppModule() {}
+func (appModuleGenesisWrapper) IsAppModule() {}
 
 func (m appModuleGenesisWrapper) DefaultGenesis(target appmodule.GenesisTarget) error {
 	tableNames := maps.Keys(m.tablesByName)
@@ -83,7 +83,7 @@ func (m appModuleGenesisWrapper) ValidateGenesis(source appmodule.GenesisSource)
 		for name, err := range errMap {
 			allErrors += fmt.Sprintf("Error in JSON for table %s: %v\n", name, err)
 		}
-		return ormerrors.JSONValidationError.Wrap(allErrors)
+		return ormerrors.ErrJSONValidationError.Wrap(allErrors)
 	}
 
 	return nil

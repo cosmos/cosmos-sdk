@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -24,7 +23,7 @@ var _ EntryCodec = &SeqCodec{}
 
 func (s SeqCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	if !bytes.Equal(k, s.prefix) {
-		return nil, ormerrors.UnexpectedDecodePrefix
+		return nil, ormerrors.ErrUnexpectedDecodePrefix
 	}
 
 	x, err := s.DecodeValue(v)
@@ -41,11 +40,11 @@ func (s SeqCodec) DecodeEntry(k, v []byte) (Entry, error) {
 func (s SeqCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	seqEntry, ok := entry.(*SeqEntry)
 	if !ok {
-		return nil, nil, ormerrors.BadDecodeEntry
+		return nil, nil, ormerrors.ErrBadDecodeEntry
 	}
 
 	if seqEntry.TableName != s.messageType {
-		return nil, nil, ormerrors.BadDecodeEntry
+		return nil, nil, ormerrors.ErrBadDecodeEntry
 	}
 
 	return s.prefix, s.EncodeValue(seqEntry.Value), nil
@@ -55,13 +54,13 @@ func (s SeqCodec) Prefix() []byte {
 	return s.prefix
 }
 
-func (s SeqCodec) EncodeValue(seq uint64) (v []byte) {
+func (SeqCodec) EncodeValue(seq uint64) (v []byte) {
 	bz := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(bz, seq)
 	return bz[:n]
 }
 
-func (s SeqCodec) DecodeValue(v []byte) (uint64, error) {
+func (SeqCodec) DecodeValue(v []byte) (uint64, error) {
 	if len(v) == 0 {
 		return 0, nil
 	}

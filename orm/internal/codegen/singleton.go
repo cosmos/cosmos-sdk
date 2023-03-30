@@ -3,12 +3,10 @@ package codegen
 import (
 	"fmt"
 
+	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/dynamicpb"
-
-	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 type singletonGen struct {
@@ -59,7 +57,7 @@ func (s singletonGen) genInterfaceGuard() {
 func (s singletonGen) genMethods() {
 	receiver := fmt.Sprintf("func (x %s) ", s.messageTableReceiverName(s.msg))
 	varName := s.param(s.msg.GoIdent.GoName)
-	// Get
+	// Get.
 	s.P(receiver, "Get(ctx ", contextPkg.Ident("Context"), ") (*", s.msg.GoIdent.GoName, ", error) {")
 	s.P(varName, " := &", s.msg.GoIdent.GoName, "{}")
 	s.P("_, err := x.table.Get(ctx, ", varName, ")")
@@ -67,7 +65,7 @@ func (s singletonGen) genMethods() {
 	s.P("}")
 	s.P()
 
-	// Save
+	// Save.
 	s.P(receiver, "Save(ctx ", contextPkg.Ident("Context"), ", ", varName, " *", s.msg.GoIdent.GoName, ") error {")
 	s.P("return x.table.Save(ctx, ", varName, ")")
 	s.P("}")

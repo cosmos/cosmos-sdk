@@ -6,26 +6,23 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/protobuf/types/known/timestamppb"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
-
+	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 )
 
 func TestCodec(t *testing.T) {
 	for _, ks := range testutil.TestFieldSpecs {
-		testCodec(t, ks)
+		doTestCodec(t, ks)
 	}
 }
 
-func testCodec(t *testing.T, spec testutil.TestFieldSpec) {
+func doTestCodec(t *testing.T, spec testutil.TestFieldSpec) {
+	t.Helper()
 	t.Run(fmt.Sprintf("%s %v", spec.FieldName, false), func(t *testing.T) {
 		testCodecNT(t, spec.FieldName, spec.Gen, false)
 	})
@@ -35,6 +32,7 @@ func testCodec(t *testing.T, spec testutil.TestFieldSpec) {
 }
 
 func testCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.Generator[any], nonTerminal bool) {
+	t.Helper()
 	cdc, err := testutil.MakeTestCodec(fname, nonTerminal)
 	assert.NilError(t, err)
 	rapid.Check(t, func(t *rapid.T) {
@@ -68,15 +66,15 @@ func checkEncodeDecodeSize(t *rapid.T, x protoreflect.Value, cdc ormfield.Codec)
 
 func TestUnsupportedFields(t *testing.T) {
 	_, err := ormfield.GetCodec(nil, false)
-	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.ErrInvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("repeated"), false)
-	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.ErrInvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("map"), false)
-	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.ErrInvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("msg"), false)
-	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.ErrInvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("oneof"), false)
-	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.ErrInvalidKeyField.Error())
 }
 
 func TestCompactUInt32(t *testing.T) {
@@ -99,7 +97,7 @@ func TestCompactUInt32(t *testing.T) {
 	testEncodeDecode(1073741823, 4)
 	testEncodeDecode(1073741824, 5)
 
-	// randomized tests
+	// Randomized tests.
 	rapid.Check(t, func(t *rapid.T) {
 		x := rapid.Uint32().Draw(t, "x")
 		y := rapid.Uint32().Draw(t, "y")
@@ -147,7 +145,7 @@ func TestCompactUInt64(t *testing.T) {
 	testEncodeDecode(70368744177663, 6)
 	testEncodeDecode(70368744177664, 9)
 
-	// randomized tests
+	// Randomized tests.
 	rapid.Check(t, func(t *rapid.T) {
 		x := rapid.Uint64().Draw(t, "x")
 		y := rapid.Uint64().Draw(t, "y")
@@ -176,7 +174,7 @@ func TestCompactUInt64(t *testing.T) {
 func TestTimestamp(t *testing.T) {
 	cdc := ormfield.TimestampCodec{}
 
-	// nil value
+	// Nil value.
 	buf := &bytes.Buffer{}
 	assert.NilError(t, cdc.Encode(protoreflect.Value{}, buf))
 	assert.Equal(t, 1, len(buf.Bytes()))
@@ -184,7 +182,7 @@ func TestTimestamp(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, !val.IsValid())
 
-	// no nanos
+	// No nanos.
 	ts := timestamppb.New(time.Date(2022, 1, 1, 12, 30, 15, 0, time.UTC))
 	val = protoreflect.ValueOfMessage(ts.ProtoReflect())
 	buf = &bytes.Buffer{}
@@ -194,7 +192,7 @@ func TestTimestamp(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, 0, cdc.Compare(val, val2))
 
-	// nanos
+	// Nanos.
 	ts = timestamppb.New(time.Date(2022, 1, 1, 12, 30, 15, 235809753, time.UTC))
 	val = protoreflect.ValueOfMessage(ts.ProtoReflect())
 	buf = &bytes.Buffer{}

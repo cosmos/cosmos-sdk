@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -21,11 +20,11 @@ var _ IndexCodec = &IndexKeyCodec{}
 // provided message descriptor, index and primary key fields.
 func NewIndexKeyCodec(prefix []byte, messageType protoreflect.MessageType, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
 	if len(indexFields) == 0 {
-		return nil, ormerrors.InvalidTableDefinition.Wrapf("index fields are empty")
+		return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("index fields are empty")
 	}
 
 	if len(primaryKeyFields) == 0 {
-		return nil, ormerrors.InvalidTableDefinition.Wrapf("primary key fields are empty")
+		return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("primary key fields are empty")
 	}
 
 	indexFieldMap := map[protoreflect.Name]int{}
@@ -63,14 +62,14 @@ func NewIndexKeyCodec(prefix []byte, messageType protoreflect.MessageType, index
 
 func (cdc IndexKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
 	values, err := cdc.DecodeKey(bytes.NewReader(k))
-	// got prefix key
+	// Got prefix key.
 	if err == io.EOF {
 		return values, nil, nil
 	} else if err != nil {
 		return nil, nil, err
 	}
 
-	// got prefix key
+	// Got prefix key.
 	if len(values) < len(cdc.fieldCodecs) {
 		return values, nil, nil
 	}
@@ -102,11 +101,11 @@ func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 func (cdc IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	indexEntry, ok := entry.(*IndexKeyEntry)
 	if !ok {
-		return nil, nil, ormerrors.BadDecodeEntry
+		return nil, nil, ormerrors.ErrBadDecodeEntry
 	}
 
 	if indexEntry.TableName != cdc.messageType.Descriptor().FullName() {
-		return nil, nil, ormerrors.BadDecodeEntry
+		return nil, nil, ormerrors.ErrBadDecodeEntry
 	}
 
 	bz, err := cdc.KeyCodec.EncodeKey(indexEntry.IndexValues)

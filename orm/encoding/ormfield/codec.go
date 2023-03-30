@@ -4,11 +4,9 @@ import (
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // Codec defines an interface for decoding and encoding values in ORM index keys.
@@ -50,37 +48,37 @@ var (
 )
 
 // GetCodec returns the Codec for the provided field if one is defined.
-// nonTerminal should be set to true if this value is being encoded as a
+// NonTerminal should be set to true if this value is being encoded as a
 // non-terminal segment of a multi-part key.
 func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, error) {
 	if field == nil {
-		return nil, ormerrors.InvalidKeyField.Wrap("nil field")
+		return nil, ormerrors.ErrInvalidKeyField.Wrap("nil field")
 	}
 	if field.IsList() {
-		return nil, ormerrors.InvalidKeyField.Wrapf("repeated field %s", field.FullName())
+		return nil, ormerrors.ErrInvalidKeyField.Wrapf("repeated field %s", field.FullName())
 	}
 
 	if field.ContainingOneof() != nil {
-		return nil, ormerrors.InvalidKeyField.Wrapf("oneof field %s", field.FullName())
+		return nil, ormerrors.ErrInvalidKeyField.Wrapf("oneof field %s", field.FullName())
 	}
 
 	if field.HasOptionalKeyword() {
-		return nil, ormerrors.InvalidKeyField.Wrapf("optional field %s", field.FullName())
+		return nil, ormerrors.ErrInvalidKeyField.Wrapf("optional field %s", field.FullName())
 	}
 
 	switch field.Kind() {
 	case protoreflect.BytesKind:
 		if nonTerminal {
 			return NonTerminalBytesCodec{}, nil
-		} else {
-			return BytesCodec{}, nil
 		}
+		return BytesCodec{}, nil
+
 	case protoreflect.StringKind:
 		if nonTerminal {
 			return NonTerminalStringCodec{}, nil
-		} else {
-			return StringCodec{}, nil
 		}
+		return StringCodec{}, nil
+
 	case protoreflect.Uint32Kind:
 		return CompactUint32Codec{}, nil
 	case protoreflect.Fixed32Kind:
@@ -105,9 +103,9 @@ func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, erro
 		case durationFullName:
 			return DurationCodec{}, nil
 		default:
-			return nil, ormerrors.InvalidKeyField.Wrapf("%s of type %s", field.FullName(), msgName)
+			return nil, ormerrors.ErrInvalidKeyField.Wrapf("%s of type %s", field.FullName(), msgName)
 		}
 	default:
-		return nil, ormerrors.InvalidKeyField.Wrapf("%s of kind %s", field.FullName(), field.Kind())
+		return nil, ormerrors.ErrInvalidKeyField.Wrapf("%s of kind %s", field.FullName(), field.Kind())
 	}
 }

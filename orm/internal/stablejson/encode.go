@@ -34,9 +34,9 @@ func Marshal(message proto.Message) ([]byte, error) {
 				fd = last.Step.FieldDescriptor()
 				_, _ = fmt.Fprintf(buf, "%q:", fd.Name())
 			case protopath.ListIndexStep:
-				fd = beforeLast.Step.FieldDescriptor() // lists always appear in the context of a repeated field
+				fd = beforeLast.Step.FieldDescriptor() // Lists always appear in the context of a repeated field.
 			case protopath.MapIndexStep:
-				fd = beforeLast.Step.FieldDescriptor() // maps always appear in the context of a repeated field
+				fd = beforeLast.Step.FieldDescriptor() // Maps always appear in the context of a repeated field.
 				_, _ = fmt.Fprintf(buf, "%v:", last.Step.MapIndex().Interface())
 			case protopath.AnyExpandStep:
 				_, _ = fmt.Fprintf(buf, `"@type":%q`, last.Value.Message().Descriptor().FullName())

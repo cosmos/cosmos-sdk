@@ -10,12 +10,12 @@ import (
 // EnumCodec encodes enum values as varints.
 type EnumCodec struct{}
 
-func (e EnumCodec) Decode(r Reader) (protoreflect.Value, error) {
+func (EnumCodec) Decode(r Reader) (protoreflect.Value, error) {
 	x, err := binary.ReadVarint(r)
 	return protoreflect.ValueOfEnum(protoreflect.EnumNumber(x)), err
 }
 
-func (e EnumCodec) Encode(value protoreflect.Value, w io.Writer) error {
+func (EnumCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	var x protoreflect.EnumNumber
 	if value.IsValid() {
 		x = value.Enum()
@@ -26,7 +26,7 @@ func (e EnumCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	return err
 }
 
-func (e EnumCodec) Compare(v1, v2 protoreflect.Value) int {
+func (EnumCodec) Compare(v1, v2 protoreflect.Value) int {
 	var x, y protoreflect.EnumNumber
 	if v1.IsValid() {
 		x = v1.Enum()
@@ -43,11 +43,11 @@ func (e EnumCodec) Compare(v1, v2 protoreflect.Value) int {
 	}
 }
 
-func (e EnumCodec) IsOrdered() bool {
+func (EnumCodec) IsOrdered() bool {
 	return false
 }
 
-func (e EnumCodec) FixedBufferSize() int {
+func (EnumCodec) FixedBufferSize() int {
 	return binary.MaxVarintLen32
 }
 

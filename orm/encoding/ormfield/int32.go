@@ -19,14 +19,14 @@ const (
 	int32Offset = int32Max + 1
 )
 
-func (i Int32Codec) Decode(r Reader) (protoreflect.Value, error) {
+func (Int32Codec) Decode(r Reader) (protoreflect.Value, error) {
 	var x uint32
 	err := binary.Read(r, binary.BigEndian, &x)
 	y := int64(x) - int32Offset
 	return protoreflect.ValueOfInt32(int32(y)), err
 }
 
-func (i Int32Codec) Encode(value protoreflect.Value, w io.Writer) error {
+func (Int32Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	var x int64
 	if value.IsValid() {
 		x = value.Int()
@@ -35,15 +35,15 @@ func (i Int32Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	return binary.Write(w, binary.BigEndian, uint32(x))
 }
 
-func (i Int32Codec) Compare(v1, v2 protoreflect.Value) int {
+func (Int32Codec) Compare(v1, v2 protoreflect.Value) int {
 	return compareInt(v1, v2)
 }
 
-func (i Int32Codec) IsOrdered() bool {
+func (Int32Codec) IsOrdered() bool {
 	return true
 }
 
-func (i Int32Codec) FixedBufferSize() int {
+func (Int32Codec) FixedBufferSize() int {
 	return 4
 }
 

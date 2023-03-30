@@ -30,7 +30,7 @@ type fileDescriptorDBOptions struct {
 type fileDescriptorDB struct {
 	id             uint32
 	prefix         []byte
-	tablesById     map[uint32]ormtable.Table
+	tablesByID     map[uint32]ormtable.Table
 	tablesByName   map[protoreflect.FullName]ormtable.Table
 	fileDescriptor protoreflect.FileDescriptor
 }
@@ -41,7 +41,7 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 	schema := &fileDescriptorDB{
 		id:             options.ID,
 		prefix:         prefix,
-		tablesById:     map[uint32]ormtable.Table{},
+		tablesByID:     map[uint32]ormtable.Table{},
 		tablesByName:   map[protoreflect.FullName]ormtable.Table{},
 		fileDescriptor: fileDescriptor,
 	}
@@ -68,7 +68,7 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 			JSONValidator:   options.JSONValidator,
 			BackendResolver: options.BackendResolver,
 		})
-		if errors.Is(err, ormerrors.NoTableDescriptor) {
+		if errors.Is(err, ormerrors.ErrNoTableDescriptor) {
 			continue
 		}
 		if err != nil {
@@ -76,13 +76,13 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 		}
 
 		id := table.ID()
-		if _, ok := schema.tablesById[id]; ok {
-			return nil, ormerrors.InvalidTableId.Wrapf("duplicate ID %d for %s", id, tableName)
+		if _, ok := schema.tablesByID[id]; ok {
+			return nil, ormerrors.ErrInvalidTableID.Wrapf("duplicate ID %d for %s", id, tableName)
 		}
-		schema.tablesById[id] = table
+		schema.tablesByID[id] = table
 
 		if _, ok := schema.tablesByName[tableName]; ok {
-			return nil, ormerrors.InvalidTableDefinition.Wrapf("duplicate table %s", tableName)
+			return nil, ormerrors.ErrInvalidTableDefinition.Wrapf("duplicate table %s", tableName)
 		}
 		schema.tablesByName[tableName] = table
 	}
@@ -103,12 +103,12 @@ func (f fileDescriptorDB) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 	}
 
 	if id > math.MaxUint32 {
-		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
+		return nil, ormerrors.ErrUnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
-	table, ok := f.tablesById[uint32(id)]
+	table, ok := f.tablesByID[uint32(id)]
 	if !ok {
-		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find table with id %d", id)
+		return nil, ormerrors.ErrUnexpectedDecodePrefix.Wrapf("can't find table with id %d", id)
 	}
 
 	return table.DecodeEntry(k, v)
@@ -117,7 +117,7 @@ func (f fileDescriptorDB) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 func (f fileDescriptorDB) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	table, ok := f.tablesByName[entry.GetTableName()]
 	if !ok {
-		return nil, nil, ormerrors.BadDecodeEntry.Wrapf("can't find table %s", entry.GetTableName())
+		return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("can't find table %s", entry.GetTableName())
 	}
 
 	return table.EncodeEntry(entry)

@@ -24,10 +24,10 @@ type tableImpl struct {
 	indexes               []Index
 	indexesByFields       map[fieldnames.FieldNames]concreteIndex
 	uniqueIndexesByFields map[fieldnames.FieldNames]UniqueIndex
-	indexesById           map[uint32]Index
-	entryCodecsById       map[uint32]ormkv.EntryCodec
+	indexesByID           map[uint32]Index
+	entryCodecsByID       map[uint32]ormkv.EntryCodec
 	tablePrefix           []byte
-	tableId               uint32
+	tableID               uint32
 	typeResolver          TypeResolver
 	customJSONValidator   func(message proto.Message) error
 }
@@ -44,7 +44,7 @@ func (t tableImpl) PrimaryKey() UniqueIndex {
 }
 
 func (t tableImpl) GetIndexByID(id uint32) Index {
-	return t.indexesById[id]
+	return t.indexesByID[id]
 }
 
 func (t tableImpl) Save(ctx context.Context, message proto.Message) error {
@@ -53,7 +53,7 @@ func (t tableImpl) Save(ctx context.Context, message proto.Message) error {
 		return err
 	}
 
-	return t.save(ctx, backend, message, saveModeDefault)
+	return t.write(ctx, backend, message, saveModeDefault)
 }
 
 func (t tableImpl) Insert(ctx context.Context, message proto.Message) error {
@@ -62,7 +62,7 @@ func (t tableImpl) Insert(ctx context.Context, message proto.Message) error {
 		return err
 	}
 
-	return t.save(ctx, backend, message, saveModeInsert)
+	return t.write(ctx, backend, message, saveModeInsert)
 }
 
 func (t tableImpl) Update(ctx context.Context, message proto.Message) error {
@@ -71,10 +71,10 @@ func (t tableImpl) Update(ctx context.Context, message proto.Message) error {
 		return err
 	}
 
-	return t.save(ctx, backend, message, saveModeUpdate)
+	return t.write(ctx, backend, message, saveModeUpdate)
 }
 
-func (t tableImpl) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) error {
+func (t tableImpl) write(ctx context.Context, backend Backend, message proto.Message, mode saveMode) error {
 	writer := newBatchIndexCommitmentWriter(backend)
 	defer writer.Close()
 	return t.doSave(ctx, writer, message, mode)
@@ -95,7 +95,7 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 
 	if haveExisting {
 		if mode == saveModeInsert {
-			return ormerrors.AlreadyExists.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
+			return ormerrors.ErrOrmAlreadyExists.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 
 		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
@@ -106,7 +106,7 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 		}
 	} else {
 		if mode == saveModeUpdate {
-			return ormerrors.NotFound.Wrapf("%q", mref.Descriptor().FullName())
+			return ormerrors.ErrNotFound.Wrapf("%q", mref.Descriptor().FullName())
 		}
 
 		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
@@ -141,7 +141,6 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 			if err != nil {
 				return err
 			}
-
 		}
 		if writeHooks := writer.WriteHooks(); writeHooks != nil {
 			writer.enqueueHook(func() {
@@ -183,20 +182,20 @@ func (t tableImpl) Indexes() []Index {
 	return t.indexes
 }
 
-func (t tableImpl) DefaultJSON() json.RawMessage {
+func (tableImpl) DefaultJSON() json.RawMessage {
 	return json.RawMessage("[]")
 }
 
-func (t tableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message) error) error {
-	decoder, err := t.startDecodeJson(reader)
+func (t tableImpl) decodeJSON(reader io.Reader, onMsg func(message proto.Message) error) error {
+	decoder, err := t.startDecodeJSON(reader)
 	if err != nil {
 		return err
 	}
 
-	return t.doDecodeJson(decoder, nil, onMsg)
+	return t.doDecodeJSON(decoder, nil, onMsg)
 }
 
-func (t tableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
+func (tableImpl) startDecodeJSON(reader io.Reader) (*json.Decoder, error) {
 	decoder := json.NewDecoder(reader)
 	token, err := decoder.Token()
 	if err != nil {
@@ -204,7 +203,7 @@ func (t tableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
 	}
 
 	if token != json.Delim('[') {
-		return nil, ormerrors.JSONImportError.Wrapf("expected [ got %s", token)
+		return nil, ormerrors.ErrJSONImportError.Wrapf("expected [ got %s", token)
 	}
 
 	return decoder, nil
@@ -213,21 +212,21 @@ func (t tableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
 // onFirst is called on the first RawMessage and used for auto-increment tables
 // to decode the sequence in which case it should return true.
 // onMsg is called on every decoded message
-func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json.RawMessage) bool, onMsg func(message proto.Message) error) error {
+func (t tableImpl) doDecodeJSON(decoder *json.Decoder, onFirst func(message json.RawMessage) bool, onMsg func(message proto.Message) error) error {
 	unmarshalOptions := protojson.UnmarshalOptions{Resolver: t.typeResolver}
 
 	first := true
 	for decoder.More() {
-		var rawJson json.RawMessage
-		err := decoder.Decode(&rawJson)
+		var rawJSON json.RawMessage
+		err := decoder.Decode(&rawJSON)
 		if err != nil {
-			return ormerrors.JSONImportError.Wrapf("%s", err)
+			return ormerrors.ErrJSONImportError.Wrapf("%s", err)
 		}
 
 		if first {
 			first = false
 			if onFirst != nil {
-				if onFirst(rawJson) {
+				if onFirst(rawJSON) {
 					// if onFirst handled this, skip decoding into a proto message
 					continue
 				}
@@ -235,7 +234,7 @@ func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json
 		}
 
 		msg := t.MessageType().New().Interface()
-		err = unmarshalOptions.Unmarshal(rawJson, msg)
+		err = unmarshalOptions.Unmarshal(rawJSON, msg)
 		if err != nil {
 			return err
 		}
@@ -252,7 +251,7 @@ func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json
 	}
 
 	if token != json.Delim(']') {
-		return ormerrors.JSONImportError.Wrapf("expected ] got %s", token)
+		return ormerrors.ErrJSONImportError.Wrapf("expected ] got %s", token)
 	}
 
 	return nil
@@ -280,12 +279,11 @@ func DefaultJSONValidator(message proto.Message) error {
 }
 
 func (t tableImpl) ValidateJSON(reader io.Reader) error {
-	return t.decodeJson(reader, func(message proto.Message) error {
+	return t.decodeJSON(reader, func(message proto.Message) error {
 		if t.customJSONValidator != nil {
 			return t.customJSONValidator(message)
-		} else {
-			return DefaultJSONValidator(message)
 		}
+		return DefaultJSONValidator(message)
 	})
 }
 
@@ -295,18 +293,18 @@ func (t tableImpl) ImportJSON(ctx context.Context, reader io.Reader) error {
 		return err
 	}
 
-	return t.decodeJson(reader, func(message proto.Message) error {
-		return t.save(ctx, backend, message, saveModeDefault)
+	return t.decodeJSON(reader, func(message proto.Message) error {
+		return t.write(ctx, backend, message, saveModeDefault)
 	})
 }
 
-func (t tableImpl) ExportJSON(context context.Context, writer io.Writer) error {
+func (t tableImpl) ExportJSON(ctx context.Context, writer io.Writer) error {
 	_, err := writer.Write([]byte("["))
 	if err != nil {
 		return err
 	}
 
-	return t.doExportJSON(context, writer, true)
+	return t.doExportJSON(ctx, writer, true)
 }
 
 func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer, start bool) error {
@@ -346,7 +344,6 @@ func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer, start boo
 		if err != nil {
 			return err
 		}
-
 	}
 }
 
@@ -363,12 +360,12 @@ func (t tableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 	}
 
 	if id > math.MaxUint32 {
-		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
+		return nil, ormerrors.ErrUnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
-	idx, ok := t.entryCodecsById[uint32(id)]
+	idx, ok := t.entryCodecsByID[uint32(id)]
 	if !ok {
-		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find field with id %d", id)
+		return nil, ormerrors.ErrUnexpectedDecodePrefix.Wrapf("can't find field with id %d", id)
 	}
 
 	return idx.DecodeEntry(k, v)
@@ -381,17 +378,17 @@ func (t tableImpl) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	case *ormkv.IndexKeyEntry:
 		idx, ok := t.indexesByFields[fieldnames.FieldsFromNames(entry.Fields)]
 		if !ok {
-			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("can't find index with fields %s", entry.Fields)
+			return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("can't find index with fields %s", entry.Fields)
 		}
 
 		return idx.EncodeEntry(entry)
 	default:
-		return nil, nil, ormerrors.BadDecodeEntry.Wrapf("%s", entry)
+		return nil, nil, ormerrors.ErrBadDecodeEntry.Wrapf("%s", entry)
 	}
 }
 
 func (t tableImpl) ID() uint32 {
-	return t.tableId
+	return t.tableID
 }
 
 func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, err error) {
@@ -401,7 +398,7 @@ func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, 
 	}
 
 	keyValues := t.primaryKeyIndex.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
-	return t.primaryKeyIndex.has(backend, keyValues)
+	return t.primaryKeyIndex.checkHas(backend, keyValues)
 }
 
 // Get retrieves the message if one exists for the primary key fields
@@ -414,7 +411,7 @@ func (t tableImpl) Get(ctx context.Context, message proto.Message) (found bool, 
 	}
 
 	keyValues := t.primaryKeyIndex.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
-	return t.primaryKeyIndex.get(backend, message, keyValues)
+	return t.primaryKeyIndex.doGet(backend, message, keyValues)
 }
 
 var (

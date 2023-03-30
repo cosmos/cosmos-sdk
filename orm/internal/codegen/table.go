@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
-
-	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
-
-	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 type tableGen struct {
@@ -48,7 +46,7 @@ func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1.TableDescr
 }
 
 func (t tableGen) gen() {
-	t.getTableInterface()
+	t.tableInterface()
 	t.genIterator()
 	t.genIndexKeys()
 	t.genStruct()
@@ -57,7 +55,7 @@ func (t tableGen) gen() {
 	t.genConstructor()
 }
 
-func (t tableGen) getTableInterface() {
+func (t tableGen) tableInterface() {
 	t.P("type ", t.messageTableInterfaceName(t.msg), " interface {")
 	t.P("Insert(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	if t.table.PrimaryKey.AutoIncrement {
@@ -85,16 +83,16 @@ func (t tableGen) getTableInterface() {
 }
 
 // returns the has and get (in that order) function signature for unique indexes.
-func (t tableGen) uniqueIndexSig(idxFields string) (string, string, string) {
+func (t tableGen) uniqueIndexSig(idxFields string) (hasFuncSig, getFuncSig, getFuncName string) {
 	fieldsSlc := strings.Split(idxFields, ",")
 	camelFields := fieldsToCamelCase(idxFields)
 
 	hasFuncName := "HasBy" + camelFields
-	getFuncName := "GetBy" + camelFields
+	getFuncName = "GetBy" + camelFields
 	args := t.fieldArgsFromStringSlice(fieldsSlc)
 
-	hasFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (found bool, err error)", hasFuncName, args)
-	getFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (*%s, error)", getFuncName, args, t.msg.GoIdent.GoName)
+	hasFuncSig = fmt.Sprintf("%s (ctx context.Context, %s) (found bool, err error)", hasFuncName, args)
+	getFuncSig = fmt.Sprintf("%s (ctx context.Context, %s) (*%s, error)", getFuncName, args, t.msg.GoIdent.GoName)
 	return hasFuncSig, getFuncSig, getFuncName
 }
 
@@ -107,27 +105,6 @@ func (t tableGen) genUniqueIndexSig(idx *ormv1.SecondaryIndexDescriptor) {
 
 func (t tableGen) iteratorName() string {
 	return t.msg.GoIdent.GoName + "Iterator"
-}
-
-func (t tableGen) getSig() string {
-	res := "Get" + t.msg.GoIdent.GoName + "("
-	res += t.fieldsArgs(t.primaryKeyFields.Names())
-	res += ") (*" + t.QualifiedGoIdent(t.msg.GoIdent) + ", error)"
-	return res
-}
-
-func (t tableGen) hasSig() string {
-	t.P("Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error)")
-	return ""
-}
-
-func (t tableGen) listSig() string {
-	res := "List" + t.msg.GoIdent.GoName + "("
-	res += t.indexKeyInterfaceName()
-	res += ") ("
-	res += t.iteratorName()
-	res += ", error)"
-	return res
 }
 
 func (t tableGen) fieldArgsFromStringSlice(names []string) string {
@@ -171,7 +148,7 @@ func (t tableGen) genTableImpl() {
 	varName := t.param(t.msg.GoIdent.GoName)
 	varTypeName := t.QualifiedGoIdent(t.msg.GoIdent)
 
-	// these methods all have the same impl sans their names. so we can just loop and replace.
+	// These methods all have the same impl sans their names. So we can just loop and replace.
 	methods := []string{"Insert", "Update", "Save", "Delete"}
 	for _, method := range methods {
 		t.P(receiver, method, "(ctx ", contextPkg.Ident("Context"), ", ", varName, " *", varTypeName, ") error {")
@@ -192,13 +169,13 @@ func (t tableGen) genTableImpl() {
 		t.P()
 	}
 
-	// Has
+	// Has.
 	t.P(receiver, "Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error) {")
 	t.P("return ", receiverVar, ".table.PrimaryKey().Has(ctx, ", t.primaryKeyFields.String(), ")")
 	t.P("}")
 	t.P()
 
-	// Get
+	// Get.
 	t.P(receiver, "Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", varTypeName, ", error) {")
 	t.P("var ", varName, " ", varTypeName)
 	t.P("found, err := ", receiverVar, ".table.PrimaryKey().Get(ctx, &", varName, ", ", t.primaryKeyFields.String(), ")")
@@ -216,7 +193,7 @@ func (t tableGen) genTableImpl() {
 		fields := strings.Split(idx.Fields, ",")
 		hasName, getName, _ := t.uniqueIndexSig(idx.Fields)
 
-		// has
+		// Has.
 		t.P("func (", receiverVar, " ", t.messageTableReceiverName(t.msg), ") ", hasName, "{")
 		t.P("return ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
 			ormTablePkg.Ident("UniqueIndex"), ").Has(ctx,")
@@ -227,7 +204,7 @@ func (t tableGen) genTableImpl() {
 		t.P("}")
 		t.P()
 
-		// get
+		// Get.
 		varName := t.param(t.msg.GoIdent.GoName)
 		varTypeName := t.msg.GoIdent.GoName
 		t.P("func (", receiverVar, " ", t.messageTableReceiverName(t.msg), ") ", getName, "{")
@@ -249,28 +226,28 @@ func (t tableGen) genTableImpl() {
 		t.P()
 	}
 
-	// List
+	// List.
 	t.P(receiver, "List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
 	t.P("it, err := ", receiverVar, ".table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
 	t.P()
 
-	// ListRange
+	// ListRange.
 	t.P(receiver, "ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
 	t.P("it, err := ", receiverVar, ".table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
 	t.P()
 
-	// DeleteBy
+	// DeleteBy.
 	t.P(receiver, "DeleteBy(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ") error {")
 	t.P("return ", receiverVar, ".table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)")
 	t.P("}")
 	t.P()
 	t.P()
 
-	// DeleteRange
+	// DeleteRange.
 	t.P(receiver, "DeleteRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ") error {")
 	t.P("return ", receiverVar, ".table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())")
 	t.P("}")

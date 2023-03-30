@@ -5,14 +5,13 @@ import (
 	"io"
 	"testing"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"gotest.tools/v3/assert"
-	"pgregory.net/rapid"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"gotest.tools/v3/assert"
+	"pgregory.net/rapid"
 )
 
 func TestKeyCodec(t *testing.T) {
@@ -24,10 +23,10 @@ func TestKeyCodec(t *testing.T) {
 			bz1 := assertEncDecKey(t, key, keyValues)
 
 			if key.Codec.IsFullyOrdered() {
-				// check if ordered keys have ordered encodings
+				// Check if ordered keys have ordered encodings.
 				keyValues2 := key.Draw(t, "values2")
 				bz2 := assertEncDecKey(t, key, keyValues2)
-				// bytes comparison should equal comparison of values
+				// Bytes comparison should equal comparison of values.
 				assert.Equal(t, key.Codec.CompareKeys(keyValues, keyValues2), bytes.Compare(bz1, bz2))
 			}
 		}
@@ -170,12 +169,13 @@ func TestCompareValues(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
 			assert.Equal(
 				t, test.expect,
 				cdc.CompareKeys(test.values1, test.values2),
 			)
-			// CheckValidRangeIterationKeys should give comparable results
+			// CheckValidRangeIterationKeys should give comparable results.
 			err := cdc.CheckValidRangeIterationKeys(test.values1, test.values2)
 			if test.validRange {
 				assert.NilError(t, err)
@@ -202,6 +202,7 @@ func TestDecodePrefixKey(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
 			bz, err := cdc.EncodeKey(test.values)
 			assert.NilError(t, err)
@@ -286,6 +287,7 @@ func TestValidRangeIterationKeys(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
 			err := cdc.CheckValidRangeIterationKeys(test.values1, test.values2)
 			if test.expectErr {

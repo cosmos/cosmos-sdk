@@ -3,12 +3,11 @@ package ormkv_test
 import (
 	"testing"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"gotest.tools/v3/assert"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"gotest.tools/v3/assert"
 )
 
 var aFullName = (&testpb.ExampleTable{}).ProtoReflect().Descriptor().FullName()
@@ -22,7 +21,7 @@ func TestPrimaryKeyEntry(t *testing.T) {
 	assert.Equal(t, `PK testpb.ExampleTable 1/abc -> {"i32":-1}`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
-	// prefix key
+	// Prefix key.
 	entry = &ormkv.PrimaryKeyEntry{
 		TableName: aFullName,
 		Key:       encodeutil.ValuesOf(uint32(1), "abc"),
@@ -53,7 +52,7 @@ func TestIndexKeyEntry(t *testing.T) {
 	assert.Equal(t, `UNIQ testpb.ExampleTable u32 : 10 -> abc/-1`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
-	// prefix key
+	// Prefix key.
 	entry = &ormkv.IndexKeyEntry{
 		TableName:   aFullName,
 		Fields:      []protoreflect.Name{"u32", "i32", "str"},
@@ -63,7 +62,7 @@ func TestIndexKeyEntry(t *testing.T) {
 	assert.Equal(t, `IDX testpb.ExampleTable u32/i32/str : 10/-1 -> _`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
-	// prefix key
+	// Prefix key.
 	entry = &ormkv.IndexKeyEntry{
 		TableName:   aFullName,
 		Fields:      []protoreflect.Name{"str", "i32"},

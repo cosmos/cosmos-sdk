@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 )
 
 func TestPrimaryKeyCodec(t *testing.T) {

@@ -14,9 +14,10 @@ import (
 func SkipPrefix(r *bytes.Reader, prefix []byte) error {
 	n := len(prefix)
 	if n > 0 {
-		// we skip checking the prefix for performance reasons because we assume
-		// that it was checked by the caller
+		// We skip checking the prefix for performance reasons because we assume
+		// that it was checked by the caller.
 		_, err := r.Seek(int64(n), io.SeekCurrent)
+
 		return err
 	}
 	return nil
@@ -33,12 +34,12 @@ func AppendVarUInt32(prefix []byte, x uint32) []byte {
 }
 
 // ValuesOf takes the arguments and converts them to protoreflect.Value's.
-func ValuesOf(values ...interface{}) []protoreflect.Value {
+func ValuesOf(values ...any) []protoreflect.Value {
 	n := len(values)
 	res := make([]protoreflect.Value, n)
 	for i := 0; i < n; i++ {
-		// we catch the case of proto messages here and call ProtoReflect.
-		// this allows us to use imported messages, such as timestamppb.Timestamp
+		// We catch the case of proto messages here and call ProtoReflect.
+		// This allows us to use imported messages, such as timestamppb.Timestamp
 		// in iterators.
 		value := values[i]
 		switch value.(type) {

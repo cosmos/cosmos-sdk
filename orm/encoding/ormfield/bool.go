@@ -9,7 +9,7 @@ import (
 // BoolCodec encodes a bool value as a single byte 0 or 1.
 type BoolCodec struct{}
 
-func (b BoolCodec) Decode(r Reader) (protoreflect.Value, error) {
+func (BoolCodec) Decode(r Reader) (protoreflect.Value, error) {
 	x, err := r.ReadByte()
 	return protoreflect.ValueOfBool(x != 0), err
 }
@@ -19,7 +19,7 @@ var (
 	oneBz  = []byte{1}
 )
 
-func (b BoolCodec) Encode(value protoreflect.Value, w io.Writer) error {
+func (BoolCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	var err error
 	if !value.IsValid() || !value.Bool() {
 		_, err = w.Write(zeroBz)
@@ -29,7 +29,7 @@ func (b BoolCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	return err
 }
 
-func (b BoolCodec) Compare(v1, v2 protoreflect.Value) int {
+func (BoolCodec) Compare(v1, v2 protoreflect.Value) int {
 	var b1, b2 bool
 	if v1.IsValid() {
 		b1 = v1.Bool()
@@ -46,11 +46,11 @@ func (b BoolCodec) Compare(v1, v2 protoreflect.Value) int {
 	}
 }
 
-func (b BoolCodec) IsOrdered() bool {
+func (BoolCodec) IsOrdered() bool {
 	return false
 }
 
-func (b BoolCodec) FixedBufferSize() int {
+func (BoolCodec) FixedBufferSize() int {
 	return 1
 }
 

@@ -3,10 +3,9 @@ package testkv
 import (
 	"bytes"
 
-	"gotest.tools/v3/assert"
-
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"gotest.tools/v3/assert"
 )
 
 func AssertBackendsEqual(t assert.TestingT, b1, b2 ormtable.Backend) {

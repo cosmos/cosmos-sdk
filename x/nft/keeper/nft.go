@@ -42,7 +42,7 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 
 // Burn defines a method for burning a nft from a specific account.
 // Note: When the upper module uses this method, it needs to authenticate nft
-func (k Keeper) Burn(ctx sdk.Context, classID, nftID string) error {
+func (k Keeper) Burn(ctx context.Context, classID, nftID string) error {
 	if !k.HasClass(ctx, classID) {
 		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}
@@ -58,7 +58,7 @@ func (k Keeper) Burn(ctx sdk.Context, classID, nftID string) error {
 // burnWithNoCheck defines a method for burning a nft from a specific account.
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it
-func (k Keeper) burnWithNoCheck(ctx sdk.Context, classID, nftID string) error {
+func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) error {
 	owner := k.GetOwner(ctx, classID, nftID)
 	nftStore := k.getNFTStore(ctx, classID)
 	nftStore.Delete([]byte(nftID))

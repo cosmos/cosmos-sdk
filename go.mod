@@ -8,10 +8,10 @@ require (
 	cosmossdk.io/core v0.6.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/log v0.1.0
+	cosmossdk.io/log v1.0.0
 	cosmossdk.io/math v1.0.0
-	cosmossdk.io/store v0.1.0-alpha.1
-	cosmossdk.io/x/tx v0.3.1-0.20230321155358-6522dd1731b5
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
+	cosmossdk.io/x/tx v0.5.0
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -25,7 +25,7 @@ require (
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
-	github.com/cosmos/gogoproto v1.4.6
+	github.com/cosmos/gogoproto v1.4.7
 	github.com/cosmos/ledger-cosmos-go v0.13.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0
 	github.com/golang/mock v1.6.0

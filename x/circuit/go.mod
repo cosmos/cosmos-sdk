@@ -11,6 +11,9 @@ require (
 	cosmossdk.io/store v0.1.0-alpha.1
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321173237-fe77d4bca302
 	github.com/cosmos/gogoproto v1.4.6
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330094838-d21f58c638d5
+	github.com/cosmos/gogoproto v1.4.7
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.54.0
 	gotest.tools/v3 v3.4.0
@@ -28,6 +31,8 @@ require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
+	cosmossdk.io/log v1.0.0 // indirect
+	cosmossdk.io/math v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

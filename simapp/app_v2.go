@@ -3,7 +3,6 @@
 package simapp
 
 import (
-	_ "embed"
 	"io"
 	"os"
 	"path/filepath"

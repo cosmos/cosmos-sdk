@@ -90,7 +90,7 @@ func bytesToPubkey(bz []byte, keytype string) (cryptotypes.PubKey, bool) {
 // getPubKeyFromRawString returns a PubKey (PubKeyEd25519 or PubKeySecp256k1) by attempting
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
-func getPubKeyFromRawString(pkstr string, keytype string) (cryptotypes.PubKey, error) {
+func getPubKeyFromRawString(pkstr, keytype string) (cryptotypes.PubKey, error) {
 	// Try hex decoding
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {

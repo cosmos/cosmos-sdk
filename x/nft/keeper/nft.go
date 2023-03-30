@@ -42,7 +42,7 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 
 // Burn defines a method for burning a nft from a specific account.
 // Note: When the upper module uses this method, it needs to authenticate nft
-func (k Keeper) Burn(ctx sdk.Context, classID, nftID string) error {
+func (k Keeper) Burn(ctx context.Context, classID, nftID string) error {
 	if !k.HasClass(ctx, classID) {
 		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}

@@ -141,8 +141,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.description, func(t *testing.T) {
-			marshalled := make([]cmttypes.Tx, len(tc.msgs))
-			cli := TxSearchMock{txs: marshalled, txConfig: encCfg.TxConfig}
+			marshaled := make([]cmttypes.Tx, len(tc.msgs))
+			cli := TxSearchMock{txs: marshaled, txConfig: encCfg.TxConfig}
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
 				WithClient(cli).
@@ -155,7 +155,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 
 				tx, err := clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 				require.NoError(t, err)
-				marshalled[i] = tx
+				marshaled[i] = tx
 			}
 
 			params := v1.NewQueryProposalVotesParams(0, tc.page, tc.limit)

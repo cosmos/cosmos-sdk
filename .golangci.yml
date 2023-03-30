@@ -72,6 +72,10 @@ linters-settings:
     allow-leading-space: true
     require-explanation: true
     require-specific: false
+  gosimple:
+    # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
+    # Default: ["*"]
+    checks: ["all"]
 
   gocritic:
     # Which checks should be enabled; can't be combined with 'disabled-checks'.
@@ -90,6 +94,7 @@ linters-settings:
       - ifElseChain
       - singleCaseSwitch
       - appendAssign
+      - typeSwitchVar
     # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
     # See https://github.com/go-critic/go-critic#usage -> section "Tags".
     # Default: []

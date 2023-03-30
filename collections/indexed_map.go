@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+
 	"cosmossdk.io/collections/codec"
 )
 
@@ -133,7 +134,8 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk Prima
 // returns always the same result on multiple calls.
 func cachedGet[K, V any, M interface {
 	Get(ctx context.Context, key K) (V, error)
-}](m M, ctx context.Context, key K) func() (V, error) {
+}](m M, ctx context.Context, key K,
+) func() (V, error) {
 	var (
 		value      V
 		err        error

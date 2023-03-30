@@ -1,11 +1,11 @@
 package collections_test
 
 import (
-	"cosmossdk.io/collections/indexes"
 	"testing"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/collections/indexes"
 	"github.com/stretchr/testify/require"
 )
 

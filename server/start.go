@@ -244,7 +244,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 			return err
 		}
 
-		// Wait for the calling process to be cancelled or close the provided context,
+		// Wait for the calling process to be canceled or close the provided context,
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
 		svrCtx.Logger.Info("stopping the ABCI server...")

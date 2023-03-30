@@ -371,7 +371,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	absPath, perr := filepath.Abs(relPath)
 	s.Require().NoError(perr)
 
-	newConfig := func(home, name string, downloadBin, restartUpgrade bool, restartDelay int, skipBackup bool, dataBackupPath string, interval int, preupgradeMaxRetries int, disableLogs bool) *Config {
+	newConfig := func(home, name string, downloadBin, restartUpgrade bool, restartDelay int, skipBackup bool, dataBackupPath string, interval, preupgradeMaxRetries int, disableLogs bool) *Config {
 		return &Config{
 			Home:                  home,
 			Name:                  name,
@@ -609,14 +609,12 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			cfg, err := GetConfigFromEnv()
 			if tc.expectedErrCount == 0 {
 				assert.NoError(t, err)
-			} else {
-				if assert.Error(t, err) {
-					errCount := 1
-					if multi, isMulti := err.(*errors.MultiError); isMulti {
-						errCount = multi.Len()
-					}
-					assert.Equal(t, tc.expectedErrCount, errCount, "error count")
+			} else if assert.Error(t, err) {
+				errCount := 1
+				if multi, isMulti := err.(*errors.MultiError); isMulti {
+					errCount = multi.Len()
 				}
+				assert.Equal(t, tc.expectedErrCount, errCount, "error count")
 			}
 			assert.Equal(t, tc.expectedCfg, cfg, "config")
 		})

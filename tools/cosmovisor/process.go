@@ -179,7 +179,7 @@ func (l *Launcher) doPreUpgrade() error {
 		}
 
 		if err := l.executePreUpgradeCmd(); err != nil {
-			counter += 1
+			counter++
 
 			switch err.(*exec.ExitError).ProcessState.ExitCode() {
 			case 1:

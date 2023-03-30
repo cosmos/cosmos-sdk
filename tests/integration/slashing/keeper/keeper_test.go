@@ -285,7 +285,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, false)
 
 	// 600 more blocks happened
-	height = height + 600
+	height += 600
 	ctx = ctx.WithBlockHeight(height)
 
 	// validator added back in

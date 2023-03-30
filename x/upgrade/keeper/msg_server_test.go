@@ -94,7 +94,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 			"expected gov account as only signer for proposal message",
 		},
 		{
-			"upgrade cancelled successfully",
+			"upgrade canceled successfully",
 			&types.MsgCancelUpgrade{
 				Authority: govAccAddr,
 			},

@@ -163,7 +163,7 @@ func (g *infiniteGasMeter) GasConsumed() Gas {
 }
 
 // GasConsumedToLimit returns the gas consumed from the GasMeter since the gas is not confined to a limit.
-// NOTE: This behaviour is only called when recovering from panic when BlockGasMeter consumes gas past the limit.
+// NOTE: This behavior is only called when recovering from panic when BlockGasMeter consumes gas past the limit.
 func (g *infiniteGasMeter) GasConsumedToLimit() Gas {
 	return g.consumed
 }

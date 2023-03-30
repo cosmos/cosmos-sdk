@@ -12,8 +12,8 @@ const (
 )
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents(paramChanges []simtypes.LegacyParamChange) []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{
+func ProposalContents(paramChanges []simtypes.LegacyParamChange) []simtypes.WeightedProposalContent { //nolint:staticcheck // SA1019: simtypes.WeightedProposalContent is deprecated: WeightedProposalContent is deprecated
+	return []simtypes.WeightedProposalContent{ //nolint:staticcheck // SA1019: simtypes.WeightedProposalContent is deprecated: WeightedProposalContent is deprecated
 		simulation.NewWeightedProposalContent(
 			OpWeightSubmitParamChangeProposal,
 			DefaultWeightParamChangeProposal,

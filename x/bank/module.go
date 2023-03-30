@@ -206,8 +206,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type BankInputs struct {
+type BankInputs struct { //nolint:revive // ignore revive's exported naming rules here
 	depinject.In
 
 	Config *modulev1.Module
@@ -220,8 +219,7 @@ type BankInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-//nolint:revive
-type BankOutputs struct {
+type BankOutputs struct { //nolint:revive // ignore revive's exported naming rules here
 	depinject.Out
 
 	BankKeeper keeper.BaseKeeper

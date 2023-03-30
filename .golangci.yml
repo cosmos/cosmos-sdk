@@ -53,19 +53,52 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  gosec:
+    # To select a subset of rules to run.
+    # Available rules: https://github.com/securego/gosec#available-rules
+    # Default: [] - means include all rules
+    includes:
+      #  - G101 # Look for hard coded credentials
+      - G102 # Bind to all interfaces
+      - G103 # Audit the use of unsafe block
+      - G104 # Audit errors not checked
+      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
+      - G107 # Url provided to HTTP request as taint input
+      - G108 # Profiling endpoint automatically exposed on /debug/pprof
+      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
+      - G110 # Potential DoS vulnerability via decompression bomb
+      - G111 # Potential directory traversal
+      - G112 # Potential slowloris attack
+      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
+      - G114 # Use of net/http serve function that has no support for setting timeouts
+      - G201 # SQL query construction using format string
+      - G202 # SQL query construction using string concatenation
+      - G203 # Use of unescaped data in HTML templates
+      - G204 # Audit use of command execution
+      - G301 # Poor file permissions used when creating a directory
+      - G302 # Poor file permissions used with chmod
+      - G303 # Creating tempfile using a predictable path
+      - G304 # File path provided as taint input
+      - G305 # File traversal when extracting zip/tar archive
+      - G306 # Poor file permissions used when writing to a new file
+      - G307 # Deferring a method which returns an error
+      - G401 # Detect the usage of DES, RC4, MD5 or SHA1
+      - G402 # Look for bad TLS connection settings
+      - G403 # Ensure minimum RSA key length of 2048 bits
+      - G404 # Insecure random number source (rand)
+      - G501 # Import blocklist: crypto/md5
+      - G502 # Import blocklist: crypto/des
+      - G503 # Import blocklist: crypto/rc4
+      - G504 # Import blocklist: net/http/cgi
+      - G505 # Import blocklist: crypto/sha1
+      - G601 # Implicit memory aliasing of items from a range statement
   misspell:
-    # Correct spellings using locale preferences for US or UK.
-    # Setting locale to US will correct the British spelling of 'colour' to 'color'.
-    # Default is to use a neutral variety of English.
     locale: US
   gofumpt:
-    # Choose whether to use the extra rules.
-    # Default: false
     extra-rules: true
   dogsled:
     max-blank-identifiers: 5
   maligned:
-    # print struct with more effective memory layout or not, false by default
     suggest-new: true
   nolintlint:
     allow-unused: false
@@ -73,130 +106,9 @@ linters-settings:
     require-explanation: true
     require-specific: false
   gosimple:
-    # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
-    # Default: ["*"]
-    checks: ["all,-S1034"]
+    checks: ["all"]
 
   gocritic:
-    # Which checks should be enabled; can't be combined with 'disabled-checks'.
-    # See https://go-critic.github.io/overview#checks-overview.
-    # To check which checks are enabled run `GL_DEBUG=gocritic golangci-lint run`.
-    # By default, list of stable checks is used.
-    #    enabled-checks:
-    #      - nestingReduce
-    #      - unnamedResult
-    #      - ruleguard
-    #      - truncateCmp
-    # Which checks should be disabled; can't be combined with 'enabled-checks'.
-    # Default: []
     disabled-checks:
       - regexpMust
-      - ifElseChain
-      - singleCaseSwitch
       - appendAssign
-      - typeSwitchVar
-    # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
-    # See https://github.com/go-critic/go-critic#usage -> section "Tags".
-    # Default: []
-#    enabled-tags:
-#      - diagnostic
-#      - style
-#      - performance
-#      - experimental
-#      - opinionated
-#    disabled-tags:
-#      - diagnostic
-#      - style
-#      - performance
-#      - experimental
-#      - opinionated
-#    # Settings passed to gocritic.
-#    # The settings key is the name of a supported gocritic checker.
-#    # The list of supported checkers can be find in https://go-critic.github.io/overview.
-#    settings:
-#      # Must be valid enabled check name.
-#      captLocal:
-#        # Whether to restrict checker to params only.
-#        # Default: true
-#        paramsOnly: false
-#      elseif:
-#        # Whether to skip balanced if-else pairs.
-#        # Default: true
-#        skipBalanced: false
-#      hugeParam:
-#        # Size in bytes that makes the warning trigger.
-#        # Default: 80
-#        sizeThreshold: 70
-#      nestingReduce:
-#        # Min number of statements inside a branch to trigger a warning.
-#        # Default: 5
-#        bodyWidth: 4
-#      rangeExprCopy:
-#        # Size in bytes that makes the warning trigger.
-#        # Default: 512
-#        sizeThreshold: 516
-#        # Whether to check test functions
-#        # Default: true
-#        skipTestFuncs: false
-#      rangeValCopy:
-#        # Size in bytes that makes the warning trigger.
-#        # Default: 128
-#        sizeThreshold: 32
-#        # Whether to check test functions.
-#        # Default: true
-#        skipTestFuncs: false
-#      ruleguard:
-#        # Enable debug to identify which 'Where' condition was rejected.
-#        # The value of the parameter is the name of a function in a ruleguard file.
-#        #
-#        # When a rule is evaluated:
-#        # If:
-#        #   The Match() clause is accepted; and
-#        #   One of the conditions in the Where() clause is rejected,
-#        # Then:
-#        #   ruleguard prints the specific Where() condition that was rejected.
-#        #
-#        # The flag is passed to the ruleguard 'debug-group' argument.
-#        # Default: ""
-#        debug: "emptyDecl"
-#        # Deprecated, use 'failOn' param.
-#        # If set to true, identical to failOn='all', otherwise failOn=''
-#        failOnError: false
-#        # Determines the behavior when an error occurs while parsing ruleguard files.
-#        # If flag is not set, log error and skip rule files that contain an error.
-#        # If flag is set, the value must be a comma-separated list of error conditions.
-#        # - 'all':    fail on all errors.
-#        # - 'import': ruleguard rule imports a package that cannot be found.
-#        # - 'dsl':    gorule file does not comply with the ruleguard DSL.
-#        # Default: ""
-#        failOn: dsl
-#        # Comma-separated list of file paths containing ruleguard rules.
-#        # If a path is relative, it is relative to the directory where the golangci-lint command is executed.
-#        # The special '${configDir}' variable is substituted with the absolute directory containing the golangci config file.
-#        # Glob patterns such as 'rules-*.go' may be specified.
-#        # Default: ""
-#        rules: "${configDir}/ruleguard/rules-*.go,${configDir}/myrule1.go"
-#        # Comma-separated list of enabled groups or skip empty to enable everything.
-#        # Tags can be defined with # character prefix.
-#        # Default: "<all>"
-#        enable: "myGroupName,#myTagName"
-#        # Comma-separated list of disabled groups or skip empty to enable everything.
-#        # Tags can be defined with # character prefix.
-#        # Default: ""
-#        disable: "myGroupName,#myTagName"
-#      tooManyResultsChecker:
-#        # Maximum number of results.
-#        # Default: 5
-#        maxResults: 10
-#      truncateCmp:
-#        # Whether to skip int/uint/uintptr types.
-#        # Default: true
-#        skipArchDependent: false
-#      underef:
-#        # Whether to skip (*x).method() calls where x is a pointer receiver.
-#        # Default: true
-#        skipRecvDeref: false
-#      unnamedResult:
-#        # Whether to check exported functions.
-#        # Default: false
-#        checkExported: true

@@ -1,6 +1,7 @@
 package v1_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,7 +44,7 @@ func TestValidateGenesis(t *testing.T) {
 				params1 := params
 				params1.MinDeposit = sdk.Coins{{
 					Denom:  sdk.DefaultBondDenom,
-					Amount: sdk.NewInt(-100),
+					Amount: sdkmath.NewInt(-100),
 				}}
 
 				return v1.NewGenesisState(0, params1)

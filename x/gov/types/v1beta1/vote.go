@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -53,7 +53,7 @@ func (v Votes) String() string {
 
 // NewNonSplitVoteOption creates a single option vote with weight 1
 func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
-	return WeightedVoteOptions{{option, math.LegacyNewDec(1)}}
+	return WeightedVoteOptions{{option, sdkmath.LegacyNewDec(1)}}
 }
 
 // WeightedVoteOptions describes array of WeightedVoteOptions
@@ -69,7 +69,7 @@ func (v WeightedVoteOptions) String() (out string) {
 
 // ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
 func ValidWeightedVoteOption(option WeightedVoteOption) bool {
-	if !option.Weight.IsPositive() || option.Weight.GT(math.LegacyNewDec(1)) {
+	if !option.Weight.IsPositive() || option.Weight.GT(sdkmath.LegacyNewDec(1)) {
 		return false
 	}
 	return ValidVoteOption(option.Option)
@@ -98,7 +98,7 @@ func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 		if len(fields) < 2 {
 			return options, fmt.Errorf("weight field does not exist for %s option", fields[0])
 		}
-		weight, err := sdk.NewDecFromStr(fields[1])
+		weight, err := sdkmath.LegacyNewDecFromStr(fields[1])
 		if err != nil {
 			return options, err
 		}

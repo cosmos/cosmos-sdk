@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -75,23 +75,23 @@ func GenExpeditedVotingPeriod(r *rand.Rand) time.Duration {
 }
 
 // GenQuorum returns randomized Quorum
-func GenQuorum(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
+func GenQuorum(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 }
 
 // GenThreshold returns randomized Threshold
-func GenThreshold(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, tallyNonExpeditedMax+1)), 3)
+func GenThreshold(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 450, tallyNonExpeditedMax+1)), 3)
 }
 
 // GenExpeditedThreshold randomized ExpeditedThreshold
 func GenExpeditedThreshold(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, tallyNonExpeditedMax, 550)), 3)
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, tallyNonExpeditedMax, 550)), 3)
 }
 
 // GenVeto returns randomized Veto
-func GenVeto(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
+func GenVeto(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }
 
 // RandomizedGenState generates a random GenesisState for gov

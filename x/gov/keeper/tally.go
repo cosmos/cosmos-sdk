@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -13,12 +13,12 @@ import (
 // voters
 func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult) {
 	results := make(map[v1.VoteOption]sdk.Dec)
-	results[v1.OptionYes] = math.LegacyZeroDec()
-	results[v1.OptionAbstain] = math.LegacyZeroDec()
-	results[v1.OptionNo] = math.LegacyZeroDec()
-	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
+	results[v1.OptionYes] = sdkmath.LegacyZeroDec()
+	results[v1.OptionAbstain] = sdkmath.LegacyZeroDec()
+	results[v1.OptionNo] = sdkmath.LegacyZeroDec()
+	results[v1.OptionNoWithVeto] = sdkmath.LegacyZeroDec()
 
-	totalVotingPower := math.LegacyZeroDec()
+	totalVotingPower := sdkmath.LegacyZeroDec()
 	currValidators := make(map[string]v1.ValidatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
@@ -27,7 +27,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 			validator.GetOperator(),
 			validator.GetBondedTokens(),
 			validator.GetDelegatorShares(),
-			math.LegacyZeroDec(),
+			sdkmath.LegacyZeroDec(),
 			v1.WeightedVoteOptions{},
 		)
 
@@ -58,7 +58,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 				votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
 
 				for _, option := range vote.Options {
-					weight, _ := sdk.NewDecFromStr(option.Weight)
+					weight, _ := sdkmath.LegacyNewDecFromStr(option.Weight)
 					subPower := votingPower.Mul(weight)
 					results[option.Option] = results[option.Option].Add(subPower)
 				}
@@ -82,7 +82,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 		votingPower := sharesAfterDeductions.MulInt(val.BondedTokens).Quo(val.DelegatorShares)
 
 		for _, option := range val.Vote {
-			weight, _ := sdk.NewDecFromStr(option.Weight)
+			weight, _ := sdkmath.LegacyNewDecFromStr(option.Weight)
 			subPower := votingPower.Mul(weight)
 			results[option.Option] = results[option.Option].Add(subPower)
 		}
@@ -99,19 +99,19 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 	}
 
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.sk.TotalBondedTokens(ctx)))
-	quorum, _ := sdk.NewDecFromStr(params.Quorum)
+	percentVoting := totalVotingPower.Quo(sdkmath.LegacyNewDecFromInt(keeper.sk.TotalBondedTokens(ctx)))
+	quorum, _ := sdkmath.LegacyNewDecFromStr(params.Quorum)
 	if percentVoting.LT(quorum) {
 		return false, params.BurnVoteQuorum, tallyResults
 	}
 
 	// If no one votes (everyone abstains), proposal fails
-	if totalVotingPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
+	if totalVotingPower.Sub(results[v1.OptionAbstain]).Equal(sdkmath.LegacyZeroDec()) {
 		return false, false, tallyResults
 	}
 
 	// If more than 1/3 of voters veto, proposal fails
-	vetoThreshold, _ := sdk.NewDecFromStr(params.VetoThreshold)
+	vetoThreshold, _ := sdkmath.LegacyNewDecFromStr(params.VetoThreshold)
 	if results[v1.OptionNoWithVeto].Quo(totalVotingPower).GT(vetoThreshold) {
 		return false, params.BurnVoteVeto, tallyResults
 	}
@@ -125,7 +125,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 		thresholdStr = params.GetThreshold()
 	}
 
-	threshold, _ := sdk.NewDecFromStr(thresholdStr)
+	threshold, _ := sdkmath.LegacyNewDecFromStr(thresholdStr)
 	if results[v1.OptionYes].Quo(totalVotingPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults
 	}

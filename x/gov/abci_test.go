@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
@@ -243,7 +243,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(tc.expedited)
-			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
+			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(sdkmath.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
 
@@ -347,7 +347,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(tc.expedited)
-			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
+			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(sdkmath.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
 
@@ -481,7 +481,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(true)
-			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
+			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(sdkmath.NewInt(depositMultiplier)))
 			params := suite.GovKeeper.GetParams(ctx)
 
 			SortAddresses(addrs)
@@ -665,7 +665,7 @@ func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sd
 		valTokens := sdk.TokensFromConsensusPower(powerAmt[i], sdk.DefaultPowerReduction)
 		valCreateMsg, err := stakingtypes.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
-			TestDescription, TestCommissionRates, math.OneInt(),
+			TestDescription, TestCommissionRates, sdkmath.OneInt(),
 		)
 		require.NoError(t, err)
 		res, err := stakingMsgSvr.CreateValidator(ctx, valCreateMsg)

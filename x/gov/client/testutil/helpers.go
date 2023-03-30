@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -14,7 +15,7 @@ import (
 var commonArgs = []string{
 	fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 }
 
 // MsgSubmitLegacyProposal creates a tx for submit legacy proposal

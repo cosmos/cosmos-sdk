@@ -205,7 +205,6 @@ func init() {
 	)
 }
 
-//nolint:revive
 type StakingInputs struct {
 	depinject.In
 
@@ -220,8 +219,6 @@ type StakingInputs struct {
 }
 
 // Dependency Injection Outputs
-//
-//nolint:revive
 type StakingOutputs struct {
 	depinject.Out
 

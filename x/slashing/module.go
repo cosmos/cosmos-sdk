@@ -212,7 +212,6 @@ func init() {
 	)
 }
 
-//nolint:revive
 type SlashingInputs struct {
 	depinject.In
 
@@ -229,7 +228,6 @@ type SlashingInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-//nolint:revive
 type SlashingOutputs struct {
 	depinject.Out
 

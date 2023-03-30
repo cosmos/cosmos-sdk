@@ -962,7 +962,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			name: "invalid quorum",
 			input: func() *v1.MsgUpdateParams {
 				params1 := params
-				params1.Quorum = "abc" //nolint:goconst
+				params1.Quorum = "abc"
 
 				return &v1.MsgUpdateParams{
 					Authority: authority,

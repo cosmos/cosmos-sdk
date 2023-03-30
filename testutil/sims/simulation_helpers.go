@@ -68,7 +68,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 		}
 	}
 
-	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck
+	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck // SA1019: simState.LegacyProposalContents is deprecated: LegacyProposalContents is deprecated
 	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }

@@ -226,13 +226,6 @@ func TestBinaryFlag(t *testing.T) {
 			hasError: true,
 			err:      "input string is neither a valid file path, hex, or base64 encoded",
 		},
-		//{
-		//	name:     "File path without extension",
-		//	input:    filepath.Dir(tempFile.Name()),
-		//	expected: nil,
-		//	hasError: true,
-		//	err:      "file path must have an extension",
-		//},
 	}
 
 	// Run test cases

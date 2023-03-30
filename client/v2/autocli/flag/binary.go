@@ -11,6 +11,8 @@ import (
 
 type binaryType struct{}
 
+var _ Value = (*fileBinaryValue)(nil)
+
 func (f binaryType) NewValue(_ context.Context, _ *Builder) Value {
 	return &fileBinaryValue{}
 }
@@ -58,5 +60,5 @@ func (f *fileBinaryValue) Set(s string) error {
 }
 
 func (f *fileBinaryValue) Type() string {
-	return "binary file"
+	return "binary"
 }

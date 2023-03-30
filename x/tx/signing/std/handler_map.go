@@ -2,7 +2,9 @@ package std
 
 import (
 	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
+	"cosmossdk.io/x/tx/signing/direct_aux"
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
@@ -10,6 +12,10 @@ import (
 type SignModeOptions struct {
 	// Textual are options for SIGN_MODE_TEXTUAL
 	Textual textual.SignModeOptions
+	// DirectAux are options for SIGN_MODE_DIRECT_AUX
+	DirectAux direct_aux.SignModeHandlerOptions
+	// AminoJSON are options for SIGN_MODE_LEGACY_AMINO_JSON
+	AminoJSON aminojson.SignModeHandlerOptions
 }
 
 // HandlerMap returns a sign mode handler map that Cosmos SDK apps can use out
@@ -20,8 +26,17 @@ func (s SignModeOptions) HandlerMap() (*signing.HandlerMap, error) {
 		return nil, err
 	}
 
+	directAux, err := direct_aux.NewSignModeHandler(s.DirectAux)
+	if err != nil {
+		return nil, err
+	}
+
+	aminoJSON := aminojson.NewSignModeHandler(s.AminoJSON)
+
 	return signing.NewHandlerMap(
 		direct.SignModeHandler{},
 		txt,
+		directAux,
+		aminoJSON,
 	), nil
 }

@@ -17,7 +17,7 @@ import (
 )
 
 var buildModuleMsgCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transitions commands for the %s module", moduleName))
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 
 	err := b.AddMsgServiceCommands(cmd, testCmdMsgDesc)
 	return cmd, err
@@ -331,7 +331,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
 		txCmdDesc := modOpts.Tx
 		if txCmdDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transitions commands for the %s module", moduleName))
+			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 			err := b.AddMsgServiceCommands(cmd, txCmdDesc)
 			if err != nil {
 				return err

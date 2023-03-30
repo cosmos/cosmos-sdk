@@ -167,7 +167,7 @@ func (k Keeper) GetNFTsOfClass(ctx context.Context, classID string) (nfts []nft.
 }
 
 // GetOwner returns the owner information of the specified nft
-func (k Keeper) GetOwner(ctx context.Context, classID string, nftID string) sdk.AccAddress {
+func (k Keeper) GetOwner(ctx context.Context, classID, nftID string) sdk.AccAddress {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(ownerStoreKey(classID, nftID))
 	if err != nil {

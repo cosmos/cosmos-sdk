@@ -23,6 +23,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -48,8 +49,8 @@ func initFixture(t assert.TestingT) *fixture {
 
 	maccPerms := map[string][]string{
 		distrtypes.ModuleName:          {authtypes.Minter},
-		stakingtypes.BondedPoolName:    nil,
-		stakingtypes.NotBondedPoolName: nil,
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -287,6 +288,109 @@ func TestCommunityPoolSpend(t *testing.T) {
 				result := distrtypes.MsgCommunityPoolSpend{}
 				err = f.cdc.Unmarshal(res[0].Value, &result)
 				assert.NilError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgDepositValidatorRewardsPool(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
+	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
+	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
+
+	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+
+	f.distrKeeper.SetParams(integrationApp.Ctx, distrtypes.DefaultParams())
+	f.distrKeeper.SetFeePool(integrationApp.Ctx, distrtypes.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(100)}),
+	})
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.Ctx, int64(10000))
+	f.bankKeeper.MintCoins(integrationApp.Ctx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+
+	// Set default staking params
+	f.stakingKeeper.SetParams(integrationApp.Ctx, stakingtypes.DefaultParams())
+
+	// Register MsgServer and QueryServer
+	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper, distrkeeper.NewQuerier(f.distrKeeper))
+
+	addr := sdk.AccAddress([]byte("addr"))
+	addr1 := sdk.AccAddress(PKS[0].Address())
+	valAddr1 := sdk.ValAddress(addr1)
+
+	// send funds to val addr
+	tokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.Ctx, int64(1000))
+	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.Ctx, distrtypes.ModuleName, sdk.AccAddress(valAddr1), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tokens)))
+
+	// send funds from module to addr to perform DepositValidatorRewardsPool
+	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.Ctx, distrtypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tokens)))
+
+	tstaking := stakingtestutil.NewHelper(t, integrationApp.Ctx, f.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(valAddr1, valConsPk0, sdk.NewInt(100), true)
+
+	// mint a non-staking token and send to an account
+	amt := sdk.NewCoins(sdk.NewInt64Coin("foo", 500))
+	f.bankKeeper.MintCoins(integrationApp.Ctx, distrtypes.ModuleName, amt)
+	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.Ctx, distrtypes.ModuleName, addr, amt)
+
+	testCases := []struct {
+		name      string
+		msg       *distrtypes.MsgDepositValidatorRewardsPool
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "happy path (staking token)",
+			msg: &distrtypes.MsgDepositValidatorRewardsPool{
+				Authority:        addr.String(),
+				ValidatorAddress: valAddr1.String(),
+				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(integrationApp.Ctx), sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "happy path (non-staking token)",
+			msg: &distrtypes.MsgDepositValidatorRewardsPool{
+				Authority:        addr.String(),
+				ValidatorAddress: valAddr1.String(),
+				Amount:           amt,
+			},
+		},
+		{
+			name: "invalid validator",
+			msg: &distrtypes.MsgDepositValidatorRewardsPool{
+				Authority:        addr.String(),
+				ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String(),
+				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(integrationApp.Ctx), sdk.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "validator does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := integrationApp.ExecMsgs(tc.msg)
+			if tc.expErr {
+				assert.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				assert.NilError(t, err)
+				assert.Assert(t, res != nil)
+
+				valAddr, err := sdk.ValAddressFromBech32(tc.msg.ValidatorAddress)
+				assert.NilError(t, err)
+
+				// check validator outstanding rewards
+				outstandingRewards := f.distrKeeper.GetValidatorOutstandingRewards(integrationApp.Ctx, valAddr)
+				for _, c := range tc.msg.Amount {
+					x := outstandingRewards.Rewards.AmountOf(c.Denom)
+					assert.DeepEqual(t, x, sdk.NewDecFromInt(c.Amount))
+				}
 			}
 		})
 	}

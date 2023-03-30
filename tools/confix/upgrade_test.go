@@ -9,6 +9,7 @@ import (
 )
 
 func mustReadConfig(t *testing.T, path string) []byte {
+	t.Helper()
 	f, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("failed to open file: %v", err)
@@ -17,7 +18,7 @@ func mustReadConfig(t *testing.T, path string) []byte {
 	return f
 }
 
-func TestUpgrade(t *testing.T) {
+func TestUpgrade(_ *testing.T) {
 	// TODO: add more test cases
 }
 

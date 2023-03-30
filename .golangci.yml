@@ -314,22 +314,11 @@ linters-settings:
         # Whether to skip balanced if-else pairs.
         # Default: true
         skipBalanced: false
-      nestingReduce:
-        # Min number of statements inside a branch to trigger a warning.
-        # Default: 5
-        bodyWidth: 4
       rangeExprCopy:
         # Size in bytes that makes the warning trigger.
         # Default: 512
         sizeThreshold: 516
         # Whether to check test functions
-        # Default: true
-        skipTestFuncs: false
-      rangeValCopy:
-        # Size in bytes that makes the warning trigger.
-        # Default: 128
-        sizeThreshold: 32
-        # Whether to check test functions.
         # Default: true
         skipTestFuncs: false
 
@@ -398,4 +387,6 @@ linters-settings:
       - name: modifies-value-receiver
         disabled: true
       - name: unnecessary-stmt
+        disabled: true
+      - name: unhandled-error
         disabled: true

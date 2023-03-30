@@ -15,15 +15,16 @@ import (
 
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T) (client.Context, func()) {
+	t.Helper()
 	home := t.TempDir()
-	chainId := "test-chain" //nolint:revive
+	chainID := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
 		WithViper("").
-		WithChainID(chainId)
+		WithChainID(chainID)
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	assert.NilError(t, err)
-	assert.Equal(t, clientCtx.ChainID, chainId)
+	assert.Equal(t, clientCtx.ChainID, chainID)
 	return clientCtx, func() { _ = os.RemoveAll(home) }
 }
 
@@ -44,7 +45,7 @@ func TestSetCmd(t *testing.T) {
 
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.GetCommand(), []string{"client", "chain-id"})
 	assert.NilError(t, err)
-	assert.Equal(t, strings.TrimSpace(out.String()), fmt.Sprintf(`"%s"`, newValue))
+	assert.Equal(t, strings.TrimSpace(out.String()), fmt.Sprintf(`"%q"`, newValue))
 }
 
 func TestGetCmd(t *testing.T) {

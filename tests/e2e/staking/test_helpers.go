@@ -33,8 +33,9 @@ func MsgRedelegateExec(clientCtx client.Context, from, src, dst, amount fmt.Stri
 }
 
 // MsgUnbondExec creates a unbond message.
-func MsgUnbondExec(clientCtx client.Context, from fmt.Stringer, valAddress,
-	amount fmt.Stringer, extraArgs ...string,
+func MsgUnbondExec(clientCtx client.Context, from, valAddress,
+	amount fmt.Stringer,
+	extraArgs ...string,
 ) (testutil.BufferWriter, error) {
 	args := []string{
 		valAddress.String(),

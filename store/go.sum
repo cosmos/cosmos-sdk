@@ -1,8 +1,8 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
-cosmossdk.io/log v0.1.0 h1:Vnexi+KzUCjmqq/m93teAxjt5biWFfZ5PI1imx2IJw8=
-cosmossdk.io/log v0.1.0/go.mod h1:p95Wq6mDY3SREMc4y7+QU9Uwy3nyvfpWGD1iSaFkVFs=
+cosmossdk.io/log v1.0.0 h1:NGKZ/A5rd4PduDfoscgABklX557PWjQINbosZy/m3Jk=
+cosmossdk.io/log v1.0.0/go.mod h1:CwX9BLiBruZb7lzLlRr3R231d/fVPUXk8gAdV4LQap0=
 cosmossdk.io/math v1.0.0 h1:ro9w7eKx23om2tZz/VM2Pf+z2WAbGX1yDQQOJ6iGeJw=
 cosmossdk.io/math v1.0.0/go.mod h1:Ygz4wBHrgc7g0N+8+MrnTfS9LLn9aaTGa9hKopuym5k=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=

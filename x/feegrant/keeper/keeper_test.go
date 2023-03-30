@@ -13,6 +13,7 @@ import (
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,7 +60,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[2]).Return(suite.addrs[2].String(), nil).AnyTimes()
 	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[3]).Return(suite.addrs[3].String(), nil).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper)
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper)
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(555)))

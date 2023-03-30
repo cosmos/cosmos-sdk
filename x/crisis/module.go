@@ -191,8 +191,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type CrisisInputs struct {
+type CrisisInputs struct { //nolint:revive // ignore revive's exported naming rules here
 	depinject.In
 
 	Config  *modulev1.Module
@@ -206,8 +205,7 @@ type CrisisInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-//nolint:revive
-type CrisisOutputs struct {
+type CrisisOutputs struct { //nolint:revive // ignore revive's exported naming rules here
 	depinject.Out
 
 	Module       appmodule.AppModule

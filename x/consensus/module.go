@@ -142,7 +142,7 @@ func init() {
 }
 
 //nolint:revive
-type ConsensusInputs struct {
+type ConsensusInputs struct { //nolint:revive // ignore revive's exported namint rules here
 	depinject.In
 
 	Config       *modulev1.Module
@@ -151,8 +151,7 @@ type ConsensusInputs struct {
 	EventManager event.Service
 }
 
-//nolint:revive
-type ConsensusOutputs struct {
+type ConsensusOutputs struct { //nolint:revive // ignore revive's exported namint rules here
 	depinject.Out
 
 	Keeper        keeper.Keeper

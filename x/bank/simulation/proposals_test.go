@@ -39,6 +39,6 @@ func TestProposalMsgs(t *testing.T) {
 
 	fmt.Println(msgUpdateParams)
 	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
-	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0)
+	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0) //nolint:staticcheck // SA1019: types.SendEnabled is deprecated: SendEnabled is deprecated
 	assert.Equal(t, true, msgUpdateParams.Params.DefaultSendEnabled)
 }

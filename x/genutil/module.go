@@ -133,9 +133,7 @@ func init() {
 }
 
 // GenutilInputs defines the inputs needed for the genutil module.
-//
-//nolint:revive
-type GenutilInputs struct {
+type GenutilInputs struct { //nolint:revive // ignore revive's exported naming rules here
 	depinject.In
 
 	AccountKeeper types.AccountKeeper

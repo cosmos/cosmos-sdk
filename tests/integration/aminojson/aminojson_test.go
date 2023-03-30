@@ -458,7 +458,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		// represent the array as nil, and a subsequent marshal to JSON represent the array as null instead of empty.
 		roundTripUnequal bool
 
-		// pulsar does not support marshalling a math.Dec as anything except a string.  Therefore, we cannot unmarshal
+		// pulsar does not support marshaling a math.Dec as anything except a string.  Therefore, we cannot unmarshal
 		// a pulsar encoded Math.dec (the string representation of a Decimal) into a gogo Math.dec (expecting an int64).
 		protoUnmarshalFails bool
 	}{

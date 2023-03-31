@@ -122,8 +122,8 @@ func TestEverything(t *testing.T) {
 		"echo",
 		"1",
 		"abc",
-		`{"denom":"foo","amount":"1234"}`,
-		`{"denom":"bar","amount":"4321"}`,
+		"123.123123124foo",
+		"4321bar",
 		"--a-bool",
 		"--an-enum", "one",
 		"--a-message", `{"bar":"abc", "baz":-3}`,
@@ -134,7 +134,7 @@ func TestEverything(t *testing.T) {
 		"--i64", "-234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
-		"--a-coin", `{"denom":"foo","amount":"100000"}`,
+		"--a-coin", "100000foo",
 		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",
@@ -159,13 +159,16 @@ func TestEverything(t *testing.T) {
 		"--uints", "1,2,3",
 		"--uints", "4",
 	)
+	errOut := conn.errorOut.String()
+	res := conn.out.String()
+	fmt.Println(errOut, res)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
 func TestJSONParsing(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--some-messages", `{"bar":"baz"}`,
 		"-u", "27", // shorthand
 	)
@@ -173,7 +176,7 @@ func TestJSONParsing(t *testing.T) {
 
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--some-messages", "testdata/some_message.json",
 		"-u", "27", // shorthand
 	)
@@ -183,7 +186,7 @@ func TestJSONParsing(t *testing.T) {
 func TestOptions(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "123foo",
 		"-u", "27", // shorthand
 		"--u64", "5", // no opt default value
 	)
@@ -196,21 +199,21 @@ func TestOptions(t *testing.T) {
 func TestAddressValidation(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 	)
 	assert.Equal(t, "", conn.errorOut.String())
 
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--an-address", "regen1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
 
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--an-address", "cosmps1BAD_ENCODING",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
@@ -219,13 +222,13 @@ func TestAddressValidation(t *testing.T) {
 func TestOutputFormat(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--output", "json",
 	)
 	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--output", "text",
 	)
 	fmt.Println(conn.out.String())

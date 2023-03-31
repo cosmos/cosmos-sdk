@@ -14,10 +14,9 @@ func (b boolKey[T]) Encode(buffer []byte, key T) (int, error) {
 	if key {
 		buffer[0] = 0x1
 		return 1, nil
-	} else {
-		buffer[0] = 0x0
-		return 1, nil
 	}
+	buffer[0] = 0x0
+	return 1, nil
 }
 
 func (b boolKey[T]) Decode(buffer []byte) (int, T, error) {

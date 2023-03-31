@@ -294,8 +294,6 @@ func (msg MsgUndelegate) ValidateBasic() error {
 }
 
 // NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
-//
-
 func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
 	return &MsgCancelUnbondingDelegation{
 		DelegatorAddress: delAddr.String(),

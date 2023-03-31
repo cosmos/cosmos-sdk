@@ -112,12 +112,13 @@ func init() {
 	}
 }
 
-// By default, caches are enabled. This enables or disables accAddrCache, consAddrCache, and valAddrCache.
+// SetAddrCacheEnabled enables or disables accAddrCache, consAddrCache, and valAddrCache. By default, caches are enabled.
 func SetAddrCacheEnabled(enabled bool) {
 	isCachingEnabled.Store(enabled)
 }
 
-func IsCacheEnabled() bool {
+// IsAddrCacheEnabled returns if the address caches are enabled.
+func IsAddrCacheEnabled() bool {
 	return isCachingEnabled.Load()
 }
 
@@ -302,7 +303,7 @@ func (aa AccAddress) String() string {
 
 	key := conv.UnsafeBytesToStr(aa)
 
-	if IsCacheEnabled() {
+	if IsAddrCacheEnabled() {
 		accAddrMu.Lock()
 		defer accAddrMu.Unlock()
 
@@ -456,7 +457,7 @@ func (va ValAddress) String() string {
 
 	key := conv.UnsafeBytesToStr(va)
 
-	if IsCacheEnabled() {
+	if IsAddrCacheEnabled() {
 		valAddrMu.Lock()
 		defer valAddrMu.Unlock()
 
@@ -615,7 +616,7 @@ func (ca ConsAddress) String() string {
 
 	key := conv.UnsafeBytesToStr(ca)
 
-	if IsCacheEnabled() {
+	if IsAddrCacheEnabled() {
 		consAddrMu.Lock()
 		defer consAddrMu.Unlock()
 
@@ -702,7 +703,7 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 	if err != nil {
 		panic(err)
 	}
-	if IsCacheEnabled() {
+	if IsAddrCacheEnabled() {
 		cache.Add(cacheKey, bech32Addr)
 	}
 	return bech32Addr

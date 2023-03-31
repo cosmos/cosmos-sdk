@@ -18,8 +18,8 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgSend           = "op_weight_msg_send"      //nolint:gosec
-	OpWeightMsgMultiSend      = "op_weight_msg_multisend" //nolint:gosec
+	OpWeightMsgSend           = "op_weight_msg_send"      
+	OpWeightMsgMultiSend      = "op_weight_msg_multisend" 
 	DefaultWeightMsgSend      = 100                       // from simappparams.DefaultWeightMsgSend
 	DefaultWeightMsgMultiSend = 10                        // from simappparams.DefaultWeightMsgMultiSend
 )

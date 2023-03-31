@@ -247,7 +247,7 @@ func GetCmdQueryDelegation(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegation [delegator-addr] [validator-addr]",
 		Short: "Query a delegation based on address and validator address",
-		Example: fmt.Sprintf(` %s query staking delegation [delegator-address] [validator-address]`,
+		Example: fmt.Sprintf(`%s query staking delegation [delegator-address] [validator-address]`,
 			version.AppName),
 		Long: "Query delegations for an individual delegator on an individual validator",
 		Args: cobra.ExactArgs(2),

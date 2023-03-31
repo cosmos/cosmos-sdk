@@ -37,7 +37,7 @@ import (
 
 var (
 	_ simtypes.WeightedProposalMsg     = MockWeightedProposals{}
-	_ simtypes.WeightedProposalContent = MockWeightedProposals{} //nolint:staticcheck
+	_ simtypes.WeightedProposalContent = MockWeightedProposals{} //nolint:staticcheck // testing legacy code path
 )
 
 type MockWeightedProposals struct {
@@ -58,8 +58,8 @@ func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
 	}
 }
 
-func (m MockWeightedProposals) ContentSimulatorFn() simtypes.ContentSimulatorFn { //nolint:staticcheck
-	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content { //nolint:staticcheck
+func (m MockWeightedProposals) ContentSimulatorFn() simtypes.ContentSimulatorFn { //nolint:staticcheck // testing legacy code path
+	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content { //nolint:staticcheck // testing legacy code path
 		return v1beta1.NewTextProposal(
 			fmt.Sprintf("title-%d: %s", m.n, simtypes.RandStringOfLength(r, 100)),
 			fmt.Sprintf("description-%d: %s", m.n, simtypes.RandStringOfLength(r, 4000)),
@@ -75,8 +75,8 @@ func mockWeightedProposalMsg(n int) []simtypes.WeightedProposalMsg {
 	return wpc
 }
 
-func mockWeightedLegacyProposalContent(n int) []simtypes.WeightedProposalContent { //nolint:staticcheck
-	wpc := make([]simtypes.WeightedProposalContent, n) //nolint:staticcheck
+func mockWeightedLegacyProposalContent(n int) []simtypes.WeightedProposalContent { //nolint:staticcheck // testing legacy code path
+	wpc := make([]simtypes.WeightedProposalContent, n) //nolint:staticcheck // testing legacy code path
 	for i := 0; i < n; i++ {
 		wpc[i] = MockWeightedProposals{i}
 	}

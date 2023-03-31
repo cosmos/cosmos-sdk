@@ -66,8 +66,8 @@ func Example() {
 		panic(err)
 	}
 
-	// in this example the resut is an empty response, a nil check is enough
-	// in other cases, it is recommanded to check the result value.
+	// in this example the result is an empty response, a nil check is enough
+	// in other cases, it is recommended to check the result value.
 	if result == nil {
 		panic(fmt.Errorf("unexpected nil result"))
 	}
@@ -90,7 +90,7 @@ func Example() {
 
 // ExampleOneModule shows how to use the integration test framework to test the integration of a single module.
 // That module has no dependency on other modules.
-func ExampleOneModule() {
+func Example_oneModule() {
 	// in this example we are testing the integration of the auth module:
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
@@ -127,8 +127,8 @@ func ExampleOneModule() {
 		panic(err)
 	}
 
-	// in this example the resut is an empty response, a nil check is enough
-	// in other cases, it is recommanded to check the result value.
+	// in this example the result is an empty response, a nil check is enough
+	// in other cases, it is recommended to check the result value.
 	if result == nil {
 		panic(fmt.Errorf("unexpected nil result"))
 	}

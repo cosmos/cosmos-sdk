@@ -53,12 +53,14 @@ func TestIntegrationTestExample(t *testing.T) {
 	params := minttypes.DefaultParams()
 	params.BlocksPerYear = 10000
 
-	// now we can use the application to test an mint message
+	// now we can use the application to test a mint message
 	result, err := integrationApp.RunMsg(&minttypes.MsgUpdateParams{
 		Authority: authority,
 		Params:    params,
 	})
 	assert.NilError(t, err)
+	// in this example the resut is an empty response, a nil check is enough
+	// in other cases, it is recommanded to check the result value.
 	assert.Assert(t, result != nil)
 
 	// we now check the result

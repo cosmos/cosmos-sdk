@@ -18,6 +18,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
+// App is a test application that can be used to test the integration of modules.
 type App struct {
 	*baseapp.BaseApp
 
@@ -27,7 +28,8 @@ type App struct {
 	queryHelper *baseapp.QueryServiceTestHelper
 }
 
-func NewIntegrationApp(name string, logger log.Logger, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *App {
+// NewIntegrationApp creates a application for testing purposes. This application is able to route messages to the respectives handlers.
+func NewIntegrationApp(nameSuffix string, logger log.Logger, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -37,7 +39,7 @@ func NewIntegrationApp(name string, logger log.Logger, keys map[string]*storetyp
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
 
-	bApp := baseapp.NewBaseApp(fmt.Sprintf("integration-app-%s", name), logger, db, txConfig.TxDecoder())
+	bApp := baseapp.NewBaseApp(fmt.Sprintf("integration-app-%s", nameSuffix), logger, db, txConfig.TxDecoder())
 	bApp.MountKVStores(keys)
 	bApp.SetInitChainer(func(ctx sdk.Context, req types.RequestInitChain) (types.ResponseInitChain, error) {
 		return types.ResponseInitChain{}, nil
@@ -48,7 +50,7 @@ func NewIntegrationApp(name string, logger log.Logger, keys map[string]*storetyp
 	bApp.SetMsgServiceRouter(router)
 
 	if err := bApp.LoadLatestVersion(); err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to load application version from store:%w", err))
 	}
 
 	ctx := bApp.NewContext(true, cmtproto.Header{})
@@ -62,24 +64,30 @@ func NewIntegrationApp(name string, logger log.Logger, keys map[string]*storetyp
 	}
 }
 
+// RunMsg allows to run a message and return the response.
+// In order to run a message, the application must have a handler for it.
+// These handlers are registered on the application message service router.
+// The result of the message execution is returned as a Any type.
+// That any type can be unmarshaled to the expected response type.
+// If the message execution fails, an error is returned.
 func (app *App) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
 	app.logger.Info("Running msg", "msg", msg.String())
 
 	handler := app.MsgServiceRouter().Handler(msg)
 	if handler == nil {
-		return nil, fmt.Errorf("can't route message %+v", msg)
+		return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(msg), msg)
 	}
 
 	msgResult, err := handler(app.ctx, msg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute message: %w", err)
+		return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(msg), err)
 	}
 
 	var response *codectypes.Any
 	if len(msgResult.MsgResponses) > 0 {
 		msgResponse := msgResult.MsgResponses[0]
 		if msgResponse == nil {
-			return nil, fmt.Errorf("got nil msg response %s", sdk.MsgTypeURL(msg))
+			return nil, fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(msg), msgResult.String())
 		}
 
 		response = msgResponse

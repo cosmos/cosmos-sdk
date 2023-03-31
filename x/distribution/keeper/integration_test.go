@@ -90,6 +90,86 @@ func initFixture(t assert.TestingT) *fixture {
 	return f
 }
 
+func TestMsgFundCommunityPool(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
+	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
+	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
+
+	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+
+	// reset fee pool
+	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.InitialFeePool())
+	initPool := f.distrKeeper.GetFeePool(integrationApp.SDKContext())
+	assert.Assert(t, initPool.CommunityPool.Empty())
+
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.SDKContext(), int64(100))
+	f.bankKeeper.MintCoins(integrationApp.SDKContext(), distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+
+	// Register MsgServer and QueryServer
+	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+
+	addr := sdk.AccAddress(PKS[0].Address())
+	addr2 := sdk.AccAddress(PKS[1].Address())
+	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+
+	// fund the account by minting and sending amount from distribution module to addr
+	err := f.bankKeeper.MintCoins(integrationApp.SDKContext(), distrtypes.ModuleName, amount)
+	assert.NilError(t, err)
+	err = f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.SDKContext(), distrtypes.ModuleName, addr, amount)
+	assert.NilError(t, err)
+
+	testCases := []struct {
+		name      string
+		msg       *distrtypes.MsgFundCommunityPool
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "depositor address with no funds",
+			msg: &distrtypes.MsgFundCommunityPool{
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+				Depositor: addr2.String(),
+			},
+			expErr:    true,
+			expErrMsg: "insufficient funds",
+		},
+		{
+			name: "valid message",
+			msg: &distrtypes.MsgFundCommunityPool{
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+				Depositor: addr.String(),
+			},
+			expErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := integrationApp.ExecMsgs(tc.msg)
+			if tc.expErr {
+				assert.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				assert.NilError(t, err)
+				assert.Assert(t, res != nil)
+
+				// check the result
+				result := distrtypes.MsgFundCommunityPool{}
+				err = f.cdc.Unmarshal(res[0].Value, &result)
+				assert.NilError(t, err)
+
+				// query the community pool funds
+				assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), f.distrKeeper.GetFeePool(integrationApp.SDKContext()).CommunityPool)
+				assert.Assert(t, f.bankKeeper.GetAllBalances(integrationApp.SDKContext(), addr).Empty())
+			}
+		})
+	}
+}
+
 func TestMsgUpdateParams(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
@@ -223,7 +303,7 @@ func TestMsgUpdateParams(t *testing.T) {
 	}
 }
 
-func TestCommunityPoolSpend(t *testing.T) {
+func TestMsgCommunityPoolSpend(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 

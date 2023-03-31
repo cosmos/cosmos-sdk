@@ -189,7 +189,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			args := append(tc.args, extraArgs...) //nolint:gocritic // false positive
+			args := append(tc.args, extraArgs...)
 			cmd := cli.NewCmdSend()
 			cmd.SetContext(s.ctx)
 			cmd.SetArgs(args)

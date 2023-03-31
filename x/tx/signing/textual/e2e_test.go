@@ -22,8 +22,8 @@ import (
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
 
-type e2eJsonTest struct {
-	txJsonTest
+type e2eJSONTest struct {
+	txJSONTest
 	Cbor string
 }
 
@@ -31,7 +31,7 @@ func TestE2EJsonTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/e2e.json")
 	require.NoError(t, err)
 
-	var testcases []e2eJsonTest
+	var testcases []e2eJSONTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
@@ -49,7 +49,7 @@ func TestE2EJsonTestcases(t *testing.T) {
 				AuthInfoBytes: authInfoBz,
 				SignerData: &textualpb.SignerData{
 					Address:       signerData.Address,
-					ChainId:       signerData.ChainId,
+					ChainId:       signerData.ChainID,
 					AccountNumber: signerData.AccountNumber,
 					Sequence:      signerData.Sequence,
 					PubKey:        signerData.PubKey,

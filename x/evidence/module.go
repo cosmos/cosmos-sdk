@@ -199,8 +199,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type EvidenceInputs struct {
+type EvidenceInputs struct { //nolint:revive // don't follow revive's var-naming, for clarity
 	depinject.In
 
 	Key *store.KVStoreKey
@@ -210,8 +209,7 @@ type EvidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
-//nolint:revive
-type EvidenceOutputs struct {
+type EvidenceOutputs struct { //nolint:revive // don't follow revive's var-naming, for clarity
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper

@@ -102,7 +102,7 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 func TestMsgOptions(t *testing.T) {
 	conn := testExecCommon(t,
 		buildModuleMsgCommand,
-		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"send", "5", "6", "1foo",
 		"--uint32", "7",
 		"--u64", "8",
 		"--output", "json",
@@ -118,12 +118,12 @@ func TestMsgOptions(t *testing.T) {
 
 func TestMsgOutputFormat(t *testing.T) {
 	conn := testExecCommon(t, buildModuleMsgCommand,
-		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"send", "5", "6", "1foo",
 		"--output", "json",
 	)
 	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
 	conn = testExecCommon(t, buildModuleMsgCommand,
-		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"send", "5", "6", "1foo",
 		"--output", "text",
 	)
 
@@ -164,8 +164,8 @@ func TestEverythingMsg(t *testing.T) {
 		"send",
 		"1",
 		"abc",
-		`{"denom":"foo","amount":"1234"}`,
-		`{"denom":"bar","amount":"4321"}`,
+		"1234foo",
+		"4321foo",
 		"--output", "json",
 		"--a-bool",
 		"--an-enum", "two",
@@ -177,7 +177,7 @@ func TestEverythingMsg(t *testing.T) {
 		"--i64", "-234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
-		"--a-coin", `{"denom":"foo","amount":"100000"}`,
+		"--a-coin", "10000000foo",
 		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",

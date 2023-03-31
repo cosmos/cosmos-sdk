@@ -87,8 +87,8 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 }
 
 // GetQueryCmd returns the cli query commands for the nft module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.ac)
 }
 
 // GetTxCmd returns the transaction commands for the nft module

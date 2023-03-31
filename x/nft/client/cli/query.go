@@ -21,7 +21,7 @@ const (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd() *cobra.Command {
+func GetQueryCmd(ac address.Codec) *cobra.Command {
 	nftQueryCmd := &cobra.Command{
 		Use:                        nft.ModuleName,
 		Short:                      "Querying commands for the nft module",
@@ -35,7 +35,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryClass(),
 		GetCmdQueryClasses(),
 		GetCmdQueryNFT(),
-		GetCmdQueryNFTs(),
+		GetCmdQueryNFTs(ac),
 		GetCmdQueryOwner(),
 		GetCmdQueryBalance(),
 		GetCmdQuerySupply(),

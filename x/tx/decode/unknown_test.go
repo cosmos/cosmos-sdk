@@ -640,8 +640,8 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 
 			c1 := new(testpb.Customer1)
 			c1Desc := c1.ProtoReflect().Descriptor()
-			//err = proto.Unmarshal(blob, c1)
-			//require.NoError(t, err)
+			// err = proto.Unmarshal(blob, c1)
+			// require.NoError(t, err)
 			gotErr := decode.RejectUnknownFieldsStrict(blob, c1Desc, ProtoResolver)
 			if tt.wantErr != nil {
 				require.EqualError(t, gotErr, tt.wantErr.Error())
@@ -657,11 +657,11 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 func TestPackedEncoding(t *testing.T) {
 	data := &testpb.TestRepeatedUints{Nums: []uint64{12, 13}}
 
-	marshalled, err := proto.Marshal(data)
+	marshaled, err := proto.Marshal(data)
 	require.NoError(t, err)
 
 	unmarshalled := data.ProtoReflect().Descriptor()
-	_, err = decode.RejectUnknownFields(marshalled, unmarshalled, false, ProtoResolver)
+	_, err = decode.RejectUnknownFields(marshaled, unmarshalled, false, ProtoResolver)
 	require.NoError(t, err)
 }
 

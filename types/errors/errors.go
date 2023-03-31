@@ -52,7 +52,7 @@ var (
 	// ErrNoSignatures to doc
 	ErrNoSignatures = errorsmod.Register(RootCodespace, 15, "no signatures supplied")
 
-	// ErrJSONMarshal defines an ABCI typed JSON marshalling error
+	// ErrJSONMarshal defines an ABCI typed JSON marshaling error
 	ErrJSONMarshal = errorsmod.Register(RootCodespace, 16, "failed to marshal JSON bytes")
 
 	// ErrJSONUnmarshal defines an ABCI typed JSON unmarshalling error

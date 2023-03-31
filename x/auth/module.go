@@ -210,8 +210,7 @@ func ProvideAddressCodec(config *modulev1.Module) address.Codec {
 	return codecaddress.NewBech32Codec(config.Bech32Prefix)
 }
 
-//nolint:revive
-type AuthInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config       *modulev1.Module
@@ -225,15 +224,14 @@ type AuthInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-//nolint:revive
-type AuthOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        appmodule.AppModule
 }
 
-func ProvideModule(in AuthInputs) AuthOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -256,5 +254,5 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return AuthOutputs{AccountKeeper: k, Module: m}
+	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

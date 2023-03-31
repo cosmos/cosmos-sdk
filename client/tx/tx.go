@@ -167,7 +167,7 @@ func SignWithPrivKey(
 	var sigV2 signing.SignatureV2
 
 	// Generate the bytes to be signed.
-	signBytes, err := authsigning.GetSignBytesWithContext(txConfig.SignModeHandler(), ctx, signMode, signerData, txBuilder.GetTx())
+	signBytes, err := authsigning.GetSignBytesWithContext(ctx, txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return sigV2, err
 	}
@@ -309,7 +309,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 	}
 
 	// Generate the bytes to be signed.
-	bytesToSign, err := authsigning.GetSignBytesWithContext(txf.txConfig.SignModeHandler(), ctx, signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesWithContext(ctx, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}

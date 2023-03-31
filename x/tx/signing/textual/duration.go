@@ -83,15 +83,14 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value) 
 	negative := false
 	if duration.Seconds < 0 || duration.Nanos < 0 {
 		negative = true
+		// copy to avoid side-effecting our input
+		d := *duration //nolint:govet // we want to copy a lock here
+		duration = &d
 		duration.Seconds *= -1
 		duration.Nanos *= -1
 	}
 	factors := factorSeconds(duration.Seconds)
 	components := []string{}
-	if negative {
-		duration.Seconds *= -1
-		duration.Nanos *= -1
-	}
 
 	if factors.days > 0 {
 		components = append(components, fmt.Sprintf("%d %s", factors.days, maybePlural("day", factors.days != 1)))

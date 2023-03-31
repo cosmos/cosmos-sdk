@@ -170,7 +170,6 @@ func (s *CLITestSuite) TestQueryNFTs() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-
 			cmd := cli.GetCmdQueryNFTs(address.NewBech32Codec("cosmos"))
 			var args []string
 			args = append(args, fmt.Sprintf("--%s=%s", cli.FlagClassID, tc.args.ClassID))

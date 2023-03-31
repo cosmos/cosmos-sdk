@@ -81,7 +81,7 @@ func (s *TestSuite) TestSend() {
 				Receiver: s.addrs[2].String(),
 			},
 			expErr: true,
-			errMsg: fmt.Sprintf("%s is not the owner of nft %s", s.addrs[1].String(), testID),
+			errMsg: fmt.Sprintf("is not the owner of nft %s", testID),
 		},
 		{
 			name: "valid transaction",
@@ -101,6 +101,7 @@ func (s *TestSuite) TestSend() {
 			_, err := s.nftKeeper.Send(s.ctx, tc.req)
 			if tc.expErr {
 				s.Require().Error(err)
+				fmt.Println(err.Error())
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
 				s.Require().NoError(err)

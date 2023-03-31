@@ -145,7 +145,7 @@ type debugIterator struct {
 	debugger  Debugger
 }
 
-func (d debugIterator) Domain() (start []byte, end []byte) {
+func (d debugIterator) Domain() (start, end []byte) {
 	start, end = d.iterator.Domain()
 	d.debugger.Log(fmt.Sprintf("  DOMAIN %x -> %x", start, end))
 	return start, end

@@ -18,7 +18,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 }
 
 // primaryKeyMachine is a state machine model of the PrimaryKeyTable. The state
-// is modelled as a map of strings to TableModels.
+// is modeled as a map of strings to TableModels.
 type primaryKeyMachine struct {
 	store storetypes.KVStore
 	table *PrimaryKeyTable

@@ -52,7 +52,7 @@ var (
 	// ErrNoSignatures to doc
 	ErrNoSignatures = errorsmod.Register(RootCodespace, 15, "no signatures supplied")
 
-	// ErrJSONMarshal defines an ABCI typed JSON marshalling error
+	// ErrJSONMarshal defines an ABCI typed JSON marshaling error
 	ErrJSONMarshal = errorsmod.Register(RootCodespace, 16, "failed to marshal JSON bytes")
 
 	// ErrJSONUnmarshal defines an ABCI typed JSON unmarshalling error
@@ -132,7 +132,8 @@ var (
 	// Examples: not DB domain error, file writing etc...
 	ErrIO = errorsmod.Register(RootCodespace, 39, "Internal IO error")
 
-	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
+	// ErrAppConfig defines an error occurred if application configuration is
+	// misconfigured.
 	ErrAppConfig = errorsmod.Register(RootCodespace, 40, "error in app.toml")
 
 	// ErrInvalidGasLimit defines an error when an invalid GasWanted value is

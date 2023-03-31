@@ -35,7 +35,7 @@ type Keeper struct {
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
-	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
+	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     module.VersionMap               // the module version map at init genesis
 }
 

@@ -11,14 +11,14 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/testutil"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	paramsmodule "github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -39,11 +39,9 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	err := depinject.Inject(testutil.AppConfig,
-		&suite.cdc,
-		&suite.amino,
-	)
-	suite.NoError(err)
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(paramsmodule.AppModuleBasic{})
+	suite.cdc = encodingConfig.Codec
+	suite.amino = encodingConfig.Amino
 
 	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
 	suite.ctx = sdk.NewContext(ms, cmtproto.Header{}, false, log.NewNopLogger())

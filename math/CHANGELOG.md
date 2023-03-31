@@ -34,11 +34,11 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 # Changelog
 
-## [Unreleased] 
+## [math/v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0) - 2023-03-23
 
 ### Bug Fixes
 
-* [#15506](https://github.com/cosmos/cosmos-sdk/issues/16605) fix: Dec marshal shouldn't have side effects
+* [#15506](https://github.com/cosmos/cosmos-sdk/issues/16605) Dec marshal shouldn't have side effects
 
 ## [math/v1.0.0-rc.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0-rc.0) - 2023-03-13
 
@@ -49,7 +49,6 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 ### Bug Fixes
 
 * [#14922](https://github.com/cosmos/cosmos-sdk/issues/14922) check for negative precision
-* [#15506](https://github.com/cosmos/cosmos-sdk/issues/16605) fix: Dec marshal shouldn't have side effects
 
 ### Testing
 

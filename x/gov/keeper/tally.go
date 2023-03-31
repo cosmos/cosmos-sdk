@@ -11,7 +11,7 @@ import (
 
 // Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
 // voters
-func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, burnDeposits bool, tallyResults v1.TallyResult) {
+func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult) {
 	results := make(map[v1.VoteOption]sdk.Dec)
 	results[v1.OptionYes] = math.LegacyZeroDec()
 	results[v1.OptionAbstain] = math.LegacyZeroDec()

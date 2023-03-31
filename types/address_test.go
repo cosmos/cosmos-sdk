@@ -44,7 +44,7 @@ var invalidStrs = []string{
 	types.Bech32PrefixConsPub + "6789",
 }
 
-func (s *addressTestSuite) testMarshal(original interface{}, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
+func (s *addressTestSuite) testMarshal(original, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
 	bz, err := marshal()
 	s.Require().Nil(err)
 	s.Require().Nil(unmarshal(bz))

@@ -41,21 +41,7 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgGrantAllowance) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Granter); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Grantee); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-	if msg.Grantee == msg.Granter {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
-	}
-	allowance, err := msg.GetFeeAllowanceI()
-	if err != nil {
-		return err
-	}
-
-	return allowance.ValidateBasic()
+	return nil
 }
 
 // GetSigners gets the granter account associated with an allowance
@@ -89,22 +75,12 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 // granter and grantee
 //
 //nolint:interfacer
-func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeAllowance {
+func NewMsgRevokeAllowance(granter, grantee sdk.AccAddress) MsgRevokeAllowance {
 	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgRevokeAllowance) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Granter); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Grantee); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-	if msg.Grantee == msg.Granter {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
-	}
-
 	return nil
 }
 

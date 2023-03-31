@@ -21,7 +21,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
+// GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf, err := NewFactoryCLI(clientCtx, flagSet)
@@ -32,7 +32,7 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
-// GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction
+// GenerateOrBroadcastTxWithFactory will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	// Validate all msgs before generating or broadcasting the tx.
@@ -107,11 +107,11 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		buf := bufio.NewReader(os.Stdin)
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncancelled transaction\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncanceled transaction\n", err)
 			return err
 		}
 		if !ok {
-			_, _ = fmt.Fprintln(os.Stderr, "cancelled transaction")
+			_, _ = fmt.Fprintln(os.Stderr, "canceled transaction")
 			return nil
 		}
 	}

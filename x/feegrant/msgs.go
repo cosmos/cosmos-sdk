@@ -20,8 +20,6 @@ var (
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
-//
-
 func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {

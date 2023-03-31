@@ -127,8 +127,6 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
-//
-
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
@@ -162,8 +160,6 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
-//
-
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, metadata string) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option, metadata}
 }
@@ -193,8 +189,6 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
-//
-
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
 }
@@ -248,9 +242,7 @@ func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{voter}
 }
 
-// NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance
-//
-
+// NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance.
 func NewMsgExecLegacyContent(content *codectypes.Any, authority string) *MsgExecLegacyContent {
 	return &MsgExecLegacyContent{
 		Content:   content,
@@ -307,9 +299,7 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{authority}
 }
 
-// NewMsgCancelProposal creates a new MsgCancelProposal instance
-//
-
+// NewMsgCancelProposal creates a new MsgCancelProposal instance.
 func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal {
 	return &MsgCancelProposal{
 		ProposalId: proposalID,

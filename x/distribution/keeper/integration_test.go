@@ -214,6 +214,10 @@ func TestMsgUpdateParams(t *testing.T) {
 				result := distrtypes.MsgUpdateParams{}
 				err = f.cdc.Unmarshal(res[0].Value, &result)
 				assert.NilError(t, err)
+
+				// query the params and verify it has been updated
+				params := f.distrKeeper.GetParams(integrationApp.SDKContext())
+				assert.DeepEqual(t, distrtypes.DefaultParams(), params)
 			}
 		})
 	}
@@ -232,8 +236,10 @@ func TestCommunityPoolSpend(t *testing.T) {
 
 	f.distrKeeper.SetParams(integrationApp.SDKContext(), distrtypes.DefaultParams())
 	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.FeePool{
-		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(100)}),
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)}),
 	})
+	initialFeePool := f.distrKeeper.GetFeePool(integrationApp.SDKContext())
+
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.SDKContext(), int64(100))
 	f.bankKeeper.MintCoins(integrationApp.SDKContext(), distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
 
@@ -293,6 +299,12 @@ func TestCommunityPoolSpend(t *testing.T) {
 				result := distrtypes.MsgCommunityPoolSpend{}
 				err = f.cdc.Unmarshal(res[0].Value, &result)
 				assert.NilError(t, err)
+
+				// query the community pool to verify it has been updated
+				communityPool := f.distrKeeper.GetFeePoolCommunityCoins(integrationApp.SDKContext())
+				newPool, negative := initialFeePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(tc.msg.Amount...))
+				assert.Assert(t, negative == false)
+				assert.DeepEqual(t, communityPool, newPool)
 			}
 		})
 	}
@@ -387,6 +399,11 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 				assert.NilError(t, err)
 				assert.Assert(t, res != nil)
 
+				// check the result
+				result := distrtypes.MsgDepositValidatorRewardsPoolResponse{}
+				err = f.cdc.Unmarshal(res[0].Value, &result)
+				assert.NilError(t, err)
+
 				valAddr, err := sdk.ValAddressFromBech32(tc.msg.ValidatorAddress)
 				assert.NilError(t, err)
 
@@ -397,10 +414,6 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 					assert.DeepEqual(t, x, sdk.NewDecFromInt(c.Amount))
 				}
 
-				// check the result
-				result := distrtypes.MsgDepositValidatorRewardsPoolResponse{}
-				err = f.cdc.Unmarshal(res[0].Value, &result)
-				assert.NilError(t, err)
 			}
 		})
 	}

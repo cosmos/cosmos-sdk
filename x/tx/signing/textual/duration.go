@@ -23,9 +23,9 @@ func NewDurationValueRenderer() ValueRenderer {
 }
 
 const (
-	minSec  = 60
-	hourSec = 60 * minSec
-	daySec  = 24 * hourSec
+	min_sec  = 60
+	hour_sec = 60 * min_sec
+	day_sec  = 24 * hour_sec
 )
 
 type factors struct {
@@ -34,12 +34,12 @@ type factors struct {
 
 func factorSeconds(x int64) factors {
 	var f factors
-	f.days = x / daySec
-	x -= f.days * daySec
-	f.hours = x / hourSec
-	x -= f.hours * hourSec
-	f.minutes = x / minSec
-	x -= f.minutes * minSec
+	f.days = x / day_sec
+	x -= f.days * day_sec
+	f.hours = x / hour_sec
+	x -= f.hours * hour_sec
+	f.minutes = x / min_sec
+	x -= f.minutes * min_sec
 	f.seconds = x
 	return f
 }
@@ -84,17 +84,13 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value) 
 	if duration.Seconds < 0 || duration.Nanos < 0 {
 		negative = true
 		// copy to avoid side-effecting our input
-		d := *duration //nolint:govet // we want to copy a lock here
+		d := *duration
 		duration = &d
 		duration.Seconds *= -1
 		duration.Nanos *= -1
 	}
 	factors := factorSeconds(duration.Seconds)
 	components := []string{}
-	if negative {
-		duration.Seconds *= -1
-		duration.Nanos *= -1
-	}
 
 	if factors.days > 0 {
 		components = append(components, fmt.Sprintf("%d %s", factors.days, maybePlural("day", factors.days != 1)))
@@ -176,7 +172,7 @@ func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (prot
 	}
 
 	dur := &dpb.Duration{}
-	dur.Seconds = days*daySec + hours*hourSec + minutes*minSec + seconds
+	dur.Seconds = days*day_sec + hours*hour_sec + minutes*min_sec + seconds
 	// #nosec G701
 	// Since there are 9 digits or fewer, this conversion is safe.
 	dur.Nanos = int32(nanos)

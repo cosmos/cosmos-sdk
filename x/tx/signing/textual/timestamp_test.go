@@ -25,7 +25,7 @@ import (
 //
 // The Timestamp proto seconds field is int64, but restricted in range
 // by convention and will fit within a JSON number.
-type timestampJSONTest struct {
+type timestampJsonTest struct {
 	Proto *tspb.Timestamp
 	Error bool
 	Text  string
@@ -35,7 +35,7 @@ func TestTimestampJsonTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/timestamp.json")
 	require.NoError(t, err)
 
-	var testcases []timestampJSONTest
+	var testcases []timestampJsonTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 

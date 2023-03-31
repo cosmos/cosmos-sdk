@@ -61,12 +61,11 @@ func TestEnumJsonTestcases(t *testing.T) {
 // treats empty and default values as the same, we actually parse the protojson
 // encoded string to retrieve which field is set.
 func getFd(proto json.RawMessage, m *testpb.Baz) protoreflect.FieldDescriptor {
-	switch {
-	case strings.Contains(string(proto), `"ee"`):
+	if strings.Contains(string(proto), `"ee"`) {
 		return m.ProtoReflect().Descriptor().Fields().ByNumber(1)
-	case strings.Contains(string(proto), `"ie"`):
+	} else if strings.Contains(string(proto), `"ie"`) {
 		return m.ProtoReflect().Descriptor().Fields().ByNumber(2)
-	default:
+	} else {
 		return m.ProtoReflect().Descriptor().Fields().ByNumber(3)
 	}
 }

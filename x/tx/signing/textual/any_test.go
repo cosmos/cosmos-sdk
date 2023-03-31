@@ -26,7 +26,7 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-type anyJSONTest struct {
+type anyJsonTest struct {
 	Proto   json.RawMessage
 	Screens []textual.Screen
 }
@@ -35,7 +35,7 @@ func TestAny(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/any.json")
 	require.NoError(t, err)
 
-	var testcases []anyJSONTest
+	var testcases []anyJsonTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
@@ -59,7 +59,7 @@ func TestAny(t *testing.T) {
 			parsedMsg := val.Message().Interface()
 			require.IsType(t, &anypb.Any{}, parsedMsg)
 			parsedAny := parsedMsg.(*anypb.Any)
-			diff := cmp.Diff(anyMsg, parsedAny, protocmp.Transform()) //nolint:govet // this is a test so it's okay to copy locks
+			diff := cmp.Diff(anyMsg, parsedAny, protocmp.Transform())
 			require.Empty(t, diff)
 		})
 	}

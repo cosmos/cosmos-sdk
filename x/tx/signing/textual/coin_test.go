@@ -72,7 +72,7 @@ func TestMetadataQuerier(t *testing.T) {
 }
 
 func TestCoinJsonTestcases(t *testing.T) {
-	var testcases []coinJSONTest
+	var testcases []coinJsonTest
 	raw, err := os.ReadFile("./internal/testdata/coin.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
@@ -121,7 +121,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 // an error, otherwise match Text, then Parse() the text and expect it to
 // match (via proto.Equals()) the original Proto. If the test case has no
 // Proto, try to Parse() the Text and expect an error if Error is set.
-type coinJSONTest struct {
+type coinJsonTest struct {
 	Proto    *basev1beta1.Coin
 	Metadata *bankv1beta1.Metadata
 	Error    bool

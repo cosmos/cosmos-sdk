@@ -16,7 +16,7 @@ import (
 )
 
 func TestCoinsJsonTestcases(t *testing.T) {
-	var testcases []coinsJSONTest
+	var testcases []coinsJsonTest
 	raw, err := os.ReadFile("./internal/testdata/coins.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
@@ -98,7 +98,7 @@ func checkCoinEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
 // an error, otherwise match Text, then Parse() the text and expect it to
 // match (via proto.Equals()) the original Proto. If the test case has no
 // Proto, try to Parse() the Text and expect an error if Error is set.
-type coinsJSONTest struct {
+type coinsJsonTest struct {
 	Proto    []*basev1beta1.Coin
 	Metadata map[string]*bankv1beta1.Metadata
 	Text     string

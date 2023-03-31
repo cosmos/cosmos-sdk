@@ -16,7 +16,7 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-type repeatedJSONTest struct {
+type repeatedJsonTest struct {
 	Proto   *testpb.Qux
 	Screens []textual.Screen
 }
@@ -25,7 +25,7 @@ func TestRepeatedJsonTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/repeated.json")
 	require.NoError(t, err)
 
-	var testcases []repeatedJSONTest
+	var testcases []repeatedJsonTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 

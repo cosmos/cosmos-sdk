@@ -30,14 +30,14 @@ import (
 // cases `proto` field. The inner contents are protojson
 // encoded, so we represent them as []byte here, and decode
 // them inside the test.
-type txJsonTestTx struct {
+type txJJSONTestTx struct {
 	Body     json.RawMessage
 	AuthInfo json.RawMessage `json:"auth_info"`
 }
 
-type txJsonTest struct {
+type txJSONTest struct {
 	Name       string
-	Proto      txJsonTestTx
+	Proto      txJJSONTestTx
 	SignerData json.RawMessage `json:"signer_data"`
 	Metadata   *bankv1beta1.Metadata
 	Error      bool
@@ -48,7 +48,7 @@ func TestTxJsonTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/tx.json")
 	require.NoError(t, err)
 
-	var testcases []txJsonTest
+	var testcases []txJSONTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
@@ -57,6 +57,7 @@ func TestTxJsonTestcases(t *testing.T) {
 			txBody, bodyBz, txAuthInfo, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
 
 			tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: mockCoinMetadataQuerier})
+			require.NoError(t, err)
 			rend := textual.NewTxValueRenderer(tr)
 			ctx := addMetadataToContext(context.Background(), tc.Metadata)
 
@@ -65,7 +66,7 @@ func TestTxJsonTestcases(t *testing.T) {
 				AuthInfoBytes: authInfoBz,
 				SignerData: &textualpb.SignerData{
 					Address:       signerData.Address,
-					ChainId:       signerData.ChainId,
+					ChainId:       signerData.ChainID,
 					AccountNumber: signerData.AccountNumber,
 					Sequence:      signerData.Sequence,
 					PubKey:        signerData.PubKey,
@@ -115,7 +116,7 @@ func TestTxJsonTestcases(t *testing.T) {
 
 // createTextualData creates a Textual data give then JSON
 // test case.
-func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData json.RawMessage) (*txv1beta1.TxBody, []byte, *txv1beta1.AuthInfo, []byte, signing.SignerData) {
+func createTextualData(t *testing.T, jsonTx txJJSONTestTx, jsonSignerData json.RawMessage) (*txv1beta1.TxBody, []byte, *txv1beta1.AuthInfo, []byte, signing.SignerData) {
 	body := &txv1beta1.TxBody{}
 	authInfo := &txv1beta1.AuthInfo{}
 	protoSignerData := &textualpb.SignerData{}
@@ -142,7 +143,7 @@ func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData json.Ra
 func signerDataFromProto(d *textualpb.SignerData) signing.SignerData {
 	return signing.SignerData{
 		Address:       d.Address,
-		ChainId:       d.ChainId,
+		ChainID:       d.ChainId,
 		AccountNumber: d.AccountNumber,
 		Sequence:      d.Sequence,
 		PubKey:        d.PubKey,

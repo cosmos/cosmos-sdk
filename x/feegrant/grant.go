@@ -13,8 +13,6 @@ import (
 var _ types.UnpackInterfacesMessage = &Grant{}
 
 // NewGrant creates a new FeeAllowanceGrant.
-//
-
 func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Grant, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {

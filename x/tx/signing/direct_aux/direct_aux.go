@@ -1,4 +1,4 @@
-package direct_aux
+package directaux
 
 import (
 	"context"
@@ -69,18 +69,24 @@ func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 	return signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX
 }
 
-// getFirstSigner returns the first signer from the first message in the tx. It replicates behavior in
-// https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L142
 func (h SignModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
+	var signer []string
+	found := false
 	for _, anyMsg := range txData.Body.Messages {
 		msg, err := anyutil.Unpack(anyMsg, h.fileResolver, h.typeResolver)
 		if err != nil {
 			return "", err
 		}
-		signer, err := h.signersContext.GetSigners(msg)
+		signer, err = h.signersContext.GetSigners(msg)
 		if err != nil {
 			return "", err
 		}
+		if len(signer) > 0 {
+			found = true
+			break
+		}
+	}
+	if found {
 		return signer[0], nil
 	}
 	return "", fmt.Errorf("no signer found")
@@ -106,7 +112,7 @@ func (h SignModeHandler) GetSignBytes(
 	signDocDirectAux := &txv1beta1.SignDocDirectAux{
 		BodyBytes:     txData.BodyBytes,
 		PublicKey:     signerData.PubKey,
-		ChainId:       signerData.ChainId,
+		ChainId:       signerData.ChainID,
 		AccountNumber: signerData.AccountNumber,
 		Sequence:      signerData.Sequence,
 		Tip:           txData.AuthInfo.Tip,

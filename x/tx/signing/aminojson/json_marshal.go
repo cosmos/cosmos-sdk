@@ -186,6 +186,8 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		if !msg.Has(f) {
 			// msg.WhichOneof(oneof) == nil: no field of the oneof has been set
 			// !emptyOneOfWritten: we haven't written a null for this oneof yet (only write one null per empty oneof)
+			// msg.WhichOneof(oneof) == nil: no field of the oneof has been set
+			// !emptyOneOfWritten: we haven't written a null for this oneof yet (only write one null per empty oneof)
 			if isOneOf && msg.WhichOneof(oneof) == nil && !emptyOneOfWritten[oneofFieldName] {
 				name = oneofFieldName
 				writeNil = true

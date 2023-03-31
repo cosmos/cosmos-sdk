@@ -1,9 +1,8 @@
 package integration_test
 
 import (
-	"testing"
-
-	"gotest.tools/v3/assert"
+	"fmt"
+	"io"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -17,9 +16,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/google/go-cmp/cmp"
 )
 
-func TestIntegrationTestExample(t *testing.T) {
+// Example shows how to use the integration test framework to test the integration of a modules.
+// Panics are used in this example, but in a real test case, you should use the testing.T object and assertions.
+func Example() {
 	// in this example we are testing the integration of the following modules:
 	// - mint, which directly depends on auth, bank and staking
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, mint.AppModuleBasic{})
@@ -43,7 +45,9 @@ func TestIntegrationTestExample(t *testing.T) {
 	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, keys[minttypes.StoreKey], nil, accountKeeper, nil, authtypes.FeeCollectorName, authority)
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil, nil)
 
-	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), keys, authModule, mintModule)
+	// create the application and register all the modules from the previous step
+	// replace the name and the logger by testing values in a real test case (e.g. t.Name() and log.NewTestLogger(t))
+	integrationApp := integration.NewIntegrationApp("example", log.NewLogger(io.Discard), keys, authModule, mintModule)
 
 	// register the message and query servers
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
@@ -58,16 +62,89 @@ func TestIntegrationTestExample(t *testing.T) {
 		Authority: authority,
 		Params:    params,
 	})
-	assert.NilError(t, err)
+	if err != nil {
+		panic(err)
+	}
+
 	// in this example the resut is an empty response, a nil check is enough
 	// in other cases, it is recommanded to check the result value.
-	assert.Assert(t, result != nil)
+	if result == nil {
+		panic(fmt.Errorf("unexpected nil result"))
+	}
 
 	// we now check the result
 	resp := minttypes.MsgUpdateParamsResponse{}
 	err = encodingCfg.Codec.Unmarshal(result.Value, &resp)
-	assert.NilError(t, err)
+	if err != nil {
+		panic(err)
+	}
 
-	// we can also check the state of the application
-	assert.DeepEqual(t, mintKeeper.GetParams(integrationApp.SDKContext()), params)
+	// we should also check the state of the application
+	got := mintKeeper.GetParams(integrationApp.SDKContext())
+	if diff := cmp.Diff(got, params); diff != "" {
+		panic(diff)
+	}
+	fmt.Println(got.BlocksPerYear)
+	// Output: 10000
+}
+
+// ExampleOneModule shows how to use the integration test framework to test the integration of a single module.
+// That module has no dependency on other modules.
+func ExampleOneModule() {
+	// in this example we are testing the integration of the auth module:
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
+	authority := authtypes.NewModuleAddress("gov").String()
+
+	accountKeeper := authkeeper.NewAccountKeeper(
+		encodingCfg.Codec,
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount,
+		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
+		"cosmos",
+		authority,
+	)
+
+	// subspace is nil because we don't test params (which is legacy anyway)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts, nil)
+
+	// create the application and register all the modules from the previous step
+	// replace the name and the logger by testing values in a real test case (e.g. t.Name() and log.NewTestLogger(t))
+	integrationApp := integration.NewIntegrationApp("example-one-module", log.NewLogger(io.Discard), keys, authModule)
+
+	// register the message and query servers
+	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
+
+	params := authtypes.DefaultParams()
+	params.MaxMemoCharacters = 1000
+
+	// now we can use the application to test a mint message
+	result, err := integrationApp.RunMsg(&authtypes.MsgUpdateParams{
+		Authority: authority,
+		Params:    params,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// in this example the resut is an empty response, a nil check is enough
+	// in other cases, it is recommanded to check the result value.
+	if result == nil {
+		panic(fmt.Errorf("unexpected nil result"))
+	}
+
+	// we now check the result
+	resp := authtypes.MsgUpdateParamsResponse{}
+	err = encodingCfg.Codec.Unmarshal(result.Value, &resp)
+	if err != nil {
+		panic(err)
+	}
+
+	// we should also check the state of the application
+	got := accountKeeper.GetParams(integrationApp.SDKContext())
+	if diff := cmp.Diff(got, params); diff != "" {
+		panic(diff)
+	}
+	fmt.Println(got.MaxMemoCharacters)
+	// Output: 1000
 }

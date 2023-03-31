@@ -18,8 +18,6 @@ var (
 )
 
 // NewMsgUnjail creates a new MsgUnjail instance
-//
-
 func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
 	return &MsgUnjail{
 		ValidatorAddr: validatorAddr.String(),

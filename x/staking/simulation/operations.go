@@ -17,8 +17,6 @@ import (
 )
 
 // Simulation operation weights constants
-//
-
 const (
 	DefaultWeightMsgCreateValidator           int = 100
 	DefaultWeightMsgEditValidator             int = 5

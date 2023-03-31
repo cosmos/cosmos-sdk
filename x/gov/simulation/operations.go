@@ -29,8 +29,6 @@ var (
 )
 
 // Simulation operation weights constants
-//
-
 const (
 	OpWeightMsgDeposit        = "op_weight_msg_deposit"
 	OpWeightMsgVote           = "op_weight_msg_vote"

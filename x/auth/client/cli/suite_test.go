@@ -103,8 +103,8 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TestCLIValidateSignatures() {
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin("testtoken", sdk.NewInt(10)),
-		sdk.NewCoin("stake", sdk.NewInt(10)))
+		sdk.NewCoin("testtoken", math.NewInt(10)),
+		sdk.NewCoin("stake", math.NewInt(10)))
 
 	res, err := s.createBankMsg(s.clientCtx, s.val, sendTokens,
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
@@ -139,8 +139,8 @@ func (s *CLITestSuite) TestCLIValidateSignatures() {
 
 func (s *CLITestSuite) TestCLISignBatch() {
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin("testtoken", sdk.NewInt(10)),
-		sdk.NewCoin("stake", sdk.NewInt(10)),
+		sdk.NewCoin("testtoken", math.NewInt(10)),
+		sdk.NewCoin("stake", math.NewInt(10)),
 	)
 
 	generatedStd, err := s.createBankMsg(s.clientCtx, s.val,
@@ -729,7 +729,7 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 		addr,
 		s.val,
 		sdk.NewCoins(
-			sdk.NewCoin("stake", sdk.NewInt(1)),
+			sdk.NewCoin("stake", math.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -852,7 +852,7 @@ func (s *CLITestSuite) TestTxWithoutPublicKey() {
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
 	msg := banktypes.NewMsgSend(s.val, s.val, sdk.NewCoins(
-		sdk.NewCoin("Stake", sdk.NewInt(10)),
+		sdk.NewCoin("Stake", math.NewInt(10)),
 	))
 	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)

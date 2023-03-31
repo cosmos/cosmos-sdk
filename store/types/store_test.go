@@ -233,7 +233,7 @@ func TestNewTransientStoreKeys(t *testing.T) {
 func TestNewInfiniteGasMeter(t *testing.T) {
 	gm := NewInfiniteGasMeter()
 	require.NotNil(t, gm)
-	_, ok := gm.(GasMeter) //nolint:gosimple
+	_, ok := gm.(GasMeter) //nolint:gosimple // this is a test to ensure that the gas meter is a gas meter
 	require.True(t, ok)
 }
 

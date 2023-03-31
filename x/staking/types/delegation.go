@@ -306,8 +306,6 @@ func (d DelegationResponses) String() (out string) {
 }
 
 // NewRedelegationResponse crates a new RedelegationEntryResponse instance.
-//
-
 func NewRedelegationResponse(
 	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,
 ) RedelegationResponse {

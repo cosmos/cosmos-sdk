@@ -378,7 +378,7 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 	notBondedAmt5 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	assert.Assert(math.IntEq(t, bondedAmt1, bondedAmt5))
-	// Not bonded amount back to what it was originaly
+	// Not bonded amount back to what it was originally
 	assert.Assert(math.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
 }
 
@@ -414,6 +414,6 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 	notBondedAmt5 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	assert.Assert(math.IntEq(t, bondedAmt1, bondedAmt5))
-	// Not bonded amount back to what it was originaly
+	// Not bonded amount back to what it was originally
 	assert.Assert(math.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
 }

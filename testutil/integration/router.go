@@ -28,7 +28,7 @@ type App struct {
 	queryHelper *baseapp.QueryServiceTestHelper
 }
 
-// NewIntegrationApp creates a application for testing purposes. This application is able to route messages to their respective handlers.
+// NewIntegrationApp creates an application for testing purposes. This application is able to route messages to their respective handlers.
 func NewIntegrationApp(nameSuffix string, logger log.Logger, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *App {
 	db := dbm.NewMemDB()
 

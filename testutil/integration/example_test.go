@@ -19,7 +19,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// Example shows how to use the integration test framework to test the integration of a modules.
+// Example shows how to use the integration test framework to test the integration of SDK modules.
 // Panics are used in this example, but in a real test case, you should use the testing.T object and assertions.
 func Example() {
 	// in this example we are testing the integration of the following modules:

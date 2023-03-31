@@ -1,2 +1,2 @@
-// Integration contains the integration test suite used for SDK modules.
+// Integration contains the integration test setup used for SDK modules.
 package integration

@@ -66,7 +66,7 @@ The SDK provides small helpers for quickly setting up an integration tests. Thes
 ### Example
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/35deb0ce8656915ee179c513ff42b92d30b85f83/testutil/integration/example_test.go#L22-L71
+https://github.com/cosmos/cosmos-sdk/blob/29e22b3bdb05353555c8e0b269311bbff7b8deca/testutil/integration/example_test.go#L22-L89
 ```
 
 ## Deterministic and Regression tests	
@@ -89,7 +89,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/tests/integration/bank/kee
 Simulations uses as well a minimal application, built with [`depinject`](../tooling/02-depinject.md):
 
 :::note
-You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/slashing/app_test.go#L54-L62). There no difference between those two ways, use whichever you prefer.
+You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/slashing/app_test.go#L54-L62). There is no difference between those two ways, use whichever you prefer.
 :::
 
 Following is an example for `x/gov/` simulations:

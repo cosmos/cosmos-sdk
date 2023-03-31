@@ -4,7 +4,7 @@ Usage:
 
 Flags:
       --a-bool                                                               
-      --a-coin cosmos.base.v1beta1.Coin (json)                               
+      --a-coin cosmos.base.v1beta1.Coin                                      
       --a-message testpb.AMessage (json)                                     
       --an-address bech32 account address key name                           
       --an-enum Enum (unspecified | one | two | five | neg-three)             (default unspecified)
@@ -30,7 +30,7 @@ Flags:
       --page-reverse                                                         
       --positional1 int32                                                    
       --positional2 string                                                   
-      --positional3-varargs cosmos.base.v1beta1.Coin (json) (repeated)       
+      --positional3-varargs cosmos.base.v1beta1.Coin (repeated)              
       --shorthand-deprecated-field string                                    
       --some-messages testpb.AMessage (json) (repeated)                      
       --str string                                                           

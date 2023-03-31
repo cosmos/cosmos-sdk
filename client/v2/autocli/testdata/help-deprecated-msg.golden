@@ -6,7 +6,7 @@ Usage:
 
 Flags:
       --a-bool                                                               
-      --a-coin cosmos.base.v1beta1.Coin (json)                               
+      --a-coin cosmos.base.v1beta1.Coin                                      
       --a-message testpb.AMessage (json)                                     
   -a, --account-number uint                                                  The account number of the signing account (offline mode only)
       --an-address bech32 account address key name                           
@@ -47,7 +47,7 @@ Flags:
       --page-reverse                                                         
       --positional1 int32                                                    
       --positional2 string                                                   
-      --positional3-varargs cosmos.base.v1beta1.Coin (json) (repeated)       
+      --positional3-varargs cosmos.base.v1beta1.Coin (repeated)              
   -s, --sequence uint                                                        The sequence number of the signing account (offline mode only)
       --shorthand-deprecated-field string                                    
       --sign-mode string                                                     Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature

@@ -11,7 +11,7 @@ send 1 abc {}
 
 Flags:
       --a-bool                                                               
-      --a-coin cosmos.base.v1beta1.Coin (json)                               
+      --a-coin cosmos.base.v1beta1.Coin                                      
       --a-message testpb.AMessage (json)                                     
   -a, --account-number uint                                                  The account number of the signing account (offline mode only)
       --an-address bech32 account address key name                           

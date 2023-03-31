@@ -116,7 +116,7 @@ func TestTxJsonTestcases(t *testing.T) {
 
 // createTextualData creates a Textual data give then JSON
 // test case.
-func createTextualData(t *testing.T, jsonTx txJJSONTestTx, jsonSignerData json.RawMessage) (*txv1beta1.TxBody, []byte, *txv1beta1.AuthInfo, []byte, signing.SignerData) {
+func createTextualData(t *testing.T, jsonTx txJSONTestTx, jsonSignerData json.RawMessage) (*txv1beta1.TxBody, []byte, *txv1beta1.AuthInfo, []byte, signing.SignerData) {
 	body := &txv1beta1.TxBody{}
 	authInfo := &txv1beta1.AuthInfo{}
 	protoSignerData := &textualpb.SignerData{}

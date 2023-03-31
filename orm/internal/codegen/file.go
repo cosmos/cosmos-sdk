@@ -33,7 +33,7 @@ func (f fileGen) gen() error {
 		}
 		singletonDesc := proto.GetExtension(msg.Desc.Options(), ormv1.E_Singleton).(*ormv1.SingletonDescriptor)
 		if singletonDesc != nil {
-			// do some singleton magic
+			// Do some singleton magic.
 			singletonGen, err := newSingletonGen(f, msg, singletonDesc)
 			if err != nil {
 				return err
@@ -41,7 +41,7 @@ func (f fileGen) gen() error {
 			singletonGen.gen()
 		}
 
-		if tableDesc != nil || singletonDesc != nil { // message is one of the tables,
+		if tableDesc != nil || singletonDesc != nil { // Message is one of the tables,.
 			stores = append(stores, msg)
 		}
 	}
@@ -66,16 +66,12 @@ func (f fileGen) genStoreInterface(stores []*protogen.Message) {
 }
 
 func (f fileGen) genStoreStruct(stores []*protogen.Message) {
-	// struct
+	// Struct.
 	f.P("type ", f.storeStructName(), " struct {")
 	for _, message := range stores {
 		f.P(f.param(message.GoIdent.GoName), " ", f.messageTableInterfaceName(message))
 	}
 	f.P("}")
-}
-
-func (f fileGen) storeAccessorName() string {
-	return f.storeInterfaceName()
 }
 
 func (f fileGen) storeInterfaceName() string {
@@ -100,19 +96,11 @@ func fileShortName(file *protogen.File) string {
 	return strcase.ToCamel(shortName)
 }
 
-func (f fileGen) messageTableInterfaceName(m *protogen.Message) string {
+func (fileGen) messageTableInterfaceName(m *protogen.Message) string {
 	return m.GoIdent.GoName + "Table"
 }
 
-func (f fileGen) messageReaderInterfaceName(m *protogen.Message) string {
-	return m.GoIdent.GoName + "Reader"
-}
-
-func (f fileGen) messageTableVar(m *protogen.Message) string {
-	return f.param(m.GoIdent.GoName + "Table")
-}
-
-func (f fileGen) param(name string) string {
+func (fileGen) param(name string) string {
 	return strcase.ToLowerCamel(name)
 }
 
@@ -125,7 +113,7 @@ func (f fileGen) messageConstructorName(m *protogen.Message) string {
 }
 
 func (f fileGen) genStoreMethods(stores []*protogen.Message) {
-	// getters
+	// Getters.
 	for _, msg := range stores {
 		name := f.messageTableInterfaceName(msg)
 		f.P("func(x ", f.storeStructName(), ") ", name, "() ", name, "{")

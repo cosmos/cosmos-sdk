@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
+// TestAutoIncrementScenario runs a scenario with a table that has an auto-incrementing primary key.
 func TestAutoIncrementScenario(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleAutoIncrementTable{}).ProtoReflect().Type(),
@@ -25,7 +26,7 @@ func TestAutoIncrementScenario(t *testing.T) {
 	assert.Assert(t, ok)
 
 	// first run tests with a split index-commitment store
-	runAutoIncrementScenario(t, autoTable, ormtable.WrapContextDefault(testkv.NewSplitMemBackend()))
+	runAutoIncrementScenario(ormtable.WrapContextDefault(testkv.NewSplitMemBackend()), t, autoTable)
 
 	// now run with shared store and debugging
 	debugBuf := &strings.Builder{}
@@ -33,16 +34,18 @@ func TestAutoIncrementScenario(t *testing.T) {
 		testkv.NewSharedMemBackend(),
 		&testkv.EntryCodecDebugger{
 			EntryCodec: table,
-			Print:      func(s string) { debugBuf.WriteString(s + "\n") },
+			Print:      func(s string) { debugBuf.WriteString(s + "\n") }, //nolint:errcheck // ignore errors
 		},
 	)
-	runAutoIncrementScenario(t, autoTable, ormtable.WrapContextDefault(store))
+	runAutoIncrementScenario(ormtable.WrapContextDefault(store), t, autoTable)
 
 	golden.Assert(t, debugBuf.String(), "test_auto_inc.golden")
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
 }
 
-func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, ctx context.Context) {
+// runAutoIncrementScenario runs a simple scenario with an auto-increment table.
+func runAutoIncrementScenario(ctx context.Context, t *testing.T, table ormtable.AutoIncrementTable) {
+	t.Helper()
 	store, err := testpb.NewExampleAutoIncrementTableTable(table)
 	assert.NilError(t, err)
 
@@ -57,10 +60,10 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, c
 	assert.Equal(t, curSeq, uint64(1))
 
 	ex2 := &testpb.ExampleAutoIncrementTable{X: "bar", Y: 10}
-	newId, err := table.InsertReturningPKey(ctx, ex2)
+	newID, err := table.InsertReturningPKey(ctx, ex2)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(2), ex2.Id)
-	assert.Equal(t, newId, ex2.Id)
+	assert.Equal(t, newID, ex2.Id)
 	curSeq, err = table.LastInsertedSequence(ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, curSeq, uint64(2))
@@ -70,7 +73,7 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, c
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 	store2 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
-	assertTablesEqual(t, table, ctx, store2)
+	assertTablesEqual(ctx, store2, t, table)
 
 	// test edge case where we have deleted all entities but we're still exporting the sequence number
 	assert.NilError(t, table.Delete(ctx, ex1))
@@ -89,6 +92,7 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, c
 	assert.Equal(t, curSeq, uint64(3))
 }
 
+// TestBadJSON tests that we get an error when importing bad JSON.
 func TestBadJSON(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleAutoIncrementTable{}).ProtoReflect().Type(),

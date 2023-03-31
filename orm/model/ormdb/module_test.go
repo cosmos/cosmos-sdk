@@ -89,7 +89,7 @@ func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) err
 	if supply == nil {
 		supply = &testpb.Supply{Denom: denom, Amount: amount}
 	} else {
-		supply.Amount = supply.Amount + amount
+		supply.Amount += amount
 	}
 
 	err = k.store.SupplyTable().Save(ctx, supply)
@@ -111,7 +111,7 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 		return fmt.Errorf("insufficient supply")
 	}
 
-	supply.Amount = supply.Amount - amount
+	supply.Amount -= amount
 
 	if supply.Amount == 0 {
 		err = supplyStore.Delete(ctx, supply)
@@ -162,7 +162,7 @@ func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint6
 			Amount:  amount,
 		}
 	} else {
-		balance.Amount = balance.Amount + amount
+		balance.Amount += amount
 	}
 
 	return k.store.BalanceTable().Save(ctx, balance)
@@ -179,13 +179,12 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 		return fmt.Errorf("insufficient funds")
 	}
 
-	balance.Amount = balance.Amount - amount
+	balance.Amount -= amount
 
 	if balance.Amount == 0 {
 		return balanceStore.Delete(ctx, balance)
-	} else {
-		return balanceStore.Save(ctx, balance)
 	}
+	return balanceStore.Save(ctx, balance)
 }
 
 func TestModuleDB(t *testing.T) {
@@ -198,7 +197,7 @@ func TestModuleDB(t *testing.T) {
 		backend,
 		&testkv.EntryCodecDebugger{
 			EntryCodec: db,
-			Print:      func(s string) { debugBuf.WriteString(s + "\n") },
+			Print:      func(s string) { debugBuf.WriteString(s + "\n") }, //nolint:errcheck // ignore error
 		},
 	))
 
@@ -206,7 +205,7 @@ func TestModuleDB(t *testing.T) {
 	k, err := NewKeeper(db)
 	assert.NilError(t, err)
 
-	runSimpleBankTests(t, k, ctx)
+	runSimpleBankTests(ctx, t, k)
 
 	// check debug output
 	golden.Assert(t, debugBuf.String(), "bank_scenario.golden")
@@ -227,13 +226,13 @@ func TestModuleDB(t *testing.T) {
 	// check JSON
 	target := genesis.RawJSONTarget{}
 	assert.NilError(t, db.GenesisHandler().DefaultGenesis(target.Target()))
-	rawJson, err := target.JSON()
+	rawJSON, err := target.JSON()
 	assert.NilError(t, err)
-	golden.Assert(t, string(rawJson), "default_json.golden")
+	golden.Assert(t, string(rawJSON), "default_json.golden")
 
 	target = genesis.RawJSONTarget{}
 	assert.NilError(t, db.GenesisHandler().ExportGenesis(ctx, target.Target()))
-	rawJson, err = target.JSON()
+	rawJSON, err = target.JSON()
 	assert.NilError(t, err)
 
 	goodJSON := `{
@@ -255,14 +254,15 @@ func TestModuleDB(t *testing.T) {
 
 	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)
-	source, err = genesis.SourceFromRawJSON(rawJson)
+	source, err = genesis.SourceFromRawJSON(rawJSON)
 	assert.NilError(t, err)
 	assert.NilError(t, db.GenesisHandler().ValidateGenesis(source))
 	assert.NilError(t, db.GenesisHandler().InitGenesis(ctx2, source))
 	testkv.AssertBackendsEqual(t, backend, backend2)
 }
 
-func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
+func runSimpleBankTests(ctx context.Context, t *testing.T, k Keeper) {
+	t.Helper()
 	// mint coins
 	denom := "foo"
 	acct1 := "bob"
@@ -415,5 +415,5 @@ func TestAppConfigModule(t *testing.T) {
 	), &k)
 	assert.NilError(t, err)
 
-	runSimpleBankTests(t, k, context.Background())
+	runSimpleBankTests(context.Background(), t, k)
 }

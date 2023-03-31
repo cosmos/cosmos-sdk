@@ -8,14 +8,12 @@ import (
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
-
-	"cosmossdk.io/depinject"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 func init() {

@@ -25,7 +25,7 @@ type primaryKeyIndex struct {
 	getBackend func(context.Context) (ReadBackend, error)
 }
 
-func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
+func (p primaryKeyIndex) List(ctx context.Context, prefixKey []any, options ...ormlist.Option) (Iterator, error) {
 	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, opti
 	return prefixIterator(backend.CommitmentStoreReader(), backend, p, p.KeyCodec, prefixKey, options)
 }
 
-func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []any, options ...ormlist.Option) (Iterator, error) {
 	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return nil, err
@@ -43,18 +43,18 @@ func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, 
 	return rangeIterator(backend.CommitmentStoreReader(), backend, p, p.KeyCodec, from, to, options)
 }
 
-func (p primaryKeyIndex) doNotImplement() {}
+func (primaryKeyIndex) doNotImplement() {}
 
-func (p primaryKeyIndex) Has(ctx context.Context, key ...interface{}) (found bool, err error) {
+func (p primaryKeyIndex) Has(ctx context.Context, key ...any) (found bool, err error) {
 	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	return p.has(backend, encodeutil.ValuesOf(key...))
+	return p.checkHas(backend, encodeutil.ValuesOf(key...))
 }
 
-func (p primaryKeyIndex) has(backend ReadBackend, values []protoreflect.Value) (found bool, err error) {
+func (p primaryKeyIndex) checkHas(backend ReadBackend, values []protoreflect.Value) (found bool, err error) {
 	keyBz, err := p.EncodeKey(values)
 	if err != nil {
 		return false, err
@@ -63,16 +63,16 @@ func (p primaryKeyIndex) has(backend ReadBackend, values []protoreflect.Value) (
 	return backend.CommitmentStoreReader().Has(keyBz)
 }
 
-func (p primaryKeyIndex) Get(ctx context.Context, message proto.Message, values ...interface{}) (found bool, err error) {
+func (p primaryKeyIndex) Get(ctx context.Context, message proto.Message, values ...any) (found bool, err error) {
 	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	return p.get(backend, message, encodeutil.ValuesOf(values...))
+	return p.doGet(backend, message, encodeutil.ValuesOf(values...))
 }
 
-func (p primaryKeyIndex) get(backend ReadBackend, message proto.Message, values []protoreflect.Value) (found bool, err error) {
+func (p primaryKeyIndex) doGet(backend ReadBackend, message proto.Message, values []protoreflect.Value) (found bool, err error) {
 	key, err := p.EncodeKey(values)
 	if err != nil {
 		return false, err
@@ -81,7 +81,7 @@ func (p primaryKeyIndex) get(backend ReadBackend, message proto.Message, values 
 	return p.getByKeyBytes(backend, key, values, message)
 }
 
-func (p primaryKeyIndex) DeleteBy(ctx context.Context, primaryKeyValues ...interface{}) error {
+func (p primaryKeyIndex) DeleteBy(ctx context.Context, primaryKeyValues ...any) error {
 	if len(primaryKeyValues) == len(p.GetFieldNames()) {
 		return p.doDelete(ctx, encodeutil.ValuesOf(primaryKeyValues...))
 	}
@@ -94,7 +94,7 @@ func (p primaryKeyIndex) DeleteBy(ctx context.Context, primaryKeyValues ...inter
 	return p.deleteByIterator(ctx, it)
 }
 
-func (p primaryKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+func (p primaryKeyIndex) DeleteRange(ctx context.Context, from, to []any) error {
 	it, err := p.ListRange(ctx, from, to)
 	if err != nil {
 		return err

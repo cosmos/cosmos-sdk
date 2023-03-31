@@ -28,7 +28,7 @@ func (t autoIncrementTable) InsertReturningPKey(ctx context.Context, message pro
 		return 0, err
 	}
 
-	return t.save(ctx, backend, message, saveModeInsert)
+	return t.saveAutoIncrement(ctx, backend, message, saveModeInsert)
 }
 
 func (t autoIncrementTable) Save(ctx context.Context, message proto.Message) error {
@@ -37,7 +37,7 @@ func (t autoIncrementTable) Save(ctx context.Context, message proto.Message) err
 		return err
 	}
 
-	_, err = t.save(ctx, backend, message, saveModeDefault)
+	_, err = t.saveAutoIncrement(ctx, backend, message, saveModeDefault)
 	return err
 }
 
@@ -47,7 +47,7 @@ func (t autoIncrementTable) Insert(ctx context.Context, message proto.Message) e
 		return err
 	}
 
-	_, err = t.save(ctx, backend, message, saveModeInsert)
+	_, err = t.saveAutoIncrement(ctx, backend, message, saveModeInsert)
 	return err
 }
 
@@ -57,7 +57,7 @@ func (t autoIncrementTable) Update(ctx context.Context, message proto.Message) e
 		return err
 	}
 
-	_, err = t.save(ctx, backend, message, saveModeUpdate)
+	_, err = t.saveAutoIncrement(ctx, backend, message, saveModeUpdate)
 	return err
 }
 
@@ -70,7 +70,7 @@ func (t autoIncrementTable) LastInsertedSequence(ctx context.Context) (uint64, e
 	return t.curSeqValue(backend.IndexStoreReader())
 }
 
-func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) (newPK uint64, err error) {
+func (t *autoIncrementTable) saveAutoIncrement(ctx context.Context, backend Backend, message proto.Message, mode saveMode) (newPK uint64, err error) {
 	messageRef := message.ProtoReflect()
 	val := messageRef.Get(t.autoIncField).Uint()
 	writer := newBatchIndexCommitmentWriter(backend)
@@ -99,8 +99,8 @@ func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message 
 	return newPK, t.tableImpl.doSave(ctx, writer, message, mode)
 }
 
-func (t *autoIncrementTable) curSeqValue(kv kv.ReadonlyStore) (uint64, error) {
-	bz, err := kv.Get(t.seqCodec.Prefix())
+func (t *autoIncrementTable) curSeqValue(kvro kv.ReadonlyStore) (uint64, error) {
+	bz, err := kvro.Get(t.seqCodec.Prefix())
 	if err != nil {
 		return 0, err
 	}
@@ -108,18 +108,18 @@ func (t *autoIncrementTable) curSeqValue(kv kv.ReadonlyStore) (uint64, error) {
 	return t.seqCodec.DecodeValue(bz)
 }
 
-func (t *autoIncrementTable) nextSeqValue(kv kv.Store) (uint64, error) {
-	seq, err := t.curSeqValue(kv)
+func (t *autoIncrementTable) nextSeqValue(kvstore kv.Store) (uint64, error) {
+	seq, err := t.curSeqValue(kvstore)
 	if err != nil {
 		return 0, err
 	}
 
 	seq++
-	return seq, t.setSeqValue(kv, seq)
+	return seq, t.setSeqValue(kvstore, seq)
 }
 
-func (t *autoIncrementTable) setSeqValue(kv kv.Store, seq uint64) error {
-	return kv.Set(t.seqCodec.Prefix(), t.seqCodec.EncodeValue(seq))
+func (t *autoIncrementTable) setSeqValue(kvstore kv.Store, seq uint64) error {
+	return kvstore.Set(t.seqCodec.Prefix(), t.seqCodec.EncodeValue(seq))
 }
 
 func (t autoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
@@ -130,7 +130,7 @@ func (t autoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err err
 }
 
 func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
-	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxSeq uint64) error {
+	return t.decodeAutoIncJSON(nil, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
 		pkey := messageRef.Get(t.autoIncField).Uint()
 		if pkey > maxSeq {
@@ -140,9 +140,8 @@ func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 
 		if t.customJSONValidator != nil {
 			return t.customJSONValidator(message)
-		} else {
-			return DefaultJSONValidator(message)
 		}
+		return DefaultJSONValidator(message)
 	})
 }
 
@@ -152,37 +151,36 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 		return err
 	}
 
-	return t.decodeAutoIncJson(backend, reader, func(message proto.Message, maxSeq uint64) error {
+	return t.decodeAutoIncJSON(backend, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
 		pkey := messageRef.Get(t.autoIncField).Uint()
 		if pkey == 0 {
 			// we don't have a primary key in the JSON, so we call Save to insert and
 			// generate one
-			_, err = t.save(ctx, backend, message, saveModeInsert)
+			_, err = t.saveAutoIncrement(ctx, backend, message, saveModeInsert)
 			return err
-		} else {
-			if pkey > maxSeq {
-				return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
-					"sequence number", pkey, maxSeq)
-			}
-			// we do have a primary key and calling Save will fail because it expects
-			// either no primary key or SAVE_MODE_UPDATE. So instead we drop one level
-			// down and insert using tableImpl which doesn't know about
-			// auto-incrementing primary keys.
-			return t.tableImpl.save(ctx, backend, message, saveModeInsert)
 		}
+		if pkey > maxSeq {
+			return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
+				"sequence number", pkey, maxSeq)
+		}
+		// we do have a primary key and calling Save will fail because it expects
+		// either no primary key or SAVE_MODE_UPDATE. So instead we drop one level
+		// down and insert using tableImpl which doesn't know about
+		// auto-incrementing primary keys.
+		return t.tableImpl.write(ctx, backend, message, saveModeInsert)
 	})
 }
 
-func (t autoIncrementTable) decodeAutoIncJson(backend Backend, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
-	decoder, err := t.startDecodeJson(reader)
+func (t autoIncrementTable) decodeAutoIncJSON(backend Backend, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
+	decoder, err := t.startDecodeJSON(reader)
 	if err != nil {
 		return err
 	}
 
 	var seq uint64
 
-	return t.doDecodeJson(decoder,
+	return t.doDecodeJSON(decoder,
 		func(message json.RawMessage) bool {
 			err = json.Unmarshal(message, &seq)
 			if err == nil {

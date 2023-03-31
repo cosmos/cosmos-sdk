@@ -4,11 +4,9 @@ import (
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // Codec defines an interface for decoding and encoding values in ORM index keys.
@@ -50,7 +48,7 @@ var (
 )
 
 // GetCodec returns the Codec for the provided field if one is defined.
-// nonTerminal should be set to true if this value is being encoded as a
+// NonTerminal should be set to true if this value is being encoded as a
 // non-terminal segment of a multi-part key.
 func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, error) {
 	if field == nil {
@@ -72,15 +70,15 @@ func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, erro
 	case protoreflect.BytesKind:
 		if nonTerminal {
 			return NonTerminalBytesCodec{}, nil
-		} else {
-			return BytesCodec{}, nil
 		}
+		return BytesCodec{}, nil
+
 	case protoreflect.StringKind:
 		if nonTerminal {
 			return NonTerminalStringCodec{}, nil
-		} else {
-			return StringCodec{}, nil
 		}
+		return StringCodec{}, nil
+
 	case protoreflect.Uint32Kind:
 		return CompactUint32Codec{}, nil
 	case protoreflect.Fixed32Kind:

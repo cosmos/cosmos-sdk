@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -64,8 +63,8 @@ func NewUniqueKeyCodec(prefix []byte, messageType protoreflect.MessageType, inde
 		}
 	}
 
-	// if there is nothing in the value we have a trivial unique index
-	// which shouldn't actually be a unique index at all
+	// If there is nothing in the value we have a trivial unique index
+	// which shouldn't actually be a unique index at all.
 	if len(valueFields) == 0 {
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("unique index %s on table %s introduces no new uniqueness constraint not already in the primary key and should not be marked as unique",
 			indexFields, messageType.Descriptor().FullName())
@@ -86,14 +85,14 @@ func NewUniqueKeyCodec(prefix []byte, messageType protoreflect.MessageType, inde
 func (u UniqueKeyCodec) DecodeIndexKey(k, v []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
 	ks, err := u.keyCodec.DecodeKey(bytes.NewReader(k))
 
-	// got prefix key
+	// Got prefix key.
 	if err == io.EOF {
 		return ks, nil, err
 	} else if err != nil {
 		return nil, nil, err
 	}
 
-	// got prefix key
+	// Got prefix key.
 	if len(ks) < len(u.keyCodec.fieldCodecs) {
 		return ks, nil, err
 	}
@@ -107,12 +106,12 @@ func (u UniqueKeyCodec) DecodeIndexKey(k, v []byte) (indexFields, primaryKey []p
 	return ks, pk, nil
 }
 
-func (cdc UniqueKeyCodec) extractPrimaryKey(keyValues, valueValues []protoreflect.Value) []protoreflect.Value {
-	numPkFields := len(cdc.pkFieldOrder)
+func (u UniqueKeyCodec) extractPrimaryKey(keyValues, valueValues []protoreflect.Value) []protoreflect.Value {
+	numPkFields := len(u.pkFieldOrder)
 	pkValues := make([]protoreflect.Value, numPkFields)
 
 	for i := 0; i < numPkFields; i++ {
-		fo := cdc.pkFieldOrder[i]
+		fo := u.pkFieldOrder[i]
 		if fo.inKey {
 			pkValues[i] = keyValues[fo.i]
 		} else {
@@ -158,13 +157,11 @@ func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		value := indexEntry.PrimaryKey[i]
 		fieldOrder := u.pkFieldOrder[i]
 		if !fieldOrder.inKey {
-			// goes in values because it is not present in the index key otherwise
+			// Goes in values because it is not present in the index key otherwise.
 			values = append(values, value)
-		} else {
-			// does not go in values, but we need to verify that the value in index values matches the primary key value
-			if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
-				return nil, nil, ormerrors.BadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
-			}
+			// Does not go in values, but we need to verify that the value in index values matches the primary key value.
+		} else if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
+			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
 		}
 	}
 

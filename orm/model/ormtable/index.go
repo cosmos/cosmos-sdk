@@ -20,7 +20,7 @@ type Index interface {
 	// Prefix key values must correspond in type to the index's fields and the
 	// number of values provided cannot exceed the number of fields in the index,
 	// although fewer values can be provided.
-	List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error)
+	List(ctx context.Context, prefixKey []any, options ...ormlist.Option) (Iterator, error)
 
 	// ListRange does range iteration over the index with the provided from and to
 	// values and options.
@@ -36,13 +36,13 @@ type Index interface {
 	// value for bytes.
 	//
 	// Range iteration is inclusive at both ends.
-	ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error)
+	ListRange(ctx context.Context, from, to []any, options ...ormlist.Option) (Iterator, error)
 
 	// DeleteBy deletes any entries which match the provided prefix key.
-	DeleteBy(context context.Context, prefixKey ...interface{}) error
+	DeleteBy(context context.Context, prefixKey ...any) error
 
 	// DeleteRange deletes any entries between the provided range keys.
-	DeleteRange(context context.Context, from, to []interface{}) error
+	DeleteRange(context context.Context, from, to []any) error
 
 	// MessageType returns the protobuf message type of the index.
 	MessageType() protoreflect.MessageType
@@ -66,10 +66,10 @@ type UniqueIndex interface {
 	Index
 
 	// Has returns true if the key values are present in the store for this index.
-	Has(context context.Context, keyValues ...interface{}) (found bool, err error)
+	Has(context context.Context, keyValues ...any) (found bool, err error)
 
 	// Get retrieves the message if one exists for the provided key values.
-	Get(context context.Context, message proto.Message, keyValues ...interface{}) (found bool, err error)
+	Get(context context.Context, message proto.Message, keyValues ...any) (found bool, err error)
 }
 
 type indexer interface {

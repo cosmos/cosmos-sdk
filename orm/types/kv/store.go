@@ -9,11 +9,11 @@ import (
 // ReadonlyStore is an interface for readonly access to a kv-store.
 type ReadonlyStore interface {
 	// Get fetches the value of the given key, or nil if it does not exist.
-	// CONTRACT: key, value readonly []byte
+	// CONTRACT: key, value readonly []byte.
 	Get(key []byte) ([]byte, error)
 
 	// Has checks if a key exists.
-	// CONTRACT: key, value readonly []byte
+	// CONTRACT: key, value readonly []byte.
 	Has(key []byte) (bool, error)
 
 	// Iterator returns an iterator over a domain of keys, in ascending order. The caller must call
@@ -21,7 +21,7 @@ type ReadonlyStore interface {
 	// from the first key, and a nil end iterates to the last key (inclusive). Empty keys are not
 	// valid.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	// CONTRACT: start, end readonly []byte
+	// CONTRACT: start, end readonly []byte.
 	Iterator(start, end []byte) (Iterator, error)
 
 	// ReverseIterator returns an iterator over a domain of keys, in descending order. The caller
@@ -29,7 +29,7 @@ type ReadonlyStore interface {
 	// iterates from the last key (inclusive), and a nil start iterates to the first key (inclusive).
 	// Empty keys are not valid.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	// CONTRACT: start, end readonly []byte
+	// CONTRACT: start, end readonly []byte.
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
@@ -41,10 +41,10 @@ type Store interface {
 	ReadonlyStore
 
 	// Set sets the value for the given key, replacing it if it already exists.
-	// CONTRACT: key, value readonly []byte
+	// CONTRACT: key, value readonly []byte.
 	Set(key, value []byte) error
 
 	// Delete deletes the key, or does nothing if the key does not exist.
-	// CONTRACT: key readonly []byte
+	// CONTRACT: key readonly []byte.
 	Delete(key []byte) error
 }

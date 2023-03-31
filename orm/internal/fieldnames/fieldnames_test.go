@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
-
 	"gotest.tools/v3/assert"
 )
 
@@ -22,7 +21,7 @@ func TestFieldNames(t *testing.T) {
 	assert.DeepEqual(t, names, f.Names())
 	assert.Equal(t, abc, f.String())
 
-	// empty okay
+	// Empty okay.
 	f = CommaSeparatedFieldNames("")
 	assert.Equal(t, FieldNames{""}, f)
 	assert.Equal(t, 0, len(f.Names()))
@@ -33,7 +32,7 @@ func TestFieldNames(t *testing.T) {
 	assert.DeepEqual(t, names, f.Names())
 	assert.Equal(t, abc, f.String())
 
-	// empty okay
+	// Empty okay.
 	f = FieldsFromNames([]protoreflect.Name{})
 	assert.Equal(t, FieldNames{""}, f)
 	f = FieldsFromNames(nil)

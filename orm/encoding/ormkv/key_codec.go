@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type KeyCodec struct {
@@ -93,7 +91,7 @@ func (cdc *KeyCodec) EncodeKey(values []protoreflect.Value) ([]byte, error) {
 	}
 
 	for i := 0; i < n; i++ {
-		if err = cdc.fieldCodecs[i].Encode(values[i], w); err != nil {
+		if err := cdc.fieldCodecs[i].Encode(values[i], w); err != nil {
 			return nil, err
 		}
 	}
@@ -170,18 +168,19 @@ func (cdc *KeyCodec) CompareKeys(values1, values2 []protoreflect.Value) int {
 	var cmp int
 	for i := 0; i < n; i++ {
 		cmp = cdc.fieldCodecs[i].Compare(values1[i], values2[i])
-		// any non-equal parts determine our ordering
+		// Any non-equal parts determine our ordering.
 		if cmp != 0 {
 			return cmp
 		}
 	}
 
-	// values are equal but arrays of different length
-	if j == k {
+	// Values are equal but arrays of different length.
+	switch {
+	case j == k:
 		return 0
-	} else if j < k {
+	case j < k:
 		return -1
-	} else {
+	default:
 		return 1
 	}
 }
@@ -192,7 +191,7 @@ func (cdc KeyCodec) ComputeKeyBufferSize(values []protoreflect.Value) (int, erro
 	size := cdc.fixedSize
 	n := len(values)
 	for _, sz := range cdc.variableSizers {
-		// handle prefix key encoding case where don't need all the sizers
+		// Handle prefix key encoding case where don't need all the sizers.
 		if sz.i >= n {
 			return size, nil
 		}
@@ -247,30 +246,32 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 		y := end[i]
 
 		cmp = fieldCdc.Compare(x, y)
-		if cmp > 0 {
+		switch {
+		case cmp > 0:
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 				"start must be before end for field %s",
 				cdc.fieldDescriptors[i].FullName(),
 			)
-		} else if !fieldCdc.IsOrdered() && cmp != 0 {
+		case !fieldCdc.IsOrdered() && cmp != 0:
 			descriptor := cdc.fieldDescriptors[i]
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 				"field %s of kind %s doesn't support ordered range iteration",
 				descriptor.FullName(),
 				descriptor.Kind(),
 			)
-		} else if cmp < 0 {
+		case cmp < 0:
 			break
 		}
+
 	}
 
-	// the last prefix value must not be equal if the key lengths are the same
+	// The last prefix value must not be equal if the key lengths are the same.
 	if lenStart == lenEnd {
 		if cmp == 0 {
 			return ormerrors.InvalidRangeIterationKeys
 		}
 	} else {
-		// check any remaining values in start or end
+		// Check any remaining values in start or end.
 		for j := i; j < longest; j++ {
 			if !cdc.fieldCodecs[j].IsOrdered() {
 				return ormerrors.InvalidRangeIterationKeys.Wrapf(

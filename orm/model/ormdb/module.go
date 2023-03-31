@@ -47,7 +47,7 @@ type ModuleDB interface {
 
 type moduleDB struct {
 	prefix       []byte
-	filesById    map[uint32]*fileDescriptorDB
+	filesByID    map[uint32]*fileDescriptorDB
 	tablesByName map[protoreflect.FullName]ormtable.Table
 }
 
@@ -83,7 +83,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 	prefix := schema.Prefix
 	db := &moduleDB{
 		prefix:       prefix,
-		filesById:    map[uint32]*fileDescriptorDB{},
+		filesByID:    map[uint32]*fileDescriptorDB{},
 		tablesByName: map[protoreflect.FullName]ormtable.Table{},
 	}
 
@@ -162,7 +162,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 			return nil, err
 		}
 
-		db.filesById[id] = fdSchema
+		db.filesByID[id] = fdSchema
 		for name, table := range fdSchema.tablesByName {
 			if _, ok := db.tablesByName[name]; ok {
 				return nil, ormerrors.UnexpectedError.Wrapf("duplicate table %s", name)
@@ -191,7 +191,7 @@ func (m moduleDB) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
-	fileSchema, ok := m.filesById[uint32(id)]
+	fileSchema, ok := m.filesByID[uint32(id)]
 	if !ok {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find FileDescriptor schema with id %d", id)
 	}

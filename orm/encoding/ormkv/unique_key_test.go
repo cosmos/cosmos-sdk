@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	"gotest.tools/v3/assert"
-	"pgregory.net/rapid"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"gotest.tools/v3/assert"
+	"pgregory.net/rapid"
 )
 
 func TestUniqueKeyCodec(t *testing.T) {
@@ -20,9 +19,9 @@ func TestUniqueKeyCodec(t *testing.T) {
 		keyCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "keyCodec")
 		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "primaryKeyCodec")
 
-		// check if we have a trivial unique index where all of the fields
+		// Check if we have a trivial unique index where all of the fields
 		// in the primary key are in the unique key, we should expect an
-		// error in this case
+		// error in this case.
 		isInPk := map[protoreflect.Name]bool{}
 		for _, spec := range pkCodec.KeySpecs {
 			isInPk[spec.FieldName] = true
@@ -46,9 +45,8 @@ func TestUniqueKeyCodec(t *testing.T) {
 		if isTrivialUniqueKey {
 			assert.ErrorContains(t, err, "no new uniqueness constraint")
 			return
-		} else {
-			assert.NilError(t, err)
 		}
+		assert.NilError(t, err)
 
 		for i := 0; i < 100; i++ {
 			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i))

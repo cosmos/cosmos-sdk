@@ -2,7 +2,6 @@ package testkv
 
 import (
 	dbm "github.com/cosmos/cosmos-db"
-
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
@@ -22,6 +21,6 @@ func NewSplitMemBackend() ormtable.Backend {
 func NewSharedMemBackend() ormtable.Backend {
 	return ormtable.NewBackend(ormtable.BackendOptions{
 		CommitmentStore: dbm.NewMemDB(),
-		// commit store is automatically used as the index store
+		// Commit store is automatically used as the index store.
 	})
 }

@@ -21,7 +21,7 @@ func getDurationSecondsAndNanos(value protoreflect.Value) (protoreflect.Value, p
 // sorted iteration.
 type DurationCodec struct{}
 
-func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
+func (DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 	seconds, err := int64Codec.Decode(r)
 	if err != nil {
 		return protoreflect.Value{}, err
@@ -36,7 +36,7 @@ func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 	return protoreflect.ValueOfMessage(msg), nil
 }
 
-func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
+func (DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	seconds, nanos := getDurationSecondsAndNanos(value)
 	err := int64Codec.Encode(seconds, w)
 	if err != nil {
@@ -45,22 +45,21 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	return int32Codec.Encode(nanos, w)
 }
 
-func (d DurationCodec) Compare(v1, v2 protoreflect.Value) int {
+func (DurationCodec) Compare(v1, v2 protoreflect.Value) int {
 	s1, n1 := getDurationSecondsAndNanos(v1)
 	s2, n2 := getDurationSecondsAndNanos(v2)
 	c := compareInt(s1, s2)
 	if c != 0 {
 		return c
-	} else {
-		return compareInt(n1, n2)
 	}
+	return compareInt(n1, n2)
 }
 
-func (d DurationCodec) IsOrdered() bool {
+func (DurationCodec) IsOrdered() bool {
 	return true
 }
 
-func (d DurationCodec) FixedBufferSize() int {
+func (DurationCodec) FixedBufferSize() int {
 	return 12
 }
 

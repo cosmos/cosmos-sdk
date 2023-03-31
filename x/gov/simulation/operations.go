@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -509,14 +511,14 @@ func randomDeposit(
 
 	minDepositAmount := minDeposit[denomIndex].Amount
 
-	minAmount := sdk.ZeroInt()
+	minAmount := sdkmath.ZeroInt()
 	if useMinAmount {
-		minDepositPercent, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
+		minDepositPercent, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
 		if err != nil {
 			return nil, false, err
 		}
 
-		minAmount = sdk.NewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
+		minAmount = sdkmath.LegacyNewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
 	}
 
 	amount, err := simtypes.RandPositiveInt(r, minDepositAmount.Sub(minAmount))
@@ -600,19 +602,19 @@ func randomWeightedVotingOptions(r *rand.Rand) v1.WeightedVoteOptions {
 	if w2 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
 			Option: v1.OptionAbstain,
-			Weight: sdk.NewDecWithPrec(int64(w2), 2).String(),
+			Weight: sdkmath.LegacyNewDecWithPrec(int64(w2), 2).String(),
 		})
 	}
 	if w3 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
 			Option: v1.OptionNo,
-			Weight: sdk.NewDecWithPrec(int64(w3), 2).String(),
+			Weight: sdkmath.LegacyNewDecWithPrec(int64(w3), 2).String(),
 		})
 	}
 	if w4 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
 			Option: v1.OptionNoWithVeto,
-			Weight: sdk.NewDecWithPrec(int64(w4), 2).String(),
+			Weight: sdkmath.LegacyNewDecWithPrec(int64(w4), 2).String(),
 		})
 	}
 	return weightedVoteOptions

@@ -2,6 +2,7 @@ package indexes
 
 import (
 	"context"
+	"errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
@@ -10,7 +11,10 @@ import (
 // Multi defines the most common index. It can be used to create a reference between
 // a field of value and its primary key. Multiple primary keys can be mapped to the same
 // reference key as the index does not enforce uniqueness constraints.
-type Multi[ReferenceKey, PrimaryKey, Value any] collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value]
+type Multi[ReferenceKey, PrimaryKey, Value any] struct {
+	getRefKey func(pk PrimaryKey, value Value) (ReferenceKey, error)
+	refKeys   collections.KeySet[collections.Pair[ReferenceKey, PrimaryKey]]
+}
 
 // NewMulti instantiates a new Multi instance given a schema,
 // a Prefix, the humanized name for the index, the reference key key codec
@@ -24,32 +28,54 @@ func NewMulti[ReferenceKey, PrimaryKey, Value any](
 	pkCodec codec.KeyCodec[PrimaryKey],
 	getRefKeyFunc func(pk PrimaryKey, value Value) (ReferenceKey, error),
 ) *Multi[ReferenceKey, PrimaryKey, Value] {
-	i := collections.NewGenericMultiIndex(
-		schema, prefix, name, refCodec, pkCodec,
-		func(pk PrimaryKey, value Value) ([]collections.IndexReference[ReferenceKey, PrimaryKey], error) {
-			ref, err := getRefKeyFunc(pk, value)
-			if err != nil {
-				return nil, err
-			}
-			return []collections.IndexReference[ReferenceKey, PrimaryKey]{
-				collections.NewIndexReference(ref, pk),
-			}, nil
-		},
-	)
-
-	return (*Multi[ReferenceKey, PrimaryKey, Value])(i)
+	return &Multi[ReferenceKey, PrimaryKey, Value]{
+		getRefKey: getRefKeyFunc,
+		refKeys:   collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec)),
+	}
 }
 
-func (m *Multi[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Context, pk PrimaryKey, newValue Value, oldValue *Value) error {
-	return (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Reference(ctx, pk, newValue, oldValue)
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Context, pk PrimaryKey, newValue Value, lazyOldValue func() (Value, error)) error {
+	oldValue, err := lazyOldValue()
+	switch {
+	// if no error it means the value existed, and we need to remove the old indexes
+	case err == nil:
+		err = m.unreference(ctx, pk, oldValue)
+		if err != nil {
+			return err
+		}
+	// if error is ErrNotFound, it means that the object does not exist, so we're creating indexes for the first time.
+	// we do nothing.
+	case errors.Is(err, collections.ErrNotFound):
+	// default case means that there was some other error
+	default:
+		return err
+	}
+	// create new indexes
+	refKey, err := m.getRefKey(pk, newValue)
+	if err != nil {
+		return err
+	}
+	return m.refKeys.Set(ctx, collections.Join(refKey, pk))
 }
 
-func (m *Multi[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, value Value) error {
-	return (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Unreference(ctx, pk, value)
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, getValue func() (Value, error)) error {
+	value, err := getValue()
+	if err != nil {
+		return err
+	}
+	return m.unreference(ctx, pk, value)
+}
+
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) unreference(ctx context.Context, pk PrimaryKey, value Value) error {
+	refKey, err := m.getRefKey(pk, value)
+	if err != nil {
+		return err
+	}
+	return m.refKeys.Remove(ctx, collections.Join(refKey, pk))
 }
 
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]]) (MultiIterator[ReferenceKey, PrimaryKey], error) {
-	iter, err := (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Iterate(ctx, ranger)
+	iter, err := m.refKeys.Iterate(ctx, ranger)
 	return (MultiIterator[ReferenceKey, PrimaryKey])(iter), err
 }
 
@@ -58,7 +84,9 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Walk(
 	ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]],
 	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool,
 ) error {
-	return (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Walk(ctx, ranger, walkFunc)
+	return m.refKeys.Walk(ctx, ranger, func(key collections.Pair[ReferenceKey, PrimaryKey]) bool {
+		return walkFunc(key.K1(), key.K2())
+	})
 }
 
 // MatchExact returns a MultiIterator containing all the primary keys referenced by the provided reference key.
@@ -66,8 +94,8 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context,
 	return m.Iterate(ctx, collections.NewPrefixedPairRange[ReferenceKey, PrimaryKey](refKey))
 }
 
-func (i *MultiPair[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K2, K1]] {
-	return (*collections.GenericMultiIndex[K2, K1, collections.Pair[K1, K2], Value])(i).KeyCodec()
+func (m *Multi[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K1, K2]] {
+	return m.refKeys.KeyCodec()
 }
 
 // MultiIterator is just a KeySetIterator with key as Pair[ReferenceKey, PrimaryKey].

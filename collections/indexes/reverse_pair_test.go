@@ -16,14 +16,14 @@ type (
 // our balance index, allows us to efficiently create an index between the key that maps
 // balances which is a collections.Pair[Address, Denom] and the Denom.
 type balanceIndex struct {
-	Denom *MultiPair[Address, Denom, Amount]
+	Denom *ReversePair[Address, Denom, Amount]
 }
 
 func (b balanceIndex) IndexesList() []collections.Index[collections.Pair[Address, Denom], Amount] {
 	return []collections.Index[collections.Pair[Address, Denom], Amount]{b.Denom}
 }
 
-func TestMultiPair(t *testing.T) {
+func TestReversePair(t *testing.T) {
 	sk, ctx := deps()
 	sb := collections.NewSchemaBuilder(sk)
 	// we create an indexed map that maps balances, which are saved as
@@ -37,7 +37,7 @@ func TestMultiPair(t *testing.T) {
 		keyCodec,
 		collections.Uint64Value,
 		balanceIndex{
-			Denom: NewMultiPair[Amount](sb, collections.NewPrefix("denom_index"), "denom_index", keyCodec),
+			Denom: NewReversePair[Amount](sb, collections.NewPrefix("denom_index"), "denom_index", keyCodec),
 		},
 	)
 

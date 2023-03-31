@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -20,17 +21,19 @@ var StoreKey = "Consensus"
 
 type Keeper struct {
 	storeService storetypes.KVStoreService
+	event        event.Service
 
-	authority string
-	Params    collections.Item[cmtproto.ConsensusParams]
+	authority   string
+	ParamsStore collections.Item[cmtproto.ConsensusParams]
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		storeService: storeService,
 		authority:    authority,
-		Params:       collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+		event:        em,
+		ParamsStore:  collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
 }
 
@@ -43,8 +46,8 @@ func (k *Keeper) GetAuthority() string {
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of consensus module
-func (k Keeper) GetParams(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := k.Params.Get(ctx)
+func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -66,7 +69,15 @@ func (k Keeper) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	if err := k.Params.Set(ctx, consensusParams); err != nil {
+	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
+		return nil, err
+	}
+
+	if err := k.event.EventManager(ctx).EmitKV(
+		ctx,
+		"update_consensus_params",
+		event.Attribute{Key: "authority", Value: req.Authority},
+		event.Attribute{Key: "parameters", Value: consensusParams.String()}); err != nil {
 		return nil, err
 	}
 

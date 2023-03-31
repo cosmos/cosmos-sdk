@@ -294,7 +294,7 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf(
 					"--query=tx.fee='%s'",
-					sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String(),
+					sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String(),
 				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
@@ -305,7 +305,7 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf(
 					"--query=tx.fee='%s'",
-					sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(0))).String(),
+					sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(0))).String(),
 				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},

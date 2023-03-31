@@ -19,10 +19,10 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"          
-	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"    
-	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission" 
-	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"           
+	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"
+	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"
+	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission"
+	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"
 
 	DefaultWeightMsgSetWithdrawAddress          int = 50
 	DefaultWeightMsgWithdrawDelegationReward    int = 50

@@ -27,7 +27,6 @@ func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey) (*BaseAccount, error) {
 	return baseAccount, nil
 }
 
-
 const ModuleCredentialType = "ModuleCredential"
 
 var _ cryptotypes.PubKey = &ModuleCredential{}

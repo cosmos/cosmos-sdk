@@ -86,5 +86,4 @@ func TestDecodeCoin(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "1000000000", coin.Amount)
 	require.Equal(t, "foo", coin.Denom)
-
 }

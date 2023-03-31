@@ -15,7 +15,7 @@ import (
 func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData SignerData, sigData signing.SignatureData, handler SignModeHandler, tx sdk.Tx) error {
 	switch data := sigData.(type) {
 	case *signing.SingleSignatureData:
-		signBytes, err := GetSignBytesWithContext(handler, ctx, data.SignMode, signerData, tx)
+		signBytes, err := GetSignBytesWithContext(ctx, handler, data.SignMode, signerData, tx)
 		if err != nil {
 			return err
 		}
@@ -49,7 +49,7 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 // checks if the sign mode handler supports SignModeHandlerWithContext, in
 // which case it passes the context.Context argument. Otherwise, it fallbacks
 // to GetSignBytes.
-func GetSignBytesWithContext(h SignModeHandler, ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) { //nolint:revive
+func GetSignBytesWithContext(ctx context.Context, h SignModeHandler, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
 	hWithCtx, ok := h.(SignModeHandlerWithContext)
 	if ok {
 		return hWithCtx.GetSignBytesWithContext(ctx, mode, data, tx)

@@ -131,16 +131,14 @@ func init() {
 	)
 }
 
-//nolint:revive
-type VestingInputs struct {
+type VestingInputs struct { //nolint:revive // ignore revive's exported naming rules here for clarity
 	depinject.In
 
 	AccountKeeper keeper.AccountKeeper
 	BankKeeper    types.BankKeeper
 }
 
-//nolint:revive
-type VestingOutputs struct {
+type VestingOutputs struct { //nolint:revive // ignore revive's exported naming rules here for clarity
 	depinject.Out
 
 	Module appmodule.AppModule

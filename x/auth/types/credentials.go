@@ -27,7 +27,6 @@ func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey) (*BaseAccount, error) {
 	return baseAccount, nil
 }
 
-//nolint:gosec // this isn't an hardcoded credential
 const ModuleCredentialType = "ModuleCredential"
 
 var _ cryptotypes.PubKey = &ModuleCredential{}

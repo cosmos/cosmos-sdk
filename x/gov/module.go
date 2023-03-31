@@ -163,8 +163,7 @@ func init() {
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
-//nolint:revive
-type GovInputs struct {
+type GovInputs struct { //nolint:revive // ignore the revive exported naming rules here
 	depinject.In
 
 	Config           *modulev1.Module
@@ -182,8 +181,7 @@ type GovInputs struct {
 	LegacySubspace govtypes.ParamSubspace
 }
 
-//nolint:revive
-type GovOutputs struct {
+type GovOutputs struct { //nolint:revive // ignore the revive exported naming rules here
 	depinject.Out
 
 	Module       appmodule.AppModule
@@ -340,7 +338,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the gov content functions used to
 // simulate governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck
+func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck // simtypes.WeightedProposalContent is deprecated
 	return simulation.ProposalContents()
 }
 

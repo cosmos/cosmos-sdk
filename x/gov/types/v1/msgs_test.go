@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
+const metadata = "metadata"
+
 var (
 	coinsPos   = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
 	coinsZero  = sdk.NewCoins()
@@ -62,7 +64,7 @@ func TestMsgDeposit(t *testing.T) {
 
 // test ValidateBasic for MsgVote
 func TestMsgVote(t *testing.T) {
-	metadata := "metadata" //nolint:goconst
+	metadata := metadata
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
@@ -90,7 +92,7 @@ func TestMsgVote(t *testing.T) {
 
 // test ValidateBasic for MsgVoteWeighted
 func TestMsgVoteWeighted(t *testing.T) {
-	metadata := "metadata"
+	metadata := metadata
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
@@ -135,7 +137,7 @@ func TestMsgVoteWeighted(t *testing.T) {
 }
 
 func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
-	metadata := "metadata"
+	metadata := metadata
 	// Valid msg
 	msg1, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), addrs[0].String())
 	require.NoError(t, err)

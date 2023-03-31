@@ -5,19 +5,18 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func (t tableGen) genIndexKeys() {
-	// interface that all keys must adhere to
+	// Interface that all keys must adhere to.
 	t.P("type ", t.indexKeyInterfaceName(), " interface {")
 	t.P("id() uint32")
-	t.P("values() []interface{}")
+	t.P("values() []any")
 	t.P(t.param(t.indexKeyInterfaceName()), "()")
 	t.P("}")
 	t.P()
 
-	// start with primary key..
+	// Start with primary key..
 	t.P("// primary key starting index..")
 	t.genIndex(t.table.PrimaryKey.Fields, 0, true)
 	for _, idx := range t.table.Index {
@@ -43,45 +42,8 @@ func (t tableGen) genValueFunc() {
 	t.P("}")
 }
 
-func (t tableGen) genIndexMethods(idxKeyName string) {
-	receiverFunc := fmt.Sprintf("func (x %s) ", idxKeyName)
-	t.P(receiverFunc, "id() uint32 { return ", t.table.Id, " /* primary key */ }")
-	t.P(receiverFunc, "values() []interface{} { return x.vs }")
-	t.P(receiverFunc, t.param(t.indexKeyInterfaceName()), "() {}")
-	t.P()
-}
-
-func (t tableGen) genIndexInterfaceGuard(idxKeyName string) {
-	t.P("var _ ", t.indexKeyInterfaceName(), " = ", idxKeyName, "{}")
-	t.P()
-}
-
 func (t tableGen) indexKeyInterfaceName() string {
 	return t.msg.GoIdent.GoName + "IndexKey"
-}
-
-func (t tableGen) genIndexKey(idxKeyName string) {
-	t.P("type ", idxKeyName, " struct {")
-	t.P("vs []interface{}")
-	t.P("}")
-	t.P()
-}
-
-func (t tableGen) indexKeyParts(names []protoreflect.Name) string {
-	cnames := make([]string, len(names))
-	for i, name := range names {
-		cnames[i] = strcase.ToCamel(string(name))
-	}
-	return strings.Join(cnames, "")
-}
-
-func (t tableGen) indexKeyName(names []protoreflect.Name) string {
-	cnames := make([]string, len(names))
-	for i, name := range names {
-		cnames[i] = strcase.ToCamel(string(name))
-	}
-	joinedNames := strings.Join(cnames, "")
-	return t.msg.GoIdent.GoName + joinedNames + "IndexKey"
 }
 
 func (t tableGen) indexStructName(fields []string) string {
@@ -103,7 +65,7 @@ func (t tableGen) genIndex(fields string, id uint32, isPrimaryKey bool) {
 	}
 
 	t.P("type ", idxKeyName, " struct {")
-	t.P("vs []interface{}")
+	t.P("vs []any")
 	t.P("}")
 
 	t.genIndexInterfaceMethods(id, idxKeyName)
@@ -116,7 +78,7 @@ func (t tableGen) genIndex(fields string, id uint32, isPrimaryKey bool) {
 func (t tableGen) genIndexInterfaceMethods(id uint32, indexStructName string) {
 	funPrefix := fmt.Sprintf("func (x %s) ", indexStructName)
 	t.P(funPrefix, "id() uint32 {return ", id, "}")
-	t.P(funPrefix, "values() []interface{} {return x.vs}")
+	t.P(funPrefix, "values() []any {return x.vs}")
 	t.P(funPrefix, t.param(t.indexKeyInterfaceName()), "() {}")
 	t.P()
 }
@@ -130,7 +92,7 @@ func (t tableGen) genWithMethods(indexStructName string, parts []string) {
 	funcName := "With" + strings.Join(camelParts, "")
 
 	t.P(funcPrefix, funcName, "(", t.fieldArgsFromStringSlice(parts), ") ", indexStructName, "{")
-	t.P("this.vs = []interface{}{", strings.Join(parts, ","), "}")
+	t.P("this.vs = []any{", strings.Join(parts, ","), "}")
 	t.P("return this")
 	t.P("}")
 	t.P()

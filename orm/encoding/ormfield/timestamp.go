@@ -33,8 +33,8 @@ var (
 	timestampZeroNanosBz = []byte{timestampZeroNanosValue}
 )
 
-func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
-	// nil case
+func (TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
+	// Nil case.
 	if !value.IsValid() {
 		_, err := w.Write(timestampNilBz)
 		return err
@@ -47,7 +47,7 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	}
 	secondsInt -= timestampSecondsMin
 	var secondsBz [5]byte
-	// write the seconds buffer from the end to the front
+	// Write the seconds buffer from the end to the front.
 	for i := 4; i >= 0; i-- {
 		secondsBz[i] = byte(secondsInt)
 		secondsInt >>= 8
@@ -72,12 +72,12 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 		nanosBz[i] = byte(nanosInt)
 		nanosInt >>= 8
 	}
-	nanosBz[0] = nanosBz[0] | 0xC0
+	nanosBz[0] |= 0xC0
 	_, err = w.Write(nanosBz[:])
 	return err
 }
 
-func (t TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
+func (TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
 	b0, err := r.ReadByte()
 	if err != nil {
 		return protoreflect.Value{}, err
@@ -124,7 +124,7 @@ func (t TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, io.EOF
 	}
 
-	nanos := int32(b0) & 0x3F // clear first two bits
+	nanos := int32(b0) & 0x3F // Clear first two bits.
 	for i := 0; i < 3; i++ {
 		nanos <<= 8
 		nanos |= int32(nanosBz[i])
@@ -134,7 +134,7 @@ func (t TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
 	return protoreflect.ValueOfMessage(msg), nil
 }
 
-func (t TimestampCodec) Compare(v1, v2 protoreflect.Value) int {
+func (TimestampCodec) Compare(v1, v2 protoreflect.Value) int {
 	if !v1.IsValid() {
 		if !v2.IsValid() {
 			return 0
@@ -151,20 +151,19 @@ func (t TimestampCodec) Compare(v1, v2 protoreflect.Value) int {
 	c := compareInt(s1, s2)
 	if c != 0 {
 		return c
-	} else {
-		return compareInt(n1, n2)
 	}
+	return compareInt(n1, n2)
 }
 
-func (t TimestampCodec) IsOrdered() bool {
+func (TimestampCodec) IsOrdered() bool {
 	return true
 }
 
-func (t TimestampCodec) FixedBufferSize() int {
+func (TimestampCodec) FixedBufferSize() int {
 	return 9
 }
 
-func (t TimestampCodec) ComputeBufferSize(protoreflect.Value) (int, error) {
+func (TimestampCodec) ComputeBufferSize(protoreflect.Value) (int, error) {
 	return 9, nil
 }
 
@@ -185,7 +184,7 @@ func getTimestampSecondsAndNanos(value protoreflect.Value) (protoreflect.Value, 
 	return msg.Get(timestampSecondsField), msg.Get(timestampNanosField)
 }
 
-func (t TimestampV0Codec) Decode(r Reader) (protoreflect.Value, error) {
+func (TimestampV0Codec) Decode(r Reader) (protoreflect.Value, error) {
 	seconds, err := int64Codec.Decode(r)
 	if err != nil {
 		return protoreflect.Value{}, err
@@ -200,7 +199,7 @@ func (t TimestampV0Codec) Decode(r Reader) (protoreflect.Value, error) {
 	return protoreflect.ValueOfMessage(msg), nil
 }
 
-func (t TimestampV0Codec) Encode(value protoreflect.Value, w io.Writer) error {
+func (TimestampV0Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	seconds, nanos := getTimestampSecondsAndNanos(value)
 	err := int64Codec.Encode(seconds, w)
 	if err != nil {
@@ -209,22 +208,21 @@ func (t TimestampV0Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	return int32Codec.Encode(nanos, w)
 }
 
-func (t TimestampV0Codec) Compare(v1, v2 protoreflect.Value) int {
+func (TimestampV0Codec) Compare(v1, v2 protoreflect.Value) int {
 	s1, n1 := getTimestampSecondsAndNanos(v1)
 	s2, n2 := getTimestampSecondsAndNanos(v2)
 	c := compareInt(s1, s2)
 	if c != 0 {
 		return c
-	} else {
-		return compareInt(n1, n2)
 	}
+	return compareInt(n1, n2)
 }
 
-func (t TimestampV0Codec) IsOrdered() bool {
+func (TimestampV0Codec) IsOrdered() bool {
 	return true
 }
 
-func (t TimestampV0Codec) FixedBufferSize() int {
+func (TimestampV0Codec) FixedBufferSize() int {
 	return 12
 }
 

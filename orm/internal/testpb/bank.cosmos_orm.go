@@ -37,7 +37,7 @@ func (i BalanceIterator) Value() (*Balance, error) {
 
 type BalanceIndexKey interface {
 	id() uint32
-	values() []interface{}
+	values() []any
 	balanceIndexKey()
 }
 
@@ -45,33 +45,33 @@ type BalanceIndexKey interface {
 type BalancePrimaryKey = BalanceAddressDenomIndexKey
 
 type BalanceAddressDenomIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x BalanceAddressDenomIndexKey) id() uint32            { return 0 }
-func (x BalanceAddressDenomIndexKey) values() []interface{} { return x.vs }
+func (x BalanceAddressDenomIndexKey) values() []any { return x.vs }
 func (x BalanceAddressDenomIndexKey) balanceIndexKey()      {}
 
 func (this BalanceAddressDenomIndexKey) WithAddress(address string) BalanceAddressDenomIndexKey {
-	this.vs = []interface{}{address}
+	this.vs = []any{address}
 	return this
 }
 
 func (this BalanceAddressDenomIndexKey) WithAddressDenom(address string, denom string) BalanceAddressDenomIndexKey {
-	this.vs = []interface{}{address, denom}
+	this.vs = []any{address, denom}
 	return this
 }
 
 type BalanceDenomIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x BalanceDenomIndexKey) id() uint32            { return 1 }
-func (x BalanceDenomIndexKey) values() []interface{} { return x.vs }
+func (x BalanceDenomIndexKey) values() []any { return x.vs }
 func (x BalanceDenomIndexKey) balanceIndexKey()      {}
 
 func (this BalanceDenomIndexKey) WithDenom(denom string) BalanceDenomIndexKey {
-	this.vs = []interface{}{denom}
+	this.vs = []any{denom}
 	return this
 }
 
@@ -169,7 +169,7 @@ func (i SupplyIterator) Value() (*Supply, error) {
 
 type SupplyIndexKey interface {
 	id() uint32
-	values() []interface{}
+	values() []any
 	supplyIndexKey()
 }
 
@@ -177,15 +177,15 @@ type SupplyIndexKey interface {
 type SupplyPrimaryKey = SupplyDenomIndexKey
 
 type SupplyDenomIndexKey struct {
-	vs []interface{}
+	vs []any
 }
 
 func (x SupplyDenomIndexKey) id() uint32            { return 0 }
-func (x SupplyDenomIndexKey) values() []interface{} { return x.vs }
+func (x SupplyDenomIndexKey) values() []any { return x.vs }
 func (x SupplyDenomIndexKey) supplyIndexKey()       {}
 
 func (this SupplyDenomIndexKey) WithDenom(denom string) SupplyDenomIndexKey {
-	this.vs = []interface{}{denom}
+	this.vs = []any{denom}
 	return this
 }
 

@@ -25,7 +25,7 @@ type indexKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
+func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...any) error {
 	it, err := i.List(ctx, keyValues)
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) e
 	return i.primaryKey.deleteByIterator(ctx, it)
 }
 
-func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []any) error {
 	it, err := i.ListRange(ctx, from, to)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) 
 	return i.primaryKey.deleteByIterator(ctx, it)
 }
 
-func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
+func (i indexKeyIndex) List(ctx context.Context, prefixKey []any, options ...ormlist.Option) (Iterator, error) {
 	backend, err := i.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, option
 	return prefixIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, prefixKey, options)
 }
 
-func (i indexKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+func (i indexKeyIndex) ListRange(ctx context.Context, from, to []any, options ...ormlist.Option) (Iterator, error) {
 	backend, err := i.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ var (
 	_ Index   = &indexKeyIndex{}
 )
 
-func (i indexKeyIndex) doNotImplement() {}
+func (indexKeyIndex) doNotImplement() {}
 
 func (i indexKeyIndex) onInsert(store kv.Store, message protoreflect.Message) error {
 	k, v, err := i.EncodeKVFromMessage(message)
@@ -76,9 +76,9 @@ func (i indexKeyIndex) onInsert(store kv.Store, message protoreflect.Message) er
 	return store.Set(k, v)
 }
 
-func (i indexKeyIndex) onUpdate(store kv.Store, new, existing protoreflect.Message) error {
-	newValues := i.GetKeyValues(new)
-	existingValues := i.GetKeyValues(existing)
+func (i indexKeyIndex) onUpdate(store kv.Store, newMsg, existingMsg protoreflect.Message) error {
+	newValues := i.GetKeyValues(newMsg)
+	existingValues := i.GetKeyValues(existingMsg)
 	if i.CompareKeys(newValues, existingValues) == 0 {
 		return nil
 	}
@@ -108,7 +108,7 @@ func (i indexKeyIndex) onDelete(store kv.Store, message protoreflect.Message) er
 }
 
 func (i indexKeyIndex) readValueFromIndexKey(backend ReadBackend, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
-	found, err := i.primaryKey.get(backend, message, primaryKey)
+	found, err := i.primaryKey.doGet(backend, message, primaryKey)
 	if err != nil {
 		return err
 	}
@@ -120,6 +120,6 @@ func (i indexKeyIndex) readValueFromIndexKey(backend ReadBackend, primaryKey []p
 	return nil
 }
 
-func (p indexKeyIndex) Fields() string {
-	return p.fields.String()
+func (i indexKeyIndex) Fields() string {
+	return i.fields.String()
 }

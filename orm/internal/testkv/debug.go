@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"google.golang.org/protobuf/proto"
 )
 
 // Debugger is an interface that handles debug info from the debug store wrapper.
@@ -217,42 +216,42 @@ type debugHooks struct {
 	writeHooks    ormtable.WriteHooks
 }
 
-func (d debugHooks) ValidateInsert(context context.Context, message proto.Message) error {
-	jsonBz, err := stablejson.Marshal(message)
+func (d debugHooks) ValidateInsert(ctx context.Context, insertMessage proto.Message) error {
+	jsonBz, err := stablejson.Marshal(insertMessage)
 	if err != nil {
 		return err
 	}
 
 	d.debugger.Log(fmt.Sprintf(
 		"ORM BEFORE INSERT %s %s",
-		message.ProtoReflect().Descriptor().FullName(),
+		insertMessage.ProtoReflect().Descriptor().FullName(),
 		jsonBz,
 	))
 	if d.validateHooks != nil {
-		return d.validateHooks.ValidateInsert(context, message)
+		return d.validateHooks.ValidateInsert(ctx, insertMessage)
 	}
 	return nil
 }
 
-func (d debugHooks) ValidateUpdate(ctx context.Context, existing, new proto.Message) error {
-	existingJson, err := stablejson.Marshal(existing)
+func (d debugHooks) ValidateUpdate(ctx context.Context, existingMsg, newMsg proto.Message) error {
+	existingJSON, err := stablejson.Marshal(existingMsg)
 	if err != nil {
 		return err
 	}
 
-	newJson, err := stablejson.Marshal(new)
+	newJSON, err := stablejson.Marshal(newMsg)
 	if err != nil {
 		return err
 	}
 
 	d.debugger.Log(fmt.Sprintf(
 		"ORM BEFORE UPDATE %s %s -> %s",
-		existing.ProtoReflect().Descriptor().FullName(),
-		existingJson,
-		newJson,
+		existingMsg.ProtoReflect().Descriptor().FullName(),
+		existingJSON,
+		newJSON,
 	))
 	if d.validateHooks != nil {
-		return d.validateHooks.ValidateUpdate(ctx, existing, new)
+		return d.validateHooks.ValidateUpdate(ctx, existingMsg, newMsg)
 	}
 	return nil
 }
@@ -290,25 +289,25 @@ func (d debugHooks) OnInsert(ctx context.Context, message proto.Message) {
 	}
 }
 
-func (d debugHooks) OnUpdate(ctx context.Context, existing, new proto.Message) {
-	existingJson, err := stablejson.Marshal(existing)
+func (d debugHooks) OnUpdate(ctx context.Context, existingMsg, newMsg proto.Message) {
+	existingJSON, err := stablejson.Marshal(existingMsg)
 	if err != nil {
 		panic(err)
 	}
 
-	newJson, err := stablejson.Marshal(new)
+	newJSON, err := stablejson.Marshal(newMsg)
 	if err != nil {
 		panic(err)
 	}
 
 	d.debugger.Log(fmt.Sprintf(
 		"ORM AFTER UPDATE %s %s -> %s",
-		existing.ProtoReflect().Descriptor().FullName(),
-		existingJson,
-		newJson,
+		existingMsg.ProtoReflect().Descriptor().FullName(),
+		existingJSON,
+		newJSON,
 	))
 	if d.writeHooks != nil {
-		d.writeHooks.OnUpdate(ctx, existing, new)
+		d.writeHooks.OnUpdate(ctx, existingMsg, newMsg)
 	}
 }
 

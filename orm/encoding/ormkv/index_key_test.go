@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"gotest.tools/v3/assert"
-	"pgregory.net/rapid"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
+	"gotest.tools/v3/assert"
+	"pgregory.net/rapid"
 )
 
 func TestIndexKeyCodec(t *testing.T) {

@@ -11,11 +11,11 @@ import (
 // StringCodec encodes strings as raw bytes.
 type StringCodec struct{}
 
-func (s StringCodec) FixedBufferSize() int {
+func (StringCodec) FixedBufferSize() int {
 	return -1
 }
 
-func (s StringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
+func (StringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	if !value.IsValid() {
 		return 0, nil
 	}
@@ -23,20 +23,20 @@ func (s StringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	return len(value.String()), nil
 }
 
-func (s StringCodec) IsOrdered() bool {
+func (StringCodec) IsOrdered() bool {
 	return true
 }
 
-func (s StringCodec) Compare(v1, v2 protoreflect.Value) int {
+func (StringCodec) Compare(v1, v2 protoreflect.Value) int {
 	return compareStrings(v1, v2)
 }
 
-func (s StringCodec) Decode(r Reader) (protoreflect.Value, error) {
+func (StringCodec) Decode(r Reader) (protoreflect.Value, error) {
 	bz, err := io.ReadAll(r)
 	return protoreflect.ValueOfString(string(bz)), err
 }
 
-func (s StringCodec) Encode(value protoreflect.Value, w io.Writer) error {
+func (StringCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	var x string
 	if value.IsValid() {
 		x = value.String()
@@ -49,23 +49,23 @@ func (s StringCodec) Encode(value protoreflect.Value, w io.Writer) error {
 // values within strings will produce an error.
 type NonTerminalStringCodec struct{}
 
-func (s NonTerminalStringCodec) FixedBufferSize() int {
+func (NonTerminalStringCodec) FixedBufferSize() int {
 	return -1
 }
 
-func (s NonTerminalStringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
+func (NonTerminalStringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	return len(value.String()) + 1, nil
 }
 
-func (s NonTerminalStringCodec) IsOrdered() bool {
+func (NonTerminalStringCodec) IsOrdered() bool {
 	return true
 }
 
-func (s NonTerminalStringCodec) Compare(v1, v2 protoreflect.Value) int {
+func (NonTerminalStringCodec) Compare(v1, v2 protoreflect.Value) int {
 	return compareStrings(v1, v2)
 }
 
-func (s NonTerminalStringCodec) Decode(r Reader) (protoreflect.Value, error) {
+func (NonTerminalStringCodec) Decode(r Reader) (protoreflect.Value, error) {
 	var bz []byte
 	for {
 		b, err := r.ReadByte()
@@ -76,7 +76,7 @@ func (s NonTerminalStringCodec) Decode(r Reader) (protoreflect.Value, error) {
 	}
 }
 
-func (s NonTerminalStringCodec) Encode(value protoreflect.Value, w io.Writer) error {
+func (NonTerminalStringCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	var str string
 	if value.IsValid() {
 		str = value.String()

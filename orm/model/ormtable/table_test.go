@@ -9,29 +9,24 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/protobuf/types/known/timestamppb"
-
-	dbm "github.com/cosmos/cosmos-db"
-
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/testing/protocmp"
-	"gotest.tools/v3/assert"
-	"gotest.tools/v3/golden"
-	"pgregory.net/rapid"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
-
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	sdkerrors "cosmossdk.io/errors"
-
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
+	"pgregory.net/rapid"
 )
 
 func TestScenario(t *testing.T) {
@@ -40,30 +35,32 @@ func TestScenario(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	// first run tests with a split index-commitment store
+	// First run tests with a split index-commitment store.
 	runTestScenario(t, table, testkv.NewSplitMemBackend())
 
-	// now run tests with a shared index-commitment store
+	// Now run tests with a shared index-commitment store.
 
-	// we're going to wrap this test in a debug store and save the decoded debug
+	// We're going to wrap this test in a debug store and save the decoded debug
 	// messages, these will be checked against a golden file at the end of the
-	// test. the golden file can be used for fine-grained debugging of kv-store
-	// layout
+	// test. The golden file can be used for fine-grained debugging of kv-store
+	// layout.
 	debugBuf := &strings.Builder{}
 	store := testkv.NewDebugBackend(
 		testkv.NewSharedMemBackend(),
 		&testkv.EntryCodecDebugger{
 			EntryCodec: table,
-			Print:      func(s string) { debugBuf.WriteString(s + "\n") },
+			Print: func(s string) {
+				debugBuf.WriteString(s + "\n") //nolint:errcheck // we're going to pass the whole function
+			},
 		},
 	)
 
 	runTestScenario(t, table, store)
 
-	// we're going to store debug data in a golden file to make sure that
+	// We're going to store debug data in a golden file to make sure that
 	// logical decoding works successfully
 	// run `go test pkgname -test.update-golden` to update the golden file
-	// see https://pkg.go.dev/gotest.tools/v3/golden for docs
+	// see https://pkg.go.dev/gotest.tools/v3/golden for docs.
 	golden.Assert(t, debugBuf.String(), "test_scenario.golden")
 
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
@@ -151,7 +148,7 @@ func TestTimestampIndex(t *testing.T) {
 		i++
 	}
 
-	// insert a nil entry
+	// Insert a nil entry.
 	id, err := store.InsertReturningId(ctx, &testpb.ExampleTimestamp{
 		Name: "nil",
 		Ts:   nil,
@@ -165,7 +162,7 @@ func TestTimestampIndex(t *testing.T) {
 	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{})
 	assert.NilError(t, err)
 
-	// make sure nils are ordered last
+	// Make sure nils are ordered last.
 	timeOrder = append(timeOrder, nil)
 	i = 0
 	for it.Next() {
@@ -182,7 +179,7 @@ func TestTimestampIndex(t *testing.T) {
 	}
 	it.Close()
 
-	// try iterating over just nil timestamps
+	// Try iterating over just nil timestamps.
 	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{}.WithTs(nil))
 	assert.NilError(t, err)
 	assert.Assert(t, it.Next())
@@ -193,8 +190,9 @@ func TestTimestampIndex(t *testing.T) {
 	it.Close()
 }
 
-// check that the ormkv.Entry's decode and encode to the same bytes
+// check that the ormkv.Entry's decode and encode to the same bytes.
 func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.ReadonlyStore) {
+	t.Helper()
 	it, err := store.Iterator(nil, nil)
 	assert.NilError(t, err)
 	for it.Valid() {
@@ -211,73 +209,74 @@ func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.Reado
 }
 
 func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backend) {
+	t.Helper()
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleTableTable(table)
 	assert.NilError(t, err)
 
-	// let's create 10 data items we'll use later and give them indexes
+	// Let's create 10 data items we'll use later and give them indexes.
 	data := []*testpb.ExampleTable{
-		{U32: 4, I64: -2, Str: "abc", U64: 7},  // 0
-		{U32: 4, I64: -2, Str: "abd", U64: 7},  // 1
-		{U32: 4, I64: -1, Str: "abc", U64: 8},  // 2
-		{U32: 5, I64: -2, Str: "abd", U64: 8},  // 3
-		{U32: 5, I64: -2, Str: "abe", U64: 9},  // 4
-		{U32: 7, I64: -2, Str: "abe", U64: 10}, // 5
-		{U32: 7, I64: -1, Str: "abe", U64: 11}, // 6
-		{U32: 8, I64: -4, Str: "abc", U64: 11}, // 7
-		{U32: 8, I64: 1, Str: "abc", U64: 12},  // 8
-		{U32: 8, I64: 1, Str: "abd", U64: 10},  // 9
+		{U32: 4, I64: -2, Str: "abc", U64: 7},  // 0.
+		{U32: 4, I64: -2, Str: "abd", U64: 7},  // 1.
+		{U32: 4, I64: -1, Str: "abc", U64: 8},  // 2.
+		{U32: 5, I64: -2, Str: "abd", U64: 8},  // 3.
+		{U32: 5, I64: -2, Str: "abe", U64: 9},  // 4.
+		{U32: 7, I64: -2, Str: "abe", U64: 10}, // 5.
+		{U32: 7, I64: -1, Str: "abe", U64: 11}, // 6.
+		{U32: 8, I64: -4, Str: "abc", U64: 11}, // 7.
+		{U32: 8., I64: 1, Str: "abc", U64: 12}, // 8
+		{U32: 8, I64: 1, Str: "abd", U64: 10},  // 9.
 	}
 
-	// let's make a function to match what's in our iterator with what we
-	// expect using indexes in the data array above
+	// Let's make a function to match what's in our iterator with what we
+	// expect using indexes in the data array above.
 	assertIteratorItems := func(it ormtable.Iterator, xs ...int) {
 		for _, i := range xs {
 			assert.Assert(t, it.Next())
 			msg, err := it.GetMessage()
 			assert.NilError(t, err)
-			// t.Logf("data[%d] %v == %v", i, data[i], msg)
+			// T.Logf("data[%d] %v == %v", i, data[i], msg).
 			assert.DeepEqual(t, data[i], msg, protocmp.Transform())
 		}
-		// make sure the iterator is done
+		// Make sure the iterator is done.
 		assert.Assert(t, !it.Next())
 	}
 
-	// insert one record
+	// Insert one record.
 	err = store.Insert(ctx, data[0])
 	assert.NilError(t, err)
-	// trivial prefix query has one record
+	// Trivial prefix query has one record.
 	it, err := store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0)
 
-	// insert one record
+	// Insert one record.
 	err = store.Insert(ctx, data[1])
 	assert.NilError(t, err)
-	// trivial prefix query has two records
+	// Trivial prefix query has two records.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1)
 
-	// insert the other records
+	// Insert the other records.
 	assert.NilError(t, err)
 	for i := 2; i < len(data); i++ {
 		err = store.Insert(ctx, data[i])
 		assert.NilError(t, err)
 	}
 
-	// let's do a prefix query on the primary key
+	// Let's do a prefix query on the primary key.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}.WithU32(8))
 	assert.NilError(t, err)
 	assertIteratorItems(it, 7, 8, 9)
 
-	// let's try a reverse prefix query
+	// Let's try a reverse prefix query.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}.WithU32(4), ormlist.Reverse())
 	assert.NilError(t, err)
 	defer it.Close()
 	assertIteratorItems(it, 2, 1, 0)
 
-	// let's try a range query
+	// Let's try a range query.
 	it, err = store.ListRange(ctx,
 		testpb.ExampleTablePrimaryKey{}.WithU32I64(4, -1),
 		testpb.ExampleTablePrimaryKey{}.WithU32(7),
@@ -286,7 +285,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	defer it.Close()
 	assertIteratorItems(it, 2, 3, 4, 5, 6)
 
-	// and another range query
+	// And another range query.
 	it, err = store.ListRange(ctx,
 		testpb.ExampleTablePrimaryKey{}.WithU32I64(5, -3),
 		testpb.ExampleTablePrimaryKey{}.WithU32I64Str(8, 1, "abc"),
@@ -295,7 +294,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	defer it.Close()
 	assertIteratorItems(it, 3, 4, 5, 6, 7, 8)
 
-	// now a reverse range query on a different index
+	// Now a reverse range query on a different index.
 	strU32Index := table.GetIndex("str,u32")
 	assert.Assert(t, strU32Index != nil)
 	it, err = store.ListRange(ctx,
@@ -306,14 +305,14 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assertIteratorItems(it, 9, 3, 1, 8, 7, 2, 0)
 
-	// another prefix query forwards
+	// Another prefix query forwards.
 
 	it, err = store.List(ctx,
 		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abe", 7),
 	)
 	assert.NilError(t, err)
 	assertIteratorItems(it, 5, 6)
-	// and backwards
+	// And backwards.
 	it, err = store.List(ctx,
 		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abc", 4),
 		ormlist.Reverse(),
@@ -321,7 +320,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 0)
 
-	// try filtering
+	// Try filtering.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Filter(func(message proto.Message) bool {
 		ex := message.(*testpb.ExampleTable)
 		return ex.U64 != 10
@@ -329,7 +328,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8)
 
-	// try a cursor
+	// Try a cursor.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assert.Assert(t, it.Next())
@@ -338,7 +337,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 3, 4, 5, 6, 7, 8, 9)
 
-	// try an unique index
+	// Try an unique index.
 	found, err := store.HasByU64Str(ctx, 12, "abc")
 	assert.NilError(t, err)
 	assert.Assert(t, found)
@@ -346,7 +345,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assert.DeepEqual(t, data[8], a, protocmp.Transform())
 
-	// let's try paginating some stuff
+	// Let's try paginating some stuff.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Limit:      4,
 		CountTotal: true,
@@ -358,7 +357,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Equal(t, uint64(10), res.Total)
 	assert.Assert(t, res.NextKey != nil)
 
-	// let's use a default limit
+	// Let's use a default limit.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{},
 		ormlist.DefaultLimit(4),
 		ormlist.Paginate(&queryv1beta1.PageRequest{
@@ -371,7 +370,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Equal(t, uint64(10), res.Total)
 	assert.Assert(t, res.NextKey != nil)
 
-	// read another page
+	// Read another page.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Key:   res.NextKey,
 		Limit: 4,
@@ -382,7 +381,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey != nil)
 
-	// and the last page
+	// And the last page.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Key:   res.NextKey,
 		Limit: 4,
@@ -393,7 +392,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey == nil)
 
-	// let's go backwards
+	// Let's go backwards.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Limit:      2,
 		CountTotal: true,
@@ -406,7 +405,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res.NextKey != nil)
 	assert.Equal(t, uint64(10), res.Total)
 
-	// a bit more
+	// A bit more.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Key:     res.NextKey,
 		Limit:   2,
@@ -418,7 +417,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey != nil)
 
-	// range query
+	// Range query.
 	it, err = store.ListRange(ctx,
 		testpb.ExampleTablePrimaryKey{}.WithU32I64Str(4, -1, "abc"),
 		testpb.ExampleTablePrimaryKey{}.WithU32I64Str(7, -2, "abe"),
@@ -431,7 +430,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey == nil)
 
-	// let's try an offset
+	// Let's try an offset.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Limit:      2,
 		CountTotal: true,
@@ -444,7 +443,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res.NextKey != nil)
 	assert.Equal(t, uint64(10), res.Total)
 
-	// and reverse
+	// And reverse.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Limit:      3,
 		CountTotal: true,
@@ -458,7 +457,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res.NextKey != nil)
 	assert.Equal(t, uint64(10), res.Total)
 
-	// now an offset that's slightly too big
+	// Now an offset that's slightly too big.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Limit:      1,
 		CountTotal: true,
@@ -471,19 +470,19 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res.NextKey == nil)
 	assert.Equal(t, uint64(10), res.Total)
 
-	// now let's update some things
+	// Now let's update some things.
 	for i := 0; i < 5; i++ {
-		data[i].U64 = data[i].U64 * 2
+		data[i].U64 *= 2
 		data[i].Bz = []byte(data[i].Str)
 		err = store.Update(ctx, data[i])
 		assert.NilError(t, err)
 	}
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
-	// we should still get everything in the same order
+	// We should still get everything in the same order.
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 
-	// let's use SAVE_MODE_DEFAULT and add something
+	// Let's use SAVE_MODE_DEFAULT and add something.
 	data = append(data, &testpb.ExampleTable{U32: 9})
 	err = store.Save(ctx, data[10])
 	assert.NilError(t, err)
@@ -491,19 +490,19 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assert.Assert(t, a != nil)
 	assert.DeepEqual(t, data[10], a, protocmp.Transform())
-	// and update it
+	// And update it.
 	data[10].B = true
 	assert.NilError(t, table.Save(ctx, data[10]))
 	a, err = store.Get(ctx, 9, 0, "")
 	assert.NilError(t, err)
 	assert.Assert(t, a != nil)
 	assert.DeepEqual(t, data[10], a, protocmp.Transform())
-	// and iterate
+	// And iterate.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
-	// let's export and import JSON and use a read-only backend
+	// Let's export and import JSON and use a read-only backend.
 	buf := &bytes.Buffer{}
 	readBackend := ormtable.NewReadBackend(ormtable.ReadBackendOptions{
 		CommitmentStoreReader: backend.CommitmentStoreReader(),
@@ -513,32 +512,32 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 	store2 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
-	assertTablesEqual(t, table, ctx, store2)
+	assertTablesEqual(ctx, store2, t, table)
 
-	// let's delete item 5
+	// Let's delete item 5.
 	err = store.DeleteBy(ctx, testpb.ExampleTableU32I64StrIndexKey{}.WithU32I64Str(7, -2, "abe"))
 	assert.NilError(t, err)
-	// it should be gone
+	// It should be gone.
 	found, err = store.Has(ctx, 7, -2, "abe")
 	assert.NilError(t, err)
 	assert.Assert(t, !found)
-	// and missing from the iterator
+	// And missing from the iterator.
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10)
 
-	// let's do a batch delete
-	// first iterate over the items we'll delete to check that iterator
+	// Let's do a batch delete
+	// first iterate over the items we'll delete to check that iterator.
 	it, err = store.List(ctx, testpb.ExampleTableStrU32IndexKey{}.WithStr("abd"))
 	assert.NilError(t, err)
 	assertIteratorItems(it, 1, 3, 9)
-	// now delete them
+	// Now delete them.
 	assert.NilError(t, store.DeleteBy(ctx, testpb.ExampleTableStrU32IndexKey{}.WithStr("abd")))
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 2, 4, 6, 7, 8, 10)
 
-	// Let's do a range delete
+	// Let's do a range delete.
 	assert.NilError(t, store.DeleteRange(ctx,
 		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abc", 8),
 		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abe", 5),
@@ -547,7 +546,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 2, 6, 10)
 
-	// Let's delete something directly
+	// Let's delete something directly.
 	assert.NilError(t, store.Delete(ctx, data[0]))
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
@@ -559,6 +558,7 @@ func TestRandomTableData(t *testing.T) {
 }
 
 func testTable(t *testing.T, tableData *TableData) {
+	t.Helper()
 	for _, index := range tableData.table.Indexes() {
 		indexModel := &IndexModel{
 			TableData: tableData,
@@ -573,6 +573,7 @@ func testTable(t *testing.T, tableData *TableData) {
 }
 
 func testUniqueIndex(t *testing.T, model *IndexModel) {
+	t.Helper()
 	index := model.index.(ormtable.UniqueIndex)
 	t.Logf("testing unique index %T %s", index, index.Fields())
 	for i := 0; i < len(model.data); i++ {
@@ -595,6 +596,7 @@ func testUniqueIndex(t *testing.T, model *IndexModel) {
 }
 
 func testIndex(t *testing.T, model *IndexModel) {
+	t.Helper()
 	index := model.index
 	if index.IsFullyOrdered() {
 		t.Logf("testing index %T %s", index, index.Fields())
@@ -630,7 +632,7 @@ func testIndex(t *testing.T, model *IndexModel) {
 	} else {
 		t.Logf("testing unordered index %T %s", index, index.Fields())
 
-		// get all the data
+		// Get all the data.
 		it, err := model.index.List(model.context, nil)
 		assert.NilError(t, err)
 		var data2 []proto.Message
@@ -641,7 +643,7 @@ func testIndex(t *testing.T, model *IndexModel) {
 		}
 		assert.Equal(t, len(model.data), len(data2))
 
-		// sort it
+		// Sort it.
 		model2 := &IndexModel{
 			TableData: &TableData{
 				table:   model.table,
@@ -652,7 +654,7 @@ func testIndex(t *testing.T, model *IndexModel) {
 		}
 		sort.Sort(model2)
 
-		// compare
+		// Compare.
 		for i := 0; i < len(data2); i++ {
 			assert.DeepEqual(t, model.data[i], data2[i], protocmp.Transform())
 		}
@@ -763,9 +765,7 @@ func (m *IndexModel) Less(i, j int) bool {
 }
 
 func (m *IndexModel) Swap(i, j int) {
-	x := m.data[i]
-	m.data[i] = m.data[j]
-	m.data[j] = x
+	m.data[i], m.data[j] = m.data[j], m.data[i]
 }
 
 var _ sort.Interface = &IndexModel{}
@@ -782,9 +782,9 @@ func TestJSONExportImport(t *testing.T) {
 		err = table.Insert(store, x)
 		if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
 			continue
-		} else {
-			assert.NilError(t, err)
 		}
+		assert.NilError(t, err)
+
 		i++
 	}
 
@@ -796,10 +796,10 @@ func TestJSONExportImport(t *testing.T) {
 	store2 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 
-	assertTablesEqual(t, table, store, store2)
+	assertTablesEqual(store, store2, t, table)
 }
 
-func assertTablesEqual(t assert.TestingT, table ormtable.Table, ctx, ctx2 context.Context) {
+func assertTablesEqual(ctx, ctx2 context.Context, t assert.TestingT, table ormtable.Table) {
 	it, err := table.List(ctx, nil)
 	assert.NilError(t, err)
 	it2, err := table.List(ctx2, nil)
@@ -822,8 +822,8 @@ func assertTablesEqual(t assert.TestingT, table ormtable.Table, ctx, ctx2 contex
 	}
 }
 
-func protoValuesToInterfaces(ks []protoreflect.Value) []interface{} {
-	values := make([]interface{}, len(ks))
+func protoValuesToInterfaces(ks []protoreflect.Value) []any {
+	values := make([]any, len(ks))
 	for i := 0; i < len(ks); i++ {
 		values[i] = ks[i].Interface()
 	}

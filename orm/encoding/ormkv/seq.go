@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -55,13 +54,13 @@ func (s SeqCodec) Prefix() []byte {
 	return s.prefix
 }
 
-func (s SeqCodec) EncodeValue(seq uint64) (v []byte) {
+func (SeqCodec) EncodeValue(seq uint64) (v []byte) {
 	bz := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(bz, seq)
 	return bz[:n]
 }
 
-func (s SeqCodec) DecodeValue(v []byte) (uint64, error) {
+func (SeqCodec) DecodeValue(v []byte) (uint64, error) {
 	if len(v) == 0 {
 		return 0, nil
 	}

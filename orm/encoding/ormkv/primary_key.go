@@ -5,9 +5,7 @@ import (
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/proto"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -38,7 +36,7 @@ var _ IndexCodec = PrimaryKeyCodec{}
 func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
 	indexFields, err = p.DecodeKey(bytes.NewReader(k))
 
-	// got prefix key
+	// Got prefix key.
 	if err == io.EOF {
 		return indexFields, nil, nil
 	} else if err != nil {
@@ -46,8 +44,8 @@ func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 	}
 
 	if len(indexFields) == len(p.fieldCodecs) {
-		// for primary keys the index fields are the primary key
-		// but only if we don't have a prefix key
+		// For primary keys the index fields are the primary key
+		// but only if we don't have a prefix key.
 		primaryKey = indexFields
 	}
 	return indexFields, primaryKey, nil
@@ -98,8 +96,8 @@ func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 }
 
 func (p PrimaryKeyCodec) marshal(key []protoreflect.Value, message proto.Message) (v []byte, err error) {
-	// first clear the priamry key values because these are already stored in
-	// the key so we don't need to store them again in the value
+	// First clear the priamry key values because these are already stored in
+	// the key so we don't need to store them again in the value.
 	p.ClearValues(message.ProtoReflect())
 
 	v, err = proto.MarshalOptions{Deterministic: true}.Marshal(message)
@@ -107,7 +105,7 @@ func (p PrimaryKeyCodec) marshal(key []protoreflect.Value, message proto.Message
 		return nil, err
 	}
 
-	// set the primary key values again returning the message to its original state
+	// Set the primary key values again returning the message to its original state.
 	p.SetKeyValues(message.ProtoReflect(), key)
 
 	return v, nil
@@ -125,7 +123,7 @@ func (p *PrimaryKeyCodec) Unmarshal(key []protoreflect.Value, value []byte, mess
 		return err
 	}
 
-	// rehydrate primary key
+	// Rehydrate primary key.
 	p.SetKeyValues(message.ProtoReflect(), key)
 	return nil
 }

@@ -1,9 +1,8 @@
 package main
 
 import (
-	"google.golang.org/protobuf/compiler/protogen"
-
 	"github.com/cosmos/cosmos-sdk/orm/internal/codegen"
+	"google.golang.org/protobuf/compiler/protogen"
 )
 
 func main() {

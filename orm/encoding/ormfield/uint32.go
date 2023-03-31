@@ -11,7 +11,7 @@ import (
 // FixedUint32Codec encodes uint32 values as 4-byte big-endian integers.
 type FixedUint32Codec struct{}
 
-func (u FixedUint32Codec) FixedBufferSize() int {
+func (FixedUint32Codec) FixedBufferSize() int {
 	return 4
 }
 
@@ -19,21 +19,21 @@ func (u FixedUint32Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 	return u.FixedBufferSize(), nil
 }
 
-func (u FixedUint32Codec) IsOrdered() bool {
+func (FixedUint32Codec) IsOrdered() bool {
 	return true
 }
 
-func (u FixedUint32Codec) Compare(v1, v2 protoreflect.Value) int {
+func (FixedUint32Codec) Compare(v1, v2 protoreflect.Value) int {
 	return compareUint(v1, v2)
 }
 
-func (u FixedUint32Codec) Decode(r Reader) (protoreflect.Value, error) {
+func (FixedUint32Codec) Decode(r Reader) (protoreflect.Value, error) {
 	var x uint32
 	err := binary.Read(r, binary.BigEndian, &x)
 	return protoreflect.ValueOfUint32(x), err
 }
 
-func (u FixedUint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
+func (FixedUint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	var x uint64
 	if value.IsValid() {
 		x = value.Uint()
@@ -44,12 +44,12 @@ func (u FixedUint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
 // CompactUint32Codec encodes uint32 values using EncodeCompactUint32.
 type CompactUint32Codec struct{}
 
-func (c CompactUint32Codec) Decode(r Reader) (protoreflect.Value, error) {
+func (CompactUint32Codec) Decode(r Reader) (protoreflect.Value, error) {
 	x, err := DecodeCompactUint32(r)
 	return protoreflect.ValueOfUint32(x), err
 }
 
-func (c CompactUint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
+func (CompactUint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	var x uint64
 	if value.IsValid() {
 		x = value.Uint()
@@ -58,15 +58,15 @@ func (c CompactUint32Codec) Encode(value protoreflect.Value, w io.Writer) error 
 	return err
 }
 
-func (c CompactUint32Codec) Compare(v1, v2 protoreflect.Value) int {
+func (CompactUint32Codec) Compare(v1, v2 protoreflect.Value) int {
 	return compareUint(v1, v2)
 }
 
-func (c CompactUint32Codec) IsOrdered() bool {
+func (CompactUint32Codec) IsOrdered() bool {
 	return true
 }
 
-func (c CompactUint32Codec) FixedBufferSize() int {
+func (CompactUint32Codec) FixedBufferSize() int {
 	return 5
 }
 
@@ -83,19 +83,19 @@ func (c CompactUint32Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 // fit in 3, and values less than 2^30 will fit in 4.
 func EncodeCompactUint32(x uint32) []byte {
 	switch {
-	case x < 16384: // 2^14
+	case x < 16384: // 2^14.
 		buf := make([]byte, 2)
 		buf[0] = byte(x >> 8)
 		buf[1] = byte(x)
 		return buf
-	case x < 4194304: // 2^22
+	case x < 4194304: // 2^22.
 		buf := make([]byte, 3)
 		buf[0] = 0x40
 		buf[0] |= byte(x >> 16)
 		buf[1] = byte(x >> 8)
 		buf[2] = byte(x)
 		return buf
-	case x < 1073741824: // 2^30
+	case x < 1073741824: // 2^30.
 		buf := make([]byte, 4)
 		buf[0] = 0x80
 		buf[0] |= byte(x >> 24)

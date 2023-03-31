@@ -15,7 +15,7 @@ type FieldNames struct {
 // CommaSeparatedFieldNames creates a FieldNames instance from a list of comma-separated
 // fields.
 func CommaSeparatedFieldNames(fields string) FieldNames {
-	// normalize cases where there are spaces
+	// Normalize cases where there are spaces.
 	if strings.IndexByte(fields, ' ') >= 0 {
 		parts := strings.Split(fields, ",")
 		for i, part := range parts {

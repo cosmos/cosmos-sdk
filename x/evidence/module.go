@@ -199,7 +199,7 @@ func init() {
 	)
 }
 
-type EvidenceInputs struct { //nolint:revive // don't follow revive's var-naming, for clarity
+type ModuleInputs struct {
 	depinject.In
 
 	Key *store.KVStoreKey

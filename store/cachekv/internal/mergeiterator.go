@@ -24,7 +24,7 @@ type cacheMergeIterator struct {
 
 var _ types.Iterator = (*cacheMergeIterator)(nil)
 
-func NewCacheMergeIterator(parent, cache types.Iterator, ascending bool) *cacheMergeIterator { //nolint:revive
+func NewCacheMergeIterator(parent, cache types.Iterator, ascending bool) *cacheMergeIterator { //nolint:revive // we won't follow exported rules here because this is an internal package
 	iter := &cacheMergeIterator{
 		parent:    parent,
 		cache:     cache,

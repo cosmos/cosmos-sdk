@@ -171,8 +171,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type UpgradeInputs struct {
+type UpgradeInputs struct { //nolint:revive // for readability, we ignore var-naming rules here
 	depinject.In
 
 	Config *modulev1.Module
@@ -182,8 +181,7 @@ type UpgradeInputs struct {
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
-//nolint:revive
-type UpgradeOutputs struct {
+type UpgradeOutputs struct { //nolint:revive // for readability, we ignore var-naming rules here
 	depinject.Out
 
 	UpgradeKeeper *keeper.Keeper

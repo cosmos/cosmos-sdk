@@ -29,7 +29,7 @@ type StructOut struct {
 
 func privateProvider(int, float64) (string, []byte) { return "", nil }
 
-func PrivateInAndOut(containerConfig) *container { return nil }
+func PrivateInAndOut(containerConfig) *container { return nil } //nolint:revive // this is a test, we don't need to worry about exporting the return
 
 func InternalInAndOut(graphviz.Attributes) *codegen.FileGen { return nil }
 
@@ -45,7 +45,7 @@ func StructInAndOut(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, err
 	return int16(0), StructOut{}, int32(0), nil
 }
 
-func BadErrorPosition() (error, int) { return nil, 0 }
+func BadErrorPosition() (error, int) { return nil, 0 } //nolint:revive,stylecheck // error should be the last type but this seems a test for bad error position
 
 func BadOptionalFn(_ BadOptional) int { return 0 }
 

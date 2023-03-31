@@ -33,6 +33,7 @@ func (k Keeper) SetConsPubKeyRotationHistory(ctx sdk.Context, valAddr sdk.ValAdd
 	k.SetConsKeyIndex(ctx, valAddr, queueTime)
 }
 
+// GetValidatorConsPubKeyRotationHistory iterates over all the rotated history objects in the state with the given valAddr and returns.
 func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, operatorAddress sdk.ValAddress) (historyObjects []types.ConsPubKeyRotationHistory) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -48,6 +49,7 @@ func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, operatorA
 	return
 }
 
+// GetBlockConsPubKeyRotationHistory iterator over the rotation history for the given height.
 func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height int64) (historyObjects []types.ConsPubKeyRotationHistory) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -63,6 +65,7 @@ func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height int64)
 	return
 }
 
+// GetConsKeyQueue gets and returns the `types.ValAddrsOfRotatedConsKeys` with the given time.
 func (k Keeper) GetConsKeyQueue(ctx sdk.Context, ts time.Time) types.ValAddrsOfRotatedConsKeys {
 	var valAddrs types.ValAddrsOfRotatedConsKeys
 	store := ctx.KVStore(k.storeKey)
@@ -86,13 +89,14 @@ func (k Keeper) SetConsKeyQueue(ctx sdk.Context, ts time.Time, valAddr sdk.ValAd
 	store.Set(key, bz)
 }
 
-// SetConsKeyIndex sets empty bytes with the key (validatoraddress+sum(current_block_time, unbondtime))
+// SetConsKeyIndex sets empty bytes with the key (validatoraddress | sum(current_block_time, unbondtime))
 func (k Keeper) SetConsKeyIndex(ctx sdk.Context, valAddr sdk.ValAddress, ts time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetConsKeyIndexKey(valAddr, ts)
 	store.Set(key, []byte{})
 }
 
+// UpdateAllMaturedConsKeyRotatedKeys udpates all the matured key rotations.
 func (k Keeper) UpdateAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime time.Time) {
 	maturedRotatedValAddrs := k.GetAllMaturedRotatedKeys(ctx, maturedTime)
 	for _, valAddrStr := range maturedRotatedValAddrs {
@@ -105,6 +109,7 @@ func (k Keeper) UpdateAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime 
 	}
 }
 
+// GetAllMaturedRotatedKeys returns all matured valaddresses .
 func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) []string {
 	store := ctx.KVStore(k.storeKey)
 	var ValAddresses []string
@@ -121,6 +126,7 @@ func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) 
 	return ValAddresses
 }
 
+// deleteConsKeyIndexKey deletes the key which is formed with the given valAddr, time.
 func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, ts time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetConsKeyIndexKey(valAddr, ts)
@@ -132,6 +138,7 @@ func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, t
 	}
 }
 
+// CheckLimitOfMaxRotationsExceed returns bool, count of iterations made within the unbonding period.
 func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) (bool, uint64) {
 	store := ctx.KVStore(k.storeKey)
 	key := append(types.ValidatorConsensusKeyRotationRecordIndexKey, address.MustLengthPrefix(valAddr)...)

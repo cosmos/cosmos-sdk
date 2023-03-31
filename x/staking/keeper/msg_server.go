@@ -545,16 +545,19 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	}
 
 	// deletes old ValidatorByConsAddr
-	// err = k.DeleteValidatorByConsAddr(ctx, validator)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = k.DeleteValidatorByConsAddr(ctx, validator)
+	if err != nil {
+		return nil, err
+	}
 
 	// overwrites NewPubKey in validator.ConsPubKey
 	val, ok := validator.(types.Validator)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting types.Validator, got %T", validator)
 	}
+
+	// delete the old validator associated with powerIndex
+	k.DeleteValidatorByPowerIndex(ctx, val)
 
 	// SetValidatorByConsAddr for NewPubKey
 	oldConsensusPubKey := val.ConsensusPubkey
@@ -564,6 +567,8 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	}
 
 	k.SetValidator(ctx, val)
+	k.SetValidatorByConsAddr(ctx, val)
+	k.SetValidatorByPowerIndex(ctx, val)
 
 	// Add ConsPubKeyRotationHistory for tracking rotation
 	k.SetConsPubKeyRotationHistory(

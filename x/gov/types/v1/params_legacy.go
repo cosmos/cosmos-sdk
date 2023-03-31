@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -47,36 +47,36 @@ func validateTallyParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	quorum, err := sdkmath.LegacyNewDecFromStr(v.Quorum)
+	quorum, err := math.LegacyNewDecFromStr(v.Quorum)
 	if err != nil {
 		return fmt.Errorf("invalid quorum string: %w", err)
 	}
 	if quorum.IsNegative() {
 		return fmt.Errorf("quorom cannot be negative: %s", quorum)
 	}
-	if quorum.GT(sdkmath.LegacyOneDec()) {
+	if quorum.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("quorom too large: %s", v)
 	}
 
-	threshold, err := sdkmath.LegacyNewDecFromStr(v.Threshold)
+	threshold, err := math.LegacyNewDecFromStr(v.Threshold)
 	if err != nil {
 		return fmt.Errorf("invalid threshold string: %w", err)
 	}
 	if !threshold.IsPositive() {
 		return fmt.Errorf("vote threshold must be positive: %s", threshold)
 	}
-	if threshold.GT(sdkmath.LegacyOneDec()) {
+	if threshold.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("vote threshold too large: %s", v)
 	}
 
-	vetoThreshold, err := sdkmath.LegacyNewDecFromStr(v.VetoThreshold)
+	vetoThreshold, err := math.LegacyNewDecFromStr(v.VetoThreshold)
 	if err != nil {
 		return fmt.Errorf("invalid vetoThreshold string: %w", err)
 	}
 	if !vetoThreshold.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", vetoThreshold)
 	}
-	if vetoThreshold.GT(sdkmath.LegacyOneDec()) {
+	if vetoThreshold.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("veto threshold too large: %s", v)
 	}
 

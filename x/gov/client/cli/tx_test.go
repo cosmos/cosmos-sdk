@@ -2,12 +2,12 @@ package cli_test
 
 import (
 	"bytes"
-	sdkmath "cosmossdk.io/math"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"

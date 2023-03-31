@@ -4,7 +4,8 @@ package testutil
 
 import (
 	context "context"
-	sdkmath "cosmossdk.io/math"
+
+	math "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -31,7 +32,7 @@ type StakingKeeper interface {
 	types.StakingKeeper
 
 	BondDenom(ctx sdk.Context) string
-	TokensFromConsensusPower(ctx sdk.Context, power int64) sdkmath.Int
+	TokensFromConsensusPower(ctx sdk.Context, power int64) math.Int
 }
 
 // DistributionKeeper defines the expected distribution keeper

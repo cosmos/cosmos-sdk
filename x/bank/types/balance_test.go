@@ -119,9 +119,9 @@ func TestBalanceValidate(t *testing.T) {
 
 func TestBalance_GetAddress(t *testing.T) {
 	tests := []struct {
-		name      string
-		Address   string
-		wantPanic bool
+		name    string
+		Address string
+		err     bool
 	}{
 		{"empty address", "", true},
 		{"malformed address", "invalid", true},
@@ -132,8 +132,9 @@ func TestBalance_GetAddress(t *testing.T) {
 		ac := address.NewBech32Codec("cosmos")
 		t.Run(tt.name, func(t *testing.T) {
 			b := bank.Balance{Address: tt.Address}
-			if tt.wantPanic {
-				require.Panics(t, func() { b.GetAddress(ac) })
+			if !tt.err {
+				_, err := b.GetAddress(ac)
+				require.NoError(t, err)
 			} else {
 				_, err := b.GetAddress(ac)
 				require.Error(t, err)

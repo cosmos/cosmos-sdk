@@ -130,7 +130,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
-
+	authKeeper.EXPECT().StringToBytes(authtypes.NewModuleAddress(govtypes.ModuleName).String()).Return(authtypes.NewModuleAddress(govtypes.ModuleName), nil).AnyTimes()
+	authKeeper.EXPECT().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName)).Return(authtypes.NewModuleAddress(govtypes.ModuleName).String(), nil).AnyTimes()
 	suite.ctx = ctx
 	suite.authKeeper = authKeeper
 	suite.bankKeeper = keeper.NewBaseKeeper(
@@ -233,11 +234,14 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc, mAcc sdk
 }
 
 func (suite *KeeperTestSuite) TestGetAuthority() {
+	suite.authKeeper.EXPECT().StringToBytes(authtypes.NewModuleAddress(minttypes.ModuleName).String()).Return(authtypes.NewModuleAddress(minttypes.ModuleName), nil).AnyTimes()
+	suite.authKeeper.EXPECT().StringToBytes("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5").Return([]byte("8953EB4F1B47C7982A698DEB7C557D6E4F4CD923"), nil).AnyTimes()
+
 	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
 		return keeper.NewBaseKeeper(
 			moduletestutil.MakeTestEncodingConfig().Codec,
 			storetypes.NewKVStoreKey(banktypes.StoreKey),
-			nil,
+			suite.authKeeper,
 			nil,
 			authority,
 		)

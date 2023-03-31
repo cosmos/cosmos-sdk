@@ -209,7 +209,7 @@ type ModuleInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
-type EvidenceOutputs struct { //nolint:revive // don't follow revive's var-naming, for clarity
+type ModuleOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper

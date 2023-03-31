@@ -38,10 +38,10 @@ type IndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]] struct {
 }
 
 // NewIndexedMap instantiates a new IndexedMap. Accepts a SchemaBuilder, a Prefix,
-// a humanised name that defines the name of the collection, the primary key codec
+// a humanized name that defines the name of the collection, the primary key codec
 // which is basically what IndexedMap uses to encode the primary key to bytes,
 // the value codec which is what the IndexedMap uses to encode the value.
-// Then it expects the initialised indexes.
+// Then it expects the initialized indexes.
 func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
 	schema *SchemaBuilder,
 	prefix Prefix,
@@ -112,7 +112,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value) error {
 	for _, index := range m.Indexes.IndexesList() {
-		err := index.Reference(ctx, pk, value, cachedGet[PrimaryKey, Value](m, ctx, pk))
+		err := index.Reference(ctx, pk, value, cachedGet[PrimaryKey, Value](ctx, m, pk))
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk Primary
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk PrimaryKey) error {
 	for _, index := range m.Indexes.IndexesList() {
-		err := index.Unreference(ctx, pk, cachedGet[PrimaryKey, Value](m, ctx, pk))
+		err := index.Unreference(ctx, pk, cachedGet[PrimaryKey, Value](ctx, m, pk))
 		if err != nil {
 			return err
 		}
@@ -134,7 +134,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk Prima
 // returns always the same result on multiple calls.
 func cachedGet[K, V any, M interface {
 	Get(ctx context.Context, key K) (V, error)
-}](m M, ctx context.Context, key K,
+}](ctx context.Context, m M, key K,
 ) func() (V, error) {
 	var (
 		value      V

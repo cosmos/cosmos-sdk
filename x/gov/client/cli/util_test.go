@@ -2,7 +2,6 @@ package cli
 
 import (
 	"bytes"
-	sdkmath "cosmossdk.io/math"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

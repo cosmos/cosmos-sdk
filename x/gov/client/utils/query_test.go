@@ -2,9 +2,9 @@ package utils_test
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/rpc/client/mock"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmttypes "github.com/cometbft/cometbft/types"

@@ -1,9 +1,9 @@
 package gov_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 

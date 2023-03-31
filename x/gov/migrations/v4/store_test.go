@@ -1,12 +1,12 @@
 package v4_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"

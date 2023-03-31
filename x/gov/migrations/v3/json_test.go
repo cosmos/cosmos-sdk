@@ -1,11 +1,11 @@
 package v3_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 

@@ -252,7 +252,7 @@ func (g queryProtoGen) startResponseType(format string, args ...any) {
 	g.startRequestResponseType("response", format, args...)
 }
 
-func (g queryProtoGen) startRequestResponseType(typ string, format string, args ...any) {
+func (g queryProtoGen) startRequestResponseType(typ, format string, args ...any) {
 	msgTypeName := fmt.Sprintf(format, args...)
 	g.msgs.F("// %s is the %s/%s %s type.", msgTypeName, g.queryServiceName(), msgTypeName, typ)
 	g.msgs.F("message %s {", msgTypeName)

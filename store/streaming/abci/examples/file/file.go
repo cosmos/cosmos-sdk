@@ -26,7 +26,7 @@ func (a *FilePlugin) writeToFile(file string, data []byte) error {
 	}
 
 	filename := fmt.Sprintf("%s/%s.txt", home, file)
-	f, err := os.OpenFile(filepath.Clean(filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(filepath.Clean(filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 	if err != nil {
 		return err
 	}

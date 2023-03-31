@@ -3,6 +3,9 @@ package autocli
 import (
 	"bytes"
 	"context"
+	"net"
+	"testing"
+
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/testpb"
@@ -12,8 +15,6 @@ import (
 	"gotest.tools/v3/assert"
 
 	"google.golang.org/grpc/credentials/insecure"
-	"net"
-	"testing"
 )
 
 func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) *testClientConn {
@@ -46,10 +47,10 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 	}
 	b := &Builder{
 		Builder: flag.Builder{
-
 			GetClientConn: func() (grpc.ClientConnInterface, error) {
 				return conn, nil
-			}},
+			},
+		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
 		},

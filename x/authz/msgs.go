@@ -28,9 +28,7 @@ var (
 )
 
 // NewMsgGrant creates a new MsgGrant
-//
-//nolint:interfacer
-func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
+func NewMsgGrant(granter, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
 		Granter: granter.String(),
 		Grantee: grantee.String(),
@@ -109,9 +107,7 @@ func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // NewMsgRevoke creates a new MsgRevoke
-//
-//nolint:interfacer
-func NewMsgRevoke(granter sdk.AccAddress, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
+func NewMsgRevoke(granter, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
 	return MsgRevoke{
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
@@ -153,8 +149,6 @@ func (msg MsgRevoke) GetSignBytes() []byte {
 }
 
 // NewMsgExec creates a new MsgExecAuthorized
-//
-//nolint:interfacer
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {

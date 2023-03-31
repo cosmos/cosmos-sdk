@@ -12,7 +12,6 @@ import (
 
 	"cosmossdk.io/log"
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -303,7 +302,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
+	f, err := os.Create(filepath.Join(upgrade, upgradetypes.UpgradeInfoFilename))
 	if err != nil {
 		return err
 	}
@@ -327,7 +326,7 @@ func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 		return cfg.currentUpgrade, nil
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
+	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
 	_, err := os.Lstat(filename)
 	var u upgradetypes.Plan
 	var bz []byte

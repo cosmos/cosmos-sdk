@@ -85,7 +85,7 @@ func TestDiffKVStores(t *testing.T) {
 
 	// Same keys, different value. Comparisons will be nil as prefixes are skipped.
 	prefix := []byte("prefix:")
-	k1Prefixed := append(prefix, k1...) //nolint:gocritic // append is fine here
+	k1Prefixed := append(prefix, k1...)
 	store1.Set(k1Prefixed, v1)
 	store2.Set(k1Prefixed, v2)
 	checkDiffResults(t, store1, store2)

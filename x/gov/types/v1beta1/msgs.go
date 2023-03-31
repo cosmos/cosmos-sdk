@@ -32,8 +32,6 @@ var (
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-//
-
 func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,

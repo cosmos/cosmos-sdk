@@ -23,8 +23,6 @@ var (
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-//
-
 func NewMsgSubmitProposal(
 	messages []sdk.Msg,
 	initialDeposit sdk.Coins,

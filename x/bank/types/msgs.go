@@ -48,7 +48,7 @@ func (msg MsgSend) ValidateBasic() error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgSend) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners Implements Msg.
@@ -84,7 +84,7 @@ func (msg MsgMultiSend) ValidateBasic() error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgMultiSend) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners Implements Msg.
@@ -184,7 +184,7 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 // GetSignBytes returns the raw bytes for a MsgUpdateParams message that
 // the expected signer needs to sign.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
-	bz := amino.MustMarshalJSON(&msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -204,7 +204,7 @@ func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefau
 
 // GetSignBytes implements the LegacyMsg interface.
 func (msg MsgSetSendEnabled) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for MsgSoftwareUpgrade.

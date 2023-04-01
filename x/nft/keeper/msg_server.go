@@ -23,7 +23,7 @@ func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespo
 
 	owner := k.GetOwner(ctx, msg.ClassId, msg.Id)
 	if !bytes.Equal(owner, sender) {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of nft %s", sender, msg.Id)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of nft %s", msg.Sender, msg.Id)
 	}
 
 	receiver, err := k.ac.StringToBytes(msg.Receiver)

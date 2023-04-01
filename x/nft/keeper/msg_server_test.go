@@ -81,7 +81,7 @@ func (s *TestSuite) TestSend() {
 				Receiver: s.addrs[2].String(),
 			},
 			expErr: true,
-			errMsg: fmt.Sprintf("is not the owner of nft %s", testID),
+			errMsg: fmt.Sprintf("%s is not the owner of nft %s", s.addrs[1].String(), testID),
 		},
 		{
 			name: "valid transaction",

@@ -154,7 +154,7 @@ func (suite *SubspaceTestSuite) TestModified() {
 
 func (suite *SubspaceTestSuite) TestUpdate() {
 	suite.Require().Panics(func() {
-		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil) //nolint:errcheck
+		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil) //nolint:errcheck // we're testing for a panic here, so there's no need to check the error
 	})
 
 	t := time.Hour * 48

@@ -39,7 +39,7 @@ func TestHistoricalInfo(t *testing.T) {
 	})
 	require.NotNil(t, value, "Marshaled HistoricalInfo is nil")
 
-	recv, err := types.UnmarshalHistoricalInfo(codec.NewAminoCodec(legacy.Cdc), value)
+	recv, err := types.UnmarshalHistoricalInfo(codec.NewAminoCodec(legacy.Cdc), value) //nolint:staticcheck // test of a legacy codec, using the old NewAminoCodec call
 	require.Nil(t, err, "Unmarshalling HistoricalInfo failed")
 	require.Equal(t, hi.Header, recv.Header)
 	for i := range hi.Valset {

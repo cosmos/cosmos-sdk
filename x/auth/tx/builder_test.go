@@ -18,13 +18,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+const memo = "sometestmemo"
+
 func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	txBuilder := newBuilder(nil)
 
-	memo := "sometestmemo" //nolint:goconst
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
 	any, err := codectypes.NewAnyWithValue(pubkey)

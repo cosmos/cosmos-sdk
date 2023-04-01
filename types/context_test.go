@@ -139,7 +139,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck,revive
+	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck,revive // we're going to use the raw strings here for testing, even though that's not recommended.
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
@@ -238,7 +238,7 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
 
 	// test unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, "foo", "bar") //nolint:golint,staticcheck,revive
+	ctx = context.WithValue(sdkCtx, "foo", "bar") //nolint:golint,staticcheck,revive // we're going to use the raw strings here for testing, even though that's not recommended.
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
 }

@@ -7,7 +7,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	_ "github.com/cosmos/cosmos-proto" // look above
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // we use the old proto library -- and the new one, in this file, and this file solves critical problems.
 )
 
 func getFileDescriptor(filePath string) []byte {
@@ -18,7 +18,7 @@ func getFileDescriptor(filePath string) []byte {
 		return fd
 	}
 
-	return proto.FileDescriptor(filePath) //nolint:staticcheck
+	return proto.FileDescriptor(filePath) //nolint:staticcheck // we use the old proto library -- and the new one, in this file, and this file solves critical problems.
 }
 
 func getMessageType(name string) reflect.Type {
@@ -27,7 +27,7 @@ func getMessageType(name string) reflect.Type {
 		return typ
 	}
 
-	return proto.MessageType(name) //nolint:staticcheck
+	return proto.MessageType(name) //nolint:staticcheck // we use the old proto library -- and the new one, in this file, and this file solves critical problems.
 }
 
 func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
@@ -39,8 +39,7 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 	}
 
 	// check into proto registry
-	//nolint:staticcheck
-	for id, desc := range proto.RegisteredExtensions(m) {
+	for id, desc := range proto.RegisteredExtensions(m) { //nolint:staticcheck // we use the old proto library -- and the new one, in this file, and this file solves critical problems.
 		if id == extID {
 			return &gogoproto.ExtensionDesc{
 				ExtendedType:  desc.ExtendedType,
@@ -67,7 +66,7 @@ func getExtensionsNumbers(m proto.Message) []int32 {
 		return out
 	}
 
-	protoExts := proto.RegisteredExtensions(m) //nolint:staticcheck
+	protoExts := proto.RegisteredExtensions(m) //nolint:staticcheck // we use the old proto library -- and the new one, in this file, and this file solves critical problems.
 	out = make([]int32, 0, len(protoExts))
 	for id := range protoExts {
 		out = append(out, id)

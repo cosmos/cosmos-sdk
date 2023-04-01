@@ -44,7 +44,7 @@ var (
 func (dog FakeDog) Reset()                  {}
 func (dog FakeDog) String() string          { return "fakedog" }
 func (dog FakeDog) ProtoMessage()           {}
-func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata.Dog{}) } //nolint:revive
+func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata.Dog{}) } //nolint:revive // we'll violate revive naming conventions here to keep protobufs compatibility
 func (dog FakeDog) Greet() string           { return "fakedog" }
 
 func TestRegister(t *testing.T) {

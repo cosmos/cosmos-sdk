@@ -19,7 +19,7 @@ var _ proto.Message = (*errOnMarshal)(nil)
 
 var errAlways = fmt.Errorf("always erroring")
 
-func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) { //nolint:revive
+func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) { //nolint:revive // we'll violate var-naming conventions here for proto compatibility.
 	return nil, errAlways
 }
 

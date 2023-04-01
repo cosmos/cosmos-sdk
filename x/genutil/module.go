@@ -133,9 +133,7 @@ func init() {
 }
 
 // GenutilInputs defines the inputs needed for the genutil module.
-//
-//nolint:revive
-type GenutilInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	AccountKeeper types.AccountKeeper
@@ -144,7 +142,7 @@ type GenutilInputs struct {
 	Config        client.TxConfig
 }
 
-func ProvideModule(in GenutilInputs) appmodule.AppModule {
+func ProvideModule(in ModuleInputs) appmodule.AppModule {
 	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
 	return m
 }

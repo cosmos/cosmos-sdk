@@ -149,15 +149,13 @@ func (w WeightedProposalMsg) MsgSimulatorFn() simulation.MsgSimulatorFn {
 // Legacy Proposal Content
 
 // WeightedProposalContent defines a common struct for proposal content defined by external modules (i.e outside gov)
-//
-//nolint:staticcheck
 type WeightedProposalContent struct {
 	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
 	defaultWeight      int                           // default weight
-	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
+	contentSimulatorFn simulation.ContentSimulatorFn //nolint:staticcheck // provides support for the deprecated ContentSimulatorFn
 }
 
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent { //nolint:staticcheck
+func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent { //nolint:staticcheck // provides support for the deprecated WeightedProposalContent.
 	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
 }
 
@@ -169,7 +167,7 @@ func (w WeightedProposalContent) DefaultWeight() int {
 	return w.defaultWeight
 }
 
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn { //nolint:staticcheck
+func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn { //nolint:staticcheck // this implements the deprecated content simulator.
 	return w.contentSimulatorFn
 }
 

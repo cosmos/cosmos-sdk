@@ -8,7 +8,7 @@ import (
 
 var (
 	Amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(Amino)
+	ModuleCdc = codec.NewAminoCodec(Amino) //nolint:staticcheck // TODO: remove once amino is gone
 )
 
 func init() {

@@ -61,7 +61,7 @@ func GetRequest(url string) ([]byte, error) {
 // PostRequest defines a wrapper around an HTTP POST request with a provided URL and data.
 // An error is returned if the request or reading the body fails.
 func PostRequest(url, contentType string, data []byte) ([]byte, error) {
-	res, err := http.Post(url, contentType, bytes.NewBuffer(data)) //nolint:gosec
+	res, err := http.Post(url, contentType, bytes.NewBuffer(data)) //nolint:gosec // this is a test utility, so we aren't concerned with passing a url as a variable
 	if err != nil {
 		return nil, fmt.Errorf("error while sending post request: %w", err)
 	}

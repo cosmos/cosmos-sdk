@@ -119,7 +119,7 @@ func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 			return err
 		}
 	}
-	fmt.Fprintln(cmd.OutOrStdout(), string(out))
+	_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
 
 	return nil
 }

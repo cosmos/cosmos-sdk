@@ -18,7 +18,7 @@ import (
 
 const (
 	// OpWeightMsgSend Simulation operation weights constants
-	OpWeightMsgSend = "op_weight_msg_send"
+	OpWeightMsgSend = "op_weight_msg_send" //nolint:gosec
 
 	// WeightSend nft operations weights
 	WeightSend = 100

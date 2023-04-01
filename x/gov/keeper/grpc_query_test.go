@@ -556,7 +556,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &v1beta1.QueryVoteResponse{Vote: v1beta1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []v1beta1.WeightedVoteOption{{Option: v1beta1.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0")}}}}
+				expRes = &v1beta1.QueryVoteResponse{Vote: v1beta1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []v1beta1.WeightedVoteOption{{Option: v1beta1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0")}}}}
 			},
 			true,
 		},
@@ -595,7 +595,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	suite.reset()
 	ctx, queryClient := suite.ctx, suite.queryClient
 
-	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(30000000))
+	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
 
 	var (
 		req      *v1.QueryVotesRequest
@@ -697,7 +697,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	suite.reset()
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
-	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(30000000))
+	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
 
 	var (
 		req      *v1beta1.QueryVotesRequest

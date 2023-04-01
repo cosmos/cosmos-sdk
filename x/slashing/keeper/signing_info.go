@@ -214,9 +214,12 @@ func (k Keeper) IterateMissedBlockBitmap(ctx sdk.Context, addr sdk.ConsAddress, 
 
 // GetValidatorMissedBlocks returns array of missed blocks for given validator.
 func (k Keeper) GetValidatorMissedBlocks(ctx sdk.Context, addr sdk.ConsAddress) []types.MissedBlock {
-	missedBlocks := []types.MissedBlock{}
+	missedBlocks := make([]types.MissedBlock, 0, k.SignedBlocksWindow(ctx))
 	k.IterateMissedBlockBitmap(ctx, addr, func(index int64, missed bool) (stop bool) {
-		missedBlocks = append(missedBlocks, types.NewMissedBlock(index, missed))
+		if missed {
+			missedBlocks = append(missedBlocks, types.NewMissedBlock(index, missed))
+		}
+
 		return false
 	})
 

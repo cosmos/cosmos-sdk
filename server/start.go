@@ -221,7 +221,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return err
 	}
 
-	if _, err := startTelemetry(config); err != nil {
+	if _, err := startTelemetry(config, home); err != nil {
 		return err
 	}
 
@@ -349,7 +349,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		app.RegisterNodeService(clientCtx)
 	}
 
-	metrics, err := startTelemetry(config)
+	metrics, err := startTelemetry(config, home)
 	if err != nil {
 		return err
 	}
@@ -462,12 +462,12 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	return g.Wait()
 }
 
-func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
+func startTelemetry(cfg serverconfig.Config, rootDir string) (*telemetry.Metrics, error) {
 	if !cfg.Telemetry.Enabled {
 		return nil, nil
 	}
 
-	return telemetry.New(cfg.Telemetry)
+	return telemetry.New(cfg.Telemetry, rootDir)
 }
 
 // wrapCPUProfile starts CPU profiling, if enabled, and executes the provided

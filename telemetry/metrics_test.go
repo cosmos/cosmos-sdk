@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/prometheus/common/expfmt"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMetrics_Disabled(t *testing.T) {
-	m, err := New(Config{Enabled: false})
+	m, err := New(Config{Enabled: false}, "")
 	require.Nil(t, m)
 	require.Nil(t, err)
 }
@@ -22,7 +23,7 @@ func TestMetrics_InMem(t *testing.T) {
 		Enabled:        true,
 		EnableHostname: false,
 		ServiceName:    "test",
-	})
+	}, "")
 	require.NoError(t, err)
 	require.NotNil(t, m)
 
@@ -47,7 +48,7 @@ func TestMetrics_Prom(t *testing.T) {
 		ServiceName:             "test",
 		PrometheusRetentionTime: 60,
 		EnableHostnameLabel:     false,
-	})
+	}, "")
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.True(t, m.prometheusEnabled)
@@ -73,4 +74,85 @@ func emitMetrics() {
 			return
 		}
 	}
+}
+
+func TestMetrics_getDefaultGlobalLabels(t *testing.T) {
+	type args struct {
+		rootDir string
+	}
+	tests := []struct {
+		name        string
+		args        args
+		versionInfo version.Info
+		want        []metrics.Label
+	}{
+		{
+			name: "happy path",
+			args: args{
+				rootDir: "./testdata/valid",
+			},
+			versionInfo: version.Info{
+				GoVersion:        "go version go1.14 linux/amd64",
+				CosmosSdkVersion: "0.42.5",
+			},
+			want: []metrics.Label{
+				NewLabel("go", "go version go1.14 linux/amd64"),
+				NewLabel("version", "0.42.5"),
+				NewLabel("upgrade_height", "123"),
+			},
+		},
+		{
+			name: "empty versionInfo",
+			args: args{
+				rootDir: "./testdata/valid",
+			},
+			want: []metrics.Label{
+				NewLabel("upgrade_height", "123"),
+			},
+		},
+		{
+			name: "upgrade-info.json is not available",
+			args: args{
+				rootDir: "./home",
+			},
+			versionInfo: version.Info{
+				GoVersion:        "go version go1.14 linux/amd64",
+				CosmosSdkVersion: "0.42.5",
+			},
+			want: []metrics.Label{
+				NewLabel("go", "go version go1.14 linux/amd64"),
+				NewLabel("version", "0.42.5"),
+			},
+		},
+		{
+			name: "upgrade-info.json unmarshal failed",
+			args: args{
+				rootDir: "./testdata/invalid",
+			},
+			versionInfo: version.Info{
+				GoVersion:        "go version go1.14 linux/amd64",
+				CosmosSdkVersion: "0.42.5",
+			},
+			want: []metrics.Label{
+				NewLabel("go", "go version go1.14 linux/amd64"),
+				NewLabel("version", "0.42.5"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockVersionNewInfo(t, tt.versionInfo)
+			require.ElementsMatch(t, tt.want, getDefaultGlobalLabels(tt.args.rootDir))
+		})
+	}
+}
+
+func mockVersionNewInfo(t *testing.T, newInfo version.Info) {
+	oriNewInfo := version.NewInfo
+	version.NewInfo = func() version.Info {
+		return newInfo
+	}
+	t.Cleanup(func() {
+		version.NewInfo = oriNewInfo
+	})
 }

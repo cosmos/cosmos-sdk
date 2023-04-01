@@ -63,7 +63,7 @@ type Info struct {
 	CosmosSdkVersion string     `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
 }
 
-func NewInfo() Info {
+var NewInfo = func() Info {
 	sdkVersion := getSDKVersion()
 	return Info{
 		Name:             Name,

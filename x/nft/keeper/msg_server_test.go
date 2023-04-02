@@ -101,7 +101,6 @@ func (s *TestSuite) TestSend() {
 			_, err := s.nftKeeper.Send(s.ctx, tc.req)
 			if tc.expErr {
 				s.Require().Error(err)
-				fmt.Println(err.Error())
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
 				s.Require().NoError(err)

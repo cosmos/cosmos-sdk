@@ -121,5 +121,5 @@ func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	}
 	fmt.Fprintln(cmd.OutOrStdout(), string(out))
 
-	return nil
+	return err
 }

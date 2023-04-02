@@ -3,6 +3,7 @@ package authz
 import (
 	context "context"
 
+	"cosmossdk.io/core/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,6 +12,8 @@ type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	SetAccount(ctx context.Context, acc sdk.AccountI)
+
+	address.Codec
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

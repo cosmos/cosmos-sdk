@@ -30,3 +30,10 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return v3.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
 }
+
+// Migrate3to4 migrates the x/slashing module state from the consensus
+// version 3 to version 4. Specifically, it migrates the validator missed block
+// bitmap.
+func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+	panic("NOT IMPLEMENTED YET")
+}

@@ -289,9 +289,9 @@ func floatDecimalPlaces(t *rapid.T, f float64) uint32 { //nolint:unused // we'd 
 	}
 
 	// Subtract exponent from base and check if negative
-	if res := basePlaces - exp; res <= 0 {
+	res := basePlaces - exp
+	if res <= 0 {
 		return 0
-	} else { //nolint:revive // we're declaring the variable res in the if statement, so we won't be able to use it outside of the if statement
-		return uint32(res)
 	}
+	return uint32(res)
 }

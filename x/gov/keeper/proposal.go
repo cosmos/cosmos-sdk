@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -116,19 +114,14 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		// For other Msgs, we do not verify the proposal messages any further.
 		// They may fail upon execution.
 		// ref: https://github.com/cosmos/cosmos-sdk/pull/10868#discussion_r784872842
-		msg, ok := msg.(*v1.MsgExecLegacyContent)
-		if !ok {
-			continue
-		}
-
-		content, err := v1.LegacyContentFromMessage(msg)
-		if err != nil {
-			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidProposalContent, "%+v", err)
-		}
-
-		// Ensure that the content has a respective handler
-		if !k.legacyRouter.HasRoute(content.ProposalRoute()) {
-			return v1.Proposal{}, errorsmod.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
+		if msg, ok := msg.(*v1.MsgExecLegacyContent); ok {
+			cacheCtx, _ := ctx.CacheContext()
+			if _, err := handler(cacheCtx, msg); err != nil {
+				if errors.Is(types.ErrNoProposalHandlerExists, err) {
+					return v1.Proposal{}, err
+				}
+				return v1.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
+			}
 		}
 
 		if err = k.BranchService.Execute(ctx, func(ctx context.Context) error {

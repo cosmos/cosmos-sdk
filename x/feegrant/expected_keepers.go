@@ -1,22 +1,22 @@
 package feegrant
 
 import (
+	context "context"
+
+	"cosmossdk.io/core/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AccountKeeper defines the expected auth Account Keeper (noalias)
 type AccountKeeper interface {
+	address.Codec
+
 	GetModuleAddress(moduleName string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, moduleName string) sdk.ModuleAccountI
+	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
-	SetAccount(ctx sdk.Context, acc sdk.AccountI)
-
-	// StringToBytes decodes text to bytes
-	StringToBytes(text string) ([]byte, error)
-	// BytesToString encodes bytes to text
-	BytesToString(bz []byte) (string, error)
+	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx context.Context, acc sdk.AccountI)
 }
 
 // BankKeeper defines the expected supply Keeper (noalias)

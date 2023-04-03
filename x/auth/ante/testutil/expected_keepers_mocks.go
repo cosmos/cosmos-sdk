@@ -5,6 +5,7 @@
 package testutil
 
 import (
+	context "context"
 	reflect "reflect"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -36,7 +37,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
@@ -64,7 +65,7 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(moduleName interface{}
 }
 
 // GetParams mocks base method.
-func (m *MockAccountKeeper) GetParams(ctx types.Context) types0.Params {
+func (m *MockAccountKeeper) GetParams(ctx context.Context) types0.Params {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetParams", ctx)
 	ret0, _ := ret[0].(types0.Params)
@@ -78,7 +79,7 @@ func (mr *MockAccountKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx types.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }

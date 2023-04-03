@@ -16,11 +16,10 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 
-	store "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -207,16 +206,15 @@ func init() {
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
 func ProvideAddressCodec(config *modulev1.Module) address.Codec {
-	return codecaddress.NewBech32Codec(config.Bech32Prefix)
+	return keeper.NewBech32Codec(config.Bech32Prefix)
 }
 
-//nolint:revive
-type AuthInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
 
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
@@ -225,15 +223,14 @@ type AuthInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-//nolint:revive
-type AuthOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        appmodule.AppModule
 }
 
-func ProvideModule(in AuthInputs) AuthOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -253,8 +250,8 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return AuthOutputs{AccountKeeper: k, Module: m}
+	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

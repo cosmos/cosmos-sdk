@@ -45,7 +45,7 @@ type Server struct {
 
 func (h Server) Start() error {
 	h.logger.Info(fmt.Sprintf("Rosetta server listening on add %s", h.addr))
-	return http.ListenAndServe(h.addr, h.h) //nolint:gosec
+	return http.ListenAndServe(h.addr, h.h) //nolint:gosec // users are recommended to operate a proxy in front of this server
 }
 
 func NewServer(settings Settings) (Server, error) {
@@ -61,7 +61,7 @@ func NewServer(settings Settings) (Server, error) {
 		return Server{}, fmt.Errorf("cannot build asserter: %w", err)
 	}
 
-	logger := log.NewLoggerWithKV(os.Stdout, log.ModuleKey, "rosetta")
+	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "rosetta")
 
 	var adapter crgtypes.API
 	switch settings.Offline {

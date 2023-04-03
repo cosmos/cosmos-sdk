@@ -78,7 +78,7 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 	store := ctx.KVStore(q.storeKey)
 	grantsStore := prefix.NewStore(store, feegrant.FeeAllowancePrefixByGrantee(granteeAddr))
 
-	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key, value []byte) error {
 		var grant feegrant.Grant
 
 		if err := q.cdc.Unmarshal(value, &grant); err != nil {

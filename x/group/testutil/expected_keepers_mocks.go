@@ -37,7 +37,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(arg0 types.Context, arg1 types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(arg0 context.Context, arg1 types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", arg0, arg1)
 	ret0, _ := ret[0].(types.AccountI)
@@ -51,7 +51,7 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(arg0, arg1 interface{}) *gom
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types.AccountI) types.AccountI {
+func (m *MockAccountKeeper) NewAccount(arg0 context.Context, arg1 types.AccountI) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
 	ret0, _ := ret[0].(types.AccountI)
@@ -65,7 +65,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 }
 
 // RemoveAccount mocks base method.
-func (m *MockAccountKeeper) RemoveAccount(ctx types.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) RemoveAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RemoveAccount", ctx, acc)
 }
@@ -77,7 +77,7 @@ func (mr *MockAccountKeeperMockRecorder) RemoveAccount(ctx, acc interface{}) *go
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(arg0 context.Context, arg1 types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", arg0, arg1)
 }

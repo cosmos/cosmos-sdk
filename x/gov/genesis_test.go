@@ -3,6 +3,7 @@ package gov_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
@@ -24,7 +25,7 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 					Amount: sdk.Coins{
 						sdk.NewCoin(
 							"stake",
-							sdk.NewInt(1234),
+							sdkmath.NewInt(1234),
 						),
 					},
 				},

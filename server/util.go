@@ -16,7 +16,6 @@ import (
 
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -169,37 +168,37 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // CreateSDKLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
-	var logger log.Logger
-	if ctx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
-		zl := zerolog.New(out).With().Timestamp().Logger()
-		logger = log.NewCustomLogger(zl)
-	} else {
-		logger = log.NewLogger(out)
+	var opts []log.Option
+	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
+		opts = append(opts, log.OutputJSONOption())
 	}
 
-	// set filter level or keys for the logger if any
+	// check and set filter level or keys for the logger if any
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
+	if logLvlStr == "" {
+		return log.NewLogger(out, opts...), nil
+	}
+
 	logLvl, err := zerolog.ParseLevel(logLvlStr)
-	if err != nil {
+	switch {
+	case err != nil:
 		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
 		filterFunc, err := log.ParseLogLevel(logLvlStr)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
+			return nil, err
 		}
 
-		logger = log.FilterKeys(logger, filterFunc)
-	} else {
-		zl := logger.Impl().(*zerolog.Logger)
+		opts = append(opts, log.FilterOption(filterFunc))
+
+	case ctx.Viper.GetBool("trace"): // cmtcli.TraceFlag
 		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
 		// Note it overrides log level passed in `log_levels`.
-		if ctx.Viper.GetBool(cmtcli.TraceFlag) {
-			logger = log.NewCustomLogger(zl.Level(zerolog.TraceLevel))
-		} else {
-			logger = log.NewCustomLogger(zl.Level(logLvl))
-		}
+		opts = append(opts, log.LevelOption(zerolog.TraceLevel))
+	default:
+		opts = append(opts, log.LevelOption(logLvl))
 	}
 
-	return logger, nil
+	return log.NewLogger(out, opts...), nil
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context

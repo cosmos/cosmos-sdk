@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"text/template"
 
 	"github.com/spf13/viper"
@@ -84,12 +85,22 @@ func WriteHomeDirToFile(filePath, homeDir string) error {
 }
 
 // ReadHomeDirFromFile tries to return the currently stored home directory from the
-// given file
-func ReadHomeDirFromFile(filePath string, v *viper.Viper) (string, error) {
+// given config directory.
+func ReadHomeDirFromFile(configPath string, v *viper.Viper) (string, error) {
+	fmt.Println("trying to read home directory from", configPath)
 	homeDirConfig := HomeDirConfig{}
-	v.AddConfigPath(filePath)
+	v.AddConfigPath(configPath)
 	v.SetConfigName("home")
 	v.SetConfigType("toml")
+
+	homeFilePath := filepath.Join(configPath, "home.toml")
+	if _, err := os.Stat(homeFilePath); os.IsNotExist(err) {
+		folder := filepath.Dir(configPath)
+		fmt.Printf("no home directory configuration found, creating new one at %q pointing to %q.\n", homeFilePath, folder)
+		if err := WriteHomeDirToFile(homeFilePath, folder); err != nil {
+			return "", err
+		}
+	}
 
 	if err := v.ReadInConfig(); err != nil {
 		return "", err

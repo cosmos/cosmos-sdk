@@ -188,6 +188,8 @@ func TestArmor(t *testing.T) {
 	data := []byte("somedata")
 	armorStr := crypto.EncodeArmor(blockType, nil, data)
 
+	fmt.Println("just a test")
+
 	// Decode armorStr and test for equivalence.
 	blockType2, _, data2, err := crypto.DecodeArmor(armorStr)
 	require.Nil(t, err, "%+v", err)

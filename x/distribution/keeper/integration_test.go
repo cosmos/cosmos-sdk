@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"gotest.tools/v3/assert"
@@ -99,7 +100,7 @@ func TestWithdrawDelegatorReward(t *testing.T) {
 	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
 	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
 
-	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
 
 	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)}),
@@ -108,7 +109,7 @@ func TestWithdrawDelegatorReward(t *testing.T) {
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	delAddr := sdk.AccAddress(PKS[1].Address())
@@ -192,7 +193,7 @@ func TestWithdrawDelegatorReward(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := integrationApp.ExecMsgs(tc.msg)
+			res, err := integrationApp.RunMsg(tc.msg)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -201,7 +202,7 @@ func TestWithdrawDelegatorReward(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgWithdrawDelegatorRewardResponse{}
-				err := f.cdc.Unmarshal(res[0].Value, &result)
+				err := f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				// check current balance is greater than initial balance
@@ -227,11 +228,11 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
 	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
 
-	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	f.distrKeeper.SetParams(integrationApp.SDKContext(), distrtypes.DefaultParams())
 
@@ -277,7 +278,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			tc.preRun()
-			res, err := integrationApp.ExecMsgs(tc.msg)
+			res, err := integrationApp.RunMsg(tc.msg)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 
@@ -290,7 +291,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgSetWithdrawAddressResponse{}
-				err = f.cdc.Unmarshal(res[0].Value, &result)
+				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				// query the delegator withdraw address
@@ -310,11 +311,11 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
 	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
 
-	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5).Quo(math.LegacyNewDec(4))),
@@ -372,7 +373,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := integrationApp.ExecMsgs(tc.msg)
+			res, err := integrationApp.RunMsg(tc.msg)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -381,7 +382,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgWithdrawValidatorCommissionResponse{}
-				err = f.cdc.Unmarshal(res[0].Value, &result)
+				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				// check balance increase
@@ -412,7 +413,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
 	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
 
-	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
 
 	// reset fee pool
 	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.InitialFeePool())
@@ -424,7 +425,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	addr2 := sdk.AccAddress(PKS[1].Address())
@@ -463,7 +464,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := integrationApp.ExecMsgs(tc.msg)
+			res, err := integrationApp.RunMsg(tc.msg)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -472,7 +473,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgFundCommunityPool{}
-				err = f.cdc.Unmarshal(res[0].Value, &result)
+				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				// query the community pool funds
@@ -496,11 +497,11 @@ func TestMsgUpdateParams(t *testing.T) {
 	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
 	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
 
-	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	testCases := []struct {
 		name      string
@@ -596,7 +597,7 @@ func TestMsgUpdateParams(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := integrationApp.ExecMsgs(tc.msg)
+			res, err := integrationApp.RunMsg(tc.msg)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -605,7 +606,7 @@ func TestMsgUpdateParams(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgUpdateParams{}
-				err = f.cdc.Unmarshal(res[0].Value, &result)
+				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				// query the params and verify it has been updated
@@ -625,7 +626,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
 	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
 
-	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
 
 	f.distrKeeper.SetParams(integrationApp.SDKContext(), distrtypes.DefaultParams())
 	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.FeePool{
@@ -638,7 +639,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	recipient := sdk.AccAddress([]byte("addr1"))
 
@@ -681,7 +682,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := integrationApp.ExecMsgs(tc.msg)
+			res, err := integrationApp.RunMsg(tc.msg)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -690,7 +691,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgCommunityPoolSpend{}
-				err = f.cdc.Unmarshal(res[0].Value, &result)
+				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				// query the community pool to verify it has been updated
@@ -712,7 +713,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
 	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
 
-	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
 
 	f.distrKeeper.SetParams(integrationApp.SDKContext(), distrtypes.DefaultParams())
 	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.FeePool{
@@ -726,7 +727,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
 
 	addr := sdk.AccAddress([]byte("addr"))
 	addr1 := sdk.AccAddress(PKS[0].Address())
@@ -785,7 +786,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := integrationApp.ExecMsgs(tc.msg)
+			res, err := integrationApp.RunMsg(tc.msg)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -794,7 +795,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgDepositValidatorRewardsPoolResponse{}
-				err = f.cdc.Unmarshal(res[0].Value, &result)
+				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				valAddr, err := sdk.ValAddressFromBech32(tc.msg.ValidatorAddress)

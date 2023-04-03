@@ -2,6 +2,8 @@ syntax = "proto3";
 package cosmos.base.node.v1beta1;
 
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/node";
 
@@ -10,6 +12,10 @@ service Service {
   // Config queries for the operator configuration.
   rpc Config(ConfigRequest) returns (ConfigResponse) {
     option (google.api.http).get = "/cosmos/base/node/v1beta1/config";
+  }
+  // Status queries for the node status.
+  rpc Status(StatusRequest) returns (StatusResponse) {
+    option (google.api.http).get = "/cosmos/base/node/v1beta1/status";
   }
 }
 
@@ -29,5 +35,7 @@ message StatusRequest {}
 
 // StateResponse defines the response structure for the status of a node.
 message StatusResponse {
-  string earliest_version = 1;
+  uint64                    earliest_store_height         = 1;
+  uint64                    latest_block_height           = 2;
+  google.protobuf.Timestamp latest_block_height_timestamp = 3 [(gogoproto.stdtime) = true];
 }

@@ -44,3 +44,15 @@ func (s queryServer) Config(ctx context.Context, _ *ConfigRequest) (*ConfigRespo
 		PruningInterval:   s.cfg.PruningInterval,
 	}, nil
 }
+
+func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	blockTime := sdkCtx.BlockTime()
+
+	return &StatusResponse{
+		// EarliestStoreHeight: sdkCtx.MultiStore(), // todo get earliest version from store
+		LatestBlockHeight:          uint64(sdkCtx.BlockHeight()),
+		LatestBlockHeightTimestamp: &blockTime,
+	}, nil
+}

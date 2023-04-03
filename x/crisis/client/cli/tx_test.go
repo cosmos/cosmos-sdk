@@ -2,11 +2,11 @@ package cli_test
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"io"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"

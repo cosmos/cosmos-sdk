@@ -171,7 +171,7 @@ func init() {
 	)
 }
 
-type UpgradeInputs struct { //nolint:revive // for readability, we ignore var-naming rules here
+type ModuleInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -181,7 +181,7 @@ type UpgradeInputs struct { //nolint:revive // for readability, we ignore var-na
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
-type UpgradeOutputs struct { //nolint:revive // for readability, we ignore var-naming rules here
+type ModuleOutputs struct {
 	depinject.Out
 
 	UpgradeKeeper *keeper.Keeper
@@ -190,7 +190,7 @@ type UpgradeOutputs struct { //nolint:revive // for readability, we ignore var-n
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in UpgradeInputs) UpgradeOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var (
 		homePath           string
 		skipUpgradeHeights = make(map[int64]bool)

@@ -249,8 +249,8 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
 
-	case err != nil:
-		return nil, err // If the log level is not a valid zerolog level, then we try to parse it as a key filter.
+	case err != nil: // If the log level is not a valid zerolog level, then we try to parse it as a key filter.
+		return nil, err
 
 	default:
 		rootViper.SetConfigType("toml")

@@ -86,10 +86,15 @@ const (
 	// FlagOutput is the flag to set the output format.
 	// This differs from FlagOutputDocument that is used to set the output file.
 	FlagOutput = "output"
-
 	// Logging flags
 	FlagLogLevel  = "log_level"
 	FlagLogFormat = "log_format"
+)
+
+// List of supported output formats
+const (
+	OutputFormatJSON = "json"
+	OutputFormatText = "text"
 )
 
 // LineBreak can be included in a command list to provide a blank line

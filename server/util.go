@@ -169,7 +169,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
-	if ctx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
+	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
 	}
 

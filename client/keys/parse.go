@@ -137,10 +137,10 @@ func displayParseKeyInfo(w io.Writer, stringer fmt.Stringer, output string) {
 	)
 
 	switch output {
-	case OutputFormatText:
+	case flags.OutputFormatText:
 		out, err = yaml.Marshal(&stringer)
 
-	case OutputFormatJSON:
+	case flags.OutputFormatJSON:
 		out, err = json.Marshal(&stringer)
 	}
 

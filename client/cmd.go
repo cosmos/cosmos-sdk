@@ -305,7 +305,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 			// If the user didn't explicitly set an --output flag, use JSON by
 			// default.
 			if clientCtx.OutputFormat == "" || !flagSet.Changed(flags.FlagOutput) {
-				clientCtx = clientCtx.WithOutputFormat("json")
+				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
 			}
 
 			// If the user didn't explicitly set a --sign-mode flag, use

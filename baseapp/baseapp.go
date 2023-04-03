@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -14,8 +13,9 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -407,6 +407,10 @@ func (app *BaseApp) Init() error {
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(execModeCheck, emptyHeader)
 	app.Seal()
+
+	if app.cms == nil {
+		return errors.New("commit multi-store must not be nil")
+	}
 
 	return app.cms.GetPruning().Validate()
 }

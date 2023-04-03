@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (simapp) [#15305](https://github.com/cosmos/cosmos-sdk/pull/15305) Add `AppStateFnWithExtendedCb` with callback function to extend rawState and `AppStateRandomizedFnWithState` with extra genesisState argument which is the genesis state of the app.
 * (x/distribution) [#15462](https://github.com/cosmos/cosmos-sdk/pull/15462) Add delegator address to the event for withdrawing delegation rewards
+* [#14019](https://github.com/cosmos/cosmos-sdk/issues/14019) Remove the interface casting to allow other implementations of a `CommitMultiStore`.
 
 ### Bug Fixes
 

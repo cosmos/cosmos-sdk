@@ -30,7 +30,7 @@ func GetQueryCmd(ac address.Codec) *cobra.Command {
 	govQueryCmd.AddCommand(
 		GetCmdQueryProposal(),
 		GetCmdQueryProposals(ac),
-		GetCmdQueryVote(),
+		GetCmdQueryVote(ac),
 		GetCmdQueryVotes(),
 		GetCmdQueryParams(),
 		GetCmdQueryParam(),

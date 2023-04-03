@@ -39,8 +39,6 @@ cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7 h1:4LrWK+uGP5IxznxtHHsHD+Z
 cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7/go.mod h1:yVns7mKgcsG+hZW/3C5FdJtC6QYWdFIcRlKb9+5HV5g=
 cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba h1:S4PYij/tX3Op/hwenVEN9D+M27JRcwSwVqE3UA0BnwM=
 cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba/go.mod h1:lpS+G8bGC2anqzWdndTzjnQnuMO/qAcgZUkGJp4i3rc=
-cosmossdk.io/core v0.6.1 h1:OBy7TI2W+/gyn2z40vVvruK3di+cAluinA6cybFbE7s=
-cosmossdk.io/core v0.6.1/go.mod h1:g3MMBCBXtxbDWBURDVnJE7XML4BG5qENhs0gzkcpuFA=
 cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4 h1:l1scDTT2VX18ZuR6P0irvT/bAP0h4297D/Lka5nz2vE=
 cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4/go.mod h1:J8R0E7soOpQFVqFiFd7EKepXCPpINa2n2t2EqbEsXnY=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=

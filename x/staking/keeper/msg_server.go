@@ -35,10 +35,12 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAccAddr, err := sdk.AccAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
+
+	valAddr := sdk.ValAddress(valAccAddr)
 
 	if msg.Commission.Rate.LT(k.MinCommissionRate(ctx)) {
 		return nil, errorsmod.Wrapf(types.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))

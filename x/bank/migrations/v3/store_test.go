@@ -28,8 +28,8 @@ func TestMigrateStore(t *testing.T) {
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
 	balances := sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(10000)),
-		sdk.NewCoin("bar", sdk.NewInt(20000)),
+		sdk.NewCoin("foo", math.NewInt(10000)),
+		sdk.NewCoin("bar", math.NewInt(20000)),
 	)
 
 	for _, b := range balances {

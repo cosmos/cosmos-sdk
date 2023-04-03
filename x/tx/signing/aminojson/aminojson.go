@@ -77,6 +77,8 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	}
 	isTipper := tip != nil && tip.Tipper == signerData.Address
 
+	// We set a convention that if the tipper signs with LEGACY_AMINO_JSON, then
+	// they sign over empty fees and 0 gas.
 	var fee *aminojsonpb.AminoSignFee
 	if isTipper {
 		fee = &aminojsonpb.AminoSignFee{

@@ -45,10 +45,6 @@ func MakeHandlerArguments(options HandlerArgumentOptions) (signing.SignerData, s
 		},
 	}
 
-	//fee := &txv1beta1.Fee{
-	//	Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
-	//}
-
 	anyMsg, err := anyutil.New(options.Msg)
 	if err != nil {
 		return signing.SignerData{}, signing.TxData{}, err

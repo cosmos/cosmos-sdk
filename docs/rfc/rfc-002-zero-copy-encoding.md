@@ -128,6 +128,9 @@ allocated.
 * `enum`s are encoded as 1 byte and values *MUST* be in the range of `0` to `255`.
 * all scalars declared as `optional` are prefixed with 1 additional byte whose value is `0` or `1` to indicate presence
 
+All multibyte integers are encoded as little-endian which is by far the most common native byte order for modern
+CPUs. Signed integers always use two's complement encoding.
+
 #### Message Encoding
 
 By default, messages field are encoded inline as structs. Meaning that if a message struct takes 8 bytes then its inline
@@ -340,13 +343,14 @@ This encoding should allow generating native structs in Rust that are annotated 
 be fairly natural to use from Rust with a key difference that memory buffers (called `Root`s) must be manually allocated
 and passed into any pointer type.
 
-Here is some example code that uses library types `Option`, `Enum`, `String`, `OneOf` and `Repeated`:
+Here is some example code that uses library types `Option`, `Enum`, `String`, `OneOf` and `Repeated`
+as well as little-endian integer types from [rend](https://lib.rs/crates/rend):
 
 ```rust!
 #[repr(C, align(1))]
 struct Foo {
-    x: i32,
-    y: cosmos_proto::Option<u32>,
+    x: rend:i32_le,
+    y: cosmos_proto::Option<rend:u32_le>,
     z: cosmos_proto::String, // String wraps a pointer to a string
     bar: Bar
 }
@@ -355,7 +359,7 @@ struct Foo {
 struct Bar {
     abc: cosmos_proto::Enum<ABC, 3>, // the Enum wrapper allows us to distinguish undefined and defined values of ABC at runtime. 3 is specified as the max value of ABC.
     baz: cosmos_proto::OneOf<Baz, 2>, // the OneOf wrapper allows distinguished undefined values of Baz at runtime. 2 is specified as the max field value of Baz.
-    xs: cosmos_proto::Repeated<u32> // Repeated wraps a pointer to repeated fields
+    xs: cosmos_proto::Repeated<rend:u32_le> // Repeated wraps a pointer to repeated fields
 }
 
 #[repr(u8)]
@@ -369,7 +373,7 @@ enum ABC {
 #[repr(C, u8)]
 enum Baz {
     Empty, // all oneof's have a case for Empty if they are unset
-    X(u32),
+    X(rend::u32_le),
     Y(cosmos_proto::String)
 }
 ```
@@ -379,20 +383,20 @@ Example usage (which does the exact same thing as the go example above) would be
 ```rust!
 let mut root = Root<Foo>::new();
 let mut foo = root.get_mut();
-foo.x = 1;
-foo.y = Some(2);
+foo.x = 1.into();
+foo.y = Some(2.into());
 foo.z.set(root.new_string("hello")?); // could return an allocation error
 
-foo.bar.baz = Baz::X(3);
+foo.bar.baz = Baz::X(3.into());
 
 foo.bar.xs.init_with_size(&mut root, 2)?; // could return an allocation error
-foo.bar.xs[0] = 0;
-foo.bar.xs[1] = 2;
+foo.bar.xs[0] = 0.into();
+foo.bar.xs[1] = 2.into();
 
 foo.bars.init_with_size(&mut root, 3)?; // could return an allocation error
 foo.bars[0].baz = Baz::Y(root.new_string("hello")?); // could return an allocation error
 foo.bars[1].abc = ABC::B;
-foo.bars[2].baz = Baz::X(4);
+foo.bars[2].baz = Baz::X(4.into());
 ```
 
 ## Abandoned Ideas (Optional)

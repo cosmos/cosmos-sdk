@@ -30,8 +30,8 @@ func SimulateTextProposal(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk
 }
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents() []simtypes.WeightedProposalContent { //nolint:staticcheck // implements the old-style gov paths
-	return []simtypes.WeightedProposalContent{ //nolint:staticcheck // implements the old-style gov paths
+func ProposalContents() []simtypes.WeightedProposalContent { //nolint:staticcheck // keep support for simulation gov v1beta1
+	return []simtypes.WeightedProposalContent{ //nolint:staticcheck // keep support for simulation gov v1beta1
 		simulation.NewWeightedProposalContent(
 			OpWeightMsgDeposit,
 			DefaultWeightTextProposal,
@@ -41,7 +41,7 @@ func ProposalContents() []simtypes.WeightedProposalContent { //nolint:staticchec
 }
 
 // SimulateTextProposalContent returns a random text proposal content.
-func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content { //nolint:staticcheck // implements the old-style gov paths and allows us to simulate them
+func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content { //nolint:staticcheck // keep support for simulation gov v1beta1
 	return v1beta1.NewTextProposal(
 		simtypes.RandStringOfLength(r, 140),
 		simtypes.RandStringOfLength(r, 5000),

@@ -12,8 +12,8 @@ const (
 )
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents(paramChanges []simtypes.LegacyParamChange) []simtypes.WeightedProposalContent { //nolint:staticcheck // implements the old-style gov paths
-	return []simtypes.WeightedProposalContent{ //nolint:staticcheck // implements the old-style gov paths
+func ProposalContents(paramChanges []simtypes.LegacyParamChange) []simtypes.WeightedProposalContent { //nolint:staticcheck // keep support for simulation gov v1beta1
+	return []simtypes.WeightedProposalContent{ //nolint:staticcheck // keep support for simulation gov v1beta1
 		simulation.NewWeightedProposalContent(
 			OpWeightSubmitParamChangeProposal,
 			DefaultWeightParamChangeProposal,

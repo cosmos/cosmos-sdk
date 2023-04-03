@@ -30,7 +30,7 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	key := "theKey"
 	weight := 1
 	content := &testContent{}
-	f := func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content { //nolint:staticcheck // tests the old-style gov paths
+	f := func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content { //nolint:staticcheck // keep support for simulation gov v1beta1
 		return content
 	}
 

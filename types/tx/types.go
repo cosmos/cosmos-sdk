@@ -40,14 +40,14 @@ func (t *Tx) GetSigners(codec codec.Codec) ([]string, []protov2.Message, error) 
 
 	var msgsv2 []protov2.Message
 	for _, msg := range t.Body.Messages {
-		signers, msgv2, err := codec.GetMsgAnySigners(msg)
+		xs, msgv2, err := codec.GetMsgAnySigners(msg)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		msgsv2 = append(msgsv2, msgv2)
 
-		for _, signer := range signers {
+		for _, signer := range xs {
 			if !seen[signer] {
 				signers = append(signers, signer)
 				seen[signer] = true

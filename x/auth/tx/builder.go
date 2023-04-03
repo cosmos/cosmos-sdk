@@ -59,7 +59,7 @@ type ExtensionOptionsTxBuilder interface {
 }
 
 func newBuilder(cdc codec.Codec) *wrapper {
-	return &wrapper{
+	w := &wrapper{
 		cdc: cdc,
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
@@ -68,6 +68,7 @@ func newBuilder(cdc codec.Codec) *wrapper {
 			},
 		},
 	}
+	return w
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {
@@ -75,6 +76,10 @@ func (w *wrapper) GetMsgs() []sdk.Msg {
 }
 
 func (w *wrapper) GetMsgsV2() []protov2.Message {
+	if w.msgsV2 == nil {
+		w.initSignersAndMsgsV2()
+	}
+
 	return w.msgsV2
 }
 
@@ -175,19 +180,24 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 	return w.authInfoBz
 }
 
+func (w *wrapper) initSignersAndMsgsV2() {
+	signers, msgV2, err := w.tx.GetSigners(w.cdc)
+	if err != nil {
+		panic(err)
+	}
+
+	w.msgsV2 = msgV2
+	w.signers = nil
+
+	for _, signer := range signers {
+		signerBz := sdk.MustAccAddressFromBech32(signer)
+		w.signers = append(w.signers, signerBz)
+	}
+}
+
 func (w *wrapper) GetSigners() []sdk.AccAddress {
 	if w.signers == nil {
-		signers, msgV2, err := w.tx.GetSigners(w.cdc)
-		if err != nil {
-			panic(err)
-		}
-
-		w.msgsV2 = msgV2
-
-		for _, signer := range signers {
-			signerBz := sdk.MustAccAddressFromBech32(signer)
-			w.signers = append(w.signers, signerBz)
-		}
+		w.initSignersAndMsgsV2()
 	}
 	return w.signers
 }
@@ -299,6 +309,10 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
+
+	// reset signers and msgsV2
+	w.signers = nil
+	w.msgsV2 = nil
 
 	return nil
 }

@@ -196,7 +196,7 @@ func NewBaseApp(
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	// initialize with an empty interface registry to avoid nil pointer dereference
-	app.SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
+	app.cdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 
 	return app
 }

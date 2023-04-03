@@ -73,6 +73,7 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			bodyBz:                       raw.BodyBytes,
 			authInfoBz:                   raw.AuthInfoBytes,
 			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
+			cdc:                          cdc,
 		}, nil
 	}
 }

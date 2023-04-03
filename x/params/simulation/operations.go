@@ -27,7 +27,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.LegacyParam
 		panic("param changes array is empty")
 	}
 
-	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content { //nolint:staticcheck // implements the old-style gov paths
+	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content { //nolint:staticcheck // legacy param changes are gov v1beta1 proposals
 		numChanges := simulation.RandIntBetween(r, 1, maxSimultaneousParamChanges)
 		paramChanges := make([]proposal.ParamChange, numChanges)
 

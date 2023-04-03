@@ -15,14 +15,19 @@ const (
 )
 
 var (
-	validatorSigningInfoKeyPrefix         = []byte{0x01}
+	ValidatorSigningInfoKeyPrefix         = []byte{0x01}
 	validatorMissedBlockBitArrayKeyPrefix = []byte{0x02}
 )
 
-func validatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
-	kv.AssertKeyAtLeastLength(key, 2)
-	addr := key[1:]
-	kv.AssertKeyLength(addr, addrLen)
+func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
+	return append(ValidatorSigningInfoKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
+}
+
+func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
+	// Remove prefix and address length.
+	kv.AssertKeyAtLeastLength(key, 3)
+	addr := key[2:]
+
 	return sdk.ConsAddress(addr)
 }
 
@@ -30,7 +35,7 @@ func validatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
 	return append(validatorMissedBlockBitArrayKeyPrefix, v.Bytes()...)
 }
 
-func validatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
+func ValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(i))
 	return append(validatorMissedBlockBitArrayPrefixKey(v), b...)
@@ -40,7 +45,7 @@ func validatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
 	return append(validatorMissedBlockBitArrayKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
-func validatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
+func ValidatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
 	bz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bz, uint64(chunkIndex))
 

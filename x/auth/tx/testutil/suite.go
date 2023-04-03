@@ -73,7 +73,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 	tx := txBuilder.GetTx()
 	s.Require().Equal(msgs, tx.GetMsgs())
 	s.Require().Equal([]sdk.AccAddress{addr1, addr2}, tx.GetSigners())
-	s.Require().Equal(addr1, tx.FeePayer())
+	s.Require().Equal(addr1.String(), tx.FeePayer())
 	s.Require().Error(tx.ValidateBasic()) // should fail because of no signatures
 }
 

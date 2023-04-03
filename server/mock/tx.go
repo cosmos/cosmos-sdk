@@ -116,7 +116,7 @@ func (msg *KVStoreTx) ValidateBasic() error {
 	return nil
 }
 
-func (msg *KVStoreTx) GetSigners() []sdk.AccAddress {
+func (msg *KVStoreTx) GetSigners() []string {
 	return nil
 }
 

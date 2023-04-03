@@ -37,7 +37,7 @@ type wrapper struct {
 
 	txBodyHasUnknownNonCriticals bool
 
-	signers []sdk.AccAddress
+	signers []string
 	msgsV2  []protov2.Message
 }
 
@@ -181,21 +181,14 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 }
 
 func (w *wrapper) initSignersAndMsgsV2() {
-	signers, msgV2, err := w.tx.GetSigners(w.cdc)
+	var err error
+	w.signers, w.msgsV2, err = w.tx.GetSigners(w.cdc)
 	if err != nil {
 		panic(err)
 	}
-
-	w.msgsV2 = msgV2
-	w.signers = nil
-
-	for _, signer := range signers {
-		signerBz := sdk.MustAccAddressFromBech32(signer)
-		w.signers = append(w.signers, signerBz)
-	}
 }
 
-func (w *wrapper) GetSigners() []sdk.AccAddress {
+func (w *wrapper) GetSigners() []string {
 	if w.signers == nil {
 		w.initSignersAndMsgsV2()
 	}
@@ -233,21 +226,21 @@ func (w *wrapper) GetFee() sdk.Coins {
 	return w.tx.AuthInfo.Fee.Amount
 }
 
-func (w *wrapper) FeePayer() sdk.AccAddress {
+func (w *wrapper) FeePayer() string {
 	feePayer := w.tx.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		return sdk.MustAccAddressFromBech32(feePayer)
+		return feePayer
 	}
 	// use first signer as default if no payer specified
 	return w.GetSigners()[0]
 }
 
-func (w *wrapper) FeeGranter() sdk.AccAddress {
-	feePayer := w.tx.AuthInfo.Fee.Granter
-	if feePayer != "" {
-		return sdk.MustAccAddressFromBech32(feePayer)
+func (w *wrapper) FeeGranter() string {
+	feeGranter := w.tx.AuthInfo.Fee.Granter
+	if feeGranter != "" {
+		return feeGranter
 	}
-	return nil
+	return ""
 }
 
 func (w *wrapper) GetTip() *tx.Tip {
@@ -551,7 +544,7 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	// Get the aux signer's index in GetSigners.
 	signerIndex := -1
 	for i, signer := range w.GetSigners() {
-		if signer.String() == data.Address {
+		if signer == data.Address {
 			signerIndex = i
 		}
 	}

@@ -741,7 +741,7 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	sigs, err = txBuilder.GetTx().GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(sigs))
-	s.Require().Equal(val1.Address.String(), txBuilder.GetTx().GetSigners()[0].String())
+	s.Require().Equal(val1.Address.String(), txBuilder.GetTx().GetSigners()[0])
 
 	// Write the output to disk
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
@@ -1572,7 +1572,7 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
-	require.Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
+	require.Equal([]string{val0.Address.String(), val1.Address.String()}, txBuilder.GetTx().GetSigners())
 
 	// Write the unsigned tx into a file.
 	txJSON, err := val0.ClientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())

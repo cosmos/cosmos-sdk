@@ -405,7 +405,7 @@ func (s *CLITestSuite) TestCLISendGenerateSignAndBroadcast() {
 	sigs, err = txBuilder.GetTx().GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(sigs))
-	s.Require().Equal(s.val.String(), txBuilder.GetTx().GetSigners()[0].String())
+	s.Require().Equal(s.val.String(), txBuilder.GetTx().GetSigners()[0])
 
 	// Write the output to disk
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
@@ -913,7 +913,7 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
-	s.Require().Equal([]sdk.AccAddress{val0, val1}, txBuilder.GetTx().GetSigners())
+	s.Require().Equal([]string{val0.String(), val1.String()}, txBuilder.GetTx().GetSigners())
 
 	// Write the unsigned tx into a file.
 	txJSON, err := s.clientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())

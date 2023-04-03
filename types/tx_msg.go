@@ -47,10 +47,15 @@ type (
 		GetSignature() []byte
 	}
 
-	// Tx defines the interface a transaction must fulfill.
-	Tx interface {
+	// HasMsgs defines an interface a transaction must fulfill.
+	HasMsgs interface {
 		// GetMsgs gets the all the transaction's messages.
 		GetMsgs() []Msg
+	}
+
+	// Tx defines an interface a transaction must fulfill.
+	Tx interface {
+		HasMsgs
 
 		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
 		GetMsgsV2() []protov2.Message
@@ -65,8 +70,8 @@ type (
 		Tx
 		GetGas() uint64
 		GetFee() Coins
-		FeePayer() AccAddress
-		FeeGranter() AccAddress
+		FeePayer() string
+		FeeGranter() string
 	}
 
 	// TxWithMemo must have GetMemo() method to use ValidateMemoDecorator

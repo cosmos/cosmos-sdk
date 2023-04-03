@@ -85,11 +85,11 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 
 	// if feegranter set deduct fee from feegranter account.
 	// this works with only when feegrant enabled.
-	if feeGranter != nil {
+	if feeGranter != "" {
 		if dfd.feegrantKeeper == nil {
 			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		} else if !feeGranter.Equals(feePayer) {
-			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, sdkTx.GetMsgs())
+		} else if feeGranter != feePayer {
+			err := dfd.feegrantKeeper.UseGrantedFees(ctx, sdk.MustAccAddressFromBech32(feeGranter), sdk.MustAccAddressFromBech32(feePayer), fee, sdkTx.GetMsgs())
 			if err != nil {
 				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 			}
@@ -98,7 +98,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		deductFeesFrom = feeGranter
 	}
 
-	deductFeesFromAcc := dfd.accountKeeper.GetAccount(ctx, deductFeesFrom)
+	deductFeesFromAcc := dfd.accountKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(deductFeesFrom))
 	if deductFeesFromAcc == nil {
 		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
@@ -115,7 +115,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		sdk.NewEvent(
 			sdk.EventTypeTx,
 			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom),
 		),
 	}
 	ctx.EventManager().EmitEvents(events)

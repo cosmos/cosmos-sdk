@@ -66,7 +66,7 @@ func printAndValidateSigs(
 	cmd.Println("Signers:")
 	signers := sigTx.GetSigners()
 	for i, signer := range signers {
-		cmd.Printf("  %v: %v\n", i, signer.String())
+		cmd.Printf("  %v: %v\n", i, signer)
 	}
 
 	success := true
@@ -90,7 +90,7 @@ func printAndValidateSigs(
 			sigSanity      = "OK"
 		)
 
-		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
+		if i >= len(signers) || sigAddr.String() != signers[i] {
 			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
 		}

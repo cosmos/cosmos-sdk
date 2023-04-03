@@ -75,12 +75,17 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			pk = simSecp256k1Pubkey
 		}
 		// Only make check if simulate=false
-		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
+		signerAddr, err := sdk.AccAddressFromBech32(signers[i])
+		if err != nil {
+			return ctx, err
+		}
+
+		if !simulate && !bytes.Equal(pk.Address(), signerAddr) {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
 				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
 		}
 
-		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
+		acc, err := GetSignerAcc(ctx, spkd.ak, signerAddr)
 		if err != nil {
 			return ctx, err
 		}
@@ -160,10 +165,15 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
-	signerAddrs := sigTx.GetSigners()
+	signers := sigTx.GetSigners()
 
 	for i, sig := range sigs {
-		signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signerAddrs[i])
+		signerAddr, err := sdk.AccAddressFromBech32(signers[i])
+		if err != nil {
+			return ctx, err
+		}
+
+		signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signerAddr)
 		if err != nil {
 			return ctx, err
 		}
@@ -245,15 +255,20 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, err
 	}
 
-	signerAddrs := sigTx.GetSigners()
+	signers := sigTx.GetSigners()
 
 	// check that signer length and signature length are the same
-	if len(sigs) != len(signerAddrs) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
+	if len(sigs) != len(signers) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
 	}
 
 	for i, sig := range sigs {
-		acc, err := GetSignerAcc(ctx, svd.ak, signerAddrs[i])
+		signerAddr, err := sdk.AccAddressFromBech32(signers[i])
+		if err != nil {
+			return ctx, err
+		}
+
+		acc, err := GetSignerAcc(ctx, svd.ak, signerAddr)
 		if err != nil {
 			return ctx, err
 		}
@@ -334,8 +349,13 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	// increment sequence of all signers
-	for _, addr := range sigTx.GetSigners() {
-		acc := isd.ak.GetAccount(ctx, addr)
+	for _, signer := range sigTx.GetSigners() {
+		signerAddr, err := sdk.AccAddressFromBech32(signer)
+		if err != nil {
+			return ctx, err
+		}
+
+		acc := isd.ak.GetAccount(ctx, signerAddr)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
 			panic(err)
 		}

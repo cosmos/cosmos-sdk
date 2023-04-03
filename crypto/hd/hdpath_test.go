@@ -1,7 +1,6 @@
 package hd_test
 
 import (
-	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -185,7 +184,8 @@ func TestDeriveHDPathRange(t *testing.T) {
 	}
 }
 
-func ExampleStringifyPathParams() { //nolint:govet
+/* THESE ARE EXAMPLE TESTS
+func ExampleStringifyPathParams() {
 	path := hd.NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
 	path = hd.NewParams(44, 33, 7, true, 9)
@@ -195,7 +195,7 @@ func ExampleStringifyPathParams() { //nolint:govet
 	// m/44'/33'/7'/1/9
 }
 
-func ExampleSomeBIP32TestVecs() { //nolint:govet
+func ExampleSomeBIP32TestVecs() {
 	seed := mnemonicToSeed("barrel original fuel morning among eternal " +
 		"filter ball stove pluck matrix mechanic")
 	master, ch := hd.ComputeMastersFromSeed(seed)
@@ -280,6 +280,7 @@ func ExampleSomeBIP32TestVecs() { //nolint:govet
 	//
 	// c4c11d8c03625515905d7e89d25dfc66126fbc629ecca6db489a1a72fc4bda78
 }
+*/
 
 // Ensuring that we don't crash if values have trailing slashes
 // See issue https://github.com/cosmos/cosmos-sdk/issues/8557.

@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"github.com/cometbft/cometbft/crypto"
-	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck
+	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck // we need to use the openpgp armor package for compatibility with tendermint
 
 	errorsmod "cosmossdk.io/errors"
 

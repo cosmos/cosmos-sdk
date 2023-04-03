@@ -171,8 +171,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type UpgradeInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -182,8 +181,7 @@ type UpgradeInputs struct {
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
-//nolint:revive
-type UpgradeOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	UpgradeKeeper *keeper.Keeper
@@ -192,7 +190,7 @@ type UpgradeOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in UpgradeInputs) UpgradeOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var (
 		homePath           string
 		skipUpgradeHeights = make(map[int64]bool)
@@ -220,7 +218,7 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	m := NewAppModule(k)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
+	return ModuleOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
 }
 
 func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {

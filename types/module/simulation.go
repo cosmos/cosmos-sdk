@@ -33,7 +33,7 @@ type HasProposalMsgs interface {
 // HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
 type HasProposalContents interface {
 	// content functions used to simulate governance proposals
-	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // implements the old-style gov paths
+	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // keep gov v1beta1 simulation compatibility
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility

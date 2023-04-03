@@ -199,8 +199,7 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	return log.NewLogger(out, opts...), nil
 }
 
-// GetServerContextFromCmd returns a Context from a command or an empty Context
-// if it has not been set.
+// GetServerContextFromCmd returns a Context from a command or an empty Context if it has not been set.
 func GetServerContextFromCmd(cmd *cobra.Command) *Context {
 	if v := cmd.Context().Value(ServerContextKey); v != nil {
 		serverCtxPtr := v.(*Context)

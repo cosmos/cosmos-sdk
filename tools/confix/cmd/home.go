@@ -25,7 +25,7 @@ func HomeCommand() *cobra.Command {
 					cmd.Println(clientCtx.HomeDir)
 				case 1: // if one argument is given, set the home directory
 					newHome := args[0]
-					newConfigPath := filepath.Join(newHome, "config.toml")
+					newConfigPath := filepath.Join(newHome, "config", "config.toml")
 					if _, err := os.Stat(newConfigPath); os.IsNotExist(err) {
 						if err := config.CreateNewConfigAtPath(newHome, clientCtx.ChainID); err != nil {
 							return err

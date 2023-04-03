@@ -3,6 +3,7 @@ package types
 import (
 	context "context"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +17,8 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
+	address.Codec
+
 	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI // only used for simulation
 
@@ -24,11 +27,6 @@ type AccountKeeper interface {
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	SetModuleAccount(context.Context, sdk.ModuleAccountI)
-
-	// StringToBytes decodes address strings to bytes
-	StringToBytes(text string) ([]byte, error)
-	// BytesToString encodes address bytes to text
-	BytesToString(bz []byte) (string, error)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

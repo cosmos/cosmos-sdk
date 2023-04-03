@@ -23,7 +23,7 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 // GetSignBytes returns the raw bytes for a MsgUpdateParams message that
 // the expected signer needs to sign.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs basic MsgUpdateParams message validation.

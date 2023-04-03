@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -27,7 +28,7 @@ func TestMigration(t *testing.T) {
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 
-	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
+	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
 	now := ctx.BlockTime()
 	oneDay := now.AddDate(0, 0, 1)
 	twoDays := now.AddDate(0, 0, 2)

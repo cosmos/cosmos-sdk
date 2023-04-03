@@ -42,7 +42,7 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 
 		for _, b := range mb.MissedBlocks {
 			// Note: It is not necessary to store entries with missed=false, i.e. where
-			// the bit is zer0, since when the bitmap is initialized, all non-set bits
+			// the bit is zero, since when the bitmap is initialized, all non-set bits
 			// are already zero.
 			if b.Missed {
 				if err := setMissedBlockBitmapValue(ctx, store, addr, b.Index, true); err != nil {

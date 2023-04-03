@@ -194,7 +194,7 @@ func TestFundCommunityPool(t *testing.T) {
 	initPool := distrKeeper.GetFeePool(ctx)
 	require.Empty(t, initPool.CommunityPool)
 
-	amount := sdk.NewCoins(math.NewInt64Coin("stake", 100))
+	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addrs[0], "distribution", amount).Return(nil)
 	err := distrKeeper.FundCommunityPool(ctx, amount, addrs[0])
 	require.Nil(t, err)

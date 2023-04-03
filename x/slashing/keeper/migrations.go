@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/exported"
 	v2 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v3"
+	v4 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v4"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -35,5 +36,5 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 // version 3 to version 4. Specifically, it migrates the validator missed block
 // bitmap.
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
-	panic("NOT IMPLEMENTED YET")
+	return v4.Migrate(ctx, m.keeper.cdc, ctx.KVStore(m.keeper.storeKey), m.keeper.GetParams(ctx))
 }

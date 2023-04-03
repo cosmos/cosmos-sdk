@@ -190,7 +190,7 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		opts = append(opts, log.FilterOption(filterFunc))
 
 	case ctx.Viper.GetBool(cmtcli.TraceFlag):
-		opts = append(opts, log.LevelOption(zerolog.TraceLevel))
+		opts = append(opts, log.LevelOption(zerolog.TraceLevel)) // Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
 
 	default:
 		opts = append(opts, log.LevelOption(logLvl))

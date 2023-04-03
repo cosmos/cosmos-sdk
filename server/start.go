@@ -6,8 +6,11 @@ import (
 	"net"
 	"os"
 	"runtime/pprof"
+	"strconv"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/cometbft/cometbft/node"
@@ -32,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -225,6 +229,8 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return err
 	}
 
+	emitServerInfoMetrics(home)
+
 	svr, err := server.NewServer(addr, transport, app)
 	if err != nil {
 		return fmt.Errorf("error creating listener: %v", err)
@@ -353,6 +359,8 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	if err != nil {
 		return err
 	}
+
+	emitServerInfoMetrics(home)
 
 	var (
 		apiSrv  *api.Server
@@ -504,4 +512,23 @@ func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
 	}()
 
 	return <-errCh
+}
+
+func emitServerInfoMetrics(homePath string) {
+	var ls []metrics.Label
+
+	versionInfo := version.NewInfo()
+	if len(versionInfo.GoVersion) > 0 {
+		ls = append(ls, telemetry.NewLabel("go", versionInfo.GoVersion))
+	}
+	if len(versionInfo.CosmosSdkVersion) > 0 {
+		ls = append(ls, telemetry.NewLabel("version", versionInfo.CosmosSdkVersion))
+	}
+
+	uk := upgradekeeper.NewKeeper(nil, nil, nil, homePath, nil, "")
+	if upgradeInfo, err := uk.ReadUpgradeInfoFromDisk(); err == nil {
+		ls = append(ls, telemetry.NewLabel("update_height", strconv.FormatInt(upgradeInfo.Height, 10)))
+	}
+
+	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls)
 }

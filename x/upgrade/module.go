@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -44,7 +45,9 @@ const ConsensusVersion uint64 = 2
 var _ module.AppModuleBasic = AppModuleBasic{}
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	ac address.Codec
+}
 
 // Name returns the ModuleName
 func (AppModuleBasic) Name() string {
@@ -69,8 +72,8 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 }
 
 // GetTxCmd returns the CLI transaction commands for this module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ab.ac)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the upgrade module.
@@ -82,12 +85,13 @@ func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 type AppModule struct {
 	AppModuleBasic
 	keeper *keeper.Keeper
+	ac     address.Codec
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper *keeper.Keeper) AppModule {
+func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{ac: ac},
 		keeper:         keeper,
 	}
 }
@@ -174,9 +178,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config       *modulev1.Module
+	Key          *store.KVStoreKey
+	Cdc          codec.Codec
+	AddressCodec address.Codec
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
@@ -215,7 +220,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	baseappOpt := func(app *baseapp.BaseApp) {
 		k.SetVersionSetter(app)
 	}
-	m := NewAppModule(k)
+	m := NewAppModule(k, in.AddressCodec)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
 	return ModuleOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}

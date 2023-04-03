@@ -6,10 +6,8 @@ import (
 	"net"
 	"os"
 	"runtime/pprof"
-	"strconv"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
@@ -525,9 +523,8 @@ func emitServerInfoMetrics(homePath string) {
 		ls = append(ls, telemetry.NewLabel("version", versionInfo.CosmosSdkVersion))
 	}
 
-	uk := upgradekeeper.NewKeeper(nil, nil, nil, homePath, nil, "")
-	if upgradeInfo, err := uk.ReadUpgradeInfoFromDisk(); err == nil {
-		ls = append(ls, telemetry.NewLabel("update_height", strconv.FormatInt(upgradeInfo.Height, 10)))
+	if len(ls) == 0 {
+		return
 	}
 
 	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls)

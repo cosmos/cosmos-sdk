@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/x/nft/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -169,7 +170,7 @@ func (s *CLITestSuite) TestQueryNFTs() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryNFTs()
+			cmd := cli.GetCmdQueryNFTs(address.NewBech32Codec("cosmos"))
 			var args []string
 			args = append(args, fmt.Sprintf("--%s=%s", cli.FlagClassID, tc.args.ClassID))
 			args = append(args, fmt.Sprintf("--%s=%s", cli.FlagOwner, tc.args.Owner))

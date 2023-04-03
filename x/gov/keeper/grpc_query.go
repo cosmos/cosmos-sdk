@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -402,15 +403,15 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 	}
 
 	if resp.TallyParams != nil {
-		quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
+		quorum, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Quorum)
 		if err != nil {
 			return nil, err
 		}
-		threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
+		threshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Threshold)
 		if err != nil {
 			return nil, err
 		}
-		vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
+		vetoThreshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.VetoThreshold)
 		if err != nil {
 			return nil, err
 		}

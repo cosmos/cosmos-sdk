@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -24,10 +26,12 @@ func (suite *TestSuite) TestGrant() {
 	addrs := suite.createAccounts(2)
 	curBlockTime := ctx.BlockTime()
 
+	suite.accountKeeper.EXPECT().StringToBytes(sdk.AccAddress("valid").String()).Return(sdk.AccAddress("valid"), nil).AnyTimes()
+
 	oneHour := curBlockTime.Add(time.Hour)
 	oneYear := curBlockTime.AddDate(1, 0, 0)
 
-	coins := sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10)))
+	coins := sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10)))
 
 	grantee, granter := addrs[0], addrs[1]
 
@@ -221,7 +225,7 @@ func (suite *TestSuite) TestExec() {
 	addrs := suite.createAccounts(2)
 
 	grantee, granter := addrs[0], addrs[1]
-	coins := sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10)))
+	coins := sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10)))
 
 	msg := &banktypes.MsgSend{
 		FromAddress: granter.String(),

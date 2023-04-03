@@ -119,10 +119,10 @@ func deleteValidatorMissedBlockBitArray(ctx sdk.Context, store storetypes.KVStor
 
 func setMissedBlockBitmapValue(ctx sdk.Context, store storetypes.KVStore, addr sdk.ConsAddress, index int64, missed bool) error {
 	// get the chunk or "word" in the logical bitmap
-	chunkIndex := index / missedBlockBitmapChunkSize
+	chunkIndex := index / MissedBlockBitmapChunkSize
 	key := ValidatorMissedBlockBitmapKey(addr, chunkIndex)
 
-	bs := bitset.New(uint(missedBlockBitmapChunkSize))
+	bs := bitset.New(uint(MissedBlockBitmapChunkSize))
 	chunk := store.Get(key)
 	if chunk != nil {
 		if err := bs.UnmarshalBinary(chunk); err != nil {
@@ -131,7 +131,7 @@ func setMissedBlockBitmapValue(ctx sdk.Context, store storetypes.KVStore, addr s
 	}
 
 	// get the bit position in the chunk of the logical bitmap
-	bitIndex := uint(index % missedBlockBitmapChunkSize)
+	bitIndex := uint(index % MissedBlockBitmapChunkSize)
 	if missed {
 		bs.Set(bitIndex)
 	} else {

@@ -11,7 +11,7 @@ import (
 const (
 	addrLen = 20
 
-	missedBlockBitmapChunkSize = 1024 // 2^10 bits
+	MissedBlockBitmapChunkSize = 1024 // 2^10 bits
 )
 
 var (

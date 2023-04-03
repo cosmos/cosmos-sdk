@@ -16,8 +16,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-const missedBlockBitmapChunkSize = 1024 // 2^10 bits
-
 var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 
 func TestMigrate(t *testing.T) {
@@ -47,15 +45,15 @@ func TestMigrate(t *testing.T) {
 	require.Empty(t, entries)
 
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
-		chunkIndex := i / missedBlockBitmapChunkSize
+		chunkIndex := i / v4.MissedBlockBitmapChunkSize
 		chunk := store.Get(v4.ValidatorMissedBlockBitmapKey(consAddr, chunkIndex))
 		require.NotNil(t, chunk)
 
-		bs := bitset.New(uint(missedBlockBitmapChunkSize))
+		bs := bitset.New(uint(v4.MissedBlockBitmapChunkSize))
 		require.NoError(t, bs.UnmarshalBinary(chunk))
 
 		// ensure all even blocks are missed
-		bitIndex := uint(i % missedBlockBitmapChunkSize)
+		bitIndex := uint(i % v4.MissedBlockBitmapChunkSize)
 		require.Equal(t, i%2 == 0, bs.Test(bitIndex))
 		require.Equal(t, i%2 == 1, !bs.Test(bitIndex))
 	}

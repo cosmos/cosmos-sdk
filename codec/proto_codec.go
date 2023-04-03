@@ -306,7 +306,6 @@ func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([]string, proto.Me
 		return nil, nil, err
 	}
 	return pc.GetMsgAnySigners(a)
-
 }
 
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec

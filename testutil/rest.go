@@ -42,7 +42,7 @@ func GetRequestWithHeaders(url string, headers map[string]string) ([]byte, error
 // GetRequest defines a wrapper around an HTTP GET request with a provided URL.
 // An error is returned if the request or reading the body fails.
 func GetRequest(url string) ([]byte, error) {
-	res, err := http.Get(url) //nolint:gosec // only used	for testing
+	res, err := http.Get(url) //nolint:gosec // only used for testing
 	if err != nil {
 		return nil, err
 	}

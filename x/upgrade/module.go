@@ -182,7 +182,7 @@ type UpgradeInputs struct {
 	Config       *modulev1.Module
 	Key          *store.KVStoreKey
 	Cdc          codec.Codec
-	addressCodec address.Codec
+	AddressCodec address.Codec
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }

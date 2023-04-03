@@ -1,25 +1,14 @@
 package testutil
 
-import "testing"
+import (
+	"testing"
 
-func AssertPanics(t *testing.T, f func()) {
-	panicked := false
-	defer func() {
-		if r := recover(); r != nil {
-			panicked = true
-		}
-	}()
-	f()
-	if !panicked {
-		t.Errorf("should panic")
-	}
-}
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/testing/protocmp"
+)
 
-func AssertNotPanics(t *testing.T, f func()) {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("should not panic: %v", r)
-		}
-	}()
-	f()
+// ProtoDeepEqual is a helper function that uses the protocmp package to compare two protobuf messages.
+func ProtoDeepEqual(t *testing.T, p1, p2 interface{}) {
+	require.Empty(t, cmp.Diff(p1, p2, protocmp.Transform()))
 }

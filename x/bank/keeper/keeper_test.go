@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) TestSupply_MintCoins() {
 	require.Panics(func() { _ = keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") //nolint:errcheck // we're testing for a panic, not an error
 
 	suite.mockMintCoins(minterAcc)
-	require.Error(keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}}), "insufficient coins")
+	require.Error(keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: math.NewInt(-10)}}), "insufficient coins")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
 	require.Panics(func() { _ = keeper.MintCoins(ctx, randomPerm, initCoins) }) //nolint:errcheck // we're testing for a panic, not an error
@@ -1051,7 +1051,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins_Invalid() {
 	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
-	invalidCoins := sdk.Coins{sdk.Coin{Denom: "fooDenom", Amount: sdk.NewInt(-50)}}
+	invalidCoins := sdk.Coins{sdk.Coin{Denom: "fooDenom", Amount: math.NewInt(-50)}}
 	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), invalidCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
@@ -1199,7 +1199,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 		suite.bankKeeper.MintCoins(
 			suite.ctx,
 			multiPermAcc.Name,
-			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(100000)))),
+			sdk.NewCoins(sdk.NewCoin("utxo", math.NewInt(100000)))),
 	)
 	// send coins to address
 	suite.mockSendCoinsFromModuleToAccount(multiPermAcc, accAddrs[0])
@@ -1208,7 +1208,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 			suite.ctx,
 			multiPermAcc.Name,
 			accAddrs[0],
-			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(50000))),
+			sdk.NewCoins(sdk.NewCoin("utxo", math.NewInt(50000))),
 		),
 	)
 

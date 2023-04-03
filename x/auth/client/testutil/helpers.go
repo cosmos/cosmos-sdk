@@ -21,6 +21,7 @@ func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, ex
 	}
 
 	cmd := cli.GetSignCommand()
+	cmd.PersistentFlags().String(flags.FlagHome, clientCtx.HomeDir, "directory for config and data")
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, append(args, extraArgs...))
 }

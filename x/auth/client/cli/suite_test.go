@@ -103,8 +103,8 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TestCLIValidateSignatures() {
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin("testtoken", sdk.NewInt(10)),
-		sdk.NewCoin("stake", sdk.NewInt(10)))
+		sdk.NewCoin("testtoken", math.NewInt(10)),
+		sdk.NewCoin("stake", math.NewInt(10)))
 
 	res, err := s.createBankMsg(s.clientCtx, s.val, sendTokens,
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
@@ -139,8 +139,8 @@ func (s *CLITestSuite) TestCLIValidateSignatures() {
 
 func (s *CLITestSuite) TestCLISignBatch() {
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin("testtoken", sdk.NewInt(10)),
-		sdk.NewCoin("stake", sdk.NewInt(10)),
+		sdk.NewCoin("testtoken", math.NewInt(10)),
+		sdk.NewCoin("stake", math.NewInt(10)),
 	)
 
 	generatedStd, err := s.createBankMsg(s.clientCtx, s.val,
@@ -294,7 +294,7 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf(
 					"--query=tx.fee='%s'",
-					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String(),
+					sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String(),
 				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
@@ -305,7 +305,7 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf(
 					"--query=tx.fee='%s'",
-					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))).String(),
+					sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(0))).String(),
 				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
@@ -458,7 +458,7 @@ func (s *CLITestSuite) TestCLIMultisignInsufficientCosigners() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -546,7 +546,7 @@ func (s *CLITestSuite) TestCLIMultisignSortSignatures() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -619,7 +619,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -660,7 +660,7 @@ func (s *CLITestSuite) TestCLIMultisign() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -729,11 +729,11 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 		addr,
 		s.val,
 		sdk.NewCoins(
-			sdk.NewCoin("stake", sdk.NewInt(1)),
+			sdk.NewCoin("stake", math.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -852,11 +852,11 @@ func (s *CLITestSuite) TestTxWithoutPublicKey() {
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
 	msg := banktypes.NewMsgSend(s.val, s.val, sdk.NewCoins(
-		sdk.NewCoin("Stake", sdk.NewInt(10)),
+		sdk.NewCoin("Stake", math.NewInt(10)),
 	))
 	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("Stake", sdk.NewInt(150))))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("Stake", math.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 
 	// Create a file with the unsigned tx.
@@ -898,8 +898,8 @@ func (s *CLITestSuite) TestTxWithoutPublicKey() {
 // transaction to the blockchain.
 func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	val0, val1 := s.val, s.val1
-	val0Coin := sdk.NewCoin("test1token", sdk.NewInt(10))
-	val1Coin := sdk.NewCoin("test2token", sdk.NewInt(10))
+	val0Coin := sdk.NewCoin("test1token", math.NewInt(10))
+	val1Coin := sdk.NewCoin("test2token", math.NewInt(10))
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
@@ -911,7 +911,7 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 		banktypes.NewMsgSend(val0, addr1, sdk.NewCoins(val0Coin)),
 		banktypes.NewMsgSend(val1, addr1, sdk.NewCoins(val1Coin)),
 	)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	s.Require().Equal([]sdk.AccAddress{val0, val1}, txBuilder.GetTx().GetSigners())
 
@@ -957,7 +957,7 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 }
 
 func (s *CLITestSuite) TestAuxSigner() {
-	val0Coin := sdk.NewCoin("testtoken", sdk.NewInt(10))
+	val0Coin := sdk.NewCoin("testtoken", math.NewInt(10))
 
 	testCases := []struct {
 		name      string
@@ -1022,11 +1022,11 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 
 	tipper, err := acc.GetAddress()
 	require.NoError(err)
-	tipperInitialBal := sdk.NewCoin("testtoken", sdk.NewInt(10000))
+	tipperInitialBal := sdk.NewCoin("testtoken", math.NewInt(10000))
 
 	feePayer := s.val
-	fee := sdk.NewCoin("stake", sdk.NewInt(1000))
-	tip := sdk.NewCoin("testtoken", sdk.NewInt(1000))
+	fee := sdk.NewCoin("stake", math.NewInt(1000))
+	tip := sdk.NewCoin("testtoken", math.NewInt(1000))
 
 	_, err = s.createBankMsg(s.clientCtx, tipper, sdk.NewCoins(tipperInitialBal))
 	require.NoError(err)
@@ -1103,7 +1103,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 			name:     "--tip flag unset: no error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: "testtoken", Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: "testtoken", Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
@@ -1174,7 +1174,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 			name:     "wrong denom in tip: error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: "testtoken", Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: "testtoken", Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
@@ -1193,7 +1193,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 			name:     "insufficient fees: error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: "testtoken", Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: "testtoken", Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
@@ -1281,7 +1281,7 @@ func (s *CLITestSuite) createBankMsg(clientCtx client.Context, toAddr sdk.AccAdd
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
-			sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+			sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 	}
 
 	flags = append(flags, extraFlags...)

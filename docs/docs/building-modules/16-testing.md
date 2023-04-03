@@ -57,34 +57,16 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/keeper/keeper_test.g
 Integration tests are at the second level of the [test pyramid](https://martinfowler.com/articles/practical-test-pyramid.html).
 In the SDK, we locate our integration tests under [`/tests/integrations`](https://github.com/cosmos/cosmos-sdk/tree/main/tests/integration).
 
-The goal of these integration tests is to test a component with a minimal application (i.e. not `simapp`). The minimal application is defined with the help of [`depinject`](../tooling/02-depinject.md) – the SDK dependency injection framework, and includes all necessary modules to test the component. With the helps of the SDK testing package, we can easily create a minimal application and start the application with a set of genesis transactions: <https://github.com/cosmos/cosmos-sdk/blob/main/testutil/sims/app_helpers.go>.
+The goal of these integration tests is to test how a component interacts with other dependencies. Compared to unit tests, integration tests do not mock dependencies. Instead, they use the direct dependencies of the component. This differs as well from end-to-end tests, which test the component with a full application.
+
+Integration tests interact with the tested module via the defined `Msg` and `Query` services. The result of the test can be verified by checking the state of the application, by checking the emitted events or the response. It is adviced to combine two of these methods to verify the result of the test.
+
+The SDK provides small helpers for quickly setting up an integration tests. These helpers can be found at <https://github.com/cosmos/cosmos-sdk/blob/main/testutil/integration>.
 
 ### Example
 
-Here, we will walkthrough the integration tests of the `x/distribution` module. The `x/distribution` module has, in addition to keeper unit tests, integration tests that test the `x/distribution` module with a minimal application. This is expected as you may want to test the `x/distribution` module with actual application logic, instead of only mocked dependencies.
-
-For creating a minimal application, we use [`simtestutil.Setup`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/testutil/sims/app_helpers.go#L95-L99) and an [`AppConfig`](../tooling/02-depinject.md) of the `x/distribution` minimal dependencies.
-
-For instance, the `AppConfig` of `x/distribution` is defined as:
-
-* https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/distribution/testutil/app_config.go
-
-This is a stripped down version of the `simapp` `AppConfig`:
-
-* https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go
-
-:::note
-You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/slashing/app_test.go#L54-L62). There no difference between those two ways, use whichever you prefer.
-:::
-
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/tests/integration/distribution/keeper/keeper_test.go#L28-L33
-```
-
-Now the types are injected and we can use them for our tests:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/tests/integration/distribution/keeper/keeper_test.go#L21-L53
+https://github.com/cosmos/cosmos-sdk/blob/29e22b3bdb05353555c8e0b269311bbff7b8deca/testutil/integration/example_test.go#L22-L89
 ```
 
 ## Deterministic and Regression tests	
@@ -106,6 +88,10 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/tests/integration/bank/kee
 
 Simulations uses as well a minimal application, built with [`depinject`](../tooling/02-depinject.md):
 
+:::note
+You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/slashing/app_test.go#L54-L62). There is no difference between those two ways, use whichever you prefer.
+:::
+
 Following is an example for `x/gov/` simulations:
 
 ```go reference
@@ -121,6 +107,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/gov/simulation/operation
 End-to-end tests are at the top of the [test pyramid](https://martinfowler.com/articles/practical-test-pyramid.html).
 They must test the whole application flow, from the user perspective (for instance, CLI tests). They are located under [`/tests/e2e`](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e).
 
+<!-- @julienrbrt: makes more sense to use an app wired app to have 0 simapp dependencies -->
 For that, the SDK is using `simapp` but you should use your own application (`appd`).
 Here are some examples:
 
@@ -132,11 +119,6 @@ Here are some examples:
 The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html). This page will eventually be updated with better examples.
 :::
 
-## Summary
+## Learn More
 
-| Scope       | App Fixture | Mocks? |
-| ----------- | ----------- | ------ |
-| Unit        | None        | Yes    |
-| Integration | `depinject` | Some   |
-| Simulation  | `depinject` | No     |
-| E2E         | `appd`      | No     |
+Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).

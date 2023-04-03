@@ -3,6 +3,7 @@ package bank_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -360,7 +361,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil),
 		},
-		sdk.Coins{{Denom: "foocoin", Amount: sdk.NewInt(5)}},
+		sdk.Coins{{Denom: "foocoin", Amount: sdkmath.NewInt(5)}},
 		addr1Str,
 		"set default send enabled to true",
 		"Change send enabled",
@@ -372,7 +373,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{Denom: "bad coin name!", Enabled: true}}, nil),
 		},
-		sdk.Coins{{Denom: "foocoin", Amount: sdk.NewInt(5)}},
+		sdk.Coins{{Denom: "foocoin", Amount: sdkmath.NewInt(5)}},
 		addr1Str,
 		"set default send enabled to true",
 		"Change send enabled",

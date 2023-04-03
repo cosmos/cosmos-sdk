@@ -121,9 +121,7 @@ and credentials.
 
 We could also introduce a way to deterministically compute the account address.
 
-Note, from the transaction point of view, the `init_message` and `execute_message` are opaque bytes, in order to allow for 
-different encoding/deconding semantics to be efficiently applied there, and also to bypass the `google.Protobuf.Any` interface
-checking, which removes the need from `x/accounts` to register interfaces.
+Note, from the transaction point of view, the `init_message` and `execute_message` are opaque `google.Protobuf.Any`.
 
 The module protobuf definition for `x/accounts` are the following:
 
@@ -137,37 +135,37 @@ service Msg {
 message MsgDeploy {
   string sender = 1;
   string kind = 2;
-  bytes init_message = 3;
+  google.Protobuf.Any init_message = 3;
   repeated cosmos.base.v1beta1.Coin funds = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgDeployResponse {
   string address = 1;
   uint64 id = 2;
-  bytes data = 3;
+  google.Protobuf.Any data = 3;
 }
 
 message MsgExecute {
   string sender = 1;
   string address = 2;
-  bytes message = 3;
+  google.Protobuf.Any message = 3;
   repeated cosmos.base.v1beta1.Coin funds = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgExecuteResponse {
-  bytes data = 1;
+  google.Protobuf.Any data = 1;
 }
 ```
 
 #### MsgDeploy
 
-Deploys a new instance of the given account `kind` with initial settings represented by the `init_message` bytes.
-Of course the bytes can be empty. A response is returned containing the account ID and humanised address, alongside some bytes
+Deploys a new instance of the given account `kind` with initial settings represented by the `init_message` which is a `google.Protobuf.Any`.
+Of course the `init_message` can be empty. A response is returned containing the account ID and humanised address, alongside some response
 that the account instantiation might produce.
 
 #### MsgExecute
 
-Sends a `StateTransition` execution request, where the state transition is represented by the `message bytes`.
+Sends a `StateTransition` execution request, where the state transition is represented by the `message` which is a `google.Protobuf.Any`.
 The account can then decide if to process it or not based on the `sender`.
 
 ### Further discussion
@@ -228,7 +226,7 @@ message MsgCreateAuthenticatedAccountResponse {
 message MsgUpdateCredentials {
   string sender = 1;
   string kind = 2;
-  bytes  new_credential = 3;
+  google.Protobuf.Any  new_credential = 3;
 }
 
 message MsgUpdateCredentialsResponse {}

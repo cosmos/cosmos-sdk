@@ -59,9 +59,16 @@ type InterfaceRegistry interface {
 	EnsureRegistered(iface interface{}) error
 
 	protodesc.Resolver
+
+	// RangeFiles iterates over all registered files and calls f on each one. This
+	// implements the part of protoregistry.Files that is needed for reflecting over
+	// the entire FileDescriptorSet.
 	RangeFiles(f func(protoreflect.FileDescriptor) bool)
 
-	private()
+	// mustEmbedInterfaceRegistry requires that all implementations of InterfaceRegistry embed an official implementation
+	// from this package. This allows new methods to be added to the InterfaceRegistry interface without breaking
+	// backwards compatibility.
+	mustEmbedInterfaceRegistry()
 }
 
 // UnpackInterfacesMessage is meant to extend protobuf types (which implement
@@ -107,7 +114,7 @@ func NewInterfaceRegistry() InterfaceRegistry {
 	return NewInterfaceRegistryWithProtoFiles(protoFiles)
 }
 
-// NewInterfaceRegistry returns a new InterfaceRegistry with the specified *protoregistry.Files instance.
+// NewInterfaceRegistryWithProtoFiles returns a new InterfaceRegistry with the specified *protoregistry.Files instance.
 func NewInterfaceRegistryWithProtoFiles(files *protoregistry.Files) InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
@@ -307,7 +314,7 @@ func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error
 	return msg, nil
 }
 
-func (registry *interfaceRegistry) private() {}
+func (registry *interfaceRegistry) mustEmbedInterfaceRegistry() {}
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces
 // on x if x implements UnpackInterfacesMessage

@@ -42,7 +42,7 @@ func getTestProposal() []sdk.Msg {
 	}
 
 	return []sdk.Msg{
-		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))),
+		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))),
 		legacyProposalMsg,
 	}
 }
@@ -109,7 +109,7 @@ func setupGovKeeper(t *testing.T) (
 // locally tracks accounts balances (not modules balances).
 func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper, distributionKeeper *govtestutil.MockDistributionKeeper) {
 	balances := make(map[string]sdk.Coins)
-	balances[distAcct.String()] = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)))
+	balances[distAcct.String()] = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)))
 
 	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, gomock.Any()).AnyTimes()
@@ -139,7 +139,7 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper, distributionKeepe
 				return balance
 			}
 		}
-		return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))
+		return sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0))
 	}).AnyTimes()
 
 	distributionKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, coins sdk.Coins, sender sdk.AccAddress) error {

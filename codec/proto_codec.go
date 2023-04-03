@@ -200,7 +200,7 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr gogoproto.Message) {
 	}
 }
 
-// MarshalInterface is a convenience function for proto marshalling interfaces. It packs
+// MarshalInterface is a convenience function for proto marshaling interfaces. It packs
 // the provided value, which must be an interface, in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use Marshal instead
 func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
@@ -238,7 +238,7 @@ func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	return pc.UnpackAny(any, ptr)
 }
 
-// MarshalInterfaceJSON is a convenience function for proto marshalling interfaces. It
+// MarshalInterfaceJSON is a convenience function for proto marshaling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) {
@@ -314,7 +314,7 @@ func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
 	return &grpcProtoCodec{cdc: pc}
 }
 
-func (pc *ProtoCodec) private() {}
+func (pc *ProtoCodec) mustEmbedCodec() {}
 
 var errUnknownProtoType = errors.New("codec: unknown proto type") // sentinel error
 

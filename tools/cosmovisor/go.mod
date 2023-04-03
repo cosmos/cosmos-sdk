@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.20
 
 require (
-	cosmossdk.io/log v0.1.0
+	cosmossdk.io/log v1.0.0
 	cosmossdk.io/x/upgrade v0.0.0-20230227110325-294ef34f396f
 	github.com/otiai10/copy v1.9.0
 	github.com/rs/zerolog v1.29.0
@@ -49,7 +49,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321173237-fe77d4bca302 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.4.6 // indirect
+	github.com/cosmos/gogoproto v1.4.7 // indirect
 	github.com/cosmos/iavl v0.21.0-beta.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect

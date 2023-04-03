@@ -42,8 +42,6 @@ func TestRandomizedGenState(t *testing.T) {
 
 	dec1, _ := sdk.NewDecFromStr("0.210000000000000000")
 
-	require.Equal(t, sdk.ZeroDec(), distrGenesis.Params.BaseProposerReward)  //nolint:staticcheck
-	require.Equal(t, sdk.ZeroDec(), distrGenesis.Params.BonusProposerReward) //nolint:staticcheck
 	require.Equal(t, dec1, distrGenesis.Params.CommunityTax)
 	require.Equal(t, true, distrGenesis.Params.WithdrawAddrEnabled)
 	require.Len(t, distrGenesis.DelegatorStartingInfos, 0)

@@ -25,8 +25,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type TxInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config              *txconfigv1.Config
@@ -42,15 +41,14 @@ type TxInputs struct {
 	CustomSignModeHandlers func() []signing.SignModeHandler `optional:"true"`
 }
 
-//nolint:revive
-type TxOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	TxConfig      client.TxConfig
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in TxInputs) TxOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	textual, err := NewTextualWithBankKeeper(in.TxBankKeeper)
 	if err != nil {
 		panic(err)
@@ -101,10 +99,10 @@ func ProvideModule(in TxInputs) TxOutputs {
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
-	return TxOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
+	return ModuleOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
 }
 
-func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, error) {
+func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
 	if in.BankKeeper == nil {
 		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
 	}

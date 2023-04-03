@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -351,11 +352,11 @@ func (app *BaseApp) Init() error {
 	app.setCheckState(tmproto.Header{})
 	app.Seal()
 
-if app.cms == nil {
-	return errors.New("commit multi-store must not be nil")
-}
+	if app.cms == nil {
+		return errors.New("commit multi-store must not be nil")
+	}
 
-return app.cms.GetPruning().Validate()
+	return app.cms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {

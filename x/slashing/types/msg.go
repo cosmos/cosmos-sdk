@@ -20,7 +20,7 @@ var (
 // NewMsgUnjail creates a new MsgUnjail instance
 func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
 	return &MsgUnjail{
-		ValidatorAddr: validatorAddr.String(),
+		ValidatorAddr: sdk.AccAddress(validatorAddr).String(),
 	}
 }
 
@@ -38,7 +38,7 @@ func (msg MsgUnjail) GetSignBytes() []byte {
 
 // ValidateBasic does a sanity check on the provided message.
 func (msg MsgUnjail) ValidateBasic() error {
-	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddr); err != nil {
+	if _, err := sdk.AccAddressFromBech32(msg.ValidatorAddr); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("validator input address: %s", err)
 	}
 	return nil

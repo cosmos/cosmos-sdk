@@ -22,7 +22,7 @@ func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-	txBuilder := newBuilder(nil)
+	txBuilder := newBuilder(marshaler)
 
 	memo := "sometestmemo" //nolint:goconst
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}

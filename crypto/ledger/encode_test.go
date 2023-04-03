@@ -1,6 +1,7 @@
 package ledger
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,8 +24,7 @@ func checkAminoJSON(t *testing.T, src, dst interface{}, isNil bool) {
 	require.Nil(t, err, "%+v", err)
 }
 
-/* THIS IS AN EXAMPLE OF HOW TO PRINT REGISTERED TYPES
-func ExamplePrintRegisteredTypes() { //nolint:govet
+func ExamplePrintRegisteredTypes() {
 	_ = cdc.PrintTypes(os.Stdout)
 	// | Type | Name | Prefix | Length | Notes |
 	// | ---- | ---- | ------ | ----- | ------ |
@@ -37,7 +37,6 @@ func ExamplePrintRegisteredTypes() { //nolint:govet
 	// | PrivKey | tendermint/PrivKeySr25519 | 0x2F82D78B | variable |  |
 	// | PrivKey | tendermint/PrivKeySecp256k1 | 0xE1B0F79B | variable |  |
 }
-*/
 
 func TestNilEncodings(t *testing.T) {
 	// Check nil Signature.

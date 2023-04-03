@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -220,7 +219,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 
 	for _, tc := range cases {
 		cmd := authcli.GetSignCommand()
-		cmtcli.PrepareBaseCmd(cmd, "", "")
+		cmd.PersistentFlags().String(flags.FlagHome, val.ClientCtx.HomeDir, "directory for config and data")
 		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
 		if tc.expErr {
 			s.Require().Error(err)

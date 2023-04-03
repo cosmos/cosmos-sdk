@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -45,7 +44,7 @@ const (
 
 // List of CLI flags
 const (
-	FlagHome             = cmtcli.HomeFlag
+	FlagHome             = "home"
 	FlagKeyringDir       = "keyring-dir"
 	FlagUseLedger        = "ledger"
 	FlagChainID          = "chain-id"
@@ -86,11 +85,16 @@ const (
 	FlagInitHeight       = "initial-height"
 	// FlagOutput is the flag to set the output format.
 	// This differs from FlagOutputDocument that is used to set the output file.
-	FlagOutput = cmtcli.OutputFlag
-
+	FlagOutput = "output"
 	// Logging flags
 	FlagLogLevel  = "log_level"
 	FlagLogFormat = "log_format"
+)
+
+// List of supported output formats
+const (
+	OutputFormatJSON = "json"
+	OutputFormatText = "text"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -113,7 +117,7 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 // AddTxFlagsToCmd adds common flags to a module tx command.
 func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.StringP(FlagOutput, "o", "json", "Output format (text|json)")
+	f.StringP(FlagOutput, "o", OutputFormatJSON, "Output format (text|json)")
 	f.String(FlagFrom, "", "Name or address of private key with which to sign")
 	f.Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 	f.Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")

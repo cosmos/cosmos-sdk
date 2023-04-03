@@ -1,6 +1,6 @@
 # Cosmos SDK v0.46.12 Release Notes
 
-This release introduces a number of improvements and bug fixes, notably a new query for the `x/group` module, for queying all groups on a chain.
+This release introduces a number of improvements and bug fixes, notably a new query for the `x/group` module, for querying all groups on a chain.
 
 Note, from `v0.46.11`+, the following replace is *mandatory* in the `go.mod` of your application:
 

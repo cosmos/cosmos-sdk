@@ -4,14 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/armon/go-metrics"
 	metricsprom "github.com/armon/go-metrics/prometheus"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
 )
@@ -75,7 +71,7 @@ type GatherResponse struct {
 }
 
 // New creates a new instance of Metrics
-func New(cfg Config, rootDir string) (_ *Metrics, rerr error) {
+func New(cfg Config) (_ *Metrics, rerr error) {
 	if !cfg.Enabled {
 		return nil, nil
 	}
@@ -88,7 +84,6 @@ func New(cfg Config, rootDir string) (_ *Metrics, rerr error) {
 
 		globalLabels = parsedGlobalLabels
 	}
-	globalLabels = append(globalLabels, getDefaultGlobalLabels(rootDir)...)
 
 	metricsConf := metrics.DefaultConfig(cfg.ServiceName)
 	metricsConf.EnableHostname = cfg.EnableHostname
@@ -180,43 +175,4 @@ func (m *Metrics) gatherGeneric() (GatherResponse, error) {
 	}
 
 	return GatherResponse{ContentType: "application/json", Metrics: content}, nil
-}
-
-func getDefaultGlobalLabels(rootDir string) []metrics.Label {
-	var ls []metrics.Label
-
-	versionInfo := version.NewInfo()
-	if len(versionInfo.GoVersion) > 0 {
-		ls = append(ls, NewLabel("go", versionInfo.GoVersion))
-	}
-	if len(versionInfo.CosmosSdkVersion) > 0 {
-		ls = append(ls, NewLabel("version", versionInfo.CosmosSdkVersion))
-	}
-
-	upgradeInfoPath := filepath.Join(rootDir, "data", "upgrade-info.json") // the path is the expected upgrade-info filename created by `x/upgrade/keeper`.
-	if upgradeInfo, err := getUpgradeInfo(upgradeInfoPath); err == nil {
-		ls = append(ls, NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10)))
-	}
-
-	return ls
-}
-
-type plan struct {
-	Name   string `json:"name,omitempty"`
-	Height int64  `json:"height,omitempty"`
-	Info   string `json:"info,omitempty"`
-}
-
-func getUpgradeInfo(path string) (plan, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return plan{}, err
-	}
-
-	var upgradeInfo plan
-	if err := json.Unmarshal(data, &upgradeInfo); err != nil {
-		return plan{}, err
-	}
-
-	return upgradeInfo, nil
 }

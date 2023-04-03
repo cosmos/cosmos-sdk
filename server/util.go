@@ -249,7 +249,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
 
 	case err != nil:
-		return nil, err
+		return nil, err // If the log level is not a valid zerolog level, then we try to parse it as a key filter.
 
 	default:
 		rootViper.SetConfigType("toml")

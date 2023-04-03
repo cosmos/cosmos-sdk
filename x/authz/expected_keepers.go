@@ -9,11 +9,11 @@ import (
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
+	address.Codec
+
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	SetAccount(ctx context.Context, acc sdk.AccountI)
-
-	address.Codec
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

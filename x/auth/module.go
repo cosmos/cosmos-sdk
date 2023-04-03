@@ -20,7 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -207,7 +206,7 @@ func init() {
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
 func ProvideAddressCodec(config *modulev1.Module) address.Codec {
-	return codecaddress.NewBech32Codec(config.Bech32Prefix)
+	return keeper.NewBech32Codec(config.Bech32Prefix)
 }
 
 type ModuleInputs struct {

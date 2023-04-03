@@ -19,6 +19,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 		req              *authz.QueryGrantsRequest
 		expAuthorization authz.Authorization
 	)
+
 	testCases := []struct {
 		msg      string
 		malleate func(require *require.Assertions)

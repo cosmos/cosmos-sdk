@@ -1,22 +1,18 @@
 package keeper
 
 import (
-	"context"
 	"testing"
-
-	storetypes "cosmossdk.io/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type baseFixture struct {
 	t   *testing.T
 	err error
-	ctx context.Context
+	// ctx context.Context //TODO: uncomment this after implementing
 
-	// k        Keeper //TODO uncomment this after implementing
-	addrs    []sdk.AccAddress
-	storeKey *storetypes.KVStoreKey
-	sdkCtx   sdk.Context
+	// k        Keeper //TODO: uncomment this after implementing
+	// addrs    []sdk.AccAddress //TODO: uncomment this after implementing
+	// storeKey *storetypes.KVStoreKey //TODO: uncomment this after implementing
+	// sdkCtx   sdk.Context //TODO: uncomment this after implementing
 }
 
 func initFixture(t *testing.T) *baseFixture {

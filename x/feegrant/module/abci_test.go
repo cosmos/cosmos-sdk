@@ -3,6 +3,7 @@ package module_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
@@ -29,7 +30,7 @@ func TestFeegrantPruning(t *testing.T) {
 	granter2 := addrs[1]
 	granter3 := addrs[2]
 	grantee := addrs[3]
-	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
+	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
 	now := testCtx.Ctx.BlockTime()
 	oneDay := now.AddDate(0, 0, 1)
 

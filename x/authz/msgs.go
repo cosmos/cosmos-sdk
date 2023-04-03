@@ -66,7 +66,7 @@ func (msg MsgGrant) ValidateBasic() error {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrant) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
@@ -145,7 +145,7 @@ func (msg MsgRevoke) ValidateBasic() error {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevoke) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
 }
 
 // NewMsgExec creates a new MsgExecAuthorized
@@ -211,5 +211,5 @@ func (msg MsgExec) ValidateBasic() error {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgExec) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
 }

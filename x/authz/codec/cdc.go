@@ -7,8 +7,7 @@ import (
 )
 
 var (
-	Amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(Amino)
+	Amino = codec.NewLegacyAmino()
 )
 
 func init() {

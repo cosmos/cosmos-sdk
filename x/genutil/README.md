@@ -63,3 +63,7 @@ Validates the genesis file at the default location or at the location passed as 
 ```shell
 simd genesis validate-genesis
 ```
+
+:::warning
+Validate genesis only validates if the genesis is valid at the **current application binary**. For validating a genesis from a previous version of the application, use the `migrate` command to migrate the genesis to the current version.
+:::

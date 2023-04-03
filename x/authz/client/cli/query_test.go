@@ -7,6 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,7 +78,7 @@ func (s *CLITestSuite) TestQueryAuthorizations() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryGrants()
+			cmd := cli.GetCmdQueryGrants(addresscodec.NewBech32Codec("cosmos"))
 			resp, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -163,7 +164,7 @@ func (s *CLITestSuite) TestQueryAuthorization() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryGrants()
+			cmd := cli.GetCmdQueryGrants(addresscodec.NewBech32Codec("cosmos"))
 			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -226,7 +227,7 @@ func (s *CLITestSuite) TestQueryGranterGrants() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := cli.GetQueryGranterGrants()
+			cmd := cli.GetQueryGranterGrants(addresscodec.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				require.Error(err)

@@ -79,3 +79,11 @@ func TestFormatCoins(t *testing.T) {
 		})
 	}
 }
+
+func TestDecodeCoin(t *testing.T) {
+	encodedCoin := "1000000000foo"
+	coin, err := coins.ParseCoin(encodedCoin)
+	require.NoError(t, err)
+	require.Equal(t, "1000000000", coin.Amount)
+	require.Equal(t, "foo", coin.Denom)
+}

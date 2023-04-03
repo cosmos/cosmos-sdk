@@ -7,6 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -326,10 +327,12 @@ func TestChargeDeposit(t *testing.T) {
 				_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fiveStake)
 				require.NoError(t, err)
 
+				codec := address.NewBech32Codec("cosmos")
 				// get balances of dest address
 				var prevBalance sdk.Coin
 				if len(params.ProposalCancelDest) != 0 {
-					accAddr := sdk.MustAccAddressFromBech32(params.ProposalCancelDest)
+					accAddr, err := codec.StringToBytes(params.ProposalCancelDest)
+					require.NoError(t, err)
 					prevBalance = bankKeeper.GetBalance(ctx, accAddr, sdk.DefaultBondDenom)
 				}
 
@@ -345,7 +348,8 @@ func TestChargeDeposit(t *testing.T) {
 				require.NoError(t, err)
 
 				if len(params.ProposalCancelDest) != 0 {
-					accAddr := sdk.MustAccAddressFromBech32(params.ProposalCancelDest)
+					accAddr, err := codec.StringToBytes(params.ProposalCancelDest)
+					require.NoError(t, err)
 					newBalanceAfterCancelProposal := bankKeeper.GetBalance(ctx, accAddr, sdk.DefaultBondDenom)
 					cancellationCharges := sdkmath.NewInt(0)
 					for _, deposits := range allDeposits {

@@ -68,7 +68,7 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := authKeeper.StringToBytes(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,7 +23,8 @@ func ExecTestCLICmd(clientCtx client.Context, cmd *cobra.Command, extraArgs []st
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	if err := cmd.ExecuteContext(ctx); err != nil {
+	executor := cmtcli.PrepareBaseCmd(cmd, "", "")
+	if err := executor.ExecuteContext(ctx); err != nil {
 		return out, err
 	}
 

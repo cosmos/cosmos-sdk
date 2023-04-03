@@ -53,7 +53,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		fmt.Sprintf("--%s=0", flagAccount),
 		fmt.Sprintf("--%s=0", flagIndex),
 		fmt.Sprintf("--%s=330", flagCoinType),
-		fmt.Sprintf("--%s=%s", flags.FlagOutput, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
@@ -103,7 +103,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
-		fmt.Sprintf("--%s=%s", flags.FlagOutput, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),

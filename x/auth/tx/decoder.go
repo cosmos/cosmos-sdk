@@ -88,7 +88,8 @@ func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 		}
 
 		return &wrapper{
-			tx: &theTx,
+			tx:  &theTx,
+			cdc: cdc,
 		}, nil
 	}
 }

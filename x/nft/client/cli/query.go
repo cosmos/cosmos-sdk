@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/nft"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -21,7 +21,7 @@ const (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd() *cobra.Command {
+func GetQueryCmd(ac address.Codec) *cobra.Command {
 	nftQueryCmd := &cobra.Command{
 		Use:                        nft.ModuleName,
 		Short:                      "Querying commands for the nft module",
@@ -35,7 +35,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryClass(),
 		GetCmdQueryClasses(),
 		GetCmdQueryNFT(),
-		GetCmdQueryNFTs(),
+		GetCmdQueryNFTs(ac),
 		GetCmdQueryOwner(),
 		GetCmdQueryBalance(),
 		GetCmdQuerySupply(),
@@ -127,7 +127,7 @@ func GetCmdQueryNFT() *cobra.Command {
 }
 
 // GetCmdQueryNFTs implements the query nft command.
-func GetCmdQueryNFTs() *cobra.Command {
+func GetCmdQueryNFTs(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "nfts",
 		Short: "query all NFTs of a given class or owner address.",
@@ -156,7 +156,7 @@ $ %s query %s nfts <class-id> --owner=<owner>
 			}
 
 			if len(owner) > 0 {
-				if _, err := sdk.AccAddressFromBech32(owner); err != nil {
+				if _, err := ac.StringToBytes(owner); err != nil {
 					return err
 				}
 			}

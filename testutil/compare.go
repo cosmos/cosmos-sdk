@@ -8,8 +8,8 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-// ProtoDeepEqual is a helper function that uses the protocmp package to compare two protobuf messages.
-func ProtoDeepEqual(t *testing.T, p1, p2 interface{}) {
+// RequireProtoDeepEqual fails the test t if p1 and p2 are not equivalent protobuf messages.
+func RequireProtoDeepEqual(t *testing.T, p1, p2 interface{}) {
 	t.Helper()
 	require.Empty(t, cmp.Diff(p1, p2, protocmp.Transform()))
 }

@@ -41,10 +41,10 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 		deleteValidatorMissedBlockBitArray(ctx, store, addr)
 
 		for _, b := range mb.MissedBlocks {
+			// Note: It is not necessary to store entries with missed=false, i.e. where
+			// the bit is zer, since when the bitmap is initialized, all non-set bits
+			// are already zero.
 			if b.Missed {
-				// Note: It is not necessary to store entries with missed=false, i.e.
-				// where the bit is zer, since when the bitmap is initialized, all non-set
-				// bits are already zero.
 				if err := setMissedBlockBitmapValue(ctx, store, addr, b.Index, true); err != nil {
 					return err
 				}

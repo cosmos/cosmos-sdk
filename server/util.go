@@ -16,7 +16,6 @@ import (
 
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -190,7 +189,7 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 
 		opts = append(opts, log.FilterOption(filterFunc))
 
-	} else if ctx.Viper.GetBool(cmtcli.TraceFlag) {
+	} else if ctx.Viper.GetBool("trace") { // cmtcli.TraceFlag
 		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
 		// Note it overrides log level passed in `log_levels`.
 		opts = append(opts, log.LevelOption(zerolog.TraceLevel))

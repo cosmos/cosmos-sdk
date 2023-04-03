@@ -23,7 +23,7 @@ func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, ex
 	}
 
 	cmd := cli.GetSignCommand()
-	cmtcli.PrepareBaseCmd(cmd, "", "")
+	cmtcli.PrepareBaseCmd(cmd, "", "") // TODO
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, append(args, extraArgs...))
 }
@@ -92,7 +92,7 @@ func TxAuxToFeeExec(clientCtx client.Context, filename string, extraArgs ...stri
 }
 
 func QueryAccountExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{address.String(), fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}
+	args := []string{address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)}
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAccountCmd(), append(args, extraArgs...))
 }

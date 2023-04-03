@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -45,7 +44,7 @@ const (
 
 // List of CLI flags
 const (
-	FlagHome             = cmtcli.HomeFlag
+	FlagHome             = "home"
 	FlagKeyringDir       = "keyring-dir"
 	FlagUseLedger        = "ledger"
 	FlagChainID          = "chain-id"
@@ -86,7 +85,7 @@ const (
 	FlagInitHeight       = "initial-height"
 	// FlagOutput is the flag to set the output format.
 	// This differs from FlagOutputDocument that is used to set the output file.
-	FlagOutput = cmtcli.OutputFlag
+	FlagOutput = "output"
 
 	// Logging flags
 	FlagLogLevel  = "log_level"

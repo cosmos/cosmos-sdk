@@ -220,7 +220,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 
 	for _, tc := range cases {
 		cmd := authcli.GetSignCommand()
-		cmtcli.PrepareBaseCmd(cmd, "", "")
+		cmtcli.PrepareBaseCmd(cmd, "", "") // TODO
 		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
 		if tc.expErr {
 			s.Require().Error(err)

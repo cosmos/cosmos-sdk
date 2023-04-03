@@ -11,13 +11,19 @@ import (
 )
 
 // GenesisCoreCommand adds core sdk's sub-commands into genesis command.
+// Deprecated: use Commands instead.
 func GenesisCoreCommand(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
-	return GenesisCoreCommandWithCustomMigration(txConfig, moduleBasics, defaultNodeHome, MigrationMap)
+	return Commands(txConfig, moduleBasics, defaultNodeHome)
 }
 
-// GenesisCoreCommandWithCustomMigration adds core sdk's sub-commands into genesis command with custom migration map.
+// Commands adds core sdk's sub-commands into genesis command.
+func Commands(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
+	return CommandsWithCustomMigrationMap(txConfig, moduleBasics, defaultNodeHome, MigrationMap)
+}
+
+// CommandsWithCustomMigrationMap adds core sdk's sub-commands into genesis command with custom migration map.
 // This custom migration map can be used by the application to add its own migration map.
-func GenesisCoreCommandWithCustomMigration(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string, migrationMap genutiltypes.MigrationMap) *cobra.Command {
+func CommandsWithCustomMigrationMap(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string, migrationMap genutiltypes.MigrationMap) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "genesis",
 		Short:                      "Application's genesis-related subcommands",

@@ -15,6 +15,8 @@ import (
 // deletes all existing validator bitmap entries and replaces them with a real
 // "chunked" bitmap.
 func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, params types.Params) error {
+	// Get all the missed blocks for each validator, based on the existing signing
+	// info.
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
 	iterateValidatorSigningInfos(ctx, cdc, store, func(addr sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
 		bechAddr := addr.String()
@@ -28,6 +30,8 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 		return false
 	})
 
+	// For each missed blocks entry, of which there should only be one per validator,
+	// we clear all the old entries and insert the new chunked entry.
 	for _, mb := range missedBlocks {
 		addr, err := sdk.ConsAddressFromBech32(mb.Address)
 		if err != nil {
@@ -38,6 +42,9 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 
 		for _, b := range mb.MissedBlocks {
 			if b.Missed {
+				// Note: It is not necessary to store entries with missed=false, i.e.
+				// where the bit is zer, since when the bitmap is initialized, all non-set
+				// bits are already zero.
 				if err := setMissedBlockBitmapValue(ctx, store, addr, b.Index, true); err != nil {
 					return err
 				}

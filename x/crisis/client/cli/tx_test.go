@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"io"
 	"testing"
@@ -48,7 +49,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
 			true, "invalid module name", 0,
 		},
@@ -59,7 +60,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
 			true, "invalid invariant route", 0,
 		},
@@ -70,7 +71,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
 			false, "", 0,
 		},

@@ -106,7 +106,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// withdraw commission
-	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(1)), sdk.NewCoin("stake", sdk.NewInt(1)))
+	coins := sdk.NewCoins(sdk.NewCoin("mytoken", math.NewInt(1)), sdk.NewCoin("stake", math.NewInt(1)))
 	// if SendCoinsFromModuleToAccount is called, we know that the withdraw was successful
 	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), "distribution", addrs[0], coins).Return(nil)
 
@@ -194,7 +194,7 @@ func TestFundCommunityPool(t *testing.T) {
 	initPool := distrKeeper.GetFeePool(ctx)
 	require.Empty(t, initPool.CommunityPool)
 
-	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	amount := sdk.NewCoins(math.NewInt64Coin("stake", 100))
 	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addrs[0], "distribution", amount).Return(nil)
 	err := distrKeeper.FundCommunityPool(ctx, amount, addrs[0])
 	require.Nil(t, err)

@@ -45,14 +45,11 @@ func GetMigrationVersions() []string {
 // MigrateGenesisCmd returns a command to execute genesis state migration.
 func MigrateGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "migrate [target-version] [genesis-file]",
-		Short: "Migrate genesis to a specified target version",
-		Long: fmt.Sprintf(`Migrate the source genesis into the target version and print to STDOUT.
-
-Example:
-$ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
-`, version.AppName),
-		Args: cobra.ExactArgs(2),
+		Use:     "migrate [target-version] [genesis-file]",
+		Short:   "Migrate genesis to a specified target version",
+		Long:    "Migrate the source genesis into the target version and print to STDOUT",
+		Example: fmt.Sprintf("%s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z", version.AppName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -88,8 +85,10 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return fmt.Errorf("unknown migration function for version: %s", target)
 			}
 
-			// TODO: handler error from migrationFunc call
-			newGenState := migrationFunc(initialState, clientCtx)
+			newGenState, err := migrationFunc(initialState, clientCtx)
+			if err != nil {
+				return fmt.Errorf("failed to migrate genesis state: %w", err)
+			}
 
 			appGenesis.AppState, err = json.Marshal(newGenState)
 			if err != nil {

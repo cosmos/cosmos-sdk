@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -23,7 +21,6 @@ func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, ex
 	}
 
 	cmd := cli.GetSignCommand()
-	cmtcli.PrepareBaseCmd(cmd, "", "") // TODO
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, append(args, extraArgs...))
 }

@@ -180,7 +180,8 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	}
 
 	logLvl, err := zerolog.ParseLevel(logLvlStr)
-	if err != nil {
+	switch {
+	case err != nil:
 		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
 		filterFunc, err := log.ParseLogLevel(logLvlStr)
 		if err != nil {
@@ -189,11 +190,11 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 
 		opts = append(opts, log.FilterOption(filterFunc))
 
-	} else if ctx.Viper.GetBool("trace") { // cmtcli.TraceFlag
+	case ctx.Viper.GetBool("trace"): // cmtcli.TraceFlag
 		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
 		// Note it overrides log level passed in `log_levels`.
 		opts = append(opts, log.LevelOption(zerolog.TraceLevel))
-	} else {
+	default:
 		opts = append(opts, log.LevelOption(logLvl))
 	}
 

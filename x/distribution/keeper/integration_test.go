@@ -90,6 +90,217 @@ func initFixture(t assert.TestingT) *fixture {
 	return f
 }
 
+func TestWithdrawDelegatorReward(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
+	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
+	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
+
+	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+
+	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), distrtypes.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)}),
+	})
+	initFeePool := f.distrKeeper.GetFeePool(integrationApp.SDKContext())
+
+	// Register MsgServer and QueryServer
+	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+
+	addr := sdk.AccAddress(PKS[0].Address())
+	delAddr := sdk.AccAddress(PKS[1].Address())
+
+	valCommission := sdk.DecCoins{
+		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5).Quo(math.LegacyNewDec(4))),
+		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(3).Quo(math.LegacyNewDec(2))),
+	}
+
+	// setup staking validator
+	valAddr := sdk.ValAddress(addr)
+	validator, err := stakingtypes.NewValidator(valAddr, PKS[0], stakingtypes.Description{})
+	assert.NilError(t, err)
+	commission := stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyOneDec())
+	validator, err = validator.SetInitialCommission(commission)
+	assert.NilError(t, err)
+	validator.DelegatorShares = math.LegacyNewDec(100)
+	validator.Tokens = sdk.NewInt(1000000)
+	f.stakingKeeper.SetValidator(integrationApp.SDKContext(), validator)
+
+	// set module account coins
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.SDKContext(), int64(1000))
+	f.bankKeeper.MintCoins(integrationApp.SDKContext(), distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+
+	// send funds to val addr
+	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.SDKContext(), distrtypes.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+
+	initBalance := f.bankKeeper.GetAllBalances(integrationApp.SDKContext(), delAddr)
+
+	// setup delegation
+	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
+	validator, issuedShares := validator.AddTokensFromDel(delTokens)
+	delegation := stakingtypes.NewDelegation(delAddr, validator.GetOperator(), issuedShares)
+	f.stakingKeeper.SetDelegation(integrationApp.SDKContext(), delegation)
+	f.distrKeeper.SetDelegatorStartingInfo(integrationApp.SDKContext(), validator.GetOperator(), delAddr, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20))
+
+	// setup validator rewards
+	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
+	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
+	f.distrKeeper.SetValidatorHistoricalRewards(integrationApp.SDKContext(), validator.GetOperator(), 2, historicalRewards)
+	// setup current rewards and outstanding rewards
+	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
+	f.distrKeeper.SetValidatorCurrentRewards(integrationApp.SDKContext(), valAddr, currentRewards)
+	f.distrKeeper.SetValidatorOutstandingRewards(integrationApp.SDKContext(), valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
+	initOutstandingRewards := f.distrKeeper.GetValidatorOutstandingRewardsCoins(integrationApp.SDKContext(), valAddr)
+
+	testCases := []struct {
+		name      string
+		msg       *distrtypes.MsgWithdrawDelegatorReward
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "delegator with no delegations",
+			msg: &distrtypes.MsgWithdrawDelegatorReward{
+				DelegatorAddress: sdk.AccAddress([]byte("invalid")).String(),
+				ValidatorAddress: valAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "no delegation distribution info",
+		},
+		{
+			name: "validator with no delegations",
+			msg: &distrtypes.MsgWithdrawDelegatorReward{
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: sdk.ValAddress(sdk.AccAddress(PKS[2].Address())).String(),
+			},
+			expErr:    true,
+			expErrMsg: "no validator distribution info",
+		},
+		{
+			name: "valid msg",
+			msg: &distrtypes.MsgWithdrawDelegatorReward{
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valAddr.String(),
+			},
+			expErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := integrationApp.ExecMsgs(tc.msg)
+			if tc.expErr {
+				assert.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				assert.NilError(t, err)
+				assert.Assert(t, res != nil)
+
+				// check the result
+				result := distrtypes.MsgWithdrawDelegatorRewardResponse{}
+				err := f.cdc.Unmarshal(res[0].Value, &result)
+				assert.NilError(t, err)
+
+				// check current balance is greater than initial balance
+				curBalance := f.bankKeeper.GetAllBalances(integrationApp.SDKContext(), sdk.AccAddress(valAddr))
+				assert.Assert(t, initBalance.IsAllLTE(curBalance))
+
+				// check rewards
+				curFeePool := f.distrKeeper.GetFeePool(integrationApp.SDKContext())
+				rewards := curFeePool.GetCommunityPool().Sub(initFeePool.CommunityPool)
+				curOutstandingRewards := f.distrKeeper.GetValidatorOutstandingRewards(integrationApp.SDKContext(), valAddr)
+				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
+			}
+		})
+	}
+}
+
+func TestMsgSetWithdrawAddress(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
+	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
+	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
+
+	integrationApp := integration.SetupTestApp(t, f.keys, authModule, bankModule, stakingModule, distrModule)
+
+	// Register MsgServer and QueryServer
+	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryServiceHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+
+	f.distrKeeper.SetParams(integrationApp.SDKContext(), distrtypes.DefaultParams())
+
+	delAddr := sdk.AccAddress(PKS[0].Address())
+	withdrawAddr := sdk.AccAddress(PKS[1].Address())
+
+	testCases := []struct {
+		name      string
+		preRun    func()
+		msg       *distrtypes.MsgSetWithdrawAddress
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "withdraw address disabled",
+			preRun: func() {
+				params := f.distrKeeper.GetParams(integrationApp.SDKContext())
+				params.WithdrawAddrEnabled = false
+				assert.NilError(t, f.distrKeeper.SetParams(integrationApp.SDKContext(), params))
+			},
+			msg: &distrtypes.MsgSetWithdrawAddress{
+				DelegatorAddress: delAddr.String(),
+				WithdrawAddress:  withdrawAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "set withdraw address disabled",
+		},
+		{
+			name: "valid msg",
+			preRun: func() {
+				params := f.distrKeeper.GetParams(integrationApp.SDKContext())
+				params.WithdrawAddrEnabled = true
+				assert.NilError(t, f.distrKeeper.SetParams(integrationApp.SDKContext(), params))
+			},
+			msg: &distrtypes.MsgSetWithdrawAddress{
+				DelegatorAddress: delAddr.String(),
+				WithdrawAddress:  withdrawAddr.String(),
+			},
+			expErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			tc.preRun()
+			res, err := integrationApp.ExecMsgs(tc.msg)
+			if tc.expErr {
+				assert.ErrorContains(t, err, tc.expErrMsg)
+
+				// query the delegator withdraw address
+				addr := f.distrKeeper.GetDelegatorWithdrawAddr(integrationApp.SDKContext(), delAddr)
+				assert.DeepEqual(t, addr, delAddr)
+			} else {
+				assert.NilError(t, err)
+				assert.Assert(t, res != nil)
+
+				// check the result
+				result := distrtypes.MsgSetWithdrawAddressResponse{}
+				err = f.cdc.Unmarshal(res[0].Value, &result)
+				assert.NilError(t, err)
+
+				// query the delegator withdraw address
+				addr := f.distrKeeper.GetDelegatorWithdrawAddr(integrationApp.SDKContext(), delAddr)
+				assert.DeepEqual(t, addr, withdrawAddr)
+			}
+		})
+	}
+}
+
 func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)

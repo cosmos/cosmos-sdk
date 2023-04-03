@@ -17,9 +17,9 @@ import (
 )
 
 var (
-	flagInsecure string = "insecure"
-	flagUpdate   string = "update"
-	flagConfig   string = "config"
+	flagInsecure = "insecure"
+	flagUpdate   = "update"
+	flagConfig   = "config"
 )
 
 func RootCommand() (*cobra.Command, error) {
@@ -93,13 +93,15 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			Builder: flag.Builder{
 				TypeResolver: &dynamicTypeResolver{chainInfo},
 				FileResolver: chainInfo.ProtoFiles,
+				GetClientConn: func() (grpc.ClientConnInterface, error) {
+					return chainInfo.OpenClient()
+				},
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()
 			},
 			AddQueryConnFlags: func(command *cobra.Command) {},
 		}
-
 		var (
 			update   bool
 			reconfig bool
@@ -109,12 +111,13 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			Use:   chain,
 			Short: fmt.Sprintf("Commands for the %s chain", chain),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				if reconfig {
+				switch {
+				case reconfig:
 					return reconfigure(cmd, config, configDir, chain)
-				} else if update {
+				case update:
 					cmd.Printf("Updating autocli data for %s\n", chain)
 					return chainInfo.Load(true)
-				} else {
+				default:
 					return cmd.Help()
 				}
 			},
@@ -133,7 +136,7 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 	return commands, nil
 }
 
-func RemoteErrorCommand(config *Config, configDir string, chain string, chainConfig *ChainConfig, err error) *cobra.Command {
+func RemoteErrorCommand(config *Config, configDir, chain string, chainConfig *ChainConfig, err error) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   chain,
 		Short: "Unable to load data",

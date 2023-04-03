@@ -121,7 +121,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 		//
 		// A small amount of this error is tolerated and corrected for,
 		// however any greater amount should be considered a breach in expected
-		// behaviour.
+		// behavior.
 		marginOfErr := sdk.SmallestDec().MulInt64(3)
 		if stake.LTE(currentStake.Add(marginOfErr)) {
 			stake = currentStake
@@ -206,6 +206,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 			types.EventTypeWithdrawRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+			sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr().String()),
 		),
 	)
 

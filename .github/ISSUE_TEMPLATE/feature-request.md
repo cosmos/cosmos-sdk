@@ -1,7 +1,8 @@
 ---
 name: Feature Request
 about: Create a proposal to request a feature
-
+title: "[Feature]: "
+labels: T:feature-request
 ---
 
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺ 

@@ -8,7 +8,7 @@ import (
 
 var (
 	// AccAddressKey follows the same semantics of collections.BytesKey.
-	// It just uses humanised format for the String() and EncodeJSON().
+	// It just uses humanized format for the String() and EncodeJSON().
 	AccAddressKey collcodec.KeyCodec[AccAddress] = genericAddressKey[AccAddress]{
 		stringDecoder: AccAddressFromBech32,
 		keyType:       "sdk.AccAddress",

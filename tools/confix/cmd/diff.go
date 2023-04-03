@@ -17,11 +17,13 @@ func DiffCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var filename string
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			if len(args) > 1 {
+			switch {
+
+			case len(args) > 1:
 				filename = args[1]
-			} else if clientCtx.HomeDir != "" {
+			case clientCtx.HomeDir != "":
 				filename = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
-			} else {
+			default:
 				return fmt.Errorf("must provide a path to the app.toml file")
 			}
 

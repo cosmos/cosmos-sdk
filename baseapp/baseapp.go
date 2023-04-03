@@ -141,9 +141,10 @@ type BaseApp struct { //nolint: maligned
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	// abciListeners for hooking into the ABCI message processing of the BaseApp
-	// and exposing the requests and responses to external consumers
-	abciListeners []storetypes.ABCIListener
+	// streamingManager for managing instances and configuration of ABCIListener services
+	streamingManager storetypes.StreamingManager
+
+	chainID string
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -351,14 +352,10 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
-	emptyHeader := cmtproto.Header{}
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(runTxModeCheck, emptyHeader)
-
-	// needed for ABCI Replay Blocks mode which calls Prepare/Process proposal (InitChain is not called)
-	app.setState(runTxPrepareProposal, emptyHeader)
-	app.setState(runTxProcessProposal, emptyHeader)
 	app.Seal()
 
 	if app.cms == nil {
@@ -413,7 +410,7 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+		ctx: sdk.NewContext(ms, header, false, app.logger).WithStreamingManager(app.streamingManager),
 	}
 
 	switch mode {
@@ -437,30 +434,26 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *cmtproto.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams {
 	if app.paramStore == nil {
-		return nil
+		return cmtproto.ConsensusParams{}
 	}
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("consensus key is nil: %w", err))
 	}
 
 	return cp
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *cmtproto.ConsensusParams) {
+func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
 
-	if cp == nil {
-		return
-	}
-
-	app.paramStore.Set(ctx, cp)
+	return app.paramStore.Set(ctx, cp)
 	// We're explicitly not storing the CometBFT app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
 }
@@ -477,7 +470,7 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 // one.
 func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	cp := app.GetConsensusParams(ctx)
-	if cp == nil || cp.Block == nil {
+	if cp.Block == nil {
 		return 0
 	}
 
@@ -868,7 +861,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 		return nil, err
 	}
 
-	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz) //nolint:dogsled
+	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
 	if err != nil {
 		return nil, err
 	}
@@ -887,7 +880,7 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 
-	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz) //nolint:dogsled
+	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz)
 	if err != nil {
 		return nil, err
 	}

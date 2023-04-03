@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-proto/any"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -42,7 +42,7 @@ func LoadYAML(bz []byte) depinject.Config {
 
 // WrapAny marshals a proto message into a proto Any instance
 func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
-	cfg, err := any.New(config)
+	cfg, err := anyutil.New(config)
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +84,7 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 					module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
 			}
 
-			return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s\n\n%s",
+			return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to make a module ready for app wiring: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",
 				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
 		}
 

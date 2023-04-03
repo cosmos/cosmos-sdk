@@ -28,8 +28,8 @@ func TestMigrateStore(t *testing.T) {
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
 	balances := sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(10000)),
-		sdk.NewCoin("bar", sdk.NewInt(20000)),
+		sdk.NewCoin("foo", math.NewInt(10000)),
+		sdk.NewCoin("bar", math.NewInt(20000)),
 	)
 
 	for _, b := range balances {
@@ -108,7 +108,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		newKey := denomMetadataIter.Key()
 
 		// make sure old entry is deleted
-		oldKey := append(newKey, newKey[0:]...) //nolint:gocritic // append is ok here
+		oldKey := append(newKey, newKey[0:]...)
 		bz := denomMetadataStore.Get(oldKey)
 		require.Nil(t, bz)
 

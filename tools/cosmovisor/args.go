@@ -12,7 +12,6 @@ import (
 
 	"cosmossdk.io/log"
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -28,6 +27,7 @@ const (
 	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvDisableLogs          = "COSMOVISOR_DISABLE_LOGS"
 )
 
 const (
@@ -51,6 +51,7 @@ type Config struct {
 	UnsafeSkipBackup      bool
 	DataBackupPath        string
 	PreupgradeMaxRetries  int
+	DisableLogs           bool
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -156,6 +157,9 @@ func GetConfigFromEnv() (*Config, error) {
 		errs = append(errs, err)
 	}
 	if cfg.UnsafeSkipBackup, err = booleanOption(EnvSkipBackup, false); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.DisableLogs, err = booleanOption(EnvDisableLogs, false); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -298,7 +302,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
+	f, err := os.Create(filepath.Join(upgrade, upgradetypes.UpgradeInfoFilename))
 	if err != nil {
 		return err
 	}
@@ -322,7 +326,7 @@ func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 		return cfg.currentUpgrade, nil
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
+	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
 	_, err := os.Lstat(filename)
 	var u upgradetypes.Plan
 	var bz []byte
@@ -369,6 +373,7 @@ func (cfg Config) DetailString() string {
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
+		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
 	}
 
 	derivedEntries := []struct{ name, value string }{

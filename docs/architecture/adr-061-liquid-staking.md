@@ -34,7 +34,7 @@ A new governance parameter is introduced that defines the ratio of exempt to iss
 
 Min self delegation is removed from the staking system with the expectation that it will be replaced by the exempt delegations system. The exempt delegation system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc. without co-mingling funds. Delegation exemption will likely be required to grow the validators' business under widespread adoption of liquid staking once governance has adjusted the exemption factor.
 
-When shares are tokenized, the underlying shares are transfered to a module account and rewards go to the module account for the TokenizedShareRecord. 
+When shares are tokenized, the underlying shares are transferred to a module account and rewards go to the module account for the TokenizedShareRecord. 
 
 There is no longer a mechanism to override the validators vote for TokenizedShares.
 

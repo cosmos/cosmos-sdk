@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -23,12 +24,12 @@ func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := sdk.AccAddressFromBech32(req.Granter)
+	granterAddr, err := q.authKeeper.StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	granteeAddr, err := sdk.AccAddressFromBech32(req.Grantee)
+	granteeAddr, err := q.authKeeper.StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +53,8 @@ func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest
 
 	return &feegrant.QueryAllowanceResponse{
 		Allowance: &feegrant.Grant{
-			Granter:   granterAddr.String(),
-			Grantee:   granteeAddr.String(),
+			Granter:   req.Granter,
+			Grantee:   req.Grantee,
 			Allowance: feeAllowanceAny,
 		},
 	}, nil
@@ -65,7 +66,7 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granteeAddr, err := sdk.AccAddressFromBech32(req.Grantee)
+	granteeAddr, err := q.authKeeper.StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +78,7 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 	store := ctx.KVStore(q.storeKey)
 	grantsStore := prefix.NewStore(store, feegrant.FeeAllowancePrefixByGrantee(granteeAddr))
 
-	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key, value []byte) error {
 		var grant feegrant.Grant
 
 		if err := q.cdc.Unmarshal(value, &grant); err != nil {
@@ -100,7 +101,7 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := sdk.AccAddressFromBech32(req.Granter)
+	granterAddr, err := q.authKeeper.StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 	grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
 		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
 		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
-		if !granter.Equals(granterAddr) {
+		if !bytes.Equal(granter, granterAddr) {
 			return nil, nil
 		}
 

@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -143,7 +144,7 @@ func (q Keeper) Votes(c context.Context, req *v1.QueryVotesRequest) (*v1.QueryVo
 	store := ctx.KVStore(q.storeKey)
 	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
 
-	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key, value []byte) error {
 		var vote v1.Vote
 		if err := q.cdc.Unmarshal(value, &vote); err != nil {
 			return err
@@ -170,7 +171,7 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 
 	response := &v1.QueryParamsResponse{}
 
-	//nolint:staticcheck
+	//nolint:staticcheck // needed for legacy parameters
 	switch req.ParamsType {
 	case v1.ParamDeposit:
 		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
@@ -239,7 +240,7 @@ func (q Keeper) Deposits(c context.Context, req *v1.QueryDepositsRequest) (*v1.Q
 	store := ctx.KVStore(q.storeKey)
 	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
 
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
 		var deposit v1.Deposit
 		if err := q.cdc.Unmarshal(value, &deposit); err != nil {
 			return err
@@ -381,7 +382,7 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 	}, nil
 }
 
-//nolint:staticcheck
+//nolint:staticcheck // this is needed for legacy param support
 func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
 	resp, err := q.keeper.Params(c, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,
@@ -402,15 +403,15 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 	}
 
 	if resp.TallyParams != nil {
-		quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
+		quorum, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Quorum)
 		if err != nil {
 			return nil, err
 		}
-		threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
+		threshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Threshold)
 		if err != nil {
 			return nil, err
 		}
-		vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
+		vetoThreshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.VetoThreshold)
 		if err != nil {
 			return nil, err
 		}

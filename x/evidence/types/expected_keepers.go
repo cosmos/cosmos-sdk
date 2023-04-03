@@ -1,7 +1,10 @@
 package types
 
 import (
+	"context"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,16 +26,16 @@ type (
 		IsTombstoned(sdk.Context, sdk.ConsAddress) bool
 		HasValidatorSigningInfo(sdk.Context, sdk.ConsAddress) bool
 		Tombstone(sdk.Context, sdk.ConsAddress)
-		Slash(sdk.Context, sdk.ConsAddress, sdk.Dec, int64, int64)
-		SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, sdk.Dec, int64, int64, stakingtypes.Infraction)
-		SlashFractionDoubleSign(sdk.Context) sdk.Dec
+		Slash(sdk.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64)
+		SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64, stakingtypes.Infraction)
+		SlashFractionDoubleSign(sdk.Context) sdkmath.LegacyDec
 		Jail(sdk.Context, sdk.ConsAddress)
 		JailUntil(sdk.Context, sdk.ConsAddress, time.Time)
 	}
 
 	// AccountKeeper define the account keeper interface contracted needed by the evidence module
 	AccountKeeper interface {
-		SetAccount(ctx sdk.Context, acc sdk.AccountI)
+		SetAccount(ctx context.Context, acc sdk.AccountI)
 	}
 
 	// BankKeeper define the account keeper interface contracted needed by the evidence module

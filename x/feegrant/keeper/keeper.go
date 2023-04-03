@@ -162,7 +162,7 @@ func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (
 }
 
 // getGrant returns entire grant between both accounts
-func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
+func (k Keeper) getGrant(ctx sdk.Context, granter, grantee sdk.AccAddress) (*feegrant.Grant, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
@@ -248,11 +248,11 @@ func emitUseGrantEvent(ctx sdk.Context, granter, grantee string) {
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func (k Keeper) InitGenesis(ctx sdk.Context, data *feegrant.GenesisState) error {
 	for _, f := range data.Allowances {
-		granter, err := sdk.AccAddressFromBech32(f.Granter)
+		granter, err := k.authKeeper.StringToBytes(f.Granter)
 		if err != nil {
 			return err
 		}
-		grantee, err := sdk.AccAddressFromBech32(f.Grantee)
+		grantee, err := k.authKeeper.StringToBytes(f.Grantee)
 		if err != nil {
 			return err
 		}

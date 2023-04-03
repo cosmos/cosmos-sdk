@@ -34,7 +34,7 @@ type Collection[K, V any] interface {
 	KeyCodec() collcodec.KeyCodec[K]
 }
 
-// CollectionPaginate follows the same behaviour as Paginate but works on a Collection.
+// CollectionPaginate follows the same behavior as Paginate but works on a Collection.
 func CollectionPaginate[K, V any, C Collection[K, V]](
 	ctx context.Context,
 	coll C,
@@ -95,7 +95,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	} else {
 		results, pageRes, err = collFilteredPaginateNoKey(ctx, coll, prefix, reverse, offset, limit, countTotal, predicateFunc)
 	}
-	// invalid iter error is ignored to retain Paginate behaviour
+	// invalid iter error is ignored to retain Paginate behavior
 	if errors.Is(err, collections.ErrInvalidIterator) {
 		return results, new(PageResponse), nil
 	}

@@ -10,9 +10,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GenesisCoreCommand adds core sdk's sub-commands into genesis command:
-// -> gentx, migrate, collect-gentxs, validate-genesis, add-genesis-account
+// GenesisCoreCommand adds core sdk's sub-commands into genesis command.
 func GenesisCoreCommand(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
+	return GenesisCoreCommandWithCustomMigration(txConfig, moduleBasics, defaultNodeHome, MigrationMap)
+}
+
+// GenesisCoreCommandWithCustomMigration adds core sdk's sub-commands into genesis command with custom migration map.
+// This custom migration map can be used by the application to add its own migration map.
+func GenesisCoreCommandWithCustomMigration(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string, migrationMap genutiltypes.MigrationMap) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "genesis",
 		Short:                      "Application's genesis-related subcommands",
@@ -23,11 +28,9 @@ func GenesisCoreCommand(txConfig client.TxConfig, moduleBasics module.BasicManag
 	gentxModule := moduleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 
 	cmd.AddCommand(
-		GenTxCmd(moduleBasics, txConfig,
-			banktypes.GenesisBalancesIterator{}, defaultNodeHome),
-		MigrateGenesisCmd(),
-		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, defaultNodeHome,
-			gentxModule.GenTxValidator),
+		GenTxCmd(moduleBasics, txConfig, banktypes.GenesisBalancesIterator{}, defaultNodeHome),
+		MigrateGenesisCmd(migrationMap),
+		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, defaultNodeHome, gentxModule.GenTxValidator),
 		ValidateGenesisCmd(moduleBasics),
 		AddGenesisAccountCmd(defaultNodeHome),
 	)

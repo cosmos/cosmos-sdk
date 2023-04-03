@@ -12,12 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
-func TestGetMigrationCallback(t *testing.T) {
-	for _, version := range cli.GetMigrationVersions() {
-		require.NotNil(t, cli.GetMigrationCallback(version))
-	}
-}
-
 func TestMigrateGenesis(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -61,7 +55,7 @@ func TestMigrateGenesis(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			genesisFile := testutil.WriteToNewTempFile(t, tc.genesis)
-			jsonOutput, err := clitestutil.ExecTestCLICmd(client.Context{}, cli.MigrateGenesisCmd(), []string{tc.target, genesisFile.Name()})
+			jsonOutput, err := clitestutil.ExecTestCLICmd(client.Context{}, cli.MigrateGenesisCmd(cli.MigrationMap), []string{tc.target, genesisFile.Name()})
 			if tc.expErr {
 				require.Contains(t, err.Error(), tc.expErrMsg)
 			} else {

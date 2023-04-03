@@ -50,7 +50,7 @@ type (
 		RegisterTendermintService(client.Context)
 
 		// RegisterNodeService registers the node gRPC Query service.
-		RegisterNodeService(client.Context)
+		RegisterNodeService(client.Context, config.Config)
 
 		// CommitMultiStore return the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore

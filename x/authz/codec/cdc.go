@@ -6,10 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	Amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(Amino)
-)
+var Amino = codec.NewLegacyAmino()
 
 func init() {
 	cryptocodec.RegisterCrypto(Amino)

@@ -141,8 +141,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type ConsensusInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config       *modulev1.Module
@@ -151,8 +150,7 @@ type ConsensusInputs struct {
 	EventManager event.Service
 }
 
-//nolint:revive
-type ConsensusOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Keeper        keeper.Keeper
@@ -160,7 +158,7 @@ type ConsensusOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in ConsensusInputs) ConsensusOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
@@ -173,7 +171,7 @@ func ProvideModule(in ConsensusInputs) ConsensusOutputs {
 		app.SetParamStore(k.ParamsStore)
 	}
 
-	return ConsensusOutputs{
+	return ModuleOutputs{
 		Keeper:        k,
 		Module:        m,
 		BaseAppOption: baseappOpt,

@@ -86,7 +86,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -170,8 +170,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type AuthzInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Key              *store.KVStoreKey
@@ -182,18 +181,17 @@ type AuthzInputs struct {
 	MsgServiceRouter baseapp.MessageRouter
 }
 
-//nolint:revive
-type AuthzOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	AuthzKeeper keeper.Keeper
 	Module      appmodule.AppModule
 }
 
-func ProvideModule(in AuthzInputs) AuthzOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return AuthzOutputs{AuthzKeeper: k, Module: m}
+	return ModuleOutputs{AuthzKeeper: k, Module: m}
 }
 
 // ____________________________________________________________________________

@@ -46,6 +46,7 @@ var (
 // AppModuleBasic defines the basic application module used by the staking module.
 type AppModuleBasic struct {
 	cdc codec.Codec
+	ak  types.AccountKeeper
 }
 
 var _ module.AppModuleBasic = AppModuleBasic{}
@@ -94,8 +95,8 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 // GetQueryCmd returns no root query command for the staking module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.ak)
 }
 
 // AppModule implements an application module for the staking module.
@@ -119,7 +120,7 @@ func NewAppModule(
 	ls exported.Subspace,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ak: ak},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,

@@ -512,6 +512,7 @@ func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
 	return <-errCh
 }
 
+// emitServerInfoMetrics emits server info related metrics using application telemetry.
 func emitServerInfoMetrics(homePath string) {
 	var ls []metrics.Label
 

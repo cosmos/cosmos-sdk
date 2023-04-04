@@ -226,7 +226,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(k, in.AddressCodec)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	if upgradePlan, err := k.ReadUpgradeInfoFromDisk(); err == nil {
+	if upgradePlan, err := k.ReadUpgradeInfoFromDisk(); err == nil && upgradePlan.Height > 0 {
 		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradePlan.Height, 10))})
 	}
 

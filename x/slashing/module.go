@@ -212,8 +212,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type SlashingInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config      *modulev1.Module
@@ -229,8 +228,7 @@ type SlashingInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-//nolint:revive
-type SlashingOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Keeper keeper.Keeper
@@ -238,7 +236,7 @@ type SlashingOutputs struct {
 	Hooks  staking.StakingHooksWrapper
 }
 
-func ProvideModule(in SlashingInputs) SlashingOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
@@ -247,7 +245,7 @@ func ProvideModule(in SlashingInputs) SlashingOutputs {
 
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authority.String())
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
-	return SlashingOutputs{
+	return ModuleOutputs{
 		Keeper: k,
 		Module: m,
 		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},

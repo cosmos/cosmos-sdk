@@ -3,6 +3,7 @@ package types
 import (
 	context "context"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +17,8 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
+	address.Codec
+
 	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI // only used for simulation
 
@@ -61,7 +64,7 @@ type ValidatorSet interface {
 	TotalBondedTokens(sdk.Context) math.Int                      // total bonded tokens within the validator set
 	StakingTokenSupply(sdk.Context) math.Int                     // total staking token supply
 
-	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
+	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) math.Int
 	SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec, Infraction) math.Int
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator

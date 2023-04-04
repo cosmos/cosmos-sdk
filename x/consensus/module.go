@@ -6,6 +6,7 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/depinject"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -140,17 +141,16 @@ func init() {
 	)
 }
 
-//nolint:revive
-type ConsensusInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config       *modulev1.Module
 	Cdc          codec.Codec
 	StoreService storetypes.KVStoreService
+	EventManager event.Service
 }
 
-//nolint:revive
-type ConsensusOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Keeper        keeper.Keeper
@@ -158,20 +158,20 @@ type ConsensusOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in ConsensusInputs) ConsensusOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String())
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager)
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
-		app.SetParamStore(k.Params)
+		app.SetParamStore(k.ParamsStore)
 	}
 
-	return ConsensusOutputs{
+	return ModuleOutputs{
 		Keeper:        k,
 		Module:        m,
 		BaseAppOption: baseappOpt,

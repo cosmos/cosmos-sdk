@@ -27,7 +27,7 @@ func NewStore(parent types.KVStore, prefix []byte) Store {
 	}
 }
 
-func cloneAppend(bz []byte, tail []byte) (res []byte) {
+func cloneAppend(bz, tail []byte) (res []byte) {
 	res = make([]byte, len(bz)+len(tail))
 	copy(res, bz)
 	copy(res[len(bz):], tail)
@@ -193,7 +193,7 @@ func (pi *prefixIterator) Error() error {
 }
 
 // copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
-func stripPrefix(key []byte, prefix []byte) []byte {
+func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")
 	}

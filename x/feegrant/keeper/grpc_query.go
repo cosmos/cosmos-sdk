@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/feegrant"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -75,10 +76,10 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 
 	var grants []*feegrant.Grant
 
-	store := ctx.KVStore(q.storeKey)
-	grantsStore := prefix.NewStore(store, feegrant.FeeAllowancePrefixByGrantee(granteeAddr))
+	store := q.storeService.OpenKVStore(ctx)
+	grantsStore := prefix.NewStore(runtime.KVStoreAdapter(store), feegrant.FeeAllowancePrefixByGrantee(granteeAddr))
 
-	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key, value []byte) error {
 		var grant feegrant.Grant
 
 		if err := q.cdc.Unmarshal(value, &grant); err != nil {
@@ -108,8 +109,8 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(q.storeKey)
-	prefixStore := prefix.NewStore(store, feegrant.FeeAllowanceKeyPrefix)
+	store := q.storeService.OpenKVStore(ctx)
+	prefixStore := prefix.NewStore(runtime.KVStoreAdapter(store), feegrant.FeeAllowanceKeyPrefix)
 	grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
 		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
 		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))

@@ -6,6 +6,4 @@ const (
 	txCodespace = "tx"
 )
 
-var (
-	ErrUnknownField = errors.Register(txCodespace, 2, "unknown protobuf field")
-)
+var ErrUnknownField = errors.Register(txCodespace, 2, "unknown protobuf field")

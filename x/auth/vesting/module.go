@@ -131,23 +131,21 @@ func init() {
 	)
 }
 
-//nolint:revive
-type VestingInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	AccountKeeper keeper.AccountKeeper
 	BankKeeper    types.BankKeeper
 }
 
-//nolint:revive
-type VestingOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Module appmodule.AppModule
 }
 
-func ProvideModule(in VestingInputs) VestingOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
 
-	return VestingOutputs{Module: m}
+	return ModuleOutputs{Module: m}
 }

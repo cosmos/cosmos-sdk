@@ -20,8 +20,6 @@ var (
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
-//
-//nolint:interfacer
 func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
@@ -74,14 +72,13 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 // NewMsgRevokeAllowance returns a message to revoke a fee allowance for a given
 // granter and grantee
 //
-//nolint:interfacer
-func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeAllowance {
+
+func NewMsgRevokeAllowance(granter, grantee sdk.AccAddress) MsgRevokeAllowance {
 	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgRevokeAllowance) ValidateBasic() error {
-
 	return nil
 }
 

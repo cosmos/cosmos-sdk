@@ -68,6 +68,8 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 
 * `x/auth`
 * `x/consensus`
+* `x/feegrant`
+* `x/nft`
 
 When not using depinject, the `runtime.NewKVStoreService` method can be used to create a `KVStoreService` from a `StoreKey`:
 

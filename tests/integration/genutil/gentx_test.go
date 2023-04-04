@@ -9,11 +9,11 @@ import (
 
 	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -297,7 +297,7 @@ func TestDeliverGenTxs(t *testing.T) {
 			tc.malleate()
 
 			if tc.expPass {
-				sdktestutil.AssertNotPanics(t, func() {
+				require.NotPanics(t, func() {
 					genutil.DeliverGenTxs(
 						f.ctx, genTxs, f.stakingKeeper, f.baseApp.DeliverTx,
 						f.encodingConfig.TxConfig,

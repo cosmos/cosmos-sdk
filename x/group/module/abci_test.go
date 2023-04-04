@@ -2,6 +2,7 @@ package module_test
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
 
@@ -53,7 +54,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 
 	s.ctx = ctx
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))
+	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdkmath.NewInt(30000000))
 }
 
 func (s *IntegrationTestSuite) TestEndBlockerPruning() {

@@ -91,7 +91,7 @@ func initFixture(t assert.TestingT) *fixture {
 	return f
 }
 
-func TestWithdrawDelegatorReward(t *testing.T) {
+func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 

@@ -17,7 +17,7 @@ import (
 func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, params types.Params) error {
 	// Get all the missed blocks for each validator, based on the existing signing
 	// info.
-	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
+	var missedBlocks []types.ValidatorMissedBlocks
 	iterateValidatorSigningInfos(ctx, cdc, store, func(addr sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
 		bechAddr := addr.String()
 		localMissedBlocks := GetValidatorMissedBlocks(ctx, cdc, store, addr, params)
@@ -83,17 +83,15 @@ func iterateValidatorMissedBlockBitArray(
 	params types.Params,
 	cb func(index int64, missed bool) (stop bool),
 ) {
-	var index int64
-
-	for ; index < params.SignedBlocksWindow; index++ {
+	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		var missed gogotypes.BoolValue
-		bz := store.Get(ValidatorMissedBlockBitArrayKey(addr, index))
+		bz := store.Get(ValidatorMissedBlockBitArrayKey(addr, i))
 		if bz == nil {
 			continue
 		}
 
 		cdc.MustUnmarshal(bz, &missed)
-		if cb(index, missed.Value) {
+		if cb(i, missed.Value) {
 			break
 		}
 	}
@@ -106,7 +104,7 @@ func GetValidatorMissedBlocks(
 	addr sdk.ConsAddress,
 	params types.Params,
 ) []types.MissedBlock {
-	missedBlocks := []types.MissedBlock{}
+	var missedBlocks []types.MissedBlock
 	iterateValidatorMissedBlockBitArray(ctx, cdc, store, addr, params, func(index int64, missed bool) (stop bool) {
 		missedBlocks = append(missedBlocks, types.NewMissedBlock(index, missed))
 		return false

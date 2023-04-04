@@ -48,3 +48,4 @@ require a `signing.ProtoFileResolver` interface instead of `protodesc.Resolver`.
 
 * [#15302](https://github.com/cosmos/cosmos-sdk/pull/15302) Add support for a custom registry (e.g. gogo's MergedRegistry) to be plugged into SIGN_MODE_TEXTUAL.
 * [#15557](https://github.com/cosmos/cosmos-sdk/pull/15557) Implement unknown field filtering.
+* [#15515](https://github.com/cosmos/cosmos-sdk/pull/15515) Implement SIGN_MODE_LEGACY_AMINO_JSON handler.

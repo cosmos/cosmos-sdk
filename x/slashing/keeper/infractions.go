@@ -52,13 +52,19 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	case !previous && missed:
 		// Bitmap value has changed from not missed to missed, so we flip the bit
 		// and increment the counter.
-		k.SetMissedBlockBitmapValue(ctx, consAddr, index, true)
+		if err := k.SetMissedBlockBitmapValue(ctx, consAddr, index, true); err != nil {
+			panic(err)
+		}
+
 		signInfo.MissedBlocksCounter++
 
 	case previous && !missed:
 		// Bitmap value has changed from missed to not missed, so we flip the bit
 		// and decrement the counter.
-		k.SetMissedBlockBitmapValue(ctx, consAddr, index, false)
+		if err := k.SetMissedBlockBitmapValue(ctx, consAddr, index, false); err != nil {
+			panic(err)
+		}
+
 		signInfo.MissedBlocksCounter--
 
 	default:

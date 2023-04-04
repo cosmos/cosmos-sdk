@@ -95,17 +95,17 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 	return signInfo.Tombstoned
 }
 
-// GetMissedBlockBitmapChunk gets the bitmap chunk at the given chunk index for
+// getMissedBlockBitmapChunk gets the bitmap chunk at the given chunk index for
 // a validator's missed block signing window.
-func (k Keeper) GetMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress, chunkIndex int64) []byte {
+func (k Keeper) getMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress, chunkIndex int64) []byte {
 	store := ctx.KVStore(k.storeKey)
 	chunk := store.Get(types.ValidatorMissedBlockBitmapKey(addr, chunkIndex))
 	return chunk
 }
 
-// SetMissedBlockBitmapChunk sets the bitmap chunk at the given chunk index for
+// setMissedBlockBitmapChunk sets the bitmap chunk at the given chunk index for
 // a validator's missed block signing window.
-func (k Keeper) SetMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress, chunkIndex int64, chunk []byte) {
+func (k Keeper) setMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress, chunkIndex int64, chunk []byte) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.ValidatorMissedBlockBitmapKey(addr, chunkIndex)
 	store.Set(key, chunk)
@@ -122,7 +122,7 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress,
 	chunkIndex := index / types.MissedBlockBitmapChunkSize
 
 	bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
-	chunk := k.GetMissedBlockBitmapChunk(ctx, addr, chunkIndex)
+	chunk := k.getMissedBlockBitmapChunk(ctx, addr, chunkIndex)
 	if chunk != nil {
 		if err := bs.UnmarshalBinary(chunk); err != nil {
 			return false, errors.Wrapf(err, "failed to decode bitmap chunk; index: %d", index)
@@ -147,7 +147,7 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress,
 	chunkIndex := index / types.MissedBlockBitmapChunkSize
 
 	bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
-	chunk := k.GetMissedBlockBitmapChunk(ctx, addr, chunkIndex)
+	chunk := k.getMissedBlockBitmapChunk(ctx, addr, chunkIndex)
 	if chunk != nil {
 		if err := bs.UnmarshalBinary(chunk); err != nil {
 			return errors.Wrapf(err, "failed to decode bitmap chunk; index: %d", index)
@@ -167,7 +167,7 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress,
 		return errors.Wrapf(err, "failed to encode bitmap chunk; index: %d", index)
 	}
 
-	k.SetMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
+	k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
 	return nil
 }
 

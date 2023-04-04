@@ -138,8 +138,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	for i := range screens {
 		if screens[i].Indent == 0 {
 			// Do expert fields.
-			_, ok := expert[screens[i].Title]
-			if ok {
+			if _, ok := expert[screens[i].Title]; ok {
 				expertify(screens, i, screens[i].Title)
 			}
 

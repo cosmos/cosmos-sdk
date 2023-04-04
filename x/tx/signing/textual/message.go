@@ -181,9 +181,8 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		return nilValue, errors.New("expect at least one screen")
 	}
 
-	wantHeader := fmt.Sprintf("%s object", mr.msgDesc.Name())
-	if screens[0].Content != wantHeader {
-		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, wantHeader, screens[0].Title)
+	if screens[0].Content != mr.header() {
+		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, mr.header(), screens[0].Title)
 	}
 	if screens[0].Indent != 0 {
 		return nilValue, fmt.Errorf("bad message indentation: want 0, got %d", screens[0].Indent)

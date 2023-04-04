@@ -460,7 +460,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			recv: new(testpb.TestVersion1),
 			// behavior change from previous implementation: we allow mismatched wire -> proto types,
 			// but this will still error on ConsumeFieldValue
-			wantErr: fmt.Errorf(`could not consume field value for tagNum: 8, wireType: "unknown type: 7"; proto: cannot parse reserved wire type`),
+			wantErr: fmt.Errorf("could not consume field value for tagNum: 8, wireType: \"unknown type: 7\"; proto:\u00a0cannot parse reserved wire type"),
 		},
 		{
 			name: "From nested proto message, message index 0",

@@ -51,8 +51,8 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 
 	// The Any value renderer suppresses emission of the object header
 	omitHeader := 0
-	_, isMsgRenderer := vr.(*messageValueRenderer)
-	if isMsgRenderer && subscreens[0].Content == fmt.Sprintf("%s object", internalMsg.ProtoReflect().Descriptor().Name()) {
+	msgValRenderer, isMsgRenderer := vr.(*messageValueRenderer)
+	if isMsgRenderer && subscreens[0].Content == msgValRenderer.header() {
 		omitHeader = 1
 	}
 
@@ -108,14 +108,14 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 	}
 
 	// Prepend with a "%s object" if the message goes through the default
-	// messageValueRenderer.
-	_, isMsgRenderer := vr.(*messageValueRenderer)
+	// messageValueRenderer (the header() method does this for us).
+	msgValRenderer, isMsgRenderer := vr.(*messageValueRenderer)
 	if isMsgRenderer {
 		for i := range subscreens {
 			subscreens[i].Indent++
 		}
 
-		subscreens = append([]Screen{{Content: fmt.Sprintf("%s object", msgType.Descriptor().Name())}}, subscreens...)
+		subscreens = append([]Screen{{Content: msgValRenderer.header()}}, subscreens...)
 	}
 
 	internalMsg, err := vr.Parse(ctx, subscreens)

@@ -171,7 +171,7 @@ message DelegatorStartingInfo {
 message DelegationDelegatorReward {
   option (gogoproto.goproto_getters) = false;
 
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 
   repeated cosmos.base.v1beta1.DecCoin reward = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",

@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -43,7 +44,9 @@ func MigrateGenesisCmd(migrations types.MigrationMap) *cobra.Command {
 			target := args[0]
 			migrationFunc, ok := migrations[target]
 			if !ok || migrationFunc == nil {
-				return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(maps.Keys(migrations), ", "))
+				versions := maps.Keys(migrations)
+				sort.Strings(versions)
+				return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(versions, ", "))
 			}
 
 			importGenesis := args[1]

@@ -367,7 +367,3 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	err = b.enhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
 	assert.NilError(t, err)
 }
-
-type testMessageServer struct {
-	testpb.UnimplementedMsgServer
-}

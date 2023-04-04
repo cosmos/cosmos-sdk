@@ -6,7 +6,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// InitGenesis initialize default parameters and the keeper's address to
+// InitGenesis initializes default parameters and the keeper's address to
 // pubkey map.
 func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
@@ -36,7 +36,9 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 		}
 
 		for _, missed := range array.MissedBlocks {
-			keeper.SetMissedBlockBitmapValue(ctx, address, missed.Index, missed.Missed)
+			if err := keeper.SetMissedBlockBitmapValue(ctx, address, missed.Index, missed.Missed); err != nil {
+				panic(err)
+			}
 		}
 	}
 

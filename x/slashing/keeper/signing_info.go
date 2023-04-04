@@ -129,7 +129,8 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress,
 		}
 	}
 
-	// get the bit position in the chunk of the logical bitmap
+	// get the bit position in the chunk of the logical bitmap, where Test()
+	// checks if the bit is set.
 	bitIndex := index % types.MissedBlockBitmapChunkSize
 	return bs.Test(uint(bitIndex)), nil
 }
@@ -203,6 +204,7 @@ func (k Keeper) IterateMissedBlockBitmap(ctx sdk.Context, addr sdk.ConsAddress, 
 		}
 
 		for i := uint(0); i < types.MissedBlockBitmapChunkSize; i++ {
+			// execute the callback, where Test() returns true if the bit is set
 			if cb(index, bs.Test(i)) {
 				break
 			}

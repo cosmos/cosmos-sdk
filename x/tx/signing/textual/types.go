@@ -38,7 +38,7 @@ type ValueRenderer interface {
 	Format(context.Context, protoreflect.Value) ([]Screen, error)
 
 	// Parse is the inverse of Format. It must be able to parse all valid
-	// screens, however the behavior or Parse on invalid screens is not
+	// screens, however the behavior of Parse on invalid screens is not
 	// specified, and does not necessarily error.
 	Parse(context.Context, []Screen) (protoreflect.Value, error)
 }
@@ -52,7 +52,7 @@ type RepeatedValueRenderer interface {
 	FormatRepeated(context.Context, protoreflect.Value) ([]Screen, error)
 
 	// Parse is the inverse of Format. It must be able to parse all valid
-	// screens, however the behavior or Parse on invalid screens is not
+	// screens, however the behavior of Parse on invalid screens is not
 	// specified, and does not necessarily error. The `protoreflect.List`
 	// argument will be mutated and populated with the repeated values.
 	ParseRepeated(context.Context, []Screen, protoreflect.List) error

@@ -23,6 +23,13 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+var (
+	granteePub  = secp256k1.GenPrivKey().PubKey()
+	granterPub  = secp256k1.GenPrivKey().PubKey()
+	granteeAddr = sdk.AccAddress(granteePub.Address())
+	granterAddr = sdk.AccAddress(granterPub.Address())
+)
+
 type GenesisTestSuite struct {
 	suite.Suite
 
@@ -43,6 +50,11 @@ func (suite *GenesisTestSuite) SetupTest() {
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
 
+	suite.accountKeeper.EXPECT().StringToBytes(granteeAddr.String()).Return(granteeAddr, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(granterAddr).Return(granterAddr.String(), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(granterAddr.String()).Return(granterAddr, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(granterAddr).Return(granterAddr.String(), nil).AnyTimes()
+
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",
 		log.NewNopLogger(),
@@ -58,13 +70,6 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	suite.keeper = keeper.NewKeeper(key, suite.encCfg.Codec, msr, suite.accountKeeper)
 }
-
-var (
-	granteePub  = secp256k1.GenPrivKey().PubKey()
-	granterPub  = secp256k1.GenPrivKey().PubKey()
-	granteeAddr = sdk.AccAddress(granteePub.Address())
-	granterAddr = sdk.AccAddress(granterPub.Address())
-)
 
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	coins := sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(1_000)))

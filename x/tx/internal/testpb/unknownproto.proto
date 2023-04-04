@@ -1,7 +1,6 @@
 syntax = "proto3";
 package testpb;
 
-import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 
@@ -103,7 +102,7 @@ message TestVersion1 {
   TestVersion1          a = 2;
   TestVersion1          b = 3; // [(gogoproto.nullable) = false] generates invalid recursive structs;
   repeated TestVersion1 c = 4;
-  repeated TestVersion1 d = 5 [(gogoproto.nullable) = false];
+  repeated TestVersion1 d = 5;
   oneof                 sum {
     int32        e = 6;
     TestVersion1 f = 7;
@@ -112,7 +111,7 @@ message TestVersion1 {
   repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
-  Customer1 k = 12 [(gogoproto.embed) = true];
+  Customer1 k = 12;
 }
 message TestVersion2 {
   int64                 x = 1;
@@ -128,7 +127,7 @@ message TestVersion2 {
   repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
-  Customer1 k         = 12 [(gogoproto.embed) = true];
+  Customer1 k         = 12;
   uint64    new_field = 25;
 }
 message TestVersion3 {
@@ -145,7 +144,7 @@ message TestVersion3 {
   repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
-  Customer1 k                  = 12 [(gogoproto.embed) = true];
+  Customer1 k                  = 12;
   string    non_critical_field = 1031;
 }
 
@@ -162,7 +161,7 @@ message TestVersion3LoneOneOfValue {
   repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
-  Customer1 k                  = 12 [(gogoproto.embed) = true];
+  Customer1 k                  = 12;
   string    non_critical_field = 1031;
 }
 
@@ -179,7 +178,7 @@ message TestVersion3LoneNesting {
   repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
-  Customer1 k                  = 12 [(gogoproto.embed) = true];
+  Customer1 k                  = 12;
   string    non_critical_field = 1031;
 
   message Inner1 {
@@ -220,7 +219,7 @@ message TestVersion4LoneNesting {
   repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
-  Customer1 k                  = 12 [(gogoproto.embed) = true];
+  Customer1 k                  = 12;
   string    non_critical_field = 1031;
 
   message Inner1 {
@@ -271,7 +270,7 @@ message TestVersionFD1WithExtraAny {
 }
 
 message AnyWithExtra {
-  google.protobuf.Any a = 1 [(gogoproto.embed) = true];
+  google.protobuf.Any a = 1;
   int64               b = 3;
   int64               c = 4;
 }

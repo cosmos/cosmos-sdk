@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strconv"
 	"time"
 
 	"cosmossdk.io/math"
@@ -376,5 +375,7 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKey(height int64) []byte {
-	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
+	heightBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(heightBytes, uint64(height))
+	return append(HistoricalInfoKey, heightBytes...)
 }

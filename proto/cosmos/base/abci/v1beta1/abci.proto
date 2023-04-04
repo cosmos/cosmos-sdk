@@ -27,7 +27,10 @@ message TxResponse {
   // non-deterministic.
   string raw_log = 6;
   // The output of the application's logger (typed). May be non-deterministic.
-  repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
+  repeated ABCIMessageLog logs = 7 [
+    (gogoproto.castrepeated) = "ABCIMessageLogs",
+    (gogoproto.nullable)     = false
+  ];
   // Additional information. May be non-deterministic.
   string info = 8;
   // Amount of gas requested for transaction.
@@ -58,7 +61,8 @@ message ABCIMessageLog {
 
   // Events contains a slice of Event objects that were emitted during some
   // execution.
-  repeated StringEvent events = 3 [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false];
+  repeated StringEvent events = 3
+      [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false];
 }
 
 // StringEvent defines en Event object wrapper where all the attributes
@@ -174,4 +178,28 @@ message SearchBlocksResult {
   int64 limit = 5;
   // List of blocks in current page
   repeated tendermint.types.Block blocks = 6;
+}
+
+// LegacyRequestBeginBlock defines a wrapper around the now deprecated
+// RequestBeginBlock type.
+message LegacyRequestBeginBlock {
+  tendermint.abci.RequestBeginBlock req = 1;
+}
+
+// LegacyResponseBeginBlock defines a wrapper around the now deprecated
+// ResponseBeginBlock type.
+message LegacyResponseBeginBlock {
+  tendermint.abci.ResponseBeginBlock res = 1;
+}
+
+// LegacyRequestEndBlock defines a wrapper around the now deprecated
+// RequestEndBlock type.
+message LegacyRequestEndBlock {
+  tendermint.abci.RequestEndBlock req = 1;
+}
+
+// LegacyResponseEndBlock defines a wrapper around the now deprecated
+// ResponseEndBlock type.
+message LegacyResponseEndBlock {
+  tendermint.abci.ResponseEndBlock res = 1;
 }

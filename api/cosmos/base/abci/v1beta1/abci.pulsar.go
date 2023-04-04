@@ -7265,6 +7265,1746 @@ func (x *fastReflection_SearchBlocksResult) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_LegacyRequestBeginBlock     protoreflect.MessageDescriptor
+	fd_LegacyRequestBeginBlock_req protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_abci_v1beta1_abci_proto_init()
+	md_LegacyRequestBeginBlock = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("LegacyRequestBeginBlock")
+	fd_LegacyRequestBeginBlock_req = md_LegacyRequestBeginBlock.Fields().ByName("req")
+}
+
+var _ protoreflect.Message = (*fastReflection_LegacyRequestBeginBlock)(nil)
+
+type fastReflection_LegacyRequestBeginBlock LegacyRequestBeginBlock
+
+func (x *LegacyRequestBeginBlock) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_LegacyRequestBeginBlock)(x)
+}
+
+func (x *LegacyRequestBeginBlock) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_LegacyRequestBeginBlock_messageType fastReflection_LegacyRequestBeginBlock_messageType
+var _ protoreflect.MessageType = fastReflection_LegacyRequestBeginBlock_messageType{}
+
+type fastReflection_LegacyRequestBeginBlock_messageType struct{}
+
+func (x fastReflection_LegacyRequestBeginBlock_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_LegacyRequestBeginBlock)(nil)
+}
+func (x fastReflection_LegacyRequestBeginBlock_messageType) New() protoreflect.Message {
+	return new(fastReflection_LegacyRequestBeginBlock)
+}
+func (x fastReflection_LegacyRequestBeginBlock_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_LegacyRequestBeginBlock
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_LegacyRequestBeginBlock) Descriptor() protoreflect.MessageDescriptor {
+	return md_LegacyRequestBeginBlock
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_LegacyRequestBeginBlock) Type() protoreflect.MessageType {
+	return _fastReflection_LegacyRequestBeginBlock_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_LegacyRequestBeginBlock) New() protoreflect.Message {
+	return new(fastReflection_LegacyRequestBeginBlock)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_LegacyRequestBeginBlock) Interface() protoreflect.ProtoMessage {
+	return (*LegacyRequestBeginBlock)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_LegacyRequestBeginBlock) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Req != nil {
+		value := protoreflect.ValueOfMessage(x.Req.ProtoReflect())
+		if !f(fd_LegacyRequestBeginBlock_req, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_LegacyRequestBeginBlock) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestBeginBlock.req":
+		return x.Req != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyRequestBeginBlock) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestBeginBlock.req":
+		x.Req = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_LegacyRequestBeginBlock) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestBeginBlock.req":
+		value := x.Req
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestBeginBlock does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyRequestBeginBlock) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestBeginBlock.req":
+		x.Req = value.Message().Interface().(*abci.RequestBeginBlock)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyRequestBeginBlock) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestBeginBlock.req":
+		if x.Req == nil {
+			x.Req = new(abci.RequestBeginBlock)
+		}
+		return protoreflect.ValueOfMessage(x.Req.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_LegacyRequestBeginBlock) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestBeginBlock.req":
+		m := new(abci.RequestBeginBlock)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_LegacyRequestBeginBlock) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.abci.v1beta1.LegacyRequestBeginBlock", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_LegacyRequestBeginBlock) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyRequestBeginBlock) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_LegacyRequestBeginBlock) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_LegacyRequestBeginBlock) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*LegacyRequestBeginBlock)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Req != nil {
+			l = options.Size(x.Req)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*LegacyRequestBeginBlock)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Req != nil {
+			encoded, err := options.Marshal(x.Req)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*LegacyRequestBeginBlock)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LegacyRequestBeginBlock: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LegacyRequestBeginBlock: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Req", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Req == nil {
+					x.Req = &abci.RequestBeginBlock{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Req); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_LegacyResponseBeginBlock     protoreflect.MessageDescriptor
+	fd_LegacyResponseBeginBlock_res protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_abci_v1beta1_abci_proto_init()
+	md_LegacyResponseBeginBlock = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("LegacyResponseBeginBlock")
+	fd_LegacyResponseBeginBlock_res = md_LegacyResponseBeginBlock.Fields().ByName("res")
+}
+
+var _ protoreflect.Message = (*fastReflection_LegacyResponseBeginBlock)(nil)
+
+type fastReflection_LegacyResponseBeginBlock LegacyResponseBeginBlock
+
+func (x *LegacyResponseBeginBlock) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_LegacyResponseBeginBlock)(x)
+}
+
+func (x *LegacyResponseBeginBlock) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_LegacyResponseBeginBlock_messageType fastReflection_LegacyResponseBeginBlock_messageType
+var _ protoreflect.MessageType = fastReflection_LegacyResponseBeginBlock_messageType{}
+
+type fastReflection_LegacyResponseBeginBlock_messageType struct{}
+
+func (x fastReflection_LegacyResponseBeginBlock_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_LegacyResponseBeginBlock)(nil)
+}
+func (x fastReflection_LegacyResponseBeginBlock_messageType) New() protoreflect.Message {
+	return new(fastReflection_LegacyResponseBeginBlock)
+}
+func (x fastReflection_LegacyResponseBeginBlock_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_LegacyResponseBeginBlock
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_LegacyResponseBeginBlock) Descriptor() protoreflect.MessageDescriptor {
+	return md_LegacyResponseBeginBlock
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_LegacyResponseBeginBlock) Type() protoreflect.MessageType {
+	return _fastReflection_LegacyResponseBeginBlock_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_LegacyResponseBeginBlock) New() protoreflect.Message {
+	return new(fastReflection_LegacyResponseBeginBlock)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_LegacyResponseBeginBlock) Interface() protoreflect.ProtoMessage {
+	return (*LegacyResponseBeginBlock)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_LegacyResponseBeginBlock) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Res != nil {
+		value := protoreflect.ValueOfMessage(x.Res.ProtoReflect())
+		if !f(fd_LegacyResponseBeginBlock_res, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_LegacyResponseBeginBlock) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseBeginBlock.res":
+		return x.Res != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyResponseBeginBlock) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseBeginBlock.res":
+		x.Res = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_LegacyResponseBeginBlock) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseBeginBlock.res":
+		value := x.Res
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseBeginBlock does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyResponseBeginBlock) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseBeginBlock.res":
+		x.Res = value.Message().Interface().(*abci.ResponseBeginBlock)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyResponseBeginBlock) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseBeginBlock.res":
+		if x.Res == nil {
+			x.Res = new(abci.ResponseBeginBlock)
+		}
+		return protoreflect.ValueOfMessage(x.Res.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_LegacyResponseBeginBlock) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseBeginBlock.res":
+		m := new(abci.ResponseBeginBlock)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseBeginBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseBeginBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_LegacyResponseBeginBlock) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.abci.v1beta1.LegacyResponseBeginBlock", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_LegacyResponseBeginBlock) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyResponseBeginBlock) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_LegacyResponseBeginBlock) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_LegacyResponseBeginBlock) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*LegacyResponseBeginBlock)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Res != nil {
+			l = options.Size(x.Res)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*LegacyResponseBeginBlock)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Res != nil {
+			encoded, err := options.Marshal(x.Res)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*LegacyResponseBeginBlock)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LegacyResponseBeginBlock: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LegacyResponseBeginBlock: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Res", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Res == nil {
+					x.Res = &abci.ResponseBeginBlock{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Res); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_LegacyRequestEndBlock     protoreflect.MessageDescriptor
+	fd_LegacyRequestEndBlock_req protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_abci_v1beta1_abci_proto_init()
+	md_LegacyRequestEndBlock = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("LegacyRequestEndBlock")
+	fd_LegacyRequestEndBlock_req = md_LegacyRequestEndBlock.Fields().ByName("req")
+}
+
+var _ protoreflect.Message = (*fastReflection_LegacyRequestEndBlock)(nil)
+
+type fastReflection_LegacyRequestEndBlock LegacyRequestEndBlock
+
+func (x *LegacyRequestEndBlock) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_LegacyRequestEndBlock)(x)
+}
+
+func (x *LegacyRequestEndBlock) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_LegacyRequestEndBlock_messageType fastReflection_LegacyRequestEndBlock_messageType
+var _ protoreflect.MessageType = fastReflection_LegacyRequestEndBlock_messageType{}
+
+type fastReflection_LegacyRequestEndBlock_messageType struct{}
+
+func (x fastReflection_LegacyRequestEndBlock_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_LegacyRequestEndBlock)(nil)
+}
+func (x fastReflection_LegacyRequestEndBlock_messageType) New() protoreflect.Message {
+	return new(fastReflection_LegacyRequestEndBlock)
+}
+func (x fastReflection_LegacyRequestEndBlock_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_LegacyRequestEndBlock
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_LegacyRequestEndBlock) Descriptor() protoreflect.MessageDescriptor {
+	return md_LegacyRequestEndBlock
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_LegacyRequestEndBlock) Type() protoreflect.MessageType {
+	return _fastReflection_LegacyRequestEndBlock_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_LegacyRequestEndBlock) New() protoreflect.Message {
+	return new(fastReflection_LegacyRequestEndBlock)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_LegacyRequestEndBlock) Interface() protoreflect.ProtoMessage {
+	return (*LegacyRequestEndBlock)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_LegacyRequestEndBlock) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Req != nil {
+		value := protoreflect.ValueOfMessage(x.Req.ProtoReflect())
+		if !f(fd_LegacyRequestEndBlock_req, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_LegacyRequestEndBlock) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestEndBlock.req":
+		return x.Req != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyRequestEndBlock) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestEndBlock.req":
+		x.Req = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_LegacyRequestEndBlock) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestEndBlock.req":
+		value := x.Req
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestEndBlock does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyRequestEndBlock) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestEndBlock.req":
+		x.Req = value.Message().Interface().(*abci.RequestEndBlock)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyRequestEndBlock) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestEndBlock.req":
+		if x.Req == nil {
+			x.Req = new(abci.RequestEndBlock)
+		}
+		return protoreflect.ValueOfMessage(x.Req.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_LegacyRequestEndBlock) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyRequestEndBlock.req":
+		m := new(abci.RequestEndBlock)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyRequestEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyRequestEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_LegacyRequestEndBlock) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.abci.v1beta1.LegacyRequestEndBlock", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_LegacyRequestEndBlock) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyRequestEndBlock) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_LegacyRequestEndBlock) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_LegacyRequestEndBlock) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*LegacyRequestEndBlock)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Req != nil {
+			l = options.Size(x.Req)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*LegacyRequestEndBlock)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Req != nil {
+			encoded, err := options.Marshal(x.Req)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*LegacyRequestEndBlock)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LegacyRequestEndBlock: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LegacyRequestEndBlock: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Req", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Req == nil {
+					x.Req = &abci.RequestEndBlock{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Req); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_LegacyResponseEndBlock     protoreflect.MessageDescriptor
+	fd_LegacyResponseEndBlock_res protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_abci_v1beta1_abci_proto_init()
+	md_LegacyResponseEndBlock = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("LegacyResponseEndBlock")
+	fd_LegacyResponseEndBlock_res = md_LegacyResponseEndBlock.Fields().ByName("res")
+}
+
+var _ protoreflect.Message = (*fastReflection_LegacyResponseEndBlock)(nil)
+
+type fastReflection_LegacyResponseEndBlock LegacyResponseEndBlock
+
+func (x *LegacyResponseEndBlock) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_LegacyResponseEndBlock)(x)
+}
+
+func (x *LegacyResponseEndBlock) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_LegacyResponseEndBlock_messageType fastReflection_LegacyResponseEndBlock_messageType
+var _ protoreflect.MessageType = fastReflection_LegacyResponseEndBlock_messageType{}
+
+type fastReflection_LegacyResponseEndBlock_messageType struct{}
+
+func (x fastReflection_LegacyResponseEndBlock_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_LegacyResponseEndBlock)(nil)
+}
+func (x fastReflection_LegacyResponseEndBlock_messageType) New() protoreflect.Message {
+	return new(fastReflection_LegacyResponseEndBlock)
+}
+func (x fastReflection_LegacyResponseEndBlock_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_LegacyResponseEndBlock
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_LegacyResponseEndBlock) Descriptor() protoreflect.MessageDescriptor {
+	return md_LegacyResponseEndBlock
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_LegacyResponseEndBlock) Type() protoreflect.MessageType {
+	return _fastReflection_LegacyResponseEndBlock_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_LegacyResponseEndBlock) New() protoreflect.Message {
+	return new(fastReflection_LegacyResponseEndBlock)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_LegacyResponseEndBlock) Interface() protoreflect.ProtoMessage {
+	return (*LegacyResponseEndBlock)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_LegacyResponseEndBlock) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Res != nil {
+		value := protoreflect.ValueOfMessage(x.Res.ProtoReflect())
+		if !f(fd_LegacyResponseEndBlock_res, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_LegacyResponseEndBlock) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseEndBlock.res":
+		return x.Res != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyResponseEndBlock) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseEndBlock.res":
+		x.Res = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_LegacyResponseEndBlock) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseEndBlock.res":
+		value := x.Res
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseEndBlock does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyResponseEndBlock) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseEndBlock.res":
+		x.Res = value.Message().Interface().(*abci.ResponseEndBlock)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyResponseEndBlock) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseEndBlock.res":
+		if x.Res == nil {
+			x.Res = new(abci.ResponseEndBlock)
+		}
+		return protoreflect.ValueOfMessage(x.Res.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_LegacyResponseEndBlock) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LegacyResponseEndBlock.res":
+		m := new(abci.ResponseEndBlock)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LegacyResponseEndBlock"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LegacyResponseEndBlock does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_LegacyResponseEndBlock) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.abci.v1beta1.LegacyResponseEndBlock", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_LegacyResponseEndBlock) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LegacyResponseEndBlock) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_LegacyResponseEndBlock) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_LegacyResponseEndBlock) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*LegacyResponseEndBlock)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Res != nil {
+			l = options.Size(x.Res)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*LegacyResponseEndBlock)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Res != nil {
+			encoded, err := options.Marshal(x.Res)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*LegacyResponseEndBlock)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LegacyResponseEndBlock: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LegacyResponseEndBlock: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Res", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Res == nil {
+					x.Res = &abci.ResponseEndBlock{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Res); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -8003,6 +9743,154 @@ func (x *SearchBlocksResult) GetBlocks() []*types.Block {
 	return nil
 }
 
+// LegacyRequestBeginBlock defines a wrapper around the now deprecated
+// RequestBeginBlock type.
+type LegacyRequestBeginBlock struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Req *abci.RequestBeginBlock `protobuf:"bytes,1,opt,name=req,proto3" json:"req,omitempty"`
+}
+
+func (x *LegacyRequestBeginBlock) Reset() {
+	*x = LegacyRequestBeginBlock{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LegacyRequestBeginBlock) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LegacyRequestBeginBlock) ProtoMessage() {}
+
+// Deprecated: Use LegacyRequestBeginBlock.ProtoReflect.Descriptor instead.
+func (*LegacyRequestBeginBlock) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *LegacyRequestBeginBlock) GetReq() *abci.RequestBeginBlock {
+	if x != nil {
+		return x.Req
+	}
+	return nil
+}
+
+// LegacyResponseBeginBlock defines a wrapper around the now deprecated
+// ResponseBeginBlock type.
+type LegacyResponseBeginBlock struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Res *abci.ResponseBeginBlock `protobuf:"bytes,1,opt,name=res,proto3" json:"res,omitempty"`
+}
+
+func (x *LegacyResponseBeginBlock) Reset() {
+	*x = LegacyResponseBeginBlock{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LegacyResponseBeginBlock) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LegacyResponseBeginBlock) ProtoMessage() {}
+
+// Deprecated: Use LegacyResponseBeginBlock.ProtoReflect.Descriptor instead.
+func (*LegacyResponseBeginBlock) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *LegacyResponseBeginBlock) GetRes() *abci.ResponseBeginBlock {
+	if x != nil {
+		return x.Res
+	}
+	return nil
+}
+
+// LegacyRequestEndBlock defines a wrapper around the now deprecated
+// RequestEndBlock type.
+type LegacyRequestEndBlock struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Req *abci.RequestEndBlock `protobuf:"bytes,1,opt,name=req,proto3" json:"req,omitempty"`
+}
+
+func (x *LegacyRequestEndBlock) Reset() {
+	*x = LegacyRequestEndBlock{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LegacyRequestEndBlock) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LegacyRequestEndBlock) ProtoMessage() {}
+
+// Deprecated: Use LegacyRequestEndBlock.ProtoReflect.Descriptor instead.
+func (*LegacyRequestEndBlock) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *LegacyRequestEndBlock) GetReq() *abci.RequestEndBlock {
+	if x != nil {
+		return x.Req
+	}
+	return nil
+}
+
+// LegacyResponseEndBlock defines a wrapper around the now deprecated
+// ResponseEndBlock type.
+type LegacyResponseEndBlock struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Res *abci.ResponseEndBlock `protobuf:"bytes,1,opt,name=res,proto3" json:"res,omitempty"`
+}
+
+func (x *LegacyResponseEndBlock) Reset() {
+	*x = LegacyResponseEndBlock{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LegacyResponseEndBlock) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LegacyResponseEndBlock) ProtoMessage() {}
+
+// Deprecated: Use LegacyResponseEndBlock.ProtoReflect.Descriptor instead.
+func (*LegacyResponseEndBlock) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *LegacyResponseEndBlock) GetRes() *abci.ResponseEndBlock {
+	if x != nil {
+		return x.Res
+	}
+	return nil
+}
+
 var File_cosmos_base_abci_v1beta1_abci_proto protoreflect.FileDescriptor
 
 var file_cosmos_base_abci_v1beta1_abci_proto_rawDesc = []byte{
@@ -8131,7 +10019,27 @@ var file_cosmos_base_abci_v1beta1_abci_proto_rawDesc = []byte{
 	0x03, 0x52, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x2f, 0x0a, 0x06, 0x62, 0x6c, 0x6f, 0x63,
 	0x6b, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65,
 	0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x42, 0x6c, 0x6f, 0x63,
-	0x6b, 0x52, 0x06, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x73, 0x3a, 0x04, 0x80, 0xdc, 0x20, 0x01, 0x42,
+	0x6b, 0x52, 0x06, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x73, 0x3a, 0x04, 0x80, 0xdc, 0x20, 0x01, 0x22,
+	0x4f, 0x0a, 0x17, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x34, 0x0a, 0x03, 0x72, 0x65,
+	0x71, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72,
+	0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x03, 0x72, 0x65, 0x71,
+	0x22, 0x51, 0x0a, 0x18, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x35, 0x0a, 0x03,
+	0x72, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x74, 0x65, 0x6e, 0x64,
+	0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x03,
+	0x72, 0x65, 0x73, 0x22, 0x4b, 0x0a, 0x15, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x32, 0x0a, 0x03,
+	0x72, 0x65, 0x71, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74, 0x65, 0x6e, 0x64,
+	0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x03, 0x72, 0x65, 0x71,
+	0x22, 0x4d, 0x0a, 0x16, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x33, 0x0a, 0x03, 0x72, 0x65,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72,
+	0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x03, 0x72, 0x65, 0x73, 0x42,
 	0xe7, 0x01, 0x0a, 0x1c, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
 	0x61, 0x73, 0x65, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
 	0x42, 0x09, 0x41, 0x62, 0x63, 0x69, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x35, 0x63,
@@ -8162,42 +10070,54 @@ func file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP() []byte {
 	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescData
 }
 
-var file_cosmos_base_abci_v1beta1_abci_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_cosmos_base_abci_v1beta1_abci_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_cosmos_base_abci_v1beta1_abci_proto_goTypes = []interface{}{
-	(*TxResponse)(nil),         // 0: cosmos.base.abci.v1beta1.TxResponse
-	(*ABCIMessageLog)(nil),     // 1: cosmos.base.abci.v1beta1.ABCIMessageLog
-	(*StringEvent)(nil),        // 2: cosmos.base.abci.v1beta1.StringEvent
-	(*Attribute)(nil),          // 3: cosmos.base.abci.v1beta1.Attribute
-	(*GasInfo)(nil),            // 4: cosmos.base.abci.v1beta1.GasInfo
-	(*Result)(nil),             // 5: cosmos.base.abci.v1beta1.Result
-	(*SimulationResponse)(nil), // 6: cosmos.base.abci.v1beta1.SimulationResponse
-	(*MsgData)(nil),            // 7: cosmos.base.abci.v1beta1.MsgData
-	(*TxMsgData)(nil),          // 8: cosmos.base.abci.v1beta1.TxMsgData
-	(*SearchTxsResult)(nil),    // 9: cosmos.base.abci.v1beta1.SearchTxsResult
-	(*SearchBlocksResult)(nil), // 10: cosmos.base.abci.v1beta1.SearchBlocksResult
-	(*anypb.Any)(nil),          // 11: google.protobuf.Any
-	(*abci.Event)(nil),         // 12: tendermint.abci.Event
-	(*types.Block)(nil),        // 13: tendermint.types.Block
+	(*TxResponse)(nil),               // 0: cosmos.base.abci.v1beta1.TxResponse
+	(*ABCIMessageLog)(nil),           // 1: cosmos.base.abci.v1beta1.ABCIMessageLog
+	(*StringEvent)(nil),              // 2: cosmos.base.abci.v1beta1.StringEvent
+	(*Attribute)(nil),                // 3: cosmos.base.abci.v1beta1.Attribute
+	(*GasInfo)(nil),                  // 4: cosmos.base.abci.v1beta1.GasInfo
+	(*Result)(nil),                   // 5: cosmos.base.abci.v1beta1.Result
+	(*SimulationResponse)(nil),       // 6: cosmos.base.abci.v1beta1.SimulationResponse
+	(*MsgData)(nil),                  // 7: cosmos.base.abci.v1beta1.MsgData
+	(*TxMsgData)(nil),                // 8: cosmos.base.abci.v1beta1.TxMsgData
+	(*SearchTxsResult)(nil),          // 9: cosmos.base.abci.v1beta1.SearchTxsResult
+	(*SearchBlocksResult)(nil),       // 10: cosmos.base.abci.v1beta1.SearchBlocksResult
+	(*LegacyRequestBeginBlock)(nil),  // 11: cosmos.base.abci.v1beta1.LegacyRequestBeginBlock
+	(*LegacyResponseBeginBlock)(nil), // 12: cosmos.base.abci.v1beta1.LegacyResponseBeginBlock
+	(*LegacyRequestEndBlock)(nil),    // 13: cosmos.base.abci.v1beta1.LegacyRequestEndBlock
+	(*LegacyResponseEndBlock)(nil),   // 14: cosmos.base.abci.v1beta1.LegacyResponseEndBlock
+	(*anypb.Any)(nil),                // 15: google.protobuf.Any
+	(*abci.Event)(nil),               // 16: tendermint.abci.Event
+	(*types.Block)(nil),              // 17: tendermint.types.Block
+	(*abci.RequestBeginBlock)(nil),   // 18: tendermint.abci.RequestBeginBlock
+	(*abci.ResponseBeginBlock)(nil),  // 19: tendermint.abci.ResponseBeginBlock
+	(*abci.RequestEndBlock)(nil),     // 20: tendermint.abci.RequestEndBlock
+	(*abci.ResponseEndBlock)(nil),    // 21: tendermint.abci.ResponseEndBlock
 }
 var file_cosmos_base_abci_v1beta1_abci_proto_depIdxs = []int32{
 	1,  // 0: cosmos.base.abci.v1beta1.TxResponse.logs:type_name -> cosmos.base.abci.v1beta1.ABCIMessageLog
-	11, // 1: cosmos.base.abci.v1beta1.TxResponse.tx:type_name -> google.protobuf.Any
-	12, // 2: cosmos.base.abci.v1beta1.TxResponse.events:type_name -> tendermint.abci.Event
+	15, // 1: cosmos.base.abci.v1beta1.TxResponse.tx:type_name -> google.protobuf.Any
+	16, // 2: cosmos.base.abci.v1beta1.TxResponse.events:type_name -> tendermint.abci.Event
 	2,  // 3: cosmos.base.abci.v1beta1.ABCIMessageLog.events:type_name -> cosmos.base.abci.v1beta1.StringEvent
 	3,  // 4: cosmos.base.abci.v1beta1.StringEvent.attributes:type_name -> cosmos.base.abci.v1beta1.Attribute
-	12, // 5: cosmos.base.abci.v1beta1.Result.events:type_name -> tendermint.abci.Event
-	11, // 6: cosmos.base.abci.v1beta1.Result.msg_responses:type_name -> google.protobuf.Any
+	16, // 5: cosmos.base.abci.v1beta1.Result.events:type_name -> tendermint.abci.Event
+	15, // 6: cosmos.base.abci.v1beta1.Result.msg_responses:type_name -> google.protobuf.Any
 	4,  // 7: cosmos.base.abci.v1beta1.SimulationResponse.gas_info:type_name -> cosmos.base.abci.v1beta1.GasInfo
 	5,  // 8: cosmos.base.abci.v1beta1.SimulationResponse.result:type_name -> cosmos.base.abci.v1beta1.Result
 	7,  // 9: cosmos.base.abci.v1beta1.TxMsgData.data:type_name -> cosmos.base.abci.v1beta1.MsgData
-	11, // 10: cosmos.base.abci.v1beta1.TxMsgData.msg_responses:type_name -> google.protobuf.Any
+	15, // 10: cosmos.base.abci.v1beta1.TxMsgData.msg_responses:type_name -> google.protobuf.Any
 	0,  // 11: cosmos.base.abci.v1beta1.SearchTxsResult.txs:type_name -> cosmos.base.abci.v1beta1.TxResponse
-	13, // 12: cosmos.base.abci.v1beta1.SearchBlocksResult.blocks:type_name -> tendermint.types.Block
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	17, // 12: cosmos.base.abci.v1beta1.SearchBlocksResult.blocks:type_name -> tendermint.types.Block
+	18, // 13: cosmos.base.abci.v1beta1.LegacyRequestBeginBlock.req:type_name -> tendermint.abci.RequestBeginBlock
+	19, // 14: cosmos.base.abci.v1beta1.LegacyResponseBeginBlock.res:type_name -> tendermint.abci.ResponseBeginBlock
+	20, // 15: cosmos.base.abci.v1beta1.LegacyRequestEndBlock.req:type_name -> tendermint.abci.RequestEndBlock
+	21, // 16: cosmos.base.abci.v1beta1.LegacyResponseEndBlock.res:type_name -> tendermint.abci.ResponseEndBlock
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_base_abci_v1beta1_abci_proto_init() }
@@ -8338,6 +10258,54 @@ func file_cosmos_base_abci_v1beta1_abci_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LegacyRequestBeginBlock); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LegacyResponseBeginBlock); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LegacyRequestEndBlock); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LegacyResponseEndBlock); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -8345,7 +10313,7 @@ func file_cosmos_base_abci_v1beta1_abci_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_base_abci_v1beta1_abci_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

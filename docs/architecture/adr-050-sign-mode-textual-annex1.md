@@ -114,8 +114,8 @@ End of Allowed messages
 
 * Applies to all Protobuf messages that do not have a custom encoding.
 * Field names follow [sentence case](https://en.wiktionary.org/wiki/sentence_case)
-    * replace `_` with a spaces
-    * capitalize first letter of the setence
+    * replace `_` with a space
+    * capitalize first letter of the sentence
 * Field names are ordered by their Protobuf field number
 * Screen title is the field name, and screen content is the value.
 * Nesting:
@@ -190,7 +190,7 @@ See example above with `message Vote{}`.
 
 There is however one exception: when the underlying message is a Protobuf message that does not have a custom encoding, then the message header screen is omitted, and one level of indentation is removed.
 
-Messages that have a custom encoding (including `google.protobuf.Timestamp`, `google.protobuf.Duration`, `google.protobuf.Any`, `cosmos.base.v1beta1.Coin` and messages who have an app-defined custom encoding) do not have this rule applied.
+Messages that have a custom encoding, including `google.protobuf.Timestamp`, `google.protobuf.Duration`, `google.protobuf.Any`, `cosmos.base.v1beta1.Coin`, and messages that have an app-defined custom encoding, will preserve their header and indentation level.
 
 #### Examples
 

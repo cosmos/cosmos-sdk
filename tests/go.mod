@@ -23,7 +23,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.7
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0

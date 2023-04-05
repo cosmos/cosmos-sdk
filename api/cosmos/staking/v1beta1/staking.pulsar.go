@@ -9540,8 +9540,8 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
-	if x.MaxConsPubkeyRotations != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.MaxConsPubkeyRotations)
+	if x.MaxConsPubkeyRotations != uint32(0) {
+		value := protoreflect.ValueOfUint32(x.MaxConsPubkeyRotations)
 		if !f(fd_Params_max_cons_pubkey_rotations, value) {
 			return
 		}
@@ -9576,7 +9576,7 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
 		return x.KeyRotationFee != nil
 	case "cosmos.staking.v1beta1.Params.max_cons_pubkey_rotations":
-		return x.MaxConsPubkeyRotations != uint64(0)
+		return x.MaxConsPubkeyRotations != uint32(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -9608,7 +9608,7 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
 		x.KeyRotationFee = nil
 	case "cosmos.staking.v1beta1.Params.max_cons_pubkey_rotations":
-		x.MaxConsPubkeyRotations = uint64(0)
+		x.MaxConsPubkeyRotations = uint32(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -9648,7 +9648,7 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.staking.v1beta1.Params.max_cons_pubkey_rotations":
 		value := x.MaxConsPubkeyRotations
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfUint32(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -9684,7 +9684,7 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
 		x.KeyRotationFee = value.Message().Interface().(*v1beta1.Coin)
 	case "cosmos.staking.v1beta1.Params.max_cons_pubkey_rotations":
-		x.MaxConsPubkeyRotations = value.Uint()
+		x.MaxConsPubkeyRotations = uint32(value.Uint())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -9757,7 +9757,7 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.staking.v1beta1.Params.max_cons_pubkey_rotations":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfUint32(uint32(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -10202,7 +10202,7 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.MaxConsPubkeyRotations |= uint64(b&0x7F) << shift
+					x.MaxConsPubkeyRotations |= uint32(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -15063,7 +15063,7 @@ type Params struct {
 	// (either consensus pubkey or operator key)
 	KeyRotationFee *v1beta1.Coin `protobuf:"bytes,7,opt,name=key_rotation_fee,json=keyRotationFee,proto3" json:"key_rotation_fee,omitempty"`
 	// max_cons_pubkey_rotations is maximum number of consensus pubkey rotations
-	MaxConsPubkeyRotations uint64 `protobuf:"varint,8,opt,name=max_cons_pubkey_rotations,json=maxConsPubkeyRotations,proto3" json:"max_cons_pubkey_rotations,omitempty"`
+	MaxConsPubkeyRotations uint32 `protobuf:"varint,8,opt,name=max_cons_pubkey_rotations,json=maxConsPubkeyRotations,proto3" json:"max_cons_pubkey_rotations,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -15135,7 +15135,7 @@ func (x *Params) GetKeyRotationFee() *v1beta1.Coin {
 	return nil
 }
 
-func (x *Params) GetMaxConsPubkeyRotations() uint64 {
+func (x *Params) GetMaxConsPubkeyRotations() uint32 {
 	if x != nil {
 		return x.MaxConsPubkeyRotations
 	}
@@ -15786,7 +15786,7 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0xb0, 0x2a, 0x01, 0x52, 0x0e, 0x6b, 0x65, 0x79, 0x52, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
 	0x46, 0x65, 0x65, 0x12, 0x39, 0x0a, 0x19, 0x6d, 0x61, 0x78, 0x5f, 0x63, 0x6f, 0x6e, 0x73, 0x5f,
 	0x70, 0x75, 0x62, 0x6b, 0x65, 0x79, 0x5f, 0x72, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
-	0x18, 0x08, 0x20, 0x01, 0x28, 0x04, 0x52, 0x16, 0x6d, 0x61, 0x78, 0x43, 0x6f, 0x6e, 0x73, 0x50,
+	0x18, 0x08, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x16, 0x6d, 0x61, 0x78, 0x43, 0x6f, 0x6e, 0x73, 0x50,
 	0x75, 0x62, 0x6b, 0x65, 0x79, 0x52, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x3a, 0x24,
 	0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d,
 	0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x50, 0x61,

@@ -1298,16 +1298,14 @@ func (s *coinTestSuite) TestCoinValidate() {
 					t.Errorf("Unexpected error: %v", err)
 				}
 				return
-			} else {
-				if err == nil {
-					t.Error("Expected an error")
-				} else if !strings.Contains(err.Error(), tc.wantErr) {
-					t.Errorf("Error mismatch\n\tGot:  %q\nWant: %q", err, tc.wantErr)
-				}
+			}
+			if err == nil {
+				t.Error("Expected an error")
+			} else if !strings.Contains(err.Error(), tc.wantErr) {
+				t.Errorf("Error mismatch\n\tGot:  %q\nWant: %q", err, tc.wantErr)
 			}
 		})
 	}
-
 }
 
 func (s *coinTestSuite) TestCoinAminoEncoding() {

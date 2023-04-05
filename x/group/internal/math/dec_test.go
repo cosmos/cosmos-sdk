@@ -288,10 +288,11 @@ func floatDecimalPlaces(t *rapid.T, f float64) uint32 { //nolint:unused
 		require.NoError(t, err)
 	}
 
+	res := basePlaces - exp
+
 	// Subtract exponent from base and check if negative
-	if res := basePlaces - exp; res <= 0 {
+	if res <= 0 {
 		return 0
-	} else { //nolint:revive
-		return uint32(res)
 	}
+	return uint32(res)
 }

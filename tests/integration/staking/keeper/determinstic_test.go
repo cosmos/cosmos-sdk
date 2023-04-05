@@ -733,7 +733,7 @@ func TestGRPCParams(t *testing.T) {
 			MaxEntries:             rapid.Uint32Min(1).Draw(rt, "max-entries"),
 			HistoricalEntries:      rapid.Uint32Min(1).Draw(rt, "historical-entries"),
 			MinCommissionRate:      sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
-			MaxConsPubkeyRotations: rapid.Uint64Range(1, 10).Draw(rt, "max-pubkey-rotations"),
+			MaxConsPubkeyRotations: rapid.Uint32Range(1, 10).Draw(rt, "max-pubkey-rotations"),
 			KeyRotationFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(rapid.Uint64Range(1000, 1000000).Draw(rt, "cons-pubkey-rotation-fee"))),
 		}
 

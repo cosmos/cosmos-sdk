@@ -31,6 +31,7 @@ type Options struct {
 	SigningContext *signing.GetSignersContext
 }
 
+// NewContext creates a new Context for decoding transactions.
 func NewContext(options Options) (*Context, error) {
 	protoFiles := options.ProtoFiles
 	if protoFiles == nil {

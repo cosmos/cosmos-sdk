@@ -225,7 +225,7 @@ As we can see here since our `collections.Map` maps `sdk.AccAddress` to `authtyp
 we use the `sdk.AccAddressKey` which is the `KeyCodec` implementation for `AccAddress` and we use `codec.CollValue` to
 encode our proto type `BaseAccount`.
 
-Generally speaking you will always find the respective key and value codecs for types in the go.mod path you're using
-to import that type. If you want to encode proto values refer to the codec `codec.CollValue` function which allows you
-to encode any type implement the proto.Message interface.
+Generally speaking you will always find the respective key and value codecs for types in the `go.mod` path you're using
+to import that type. If you want to encode proto values refer to the codec `codec.CollValue` function, which allows you
+to encode any type implement the `proto.Message` interface.
 

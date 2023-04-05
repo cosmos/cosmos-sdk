@@ -294,7 +294,7 @@ A `ConsPubKeyRotationHistory` object is created every time a consensus pubkey ro
 To prevent the spam: 
 
 * There will only limited number of rotations can be done within unbonding period of time. 
-* And significant amount of fee will be deducted for rotating the keys.
+* A non-negligible fee will be deducted for rotating a consensus key.
 
 Formula to calculate the fees to rotate the key is: 
 

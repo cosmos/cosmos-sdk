@@ -140,7 +140,7 @@ The what we do, as always, we use the `collections.Map.Set` method to map the co
 
 ### GetBalance
 
-It shows the same thing how we can get a value in composite key collection, we simply use `collections.Join` to compose the key.
+To get a value in composite key collection, we simply use `collections.Join` to compose the key.
 
 ### GetAllAddressBalances
 

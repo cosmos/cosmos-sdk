@@ -2,6 +2,7 @@ package signing
 
 import (
 	"encoding/hex"
+	"strings"
 	"testing"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
@@ -16,7 +17,7 @@ import (
 func TestGetSigners(t *testing.T) {
 	ctx, err := NewGetSignersContext(GetSignersOptions{
 		AddressCodec:          dummyAddressCodec{},
-		ValidatorAddressCodec: dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
 	})
 	require.NoError(t, err)
 	tests := []struct {
@@ -122,6 +123,13 @@ func TestGetSigners(t *testing.T) {
 			msg:     &testpb.NoSignerOption{},
 			wantErr: true,
 		},
+		{
+			name: "validator signer",
+			msg: &testpb.ValidatorSigner{
+				Signer: "val" + hex.EncodeToString([]byte("foo")),
+			},
+			want: [][]byte{[]byte("foo")},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -147,3 +155,15 @@ func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
 }
 
 var _ address.Codec = dummyAddressCodec{}
+
+type dummyValidatorAddressCodec struct{}
+
+func (d dummyValidatorAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return hex.DecodeString(strings.TrimPrefix(text, "val"))
+}
+
+func (d dummyValidatorAddressCodec) BytesToString(bz []byte) (string, error) {
+	return "val" + hex.EncodeToString(bz), nil
+}
+
+var _ address.Codec = dummyValidatorAddressCodec{}

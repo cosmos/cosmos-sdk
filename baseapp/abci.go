@@ -331,7 +331,9 @@ func (app *BaseApp) legacyBeginBlock(req *abci.RequestFinalizeBlock) sdk.LegacyR
 		err  error
 	)
 
-	// TODO: Fill out.
+	// TODO: Fill out fields...
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 	legacyReq := sdk.LegacyRequestBeginBlock{}
 
 	if app.beginBlocker != nil {
@@ -386,7 +388,7 @@ func (app *BaseApp) legacyEndBlock(req *abci.RequestFinalizeBlock) sdk.LegacyRes
 		ctx := app.finalizeBlockState.ctx
 		blockHeight := ctx.BlockHeight()
 
-		// TODO: Figure out what to do with ListenBeginBlock and the types necessary
+		// TODO: Figure out what to do with ListenEndBlock and the types necessary
 		// as we cannot have the store sub-module depend on the root SDK module.
 		//
 		// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
@@ -396,6 +398,40 @@ func (app *BaseApp) legacyEndBlock(req *abci.RequestFinalizeBlock) sdk.LegacyRes
 	}
 
 	return resp
+}
+
+// CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
+// CheckTx mode, messages are not executed. This means messages are only validated
+// and only the AnteHandler is executed. State is persisted to the BaseApp's
+// internal CheckTx state if the AnteHandler passes. Otherwise, the ResponseCheckTx
+// will contain relevant error information. Regardless of tx execution outcome,
+// the ResponseCheckTx will contain relevant gas execution context.
+func (app *BaseApp) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
+	var mode runTxMode
+
+	switch {
+	case req.Type == abci.CheckTxType_New:
+		mode = runTxModeCheck
+
+	case req.Type == abci.CheckTxType_Recheck:
+		mode = runTxModeReCheck
+
+	default:
+		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
+	}
+
+	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
+	if err != nil {
+		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+	}
+
+	return &abci.ResponseCheckTx{
+		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	}, nil
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
@@ -527,6 +563,129 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 	}
 
 	return resp, nil
+}
+
+func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
+
+	var res sdk.LegacyResponseDeliverTx
+	defer func() {
+		// call the streaming service hook with the EndBlock messages
+		for _, abciListener := range app.streamingManager.ABCIListeners {
+			ctx := app.finalizeBlockState.ctx
+			blockHeight := ctx.BlockHeight()
+
+			// TODO: Figure out what to do with ListenDeliverTx and the types necessary
+			// as we cannot have the store sub-module depend on the root SDK module.
+			//
+			// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
+			if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
+			}
+		}
+	}()
+
+	defer func() {
+		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
+	}()
+
+	gInfo, result, anteEvents, err := app.runTx(runTxModeFinalize, tx)
+	if err != nil {
+		resultStr = "failed"
+		return sdkerrors.ResponseExecTxResultWithEvents(
+			err,
+			gInfo.GasWanted,
+			gInfo.GasUsed,
+			sdk.MarkEventsToIndex(anteEvents, app.indexEvents),
+			app.trace,
+		)
+	}
+
+	return &abci.ExecTxResult{
+		GasWanted: int64(gInfo.GasWanted),
+		GasUsed:   int64(gInfo.GasUsed),
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	}
+}
+
+func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	if err := app.validateFinalizeBlockHeight(req); err != nil {
+		return nil, err
+	}
+
+	if app.cms.TracingEnabled() {
+		app.cms.SetTracingContext(storetypes.TraceContext(
+			map[string]any{"blockHeight": req.Height},
+		))
+	}
+
+	app.voteInfos = req.DecidedLastCommit.Votes
+
+	header := cmtproto.Header{
+		ChainID:            app.chainID,
+		Height:             req.Height,
+		Time:               req.Time,
+		ProposerAddress:    req.ProposerAddress,
+		NextValidatorsHash: req.NextValidatorsHash,
+	}
+
+	// Initialize the FinalizeBlock state. If this is the first block, it should
+	// already be initialized in InitChain. Otherwise app.finalizeBlockState will be
+	// nil, since it is reset on Commit.
+	if app.finalizeBlockState == nil {
+		app.setState(runTxModeFinalize, header)
+	} else {
+		// In the first block, app.finalizeBlockState.ctx will already be initialized
+		// by InitChain. Context is now updated with Header information.
+		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
+			WithBlockHeader(header).
+			WithBlockHeight(req.Height)
+	}
+
+	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
+
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
+		WithBlockGasMeter(gasMeter).
+		WithHeaderHash(req.Hash).
+		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
+		WithVoteInfos(req.DecidedLastCommit.Votes).
+		WithMisbehavior(req.Misbehavior)
+
+	if app.checkState != nil {
+		app.checkState.ctx = app.checkState.ctx.
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash)
+	}
+
+	beginBlockResp := app.legacyBeginBlock(req)
+
+	txResults := make([]*abci.ExecTxResult, len(req.Txs))
+	for i, rawTx := range req.Txs {
+		txResults[i] = app.legacyDeliverTx(rawTx)
+	}
+
+	if app.finalizeBlockState.ms.TracingEnabled() {
+		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
+	}
+
+	endBlockResp := app.legacyEndBlock(req)
+
+	// TODO: Populate fields.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
+	return &abci.ResponseFinalizeBlock{
+		Events:                nil,
+		TxResults:             txResults,
+		ValidatorUpdates:      nil,
+		ConsensusParamUpdates: nil,
+		AppHash:               app.flushCommit().Hash,
+	}, nil
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in
@@ -961,157 +1120,4 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	}
 
 	return retentionHeight
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~ All logic above has been completed for ABCI++ modulo any TODOs ~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
-// CheckTx mode, messages are not executed. This means messages are only validated
-// and only the AnteHandler is executed. State is persisted to the BaseApp's
-// internal CheckTx state if the AnteHandler passes. Otherwise, the ResponseCheckTx
-// will contain relevant error information. Regardless of tx execution outcome,
-// the ResponseCheckTx will contain relevant gas execution context.
-func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
-	var mode runTxMode
-
-	switch {
-	case req.Type == abci.CheckTxType_New:
-		mode = runTxModeCheck
-
-	case req.Type == abci.CheckTxType_Recheck:
-		mode = runTxModeReCheck
-
-	default:
-		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
-	}
-
-	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
-	if err != nil {
-		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
-	}
-
-	return abci.ResponseCheckTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}
-}
-
-// DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
-// State only gets persisted if all messages are valid and get executed successfully.
-// Otherwise, the ResponseDeliverTx will contain relevant error information.
-// Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
-// gas execution context.
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	gInfo := sdk.GasInfo{}
-	resultStr := "successful"
-
-	var res abci.ResponseDeliverTx
-	defer func() {
-		// call the streaming service hook with the EndBlock messages
-		for _, abciListener := range app.streamingManager.ABCIListeners {
-			ctx := app.deliverState.ctx
-			blockHeight := ctx.BlockHeight()
-			if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
-				app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
-			}
-		}
-	}()
-
-	defer func() {
-		telemetry.IncrCounter(1, "tx", "count")
-		telemetry.IncrCounter(1, "tx", resultStr)
-		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
-		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
-	}()
-
-	gInfo, result, anteEvents, _, err := app.runTx(runTxModeDeliver, req.Tx)
-	if err != nil {
-		resultStr = "failed"
-		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
-	}
-
-	return abci.ResponseDeliverTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}
-}
-
-func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	if err := app.validateFinalizeBlockHeight(req); err != nil {
-		return nil, err
-	}
-
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]any{"blockHeight": req.Height},
-		))
-	}
-
-	app.voteInfos = req.DecidedLastCommit.Votes
-
-	header := cmtproto.Header{
-		ChainID:            app.chainID,
-		Height:             req.Height,
-		Time:               req.Time,
-		ProposerAddress:    req.ProposerAddress,
-		NextValidatorsHash: req.NextValidatorsHash,
-	}
-
-	// Initialize the FinalizeBlock state. If this is the first block, it should
-	// already be initialized in InitChain. Otherwise app.finalizeBlockState will be
-	// nil, since it is reset on Commit.
-	if app.finalizeBlockState == nil {
-		app.setState(runTxModeFinalize, header)
-	} else {
-		// In the first block, app.finalizeBlockState.ctx will already be initialized
-		// by InitChain. Context is now updated with Header information.
-		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
-			WithBlockHeader(header).
-			WithBlockHeight(req.Height)
-	}
-
-	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
-
-	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
-		WithBlockGasMeter(gasMeter).
-		WithHeaderHash(req.Hash).
-		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
-		WithVoteInfos(req.DecidedLastCommit.Votes).
-		WithMisbehavior(req.Misbehavior)
-
-	if app.checkState != nil {
-		app.checkState.ctx = app.checkState.ctx.
-			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
-	}
-
-	beginBlockResp := app.legacyBeginBlock(req)
-
-	// TODO: deliver transactions...
-
-	if app.finalizeBlockState.ms.TracingEnabled() {
-		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
-	}
-
-	endBlockResp := app.legacyEndBlock(req)
-
-	return &abci.ResponseFinalizeBlock{
-		Events:                nil,
-		TxResults:             nil,
-		ValidatorUpdates:      nil,
-		ConsensusParamUpdates: nil,
-		AppHash:               app.flushCommit().Hash,
-	}, nil
 }

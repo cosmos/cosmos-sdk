@@ -183,23 +183,31 @@ message SearchBlocksResult {
 // LegacyRequestBeginBlock defines a wrapper around the now deprecated
 // RequestBeginBlock type.
 message LegacyRequestBeginBlock {
-  tendermint.abci.RequestBeginBlock request = 1;
+  // TODO: Add legacy fields.
+  //
+  // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 }
 
 // LegacyResponseBeginBlock defines a wrapper around the now deprecated
 // ResponseBeginBlock type.
 message LegacyResponseBeginBlock {
-  tendermint.abci.ResponseBeginBlock response = 1;
+  // TODO: Add legacy fields.
+  //
+  // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 }
 
 // LegacyRequestEndBlock defines a wrapper around the now deprecated
 // RequestEndBlock type.
 message LegacyRequestEndBlock {
-  tendermint.abci.RequestEndBlock request = 1;
+  // TODO: Add legacy fields.
+  //
+  // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 }
 
 // LegacyResponseEndBlock defines a wrapper around the now deprecated
 // ResponseEndBlock type.
 message LegacyResponseEndBlock {
-  tendermint.abci.ResponseEndBlock response = 1;
+  // TODO: Add legacy fields.
+  //
+  // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 }

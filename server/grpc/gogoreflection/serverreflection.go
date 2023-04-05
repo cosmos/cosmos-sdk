@@ -46,7 +46,7 @@ import (
 	"sort"
 	"sync"
 
-	//nolint: staticcheck
+	//nolint: staticcheck // keep this import for backward compatibility
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/grpc"
@@ -226,8 +226,8 @@ func decompress(b []byte) ([]byte, error) {
 }
 
 func typeForName(name string) (reflect.Type, error) {
-	pt := getMessageType(name)
-	if pt == nil {
+	pt, err := getMessageType(name)
+	if err != nil {
 		return nil, fmt.Errorf("unknown type: %q", name)
 	}
 	st := pt.Elem()

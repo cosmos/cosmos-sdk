@@ -16,7 +16,11 @@ import (
 func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	stakingKeeper, ctx := s.stakingKeeper, s.ctx
 
-	_, addrVals := createValAddrs(2)
+	addrDels, addrVals := createValAddrs(2)
+	for _, addr := range addrDels {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
 
 	// create a validator with a self-delegation
 	val := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -28,6 +32,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	_ = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
+
 	stakingKeeper.SetDelegation(ctx, selfDelegation)
 
 	validators := stakingKeeper.GetAllValidators(ctx)
@@ -86,9 +91,9 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	existingPubkey, ok := validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().True(ok)
 
-	bonedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
-	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bonedPool).AnyTimes()
-	bankKeeper.EXPECT().GetBalance(gomock.Any(), bonedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))).AnyTimes()
+	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
+	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
+	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))).AnyTimes()
 
 	testCases := []struct {
 		name      string
@@ -226,7 +231,11 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 func (s *KeeperTestSuite) setValidators(n int) {
 	stakingKeeper, ctx := s.stakingKeeper, s.ctx
 
-	_, addrVals := createValAddrs(n)
+	addrDels, addrVals := createValAddrs(n)
+	for _, addr := range addrDels {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
 
 	for i := 0; i < n; i++ {
 		val := testutil.NewValidator(s.T(), addrVals[i], PKs[i])

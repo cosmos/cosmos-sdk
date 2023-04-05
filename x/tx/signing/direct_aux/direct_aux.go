@@ -23,9 +23,6 @@ type SignModeHandler struct {
 
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
-	// FileResolver is the protodesc.Resolver to use for resolving proto files when unpacking any messages.
-	FileResolver signing.ProtoFileResolver
-
 	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving proto types when unpacking any messages.
 	TypeResolver protoregistry.MessageTypeResolver
 
@@ -37,26 +34,17 @@ type SignModeHandlerOptions struct {
 func NewSignModeHandler(options SignModeHandlerOptions) (SignModeHandler, error) {
 	h := SignModeHandler{}
 
-	if options.FileResolver == nil {
-		h.fileResolver = protoregistry.GlobalFiles
-	} else {
-		h.fileResolver = options.FileResolver
+	if options.SignersContext == nil {
+		return h, fmt.Errorf("signers context is required")
 	}
+	h.signersContext = options.SignersContext
+
+	h.fileResolver = h.signersContext.ProtoFileResolver()
 
 	if options.TypeResolver == nil {
 		h.typeResolver = protoregistry.GlobalTypes
 	} else {
 		h.typeResolver = options.TypeResolver
-	}
-
-	if options.SignersContext == nil {
-		var err error
-		h.signersContext, err = signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: h.fileResolver})
-		if err != nil {
-			return h, err
-		}
-	} else {
-		h.signersContext = options.SignersContext
 	}
 
 	return h, nil

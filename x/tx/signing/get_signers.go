@@ -289,3 +289,11 @@ func (c *GetSignersContext) GetSigners(msg proto.Message) ([][]byte, error) {
 func (c *GetSignersContext) AddressCodec() address.Codec {
 	return c.addressCodec
 }
+
+func (c *GetSignersContext) ValidatorAddressCodec() address.Codec {
+	return c.validatorAddressCodec
+}
+
+func (c *GetSignersContext) ProtoFileResolver() ProtoFileResolver {
+	return c.protoFiles
+}

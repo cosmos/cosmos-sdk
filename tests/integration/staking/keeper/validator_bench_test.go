@@ -36,10 +36,6 @@ func BenchmarkGetValidator(b *testing.B) {
 }
 
 func BenchmarkGetValidatorDelegations(b *testing.B) {
-	// 900 is the max number we are allowed to use in order to avoid simtestutil.CreateTestPubKeys
-	// panic: encoding/hex: odd length hex string
-	// powersNumber := 900
-
 	powersNumber := 10
 
 	var totalPower int64
@@ -50,8 +46,6 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 	}
 
 	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
-
-	// app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
 		app.StakingKeeper.SetValidator(ctx, validator)
@@ -81,9 +75,6 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 }
 
 func BenchmarkGetValidatorDelegationsOld(b *testing.B) {
-	// 900 is the max number we are allowed to use in order to avoid simtestutil.CreateTestPubKeys
-	// panic: encoding/hex: odd length hex string
-	// powersNumber := 900
 
 	powersNumber := 10
 
@@ -95,8 +86,6 @@ func BenchmarkGetValidatorDelegationsOld(b *testing.B) {
 	}
 
 	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
-
-	// app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
 		app.StakingKeeper.SetValidator(ctx, validator)

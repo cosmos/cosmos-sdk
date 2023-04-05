@@ -167,9 +167,9 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
 }
 
-func (app *BaseApp) SetPrepareCheckState(prepareCheckStater sdk.PrepareCheckStater) {
+func (app *BaseApp) SetPrepareCheckStater(prepareCheckStater sdk.PrepareCheckStater) {
 	if app.sealed {
-		panic("SetPrepareCheckState() on sealed BaseApp")
+		panic("SetPrepareCheckStater() on sealed BaseApp")
 	}
 
 	app.prepareCheckStater = prepareCheckStater

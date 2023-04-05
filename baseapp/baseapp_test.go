@@ -389,7 +389,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		suite.baseApp.SetEndBlocker(nil)
 	})
 	require.Panics(t, func() {
-		suite.baseApp.SetPrepareCheckState(nil)
+		suite.baseApp.SetPrepareCheckStater(nil)
 	})
 	require.Panics(t, func() {
 		suite.baseApp.SetPrecommiter(nil)

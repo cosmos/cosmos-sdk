@@ -104,10 +104,12 @@ func (a *App) Load(loadLatest bool) error {
 
 	if len(a.config.Precommiters) != 0 {
 		a.ModuleManager.SetOrderPrecommiters(a.config.Precommiters...)
+		a.SetPrecommiter(a.Precommiter)
 	}
 
 	if len(a.config.PrepareCheckStaters) != 0 {
 		a.ModuleManager.SetOrderPrepareCheckStaters(a.config.PrepareCheckStaters...)
+		a.SetPrepareCheckStater(a.PrepareCheckStater)
 	}
 
 	if len(a.config.OrderMigrations) != 0 {
@@ -131,6 +133,16 @@ func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.Re
 // EndBlocker application updates every end block
 func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
 	return a.ModuleManager.EndBlock(ctx, req)
+}
+
+// Precommiter application updates every commit
+func (a *App) Precommiter(ctx sdk.Context) {
+	a.ModuleManager.Precommit(ctx)
+}
+
+// PrepareCheckStater application updates every commit
+func (a *App) PrepareCheckStater(ctx sdk.Context) {
+	a.ModuleManager.PrepareCheckState(ctx)
 }
 
 // InitChainer initializes the chain.

@@ -616,7 +616,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 	})
 
 	wasPrepareCheckStateCalled := false
-	app.SetPrepareCheckState(func(ctx sdk.Context) {
+	app.SetPrepareCheckStater(func(ctx sdk.Context) {
 		wasPrepareCheckStateCalled = true
 	})
 	app.Seal()
@@ -1386,7 +1386,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	wasPrepareCheckStateCalled := false
-	app.SetPrepareCheckState(func(ctx sdk.Context) {
+	app.SetPrepareCheckStater(func(ctx sdk.Context) {
 		require.Equal(t, true, ctx.IsCheckTx())
 		wasPrepareCheckStateCalled = true
 	})

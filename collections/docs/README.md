@@ -70,7 +70,7 @@ Let's analyse the shared arguments, what they do, and why we need them.
 The first argument passed is the ``SchemaBuilder``
 
 Schema builder is a structure that keeps track of all the state of a module, it is not required by the collections
-themselve to deal with state, but it offers a dynamic and reflective way for clients to explore a module's state.
+ to deal with state but it offers a dynamic and reflective way for clients to explore a module's state.
 
 We instantiate a ``SchemaBuilder`` by passing it a function that given the modules store key returns the module's specific store.
 

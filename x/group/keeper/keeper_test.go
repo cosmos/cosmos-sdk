@@ -18,6 +18,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -62,12 +63,12 @@ func (s *TestSuite) SetupTest() {
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
-	for i, addr := range s.addrs {
+	for i := range s.addrs {
 		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[i])).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-
+		s.accountKeeper.EXPECT().BytesToString(s.addrs[i]).Return(s.addrs[i].String(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().StringToBytes(s.addrs[i].String()).Return(s.addrs[i], nil).AnyTimes()
 	}
+
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 
 	bApp := baseapp.NewBaseApp(
@@ -114,12 +115,10 @@ func (s *TestSuite) SetupTest() {
 	groupSeq := s.groupKeeper.GetGroupSequence(s.sdkCtx)
 	s.Require().Equal(groupSeq, uint64(1))
 
-	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
+	_, err = s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	s.policy = policy
-	addr, err := s.accountKeeper.StringToBytes(policyRes.Address)
-	s.Require().NoError(err)
-	s.groupPolicyAddr = addr
+	s.groupPolicyAddr = s.addrs[0]
 
 	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
 	s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
@@ -1954,6 +1953,10 @@ func (s *TestSuite) TestVote() {
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	accountAddr := policyRes.Address
+	// module account will be created and returned
+	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(accountAddr)
+	s.Require().NoError(err)
+	s.accountKeeper.EXPECT().StringToBytes(accountAddr).Return(addrbz, nil).AnyTimes()
 	groupPolicy, err := s.accountKeeper.StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)

@@ -505,7 +505,7 @@ When a redelegations complete the following occurs:
 
 #### Consensus pubkey rotation
 
-When a `ConsPubkeyRotation` occurs the validator and the `ValidatorConsensusKeyRotationRecordQueue` updated
+When a `ConsPubkeyRotation` occurs the validator and the `ValidatorConsensusKeyRotationRecordQueue` are updated:
 
 * the old consensus pubkey address will be removed from state and new consensus pubkey address will be added in place.
 * transfers the voting power to the new consensus pubkey address.

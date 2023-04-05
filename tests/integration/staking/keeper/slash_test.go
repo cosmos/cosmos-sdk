@@ -7,9 +7,9 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -382,7 +382,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	assert.Assert(t, found)
 
-	sdktestutil.AssertNotPanics(t, func() {
+	require.NotPanics(t, func() {
 		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction)
 	})
 	burnAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
@@ -415,7 +415,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	_, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	assert.Assert(t, found)
 
-	sdktestutil.AssertNotPanics(t, func() {
+	require.NotPanics(t, func() {
 		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec())
 	})
 	burnAmount = app.StakingKeeper.TokensFromConsensusPower(ctx, 7)
@@ -451,7 +451,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	_, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	assert.Assert(t, found)
 
-	sdktestutil.AssertNotPanics(t, func() {
+	require.NotPanics(t, func() {
 		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec())
 	})
 
@@ -486,7 +486,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	assert.Equal(t, validator.GetStatus(), types.Unbonding)
 
-	sdktestutil.AssertNotPanics(t, func() {
+	require.NotPanics(t, func() {
 		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec())
 	})
 

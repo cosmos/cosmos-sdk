@@ -36,8 +36,8 @@ ARG TARGETOS TARGETARCH
 # install simapp, remove packages
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH make build
 
-# Use alpine:latest as a base image
-FROM alpine:latest
+# Use alpine:3 as a base image
+FROM alpine:3
 
 EXPOSE 26656 26657 1317 9090
 # Run simd by default, omit entrypoint to ease using container with simcli

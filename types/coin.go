@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -42,6 +43,10 @@ func (coin Coin) String() string {
 func (coin Coin) Validate() error {
 	if err := ValidateDenom(coin.Denom); err != nil {
 		return err
+	}
+
+	if coin.Amount.IsNil() {
+		return errors.New("amount is nil")
 	}
 
 	if coin.Amount.IsNegative() {

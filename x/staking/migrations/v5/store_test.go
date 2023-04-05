@@ -41,7 +41,7 @@ func TestMigrate(t *testing.T) {
 
 	// before migration the state of delegations by val index should not be empty
 	dels = getValDelegations(ctx, cdc, storeKey, valAddrs[0])
-	assert.Len(t, dels, 10)
+	assert.Len(t, dels, len(addedDels))
 	assert.Equal(t, addedDels, dels)
 }
 

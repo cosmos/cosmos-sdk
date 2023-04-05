@@ -79,6 +79,47 @@ func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress)
 	return delegations
 }
 
+func (k Keeper) UpdateValidatorDelegations(ctx sdk.Context, existingValAddr, newValAddr sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+
+	itr := storetypes.KVStorePrefixIterator(store, types.GetDelegationsByValPrefixKey(existingValAddr))
+	defer itr.Close()
+
+	for ; itr.Valid(); itr.Next() {
+		key := itr.Key()
+		val, del, err := types.ParseDelegationsByValKey(key)
+		if err != nil {
+			panic(err)
+		}
+
+		delbz := store.Get(types.GetDelegationKey(del, val))
+
+		delegation := types.MustUnmarshalDelegation(k.cdc, delbz)
+		k.RemoveDelegation(ctx, delegation)
+		// remove old keys
+
+		delegation.ValidatorAddress = newValAddr.String()
+		// add with new val addr
+		k.SetDelegation(ctx, delegation)
+	}
+}
+
+func (k Keeper) UpdateValidatorDelegationsOld(ctx sdk.Context, existingValAddr, newValAddr sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := storetypes.KVStorePrefixIterator(store, types.DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+		if delegation.GetValidatorAddr().Equals(existingValAddr) {
+			k.RemoveDelegation(ctx, delegation)
+			delegation.ValidatorAddress = newValAddr.String()
+			k.SetDelegation(ctx, delegation)
+		}
+	}
+}
+
 // GetDelegatorDelegations returns a given amount of all the delegations from a
 // delegator.
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, maxRetrieve uint16) (delegations []types.Delegation) {

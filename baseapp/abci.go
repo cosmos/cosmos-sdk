@@ -1,8 +1,8 @@
 package baseapp
 
 import (
+	"context"
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -34,11 +35,9 @@ const (
 	QueryPathStore  = "store"
 )
 
-// InitChain implements the ABCI interface. It runs the initialization logic
-// directly on the CommitMultiStore.
-func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	if req.ChainId != app.chainID {
-		panic(fmt.Sprintf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId))
+		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
 	}
 
 	// On a new chain, we consider the init chain block height as 0, even though
@@ -54,7 +53,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		initHeader = cmtproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
 
 		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 
@@ -68,12 +67,12 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	if req.ConsensusParams != nil {
 		err := app.StoreConsensusParams(app.finalizeBlockState.ctx, *req.ConsensusParams)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 
 	if app.initChainer == nil {
-		return
+		return &abci.ResponseInitChain{}, nil
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
@@ -81,16 +80,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	res, err := app.initChainer(app.finalizeBlockState.ctx, req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(res.Validators) {
-			panic(
-				fmt.Errorf(
-					"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
-					len(req.Validators), len(res.Validators),
-				),
+			return nil, fmt.Errorf(
+				"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
+				len(req.Validators), len(res.Validators),
 			)
 		}
 
@@ -99,7 +96,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 		for i := range res.Validators {
 			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
-				panic(fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i))
+				return nil, fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i)
 			}
 		}
 	}
@@ -116,140 +113,289 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		appHash = emptyHash[:]
 	}
 
-	// NOTE: We don't commit, but FinalizeBlock for block at height initial_height
-	// starts from this state.
-	return abci.ResponseInitChain{
+	// NOTE: We don't commit, since FinalizeBlock for a block at height
+	// initial_height starts from this state.
+	return &abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,
 		AppHash:         appHash,
-	}
+	}, nil
 }
 
-// Info implements the ABCI interface.
-func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
+func (app *BaseApp) Info(_ context.Context, req *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	lastCommitID := app.cms.LastCommitID()
 
-	return abci.ResponseInfo{
+	return &abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,
 		AppVersion:       app.appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
+	}, nil
+}
+
+// Query implements the ABCI interface. It delegates to CommitMultiStore if it
+// implements Queryable.
+func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+	var resp *abci.ResponseQuery
+
+	// add panic recovery for all queries
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/pull/8039
+	defer func() {
+		if r := recover(); r != nil {
+			resp = sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrPanic, "%v", r), app.trace)
+		}
+	}()
+
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		req.Height = app.LastBlockHeight()
+	}
+
+	telemetry.IncrCounter(1, "query", "count")
+	telemetry.IncrCounter(1, "query", req.Path)
+	defer telemetry.MeasureSince(time.Now(), req.Path)
+
+	if req.Path == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil
+	}
+
+	// handle gRPC routes first rather than calling splitPath because '/' characters
+	// are used as part of gRPC paths
+	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
+		return app.handleQueryGRPC(grpcHandler, req), nil
+	}
+
+	path := SplitABCIQueryPath(req.Path)
+	if len(path) == 0 {
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace), nil
+	}
+
+	switch path[0] {
+	case QueryPathApp:
+		// "/app" prefix for special application queries
+		resp = handleQueryApp(app, path, req)
+
+	case QueryPathStore:
+		resp = handleQueryStore(app, path, req)
+
+	case QueryPathP2P:
+		resp = handleQueryP2P(app, path)
+
+	default:
+		resp = sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
+	}
+
+	return resp, nil
+}
+
+// ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) ListSnapshots(_ context.Context, req *abci.RequestListSnapshots) (*abci.ResponseListSnapshots, error) {
+	resp := &abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}
+	if app.snapshotManager == nil {
+		return resp, nil
+	}
+
+	snapshots, err := app.snapshotManager.List()
+	if err != nil {
+		app.logger.Error("failed to list snapshots", "err", err)
+		return nil, err
+	}
+
+	for _, snapshot := range snapshots {
+		abciSnapshot, err := snapshot.ToABCI()
+		if err != nil {
+			app.logger.Error("failed to list snapshots", "err", err)
+			return nil, err
+		}
+
+		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
+	}
+
+	return resp, nil
+}
+
+// LoadSnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) LoadSnapshotChunk(_ context.Context, req *abci.RequestLoadSnapshotChunk) (*abci.ResponseLoadSnapshotChunk, error) {
+	if app.snapshotManager == nil {
+		return &abci.ResponseLoadSnapshotChunk{}, nil
+	}
+
+	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
+	if err != nil {
+		app.logger.Error(
+			"failed to load snapshot chunk",
+			"height", req.Height,
+			"format", req.Format,
+			"chunk", req.Chunk,
+			"err", err,
+		)
+		return nil, err
+	}
+
+	return &abci.ResponseLoadSnapshotChunk{Chunk: chunk}, nil
+}
+
+// OfferSnapshot implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) OfferSnapshot(_ context.Context, req *abci.RequestOfferSnapshot) (*abci.ResponseOfferSnapshot, error) {
+	if app.snapshotManager == nil {
+		app.logger.Error("snapshot manager not configured")
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
+	}
+
+	if req.Snapshot == nil {
+		app.logger.Error("received nil snapshot")
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
+	}
+
+	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
+	if err != nil {
+		app.logger.Error("failed to decode snapshot metadata", "err", err)
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, err
+	}
+
+	// TODO: Examine non-ACCEPT return paths and if errors should be returned or
+	// not.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
+	err = app.snapshotManager.Restore(snapshot)
+	switch {
+	case err == nil:
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, nil
+
+	case errors.Is(err, snapshottypes.ErrUnknownFormat):
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}, err
+
+	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
+		app.logger.Error(
+			"rejecting invalid snapshot",
+			"height", req.Snapshot.Height,
+			"format", req.Snapshot.Format,
+			"err", err,
+		)
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, err
+
+	default:
+		app.logger.Error(
+			"failed to restore snapshot",
+			"height", req.Snapshot.Height,
+			"format", req.Snapshot.Format,
+			"err", err,
+		)
+
+		// We currently don't support resetting the IAVL stores and retrying a
+		// different snapshot, so we ask CometBFT to abort all snapshot restoration.
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
 	}
 }
 
-// FilterPeerByAddrPort filters peers by address/port.
-func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
-	if app.addrPeerFilter != nil {
-		return app.addrPeerFilter(info)
+// ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) ApplySnapshotChunk(_ context.Context, req *abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) {
+	if app.snapshotManager == nil {
+		app.logger.Error("snapshot manager not configured")
+		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
 	}
 
-	return abci.ResponseQuery{}
+	// TODO: Examine non-ACCEPT return paths and if errors should be returned or
+	// not.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
+	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
+	switch {
+	case err == nil:
+		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}, nil
+
+	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
+		app.logger.Error(
+			"chunk checksum mismatch; rejecting sender and requesting refetch",
+			"chunk", req.Index,
+			"sender", req.Sender,
+			"err", err,
+		)
+		return &abci.ResponseApplySnapshotChunk{
+			Result:        abci.ResponseApplySnapshotChunk_RETRY,
+			RefetchChunks: []uint32{req.Index},
+			RejectSenders: []string{req.Sender},
+		}, err
+
+	default:
+		app.logger.Error("failed to restore snapshot", "err", err)
+		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
+	}
 }
 
-// FilterPeerByID filters peers by node ID.
-func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
-	if app.idPeerFilter != nil {
-		return app.idPeerFilter(info)
-	}
+func (app *BaseApp) legacyBeginBlock(req *abci.RequestFinalizeBlock) sdk.LegacyResponseBeginBlock {
+	var (
+		resp sdk.LegacyResponseBeginBlock
+		err  error
+	)
 
-	return abci.ResponseQuery{}
-}
-
-// BeginBlock implements the ABCI application interface.
-func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	if req.Header.ChainID != app.chainID {
-		panic(fmt.Sprintf("invalid chain-id on BeginBlock; expected: %s, got: %s", app.chainID, req.Header.ChainID))
-	}
-
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]interface{}{"blockHeight": req.Header.Height},
-		))
-	}
-
-	if err := app.validateHeight(req); err != nil {
-		panic(err)
-	}
-
-	// Initialize the DeliverTx state. If this is the first block, it should
-	// already be initialized in InitChain. Otherwise app.deliverState will be
-	// nil, since it is reset on Commit.
-	if app.deliverState == nil {
-		app.setState(runTxModeDeliver, req.Header)
-	} else {
-		// In the first block, app.deliverState.ctx will already be initialized
-		// by InitChain. Context is now updated with Header information.
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockHeader(req.Header).
-			WithBlockHeight(req.Header.Height)
-	}
-
-	gasMeter := app.getBlockGasMeter(app.deliverState.ctx)
-
-	app.deliverState.ctx = app.deliverState.ctx.
-		WithBlockGasMeter(gasMeter).
-		WithHeaderHash(req.Hash).
-		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx)).
-		WithVoteInfos(req.LastCommitInfo.GetVotes())
-
-	if app.checkState != nil {
-		app.checkState.ctx = app.checkState.ctx.
-			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
-	}
+	// TODO: Fill out.
+	legacyReq := sdk.LegacyRequestBeginBlock{}
 
 	if app.beginBlocker != nil {
-		var err error
-		res, err = app.beginBlocker(app.deliverState.ctx, req)
+		resp, err = app.beginBlocker(app.finalizeBlockState.ctx, legacyReq)
 		if err != nil {
 			panic(err)
 		}
-		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
+
+		resp.Response.Events = sdk.MarkEventsToIndex(resp.Response.Events, app.indexEvents)
 	}
-	// set the signed validators for addition to context in deliverTx
-	app.voteInfos = req.LastCommitInfo.GetVotes()
 
 	// call the streaming service hook with the BeginBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
-		ctx := app.deliverState.ctx
+		ctx := app.finalizeBlockState.ctx
 		blockHeight := ctx.BlockHeight()
+
+		// TODO: Figure out what to do with ListenBeginBlock and the types necessary
+		// as we cannot have the store sub-module depend on the root SDK module.
+		//
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 		if err := abciListener.ListenBeginBlock(ctx, req, res); err != nil {
 			app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
 		}
 	}
 
-	return res
+	return resp
 }
 
-// EndBlock implements the ABCI interface.
-func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
-	}
+func (app *BaseApp) legacyEndBlock(req *abci.RequestFinalizeBlock) sdk.LegacyResponseEndBlock {
+	var (
+		resp sdk.LegacyResponseEndBlock
+		err  error
+	)
+
+	// TODO: Fill out!
+	legacyReq := sdk.LegacyRequestEndBlock{}
 
 	if app.endBlocker != nil {
-		var err error
-		res, err = app.endBlocker(app.deliverState.ctx, req)
+		resp, err = app.endBlocker(app.finalizeBlockState.ctx, legacyReq)
 		if err != nil {
 			panic(err)
 		}
-		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
+
+		resp.Response.Events = sdk.MarkEventsToIndex(resp.Response.Events, app.indexEvents)
 	}
 
-	cp := app.GetConsensusParams(app.deliverState.ctx)
-	res.ConsensusParamUpdates = &cp
+	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
+	resp.Response.ConsensusParamUpdates = &cp
 
 	// call the streaming service hook with the EndBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
-		ctx := app.deliverState.ctx
+		ctx := app.finalizeBlockState.ctx
 		blockHeight := ctx.BlockHeight()
+
+		// TODO: Figure out what to do with ListenBeginBlock and the types necessary
+		// as we cannot have the store sub-module depend on the root SDK module.
+		//
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 		if err := abciListener.ListenEndBlock(ctx, req, res); err != nil {
 			app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
 		}
 	}
 
-	return res
+	return resp
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
@@ -265,9 +411,9 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
-func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
+func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 	if app.prepareProposal == nil {
-		panic("PrepareProposal method not set")
+		return nil, errors.New("PrepareProposal method not set")
 	}
 
 	// always reset state given that PrepareProposal can timeout and be called again
@@ -277,7 +423,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 	// CometBFT must never call PrepareProposal with a height of 0.
 	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
-		panic("PrepareProposal called with invalid height")
+		errors.New("PrepareProposal called with invalid height")
 	}
 
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
@@ -290,6 +436,11 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
 		WithBlockGasMeter(app.getBlockGasMeter(app.prepareProposalState.ctx))
 
+	var (
+		resp *abci.ResponsePrepareProposal
+		err  error
+	)
+
 	defer func() {
 		if err := recover(); err != nil {
 			app.logger.Error(
@@ -299,12 +450,16 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 				"panic", err,
 			)
 
-			resp = abci.ResponsePrepareProposal{Txs: req.Txs}
+			resp = &abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 	}()
 
-	resp = app.prepareProposal(app.prepareProposalState.ctx, req)
-	return resp
+	resp, err = app.prepareProposal(app.prepareProposalState.ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a
@@ -322,15 +477,15 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
-func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.ResponseProcessProposal) {
+func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 	if app.processProposal == nil {
-		panic("app.ProcessProposal is not set")
+		return nil, errors.New("app.ProcessProposal is not set")
 	}
 
 	// CometBFT must never call ProcessProposal with a height of 0.
 	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
-		panic("ProcessProposal called with invalid height")
+		return nil, errors.New("ProcessProposal called with invalid height")
 	}
 
 	// always reset state given that ProcessProposal can timeout and be called again
@@ -348,6 +503,11 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
 		WithBlockGasMeter(app.getBlockGasMeter(app.processProposalState.ctx))
 
+	var (
+		resp *abci.ResponseProcessProposal
+		err  error
+	)
+
 	defer func() {
 		if err := recover(); err != nil {
 			app.logger.Error(
@@ -357,90 +517,16 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 				"hash", fmt.Sprintf("%X", req.Hash),
 				"panic", err,
 			)
-			resp = abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			resp = &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
 	}()
 
-	resp = app.processProposal(app.processProposalState.ctx, req)
-	return resp
-}
-
-// CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
-// CheckTx mode, messages are not executed. This means messages are only validated
-// and only the AnteHandler is executed. State is persisted to the BaseApp's
-// internal CheckTx state if the AnteHandler passes. Otherwise, the ResponseCheckTx
-// will contain relevant error information. Regardless of tx execution outcome,
-// the ResponseCheckTx will contain relevant gas execution context.
-func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
-	var mode runTxMode
-
-	switch {
-	case req.Type == abci.CheckTxType_New:
-		mode = runTxModeCheck
-
-	case req.Type == abci.CheckTxType_Recheck:
-		mode = runTxModeReCheck
-
-	default:
-		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
-	}
-
-	gInfo, result, anteEvents, priority, err := app.runTx(mode, req.Tx)
+	resp, err = app.processProposal(app.processProposalState.ctx, req)
 	if err != nil {
-		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
+		return nil, err
 	}
 
-	return abci.ResponseCheckTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-		Priority:  priority,
-	}
-}
-
-// DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
-// State only gets persisted if all messages are valid and get executed successfully.
-// Otherwise, the ResponseDeliverTx will contain relevant error information.
-// Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
-// gas execution context.
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	gInfo := sdk.GasInfo{}
-	resultStr := "successful"
-
-	var res abci.ResponseDeliverTx
-	defer func() {
-		// call the streaming service hook with the EndBlock messages
-		for _, abciListener := range app.streamingManager.ABCIListeners {
-			ctx := app.deliverState.ctx
-			blockHeight := ctx.BlockHeight()
-			if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
-				app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
-			}
-		}
-	}()
-
-	defer func() {
-		telemetry.IncrCounter(1, "tx", "count")
-		telemetry.IncrCounter(1, "tx", resultStr)
-		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
-		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
-	}()
-
-	gInfo, result, anteEvents, _, err := app.runTx(runTxModeDeliver, req.Tx)
-	if err != nil {
-		resultStr = "failed"
-		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
-	}
-
-	return abci.ResponseDeliverTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}
+	return resp, nil
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in
@@ -450,8 +536,8 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 // defined in config, Commit will execute a deferred function call to check
 // against that height and gracefully halt if it matches the latest committed
 // height.
-func (app *BaseApp) Commit() abci.ResponseCommit {
-	header := app.deliverState.ctx.BlockHeader()
+func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.ResponseCommit, error) {
+	header := app.finalizeBlockState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	rms, ok := app.cms.(*rootmulti.Store)
@@ -459,43 +545,32 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 		rms.SetCommitHeader(header)
 	}
 
-	// Write the DeliverTx state into branched storage and commit the MultiStore.
-	// The write to the DeliverTx state writes all state transitions to the root
-	// MultiStore (app.cms) so when Commit() is called is persists those values.
-	app.deliverState.ms.Write()
-	commitID := app.cms.Commit()
-
-	res := abci.ResponseCommit{
-		Data:         commitID.Hash,
+	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,
 	}
 
-	// call the streaming service hook with the EndBlock messages
 	abciListeners := app.streamingManager.ABCIListeners
 	if len(abciListeners) > 0 {
-		ctx := app.deliverState.ctx
+		ctx := app.finalizeBlockState.ctx
 		blockHeight := ctx.BlockHeight()
 		changeSet := app.cms.PopStateCache()
+
 		for _, abciListener := range abciListeners {
-			if err := abciListener.ListenCommit(ctx, res, changeSet); err != nil {
+			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
 			}
 		}
 	}
 
-	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
-
-	// Reset the Check state to the latest committed.
+	// Reset the CheckTx state to the latest committed.
 	//
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
 
-	// empty/reset the deliver state
-	app.deliverState = nil
+	app.finalizeBlockState = nil
 
 	var halt bool
-
 	switch {
 	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
 		halt = true
@@ -514,7 +589,21 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	go app.snapshotManager.SnapshotIfApplicable(header.Height)
 
-	return res
+	return resp, nil
+}
+
+// flushCommit writes all state transitions that occurred during FinalizeBlock.
+// These writes are persisted to the root multi-store (app.cms) and flushed to
+// disk. This means when the ABCI client requests Commit(), the application
+// state transitions are already flushed to disk and as a result, we already have
+// an application Merkle root.
+func (app *BaseApp) flushCommit() storetypes.CommitID {
+	app.finalizeBlockState.ms.Write()
+
+	commitID := app.cms.Commit()
+	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
+
+	return commitID
 }
 
 // halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
@@ -539,194 +628,165 @@ func (app *BaseApp) halt() {
 	os.Exit(0)
 }
 
-// Query implements the ABCI interface. It delegates to CommitMultiStore if it
-// implements Queryable.
-func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	// Add panic recovery for all queries.
-	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
-	defer func() {
-		if r := recover(); r != nil {
-			res = sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrPanic, "%v", r), app.trace)
+func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {
+	if len(path) >= 2 {
+		switch path[1] {
+		case "simulate":
+			txBytes := req.Data
+
+			gInfo, res, err := app.Simulate(txBytes)
+			if err != nil {
+				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to simulate tx"), app.trace)
+			}
+
+			simRes := &sdk.SimulationResponse{
+				GasInfo: gInfo,
+				Result:  res,
+			}
+
+			bz, err := codec.ProtoMarshalJSON(simRes, app.interfaceRegistry)
+			if err != nil {
+				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to JSON encode simulation response"), app.trace)
+			}
+
+			return &abci.ResponseQuery{
+				Codespace: sdkerrors.RootCodespace,
+				Height:    req.Height,
+				Value:     bz,
+			}
+
+		case "version":
+			return &abci.ResponseQuery{
+				Codespace: sdkerrors.RootCodespace,
+				Height:    req.Height,
+				Value:     []byte(app.version),
+			}
+
+		default:
+			return sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path), app.trace)
 		}
-	}()
-
-	// when a client did not provide a query height, manually inject the latest
-	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
 	}
 
-	telemetry.IncrCounter(1, "query", "count")
-	telemetry.IncrCounter(1, "query", req.Path)
-	defer telemetry.MeasureSince(time.Now(), req.Path)
-
-	if req.Path == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
-		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace)
-	}
-
-	// handle gRPC routes first rather than calling splitPath because '/' characters
-	// are used as part of gRPC paths
-	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
-		return app.handleQueryGRPC(grpcHandler, req)
-	}
-
-	path := SplitABCIQueryPath(req.Path)
-	if len(path) == 0 {
-		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
-	}
-
-	switch path[0] {
-	case QueryPathApp:
-		// "/app" prefix for special application queries
-		return handleQueryApp(app, path, req)
-
-	case QueryPathStore:
-		return handleQueryStore(app, path, req)
-
-	case QueryPathP2P:
-		return handleQueryP2P(app, path)
-	}
-
-	return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
+	return sdkerrors.QueryResult(
+		errorsmod.Wrap(
+			sdkerrors.ErrUnknownRequest,
+			"expected second parameter to be either 'simulate' or 'version', neither was present",
+		), app.trace)
 }
 
-// ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseListSnapshots {
-	resp := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}
-	if app.snapshotManager == nil {
-		return resp
+func handleQueryStore(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {
+	// "/store" prefix for store queries
+	queryable, ok := app.cms.(storetypes.Queryable)
+	if !ok {
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "multi-store does not support queries"), app.trace)
 	}
 
-	snapshots, err := app.snapshotManager.List()
-	if err != nil {
-		app.logger.Error("failed to list snapshots", "err", err)
-		return resp
+	req.Path = "/" + strings.Join(path[1:], "/")
+
+	if req.Height <= 1 && req.Prove {
+		return sdkerrors.QueryResult(
+			errorsmod.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				"cannot query with proof when height <= 1; please provide a valid height",
+			), app.trace)
 	}
 
-	for _, snapshot := range snapshots {
-		abciSnapshot, err := snapshot.ToABCI()
-		if err != nil {
-			app.logger.Error("failed to list snapshots", "err", err)
-			return resp
+	// TODO: Update Query interface method accept a pointer to RequestQuery.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
+	resp := queryable.Query(req)
+	resp.Height = req.Height
+
+	return resp
+}
+
+func handleQueryP2P(app *BaseApp, path []string) *abci.ResponseQuery {
+	// "/p2p" prefix for p2p queries
+	if len(path) < 4 {
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>"), app.trace)
+	}
+
+	var resp *abci.ResponseQuery
+
+	cmd, typ, arg := path[1], path[2], path[3]
+	switch cmd {
+	case "filter":
+		switch typ {
+		case "addr":
+			resp = app.FilterPeerByAddrPort(arg)
+
+		case "id":
+			resp = app.FilterPeerByID(arg)
 		}
-		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
+
+	default:
+		resp = sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
 	}
 
 	return resp
 }
 
-// LoadSnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
-	if app.snapshotManager == nil {
-		return abci.ResponseLoadSnapshotChunk{}
+// SplitABCIQueryPath splits a string path using the delimiter '/'.
+//
+// e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
+func SplitABCIQueryPath(requestPath string) (path []string) {
+	path = strings.Split(requestPath, "/")
+
+	// first element is empty string
+	if len(path) > 0 && path[0] == "" {
+		path = path[1:]
 	}
-	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
-	if err != nil {
-		app.logger.Error(
-			"failed to load snapshot chunk",
-			"height", req.Height,
-			"format", req.Format,
-			"chunk", req.Chunk,
-			"err", err,
-		)
-		return abci.ResponseLoadSnapshotChunk{}
-	}
-	return abci.ResponseLoadSnapshotChunk{Chunk: chunk}
+
+	return path
 }
 
-// OfferSnapshot implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
-	if app.snapshotManager == nil {
-		app.logger.Error("snapshot manager not configured")
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
+// FilterPeerByAddrPort filters peers by address/port.
+func (app *BaseApp) FilterPeerByAddrPort(info string) *abci.ResponseQuery {
+	if app.addrPeerFilter != nil {
+		return app.addrPeerFilter(info)
 	}
 
-	if req.Snapshot == nil {
-		app.logger.Error("received nil snapshot")
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
-	}
-
-	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
-	if err != nil {
-		app.logger.Error("failed to decode snapshot metadata", "err", err)
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
-	}
-
-	err = app.snapshotManager.Restore(snapshot)
-	switch {
-	case err == nil:
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}
-
-	case errors.Is(err, snapshottypes.ErrUnknownFormat):
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}
-
-	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
-		app.logger.Error(
-			"rejecting invalid snapshot",
-			"height", req.Snapshot.Height,
-			"format", req.Snapshot.Format,
-			"err", err,
-		)
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
-
-	default:
-		app.logger.Error(
-			"failed to restore snapshot",
-			"height", req.Snapshot.Height,
-			"format", req.Snapshot.Format,
-			"err", err,
-		)
-
-		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
-		// so we ask CometBFT to abort all snapshot restoration.
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
-	}
+	return &abci.ResponseQuery{}
 }
 
-// ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
-	if app.snapshotManager == nil {
-		app.logger.Error("snapshot manager not configured")
-		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
+// FilterPeerByID filters peers by node ID.
+func (app *BaseApp) FilterPeerByID(info string) *abci.ResponseQuery {
+	if app.idPeerFilter != nil {
+		return app.idPeerFilter(info)
 	}
 
-	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
-	switch {
-	case err == nil:
-		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}
-
-	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
-		app.logger.Error(
-			"chunk checksum mismatch; rejecting sender and requesting refetch",
-			"chunk", req.Index,
-			"sender", req.Sender,
-			"err", err,
-		)
-		return abci.ResponseApplySnapshotChunk{
-			Result:        abci.ResponseApplySnapshotChunk_RETRY,
-			RefetchChunks: []uint32{req.Index},
-			RejectSenders: []string{req.Sender},
-		}
-
-	default:
-		app.logger.Error("failed to restore snapshot", "err", err)
-		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
-	}
+	return &abci.ResponseQuery{}
 }
 
-func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
+// getContextForProposal returns the correct Context for PrepareProposal and
+// ProcessProposal. We use finalizeBlockState on the first block to be able to
+// access any state changes made in InitChain.
+func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
+	if height == 1 {
+		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
+
+		// clear all context data set during InitChain to avoid inconsistent behavior
+		ctx = ctx.WithBlockHeader(cmtproto.Header{})
+		return ctx
+	}
+
+	return ctx
+}
+
+func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.RequestQuery) *abci.ResponseQuery {
 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)
 	}
 
-	res, err := handler(ctx, req)
+	resp, err := handler(ctx, req)
 	if err != nil {
-		res = sdkerrors.QueryResult(gRPCErrorToSDKError(err), app.trace)
-		res.Height = req.Height
-		return res
+		resp = sdkerrors.QueryResult(gRPCErrorToSDKError(err), app.trace)
+		resp.Height = req.Height
+		return resp
 	}
 
-	return res
+	return resp
 }
 
 func gRPCErrorToSDKError(err error) error {
@@ -738,12 +798,16 @@ func gRPCErrorToSDKError(err error) error {
 	switch status.Code() {
 	case codes.NotFound:
 		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
+
 	case codes.InvalidArgument:
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+
 	case codes.FailedPrecondition:
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+
 	case codes.Unauthenticated:
 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+
 	default:
 		return errorsmod.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
@@ -751,12 +815,9 @@ func gRPCErrorToSDKError(err error) error {
 
 func checkNegativeHeight(height int64) error {
 	if height < 0 {
-		// Reject invalid heights.
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"cannot query with height < 0; please provide a valid height",
-		)
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "cannot query with height < 0; please provide a valid height")
 	}
+
 	return nil
 }
 
@@ -767,7 +828,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 		return sdk.Context{}, err
 	}
 
-	// use custom query multistore if provided
+	// use custom query multi-store if provided
 	qms := app.qms
 	if qms == nil {
 		qms = app.cms.(storetypes.MultiStore)
@@ -808,7 +869,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	// branch the commit-multistore for safety
+	// branch the commit multi-store for safety
 	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height)
@@ -857,10 +918,13 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 		switch {
 		case x == 0:
 			return y
+
 		case y == 0:
 			return x
+
 		case x < y:
 			return x
+
 		default:
 			return y
 		}
@@ -873,10 +937,10 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 
 	// Define the number of blocks needed to protect against misbehaving validators
 	// which allows light clients to operate safely. Note, we piggy back of the
-	// evidence parameters instead of computing an estimated nubmer of blocks based
+	// evidence parameters instead of computing an estimated number of blocks based
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.
-	cp := app.GetConsensusParams(app.deliverState.ctx)
+	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
 	if cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
@@ -899,127 +963,155 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	return retentionHeight
 }
 
-func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
-	if len(path) >= 2 {
-		switch path[1] {
-		case "simulate":
-			txBytes := req.Data
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~ All logic above has been completed for ABCI++ modulo any TODOs ~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-			gInfo, res, err := app.Simulate(txBytes)
-			if err != nil {
-				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to simulate tx"), app.trace)
-			}
+// CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
+// CheckTx mode, messages are not executed. This means messages are only validated
+// and only the AnteHandler is executed. State is persisted to the BaseApp's
+// internal CheckTx state if the AnteHandler passes. Otherwise, the ResponseCheckTx
+// will contain relevant error information. Regardless of tx execution outcome,
+// the ResponseCheckTx will contain relevant gas execution context.
+func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+	var mode runTxMode
 
-			simRes := &sdk.SimulationResponse{
-				GasInfo: gInfo,
-				Result:  res,
-			}
+	switch {
+	case req.Type == abci.CheckTxType_New:
+		mode = runTxModeCheck
 
-			bz, err := codec.ProtoMarshalJSON(simRes, app.interfaceRegistry)
-			if err != nil {
-				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to JSON encode simulation response"), app.trace)
-			}
-
-			return abci.ResponseQuery{
-				Codespace: sdkerrors.RootCodespace,
-				Height:    req.Height,
-				Value:     bz,
-			}
-
-		case "version":
-			return abci.ResponseQuery{
-				Codespace: sdkerrors.RootCodespace,
-				Height:    req.Height,
-				Value:     []byte(app.version),
-			}
-
-		default:
-			return sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path), app.trace)
-		}
-	}
-
-	return sdkerrors.QueryResult(
-		errorsmod.Wrap(
-			sdkerrors.ErrUnknownRequest,
-			"expected second parameter to be either 'simulate' or 'version', neither was present",
-		), app.trace)
-}
-
-func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
-	// "/store" prefix for store queries
-	queryable, ok := app.cms.(storetypes.Queryable)
-	if !ok {
-		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
-	}
-
-	req.Path = "/" + strings.Join(path[1:], "/")
-
-	if req.Height <= 1 && req.Prove {
-		return sdkerrors.QueryResult(
-			errorsmod.Wrap(
-				sdkerrors.ErrInvalidRequest,
-				"cannot query with proof when height <= 1; please provide a valid height",
-			), app.trace)
-	}
-
-	resp := queryable.Query(req)
-	resp.Height = req.Height
-
-	return resp
-}
-
-func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
-	// "/p2p" prefix for p2p queries
-	if len(path) < 4 {
-		return sdkerrors.QueryResult(
-			errorsmod.Wrap(
-				sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>",
-			), app.trace)
-	}
-
-	var resp abci.ResponseQuery
-
-	cmd, typ, arg := path[1], path[2], path[3]
-	switch cmd {
-	case "filter":
-		switch typ {
-		case "addr":
-			resp = app.FilterPeerByAddrPort(arg)
-
-		case "id":
-			resp = app.FilterPeerByID(arg)
-		}
+	case req.Type == abci.CheckTxType_Recheck:
+		mode = runTxModeReCheck
 
 	default:
-		resp = sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
+		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	return resp
+	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
+	if err != nil {
+		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
+	}
+
+	return abci.ResponseCheckTx{
+		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	}
 }
 
-// SplitABCIQueryPath splits a string path using the delimiter '/'.
-//
-// e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
-func SplitABCIQueryPath(requestPath string) (path []string) {
-	path = strings.Split(requestPath, "/")
+// DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
+// State only gets persisted if all messages are valid and get executed successfully.
+// Otherwise, the ResponseDeliverTx will contain relevant error information.
+// Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
+// gas execution context.
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
 
-	// first element is empty string
-	if len(path) > 0 && path[0] == "" {
-		path = path[1:]
+	var res abci.ResponseDeliverTx
+	defer func() {
+		// call the streaming service hook with the EndBlock messages
+		for _, abciListener := range app.streamingManager.ABCIListeners {
+			ctx := app.deliverState.ctx
+			blockHeight := ctx.BlockHeight()
+			if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
+			}
+		}
+	}()
+
+	defer func() {
+		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
+	}()
+
+	gInfo, result, anteEvents, _, err := app.runTx(runTxModeDeliver, req.Tx)
+	if err != nil {
+		resultStr = "failed"
+		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
 	}
 
-	return path
+	return abci.ResponseDeliverTx{
+		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	}
 }
 
-// getContextForProposal returns the right context for PrepareProposal and
-// ProcessProposal. We use deliverState on the first block to be able to access
-// any state changes made in InitChain.
-func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
-	if height == 1 {
-		ctx, _ = app.deliverState.ctx.CacheContext()
-		// clear all context data set during InitChain to avoid inconsistent behavior
-		ctx = ctx.WithBlockHeader(cmtproto.Header{})
-		return ctx
+func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	if err := app.validateFinalizeBlockHeight(req); err != nil {
+		return nil, err
 	}
-	return ctx
+
+	if app.cms.TracingEnabled() {
+		app.cms.SetTracingContext(storetypes.TraceContext(
+			map[string]any{"blockHeight": req.Height},
+		))
+	}
+
+	app.voteInfos = req.DecidedLastCommit.Votes
+
+	header := cmtproto.Header{
+		ChainID:            app.chainID,
+		Height:             req.Height,
+		Time:               req.Time,
+		ProposerAddress:    req.ProposerAddress,
+		NextValidatorsHash: req.NextValidatorsHash,
+	}
+
+	// Initialize the FinalizeBlock state. If this is the first block, it should
+	// already be initialized in InitChain. Otherwise app.finalizeBlockState will be
+	// nil, since it is reset on Commit.
+	if app.finalizeBlockState == nil {
+		app.setState(runTxModeFinalize, header)
+	} else {
+		// In the first block, app.finalizeBlockState.ctx will already be initialized
+		// by InitChain. Context is now updated with Header information.
+		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
+			WithBlockHeader(header).
+			WithBlockHeight(req.Height)
+	}
+
+	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
+
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
+		WithBlockGasMeter(gasMeter).
+		WithHeaderHash(req.Hash).
+		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
+		WithVoteInfos(req.DecidedLastCommit.Votes).
+		WithMisbehavior(req.Misbehavior)
+
+	if app.checkState != nil {
+		app.checkState.ctx = app.checkState.ctx.
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash)
+	}
+
+	beginBlockResp := app.legacyBeginBlock(req)
+
+	// TODO: deliver transactions...
+
+	if app.finalizeBlockState.ms.TracingEnabled() {
+		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
+	}
+
+	endBlockResp := app.legacyEndBlock(req)
+
+	return &abci.ResponseFinalizeBlock{
+		Events:                nil,
+		TxResults:             nil,
+		ValidatorUpdates:      nil,
+		ConsensusParamUpdates: nil,
+		AppHash:               app.flushCommit().Hash,
+	}, nil
 }

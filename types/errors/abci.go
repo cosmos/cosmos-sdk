@@ -35,9 +35,9 @@ func ResponseDeliverTxWithEvents(err error, gw, gu uint64, events []abci.Event, 
 
 // QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error, debug bool) abci.ResponseQuery {
+func QueryResult(err error, debug bool) *abci.ResponseQuery {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
-	return abci.ResponseQuery{
+	return &abci.ResponseQuery{
 		Codespace: space,
 		Code:      code,
 		Log:       log,

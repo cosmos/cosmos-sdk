@@ -489,9 +489,9 @@ func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	}
 }
 
-func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
-	if req.Header.Height < 1 {
-		return fmt.Errorf("invalid height: %d", req.Header.Height)
+func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) error {
+	if req.Height < 1 {
+		return fmt.Errorf("invalid height: %d", req.Height)
 	}
 
 	// expectedHeight holds the expected height to validate.
@@ -509,8 +509,8 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 		expectedHeight = app.LastBlockHeight() + 1
 	}
 
-	if req.Header.Height != expectedHeight {
-		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, expectedHeight)
+	if req.Height != expectedHeight {
+		return fmt.Errorf("invalid height: %d; expected: %d", req.Height, expectedHeight)
 	}
 
 	return nil

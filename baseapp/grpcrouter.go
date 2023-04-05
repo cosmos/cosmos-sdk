@@ -38,7 +38,7 @@ func NewGRPCQueryRouter() *GRPCQueryRouter {
 
 // GRPCQueryHandler defines a function type which handles ABCI Query requests
 // using gRPC
-type GRPCQueryHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error)
+type GRPCQueryHandler = func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error)
 
 // Route returns the GRPCQueryHandler for a given query route path or nil
 // if not found
@@ -76,25 +76,25 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			)
 		}
 
-		qrt.routes[fqName] = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error) {
+		qrt.routes[fqName] = func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, ctx, func(i interface{}) error {
 				return qrt.cdc.Unmarshal(req.Data, i)
 			}, nil)
 			if err != nil {
-				return abci.ResponseQuery{}, err
+				return nil, err
 			}
 
 			// proto marshal the result bytes
 			var resBytes []byte
 			resBytes, err = qrt.cdc.Marshal(res)
 			if err != nil {
-				return abci.ResponseQuery{}, err
+				return nil, err
 			}
 
 			// return the result bytes as the response value
-			return abci.ResponseQuery{
+			return &abci.ResponseQuery{
 				Height: req.Height,
 				Value:  resBytes,
 			}, nil

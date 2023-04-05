@@ -183,23 +183,23 @@ message SearchBlocksResult {
 // LegacyRequestBeginBlock defines a wrapper around the now deprecated
 // RequestBeginBlock type.
 message LegacyRequestBeginBlock {
-  tendermint.abci.RequestBeginBlock req = 1;
+  tendermint.abci.RequestBeginBlock request = 1;
 }
 
 // LegacyResponseBeginBlock defines a wrapper around the now deprecated
 // ResponseBeginBlock type.
 message LegacyResponseBeginBlock {
-  tendermint.abci.ResponseBeginBlock res = 1;
+  tendermint.abci.ResponseBeginBlock response = 1;
 }
 
 // LegacyRequestEndBlock defines a wrapper around the now deprecated
 // RequestEndBlock type.
 message LegacyRequestEndBlock {
-  tendermint.abci.RequestEndBlock req = 1;
+  tendermint.abci.RequestEndBlock request = 1;
 }
 
 // LegacyResponseEndBlock defines a wrapper around the now deprecated
 // ResponseEndBlock type.
 message LegacyResponseEndBlock {
-  tendermint.abci.ResponseEndBlock res = 1;
+  tendermint.abci.ResponseEndBlock response = 1;
 }

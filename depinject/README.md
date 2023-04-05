@@ -133,7 +133,7 @@ A specific binding preference for `Duck` is required.
 
 #### `BindInterface` API
 
-In the above situation registering a binding for a given interface binding may look like
+In the above situation registering a binding for a given interface binding may look like:
 
 ```go
 depinject.Inject(

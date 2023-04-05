@@ -370,7 +370,7 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 	m.OrderEndBlockers = moduleNames
 }
 
-// SetOrderPrepareCheckStaters sets the order of set commiter calls
+// SetOrderPrepareCheckStaters sets the order of set prepare-check-stater calls
 func (m *Manager) SetOrderPrepareCheckStaters(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderPrepareCheckStaters", moduleNames,
 		func(moduleName string) bool {
@@ -747,17 +747,6 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 	}, nil
 }
 
-// PrepareCheckState performs functionality for preparing the check state for all modules.
-func (m *Manager) PrepareCheckState(ctx sdk.Context) {
-	for _, moduleName := range m.OrderPrepareCheckStaters {
-		module, ok := m.Modules[moduleName].(PrepareCheckStateAppModule)
-		if !ok {
-			continue
-		}
-		module.PrepareCheckState(ctx)
-	}
-}
-
 // Precommit performs precommit functionality for all modules.
 func (m *Manager) Precommit(ctx sdk.Context) {
 	for _, moduleName := range m.OrderPrecommiters {
@@ -766,6 +755,17 @@ func (m *Manager) Precommit(ctx sdk.Context) {
 			continue
 		}
 		module.Precommit(ctx)
+	}
+}
+
+// PrepareCheckState performs functionality for preparing the check state for all modules.
+func (m *Manager) PrepareCheckState(ctx sdk.Context) {
+	for _, moduleName := range m.OrderPrepareCheckStaters {
+		module, ok := m.Modules[moduleName].(PrepareCheckStateAppModule)
+		if !ok {
+			continue
+		}
+		module.PrepareCheckState(ctx)
 	}
 }
 

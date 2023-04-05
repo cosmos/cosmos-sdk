@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
@@ -22,7 +22,7 @@ const (
 )
 
 // TxCmd returns a root CLI command handler for all x/group transaction commands.
-func TxCmd(name string) *cobra.Command {
+func TxCmd(name string, ac address.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        name,
 		Short:                      "Group transaction subcommands",
@@ -39,7 +39,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgCreateGroupWithPolicyCmd(),
 		MsgCreateGroupPolicyCmd(),
 		MsgUpdateGroupPolicyAdminCmd(),
-		MsgUpdateGroupPolicyDecisionPolicyCmd(),
+		MsgUpdateGroupPolicyDecisionPolicyCmd(ac),
 		MsgUpdateGroupPolicyMetadataCmd(),
 		MsgWithdrawProposalCmd(),
 		MsgSubmitProposalCmd(),
@@ -461,7 +461,7 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 }
 
 // MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
-func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
+func MsgUpdateGroupPolicyDecisionPolicyCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy-json-file]",
 		Short: "Update a group policy's decision policy",
@@ -482,7 +482,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
-			accountAddress, err := sdk.AccAddressFromBech32(args[1])
+			accountAddress, err := ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}

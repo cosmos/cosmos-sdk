@@ -50,7 +50,8 @@ func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, operatorA
 }
 
 // GetBlockConsPubKeyRotationHistory iterator over the rotation history for the given height.
-func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height int64) (historyObjects []types.ConsPubKeyRotationHistory) {
+func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height int64) []types.ConsPubKeyRotationHistory {
+	var historyObjects []types.ConsPubKeyRotationHistory
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := storetypes.KVStorePrefixIterator(store, types.GetBlockConsPubKeyRotationHistoryPrefix(height))
@@ -62,7 +63,7 @@ func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height int64)
 		k.cdc.MustUnmarshal(iterator.Value(), &history)
 		historyObjects = append(historyObjects, history)
 	}
-	return
+	return historyObjects
 }
 
 // GetConsKeyQueue gets and returns the `types.ValAddrsOfRotatedConsKeys` with the given time.

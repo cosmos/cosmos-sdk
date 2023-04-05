@@ -182,7 +182,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 }
 ````
 
-We're now instantiating a map where the key is string and the value is uint64.
+We're now instantiating a map where the key is string and the value is `uint64`.
 We already know the first three arguments of the ``NewMap`` function.
 
 The fourth parameter is our `KeyCodec`, we know that the ``Map`` has `string` as key so we pass it a `KeyCodec` that handles strings as keys.

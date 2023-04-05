@@ -48,7 +48,7 @@ type ValueRenderer interface {
 type RepeatedValueRenderer interface {
 	ValueRenderer
 
-	// Format renders the Protobuf list value to a list of Screens.
+	// FormatRepeated renders the Protobuf list value to a list of Screens.
 	FormatRepeated(context.Context, protoreflect.Value) ([]Screen, error)
 
 	// Parse is the inverse of Format. It must be able to parse all valid

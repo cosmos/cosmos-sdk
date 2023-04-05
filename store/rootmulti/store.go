@@ -497,6 +497,38 @@ func (rs *Store) Commit() types.CommitID {
 	}
 }
 
+// WorkingHash implements Committer/CommitStore.
+func (rs *Store) WorkingHash() []byte {
+	storeInfos := make([]types.StoreInfo, 0, len(rs.stores))
+	storeKeys := keysFromStoreKeyMap(rs.stores)
+
+	for _, key := range storeKeys {
+		store := rs.stores[key]
+
+		storeType := store.GetStoreType()
+		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
+			continue
+		}
+
+		if !rs.removalMap[key] {
+			si := types.StoreInfo{}
+			si.Name = key.Name()
+			si.CommitId = types.CommitID{
+				Hash: store.WorkingHash(),
+			}
+			storeInfos = append(storeInfos, si)
+		}
+	}
+
+	sort.SliceStable(storeInfos, func(i, j int) bool {
+		return strings.Compare(storeInfos[i].Name, storeInfos[j].Name) < 0
+	})
+
+	return types.CommitInfo{
+		StoreInfos: storeInfos,
+	}.Hash()
+}
+
 // CacheWrap implements CacheWrapper/Store/CommitStore.
 func (rs *Store) CacheWrap() types.CacheWrap {
 	return rs.CacheMultiStore().(types.CacheWrap)

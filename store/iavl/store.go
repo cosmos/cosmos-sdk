@@ -143,6 +143,16 @@ func (st *Store) Commit() types.CommitID {
 	}
 }
 
+// WorkingHash returns the hash of the current working tree.
+func (st *Store) WorkingHash() []byte {
+	hash, err := st.tree.WorkingHash()
+	if err != nil {
+		panic(err)
+	}
+
+	return hash
+}
+
 // LastCommitID implements Committer.
 func (st *Store) LastCommitID() types.CommitID {
 	hash, err := st.tree.Hash()

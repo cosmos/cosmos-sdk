@@ -73,7 +73,10 @@ func NewCometStarter(
 	// but we should add a RPCListen method to opt in to enabling it.
 	cfg.RPC.ListenAddress = ""
 
-	const defaultStartTries = 10
+	// defaultStartTries is somewhat arbitrary.
+	// Occasionally TestCometStarter_PortContention would fail with 10 tries,
+	// and bumping it up to 12 makes it almost never fail.
+	const defaultStartTries = 12
 	return &CometStarter{
 		logger: log.NewNopLogger(),
 

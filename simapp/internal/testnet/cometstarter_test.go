@@ -139,11 +139,6 @@ func TestCometStarter_PortContention(t *testing.T) {
 			if !heightAdvanced {
 				t.Fatalf("consensus height did not advance in approximately 10 seconds")
 			}
-
-			// Ensure nodes are stopped completely,
-			// so that we don't get t.Cleanup errors around directories not being empty.
-			_ = nodes.Stop()
-			nodes.Wait()
 		})
 	}
 }

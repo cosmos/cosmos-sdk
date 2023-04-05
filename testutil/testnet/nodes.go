@@ -3,6 +3,7 @@ package testnet
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/cometbft/cometbft/node"
 )
@@ -54,5 +55,16 @@ func (ns Nodes) Wait() {
 func (ns Nodes) StopAndWait() error {
 	err := ns.Stop()
 	ns.Wait()
+
+	// TODO(mr): remove this sleep call after we are using a version of Comet
+	// that includes a fix for https://github.com/cometbft/cometbft/issues/646.
+	//
+	// On my machine, this sleep appears to completely eliminate the late file write.
+	// It also almost always works around https://github.com/cometbft/cometbft/issues/652.
+	//
+	// Presumably the fix for those two issues will be included in a v0.37.1 release.
+	// If not, I assume they will be part of the first v0.38 series release.
+	time.Sleep(250 * time.Millisecond)
+
 	return err
 }

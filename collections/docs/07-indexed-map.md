@@ -23,7 +23,7 @@ So we can say we want to create an `Index` that maps our `BaseAccount` to its `A
 We also know that this `Index` is unique. Unique means that there can only be one `BaseAccount` that maps to a specific 
 `AccountNumber`.
 
-First of all we start by defining the object that contains our index:
+First of all, we start by defining the object that contains our index:
 
 ```go
 var AccountsNumberIndexPrefix = collections.NewPrefix(1)

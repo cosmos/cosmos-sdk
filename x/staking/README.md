@@ -114,6 +114,10 @@ Validators can have one of three statuses
   tombstoning, an unbonding of all their delegations begins. All delegations must then wait the UnbondingTime
   before their tokens are moved to their accounts from the `BondedPool`.
 
+:::warning
+Tombstoning is permanent, once tombstoned a validators consensus key can not be reused within the chain where the tombstoning happened. 
+:::
+
 Validators objects should be primarily stored and accessed by the
 `OperatorAddr`, an SDK validator address for the operator of the validator. Two
 additional indices are maintained per validator object in order to fulfill

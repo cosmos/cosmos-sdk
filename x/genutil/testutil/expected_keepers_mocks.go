@@ -5,6 +5,7 @@
 package testutil
 
 import (
+	context "context"
 	json "encoding/json"
 	reflect "reflect"
 
@@ -77,7 +78,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx types0.Context, process func(types0.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types0.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, process)
 }
@@ -89,7 +90,7 @@ func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, process interface{
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountKeeper) NewAccount(arg0 types0.Context, arg1 types0.AccountI) types0.AccountI {
+func (m *MockAccountKeeper) NewAccount(arg0 context.Context, arg1 types0.AccountI) types0.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
 	ret0, _ := ret[0].(types0.AccountI)
@@ -103,7 +104,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(arg0 types0.Context, arg1 types0.AccountI) {
+func (m *MockAccountKeeper) SetAccount(arg0 context.Context, arg1 types0.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", arg0, arg1)
 }

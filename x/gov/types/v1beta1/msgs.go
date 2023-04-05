@@ -32,8 +32,6 @@ var (
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-//
-//nolint:interfacer
 func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
@@ -116,7 +114,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&m)
+	bz := codec.Amino.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -134,7 +132,7 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 
 // NewMsgDeposit creates a new MsgDeposit instance
 //
-//nolint:interfacer
+
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
@@ -156,7 +154,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -167,8 +165,6 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
-//
-//nolint:interfacer
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option}
 }
@@ -187,7 +183,7 @@ func (msg MsgVote) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -197,9 +193,7 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{voter}
 }
 
-// NewMsgVoteWeighted creates a message to cast a vote on an active proposal
-//
-//nolint:interfacer
+// NewMsgVoteWeighted creates a message to cast a vote on an active proposal.
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options}
 }
@@ -239,7 +233,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

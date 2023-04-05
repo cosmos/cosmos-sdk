@@ -138,10 +138,13 @@ func GetConsensusParams(ctx sdk.Context, paramStore LegacyParamStore) *cmtproto.
 	return cp
 }
 
-func MigrateParams(ctx sdk.Context, lps LegacyParamStore, ps ParamStore) {
+func MigrateParams(ctx sdk.Context, lps LegacyParamStore, ps ParamStore) error {
 	if cp := GetConsensusParams(ctx, lps); cp != nil {
-		ps.Set(ctx, cp)
+		if err := ps.Set(ctx, *cp); err != nil {
+			return err
+		}
 	} else {
 		ctx.Logger().Info("warning: consensus parameters are undefined; skipping migration")
 	}
+	return nil
 }

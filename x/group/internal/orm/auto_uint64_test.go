@@ -52,7 +52,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
 		expError   *errorsmod.Error
-		method     func(store storetypes.KVStore, start uint64, end uint64) (Iterator, error)
+		method     func(store storetypes.KVStore, start, end uint64) (Iterator, error)
 	}{
 		"first element": {
 			start:     1,

@@ -2,9 +2,10 @@ package autocli
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/encoding/protojson"
 	"strings"
 	"testing"
+
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"gotest.tools/v3/golden"
 
@@ -16,7 +17,7 @@ import (
 )
 
 var buildModuleMsgCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 
 	err := b.AddMsgServiceCommands(cmd, testCmdMsgDesc)
 	return cmd, err
@@ -101,7 +102,7 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 func TestMsgOptions(t *testing.T) {
 	conn := testExecCommon(t,
 		buildModuleMsgCommand,
-		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"send", "5", "6", "1foo",
 		"--uint32", "7",
 		"--u64", "8",
 		"--output", "json",
@@ -117,17 +118,16 @@ func TestMsgOptions(t *testing.T) {
 
 func TestMsgOutputFormat(t *testing.T) {
 	conn := testExecCommon(t, buildModuleMsgCommand,
-		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"send", "5", "6", "1foo",
 		"--output", "json",
 	)
 	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
 	conn = testExecCommon(t, buildModuleMsgCommand,
-		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
+		"send", "5", "6", "1foo",
 		"--output", "text",
 	)
 
 	assert.Assert(t, strings.Contains(conn.out.String(), "positional1: 5"))
-
 }
 
 func TestMsgOptionsError(t *testing.T) {
@@ -145,7 +145,6 @@ func TestMsgOptionsError(t *testing.T) {
 		"--u64", "abc",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "invalid argument "))
-
 }
 
 func TestDeprecatedMsg(t *testing.T) {
@@ -165,8 +164,8 @@ func TestEverythingMsg(t *testing.T) {
 		"send",
 		"1",
 		"abc",
-		`{"denom":"foo","amount":"1234"}`,
-		`{"denom":"bar","amount":"4321"}`,
+		"1234foo",
+		"4321foo",
 		"--output", "json",
 		"--a-bool",
 		"--an-enum", "two",
@@ -178,8 +177,8 @@ func TestEverythingMsg(t *testing.T) {
 		"--i64", "-234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
-		"--a-coin", `{"denom":"foo","amount":"100000"}`,
-		"--an-address", "cosmossdghdsfoi2134sdgh",
+		"--a-coin", "10000000foo",
+		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",
 		"--page-key", "MTIzNTQ4N3NnaGRhcw==",
@@ -282,7 +281,7 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 func TestNotFoundErrorsMsg(t *testing.T) {
 	b := &Builder{}
 	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err
@@ -325,7 +324,6 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 		},
 	})
 	assert.ErrorContains(t, err, "can't find field un-existent-flag")
-
 }
 
 func TestEnhanceMessageCommand(t *testing.T) {
@@ -333,7 +331,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
 		txCmdDesc := modOpts.Tx
 		if txCmdDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 			err := b.AddMsgServiceCommands(cmd, txCmdDesc)
 			if err != nil {
 				return err
@@ -368,9 +366,4 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	customCommands = map[string]*cobra.Command{}
 	err = b.enhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
 	assert.NilError(t, err)
-
-}
-
-type testMessageServer struct {
-	testpb.UnimplementedMsgServer
 }

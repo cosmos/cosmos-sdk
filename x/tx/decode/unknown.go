@@ -3,8 +3,8 @@ package decode
 import (
 	"errors"
 	"fmt"
+	"strings"
 
-	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -14,11 +14,15 @@ import (
 
 const bit11NonCritical = 1 << 10
 
-var anyDesc = (&anypb.Any{}).ProtoReflect().Descriptor()
-var anyFullName = anyDesc.FullName()
+var (
+	anyDesc     = (&anypb.Any{}).ProtoReflect().Descriptor()
+	anyFullName = anyDesc.FullName()
+)
 
+// RejectUnknownFieldsStrict operates by the same rules as RejectUnknownFields, but returns an error if any unknown
+// non-critical fields are encountered.
 func RejectUnknownFieldsStrict(bz []byte, msg protoreflect.MessageDescriptor, resolver protodesc.Resolver) error {
-	var _, err = RejectUnknownFields(bz, msg, false, resolver)
+	_, err := RejectUnknownFields(bz, msg, false, resolver)
 	return err
 }
 
@@ -53,7 +57,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 				// The tag is critical, so report it.
 				return hasUnknownNonCriticals, ErrUnknownField.Wrapf(
 					"%s: {TagNum: %d, WireType:%q}",
-					desc.FullName(), tagNum, wireTypeToString(wireType))
+					desc.FullName(), tagNum, WireTypeToString(wireType))
 			}
 		}
 
@@ -62,7 +66,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		n := protowire.ConsumeFieldValue(tagNum, wireType, bz)
 		if n < 0 {
 			err = fmt.Errorf("could not consume field value for tagNum: %d, wireType: %q; %w",
-				tagNum, wireTypeToString(wireType), protowire.ParseError(n))
+				tagNum, WireTypeToString(wireType), protowire.ParseError(n))
 			return hasUnknownNonCriticals, err
 		}
 		fieldBytes := bz[:n]
@@ -78,8 +82,6 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		if fieldMessage == nil {
 			continue
 		}
-
-		// Let's recursively traverse and typecheck the field.
 
 		// consume length prefix of nested message
 		_, o := protowire.ConsumeVarint(fieldBytes)
@@ -99,30 +101,13 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 				return hasUnknownNonCriticals, err
 			}
 
-			msgName := MessageNameFromTypeURL(a.TypeUrl)
-			fieldMessage, err := resolver.FindDescriptorByName(msgName)
+			msgName := protoreflect.FullName(strings.TrimPrefix(a.TypeUrl, "/"))
+			msgDesc, err := resolver.FindDescriptorByName(msgName)
 			if err != nil {
 				return hasUnknownNonCriticals, err
 			}
 
-			accepts := proto.GetExtension(fieldDesc.Options(), cosmos_proto.E_AcceptsInterface).(string)
-			if accepts != "" {
-				implements := proto.GetExtension(fieldMessage.Options(), cosmos_proto.E_ImplementsInterface).([]string)
-				found := false
-				for _, iface := range implements {
-					if iface == accepts {
-						found = true
-						break
-					}
-				}
-
-				if !found {
-					return hasUnknownNonCriticals, ErrInterfaceNotImplemented.Wrapf(
-						"expected interface %s, message %s implements %v",
-						accepts, fieldMessage.FullName(), implements)
-				}
-			}
-
+			fieldMessage = msgDesc.(protoreflect.MessageDescriptor)
 			fieldBytes = a.Value
 		}
 
@@ -147,7 +132,7 @@ type errUnknownField struct {
 // String implements fmt.Stringer.
 func (twt *errUnknownField) String() string {
 	return fmt.Sprintf("errUnknownField %q: {TagNum: %d, WireType:%q}",
-		twt.Desc.FullName(), twt.TagNum, wireTypeToString(twt.WireType))
+		twt.Desc.FullName(), twt.TagNum, WireTypeToString(twt.WireType))
 }
 
 // Error implements the error interface.
@@ -157,7 +142,8 @@ func (twt *errUnknownField) Error() string {
 
 var _ error = (*errUnknownField)(nil)
 
-func wireTypeToString(wt protowire.Type) string {
+// WireTypeToString returns a string representation of the given protowire.Type.
+func WireTypeToString(wt protowire.Type) string {
 	switch wt {
 	case 0:
 		return "varint"

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -35,7 +36,6 @@ import (
 const ConsensusVersion = 3
 
 var (
-	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -43,6 +43,7 @@ var (
 // AppModuleBasic defines the basic application module used by the distribution module.
 type AppModuleBasic struct {
 	cdc codec.Codec
+	ac  address.Codec
 }
 
 // Name returns the distribution module's name.
@@ -79,17 +80,17 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 }
 
 // GetTxCmd returns the root tx command for the distribution module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd(ab.ac)
 }
 
 // GetQueryCmd returns the root query command for the distribution module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.ac)
 }
 
 // RegisterInterfaces implements InterfaceModule
-func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -112,7 +113,7 @@ func NewAppModule(
 	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, ss exported.Subspace,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: accountKeeper},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
@@ -121,7 +122,10 @@ func NewAppModule(
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -174,8 +178,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the distribution module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(ctx, req, am.keeper)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	return BeginBlocker(c, am.keeper)
 }
 
 // AppModuleSimulation functions

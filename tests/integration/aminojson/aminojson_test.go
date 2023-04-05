@@ -1,6 +1,7 @@
 package aminojson
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -38,6 +39,7 @@ import (
 	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	"cosmossdk.io/x/evidence"
@@ -45,6 +47,7 @@ import (
 	feegranttypes "cosmossdk.io/x/feegrant"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/signing/aminojson"
+	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -57,7 +60,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -293,9 +299,9 @@ var (
 		genType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, genOpts),
 
 		// upgrade
+		genType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, genOpts),       // nolint:staticcheck // testing legacy code path
+		genType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, genOpts.WithDisallowNil()), // nolint:staticcheck // testing legacy code path
 		genType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, genOpts.WithDisallowNil()),
-		genType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, genOpts.WithDisallowNil()),
-		genType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, genOpts),
 		genType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, genOpts.WithDisallowNil()),
 		genType(&upgradetypes.MsgCancelUpgrade{}, &upgradeapi.MsgCancelUpgrade{}, genOpts),
 
@@ -340,12 +346,12 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 			fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
 			rapid.Check(t, func(t *rapid.T) {
 				// uncomment to debug; catch a panic and inspect application state
-				//defer func() {
+				// defer func() {
 				//	if r := recover(); r != nil {
 				//		//fmt.Printf("Panic: %+v\n", r)
 				//		t.FailNow()
 				//	}
-				//}()
+				// }()
 
 				msg := gen.Draw(t, "msg")
 				postFixPulsarMessage(msg)
@@ -362,11 +368,55 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				err = encCfg.Codec.Unmarshal(protoBz, gogo)
 				require.NoError(t, err)
 
-				legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
+				legacyAminoJSON, err := encCfg.Amino.MarshalJSON(gogo)
 				require.NoError(t, err)
-				aminoJson, err := aj.Marshal(msg)
+				aminoJSON, err := aj.Marshal(msg)
 				require.NoError(t, err)
-				require.Equal(t, string(legacyAminoJson), string(aminoJson))
+				require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
+
+				// test amino json signer handler equivalence
+				gogoMsg, ok := gogo.(types.Msg)
+				if !ok {
+					// not signable
+					return
+				}
+
+				handlerOptions := signing_testutil.HandlerArgumentOptions{
+					ChainId:       "test-chain",
+					Memo:          "sometestmemo",
+					Msg:           tt.pulsar,
+					AccNum:        1,
+					AccSeq:        2,
+					SignerAddress: "signerAddress",
+					Fee: &txv1beta1.Fee{
+						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+					},
+				}
+
+				signerData, txData, err := signing_testutil.MakeHandlerArguments(handlerOptions)
+				require.NoError(t, err)
+
+				handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
+				signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
+				require.NoError(t, err)
+
+				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+				txBuilder := encCfg.TxConfig.NewTxBuilder()
+				require.NoError(t, txBuilder.SetMsgs([]types.Msg{gogoMsg}...))
+				txBuilder.SetMemo(handlerOptions.Memo)
+				txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
+				theTx := txBuilder.GetTx()
+
+				legacySigningData := signing.SignerData{
+					ChainID:       handlerOptions.ChainId,
+					Address:       handlerOptions.SignerAddress,
+					AccountNumber: handlerOptions.AccNum,
+					Sequence:      handlerOptions.AccSeq,
+				}
+				legacySignBz, err := legacyHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+					legacySigningData, theTx)
+				require.NoError(t, err)
+				require.Equal(t, string(legacySignBz), string(signBz))
 			})
 		})
 	}
@@ -408,16 +458,18 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		// represent the array as nil, and a subsequent marshal to JSON represent the array as null instead of empty.
 		roundTripUnequal bool
 
-		// pulsar does not support marshalling a math.Dec as anything except a string.  Therefore, we cannot unmarshal
+		// pulsar does not support marshaling a math.Dec as anything except a string.  Therefore, we cannot unmarshal
 		// a pulsar encoded Math.dec (the string representation of a Decimal) into a gogo Math.dec (expecting an int64).
 		protoUnmarshalFails bool
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
 		"auth/module_account": {
 			gogo: &authtypes.ModuleAccount{
-				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: []string{}},
+				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: []string{},
+			},
 			pulsar: &authapi.ModuleAccount{
-				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}},
+				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{},
+			},
 			roundTripUnequal: true,
 		},
 		"auth/base_account": {
@@ -426,9 +478,11 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		},
 		"authz/msg_grant": {
 			gogo: &authztypes.MsgGrant{
-				Grant: authztypes.Grant{Expiration: &now, Authorization: genericAuth}},
+				Grant: authztypes.Grant{Expiration: &now, Authorization: genericAuth},
+			},
 			pulsar: &authzapi.MsgGrant{
-				Grant: &authzapi.Grant{Expiration: timestamppb.New(now), Authorization: genericAuthPulsar}},
+				Grant: &authzapi.Grant{Expiration: timestamppb.New(now), Authorization: genericAuthPulsar},
+			},
 		},
 		"authz/msg_update_params": {
 			gogo:   &authtypes.MsgUpdateParams{Params: authtypes.Params{TxSigLimit: 10}},
@@ -482,12 +536,14 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"consensus/evidence_params/big_duration": {
 			gogo: &gov_v1beta1_types.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
 			pulsar: &gov_v1beta1_api.VotingParams{VotingPeriod: &durationpb.Duration{
-				Seconds: rapidproto.MaxDurationSeconds, Nanos: 999999999}},
+				Seconds: rapidproto.MaxDurationSeconds, Nanos: 999999999,
+			}},
 		},
 		"consensus/evidence_params/too_big_duration": {
 			gogo: &gov_v1beta1_types.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
 			pulsar: &gov_v1beta1_api.VotingParams{VotingPeriod: &durationpb.Duration{
-				Seconds: rapidproto.MaxDurationSeconds + 1, Nanos: 999999999}},
+				Seconds: rapidproto.MaxDurationSeconds + 1, Nanos: 999999999,
+			}},
 			pulsarMarshalFails: true,
 		},
 		// amino.dont_omitempty + empty/nil lists produce some surprising results
@@ -521,7 +577,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"slashing/params/dec": {
 			gogo: &slashingtypes.Params{
 				DowntimeJailDuration: 1e9 + 7,
-				MinSignedPerWindow:   types.NewDec(10)},
+				MinSignedPerWindow:   types.NewDec(10),
+			},
 			pulsar: &slashingapi.Params{
 				DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7},
 				MinSignedPerWindow:   dec10bz,
@@ -548,11 +605,13 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo: &stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{"foo"}},
-				}},
+				},
+			},
 			pulsar: &stakingapi.StakeAuthorization{
 				Validators: &stakingapi.StakeAuthorization_AllowList{
 					AllowList: &stakingapi.StakeAuthorization_Validators{Address: []string{"foo"}},
-				}},
+				},
+			},
 		},
 		"vesting/base_account_empty": {
 			gogo:   &vestingtypes.BaseVestingAccount{BaseAccount: &authtypes.BaseAccount{}},
@@ -609,11 +668,56 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.NoError(t, err)
 
 			newGogoBytes, err := encCfg.Amino.MarshalJSON(newGogo)
+			require.NoError(t, err)
 			if tc.roundTripUnequal {
 				require.NotEqual(t, string(gogoBytes), string(newGogoBytes))
 				return
 			}
 			require.Equal(t, string(gogoBytes), string(newGogoBytes))
+
+			// test amino json signer handler equivalence
+			msg, ok := tc.gogo.(types.Msg)
+			if !ok {
+				// not signable
+				return
+			}
+
+			handlerOptions := signing_testutil.HandlerArgumentOptions{
+				ChainId:       "test-chain",
+				Memo:          "sometestmemo",
+				Msg:           tc.pulsar,
+				AccNum:        1,
+				AccSeq:        2,
+				SignerAddress: "signerAddress",
+				Fee: &txv1beta1.Fee{
+					Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+				},
+			}
+
+			signerData, txData, err := signing_testutil.MakeHandlerArguments(handlerOptions)
+			require.NoError(t, err)
+
+			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
+			signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
+			require.NoError(t, err)
+
+			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+			txBuilder := encCfg.TxConfig.NewTxBuilder()
+			require.NoError(t, txBuilder.SetMsgs([]types.Msg{msg}...))
+			txBuilder.SetMemo(handlerOptions.Memo)
+			txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
+			theTx := txBuilder.GetTx()
+
+			legacySigningData := signing.SignerData{
+				ChainID:       handlerOptions.ChainId,
+				Address:       handlerOptions.SignerAddress,
+				AccountNumber: handlerOptions.AccNum,
+				Sequence:      handlerOptions.AccSeq,
+			}
+			legacySignBz, err := legacyHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				legacySigningData, theTx)
+			require.NoError(t, err)
+			require.Equal(t, string(legacySignBz), string(signBz))
 		})
 	}
 }
@@ -641,6 +745,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.NoError(t, err)
 
 	err = proto.Unmarshal(protoBz, sanityPulsar)
+	require.NoError(t, err)
 
 	// !!!
 	//  empty []string is not the same as nil []string.  this is a bug in gogo.
@@ -652,22 +757,43 @@ func TestSendAuthorization(t *testing.T) {
 	require.NotNil(t, pulsar.SpendLimit)
 	require.Zero(t, len(pulsar.SpendLimit))
 
-	legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
-	aminoJson, err := aj.Marshal(sanityPulsar)
+	legacyAminoJSON, err := encCfg.Amino.MarshalJSON(gogo)
+	require.NoError(t, err)
+	aminoJSON, err := aj.Marshal(sanityPulsar)
+	require.NoError(t, err)
 
-	require.Equal(t, string(legacyAminoJson), string(aminoJson))
+	require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
 
-	aminoJson, err = aj.Marshal(pulsar)
+	aminoJSON, err = aj.Marshal(pulsar)
 	require.NoError(t, err)
 
 	// at this point, pulsar.SpendLimit = [], and gogo.SpendLimit = nil, but they will both marshal to `[]`
 	// this is *only* possible because of Cosmos SDK's custom MarshalJSON method for Coins
-	require.Equal(t, string(legacyAminoJson), string(aminoJson))
+	require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
+}
+
+func TestDecimalMutation(t *testing.T) {
+	encCfg := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{})
+	rates := &stakingtypes.CommissionRates{}
+	rateBz, _ := encCfg.Amino.MarshalJSON(rates)
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	_, err := gogoproto.Marshal(rates)
+	require.NoError(t, err)
+	rateBz, _ = encCfg.Amino.MarshalJSON(rates)
+
+	// prior to the merge of https://github.com/cosmos/cosmos-sdk/pull/15506
+	// gogoproto.Marshal would mutate Decimal fields changing JSON output as shown in the assertions below
+	//require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	//require.Equal(t,
+	//	`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
+	//	string(rateBz))
+
+	// This is no longer the case, new behavior:
+	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
 }
 
 func postFixPulsarMessage(msg proto.Message) {
-	switch m := msg.(type) {
-	case *authapi.ModuleAccount:
+	if m, ok := msg.(*authapi.ModuleAccount); ok {
 		if m.BaseAccount == nil {
 			m.BaseAccount = &authapi.BaseAccount{}
 		}

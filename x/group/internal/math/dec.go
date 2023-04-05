@@ -105,7 +105,7 @@ func (x Dec) IsNegative() bool {
 }
 
 // Add adds x and y
-func Add(x Dec, y Dec) (Dec, error) {
+func Add(x, y Dec) (Dec, error) {
 	return x.Add(y)
 }
 
@@ -130,7 +130,7 @@ func (x Dec) IsZero() bool {
 
 // SubNonNegative subtracts the value of y from x and returns the result with
 // arbitrary precision. Returns an error if the result is negative.
-func SubNonNegative(x Dec, y Dec) (Dec, error) {
+func SubNonNegative(x, y Dec) (Dec, error) {
 	z, err := x.Sub(y)
 	if err != nil {
 		return Dec{}, err

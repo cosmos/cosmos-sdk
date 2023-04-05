@@ -17,6 +17,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
@@ -62,19 +63,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.setState(runTxModeDeliver, initHeader)
 	app.setState(runTxModeCheck, initHeader)
 
-	// Use an empty header for prepare and process proposal states. The header
-	// will be overwritten for the first block (see getContextForProposal()) and
-	// cleaned up on every Commit(). Only the ChainID is needed so it's set in
-	// the context.
-	emptyHeader := cmtproto.Header{ChainID: req.ChainId}
-	app.setState(runTxPrepareProposal, emptyHeader)
-	app.setState(runTxProcessProposal, emptyHeader)
-
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+		err := app.StoreConsensusParams(app.deliverState.ctx, *req.ConsensusParams)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if app.initChainer == nil {
@@ -243,9 +239,8 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
-	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
-		res.ConsensusParamUpdates = cp
-	}
+	cp := app.GetConsensusParams(app.deliverState.ctx)
+	res.ConsensusParamUpdates = &cp
 
 	// call the streaming service hook with the EndBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
@@ -276,6 +271,10 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
+
+	// always reset state given that PrepareProposal can timeout and be called again
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
+	app.setState(runTxPrepareProposal, emptyHeader)
 
 	// CometBFT must never call PrepareProposal with a height of 0.
 	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
@@ -329,6 +328,16 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 	if app.processProposal == nil {
 		panic("app.ProcessProposal is not set")
 	}
+
+	// CometBFT must never call ProcessProposal with a height of 0.
+	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	if req.Height < 1 {
+		panic("ProcessProposal called with invalid height")
+	}
+
+	// always reset state given that ProcessProposal can timeout and be called again
+	emptyHeader := cmtproto.Header{ChainID: app.chainID}
+	app.setState(runTxProcessProposal, emptyHeader)
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(app.voteInfos).
@@ -447,6 +456,11 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
+	rms, ok := app.cms.(*rootmulti.Store)
+	if ok {
+		rms.SetCommitHeader(header)
+	}
+
 	// Write the DeliverTx state into branched storage and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
@@ -478,12 +492,6 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
-
-	// Reset state to the latest committed but with an empty header to avoid
-	// leaking the header from the last block.
-	emptyHeader := cmtproto.Header{ChainID: app.chainID}
-	app.setState(runTxPrepareProposal, emptyHeader)
-	app.setState(runTxProcessProposal, emptyHeader)
 
 	// empty/reset the deliver state
 	app.deliverState = nil
@@ -807,6 +815,16 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height)
 
+	if height != lastBlockHeight {
+		rms, ok := app.cms.(*rootmulti.Store)
+		if ok {
+			cInfo, err := rms.GetCommitInfo(height)
+			if cInfo != nil && err == nil {
+				ctx = ctx.WithBlockTime(cInfo.Timestamp)
+			}
+		}
+	}
+
 	return ctx, nil
 }
 
@@ -861,7 +879,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.
 	cp := app.GetConsensusParams(app.deliverState.ctx)
-	if cp != nil && cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
+	if cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
 

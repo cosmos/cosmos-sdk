@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -44,7 +46,7 @@ func (suite *KeeperTestSuite) reset() {
 
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
-	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
 	err := bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 	suite.NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
@@ -69,11 +71,11 @@ func (suite *KeeperTestSuite) reset() {
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.govKeeper)
 
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
-	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(30000000))
+	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdkmath.NewInt(30000000))
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
+	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
 
 	tp := TestProposal
 	_, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
@@ -93,7 +95,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
+	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
 
 	// create test proposals
 	tp := TestProposal

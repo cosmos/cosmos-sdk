@@ -11,12 +11,12 @@ import (
 
 	"cosmossdk.io/depinject"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/types/address"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 
-	store "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -126,9 +126,6 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterInvariants performs a no-op.
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -212,13 +209,12 @@ func ProvideAddressCodec(config *modulev1.Module) address.Codec {
 	return keeper.NewBech32Codec(config.Bech32Prefix)
 }
 
-//nolint:revive
-type AuthInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
 
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
@@ -227,15 +223,14 @@ type AuthInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-//nolint:revive
-type AuthOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        appmodule.AppModule
 }
 
-func ProvideModule(in AuthInputs) AuthOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -255,8 +250,8 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return AuthOutputs{AccountKeeper: k, Module: m}
+	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

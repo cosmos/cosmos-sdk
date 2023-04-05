@@ -274,7 +274,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1bet
 
 ## ConsPubkeyRotation
 
-The `ConsPubkey` of a validator will be instantly rotated to the new `ConsPubkey` there will be a tracking for the rotations which is only allows limited no.of rotations should be made in the unbonding period of time
+The `ConsPubkey` of a validator will be instantly rotated to the new `ConsPubkey`. The rotation will be tracked to only allow a limited number of rotations within an unbonding period of time.
 
 `ConsPubkeyRotation` are indexed in the store as:
 
@@ -294,7 +294,7 @@ A `ConsPubKeyRotationHistory` object is created every time a consensus pubkey ro
 To prevent the spam: 
 
 * There will only limited number of rotations can be done within unbonding period of time. 
-* And significant amount of fee will be deducted for rotating the keys.
+* A non-negligible fee will be deducted for rotating a consensus key.
 
 Formula to calculate the fees to rotate the key is: 
 

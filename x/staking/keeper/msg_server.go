@@ -518,17 +518,15 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		return nil, types.ErrNoValidatorFound
 	}
 
-	// checks if the validator is exceeding parameter MaxConsPubKeyRotations within the
-	// unbonding period by iterating ConsPubKeyRotationHistory
-	//
-	// this index will contain the keys of how many
+	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
+	// unbonding period by iterating ConsPubKeyRotationHistory.
 	isExceedingLimit, rotationsMade := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
 	if isExceedingLimit {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
-	// checks if the signing account has enough balance to pay KeyRotationFee
-	// pays KeyRotationFee to community fund
+	// Check if the signing account has enough balance to pay KeyRotationFee
+	// pays KeyRotationFee to community fund.
 	rotationFee := k.getRotationFee(ctx, validator.GetBondedTokens(), rotationsMade)
 
 	// deletes old ValidatorByConsAddr

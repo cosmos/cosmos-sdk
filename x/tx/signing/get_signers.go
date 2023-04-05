@@ -31,7 +31,10 @@ type GetSignersOptions struct {
 	// If it is nil, the global protobuf registry will be used.
 	ProtoFiles ProtoFileResolver
 
-	AddressCodec          address.Codec
+	// AddressCodec is the codec for converting addresses between strings and bytes.
+	AddressCodec address.Codec
+
+	// ValidatorAddressCodec is the codec for converting validator addresses between strings and bytes.
 	ValidatorAddressCodec address.Codec
 }
 

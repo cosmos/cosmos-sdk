@@ -117,7 +117,7 @@ specified here https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor/README.
 This will allow a properly configured cosmsod daemon to auto-download new binaries and auto-upgrade.
 As noted there, this is intended more for full nodes than validators.
 
-# Cancelling Upgrades
+# Canceling Upgrades
 
 There are two ways to cancel a planned upgrade - with on-chain governance or off-chain social consensus.
 For the first one, there is a CancelSoftwareUpgrade proposal type, which can be voted on and will

@@ -5,7 +5,7 @@ package testutil
 import (
 	context "context"
 
-	math "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"

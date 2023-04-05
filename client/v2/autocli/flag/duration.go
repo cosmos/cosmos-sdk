@@ -10,11 +10,11 @@ import (
 
 type durationType struct{}
 
-func (t durationType) NewValue(context.Context, *Builder) Value {
+func (d durationType) NewValue(context.Context, *Builder) Value {
 	return &durationValue{}
 }
 
-func (t durationType) DefaultValue() string {
+func (d durationType) DefaultValue() string {
 	return ""
 }
 
@@ -22,30 +22,30 @@ type durationValue struct {
 	value *durationpb.Duration
 }
 
-func (a durationValue) Get(protoreflect.Value) (protoreflect.Value, error) {
-	if a.value == nil {
+func (d durationValue) Get(protoreflect.Value) (protoreflect.Value, error) {
+	if d.value == nil {
 		return protoreflect.Value{}, nil
 	}
-	return protoreflect.ValueOfMessage(a.value.ProtoReflect()), nil
+	return protoreflect.ValueOfMessage(d.value.ProtoReflect()), nil
 }
 
-func (v durationValue) String() string {
-	if v.value == nil {
+func (d durationValue) String() string {
+	if d.value == nil {
 		return ""
 	}
-	return v.value.AsDuration().String()
+	return d.value.AsDuration().String()
 }
 
-func (v *durationValue) Set(s string) error {
+func (d *durationValue) Set(s string) error {
 	dur, err := time.ParseDuration(s)
 	if err != nil {
 		return err
 	}
 
-	v.value = durationpb.New(dur)
+	d.value = durationpb.New(dur)
 	return nil
 }
 
-func (v durationValue) Type() string {
+func (d durationValue) Type() string {
 	return "duration"
 }

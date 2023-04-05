@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
@@ -97,7 +97,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	isShowDevice, _ := cmd.Flags().GetBool(FlagDevice)
 
 	isOutputSet := false
-	tmp := cmd.Flag(cli.OutputFlag)
+	tmp := cmd.Flag(flags.FlagOutput)
 	if tmp != nil {
 		isOutputSet = tmp.Changed
 	}
@@ -117,7 +117,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	if isOutputSet {
-		clientCtx.OutputFormat, _ = cmd.Flags().GetString(cli.OutputFlag)
+		clientCtx.OutputFormat, _ = cmd.Flags().GetString(flags.FlagOutput)
 	}
 
 	switch {

@@ -4,12 +4,12 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
-	cosmossdk.io/core v0.6.1
+	cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.9.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330094838-d21f58c638d5
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0

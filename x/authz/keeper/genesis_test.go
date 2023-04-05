@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/golang/mock/gomock"
 
@@ -20,6 +21,13 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+)
+
+var (
+	granteePub  = secp256k1.GenPrivKey().PubKey()
+	granterPub  = secp256k1.GenPrivKey().PubKey()
+	granteeAddr = sdk.AccAddress(granteePub.Address())
+	granterAddr = sdk.AccAddress(granterPub.Address())
 )
 
 type GenesisTestSuite struct {
@@ -42,6 +50,11 @@ func (suite *GenesisTestSuite) SetupTest() {
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
 
+	suite.accountKeeper.EXPECT().StringToBytes(granteeAddr.String()).Return(granteeAddr, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(granterAddr).Return(granterAddr.String(), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(granterAddr.String()).Return(granterAddr, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(granterAddr).Return(granterAddr.String(), nil).AnyTimes()
+
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",
 		log.NewNopLogger(),
@@ -58,15 +71,8 @@ func (suite *GenesisTestSuite) SetupTest() {
 	suite.keeper = keeper.NewKeeper(key, suite.encCfg.Codec, msr, suite.accountKeeper)
 }
 
-var (
-	granteePub  = secp256k1.GenPrivKey().PubKey()
-	granterPub  = secp256k1.GenPrivKey().PubKey()
-	granteeAddr = sdk.AccAddress(granteePub.Address())
-	granterAddr = sdk.AccAddress(granterPub.Address())
-)
-
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
-	coins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000)))
+	coins := sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(1_000)))
 
 	now := suite.ctx.BlockTime()
 	expires := now.Add(time.Hour)

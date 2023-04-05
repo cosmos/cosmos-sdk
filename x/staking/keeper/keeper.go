@@ -8,7 +8,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -48,7 +47,7 @@ func NewKeeper(
 	}
 
 	// ensure that authority is a valid AccAddress
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := ak.StringToBytes(authority); err != nil {
 		panic("authority is not a valid acc address")
 	}
 

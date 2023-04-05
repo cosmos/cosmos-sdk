@@ -134,7 +134,7 @@ func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 
 	b.Run("logger structured", func(b *testing.B) {
 		zl := zerolog.New(io.Discard)
-		var logger log.Logger = log.NewCustomLogger(zl)
+		logger := log.NewCustomLogger(zl)
 		zerolog := logger.Impl().(*zerolog.Logger)
 		for i := 0; i < b.N; i++ {
 			zerolog.Info().Int64("foo", 100000).Msg(message)
@@ -150,7 +150,7 @@ func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 
 	b.Run("logger", func(b *testing.B) {
 		zl := zerolog.New(io.Discard)
-		var logger log.Logger = log.NewCustomLogger(zl)
+		logger := log.NewCustomLogger(zl)
 		for i := 0; i < b.N; i++ {
 			logger.Info(message, "foo", 100000)
 			logger.Info(message, "foo", "foo")

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,7 +14,7 @@ var _ authz.MsgServer = Keeper{}
 // Grant implements the MsgServer.Grant method to create a new grant.
 func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +26,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	granter, err := k.authKeeper.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -51,11 +52,11 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 // Revoke implements the MsgServer.Revoke method.
 func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	granter, err := k.authKeeper.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +72,10 @@ func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgR
 // Exec implements the MsgServer.Exec method.
 func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if msg.Grantee == "" {
+		return nil, errors.New("empty address string is not allowed")
+	}
+	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}

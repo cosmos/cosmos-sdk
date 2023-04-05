@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -29,8 +31,6 @@ var (
 )
 
 // Simulation operation weights constants
-//
-//nolint:gosec // these are not hard-coded credentials.
 const (
 	OpWeightMsgDeposit        = "op_weight_msg_deposit"
 	OpWeightMsgVote           = "op_weight_msg_vote"
@@ -45,7 +45,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, wMsgs []simtypes.WeightedProposalMsg, wContents []simtypes.WeightedProposalContent) simulation.WeightedOperations { //nolint:staticcheck
+func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, wMsgs []simtypes.WeightedProposalMsg, wContents []simtypes.WeightedProposalContent) simulation.WeightedOperations { //nolint:staticcheck // used for legacy testing
 	var (
 		weightMsgDeposit        int
 		weightMsgVote           int
@@ -154,7 +154,7 @@ func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 // SimulateMsgSubmitLegacyProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-func SimulateMsgSubmitLegacyProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, contentSim simtypes.ContentSimulatorFn) simtypes.Operation { //nolint:staticcheck
+func SimulateMsgSubmitLegacyProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, contentSim simtypes.ContentSimulatorFn) simtypes.Operation { //nolint:staticcheck // used for legacy testing
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		// 1) submit proposal now
@@ -511,14 +511,14 @@ func randomDeposit(
 
 	minDepositAmount := minDeposit[denomIndex].Amount
 
-	minAmount := sdk.ZeroInt()
+	minAmount := sdkmath.ZeroInt()
 	if useMinAmount {
-		minDepositPercent, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
+		minDepositPercent, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
 		if err != nil {
 			return nil, false, err
 		}
 
-		minAmount = sdk.NewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
+		minAmount = sdkmath.LegacyNewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
 	}
 
 	amount, err := simtypes.RandPositiveInt(r, minDepositAmount.Sub(minAmount))
@@ -602,19 +602,19 @@ func randomWeightedVotingOptions(r *rand.Rand) v1.WeightedVoteOptions {
 	if w2 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
 			Option: v1.OptionAbstain,
-			Weight: sdk.NewDecWithPrec(int64(w2), 2).String(),
+			Weight: sdkmath.LegacyNewDecWithPrec(int64(w2), 2).String(),
 		})
 	}
 	if w3 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
 			Option: v1.OptionNo,
-			Weight: sdk.NewDecWithPrec(int64(w3), 2).String(),
+			Weight: sdkmath.LegacyNewDecWithPrec(int64(w3), 2).String(),
 		})
 	}
 	if w4 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
 			Option: v1.OptionNoWithVeto,
-			Weight: sdk.NewDecWithPrec(int64(w4), 2).String(),
+			Weight: sdkmath.LegacyNewDecWithPrec(int64(w4), 2).String(),
 		})
 	}
 	return weightedVoteOptions

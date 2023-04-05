@@ -3,6 +3,8 @@ package v1beta1
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,10 +15,10 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = sdk.NewInt(10000000)
-	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens = sdkmath.NewInt(10000000)
+	DefaultQuorum           = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultThreshold        = sdkmath.LegacyNewDecWithPrec(5, 1)
+	DefaultVetoThreshold    = sdkmath.LegacyNewDecWithPrec(334, 3)
 )
 
 // NewDepositParams creates a new DepositParams object

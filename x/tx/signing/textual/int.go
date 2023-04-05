@@ -2,6 +2,7 @@ package textual
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -19,8 +20,6 @@ func NewIntValueRenderer(fd protoreflect.FieldDescriptor) ValueRenderer {
 type intValueRenderer struct {
 	fd protoreflect.FieldDescriptor
 }
-
-var _ ValueRenderer = intValueRenderer{}
 
 func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	formatted, err := math.FormatInt(v.String())
@@ -79,6 +78,10 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 
 // parseInt parses a value-rendered string into an integer
 func parseInt(v string) (string, error) {
+	if v == "" {
+		return "", errors.New("empty string not supported")
+	}
+
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"

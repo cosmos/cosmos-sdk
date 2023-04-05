@@ -131,7 +131,7 @@ func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (prot
 		return protoreflect.Value{}, fmt.Errorf("bad duration format: %s", screens[0].Content)
 	}
 
-	negative := parts[1] != ""
+	isNegative := parts[1] == "-"
 	var days, hours, minutes, seconds, nanos int64
 	var err error
 
@@ -177,7 +177,7 @@ func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (prot
 	// Since there are 9 digits or fewer, this conversion is safe.
 	dur.Nanos = int32(nanos)
 
-	if negative {
+	if isNegative {
 		dur.Seconds *= -1
 		dur.Nanos *= -1
 	}

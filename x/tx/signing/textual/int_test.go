@@ -46,6 +46,24 @@ func TestIntJsonTestcases(t *testing.T) {
 				checkNumberTest(t, r, protoreflect.ValueOf(i), tc[1])
 			}
 
+			// Parse test case strings as protobuf int64
+			ii, err := strconv.ParseInt(tc[0], 10, 64)
+			if err == nil {
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("INT64"))
+				require.NoError(t, err)
+
+				checkNumberTest(t, r, protoreflect.ValueOf(ii), tc[1])
+			}
+
+			// Parse test case strings as protobuf int32
+			ii, err = strconv.ParseInt(tc[0], 10, 32)
+			if err == nil {
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("INT32"))
+				require.NoError(t, err)
+
+				checkNumberTest(t, r, protoreflect.ValueOf(ii), tc[1])
+			}
+
 			// Parse test case strings as sdk.Ints
 			_, ok := math.NewIntFromString(tc[0])
 			if ok {
@@ -56,6 +74,24 @@ func TestIntJsonTestcases(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEmptyString(t *testing.T) {
+	vr := textual.NewIntValueRenderer(fieldDescriptorFromName("UINT64"))
+
+	// this should not panic after we fix cosmossdk.io/math's FormatInt
+	require.Panics(t, func() {
+		vr.Format(context.Background(), protoreflect.ValueOf(""))
+	})
+
+	screens, err := vr.Format(context.Background(), protoreflect.ValueOf("123"))
+	require.NoError(t, err)
+	require.Len(t, screens, 1)
+
+	// force empty screen content
+	screens[0].Content = ""
+	_, err = vr.Parse(context.Background(), screens)
+	require.EqualError(t, err, "empty string not supported")
 }
 
 // checkNumberTest checks that the output of a number value renderer

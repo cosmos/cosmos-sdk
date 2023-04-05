@@ -13,6 +13,11 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
+var (
+	headerRegex  = regexp.MustCompile(`(\d+) .+`)
+	elementRegex = regexp.MustCompile(`(.+) \(\d+\/\d+\)`)
+)
+
 type messageValueRenderer struct {
 	tr      *SignModeHandler
 	msgDesc protoreflect.MessageDescriptor
@@ -262,7 +267,6 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 
 func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Screen, l protoreflect.List, vr ValueRenderer) error {
 	// <int> <field_kind>
-	headerRegex := *regexp.MustCompile(`(\d+) .+`)
 	res := headerRegex.FindAllStringSubmatch(screens[0].Content, -1)
 
 	if res == nil {
@@ -279,7 +283,6 @@ func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Scr
 	elementIndex := 1
 
 	// <field_name> (<int>/<int>): <value rendered 1st line>
-	elementRegex := regexp.MustCompile(`(.+) \(\d+\/\d+\)`)
 	elementRes := elementRegex.FindAllStringSubmatch(screens[idx].Title, -1)
 	if elementRes == nil {
 		return errors.New("element malformed")

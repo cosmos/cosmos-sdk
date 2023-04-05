@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// SetConsPubKeyRotationHistory sets the history item of consensus key rotation of a validator
+// SetConsPubKeyRotationHistory sets the consensus key rotation of a validator into state
 func (k Keeper) SetConsPubKeyRotationHistory(ctx sdk.Context, valAddr sdk.ValAddress,
 	oldPubKey, newPubKey *codectypes.Any, height uint64, fee sdk.Coin) {
 	history := types.ConsPubKeyRotationHistory{

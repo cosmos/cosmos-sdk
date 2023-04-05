@@ -128,6 +128,9 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 		{
 			name: "two continuous rotations",
 			malleate: func() sdk.Context {
+				params := stakingKeeper.GetParams(ctx)
+				params.MaxConsPubkeyRotations = 2
+				stakingKeeper.SetParams(ctx, params)
 				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(validators[1].GetOperator()), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 				req, err := types.NewMsgRotateConsPubKey(validators[1].GetOperator(), PKs[497])

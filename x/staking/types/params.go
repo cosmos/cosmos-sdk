@@ -31,8 +31,8 @@ const (
 	DefaultHistoricalEntries uint32 = 10000
 
 	// DefaultMaxConsPubKeyRotations is param to set validators can rotate their
-	// keys only for 10 times
-	DefaultMaxConsPubKeyRotations uint64 = 10
+	// keys only for 1 times
+	DefaultMaxConsPubKeyRotations uint64 = 1
 )
 
 var (

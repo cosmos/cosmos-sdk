@@ -299,7 +299,7 @@ To prevent the spam:
 Formula to calculate the fees to rotate the key is: 
 
 ```go
-(max(VotingPowerPercentage 100, 1) * InitialKeyRotationFee) * 2^(number of rotations in ConsPubKeyRotationHistory in recent unbonding period)
+(max(VotingPowerPercentage, 1) * InitialKeyRotationFee) * 2^(number of rotations in ConsPubKeyRotationHistory in recent unbonding period)
 ```
 
 ### Queues

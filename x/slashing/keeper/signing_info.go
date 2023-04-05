@@ -160,10 +160,9 @@ func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.C
 	}
 }
 
-// RemoveValidatorSigningInfo removes the validator signing info from a consensus address key
-func (k Keeper) RemoveValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.ValidatorSigningInfoKey(address))
+// removeValidatorSigningInfo removes the validator signing info from a consensus address key
+func (k Keeper) removeValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) {
+	ctx.KVStore(k.storeKey).Delete(types.ValidatorSigningInfoKey(address))
 }
 
 func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey) error {
@@ -175,10 +174,10 @@ func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptoty
 	// Migrate ValidatorSigningInfo from oldPubKey to newPubKey
 	signingInfo, found := k.GetValidatorSigningInfo(ctx, sdk.ConsAddress(oldPubKey.Address()))
 	if !found {
-		return nil
+		return types.ErrInvalidConsPubKey
 	}
 	k.SetValidatorSigningInfo(ctx, sdk.ConsAddress(newPubKey.Address()), signingInfo)
-	k.RemoveValidatorSigningInfo(ctx, sdk.ConsAddress(oldPubKey.Address()))
+	k.removeValidatorSigningInfo(ctx, sdk.ConsAddress(oldPubKey.Address()))
 
 	// Migrate ValidatorMissedBlockBitArray from oldPubKey to newPubKey
 	missedBlocks := k.GetValidatorMissedBlocks(ctx, sdk.ConsAddress(oldPubKey.Address()))

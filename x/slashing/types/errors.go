@@ -11,4 +11,5 @@ var (
 	ErrMissingSelfDelegation        = errors.Register(ModuleName, 6, "validator has no self-delegation; cannot be unjailed")
 	ErrSelfDelegationTooLowToUnjail = errors.Register(ModuleName, 7, "validator's self delegation less than minimum; cannot be unjailed")
 	ErrNoSigningInfoFound           = errors.Register(ModuleName, 8, "no validator signing info found")
+	ErrInvalidConsPubKey            = errors.Register(ModuleName, 9, "invalid consensus pubkey")
 )

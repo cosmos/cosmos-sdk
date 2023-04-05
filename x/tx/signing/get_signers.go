@@ -49,6 +49,14 @@ func NewGetSignersContext(options GetSignersOptions) (*GetSignersContext, error)
 		protoFiles = protoregistry.GlobalFiles
 	}
 
+	if options.AddressCodec == nil {
+		return nil, errors.New("address codec is required")
+	}
+
+	if options.ValidatorAddressCodec == nil {
+		return nil, errors.New("validator address codec is required")
+	}
+
 	c := &GetSignersContext{
 		protoFiles:            protoFiles,
 		addressCodec:          options.AddressCodec,
@@ -276,4 +284,8 @@ func (c *GetSignersContext) GetSigners(msg proto.Message) ([][]byte, error) {
 	}
 
 	return f(msg)
+}
+
+func (c *GetSignersContext) AddressCodec() address.Codec {
+	return c.addressCodec
 }

@@ -71,19 +71,19 @@ func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 
 // getFirstSigner returns the first signer from the first message in the tx. It replicates behavior in
 // https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L142
-func (h SignModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
+func (h SignModeHandler) getFirstSigner(txData signing.TxData) ([]byte, error) {
 	for _, anyMsg := range txData.Body.Messages {
 		msg, err := anyutil.Unpack(anyMsg, h.fileResolver, h.typeResolver)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		signer, err := h.signersContext.GetSigners(msg)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		return signer[0], nil
 	}
-	return "", fmt.Errorf("no signer found")
+	return nil, fmt.Errorf("no signer found")
 }
 
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.
@@ -96,7 +96,10 @@ func (h SignModeHandler) GetSignBytes(
 		if err != nil {
 			return nil, err
 		}
-		feePayer = fp
+		feePayer, err = h.signersContext.AddressCodec().BytesToString(fp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if feePayer == signerData.Address {
 		return nil, fmt.Errorf("fee payer %s cannot sign with %s: unauthorized",

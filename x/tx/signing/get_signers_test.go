@@ -1,10 +1,12 @@
 package signing
 
 import (
+	"encoding/hex"
 	"testing"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	groupv1 "cosmossdk.io/api/cosmos/group/v1"
+	"cosmossdk.io/core/address"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
@@ -12,81 +14,103 @@ import (
 )
 
 func TestGetSigners(t *testing.T) {
-	ctx, err := NewGetSignersContext(GetSignersOptions{})
+	ctx, err := NewGetSignersContext(GetSignersOptions{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyAddressCodec{},
+	})
 	require.NoError(t, err)
 	tests := []struct {
 		name    string
 		msg     proto.Message
-		want    []string
+		want    [][]byte
 		wantErr bool
 	}{
 		{
 			name: "MsgSend",
 			msg: &bankv1beta1.MsgSend{
-				FromAddress: "foo",
+				FromAddress: hex.EncodeToString([]byte("foo")),
 			},
-			want: []string{"foo"},
+			want: [][]byte{[]byte("foo")},
 		},
 		{
 			name: "MsgMultiSend",
 			msg: &bankv1beta1.MsgMultiSend{
 				Inputs: []*bankv1beta1.Input{
-					{Address: "foo"},
-					{Address: "bar"},
+					{Address: hex.EncodeToString([]byte("foo"))},
+					{Address: hex.EncodeToString([]byte("bar"))},
 				},
 			},
-			want: []string{"foo", "bar"},
+			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
 			name: "MsgSubmitProposal",
 			msg: &groupv1.MsgSubmitProposal{
-				Proposers: []string{"foo", "bar"},
+				Proposers: []string{
+					hex.EncodeToString([]byte("foo")),
+					hex.EncodeToString([]byte("bar")),
+				},
 			},
-			want: []string{"foo", "bar"},
+			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
 			name: "simple",
-			msg:  &testpb.SimpleSigner{Signer: "foo"},
-			want: []string{"foo"},
+			msg:  &testpb.SimpleSigner{Signer: hex.EncodeToString([]byte("foo"))},
+			want: [][]byte{[]byte("foo")},
 		},
 		{
 			name: "repeated",
-			msg:  &testpb.RepeatedSigner{Signer: []string{"foo", "bar"}},
-			want: []string{"foo", "bar"},
+			msg: &testpb.RepeatedSigner{Signer: []string{
+				hex.EncodeToString([]byte("foo")),
+				hex.EncodeToString([]byte("bar")),
+			}},
+			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
 			name: "nested",
-			msg:  &testpb.NestedSigner{Inner: &testpb.NestedSigner_Inner{Signer: "foo"}},
-			want: []string{"foo"},
+			msg:  &testpb.NestedSigner{Inner: &testpb.NestedSigner_Inner{Signer: hex.EncodeToString([]byte("foo"))}},
+			want: [][]byte{[]byte("foo")},
 		},
 		{
 			name: "nested repeated",
-			msg:  &testpb.NestedRepeatedSigner{Inner: &testpb.NestedRepeatedSigner_Inner{Signer: []string{"foo", "bar"}}},
-			want: []string{"foo", "bar"},
+			msg: &testpb.NestedRepeatedSigner{Inner: &testpb.NestedRepeatedSigner_Inner{Signer: []string{
+				hex.EncodeToString([]byte("foo")),
+				hex.EncodeToString([]byte("bar")),
+			}}},
+			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
 			name: "repeated nested",
 			msg: &testpb.RepeatedNestedSigner{Inner: []*testpb.RepeatedNestedSigner_Inner{
-				{Signer: "foo"},
-				{Signer: "bar"},
+				{Signer: hex.EncodeToString([]byte("foo"))},
+				{Signer: hex.EncodeToString([]byte("bar"))},
 			}},
-			want: []string{"foo", "bar"},
+			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
 			name: "nested repeated",
 			msg: &testpb.NestedRepeatedSigner{Inner: &testpb.NestedRepeatedSigner_Inner{
-				Signer: []string{"foo", "bar"},
-			}},
-			want: []string{"foo", "bar"},
+				Signer: []string{
+					hex.EncodeToString([]byte("foo")),
+					hex.EncodeToString([]byte("bar")),
+				}}},
+			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
 			name: "repeated nested repeated",
 			msg: &testpb.RepeatedNestedRepeatedSigner{Inner: []*testpb.RepeatedNestedRepeatedSigner_Inner{
-				{Signer: []string{"foo", "bar"}},
-				{Signer: []string{"baz", "bam"}},
-				{Signer: []string{"blah"}},
+				{Signer: []string{
+					hex.EncodeToString([]byte("foo")),
+					hex.EncodeToString([]byte("bar")),
+				}},
+				{Signer: []string{
+					hex.EncodeToString([]byte("baz")),
+					hex.EncodeToString([]byte("bam")),
+				}},
+				{Signer: []string{
+					hex.EncodeToString([]byte("blah")),
+				}},
 			}},
-			want: []string{"foo", "bar", "baz", "bam", "blah"},
+			want: [][]byte{[]byte("foo"), []byte("bar"), []byte("baz"), []byte("bam"), []byte("blah")},
 		},
 		{
 			name:    "bad",
@@ -111,3 +135,15 @@ func TestGetSigners(t *testing.T) {
 		})
 	}
 }
+
+type dummyAddressCodec struct{}
+
+func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return hex.DecodeString(text)
+}
+
+func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
+	return hex.EncodeToString(bz), nil
+}
+
+var _ address.Codec = dummyAddressCodec{}

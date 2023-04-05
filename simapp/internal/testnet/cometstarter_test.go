@@ -84,15 +84,6 @@ func TestCometStarter_PortContention(t *testing.T) {
 	// https://github.com/cometbft/cometbft/pull/532
 	logger := log.NewTestLoggerInfo(t)
 
-	// This chooser function is the key of this test,
-	// where there is only one more available address than there are nodes.
-	// Therefore it is likely that an address will already be in use,
-	// thereby exercising the address-in-use retry.
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-	chooser := func() string {
-		return reuseAddrs[rng.Intn(len(reuseAddrs))]
-	}
-
 	const nRuns = 4
 	for i := 0; i < nRuns; i++ {
 		t.Run(fmt.Sprintf("attempt %d", i), func(t *testing.T) {
@@ -121,10 +112,16 @@ func TestCometStarter_PortContention(t *testing.T) {
 					rootDir,
 				).
 					Logger(logger.With("rootmodule", fmt.Sprintf("comet_node-%d", idx))).
-					TCPAddrChooser(chooser)
+					TCPAddrChooser(func() string {
+						// This chooser function is the key of this test,
+						// where there is only one more available address than there are nodes.
+						// Therefore it is likely that an address will already be in use,
+						// thereby exercising the address-in-use retry.
+						return reuseAddrs[rand.Intn(len(reuseAddrs))]
+					})
 			})
+			defer nodes.StopAndWait()
 			require.NoError(t, err)
-			defer nodes.Stop()
 
 			heightAdvanced := false
 			for j := 0; j < 40; j++ {

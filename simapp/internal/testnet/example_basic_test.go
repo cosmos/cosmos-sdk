@@ -93,25 +93,18 @@ func Example_basicUsage() {
 			dir,             // Where to put files on disk.
 		).Logger(logger.With("root_module", fmt.Sprintf("comet_%d", idx)))
 	})
+	// StopAndWait must be deferred before the error check,
+	// as the nodes value may contain some successfully started instances.
+	defer nodes.StopAndWait()
 	if err != nil {
 		panic(err)
 	}
-
-	defer nodes.Stop() // Ensure nodes are all stopped.
 
 	// Now you can begin interacting with the nodes.
 	// For the sake of this example, we'll just check
 	// a couple simple properties of one node.
 	fmt.Println(nodes[0].IsListening())
 	fmt.Println(nodes[0].GenesisDoc().ChainID)
-
-	// Final teardown. Stop the nodes first.
-	_ = nodes.Stop()
-
-	// Then wait on all the nodes.
-	// If your tests don't wait, you will likely see t.Cleanup errors
-	// stemming from t.TempDir() not being empty when the test finishes.
-	nodes.Wait()
 
 	// Output:
 	// true

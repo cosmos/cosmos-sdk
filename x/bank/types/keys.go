@@ -2,6 +2,9 @@ package types
 
 import (
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -29,3 +32,28 @@ var (
 	// ParamsKey is the prefix for x/bank parameters
 	ParamsKey = collections.NewPrefix(5)
 )
+
+// NewBalanceCompatValueCodec is a codec for encoding Balances in a backwards compatible way
+// with respect to the old format.
+func NewBalanceCompatValueCodec() collcodec.ValueCodec[math.Int] {
+	return balanceCompatValueCodec{
+		sdk.IntValue,
+	}
+}
+
+type balanceCompatValueCodec struct {
+	collcodec.ValueCodec[math.Int]
+}
+
+func (v balanceCompatValueCodec) Decode(b []byte) (math.Int, error) {
+	i, err := v.ValueCodec.Decode(b)
+	if err == nil {
+		return i, nil
+	}
+	c := new(sdk.Coin)
+	err = c.Unmarshal(b)
+	if err != nil {
+		return math.Int{}, err
+	}
+	return c.Amount, nil
+}

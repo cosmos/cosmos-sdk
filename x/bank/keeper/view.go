@@ -42,7 +42,7 @@ type ViewKeeper interface {
 
 func newBalancesIndexes(sb *collections.SchemaBuilder) BalancesIndexes {
 	return BalancesIndexes{
-		Denom: indexes.NewMultiPair[math.Int](
+		Denom: indexes.NewReversePair[math.Int](
 			sb, types.DenomAddressPrefix, "address_by_denom_index",
 			collections.PairKeyCodec(sdk.AddressKeyAsIndexKey(sdk.AccAddressKey), collections.StringKey), // NOTE: refer to the AddressKeyAsIndexKey docs to understand why we do this.
 		),
@@ -50,7 +50,7 @@ func newBalancesIndexes(sb *collections.SchemaBuilder) BalancesIndexes {
 }
 
 type BalancesIndexes struct {
-	Denom *indexes.MultiPair[sdk.AccAddress, string, math.Int]
+	Denom *indexes.ReversePair[sdk.AccAddress, string, math.Int]
 }
 
 func (b BalancesIndexes) IndexesList() []collections.Index[collections.Pair[sdk.AccAddress, string], math.Int] {
@@ -81,7 +81,7 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak t
 		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
 		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
 		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
-		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), sdk.IntValue, newBalancesIndexes(sb)),
+		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), types.NewBalanceCompatValueCodec(), newBalancesIndexes(sb)),
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 

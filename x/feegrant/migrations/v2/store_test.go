@@ -4,13 +4,16 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	v2 "cosmossdk.io/x/feegrant/migrations/v2"
 	"cosmossdk.io/x/feegrant/module"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -27,7 +30,7 @@ func TestMigration(t *testing.T) {
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 
-	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
+	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
 	now := ctx.BlockTime()
 	oneDay := now.AddDate(0, 0, 1)
 	twoDays := now.AddDate(0, 0, 2)
@@ -77,7 +80,7 @@ func TestMigration(t *testing.T) {
 	}
 
 	ctx = ctx.WithBlockTime(now.Add(30 * time.Hour))
-	require.NoError(t, v2.MigrateStore(ctx, feegrantKey, cdc))
+	require.NoError(t, v2.MigrateStore(ctx, runtime.NewKVStoreService(feegrantKey), cdc))
 	store = ctx.KVStore(feegrantKey)
 
 	require.NotNil(t, store.Get(v2.FeeAllowanceKey(granter1, grantee1)))

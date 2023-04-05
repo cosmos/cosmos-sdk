@@ -3,6 +3,8 @@
 ## Changelog
 
 * 2022-08-02: Initial Draft
+* 2023-03-02: Add precision for integration tests
+* 2023-03-23: Add precision for E2E tests
 
 ## Status
 
@@ -55,13 +57,11 @@ These are almost like integration tests in that they exercise many things togeth
 use mocks.
 
 Example 1 journey vs illustrative tests - [depinject's BDD style tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/features/bindings.feature), show how we can
-rapidly build up many illustrative cases demonstrating behavioral rules without [very much
-code](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/binding_test.go) while maintaining high level readability.
+rapidly build up many illustrative cases demonstrating behavioral rules without [very much code](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/binding_test.go) while maintaining high level readability.
 
 Example 2 [depinject table driven tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/provider_desc_test.go)
 
-Example 3 [Bank keeper tests](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/bank/keeper/keeper_test.go#L94-L105) - A mock implementation of `AccountKeeper` is
-supplied to the keeper constructor.
+Example 3 [Bank keeper tests](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/bank/keeper/keeper_test.go#L94-L105) - A mock implementation of `AccountKeeper` is supplied to the keeper constructor.
 
 #### Limitations
 
@@ -147,6 +147,9 @@ End to end tests exercise the entire system as we understand it in as close an a
 to a production environment as is practical. Presently these tests are located at
 [tests/e2e](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e) and rely on [testutil/network](https://github.com/cosmos/cosmos-sdk/tree/main/testutil/network) to start up an in-process Tendermint node.
 
+An application should be built as minimally as possible to exercise the desired functionality.
+The SDK uses an application will only the required modules for the tests. The application developer is adviced to use its own application for e2e tests.
+
 #### Limitations
 
 In general the limitations of end to end tests are orchestration and compute cost.
@@ -162,20 +165,20 @@ The scope of e2e tests has been complected with command line interface testing.
 
 We accept these test scopes and identify the following decisions points for each.
 
-| Scope       | App Fixture | Mocks? |
-| ----------- | ----------- | ------ |
-| Unit        | None        | Yes    |
-| Integration | depinject   | Some   |
-| Simulation  | depinject   | No     |
-| E2E         | simapp      | No     |
+| Scope       | App Type            | Mocks? |
+| ----------- | ------------------- | ------ |
+| Unit        | None                | Yes    |
+| Integration | integration helpers | Some   |
+| Simulation  | minimal app         | No     |
+| E2E         | minimal app         | No     |
+
+The decision above is valid for the SDK. An application developer should test their application with their full application instead of the minimal app.
 
 ### Unit Tests
 
 All modules must have mocked unit test coverage.
 
 Illustrative tests should outnumber journeys in unit tests.
-
-~BDD feature tests are recommended when building up illustrative and journey scenarios.~
 
 Unit tests should outnumber integration tests.
 
@@ -200,7 +203,7 @@ Integration tests should outnumber e2e tests.
 
 ### Simulations
 
-Simulations shall use `depinject`. They are located under `/x/{moduleName}/simulation`.
+Simulations shall use a minimal application (usually via app wiring). They are located under `/x/{moduleName}/simulation`.
 
 ### E2E Tests
 
@@ -233,7 +236,6 @@ demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 
 ### Neutral
 
-* learning curve for BDD style tests
 * some discovery required for e2e transition to dockertest
 
 ## Further Discussions

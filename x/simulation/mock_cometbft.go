@@ -69,7 +69,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) []byte {
 
 	proposer := vals[key].val
 	pk, err := cryptoenc.PubKeyFromProto(proposer.PubKey)
-	if err != nil { //nolint:wsl
+	if err != nil {
 		panic(err)
 	}
 

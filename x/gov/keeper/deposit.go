@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -171,7 +172,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 // Remaining funds are send back to the depositor.
 func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddress, proposalCancelRate string) error {
 	store := ctx.KVStore(keeper.storeKey)
-	rate := sdk.MustNewDecFromStr(proposalCancelRate)
+	rate := sdkmath.LegacyMustNewDecFromStr(proposalCancelRate)
 	var cancellationCharges sdk.Coins
 
 	for _, deposit := range keeper.GetDeposits(ctx, proposalID) {

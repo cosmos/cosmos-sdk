@@ -207,7 +207,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, types.ErrNoValidatorFound
 	}
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	if err != nil {
 		return nil, err
 	}
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	if err != nil {
 		return nil, err
 	}
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +380,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, err
 	}
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}

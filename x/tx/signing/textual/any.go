@@ -107,7 +107,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		subscreens[i-1].Indent--
 	}
 
-	// Prepend with a "%s object" if the message goes through the default
+	// Append with "%s object" if the message goes through the default
 	// messageValueRenderer (the header() method does this for us).
 	msgValRenderer, isMsgRenderer := vr.(*messageValueRenderer)
 	if isMsgRenderer {

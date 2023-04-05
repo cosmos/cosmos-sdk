@@ -23,6 +23,37 @@ type Context struct {
 	protoFiles    *protoregistry.Files
 }
 
+// Options are options for creating a Context.
+type Options struct {
+	// ProtoFiles are the protobuf files to use for resolving message descriptors.
+	// If it is nil, the global protobuf registry will be used.
+	ProtoFiles     *protoregistry.Files
+	SigningContext *signing.GetSignersContext
+}
+
+func NewContext(options Options) (*Context, error) {
+	protoFiles := options.ProtoFiles
+	if protoFiles == nil {
+		protoFiles = protoregistry.GlobalFiles
+	}
+
+	getSignersCtx := options.SigningContext
+	if getSignersCtx == nil {
+		var err error
+		getSignersCtx, err = signing.NewGetSignersContext(signing.GetSignersOptions{
+			ProtoFiles: protoFiles,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Context{
+		getSignersCtx: getSignersCtx,
+		protoFiles:    protoFiles,
+	}, nil
+}
+
 // Decode decodes raw protobuf encoded transaction bytes into a DecodedTx.
 func (c *Context) Decode(txBytes []byte) (*DecodedTx, error) {
 	// Make sure txBytes follow ADR-027.

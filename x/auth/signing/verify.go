@@ -56,7 +56,7 @@ func VerifySignatureV2(
 
 	switch data := signatureData.(type) {
 	case *signing.SingleSignatureData:
-		signBytes, err := GetSignBytesWithContext(handler, ctx, data.SignMode, signerData, tx)
+		signBytes, err := handler.GetSignBytes(ctx, signerData, txData)
 		if err != nil {
 			return err
 		}
@@ -71,20 +71,15 @@ func VerifySignatureV2(
 			return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
 		}
 		err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
-			handlerWithContext, ok := handler.(SignModeHandlerWithContext)
-			if ok {
-				return handlerWithContext.GetSignBytesWithContext(ctx, mode, signerData, tx)
-			}
-			return handler.GetSignBytes(mode, signerData, tx)
+			return handler.GetSignBytes(ctx, signerData, txData)
 		}, data)
 		if err != nil {
 			return err
 		}
 		return nil
 	default:
-		return fmt.Errorf("unexpected SignatureData %T", sigData)
+		return fmt.Errorf("unexpected SignatureData %T", signatureData)
 	}
-
 }
 
 // GetSignBytesWithContext gets the sign bytes from the sign mode handler. It

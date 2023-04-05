@@ -10,9 +10,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -216,6 +216,13 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 	}
 }
 
+func NewSigVerificationDecoratorV2(ak AccountKeeper, handler txsigning.SignModeHandler) SigVerificationDecorator {
+	return SigVerificationDecorator{
+		ak:                ak,
+		signModeHandlerV2: handler,
+	}
+}
+
 // OnlyLegacyAminoSigners checks SignatureData to see if all
 // signers are using SIGN_MODE_LEGACY_AMINO_JSON. If this is the case
 // then the corresponding SignatureV2 struct will not have account sequence
@@ -288,9 +295,12 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() {
 			var verifyErr error
-			anyPk, _ := types2.NewAnyWithValue(pubKey)
 
 			if svd.signModeHandlerV2 != nil {
+				// TODO
+				// any other way to do this?
+				anyPk, _ := codectypes.NewAnyWithValue(pubKey)
+
 				signerData := txsigning.SignerData{
 					Address:       acc.GetAddress().String(),
 					ChainId:       chainID,
@@ -301,7 +311,21 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 						Value:   anyPk.Value,
 					},
 				}
-				verifyErr = authsigning.VerifySignatureV2(ctx, pubKey, signerData, sig.Data, svd.signModeHandlerV2, tx)
+				decodeCtx, err := decode.NewContext(decode.Options{})
+				if err != nil {
+					return ctx, err
+				}
+				decodedTx, err := decodeCtx.Decode(ctx.TxBytes())
+				if err != nil {
+					return ctx, err
+				}
+				txData := txsigning.TxData{
+					Body:          decodedTx.Tx.Body,
+					AuthInfo:      decodedTx.Tx.AuthInfo,
+					AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
+					BodyBytes:     decodedTx.TxRaw.BodyBytes,
+				}
+				verifyErr = authsigning.VerifySignatureV2(ctx, pubKey, signerData, sig.Data, svd.signModeHandlerV2, txData)
 			} else {
 				signerData := authsigning.SignerData{
 					Address:       acc.GetAddress().String(),
@@ -312,6 +336,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 				}
 				verifyErr = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			}
+
 			if verifyErr != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {

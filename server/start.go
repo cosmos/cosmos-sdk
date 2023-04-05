@@ -227,7 +227,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return err
 	}
 
-	emitServerInfoMetrics(home)
+	emitServerInfoMetrics()
 
 	svr, err := server.NewServer(addr, transport, app)
 	if err != nil {
@@ -358,7 +358,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	emitServerInfoMetrics(home)
+	emitServerInfoMetrics()
 
 	var (
 		apiSrv  *api.Server
@@ -513,7 +513,7 @@ func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
 }
 
 // emitServerInfoMetrics emits server info related metrics using application telemetry.
-func emitServerInfoMetrics(homePath string) {
+func emitServerInfoMetrics() {
 	var ls []metrics.Label
 
 	versionInfo := version.NewInfo()

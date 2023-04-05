@@ -5,7 +5,7 @@
 package testutil
 
 import (
-	context "context"
+	"context"
 	reflect "reflect"
 
 	types "github.com/cosmos/cosmos-sdk/types"

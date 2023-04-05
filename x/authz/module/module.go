@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 
 	"cosmossdk.io/depinject"
@@ -38,6 +39,7 @@ var (
 // AppModuleBasic defines the basic application module used by the authz module.
 type AppModuleBasic struct {
 	cdc codec.Codec
+	ac  address.Codec
 }
 
 // Name returns the authz module's name.
@@ -84,20 +86,20 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
 // GetQueryCmd returns the cli query commands for the authz module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.ac)
 }
 
 // GetTxCmd returns the transaction commands for the authz module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ab.ac)
 }
 
 // AppModule implements the sdk.AppModule interface
@@ -112,7 +114,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper, bk authz.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -168,8 +170,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type AuthzInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Key              *store.KVStoreKey
@@ -180,18 +181,17 @@ type AuthzInputs struct {
 	MsgServiceRouter baseapp.MessageRouter
 }
 
-//nolint:revive
-type AuthzOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	AuthzKeeper keeper.Keeper
 	Module      appmodule.AppModule
 }
 
-func ProvideModule(in AuthzInputs) AuthzOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return AuthzOutputs{AuthzKeeper: k, Module: m}
+	return ModuleOutputs{AuthzKeeper: k, Module: m}
 }
 
 // ____________________________________________________________________________

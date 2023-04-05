@@ -9,7 +9,8 @@
 # Client: (Note the simapp binary always looks at ~/.simapp we can bind to different local storage)
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys add foo
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys list
-# TODO: demo connecting rest-server (or is this in server now?)
+#
+# This image is pushed to the GHCR as https://ghcr.io/cosmos/simapp
 
 # bullseye already comes with build dependencies, so we don't need anything extra to install
 FROM --platform=$BUILDPLATFORM golang:1.20-bullseye AS build-env

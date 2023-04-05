@@ -528,8 +528,8 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
-	// checks if the signing account has enough balance to pay KeyRotationFee
-	// pays KeyRotationFee to community fund
+	// Check if the signing account has enough balance to pay KeyRotationFee
+	// pays KeyRotationFee to community fund.
 	rotationFee := k.getRotationFee(ctx, validator.GetBondedTokens(), rotationsMade)
 	sender := sdk.AccAddress(valAddr)
 

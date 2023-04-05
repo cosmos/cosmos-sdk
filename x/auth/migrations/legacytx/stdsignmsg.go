@@ -21,6 +21,7 @@ type StdSignMsg struct {
 
 // get message bytes
 func (msg StdSignMsg) Bytes() []byte {
+	//panic("not implemented")
 	return StdSignBytes(msg.ChainID, msg.AccountNumber, msg.Sequence, msg.TimeoutHeight, msg.Fee, msg.Msgs, msg.Memo, nil)
 }
 

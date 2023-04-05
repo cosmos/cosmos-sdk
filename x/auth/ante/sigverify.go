@@ -6,8 +6,12 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/anypb"
+
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
+	types2 "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -194,14 +198,15 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	return next(ctx, tx, simulate)
 }
 
-// Verify all signatures for a tx and return an error if any are invalid. Note,
+// SigVerificationDecorator verifies all signatures for a tx and return an error if any are invalid. Note,
 // the SigVerificationDecorator will not check signatures on ReCheck.
 //
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak              AccountKeeper
-	signModeHandler authsigning.SignModeHandler
+	ak                AccountKeeper
+	signModeHandler   authsigning.SignModeHandler
+	signModeHandlerV2 txsigning.SignModeHandler
 }
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler) SigVerificationDecorator {
@@ -279,18 +284,35 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 		}
-		signerData := authsigning.SignerData{
-			Address:       acc.GetAddress().String(),
-			ChainID:       chainID,
-			AccountNumber: accNum,
-			Sequence:      acc.GetSequence(),
-			PubKey:        pubKey,
-		}
 
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() {
-			err := authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, tx)
-			if err != nil {
+			var verifyErr error
+			anyPk, _ := types2.NewAnyWithValue(pubKey)
+
+			if svd.signModeHandlerV2 != nil {
+				signerData := txsigning.SignerData{
+					Address:       acc.GetAddress().String(),
+					ChainId:       chainID,
+					AccountNumber: accNum,
+					Sequence:      acc.GetSequence(),
+					PubKey: &anypb.Any{
+						TypeUrl: anyPk.TypeUrl,
+						Value:   anyPk.Value,
+					},
+				}
+				verifyErr = authsigning.VerifySignatureV2(ctx, pubKey, signerData, sig.Data, svd.signModeHandlerV2, tx)
+			} else {
+				signerData := authsigning.SignerData{
+					Address:       acc.GetAddress().String(),
+					ChainID:       chainID,
+					AccountNumber: accNum,
+					Sequence:      acc.GetSequence(),
+					PubKey:        pubKey,
+				}
+				verifyErr = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, tx)
+			}
+			if verifyErr != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {
 					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,

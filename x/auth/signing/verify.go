@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	txsigning "cosmossdk.io/x/tx/signing"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,6 +44,47 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 	default:
 		return fmt.Errorf("unexpected SignatureData %T", sigData)
 	}
+}
+
+func VerifySignatureV2(
+	ctx context.Context,
+	pubKey cryptotypes.PubKey,
+	signerData txsigning.SignerData,
+	signatureData signing.SignatureData,
+	handler txsigning.SignModeHandler,
+	txData txsigning.TxData) error {
+
+	switch data := signatureData.(type) {
+	case *signing.SingleSignatureData:
+		signBytes, err := GetSignBytesWithContext(handler, ctx, data.SignMode, signerData, tx)
+		if err != nil {
+			return err
+		}
+		if !pubKey.VerifySignature(signBytes, data.Signature) {
+			return fmt.Errorf("unable to verify single signer signature")
+		}
+		return nil
+
+	case *signing.MultiSignatureData:
+		multiPK, ok := pubKey.(multisig.PubKey)
+		if !ok {
+			return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
+		}
+		err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
+			handlerWithContext, ok := handler.(SignModeHandlerWithContext)
+			if ok {
+				return handlerWithContext.GetSignBytesWithContext(ctx, mode, signerData, tx)
+			}
+			return handler.GetSignBytes(mode, signerData, tx)
+		}, data)
+		if err != nil {
+			return err
+		}
+		return nil
+	default:
+		return fmt.Errorf("unexpected SignatureData %T", sigData)
+	}
+
 }
 
 // GetSignBytesWithContext gets the sign bytes from the sign mode handler. It

@@ -2,6 +2,7 @@ package ante
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -19,6 +20,7 @@ type HandlerOptions struct {
 	ExtensionOptionChecker ExtensionOptionChecker
 	FeegrantKeeper         FeegrantKeeper
 	SignModeHandler        authsigning.SignModeHandler
+	SignModeHandlerV2      txsigning.SignModeHandler
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker           TxFeeChecker
 }
@@ -35,7 +37,12 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "bank keeper is required for ante builder")
 	}
 
-	if options.SignModeHandler == nil {
+	var sigVerification SigVerificationDecorator
+	if options.SignModeHandler != nil {
+		sigVerification = NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler)
+	} else if options.SignModeHandlerV2 != nil {
+		sigVerification = NewSigVerificationDecoratorV2(options.AccountKeeper, options.SignModeHandlerV2)
+	} else {
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
 	}
 
@@ -50,7 +57,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(options.AccountKeeper),
 		NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
-		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+		sigVerification,
 		NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 

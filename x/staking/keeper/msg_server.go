@@ -523,8 +523,6 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 
 	// checks if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory
-	//
-	// this index will contain the keys of how many
 	isExceedingLimit, rotationsMade := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
 	if isExceedingLimit {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations

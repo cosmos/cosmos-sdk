@@ -1,7 +1,6 @@
 # IndexedMap
 
-`collections.IndexedMap` is a collection that uses under the hood a `collections.Map`, and has a struct
-which contains the indexes that we need to define.
+`collections.IndexedMap` is a collection that uses under the hood a `collections.Map`, and has a struct, which contains the indexes that we need to define.
 
 # Example
 

@@ -18,10 +18,6 @@ import (
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-const (
-	oneYearInSeconds = 365 * 24 * 60 * 60
-)
-
 type CLITestSuite struct {
 	suite.Suite
 

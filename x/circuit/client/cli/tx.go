@@ -83,13 +83,9 @@ func TripCircuitBreakerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "disable [type_url]",
 		Short:   "disable a message from being executed",
-		Example: fmt.Sprintf(`%s circuit authorize trip "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+		Example: fmt.Sprintf(`%s circuit disable "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
-				return err
-			}
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -111,13 +107,9 @@ func ResetCircuitBreakerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "reset [type_url]",
 		Short:   "Enable a message to be executed",
-		Example: fmt.Sprintf(`%s circuit authorize reset "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+		Example: fmt.Sprintf(`%s circuit reset "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
-				return err
-			}
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

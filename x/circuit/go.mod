@@ -3,8 +3,8 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.20
 
 require (
-	cosmossdk.io/store v0.1.0-alpha.1
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230321173237-fe77d4bca302
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330094838-d21f58c638d5
 	github.com/cosmos/gogoproto v1.4.7
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.54.0
@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/log v0.1.0 // indirect
+	cosmossdk.io/log v1.0.0 // indirect
 	cosmossdk.io/math v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
@@ -79,7 +79,7 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
-	github.com/spf13/cobra v1.6.1 // indirect
+	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.15.0 // indirect

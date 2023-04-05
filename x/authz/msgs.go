@@ -28,8 +28,6 @@ var (
 )
 
 // NewMsgGrant creates a new MsgGrant
-//
-//nolint:interfacer
 func NewMsgGrant(granter, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
 		Granter: granter.String(),
@@ -68,7 +66,7 @@ func (msg MsgGrant) ValidateBasic() error {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrant) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
@@ -109,8 +107,6 @@ func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // NewMsgRevoke creates a new MsgRevoke
-//
-//nolint:interfacer
 func NewMsgRevoke(granter, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
 	return MsgRevoke{
 		Granter:    granter.String(),
@@ -149,12 +145,10 @@ func (msg MsgRevoke) ValidateBasic() error {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevoke) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
 }
 
 // NewMsgExec creates a new MsgExecAuthorized
-//
-//nolint:interfacer
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
@@ -217,5 +211,5 @@ func (msg MsgExec) ValidateBasic() error {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgExec) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
 }

@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.7
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
 )
@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba // indirect
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
-	cosmossdk.io/log v0.1.0 // indirect
+	cosmossdk.io/log v1.0.0 // indirect
 	cosmossdk.io/math v1.0.0 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect

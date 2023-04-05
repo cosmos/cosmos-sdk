@@ -12,6 +12,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	storetypes "cosmossdk.io/store/types"
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -89,7 +89,6 @@ func newBarCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(barDenom, amt)
 }
 
-// nolint: interfacer
 func getCoinsByName(ctx sdk.Context, bk keeper.Keeper, ak types.AccountKeeper, moduleName string) sdk.Coins {
 	moduleAddress := ak.GetModuleAddress(moduleName)
 	macc := ak.GetAccount(ctx, moduleAddress)
@@ -243,16 +242,16 @@ func TestSupply_SendCoins(t *testing.T) {
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
 	authKeeper.SetAccount(ctx, baseAcc)
 
-	testutil.AssertPanics(t, func() {
-		_ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) // nolint:errcheck
+	require.Panics(t, func() {
+		_ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) //nolint:errcheck // no error check is needed because we are testing for a panic
 	})
 
-	testutil.AssertPanics(t, func() {
-		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) // nolint:errcheck
+	require.Panics(t, func() {
+		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) //nolint:errcheck // no error check is needed because we are testing for a panic
 	})
 
-	testutil.AssertPanics(t, func() {
-		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) // nolint:errcheck
+	require.Panics(t, func() {
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) //nolint:errcheck // no error check is needed because we are testing for a panic
 	})
 
 	assert.Error(t,
@@ -295,14 +294,14 @@ func TestSupply_MintCoins(t *testing.T) {
 	assert.NilError(t, err)
 
 	// no module account
-	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, "", initCoins) }) // nolint:errcheck
+	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) }) //nolint:errcheck // we're testing for a panic
 	// invalid permission
-	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) // nolint:errcheck
+	require.Panics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) //nolint:errcheck // we're testing for a panic
 
 	err = keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
 	assert.Error(t, err, fmt.Sprintf("%sdenom: invalid coins", sdk.NewInt(-10)))
 
-	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
+	require.Panics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) //nolint:errcheck // we're testing for a panic
 
 	err = keeper.MintCoins(ctx, authtypes.Minter, initCoins)
 	assert.NilError(t, err)
@@ -324,7 +323,7 @@ func TestSupply_MintCoins(t *testing.T) {
 	assert.NilError(t, err)
 	assert.DeepEqual(t, initCoins, getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
 	assert.DeepEqual(t, initialSupply.Add(initCoins...), totalSupply)
-	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) // nolint:errcheck
+	require.Panics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) //nolint:errcheck // we're testing for a panic
 }
 
 func TestSupply_BurnCoins(t *testing.T) {
@@ -345,11 +344,11 @@ func TestSupply_BurnCoins(t *testing.T) {
 	supplyAfterInflation, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	assert.NilError(t, err)
 	// no module account
-	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }) // nolint:errcheck
+	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }) //nolint:errcheck // we're testing for a panic
 	// invalid permission
-	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }) // nolint:errcheck
+	require.Panics(t, func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }) //nolint:errcheck // we're testing for a panic
 	// random permission
-	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }) // nolint:errcheck
+	require.Panics(t, func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }) //nolint:errcheck // we're testing for a panic
 	err = keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation)
 	assert.Error(t, err, fmt.Sprintf("spendable balance %s is smaller than %s: insufficient funds", initCoins, supplyAfterInflation))
 
@@ -1245,26 +1244,26 @@ func TestBalanceTrackingEvents(t *testing.T) {
 	for _, e := range f.ctx.EventManager().ABCIEvents() {
 		switch e.Type {
 		case types.EventTypeCoinBurn:
-			burnedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			burnedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			assert.NilError(t, err)
 			supply = supply.Sub(burnedCoins...)
 
 		case types.EventTypeCoinMint:
-			mintedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			mintedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			assert.NilError(t, err)
 			supply = supply.Add(mintedCoins...)
 
 		case types.EventTypeCoinSpent:
-			coinsSpent, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			coinsSpent, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			assert.NilError(t, err)
-			spender, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			spender, err := sdk.AccAddressFromBech32(e.Attributes[0].Value)
 			assert.NilError(t, err)
 			balances[spender.String()] = balances[spender.String()].Sub(coinsSpent...)
 
 		case types.EventTypeCoinReceived:
-			coinsRecv, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			coinsRecv, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			assert.NilError(t, err)
-			receiver, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			receiver, err := sdk.AccAddressFromBech32(e.Attributes[0].Value)
 			assert.NilError(t, err)
 			balances[receiver.String()] = balances[receiver.String()].Add(coinsRecv...)
 		}
@@ -1799,8 +1798,8 @@ func TestMigrator_Migrate3to4(t *testing.T) {
 			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
 			assert.NilError(t, migrator.Migrate3to4(ctx))
 			newParams := bankKeeper.GetParams(ctx)
-			assert.Assert(t, len(newParams.SendEnabled) == 0)
-			for _, se := range params.SendEnabled {
+			assert.Assert(t, len(newParams.SendEnabled) == 0) //nolint:staticcheck // We need to test the deprecated send enabled approach
+			for _, se := range params.SendEnabled {           //nolint:staticcheck // We need to test the deprecated send enabled approach
 				actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
 				assert.Equal(t, se.Enabled, actual, se.Denom)
 			}
@@ -1814,7 +1813,7 @@ func TestSetParams(t *testing.T) {
 
 	ctx, bankKeeper := f.ctx, f.bankKeeper
 	params := types.NewParams(true)
-	params.SendEnabled = []*types.SendEnabled{
+	params.SendEnabled = []*types.SendEnabled{ //nolint:staticcheck // We need to test the deprecated send enabled approach
 		{Denom: "paramscointrue", Enabled: true},
 		{Denom: "paramscoinfalse", Enabled: false},
 	}
@@ -1823,7 +1822,7 @@ func TestSetParams(t *testing.T) {
 	t.Run("stored params are as expected", func(t *testing.T) {
 		actual := bankKeeper.GetParams(ctx)
 		assert.Assert(t, actual.DefaultSendEnabled, "DefaultSendEnabled")
-		assert.Assert(t, len(actual.SendEnabled) == 0, "SendEnabled")
+		assert.Assert(t, len(actual.SendEnabled) == 0, "SendEnabled") //nolint:staticcheck // We need to test the deprecated send enabled approach
 	})
 
 	t.Run("send enabled params converted to store", func(t *testing.T) {

@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -27,7 +26,8 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	ctx := CreateExecuteContext(context.Background())
 
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
-	rootCmd.PersistentFlags().String(flags.FlagLogFormat, cmtcfg.LogFormatPlain, "The logging format (json|plain)")
+	// NOTE: The default logger is only checking for the "json" value, any other value will default to plain text.
+	rootCmd.PersistentFlags().String(flags.FlagLogFormat, "plain", "The logging format (json|plain)")
 
 	executor := cmtcli.PrepareBaseCmd(rootCmd, envPrefix, defaultHome)
 	return executor.ExecuteContext(ctx)

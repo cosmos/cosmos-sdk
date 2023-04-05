@@ -289,14 +289,17 @@ func (c *GetSignersContext) GetSigners(msg proto.Message) ([][]byte, error) {
 	return f(msg)
 }
 
+// AddressCodec returns the address codec used by the context.
 func (c *GetSignersContext) AddressCodec() address.Codec {
 	return c.addressCodec
 }
 
+// ValidatorAddressCodec returns the validator address codec used by the context.
 func (c *GetSignersContext) ValidatorAddressCodec() address.Codec {
 	return c.validatorAddressCodec
 }
 
+// ProtoFileResolver returns the proto file resolver used by the context.
 func (c *GetSignersContext) ProtoFileResolver() ProtoFileResolver {
 	return c.protoFiles
 }

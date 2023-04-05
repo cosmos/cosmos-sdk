@@ -1298,8 +1298,7 @@ func (s *coinTestSuite) TestCoinValidate() {
 					t.Errorf("Unexpected error: %v", err)
 				}
 				return
-			}
-			if err == nil {
+			} else if err == nil {
 				t.Error("Expected an error")
 			} else if !strings.Contains(err.Error(), tc.wantErr) {
 				t.Errorf("Error mismatch\n\tGot:  %q\nWant: %q", err, tc.wantErr)

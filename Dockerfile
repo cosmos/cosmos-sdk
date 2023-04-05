@@ -36,8 +36,7 @@ ARG TARGETOS TARGETARCH
 # install simapp, remove packages
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH make build
 
-
-# Final image, without build artifacts. `/base` already contains openssl, glibc and all required libs to start an app
+# Use alpine:latest as a base image
 FROM alpine:latest
 
 EXPOSE 26656 26657 1317 9090

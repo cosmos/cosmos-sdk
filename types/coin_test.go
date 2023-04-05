@@ -1293,14 +1293,15 @@ func (s *coinTestSuite) TestCoinValidate() {
 		t := s.T()
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.coin.Validate()
-			if tc.wantErr == "" {
+			switch {
+			case tc.wantErr == "":
 				if err != nil {
 					t.Errorf("Unexpected error: %v", err)
 				}
 				return
-			} else if err == nil {
+			case err == nil:
 				t.Error("Expected an error")
-			} else if !strings.Contains(err.Error(), tc.wantErr) {
+			case !strings.Contains(err.Error(), tc.wantErr):
 				t.Errorf("Error mismatch\n\tGot:  %q\nWant: %q", err, tc.wantErr)
 			}
 		})

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/address"
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -17,8 +19,10 @@ import (
 // message where signers are specified by the cosmos.msg.v1.signer protobuf
 // option.
 type GetSignersContext struct {
-	protoFiles      ProtoFileResolver
-	getSignersFuncs map[protoreflect.FullName]getSignersFunc
+	protoFiles            ProtoFileResolver
+	addressCodec          address.Codec
+	validatorAddressCodec address.Codec
+	getSignersFuncs       map[protoreflect.FullName]getSignersFunc
 }
 
 // GetSignersOptions are options for creating GetSignersContext.
@@ -26,6 +30,9 @@ type GetSignersOptions struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
 	ProtoFiles ProtoFileResolver
+
+	AddressCodec          address.Codec
+	ValidatorAddressCodec address.Codec
 }
 
 // ProtoFileResolver is a protodesc.Resolver that also allows iterating over all
@@ -43,14 +50,16 @@ func NewGetSignersContext(options GetSignersOptions) (*GetSignersContext, error)
 	}
 
 	c := &GetSignersContext{
-		protoFiles:      protoFiles,
-		getSignersFuncs: map[protoreflect.FullName]getSignersFunc{},
+		protoFiles:            protoFiles,
+		addressCodec:          options.AddressCodec,
+		validatorAddressCodec: options.ValidatorAddressCodec,
+		getSignersFuncs:       map[protoreflect.FullName]getSignersFunc{},
 	}
 
 	return c, c.init()
 }
 
-type getSignersFunc func(proto.Message) []string
+type getSignersFunc func(proto.Message) ([][]byte, error)
 
 func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, error) {
 	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
@@ -93,13 +102,13 @@ func (c *GetSignersContext) init() error {
 	return errors.Join(errs...)
 }
 
-func (*GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+func (c *GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
 	signersFields, err := getSignersFieldNames(descriptor)
 	if err != nil {
 		return nil, err
 	}
 
-	fieldGetters := make([]func(proto.Message, []string) []string, len(signersFields))
+	fieldGetters := make([]func(proto.Message, [][]byte) ([][]byte, error), len(signersFields))
 	for i, fieldName := range signersFields {
 		field := descriptor.Fields().ByName(protoreflect.Name(fieldName))
 		if field == nil {
@@ -110,20 +119,38 @@ func (*GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDesc
 			return nil, fmt.Errorf("cosmos.msg.v1.signer field %s in message %s must not be a map or optional", fieldName, descriptor.FullName())
 		}
 
+		scalarOpt := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
+		addrCdc := c.addressCodec
+		if scalarOpt != nil {
+			if scalarOpt.(string) == "cosmos.ValidatorAddressString" {
+				addrCdc = c.validatorAddressCodec
+			}
+		}
+
 		switch field.Kind() {
 		case protoreflect.StringKind:
 			if field.IsList() {
-				fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+				fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
 					signers := msg.ProtoReflect().Get(field).List()
 					n := signers.Len()
 					for i := 0; i < n; i++ {
-						arr = append(arr, signers.Get(i).String())
+						addrStr := signers.Get(i).String()
+						addrBz, err := addrCdc.StringToBytes(addrStr)
+						if err != nil {
+							return nil, err
+						}
+						arr = append(arr, addrBz)
 					}
-					return arr
+					return arr, nil
 				}
 			} else {
-				fieldGetters[i] = func(msg proto.Message, arr []string) []string {
-					return append(arr, msg.ProtoReflect().Get(field).String())
+				fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
+					addrStr := msg.ProtoReflect().Get(field).String()
+					addrBz, err := addrCdc.StringToBytes(addrStr)
+					if err != nil {
+						return nil, err
+					}
+					return append(arr, addrBz), nil
 				}
 			}
 		case protoreflect.MessageKind:
@@ -151,42 +178,62 @@ func (*GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDesc
 
 			if isList {
 				if nestedIsList {
-					fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+					fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
 						msgs := msg.ProtoReflect().Get(field).List()
 						m := msgs.Len()
 						for i := 0; i < m; i++ {
 							signers := msgs.Get(i).Message().Get(nestedField).List()
 							n := signers.Len()
 							for j := 0; j < n; j++ {
-								arr = append(arr, signers.Get(j).String())
+								addrStr := signers.Get(j).String()
+								addrBz, err := addrCdc.StringToBytes(addrStr)
+								if err != nil {
+									return nil, err
+								}
+								arr = append(arr, addrBz)
 							}
 						}
-						return arr
+						return arr, nil
 					}
 				} else {
-					fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+					fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
 						msgs := msg.ProtoReflect().Get(field).List()
 						m := msgs.Len()
 						for i := 0; i < m; i++ {
-							arr = append(arr, msgs.Get(i).Message().Get(nestedField).String())
+							addrStr := msgs.Get(i).Message().Get(nestedField).String()
+							addrBz, err := addrCdc.StringToBytes(addrStr)
+							if err != nil {
+								return nil, err
+							}
+							arr = append(arr, addrBz)
 						}
-						return arr
+						return arr, nil
 					}
 				}
 			} else {
 				if nestedIsList {
-					fieldGetters[i] = func(msg proto.Message, arr []string) []string {
+					fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
 						nestedMsg := msg.ProtoReflect().Get(field).Message()
 						signers := nestedMsg.Get(nestedField).List()
 						n := signers.Len()
 						for j := 0; j < n; j++ {
-							arr = append(arr, signers.Get(j).String())
+							addrStr := signers.Get(j).String()
+							addrBz, err := addrCdc.StringToBytes(addrStr)
+							if err != nil {
+								return nil, err
+							}
+							arr = append(arr, addrBz)
 						}
-						return arr
+						return arr, nil
 					}
 				} else {
-					fieldGetters[i] = func(msg proto.Message, arr []string) []string {
-						return append(arr, msg.ProtoReflect().Get(field).Message().Get(nestedField).String())
+					fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
+						addrStr := msg.ProtoReflect().Get(field).Message().Get(nestedField).String()
+						addrBz, err := addrCdc.StringToBytes(addrStr)
+						if err != nil {
+							return nil, err
+						}
+						return append(arr, addrBz), nil
 					}
 				}
 			}
@@ -196,17 +243,20 @@ func (*GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDesc
 		}
 	}
 
-	return func(message proto.Message) []string {
-		var signers []string
+	return func(message proto.Message) ([][]byte, error) {
+		var signers [][]byte
 		for _, getter := range fieldGetters {
-			signers = getter(message, signers)
+			signers, err = getter(message, signers)
+			if err != nil {
+				return nil, err
+			}
 		}
-		return signers
+		return signers, nil
 	}, nil
 }
 
 // GetSigners returns the signers for a given message.
-func (c *GetSignersContext) GetSigners(msg proto.Message) ([]string, error) {
+func (c *GetSignersContext) GetSigners(msg proto.Message) ([][]byte, error) {
 	messageDescriptor := msg.ProtoReflect().Descriptor()
 	f, ok := c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {
@@ -218,5 +268,5 @@ func (c *GetSignersContext) GetSigners(msg proto.Message) ([]string, error) {
 		c.getSignersFuncs[messageDescriptor.FullName()] = f
 	}
 
-	return f(msg), nil
+	return f(msg)
 }

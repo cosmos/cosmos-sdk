@@ -119,16 +119,9 @@ func (c *GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDe
 			return nil, fmt.Errorf("cosmos.msg.v1.signer field %s in message %s must not be a map or optional", fieldName, descriptor.FullName())
 		}
 
-		scalarOpt := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
-		addrCdc := c.addressCodec
-		if scalarOpt != nil {
-			if scalarOpt.(string) == "cosmos.ValidatorAddressString" {
-				addrCdc = c.validatorAddressCodec
-			}
-		}
-
 		switch field.Kind() {
 		case protoreflect.StringKind:
+			addrCdc := c.getAddressCodec(field)
 			if field.IsList() {
 				fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
 					signers := msg.ProtoReflect().Get(field).List()
@@ -175,6 +168,8 @@ func (c *GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDe
 			if nestedField.Kind() != protoreflect.StringKind || nestedField.IsMap() || nestedField.HasOptionalKeyword() {
 				return nil, fmt.Errorf("nested signer field %s in message %s must be a simple string", nestedFieldName, nestedMessage.FullName())
 			}
+
+			addrCdc := c.getAddressCodec(nestedField)
 
 			if isList {
 				if nestedIsList {
@@ -253,6 +248,18 @@ func (c *GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDe
 		}
 		return signers, nil
 	}, nil
+}
+
+func (c *GetSignersContext) getAddressCodec(field protoreflect.FieldDescriptor) address.Codec {
+	scalarOpt := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
+	addrCdc := c.addressCodec
+	if scalarOpt != nil {
+		if scalarOpt.(string) == "cosmos.ValidatorAddressString" {
+			addrCdc = c.validatorAddressCodec
+		}
+	}
+
+	return addrCdc
 }
 
 // GetSigners returns the signers for a given message.

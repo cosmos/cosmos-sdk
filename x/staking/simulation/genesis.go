@@ -42,8 +42,8 @@ func getKeyRotationFee(r *rand.Rand) sdk.Coin {
 }
 
 // getMaxConsPubKeyRotations returns randomized maxConsPubKeyRotations between 1-10.
-func getMaxConsPubKeyRotations(r *rand.Rand) uint64 {
-	return uint64(r.Intn(int(types.DefaultMaxConsPubKeyRotations)) + 1)
+func getMaxConsPubKeyRotations(r *rand.Rand) uint32 {
+	return uint32(r.Intn(int(types.DefaultMaxConsPubKeyRotations)) + 1)
 }
 
 // RandomizedGenState generates a random GenesisState for staking
@@ -54,7 +54,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		maxVals             uint32
 		histEntries         uint32
 		minCommissionRate   sdk.Dec
-		maxConsKeyRotations uint64
+		maxConsKeyRotations uint32
 		rotationFee         sdk.Coin
 	)
 

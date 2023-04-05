@@ -570,7 +570,7 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 
 // getRotationFee calculates and returns the fee for rotation based on the previous rotations
 // KeyRotationFee = (max(VotingPowerPercentage, 1) * InitialKeyRotationFee) * 2^(number ofrotations in ConsPubKeyRotationHistory in recent unbonding period)
-func (k msgServer) getRotationFee(ctx sdk.Context, valBondedTokens math.Int, rotationsMade uint64) sdk.Coin {
+func (k msgServer) getRotationFee(ctx sdk.Context, valBondedTokens math.Int, rotationsMade uint32) sdk.Coin {
 	totalBondedTokens := k.TotalBondedTokens(ctx)
 
 	valBondedPercent := (valBondedTokens.Quo(totalBondedTokens)).Mul(math.NewInt(100))

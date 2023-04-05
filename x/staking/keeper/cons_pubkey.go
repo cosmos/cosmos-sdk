@@ -140,13 +140,13 @@ func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, t
 }
 
 // CheckLimitOfMaxRotationsExceed returns bool, count of iterations made within the unbonding period.
-func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) (bool, uint64) {
+func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) (bool, uint32) {
 	store := ctx.KVStore(k.storeKey)
 	key := append(types.ValidatorConsensusKeyRotationRecordIndexKey, address.MustLengthPrefix(valAddr)...)
 	prefixIterator := storetypes.KVStorePrefixIterator(store, key)
 	defer prefixIterator.Close()
 
-	count := uint64(0)
+	count := uint32(0)
 	for ; prefixIterator.Valid(); prefixIterator.Next() {
 		count += 1
 	}

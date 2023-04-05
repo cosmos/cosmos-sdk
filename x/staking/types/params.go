@@ -32,7 +32,7 @@ const (
 
 	// DefaultMaxConsPubKeyRotations is param to set validators can rotate their
 	// keys only for 1 times
-	DefaultMaxConsPubKeyRotations uint64 = 1
+	DefaultMaxConsPubKeyRotations uint32 = 1
 )
 
 var (
@@ -47,7 +47,7 @@ var (
 func NewParams(unbondingTime time.Duration,
 	maxValidators, maxEntries, historicalEntries uint32,
 	bondDenom string, minCommissionRate sdk.Dec,
-	maxConsPubKeyRotations uint64, keyRotationFee sdk.Coin) Params {
+	maxConsPubKeyRotations uint32, keyRotationFee sdk.Coin) Params {
 
 	return Params{
 		UnbondingTime:          unbondingTime,

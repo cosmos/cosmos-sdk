@@ -79,11 +79,11 @@ We then need to pass the schema builder to every collection type we instantiate 
 ### Prefix
 
 The second argument passed to our ``KeySet`` is a `collections.Prefix`, a prefix represents a partition of the module's KVStore
-where all the state of a specific collection will be saved. Since a module can have multiple collections, example:
+where all the state of a specific collection will be saved. 
 
-- Module params will become a `collections.Item`,
-- The `AllowList` is a `collections.KeySet`.
-- etc.
+Since a module can have multiple collections, the following is expected:
+- module params will become a `collections.Item`
+- the `AllowList` is a `collections.KeySet`
 
 We don't want a collection to write over the state of the other so we pass it a prefix, which defines this storage partition
 owned by the collection.

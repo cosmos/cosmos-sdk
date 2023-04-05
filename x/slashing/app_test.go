@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -92,7 +91,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, stakingtypes.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := &types.MsgUnjail{ValidatorAddr: addr1.String()}
+	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
 	ctxCheck = app.BaseApp.NewContext(true, cmtproto.Header{})
 	_, found = slashingKeeper.GetValidatorSigningInfo(ctxCheck, sdk.ConsAddress(valAddr))

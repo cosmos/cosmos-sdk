@@ -5,8 +5,6 @@ import (
 
 	_ "github.com/cosmos/gogoproto/gogoproto" // required so it does register the gogoproto file descriptor
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	_ "github.com/cosmos/cosmos-proto" // look above
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // migrate in a future pr
@@ -29,12 +27,7 @@ func getMessageType(name string) (reflect.Type, error) {
 		return typ, nil
 	}
 
-	nametype, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(name))
-	if err != nil {
-		return nil, err
-	}
-
-	return reflect.TypeOf(proto.MessageV1(nametype.Zero().Interface())), nil
+	return proto.MessageType(name), nil //nolint:staticcheck // keep for backward compatibility
 }
 
 func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {

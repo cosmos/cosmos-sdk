@@ -8,7 +8,7 @@ import (
 
 func TestKeySet(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchemaBuilderFromKVService(sk)
+	schema := NewSchemaBuilder(sk)
 	ks := NewKeySet(schema, NewPrefix("keyset"), "keyset", StringKey)
 
 	// set

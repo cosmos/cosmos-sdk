@@ -9,8 +9,6 @@ require (
 	pgregory.net/rapid v0.5.5
 )
 
-require pgregory.net/rapid v0.5.3
-
 require (
 	cosmossdk.io/api v0.3.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect

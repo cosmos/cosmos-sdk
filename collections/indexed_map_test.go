@@ -44,7 +44,7 @@ func newTestIndexedMap(schema *collections.SchemaBuilder) *collections.IndexedMa
 
 func TestIndexedMap(t *testing.T) {
 	sk, ctx := colltest.MockStore()
-	schema := collections.NewSchemaBuilderFromKVService(sk)
+	schema := collections.NewSchemaBuilder(sk)
 
 	im := newTestIndexedMap(schema)
 

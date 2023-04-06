@@ -497,7 +497,8 @@ func (rs *Store) Commit() types.CommitID {
 	}
 }
 
-// WorkingHash implements Committer/CommitStore.
+// WorkingHash returns the current hash of the store.
+// it will be used to get the current app hash before commit.
 func (rs *Store) WorkingHash() []byte {
 	storeInfos := make([]types.StoreInfo, 0, len(rs.stores))
 	storeKeys := keysFromStoreKeyMap(rs.stores)
@@ -505,8 +506,7 @@ func (rs *Store) WorkingHash() []byte {
 	for _, key := range storeKeys {
 		store := rs.stores[key]
 
-		storeType := store.GetStoreType()
-		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
+		if store.GetStoreType() != types.StoreTypeIAVL {
 			continue
 		}
 
@@ -524,9 +524,7 @@ func (rs *Store) WorkingHash() []byte {
 		return strings.Compare(storeInfos[i].Name, storeInfos[j].Name) < 0
 	})
 
-	return types.CommitInfo{
-		StoreInfos: storeInfos,
-	}.Hash()
+	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.

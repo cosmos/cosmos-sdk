@@ -473,7 +473,11 @@ Collections which deal with keys (so `Map`, `KeySet` and `IndexedMap`) allow you
 over keys in a safe and typed way. They all share the same API, the only difference being
 that ``KeySet`` returns a different type of `Iterator` because `KeySet` only deals with keys.
 
-NOTE: that every collection shares the same `Iterator` semantics.
+:::note
+
+Every collection shares the same `Iterator` semantics.
+
+:::
 
 Let's have a look at the `Map.Iterate` method:
 
@@ -599,10 +603,21 @@ can be prefixed.
 
 ### IterateAccounts
 
-Here we showcase how to lazily collect values from an Iterator. Note that `Keys/Values/KeyValues` fully consume
-and close the `Iterator`, here we need to explictly do a `defer iterator.Close()` call.
+Here we showcase how to lazily collect values from an Iterator. 
+
+:::note
+
+`Keys/Values/KeyValues` fully consume and close the `Iterator`, here we need to explicitly do a `defer iterator.Close()` call.
+
+:::
 
 `Iterator` also exposes a `Value` and `Key` method to collect only the current value or key, if collecting both is not needed.
+
+:::note
+
+For this `callback` pattern, collections expose a `Walk` API.
+
+:::
 
 # Composite keys
 

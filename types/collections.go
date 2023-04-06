@@ -85,6 +85,9 @@ func (a genericAddressKey[T]) SizeNonTerminal(key T) int {
 	return collections.BytesKey.SizeNonTerminal(key)
 }
 
+// Deprecated: genericAddressIndexKey is a special key codec used to retain state backwards compatibility
+// when a generic address key (be: AccAddress, ValAddress, ConsAddress), is used as an index key.
+// More docs can be found in the AddressKeyAsIndexKey function.
 type genericAddressIndexKey[T addressUnion] struct {
 	collcodec.KeyCodec[T]
 }

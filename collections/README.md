@@ -2,7 +2,7 @@
 
 Collections is a library meant to simplify the experience with respect to module state handling.
 
-Cosmos-sdk modules handle their state using the `KVStore` interface. The problem with working with
+Cosmos SDK modules handle their state using the `KVStore` interface. The problem with working with
 `KVStore` is that it forces you to think of state as a bytes KV pairings when in reality the majority of
 state comes from complex concrete golang objects (strings, ints, structs, etc.).
 

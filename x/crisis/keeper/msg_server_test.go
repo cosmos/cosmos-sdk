@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -143,7 +144,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			name: "negative constant fee",
 			input: &types.MsgUpdateParams{
 				Authority:   s.keeper.GetAuthority(),
-				ConstantFee: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(-1000)},
+				ConstantFee: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdkmath.NewInt(-1000)},
 			},
 			expErr: true,
 		},

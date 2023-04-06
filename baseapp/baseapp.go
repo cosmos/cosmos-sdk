@@ -40,9 +40,9 @@ const (
 	runTxModeCheck       runTxMode = iota // Check a transaction
 	runTxModeReCheck                      // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                     // Simulate a transaction
-	runTxModeFinalize                     // Finalize a block
+	runTxModeFinalize                     // Finalize a block proposal
 	runTxPrepareProposal                  // Prepare a block proposal
-	runTxProcessProposal                  // Process a  block proposal
+	runTxProcessProposal                  // Process a block proposal
 )
 
 var _ abci.Application = (*BaseApp)(nil)

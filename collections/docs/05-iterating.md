@@ -14,7 +14,7 @@ Let's have a look at the `Map.Iterate` method:
 func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V], error) 
 ```
 
-It accepts a `collections.Ranger[K]` which an API that instructs map on how to iterate over keys.
+It accepts a `collections.Ranger[K]`, which is an API that instructs map on how to iterate over keys.
 As always we don't need to implement anything here as `collections` already provides some generic `Ranger` implementers
 that expose all you need to work with ranges.
 

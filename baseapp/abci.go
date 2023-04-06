@@ -27,12 +27,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Supported ABCI Query prefixes
+// Supported ABCI Query prefixes and paths
 const (
 	QueryPathApp    = "app"
 	QueryPathCustom = "custom"
 	QueryPathP2P    = "p2p"
 	QueryPathStore  = "store"
+
+	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 )
 
 func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -136,9 +138,7 @@ func (app *BaseApp) Info(_ context.Context, req *abci.RequestInfo) (*abci.Respon
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
-func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
-	var resp *abci.ResponseQuery
-
+func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
 	// add panic recovery for all queries
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/8039
@@ -157,7 +157,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (*abci.Resp
 	telemetry.IncrCounter(1, "query", req.Path)
 	defer telemetry.MeasureSince(time.Now(), req.Path)
 
-	if req.Path == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
+	if req.Path == QueryPathBroadcastTx {
 		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil
 	}
 
@@ -447,7 +447,7 @@ func (app *BaseApp) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
-func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 	if app.prepareProposal == nil {
 		return nil, errors.New("PrepareProposal method not set")
 	}
@@ -471,11 +471,6 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
 		WithBlockGasMeter(app.getBlockGasMeter(app.prepareProposalState.ctx))
-
-	var (
-		resp *abci.ResponsePrepareProposal
-		err  error
-	)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -513,7 +508,7 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
-func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessProposal) (resp *abci.ResponseProcessProposal, err error) {
 	if app.processProposal == nil {
 		return nil, errors.New("app.ProcessProposal is not set")
 	}
@@ -538,11 +533,6 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
 		WithBlockGasMeter(app.getBlockGasMeter(app.processProposalState.ctx))
-
-	var (
-		resp *abci.ResponseProcessProposal
-		err  error
-	)
 
 	defer func() {
 		if err := recover(); err != nil {

@@ -43,8 +43,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern={{version}}
-            type=semver,pattern=latest-{{major}}.{{minor}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{version}},value=v${{ inputs.tags }},enable=${{ inputs.tags != '' }}
+            type=sha,enable=false
           flavor: |
             latest=false
 

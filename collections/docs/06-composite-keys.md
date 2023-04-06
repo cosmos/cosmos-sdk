@@ -140,11 +140,11 @@ The what we do, as always, we use the `collections.Map.Set` method to map the co
 
 ### GetBalance
 
-It shows the same thing how we can get a value in composite key collection, we simply use `collections.Join` to compose the key.
+To get a value in composite key collection, we simply use `collections.Join` to compose the key.
 
 ### GetAllAddressBalances
 
-We show here how we can use `collections.PrefixedPairRange` to iterate over all the keys starting with the provided address.
+We use `collections.PrefixedPairRange` to iterate over all the keys starting with the provided address.
 Concretely the iteration will report all the balances belonging to the provided address.
 
 The first part is that we instantiate a `PrefixedPairRange`, which is a `Ranger` implementer aimed to help

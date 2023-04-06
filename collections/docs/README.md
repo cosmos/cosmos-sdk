@@ -3,7 +3,7 @@
 Collections is a library meant to simplify the experience with respect to module state handling.
 
 Cosmos-sdk modules handle their state using the `KVStore` interface. The problem with working with
-KVStore is that it forces you to think of state as a bytes KV pairings when in reality the majority of
+`KVStore` is that it forces you to think of state as a bytes KV pairings when in reality the majority of
 state comes from complex concrete golang objects (strings, ints, structs, etc.).
 
 Collections allows you to work with state as if they were normal golang objects and removes the need
@@ -69,8 +69,8 @@ Let's analyse the shared arguments, what they do, and why we need them.
 
 The first argument passed is the ``SchemaBuilder``
 
-Schema builder is a structure that keeps track of all the state of a module, it is not required by the collections
-themselve to deal with state, but it offers a dynamic and reflective way for clients to explore a module's state.
+`SchemaBuilder` is a structure that keeps track of all the state of a module, it is not required by the collections
+ to deal with state but it offers a dynamic and reflective way for clients to explore a module's state.
 
 We instantiate a ``SchemaBuilder`` by passing it a function that given the modules store key returns the module's specific store.
 
@@ -78,12 +78,12 @@ We then need to pass the schema builder to every collection type we instantiate 
 
 ### Prefix
 
-The second argument passed to our ``KeySet`` is a `collections.Prefix`, a prefix represents a partition of the module's KVStore
-where all the state of a specific collection will be saved. Since a module can have multiple collections, example:
+The second argument passed to our ``KeySet`` is a `collections.Prefix`, a prefix represents a partition of the module's `KVStore`
+where all the state of a specific collection will be saved. 
 
-- Module params will become a `collections.Item`,
-- The `AllowList` is a `collections.KeySet`.
-- etc.
+Since a module can have multiple collections, the following is expected:
+- module params will become a `collections.Item`
+- the `AllowList` is a `collections.KeySet`
 
 We don't want a collection to write over the state of the other so we pass it a prefix, which defines this storage partition
 owned by the collection.
@@ -143,7 +143,7 @@ Each collection in a module **MUST** have a unique humanised name.
 ## Key and Value Codecs
 
 A collection is generic over the type you can use as keys or values.
-Which makes collections dumb, but also means that hypothetically we can store everything
+This makes collections dumb, but also means that hypothetically we can store everything
 that can be a go type into a collection. We are not bounded to any type of encoding (be it proto, json or whatever)
 
 So a collection needs to be given a way to understand how to convert your keys and values to bytes.
@@ -182,7 +182,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 }
 ````
 
-We're now instantiating a map where the key is string and the value is uint64.
+We're now instantiating a map where the key is string and the value is `uint64`.
 We already know the first three arguments of the ``NewMap`` function.
 
 The fourth parameter is our `KeyCodec`, we know that the ``Map`` has `string` as key so we pass it a `KeyCodec` that handles strings as keys.
@@ -225,7 +225,7 @@ As we can see here since our `collections.Map` maps `sdk.AccAddress` to `authtyp
 we use the `sdk.AccAddressKey` which is the `KeyCodec` implementation for `AccAddress` and we use `codec.CollValue` to
 encode our proto type `BaseAccount`.
 
-Generally speaking you will always find the respective key and value codecs for types in the go.mod path you're using
-to import that type. If you want to encode proto values refer to the codec `codec.CollValue` function which allows you
-to encode any type implement the proto.Message interface.
+Generally speaking you will always find the respective key and value codecs for types in the `go.mod` path you're using
+to import that type. If you want to encode proto values refer to the codec `codec.CollValue` function, which allows you
+to encode any type implement the `proto.Message` interface.
 

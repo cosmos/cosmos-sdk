@@ -1,7 +1,6 @@
 # IndexedMap
 
-`collections.IndexedMap` is a collection that uses under the hood a `collections.Map`, and has a struct
-which contains the indexes that we need to define.
+`collections.IndexedMap` is a collection that uses under the hood a `collections.Map`, and has a struct, which contains the indexes that we need to define.
 
 # Example
 
@@ -14,7 +13,7 @@ type BaseAccount struct {
 }
 ```
 
-First of all when we save our accounts in state we map them using a primary key, in our it's the `sdk.AccAddress`.
+First of all, when we save our accounts in state we map them using a primary key `sdk.AccAddress`.
 If it were to be a `collections.Map` it would be `collections.Map[sdk.AccAddres, authtypes.BaseAccount]`.
 
 Then we also want to be able to get an account not only by its `sdk.AccAddress`, but also by its `AccountNumber`.
@@ -24,7 +23,7 @@ So we can say we want to create an `Index` that maps our `BaseAccount` to its `A
 We also know that this `Index` is unique. Unique means that there can only be one `BaseAccount` that maps to a specific 
 `AccountNumber`.
 
-First of all we start by defining the object that contains our index:
+First of all, we start by defining the object that contains our index:
 
 ```go
 var AccountsNumberIndexPrefix = collections.NewPrefix(1)

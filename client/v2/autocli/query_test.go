@@ -265,7 +265,6 @@ func TestBinaryFlag(t *testing.T) {
 				assert.Assert(t, strings.Contains(conn.errorOut.String(), tc.err))
 			}
 		})
-
 	}
 }
 
@@ -290,7 +289,6 @@ func TestAddressValidation(t *testing.T) {
 		"--an-address", "cosmps1BAD_ENCODING",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
-
 }
 
 func TestOutputFormat(t *testing.T) {

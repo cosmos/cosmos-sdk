@@ -3,7 +3,7 @@ package depinject
 import (
 	"reflect"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 )
 
 // Config is a functional configuration of a container.
@@ -109,7 +109,7 @@ func invoke(ctr *container, key *moduleKey, invokers []interface{}) error {
 //
 //	"cosmossdk.io/depinject_test/depinject_test.Duck",
 //	"cosmossdk.io/depinject_test/depinject_test.Canvasback")
-func BindInterface(inTypeName string, outTypeName string) Config {
+func BindInterface(inTypeName, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return bindInterface(ctr, inTypeName, outTypeName, "")
 	})
@@ -125,13 +125,13 @@ func BindInterface(inTypeName string, outTypeName string) Config {
 //	 "moduleFoo",
 //		"cosmossdk.io/depinject_test/depinject_test.Duck",
 //		"cosmossdk.io/depinject_test/depinject_test.Canvasback")
-func BindInterfaceInModule(moduleName string, inTypeName string, outTypeName string) Config {
+func BindInterfaceInModule(moduleName, inTypeName, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return bindInterface(ctr, inTypeName, outTypeName, moduleName)
 	})
 }
 
-func bindInterface(ctr *container, inTypeName string, outTypeName string, moduleName string) error {
+func bindInterface(ctr *container, inTypeName, outTypeName, moduleName string) error {
 	var mk *moduleKey
 	if moduleName != "" {
 		mk = &moduleKey{name: moduleName}

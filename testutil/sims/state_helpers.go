@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -19,6 +17,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -34,6 +33,20 @@ const (
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 // genesisState is the default genesis state of the whole app.
 func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
+	return AppStateFnWithExtendedCb(cdc, simManager, genesisState, nil)
+}
+
+// AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
+// It panics if the user provides files for both of them.
+// If a file is not given for the genesis or the sim params, it creates a randomized one.
+// genesisState is the default genesis state of the whole app.
+// cb is the callback function to extend rawState.
+func AppStateFnWithExtendedCb(
+	cdc codec.JSONCodec,
+	simManager *module.SimulationManager,
+	genesisState map[string]json.RawMessage,
+	cb func(rawState map[string]json.RawMessage),
+) simtypes.AppStateFn {
 	return func(
 		r *rand.Rand,
 		accs []simtypes.Account,
@@ -138,6 +151,11 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genes
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
 
+		// extend state from callback function
+		if cb != nil {
+			cb(rawState)
+		}
+
 		// replace appstate
 		appState, err = json.Marshal(rawState)
 		if err != nil {
@@ -211,15 +229,14 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
-func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (cmttypes.GenesisDoc, []simtypes.Account, error) {
+func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (genutiltypes.AppGenesis, []simtypes.Account, error) {
 	bytes, err := os.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
 
-	var genesis cmttypes.GenesisDoc
-	// NOTE: CometBFT uses a custom JSON decoder for GenesisDoc
-	if err = cmtjson.Unmarshal(bytes, &genesis); err != nil {
+	var genesis genutiltypes.AppGenesis
+	if err = json.Unmarshal(bytes, &genesis); err != nil {
 		return genesis, nil, err
 	}
 

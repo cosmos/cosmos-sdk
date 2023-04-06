@@ -80,10 +80,12 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 039: Epoched Staking](./adr-039-epoched-staking.md)
 * [ADR 040: Storage and SMT State Commitments](./adr-040-storage-and-smt-state-commitments.md)
 * [ADR 046: Module Params](./adr-046-module-params.md)
+* [ADR 054: Semver Compatible SDK Modules](./adr-054-semver-compatible-modules.md)
 * [ADR 057: App Wiring](./adr-057-app-wiring.md)
 * [ADR 059: Test Scopes](./adr-059-test-scopes.md)
 * [ADR 062: Collections State Layer](./adr-062-collections-state-layer.md)
 * [ADR 063: Core Module API](./adr-063-core-module-api.md)
+* [ADR 065: Store V2](./adr-065-store-v2.md)
 
 ### Draft
 

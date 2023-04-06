@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -19,8 +21,6 @@ var (
 )
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
-//
-//nolint:interfacer
 func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
 	return &MsgCreateVestingAccount{
 		FromAddress: fromAddr.String(),
@@ -41,15 +41,15 @@ func (msg MsgCreateVestingAccount) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	if msg.EndTime <= 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid end time")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid end time")
 	}
 
 	return nil
@@ -68,8 +68,6 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
-//
-//nolint:interfacer
 func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
 	return &MsgCreatePermanentLockedAccount{
 		FromAddress: fromAddr.String(),
@@ -111,8 +109,6 @@ func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
-//
-//nolint:interfacer
 func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
 	return &MsgCreatePeriodicVestingAccount{
 		FromAddress:    fromAddr.String(),
@@ -148,11 +144,11 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 		return err
 	}
 	if err := sdk.VerifyAddressFormat(from); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
 	}
 
 	if err := sdk.VerifyAddressFormat(to); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
 	}
 
 	if msg.StartTime < 1 {

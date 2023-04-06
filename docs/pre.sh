@@ -31,3 +31,9 @@ cp -r ./architecture ./docs
 
 ## Add spec documentation
 cp -r ./spec ./docs
+
+## Add rfc documentation
+cp -r ./rfc ./docs
+
+## Add SDK migration documentation
+cp -r ../UPGRADING.md ./docs/migrations/02-upgrading.md

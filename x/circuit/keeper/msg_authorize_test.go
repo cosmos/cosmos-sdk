@@ -18,10 +18,9 @@ type authorizeSuite struct {
 
 func (s *authorizeSuite) Before(t *testing.T) {
 	s.baseFixture = initFixture(t)
-
 }
 
-func (s *authorizeSuite) HasPermission(a string, b string) {
+func (s *authorizeSuite) HasPermission(a, b string) {
 	panic("PENDING")
 }
 
@@ -29,7 +28,7 @@ func (s *authorizeSuite) HasNoPermissions(a string) {
 	panic("PENDING")
 }
 
-func (s *authorizeSuite) AttemptsToGrantThePermissions(a string, b string, c gocuke.DocString) {
+func (s *authorizeSuite) AttemptsToGrantThePermissions(a, b string, c gocuke.DocString) {
 	panic("PENDING")
 }
 

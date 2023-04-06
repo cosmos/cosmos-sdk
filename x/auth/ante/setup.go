@@ -5,12 +5,11 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
-
-var _ GasTx = (*legacytx.StdTx)(nil) // assert StdTx implements GasTx
 
 // GasTx defines a Tx with a GetGas() method which is needed to use SetUpContextDecorator
 type GasTx interface {
@@ -36,7 +35,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
 		// during runTx.
 		newCtx = SetGasMeter(simulate, ctx, 0)
-		return newCtx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
+		return newCtx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
 	}
 
 	newCtx = SetGasMeter(simulate, ctx, gasTx.GetGas())
@@ -54,7 +53,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed())
 
-				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+				err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
 				panic(r)
 			}

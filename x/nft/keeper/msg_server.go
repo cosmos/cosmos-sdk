@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -13,17 +16,17 @@ var _ nft.MsgServer = Keeper{}
 // Send implements Send method of the types.MsgServer.
 func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	sender, err := k.ac.StringToBytes(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
 
 	owner := k.GetOwner(ctx, msg.ClassId, msg.Id)
-	if !owner.Equals(sender) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of nft %s", sender, msg.Id)
+	if !bytes.Equal(owner, sender) {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of nft %s", msg.Sender, msg.Id)
 	}
 
-	receiver, err := sdk.AccAddressFromBech32(msg.Receiver)
+	receiver, err := k.ac.StringToBytes(msg.Receiver)
 	if err != nil {
 		return nil, err
 	}

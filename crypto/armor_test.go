@@ -50,7 +50,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	require.Contains(t, err.Error(), "unrecognized armor type")
 
 	// armor key manually
-	encryptPrivKeyFn := func(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
+	encryptPrivKeyFn := func(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, encBytes []byte) {
 		saltBytes = cmtcrypto.CRandBytes(16)
 		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), crypto.BcryptSecurityParameter)
 		require.NoError(t, err)
@@ -169,7 +169,7 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 
 func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
 	passphrase := []byte("passphrase")
-	for securityParam := 9; securityParam < 16; securityParam++ {
+	for securityParam := uint32(9); securityParam < 16; securityParam++ {
 		param := securityParam
 		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
 			b.ReportAllocs()

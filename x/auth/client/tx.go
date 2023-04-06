@@ -3,7 +3,6 @@ package client
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -14,12 +13,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -52,7 +49,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 	}
 	addr := sdk.AccAddress(pubKey.Address())
 	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
-		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
 	}
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
@@ -61,8 +58,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		}
 	}
 
-	// When Textual is wired up, the context argument should be retrieved from the client context.
-	return tx.Sign(context.TODO(), txFactory, name, txBuilder, overwriteSig)
+	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwriteSig)
 }
 
 // SignTxWithSignerAddress attaches a signature to a transaction.
@@ -80,7 +76,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
-		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {
@@ -90,8 +86,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		}
 	}
 
-	// When Textual is wired up, the context argument should be retrieved from the client context.
-	return tx.Sign(context.TODO(), txFactory, name, txBuilder, overwrite)
+	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwrite)
 }
 
 // Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
@@ -183,17 +178,6 @@ func populateAccountFromState(
 	}
 
 	return txBldr.WithAccountNumber(num).WithSequence(seq), nil
-}
-
-// GetTxEncoder return tx encoder from global sdk configuration if ones is defined.
-// Otherwise returns encoder with default logic.
-func GetTxEncoder(cdc *codec.LegacyAmino) (encoder sdk.TxEncoder) {
-	encoder = sdk.GetConfig().GetTxEncoder()
-	if encoder == nil {
-		encoder = legacytx.DefaultTxEncoder(cdc)
-	}
-
-	return encoder
 }
 
 func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {

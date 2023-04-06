@@ -22,11 +22,16 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
     * update the GitHub mergify integration by adding instructions for automatically backporting commits from `main` to the `release/vY` using the `backport/Y` label.
 * In the release branch prepare a new version section in the `CHANGELOG.md`
-    * All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+    * All links must point to their respective pull request.
     * The `CHANGELOG.md` must contain only the changes of that specific released version. All other changelog entries must be deleted and linked to the `main` branch changelog ([example](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md#previous-versions)).
     * Create release notes, in `RELEASE_NOTES.md`, highlighting the new features and changes in the version. This is needed so the bot knows which entries to add to the release page on GitHub.
     * Additionally verify that the `UPGRADING.md` file is up to date and contains all the necessary information for upgrading to the new version.
-* Remove GitHub workflows that should not be in the release branch (eg: `deploy-docs.yml`).
+* Remove GitHub workflows that should not be in the release branch
+    * `deploy-docs.yml`: must be removed to avoid duplicate documentation deployment.
+    * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests` and SDK tests).
+        * These packages are tracked and tested directly on main.
+    * `build.yml`: Only the SDK and SimApp needs to be built on release branches.
+        * Tooling is tracked and tested directly on main.
 * Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.
@@ -71,13 +76,15 @@ After the release branch has all commits required for the next patch release:
 
 Major Release series continue to receive bug fixes (released as a Patch Release) until they reach **End Of Life**.
 Major Release series is maintained in compliance with the **Stable Release Policy** as described in this document.
-Note: not every Major Release is denoted as stable releases.
 
 Only the following major release series have a stable release status:
 
-* **0.45** is supported until 6 months after **0.46.0** release. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.46** is the last major release and will be supportted until 6 months after **0.47.0** release.
-* **0.47** is the next major release and will be supported until 6 months after **0.48.0** release.
+* **0.46** is the previous major release and is supported until the release of **0.48.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
+* **0.47** is the last major release and is supported until the release of **0.49.0**.
+
+The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.
+The SDK team will not backport any bug fixes to releases that are not supported.
+Widely-used (decided at SDK team's discretion) unsupported releases are considered to be in a security maintenance mode. The SDK team will backport security fixes to these releases.
 
 ## Stable Release Policy
 
@@ -88,7 +95,7 @@ and must follow the [Patch Release Procedure](CONTRIBUTING.md#branching-model-an
 
 ### Rationale
 
-Unlike in-development `main` branch snapshots, **Cosmos-SDK** releases are subject to much wider adoption,
+Unlike in-development `main` branch snapshots, **Cosmos SDK** releases are subject to much wider adoption,
 and by a significantly different demographic of users. During development, changes in the `main` branch
 affect SDK users, application developers, early adopters, and other advanced users that elect to use
 unstable experimental software at their own risk.
@@ -113,7 +120,7 @@ ways in stable releases and `main` branch.
 
 ### Migrations
 
-To smoothen the update to the latest stable release, the SDK includes a set of CLI commands for managing migrations between SDK versions, under the `migrate` subcommand. Only migration scripts between stable releases are included. For the current major release, and later, migrations are supported.
+See the SDK's policy on migrations [here](https://docs.cosmos.network/main/migrations/intro).
 
 ### What qualifies as a Stable Release Update (SRU)
 
@@ -192,7 +199,7 @@ It's crucial to make the effort of thinking about what could happen in case a re
 
 ### Stable Release Managers
 
-The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos-SDK Stable Release series,
+The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos SDK Stable Release series,
 according to the [stable release policy](#stable-release-policy) and [release procedure](#major-release-procedure).
 Decisions are made by consensus.
 
@@ -202,6 +209,7 @@ Their responsibilites include:
 * Approving/rejecting proposed changes to a stable release series.
 * Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
 
-The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
+Currently residing Stable Release Managers:
 
-* @amaurym - Amaury Martiny
+* @tac0turtle - Marko Baricevic
+* @julienrbrt - Julien Robert

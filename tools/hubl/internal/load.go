@@ -33,7 +33,7 @@ type ChainInfo struct {
 	Config        *ChainConfig
 }
 
-func NewChainInfo(configDir string, chain string, config *ChainConfig) *ChainInfo {
+func NewChainInfo(configDir, chain string, config *ChainConfig) *ChainInfo {
 	return &ChainInfo{
 		ConfigDir: configDir,
 		Chain:     chain,
@@ -44,7 +44,7 @@ func NewChainInfo(configDir string, chain string, config *ChainConfig) *ChainInf
 
 func (c *ChainInfo) getCacheDir() (string, error) {
 	cacheDir := path.Join(c.ConfigDir, "cache")
-	return cacheDir, os.MkdirAll(cacheDir, 0755)
+	return cacheDir, os.MkdirAll(cacheDir, 0o755)
 }
 
 func (c *ChainInfo) fdsCacheFilename() (string, error) {
@@ -92,7 +92,7 @@ func (c *ChainInfo) Load(reload bool) error {
 			return err
 		}
 
-		if err = os.WriteFile(fdsFilename, bz, 0644); err != nil {
+		if err = os.WriteFile(fdsFilename, bz, 0o600); err != nil {
 			return err
 		}
 	} else {
@@ -133,7 +133,7 @@ func (c *ChainInfo) Load(reload bool) error {
 			return err
 		}
 
-		err = os.WriteFile(appOptsFilename, bz, 0644)
+		err = os.WriteFile(appOptsFilename, bz, 0o600)
 		if err != nil {
 			return err
 		}

@@ -18,10 +18,9 @@ type resetSuite struct {
 
 func (s *resetSuite) Before(t *testing.T) {
 	s.baseFixture = initFixture(t)
-
 }
 
-func (s *resetSuite) HasPermission(a string, b string) {
+func (s *resetSuite) HasPermission(a, b string) {
 	panic("PENDING")
 }
 
@@ -29,7 +28,7 @@ func (s *resetSuite) HasNoPermissions(a string) {
 	panic("PENDING")
 }
 
-func (s *resetSuite) AttemptsToResetCircuit(a string, b string, c gocuke.DocString) {
+func (s *resetSuite) AttemptsToResetCircuit(a, b string, c gocuke.DocString) {
 	panic("PENDING")
 }
 

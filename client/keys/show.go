@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
@@ -95,7 +97,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	isShowDevice, _ := cmd.Flags().GetBool(FlagDevice)
 
 	isOutputSet := false
-	tmp := cmd.Flag(cli.OutputFlag)
+	tmp := cmd.Flag(flags.FlagOutput)
 	if tmp != nil {
 		isOutputSet = tmp.Changed
 	}
@@ -115,7 +117,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	if isOutputSet {
-		clientCtx.OutputFormat, _ = cmd.Flags().GetString(cli.OutputFlag)
+		clientCtx.OutputFormat, _ = cmd.Flags().GetString(flags.FlagOutput)
 	}
 
 	switch {
@@ -173,7 +175,7 @@ func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
 	// if the key is not there or if we have a problem with a keyring itself then we move to a
 	// fallback: searching for key by address.
 
-	if err == nil || !sdkerr.IsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
+	if err == nil || !errorsmod.IsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
 		return k, err
 	}
 
@@ -183,7 +185,7 @@ func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
 	}
 
 	k, err = kb.KeyByAddress(accAddr)
-	return k, sdkerr.Wrap(err, "Invalid key")
+	return k, errorsmod.Wrap(err, "Invalid key")
 }
 
 func validateMultisigThreshold(k, nKeys int) error {

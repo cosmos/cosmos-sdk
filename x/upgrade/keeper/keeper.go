@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/cometbft/cometbft/libs/log"
-
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	xp "cosmossdk.io/x/upgrade/exported"
@@ -35,7 +35,7 @@ type Keeper struct {
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
-	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
+	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     module.VersionMap               // the module version map at init genesis
 }
 
@@ -199,11 +199,11 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
 	// as a strategy for emergency hard fork recoveries
 	if plan.Height < ctx.BlockHeight() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
 	if k.GetDoneHeight(ctx, plan.Name) != 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
 	store := ctx.KVStore(k.storeKey)

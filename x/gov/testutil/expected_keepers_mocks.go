@@ -41,7 +41,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
@@ -55,7 +55,7 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx types.Context, name string) types.ModuleAccountI {
+func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, name string) types.ModuleAccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, name)
 	ret0, _ := ret[0].(types.ModuleAccountI)
@@ -83,7 +83,7 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gom
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, cb func(types.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, cb func(types.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, cb)
 }
@@ -95,7 +95,7 @@ func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, cb interface{}) *g
 }
 
 // SetModuleAccount mocks base method.
-func (m *MockAccountKeeper) SetModuleAccount(arg0 types.Context, arg1 types.ModuleAccountI) {
+func (m *MockAccountKeeper) SetModuleAccount(arg0 context.Context, arg1 types.ModuleAccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetModuleAccount", arg0, arg1)
 }
@@ -319,6 +319,20 @@ func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
 }
 
+// GetAllDenomMetaData mocks base method.
+func (m *MockBankKeeper) GetAllDenomMetaData(ctx types.Context) []types0.Metadata {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllDenomMetaData", ctx)
+	ret0, _ := ret[0].([]types0.Metadata)
+	return ret0
+}
+
+// GetAllDenomMetaData indicates an expected call of GetAllDenomMetaData.
+func (mr *MockBankKeeperMockRecorder) GetAllDenomMetaData(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllDenomMetaData", reflect.TypeOf((*MockBankKeeper)(nil).GetAllDenomMetaData), ctx)
+}
+
 // GetAllSendEnabledEntries mocks base method.
 func (m *MockBankKeeper) GetAllSendEnabledEntries(ctx types.Context) []types0.SendEnabled {
 	m.ctrl.T.Helper()
@@ -504,7 +518,7 @@ func (mr *MockBankKeeperMockRecorder) InitGenesis(arg0, arg1 interface{}) *gomoc
 }
 
 // InputOutputCoins mocks base method.
-func (m *MockBankKeeper) InputOutputCoins(ctx types.Context, inputs []types0.Input, outputs []types0.Output) error {
+func (m *MockBankKeeper) InputOutputCoins(ctx types.Context, inputs types0.Input, outputs []types0.Output) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InputOutputCoins", ctx, inputs, outputs)
 	ret0, _ := ret[0].(error)

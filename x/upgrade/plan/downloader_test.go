@@ -65,9 +65,7 @@ type TestZip []*TestFile
 
 func NewTestZip(testFiles ...*TestFile) TestZip {
 	tz := make([]*TestFile, len(testFiles))
-	for i, tf := range testFiles { //nolint:gosimple
-		tz[i] = tf
-	}
+	copy(tz, testFiles)
 	return tz
 }
 
@@ -94,7 +92,7 @@ func (z TestZip) SaveAs(path string) error {
 
 // saveTestZip saves a TestZip in this test's Home/src directory with the given name.
 // The full path to the saved archive is returned.
-func (s DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string { //nolint:govet // this is a test, we can copy locks
+func (s *DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string {
 	fullName := filepath.Join(s.Home, "src", name)
 	s.Require().NoError(z.SaveAs(fullName), "saving test zip %s", name)
 	return fullName
@@ -102,7 +100,7 @@ func (s DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string { //n
 
 // saveSrcTestFile saves a TestFile in this test's Home/src directory.
 // The full path to the saved file is returned.
-func (s DownloaderTestSuite) saveSrcTestFile(f *TestFile) string { //nolint:govet // this is a test, we can copy locks
+func (s *DownloaderTestSuite) saveSrcTestFile(f *TestFile) string {
 	path := filepath.Join(s.Home, "src")
 	fullName, err := f.SaveIn(path)
 	s.Require().NoError(err, "saving test file %s", f.Name)

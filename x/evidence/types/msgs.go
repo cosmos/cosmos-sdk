@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/evidence/exported"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -20,8 +21,6 @@ var (
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
-//
-//nolint:interfacer
 func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEvidence, error) {
 	msg, ok := evi.(proto.Message)
 	if !ok {
@@ -42,7 +41,7 @@ func (m MsgSubmitEvidence) ValidateBasic() error {
 
 	evi := m.GetEvidence()
 	if evi == nil {
-		return sdkerrors.Wrap(ErrInvalidEvidence, "missing evidence")
+		return errorsmod.Wrap(ErrInvalidEvidence, "missing evidence")
 	}
 	if err := evi.ValidateBasic(); err != nil {
 		return err

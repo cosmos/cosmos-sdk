@@ -9,7 +9,9 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/errors"
 
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
@@ -25,13 +27,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
-	_ module.EndBlockAppModule   = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -43,10 +43,11 @@ var (
 // AppModuleBasic defines the basic application module used by the feegrant module.
 type AppModuleBasic struct {
 	cdc codec.Codec
+	ac  address.Codec
 }
 
 // Name returns the feegrant module's name.
-func (AppModuleBasic) Name() string {
+func (ab AppModuleBasic) Name() string {
 	return feegrant.ModuleName
 }
 
@@ -63,46 +64,46 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (ab AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	feegrant.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers the feegrant module's interface types
-func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (ab AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	feegrant.RegisterInterfaces(registry)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+func (ab AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(feegrant.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.
-func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+func (ab AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data feegrant.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", feegrant.ModuleName)
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", feegrant.ModuleName)
 	}
 
 	return feegrant.ValidateGenesis(data)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the feegrant module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
+func (ab AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := feegrant.RegisterQueryHandlerClient(context.Background(), mux, feegrant.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
 // GetTxCmd returns the root tx command for the feegrant module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ab.ac)
 }
 
 // GetQueryCmd returns no root query command for the feegrant module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.ac)
 }
 
 // ----------------------------------------------------------------------------
@@ -121,7 +122,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -129,7 +130,10 @@ func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKe
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -141,9 +145,6 @@ func (am AppModule) IsAppModule() {}
 func (AppModule) Name() string {
 	return feegrant.ModuleName
 }
-
-// RegisterInvariants registers the feegrant module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
@@ -174,9 +175,10 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // EndBlock returns the end blocker for the feegrant module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	EndBlocker(c, am.keeper)
+	return nil
 }
 
 func init() {
@@ -216,6 +218,6 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns all the feegrant module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+		am.registry, simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper, am.ac,
 	)
 }

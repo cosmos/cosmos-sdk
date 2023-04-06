@@ -13,6 +13,8 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -1305,6 +1307,7 @@ func TestCountSubkeys(t *testing.T) {
 		{"single key", args{singleKey}, 1},
 		{"single level multikey", args{singleLevelMultiKey}, 5},
 		{"multi level multikey", args{multiLevelMultiKey}, 11},
+		{"nil key", args{nil}, 0},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(T *testing.T) {
@@ -1376,7 +1379,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 								meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 								return nil
 							default:
-								return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+								return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 							}
 						},
 					},
@@ -1451,7 +1454,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	tx, err = suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 	txBytes, err := json.Marshal(tx)
-	require.Nil(t, err, "Error marshalling tx: %v", err)
+	require.Nil(t, err, "Error marshaling tx: %v", err)
 	suite.ctx = suite.ctx.WithTxBytes(txBytes)
 
 	// require that state machine param-dependent checking is still run on recheck since parameters can change between check and recheck

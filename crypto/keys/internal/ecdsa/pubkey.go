@@ -9,6 +9,8 @@ import (
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -59,7 +61,7 @@ func (pk *PubKey) Bytes() []byte {
 // where the s integer component of the signature is in the
 // lower half of the curve order
 // 7/21/21 - expects raw encoded signature (fixed-width 64-bytes, R || S)
-func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
+func (pk *PubKey) VerifySignature(msg, sig []byte) bool {
 	// check length for raw signature
 	// which is two 32-byte padded big.Ints
 	// concatenated
@@ -95,12 +97,12 @@ func (pk *PubKey) MarshalTo(dAtA []byte) (int, error) {
 // Unmarshal implements proto.Marshaler interface.
 func (pk *PubKey) Unmarshal(bz []byte, curve elliptic.Curve, expectedSize int) error {
 	if len(bz) != expectedSize {
-		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, expecting %d bytes, got %d", expectedSize, len(bz))
+		return errorsmod.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, expecting %d bytes, got %d", expectedSize, len(bz))
 	}
 	cpk := ecdsa.PublicKey{Curve: curve}
 	cpk.X, cpk.Y = elliptic.UnmarshalCompressed(curve, bz)
 	if cpk.X == nil || cpk.Y == nil {
-		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, unknown curve type: %d", bz[0])
+		return errorsmod.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, unknown curve type: %d", bz[0])
 	}
 	pk.PublicKey = cpk
 	return nil

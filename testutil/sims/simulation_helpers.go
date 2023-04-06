@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,7 +29,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 	var logger log.Logger
 	if verbose {
-		logger = log.TestingLogger()
+		logger = log.NewLogger(os.Stdout) // TODO(mr): enable selection of log destination.
 	} else {
 		logger = log.NewNopLogger()
 	}
@@ -68,7 +68,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 		}
 	}
 
-	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck
+	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck // used for legacy testing
 	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }
@@ -131,7 +131,7 @@ func GetSimulationLog(storeName string, sdr simtypes.StoreDecoderRegistry, kvAs,
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes.
-func DiffKVStores(a storetypes.KVStore, b storetypes.KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
+func DiffKVStores(a, b storetypes.KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
 	iterA := a.Iterator(nil, nil)
 
 	defer iterA.Close()

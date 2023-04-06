@@ -6,6 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	errorsmod "cosmossdk.io/errors"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -35,7 +37,7 @@ func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
 func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+func (t testPubKey) VerifySignature(msg, sig []byte) bool { panic("not implemented") }
 
 func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
 
@@ -51,7 +53,7 @@ func (msg *KVStoreTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error)
 	return res, nil
 }
 
-func (msg *KVStoreTx) VerifySignature(msgByte []byte, sig []byte) bool {
+func (msg *KVStoreTx) VerifySignature(msgByte, sig []byte) bool {
 	panic("implement me")
 }
 
@@ -126,7 +128,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 		k, v := split[0], split[1]
 		tx = &KVStoreTx{k, v, txBytes, nil}
 	} else {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "too many '='")
+		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}
 
 	return tx, nil

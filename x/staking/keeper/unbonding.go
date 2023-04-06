@@ -3,8 +3,9 @@ package keeper
 import (
 	"encoding/binary"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -127,7 +128,10 @@ func (k Keeper) GetValidatorByUnbondingID(ctx sdk.Context, id uint64) (val types
 // Note, it does not set the unbonding delegation itself, use SetUnbondingDelegation(ctx, ubd) for that
 func (k Keeper) SetUnbondingDelegationByUnbondingID(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	delAddr := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
+	delAddr, err := k.authKeeper.StringToBytes(ubd.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
 	if err != nil {
 		panic(err)
@@ -145,7 +149,10 @@ func (k Keeper) SetUnbondingDelegationByUnbondingID(ctx sdk.Context, ubd types.U
 func (k Keeper) SetRedelegationByUnbondingID(ctx sdk.Context, red types.Redelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	delAddr := sdk.MustAccAddressFromBech32(red.DelegatorAddress)
+	delAddr, err := k.authKeeper.StringToBytes(red.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 
 	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
 	if err != nil {
@@ -248,7 +255,7 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 
 	// The entry must be on hold
 	if !ubd.Entries[i].OnHold() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrUnbondingOnHoldRefCountNegative,
 			"undelegation unbondingID(%d), expecting UnbondingOnHoldRefCount > 0, got %T",
 			id, ubd.Entries[i].UnbondingOnHoldRefCount,
@@ -259,7 +266,7 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 	// Check if entry is matured.
 	if !ubd.Entries[i].OnHold() && ubd.Entries[i].IsMature(ctx.BlockHeader().Time) {
 		// If matured, complete it.
-		delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.StringToBytes(ubd.DelegatorAddress)
 		if err != nil {
 			return err
 		}
@@ -306,7 +313,7 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) error {
 
 	// The entry must be on hold
 	if !red.Entries[i].OnHold() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrUnbondingOnHoldRefCountNegative,
 			"redelegation unbondingID(%d), expecting UnbondingOnHoldRefCount > 0, got %T",
 			id, red.Entries[i].UnbondingOnHoldRefCount,
@@ -340,7 +347,7 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) error 
 	}
 
 	if val.UnbondingOnHoldRefCount <= 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrUnbondingOnHoldRefCountNegative,
 			"val(%s), expecting UnbondingOnHoldRefCount > 0, got %T",
 			val.OperatorAddress, val.UnbondingOnHoldRefCount,

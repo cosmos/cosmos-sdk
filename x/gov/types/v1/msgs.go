@@ -3,6 +3,7 @@ package v1
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -22,8 +23,6 @@ var (
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-//
-//nolint:interfacer
 func NewMsgSubmitProposal(
 	messages []sdk.Msg,
 	initialDeposit sdk.Coins,
@@ -69,10 +68,10 @@ func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 // ValidateBasic implements the sdk.Msg interface.
 func (m MsgSubmitProposal) ValidateBasic() error {
 	if m.Title == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
 	}
 	if m.Summary == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
 	}
 
 	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
@@ -81,16 +80,16 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 	deposit := sdk.NewCoins(m.InitialDeposit...)
 	if !deposit.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
 
 	if deposit.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
 
 	// Check that either metadata or Msgs length is non nil.
 	if len(m.Messages) == 0 && len(m.Metadata) == 0 {
-		return sdkerrors.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+		return errorsmod.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
 	}
 
 	msgs, err := m.GetMsgs()
@@ -100,7 +99,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 	for idx, msg := range msgs {
 		if err := msg.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(types.ErrInvalidProposalMsg,
+			return errorsmod.Wrap(types.ErrInvalidProposalMsg,
 				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
 		}
 	}
@@ -110,7 +109,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&m)
+	bz := codec.Amino.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -126,8 +125,6 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
-//
-//nolint:interfacer
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
@@ -139,10 +136,10 @@ func (msg MsgDeposit) ValidateBasic() error {
 	}
 	amount := sdk.NewCoins(msg.Amount...)
 	if !amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
 	if amount.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
 
 	return nil
@@ -150,7 +147,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -161,8 +158,6 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
-//
-//nolint:interfacer
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, metadata string) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option, metadata}
 }
@@ -173,7 +168,7 @@ func (msg MsgVote) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 	if !ValidVoteOption(msg.Option) {
-		return sdkerrors.Wrap(types.ErrInvalidVote, msg.Option.String())
+		return errorsmod.Wrap(types.ErrInvalidVote, msg.Option.String())
 	}
 
 	return nil
@@ -181,7 +176,7 @@ func (msg MsgVote) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -192,8 +187,6 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
-//
-//nolint:interfacer
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
 }
@@ -204,32 +197,32 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 	if len(msg.Options) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
 	}
 
 	totalWeight := math.LegacyNewDec(0)
 	usedOptions := make(map[VoteOption]bool)
 	for _, option := range msg.Options {
 		if !option.IsValid() {
-			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+			return errorsmod.Wrap(types.ErrInvalidVote, option.String())
 		}
 		weight, err := sdk.NewDecFromStr(option.Weight)
 		if err != nil {
-			return sdkerrors.Wrapf(types.ErrInvalidVote, "Invalid weight: %s", err)
+			return errorsmod.Wrapf(types.ErrInvalidVote, "Invalid weight: %s", err)
 		}
 		totalWeight = totalWeight.Add(weight)
 		if usedOptions[option.Option] {
-			return sdkerrors.Wrap(types.ErrInvalidVote, "Duplicated vote option")
+			return errorsmod.Wrap(types.ErrInvalidVote, "Duplicated vote option")
 		}
 		usedOptions[option.Option] = true
 	}
 
 	if totalWeight.GT(math.LegacyNewDec(1)) {
-		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
+		return errorsmod.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
 	}
 
 	if totalWeight.LT(math.LegacyNewDec(1)) {
-		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
+		return errorsmod.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
 	}
 
 	return nil
@@ -237,7 +230,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -247,9 +240,7 @@ func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{voter}
 }
 
-// NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance
-//
-//nolint:interfacer
+// NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance.
 func NewMsgExecLegacyContent(content *codectypes.Any, authority string) *MsgExecLegacyContent {
 	return &MsgExecLegacyContent{
 		Content:   content,
@@ -259,7 +250,7 @@ func NewMsgExecLegacyContent(content *codectypes.Any, authority string) *MsgExec
 
 // GetSignBytes returns the message bytes to sign over.
 func (c MsgExecLegacyContent) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&c)
+	bz := codec.Amino.MustMarshalJSON(&c)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -296,7 +287,7 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -306,9 +297,7 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{authority}
 }
 
-// NewMsgCancelProposal creates a new MsgCancelProposal instance
-//
-//nolint:interfacer
+// NewMsgCancelProposal creates a new MsgCancelProposal instance.
 func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal {
 	return &MsgCancelProposal{
 		ProposalId: proposalID,
@@ -327,7 +316,7 @@ func (msg MsgCancelProposal) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgCancelProposal) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

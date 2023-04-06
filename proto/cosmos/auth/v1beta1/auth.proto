@@ -18,8 +18,13 @@ message BaseAccount {
 
   option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.AccountI";
 
-  string              address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  google.protobuf.Any pub_key = 2 [(gogoproto.jsontag) = "public_key,omitempty", (amino.field_name) = "public_key"];
+  string              address = 1 [
+    (cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  google.protobuf.Any pub_key = 2 [
+    (gogoproto.jsontag) = "public_key,omitempty",
+    (amino.field_name) = "public_key"];
+
   uint64              account_number = 3;
   uint64              sequence       = 4;
 }
@@ -27,6 +32,7 @@ message BaseAccount {
 // ModuleAccount defines an account for modules that holds coins on a pool.
 message ModuleAccount {
   option (amino.name)                        = "cosmos-sdk/ModuleAccount";
+  option (amino.message_encoding)            = "module_account";
   option (gogoproto.goproto_getters)         = false;
   option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.ModuleAccountI";
 
@@ -39,6 +45,7 @@ message ModuleAccount {
 //
 // Since: cosmos-sdk 0.47
 message ModuleCredential {
+  option (amino.name) = "cosmos-sdk/GroupAccountCredential";
   // module_name is the name of the module used for address derivation (passed into address.Module).
   string module_name = 1;
   // derivation_keys is for deriving a module account address (passed into address.Module)

@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/x/upgrade/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 

@@ -5,6 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -135,7 +138,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
-	badFeeAmount[0].Amount = sdk.NewInt(-5)
+	badFeeAmount[0].Amount = sdkmath.NewInt(-5)
 	txBuilder := newBuilder(nil)
 
 	var sig1, sig2 signing.SignatureV2
@@ -165,7 +168,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	txBuilder.SetFeeAmount(badFeeAmount)
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	_, code, _ := sdkerrors.ABCIInfo(err, false)
+	_, code, _ := errorsmod.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrInsufficientFee.ABCICode(), code)
 
 	// require to fail validation when no signatures exist
@@ -174,7 +177,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	txBuilder.SetFeeAmount(feeAmount)
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	_, code, _ = errorsmod.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrNoSignatures.ABCICode(), code)
 
 	// require to fail with nil values for tx, authinfo
@@ -189,7 +192,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	_, code, _ = errorsmod.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
 
 	require.Error(t, err)

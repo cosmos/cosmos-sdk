@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -23,8 +24,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type TxInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config              *txconfigv1.Config
@@ -36,19 +36,28 @@ type TxInputs struct {
 	// TxBankKeeper is the expected bank keeper to be passed to Textual
 	TxBankKeeper   BankKeeper
 	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
+
+	CustomSignModeHandlers func() []signing.SignModeHandler `optional:"true"`
 }
 
-//nolint:revive
-type TxOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	TxConfig      client.TxConfig
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in TxInputs) TxOutputs {
-	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
-	txConfig := tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+	textual, err := NewTextualWithBankKeeper(in.TxBankKeeper)
+	if err != nil {
+		panic(err)
+	}
+	var txConfig client.TxConfig
+	if in.CustomSignModeHandlers == nil {
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
+	} else {
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual, in.CustomSignModeHandlers()...)
+	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers
@@ -89,10 +98,10 @@ func ProvideModule(in TxInputs) TxOutputs {
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
-	return TxOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
+	return ModuleOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
 }
 
-func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, error) {
+func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
 	if in.BankKeeper == nil {
 		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
 	}

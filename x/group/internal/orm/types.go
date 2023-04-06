@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
@@ -63,7 +64,7 @@ type Index interface {
 	//			it = LimitIterator(it, defaultLimit)
 	//
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	PrefixScan(store storetypes.KVStore, startI interface{}, endI interface{}) (Iterator, error)
+	PrefixScan(store storetypes.KVStore, startI, endI interface{}) (Iterator, error)
 
 	// ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
 	// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
@@ -74,7 +75,7 @@ type Index interface {
 	// this as an endpoint to the public without further limits. See `LimitIterator`
 	//
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	ReversePrefixScan(store storetypes.KVStore, startI interface{}, endI interface{}) (Iterator, error)
+	ReversePrefixScan(store storetypes.KVStore, startI, endI interface{}) (Iterator, error)
 }
 
 // Iterator allows iteration through a sequence of key value pairs
@@ -109,7 +110,7 @@ type RowGetter func(store storetypes.KVStore, rowID RowID, dest proto.Message) e
 func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec) RowGetter {
 	return func(store storetypes.KVStore, rowID RowID, dest proto.Message) error {
 		if len(rowID) == 0 {
-			return sdkerrors.Wrap(errors.ErrORMEmptyKey, "key must not be nil")
+			return errorsmod.Wrap(errors.ErrORMEmptyKey, "key must not be nil")
 		}
 		if err := assertCorrectType(model, dest); err != nil {
 			return err
@@ -128,10 +129,10 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 func assertCorrectType(model reflect.Type, obj proto.Message) error {
 	tp := reflect.TypeOf(obj)
 	if tp.Kind() != reflect.Ptr {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidType, "model destination must be a pointer")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidType, "model destination must be a pointer")
 	}
 	if model != tp.Elem() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "can not use %T with this bucket", obj)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "can not use %T with this bucket", obj)
 	}
 	return nil
 }

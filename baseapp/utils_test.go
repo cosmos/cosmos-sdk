@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"reflect"
 	"strconv"
 	"testing"
@@ -18,14 +17,13 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/libs/log"
+	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -52,14 +50,6 @@ import (
 )
 
 var ParamStoreKey = []byte("paramstore")
-
-func defaultLogger() log.Logger {
-	if testing.Verbose() {
-		return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "baseapp/test")
-	}
-
-	return log.NewNopLogger()
-}
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
@@ -178,12 +168,12 @@ func incrementCounter(ctx context.Context,
 	switch m := msg.(type) {
 	case *baseapptestutil.MsgCounter:
 		if m.FailOnHandler {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
 		}
 		msgCount = m.Counter
 	case *baseapptestutil.MsgCounter2:
 		if m.FailOnHandler {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
 		}
 		msgCount = m.Counter
 	}
@@ -215,7 +205,7 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 		counter, failOnAnte := parseTxMemo(t, tx)
 
 		if failOnAnte {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
 		_, err := incrementingCounter(t, store, storeKey, counter)
@@ -249,40 +239,37 @@ type paramStore struct {
 	db *dbm.MemDB
 }
 
-func (ps *paramStore) Set(_ sdk.Context, value *cmtproto.ConsensusParams) {
+var _ baseapp.ParamStore = (*paramStore)(nil)
+
+func (ps paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
 	bz, err := json.Marshal(value)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	ps.db.Set(ParamStoreKey, bz)
+	return ps.db.Set(ParamStoreKey, bz)
 }
 
-func (ps *paramStore) Has(_ sdk.Context) bool {
-	ok, err := ps.db.Has(ParamStoreKey)
-	if err != nil {
-		panic(err)
-	}
-
-	return ok
+func (ps paramStore) Has(_ context.Context) (bool, error) {
+	return ps.db.Has(ParamStoreKey)
 }
 
-func (ps paramStore) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
+func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
 	bz, err := ps.db.Get(ParamStoreKey)
 	if err != nil {
-		panic(err)
+		return cmtproto.ConsensusParams{}, err
 	}
 
 	if len(bz) == 0 {
-		return nil, errors.New("params not found")
+		return cmtproto.ConsensusParams{}, errors.New("params not found")
 	}
 
 	var params cmtproto.ConsensusParams
 	if err := json.Unmarshal(bz, &params); err != nil {
-		panic(err)
+		return cmtproto.ConsensusParams{}, err
 	}
 
-	return &params, nil
+	return params, nil
 }
 
 func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {

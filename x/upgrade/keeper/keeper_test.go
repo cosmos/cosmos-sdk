@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestMigrations() {
 	vmBefore := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// simulate upgrading the bank module
-		vm["bank"] = vm["bank"] + 1 //nolint:gocritic
+		vm["bank"]++
 		return vm, nil
 	})
 	dummyPlan := types.Plan{

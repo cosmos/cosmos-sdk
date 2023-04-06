@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -30,7 +31,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
-	feeCollectorName string, authority string,
+	feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -59,9 +60,9 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
-func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error {
+func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr, withdrawAddr sdk.AccAddress) error {
 	if k.bankKeeper.BlockedAddr(withdrawAddr) {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", withdrawAddr)
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", withdrawAddr)
 	}
 
 	if !k.GetWithdrawAddrEnabled(ctx) {

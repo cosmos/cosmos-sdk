@@ -3,16 +3,15 @@ package cli
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math/unsafe"
 	cfg "github.com/cometbft/cometbft/config"
-	"github.com/cometbft/cometbft/libs/cli"
-	cmtrand "github.com/cometbft/cometbft/libs/rand"
-	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,7 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (
@@ -86,7 +87,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			case clientCtx.ChainID != "":
 				chainID = clientCtx.ChainID
 			default:
-				chainID = fmt.Sprintf("test-chain-%v", cmtrand.Str(6))
+				chainID = fmt.Sprintf("test-chain-%v", unsafe.Str(6))
 			}
 
 			// Get bip39 mnemonic
@@ -103,6 +104,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				if !bip39.IsMnemonicValid(mnemonic) {
 					return errors.New("invalid mnemonic")
 				}
+			}
+
+			// Get initial height
+			initHeight, _ := cmd.Flags().GetInt64(flags.FlagInitHeight)
+			if initHeight < 1 {
+				initHeight = 1
 			}
 
 			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
@@ -130,27 +137,32 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			appState, err := json.MarshalIndent(appGenState, "", " ")
 			if err != nil {
-				return errors.Wrap(err, "Failed to marshal default genesis state")
+				return errorsmod.Wrap(err, "Failed to marshal default genesis state")
 			}
 
-			genDoc := &types.GenesisDoc{}
+			appGenesis := &types.AppGenesis{}
 			if _, err := os.Stat(genFile); err != nil {
 				if !os.IsNotExist(err) {
 					return err
 				}
 			} else {
-				genDoc, err = types.GenesisDocFromFile(genFile)
+				appGenesis, err = types.AppGenesisFromFile(genFile)
 				if err != nil {
-					return errors.Wrap(err, "Failed to read genesis doc from file")
+					return errorsmod.Wrap(err, "Failed to read genesis doc from file")
 				}
 			}
 
-			genDoc.ChainID = chainID
-			genDoc.Validators = nil
-			genDoc.AppState = appState
+			appGenesis.AppName = version.AppName
+			appGenesis.AppVersion = version.Version
+			appGenesis.ChainID = chainID
+			appGenesis.AppState = appState
+			appGenesis.InitialHeight = initHeight
+			appGenesis.Consensus = &types.ConsensusGenesis{
+				Validators: nil,
+			}
 
-			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-				return errors.Wrap(err, "Failed to export genesis file")
+			if err = genutil.ExportGenesisFile(appGenesis, genFile); err != nil {
+				return errorsmod.Wrap(err, "Failed to export genesis file")
 			}
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
@@ -160,11 +172,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(FlagDefaultBondDenom, "", "genesis file default denomination, if left blank default value is 'stake'")
+	cmd.Flags().Int64(flags.FlagInitHeight, 1, "specify the initial block height at genesis")
 
 	return cmd
 }

@@ -22,9 +22,9 @@ message StakeAuthorization {
   oneof validators {
     // allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's
     // account.
-    Validators allow_list = 2;
+    Validators allow_list = 2 [(amino.oneof_name) = "cosmos-sdk/StakeAuthorization/AllowList"];
     // deny_list specifies list of validator addresses to whom grantee can not delegate tokens.
-    Validators deny_list = 3;
+    Validators deny_list = 3 [(amino.oneof_name) = "cosmos-sdk/StakeAuthorization/DenyList"];
   }
   // Validators defines list of validator addresses.
   message Validators {
@@ -46,4 +46,6 @@ enum AuthorizationType {
   AUTHORIZATION_TYPE_UNDELEGATE = 2;
   // AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for Msg/BeginRedelegate
   AUTHORIZATION_TYPE_REDELEGATE = 3;
+  // AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION defines an authorization type for Msg/MsgCancelUnbondingDelegation
+  AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION = 4;
 }

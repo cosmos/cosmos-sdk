@@ -569,7 +569,7 @@ func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
-	var res sdk.LegacyResponseDeliverTx
+	var resp *abci.ExecTxResult
 	defer func() {
 		// call the streaming service hook with the EndBlock messages
 		for _, abciListener := range app.streamingManager.ABCIListeners {
@@ -580,7 +580,7 @@ func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
 			// as we cannot have the store sub-module depend on the root SDK module.
 			//
 			// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-			if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
+			if err := abciListener.ListenDeliverTx(ctx, req, resp); err != nil {
 				app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
 			}
 		}
@@ -596,22 +596,25 @@ func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
 	gInfo, result, anteEvents, err := app.runTx(runTxModeFinalize, tx)
 	if err != nil {
 		resultStr = "failed"
-		return sdkerrors.ResponseExecTxResultWithEvents(
+		resp = sdkerrors.ResponseExecTxResultWithEvents(
 			err,
 			gInfo.GasWanted,
 			gInfo.GasUsed,
 			sdk.MarkEventsToIndex(anteEvents, app.indexEvents),
 			app.trace,
 		)
+		return resp
 	}
 
-	return &abci.ExecTxResult{
+	resp = &abci.ExecTxResult{
 		GasWanted: int64(gInfo.GasWanted),
 		GasUsed:   int64(gInfo.GasUsed),
 		Log:       result.Log,
 		Data:      result.Data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
+
+	return resp
 }
 
 func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {

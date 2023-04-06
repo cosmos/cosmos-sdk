@@ -56,7 +56,7 @@ part is `string`.
 ### The Key Codec instantiation
 
 The arguments to instantiate are always the same, the only thing that changes is how we instantiate
-the ``KeyCodec``, since this key is composed of two keys we use `collections.PairKeyCodec` which generates
+the ``KeyCodec``, since this key is composed of two keys we use `collections.PairKeyCodec`, which generates
 a `KeyCodec` composed of two key codecs. The first one will encode the first part of the key, the second one will
 encode the second part of the key.
 

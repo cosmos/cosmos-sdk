@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -56,7 +57,7 @@ func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query proposals, return the last's id
-	cmd := cli.GetCmdQueryProposals()
+	cmd := cli.GetCmdQueryProposals(address.NewBech32Codec("cosmos"))
 	args := []string{fmt.Sprintf("--%s=json", flags.FlagOutput)}
 	res, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -130,7 +131,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	proposalID := strconv.FormatUint(id, 10)
 
 	args := []string{fmt.Sprintf("--%s=json", flags.FlagOutput)}
-	cmd := cli.GetCmdQueryProposals()
+	cmd := cli.GetCmdQueryProposals(address.NewBech32Codec("cosmos"))
 	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
 

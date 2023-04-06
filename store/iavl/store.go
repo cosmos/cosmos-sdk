@@ -147,7 +147,7 @@ func (st *Store) Commit() types.CommitID {
 func (st *Store) WorkingHash() []byte {
 	hash, err := st.tree.WorkingHash()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to retrieve working hash: %w", err))
 	}
 
 	return hash

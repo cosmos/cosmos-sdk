@@ -3,8 +3,8 @@ package tx
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/cosmos-proto/rapidproto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
@@ -14,10 +14,12 @@ import (
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -40,7 +42,35 @@ func TestDecode(t *testing.T) {
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 
-	for _, tt := range rapidgen.DefaultGeneratedTypes {
+	fee := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
+	gas := uint64(200)
+	memo := "memo"
+	accSeq := uint64(2)
+
+	_, pubkey, _ := testdata.KeyTestPubAddr()
+	anyPk, _ := codectypes.NewAnyWithValue(pubkey)
+	var signerInfo []*txtypes.SignerInfo
+	signerInfo = append(signerInfo, &txtypes.SignerInfo{
+		PublicKey: anyPk,
+		ModeInfo: &txtypes.ModeInfo{
+			Sum: &txtypes.ModeInfo_Single_{
+				Single: &txtypes.ModeInfo_Single{
+					Mode: signing.SignMode_SIGN_MODE_DIRECT,
+				},
+			},
+		},
+		Sequence: accSeq,
+	})
+
+	authInfo := &txtypes.AuthInfo{
+		Fee:         &txtypes.Fee{Amount: fee, GasLimit: gas},
+		SignerInfos: signerInfo,
+	}
+
+	authInfoBytes, err := gogoproto.Marshal(authInfo)
+	require.NoError(t, err)
+
+	for _, tt := range rapidgen.SignableTypes {
 		name := string(tt.Pulsar.ProtoReflect().Descriptor().FullName())
 		t.Run(name, func(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
@@ -58,14 +88,7 @@ func TestDecode(t *testing.T) {
 				err = encCfg.Codec.Unmarshal(protoBz, gogo)
 				require.NoError(t, err)
 
-				// TODO generate tx options
 				txBuilder := encCfg.TxConfig.NewTxBuilder()
-				fee := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
-				gas := uint64(200)
-				memo := "memo"
-				accSeq := uint64(2)
-
-				_, pubkey, _ := testdata.KeyTestPubAddr()
 
 				sig := signing.SignatureV2{
 					PubKey: pubkey,
@@ -76,7 +99,10 @@ func TestDecode(t *testing.T) {
 					Sequence: accSeq,
 				}
 
-				err = txBuilder.SetMsgs(gogo.(sdk.Msg))
+				gogoMsg, ok := gogo.(sdk.Msg)
+				require.True(t, ok)
+
+				err = txBuilder.SetMsgs(gogoMsg)
 				txBuilder.SetFeeAmount(fee)
 				txBuilder.SetGasLimit(gas)
 				txBuilder.SetMemo(memo)
@@ -85,12 +111,27 @@ func TestDecode(t *testing.T) {
 
 				tx := txBuilder.GetTx()
 				txBytes, err := encCfg.TxConfig.TxEncoder()(tx)
-				anyutil.Unpack()
 				decodeCtx, err := decode.NewContext(decode.Options{})
 				require.NoError(t, err)
 				decodedTx, err := decodeCtx.Decode(txBytes)
 				require.NoError(t, err)
-				require.Equal(t, tx.GetFee()[0].Amount, decodedTx.Tx.AuthInfo.Fee.Amount[0].Amount)
+				require.NotNil(t, decodedTx)
+
+				require.Equal(t, authInfoBytes, decodedTx.TxRaw.AuthInfoBytes)
+
+				anyGogoMsg, err := codectypes.NewAnyWithValue(gogoMsg)
+				require.NoError(t, err)
+
+				txBody := &txtypes.TxBody{
+					Memo: memo,
+					Messages: []*codectypes.Any{
+						anyGogoMsg,
+					},
+				}
+				bodyBytes, err := gogoproto.Marshal(txBody)
+				require.NoError(t, err)
+
+				require.Equal(t, bodyBytes, decodedTx.TxRaw.BodyBytes)
 			})
 		})
 	}

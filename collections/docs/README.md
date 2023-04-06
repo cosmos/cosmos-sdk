@@ -229,3 +229,824 @@ Generally speaking you will always find the respective key and value codecs for 
 to import that type. If you want to encode proto values refer to the codec `codec.CollValue` function, which allows you
 to encode any type implement the `proto.Message` interface.
 
+# Map
+
+We analyse the first and most important collection type, the ``collections.Map``.
+This is the type that everything else builds on top of.
+
+## Use case
+
+A `collections.Map` is used to map arbitrary keys with arbitrary values.
+
+## Example
+
+It's easier to explain a `collections.Map` capabilities through an example:
+
+```go
+package collections
+
+import (
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+var AccountsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+	Schema    collections.Schema
+	Accounts   collections.Map[sdk.AccAddress, authtypes.BaseAccount]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Accounts: collections.NewMap(sb, AccountsPrefix, "accounts",
+			sdk.AccAddressKey, codec.CollValue[authtypes.BaseAccount](cdc)),
+	}
+}
+
+func (k Keeper) CreateAccount(ctx sdk.Context, addr sdk.AccAddress, account authtypes.BaseAccount) error {
+	has, err := k.Accounts.Has(ctx, addr)
+	if err != nil {
+		return err
+	}
+	if has {
+		return fmt.Errorf("account already exists: %s", addr)
+	}
+	
+	err = k.Accounts.Set(ctx, addr, account)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) (authtypes.BaseAccount, error) {
+	acc, err := k.Accounts.Get(ctx, addr)
+	if err != nil {
+		return authtypes.BaseAccount{}, err
+	}
+	
+	return acc,	nil
+}
+
+func (k Keeper) RemoveAccount(ctx sdk.Context, addr sdk.AccAddress) error {
+	err := k.Accounts.Remove(ctx, addr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+```
+
+### Set method
+
+Set maps with the provided `AccAddress` (the key) to the `auth.BaseAccount` (the value).
+
+Under the hood the `collections.Map` will convert the key and value to bytes using the [key and value codec](README.md#key-and-value-codecs).
+It will prepend to our bytes key the [prefix](README.md#prefix) and store it in the KVStore of the module.
+
+### Has method
+
+The has method reports if the provided key exists in the store.
+
+### Get method
+
+The get method accepts the `AccAddress` and returns the associated `auth.BaseAccount` if it exists, otherwise it errors.
+
+### Remove method
+
+The remove method accepts the `AccAddress` and removes it from the store. It won't report errors
+if it does not exist, to check for existence before removal use the ``Has`` method.
+
+### Iteration
+
+Iteration has a separate section.
+
+# KeySet
+
+The second type of collection is `collections.KeySet`, as the word suggests it maintains
+only a set of keys without values.
+
+#### Implementation curiosity
+
+A `collections.KeySet` is just a `collections.Map` with a `key` but no value.
+The value internally is always the same and is represented as an empty byte slice ```[]byte{}```.
+
+## Example
+
+As always we explore the collection type through an example:
+
+```go
+package collections
+
+import (
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var ValidatorsSetPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+	Schema        collections.Schema
+	ValidatorsSet collections.KeySet[sdk.ValAddress]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		ValidatorsSet: collections.NewKeySet(sb, ValidatorsSetPrefix, "validators_set", sdk.ValAddressKey),
+	}
+}
+
+func (k Keeper) AddValidator(ctx sdk.Context, validator sdk.ValAddress) error {
+	has, err := k.ValidatorsSet.Has(ctx, validator)
+	if err != nil {
+		return err
+	}
+	if has {
+		return fmt.Errorf("validator already in set: %s", validator)
+	}
+	
+	err = k.ValidatorsSet.Set(ctx, validator)
+	if err != nil {
+		return err
+	}
+	
+	return nil
+}
+
+func (k Keeper) RemoveValidator(ctx sdk.Context, validator sdk.ValAddress) error {
+	err := k.ValidatorsSet.Remove(ctx, validator)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+```
+The first difference we notice is that `KeySet` needs use to specify only one type parameter: the key (`sdk.ValAddress` in this case).
+The second difference we notice is that `KeySet` in its `NewKeySet` function does not require
+us to specify a `ValueCodec` but only a `KeyCodec`. This is because a `KeySet` only saves keys and not values.
+
+Let's explore the methods.
+
+### Has method
+
+Has allows us to understand if a key is present in the `collections.KeySet` or not, functions in the same way as `collections.Map.Has
+`
+
+### Set method
+
+Set inserts the provided key in the `KeySet`.
+
+### Remove method
+
+Remove removes the provided key from the `KeySet`, it does not error if the key does not exist,
+if existence check before removal is required it needs to be coupled with the `Has` method.
+
+# Item
+
+The third type of collection is the `collections.Item`.
+It stores only one single item, it's useful for example for parameters, there's only one instance
+of parameters in state always.
+
+#### implementation curiosity
+
+A `collections.Item` is just a `collections.Map` with no key but just a value.
+The key is the prefix of the collection!
+
+## Example
+
+```go
+package collections
+
+import (
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+)
+
+var ParamsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+	Schema        collections.Schema
+	Params collections.Item[stakingtypes.Params]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Params: collections.NewItem(sb, ParamsPrefix, "params", codec.CollValue[stakingtypes.Params](cdc)),
+	}
+}
+
+func (k Keeper) UpdateParams(ctx sdk.Context, params stakingtypes.Params) error {
+	err := k.Params.Set(ctx, params)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) GetParams(ctx sdk.Context) (stakingtypes.Params, error) {
+	return k.Params.Get(ctx)
+}
+```
+
+The first key difference we notice is that we specify only one type parameter, which is the value we're storing.
+The second key difference is that we don't specify the `KeyCodec`, since we store only one item we already know the key
+and the fact that it is constant.
+
+# Iteration
+
+One of the key features of the ``KVStore`` is iterating over keys.
+
+Collections which deal with keys (so `Map`, `KeySet` and `IndexedMap`) allow you to iterate
+over keys in a safe and typed way. They all share the same API, the only difference being
+that ``KeySet`` returns a different type of `Iterator` because `KeySet` only deals with keys.
+
+NOTE: that every collection shares the same `Iterator` semantics.
+
+Let's have a look at the `Map.Iterate` method:
+
+```go
+func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V], error) 
+```
+
+It accepts a `collections.Ranger[K]`, which is an API that instructs map on how to iterate over keys.
+As always we don't need to implement anything here as `collections` already provides some generic `Ranger` implementers
+that expose all you need to work with ranges.
+
+## Example
+
+We have a `collections.Map` that maps accounts using `uint64` IDs.
+
+```go
+package collections
+
+import (
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+var AccountsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+	Schema   collections.Schema
+	Accounts collections.Map[uint64, authtypes.BaseAccount]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Accounts: collections.NewMap(sb, AccountsPrefix, "accounts", collections.Uint64Key, codec.CollValue[authtypes.BaseAccount](cdc)),
+	}
+}
+
+func (k Keeper) GetAllAccounts(ctx sdk.Context) ([]authtypes.BaseAccount, error) {
+	// passing a nil Ranger equals to: iterate over every possible key
+	iter, err := k.Accounts.Iterate(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	accounts, err := iter.Values()
+	if err != nil {
+		return nil, err
+	}
+
+	return accounts, err
+}
+
+func (k Keeper) IterateAccountsBetween(ctx sdk.Context, start, end uint64) ([]authtypes.BaseAccount, error) {
+	// The collections.Range API offers a lot of capabilities
+	// like defining where the iteration starts or ends.
+	rng := new(collections.Range[uint64]).
+		StartInclusive(start).
+		EndExclusive(end).
+		Descending()
+
+	iter, err := k.Accounts.Iterate(ctx, rng)
+	if err != nil {
+		return nil, err
+	}
+	accounts, err := iter.Values()
+	if err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
+}
+
+func (k Keeper) IterateAccounts(ctx sdk.Context, do func(id uint64, acc authtypes.BaseAccount) (stop bool)) error {
+	iter, err := k.Accounts.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		kv, err := iter.KeyValue()
+		if err != nil {
+			return err
+		}
+
+		if do(kv.Key, kv.Value) {
+			break
+		}
+	}
+	return nil
+}
+```
+
+Let's analyse each method in the example and how it makes use of the `Iterate` and the returned `Iterator` API.
+
+### GetAllAccounts
+
+In `GetAllAccounts` we pass to our `Iterate` a nil `Ranger`. This means that the returned `Iterator` will include
+all the existing keys within the collection.
+
+Then we use some the `Values` method from the returned `Iterator` API to collect all the values into a slice.
+
+`Iterator` offers other methods such as `Keys()` to collect only the keys and not the values and `KeyValues` to collect
+all the keys and values.
+
+
+### IterateAccountsBetween
+
+Here we make use of the `collections.Range` helper to specialise our range.
+We make it start in a point through `StartInclusive` and end in the other with `EndExclusive`, then
+we instruct it to report us results in reverse order through `Descending`
+
+Then we pass the range instruction to `Iterate` and get an `Iterator`, which will contain only the results
+we specified in the range.
+
+Then we use again th `Values` method of the `Iterator` to collect all the results.
+
+`collections.Range` also offers a `Prefix` API which is not appliable to all keys types,
+for example uint64 cannot be prefix because it is of constant size, but a `string` key
+can be prefixed.
+
+### IterateAccounts
+
+Here we showcase how to lazily collect values from an Iterator. Note that `Keys/Values/KeyValues` fully consume
+and close the `Iterator`, here we need to explictly do a `defer iterator.Close()` call.
+
+`Iterator` also exposes a `Value` and `Key` method to collect only the current value or key, if collecting both is not needed.
+
+# Composite keys
+
+So far we've worked only with simple keys, like `uint64`, the account address, etc.
+There are some more complex cases in, which we need to deal with composite keys.
+
+A key is composite when it is composed of multiple keys, for example bank balances as stored as the composite key
+`(AccAddress, string)` where the first part is the address holding the coins and the second part is the denom.
+
+Example, let's say address `BOB` holds `10atom,15osmo`, this is how it is stored in state:
+
+```
+(bob, atom) => 10
+(bob, osmos) => 15
+```
+
+Now this allows to efficiently get a specific denom balance of an address, by simply `getting` `(address, denom)`, or getting all the balances
+of an address by prefixing over `(address)`.
+
+Let's see now how we can work with composite keys using collections.
+
+## Example
+
+In our example we will show-case how we can use collections when we are dealing with balances, similar to bank,
+a balance is a mapping between `(address, denom) => math.Int` the composite key in our case is `(address, denom)`.
+
+## Instantiation of a composite key collection
+
+```go
+package collections
+
+import (
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+
+var BalancesPrefix = collections.NewPrefix(1)
+
+type Keeper struct {
+	Schema   collections.Schema
+	Balances collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Balances: collections.NewMap(
+			sb, BalancesPrefix, "balances",
+			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
+			math.IntValue,
+		),
+	}
+}
+```
+
+### The Map Key definition
+
+First of all we can see that in order to define a composite key of two elements we use the `collections.Pair` type:
+````go
+collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
+````
+
+`collections.Pair` defines a key composed of two other keys, in our case the first part is `sdk.AccAddress`, the second
+part is `string`.
+
+### The Key Codec instantiation
+
+The arguments to instantiate are always the same, the only thing that changes is how we instantiate
+the ``KeyCodec``, since this key is composed of two keys we use `collections.PairKeyCodec`, which generates
+a `KeyCodec` composed of two key codecs. The first one will encode the first part of the key, the second one will
+encode the second part of the key.
+
+
+## Working with composite key collections
+
+Let's expand on the example we used before:
+
+````go
+var BalancesPrefix = collections.NewPrefix(1)
+
+type Keeper struct {
+	Schema   collections.Schema
+	Balances collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Balances: collections.NewMap(
+			sb, BalancesPrefix, "balances",
+			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
+			math.IntValue,
+		),
+	}
+}
+
+func (k Keeper) SetBalance(ctx sdk.Context, address sdk.AccAddress, denom string, amount math.Int) error {
+	key := collections.Join(address, denom)
+	return k.Balances.Set(ctx, key, amount)
+}
+
+func (k Keeper) GetBalance(ctx sdk.Context, address sdk.AccAddress, denom string) (math.Int, error) {
+	return k.Balances.Get(ctx, collections.Join(address, denom))
+}
+
+func (k Keeper) GetAllAddressBalances(ctx sdk.Context, address sdk.AccAddress) (sdk.Coins, error) {
+	balances := sdk.NewCoins()
+
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](address)
+
+	iter, err := k.Balances.Iterate(ctx, rng)
+	if err != nil {
+		return nil, err
+	}
+
+	kvs, err := iter.KeyValues()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, kv := range kvs {
+		balances = balances.Add(sdk.NewCoin(kv.Key.K2(), kv.Value))
+	}
+	return balances, nil
+}
+
+func (k Keeper) GetAllAddressBalancesBetween(ctx sdk.Context, address sdk.AccAddress, startDenom, endDenom string) (sdk.Coins, error) {
+    rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](address).
+        StartInclusive(startDenom).
+        EndInclusive(endDenom)
+
+    iter, err := k.Balances.Iterate(ctx, rng)
+    if err != nil {
+        return nil, err
+	}
+    ...
+}
+````
+
+### SetBalance
+
+As we can see here we're setting the balance of an address for a specific denom.
+We use the `collections.Join` function to generate the composite key.
+`collections.Join` returns a `collections.Pair` (which is the key of our `collections.Map`)
+
+`collections.Pair` contains the two keys we have joined, it also exposes two methods: `K1` to fetch the 1st part of the
+key and `K2` to fetch the second part.
+
+As always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int`in this case)
+
+### GetBalance
+
+To get a value in composite key collection, we simply use `collections.Join` to compose the key.
+
+### GetAllAddressBalances
+
+We use `collections.PrefixedPairRange` to iterate over all the keys starting with the provided address.
+Concretely the iteration will report all the balances belonging to the provided address.
+
+The first part is that we instantiate a `PrefixedPairRange`, which is a `Ranger` implementer aimed to help
+in `Pair` keys iterations.
+
+```go
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](address)
+```
+
+As we can see here we're passing the type parameters of the `collections.Pair` because golang type inference
+with respect to generics is not as permissive as other languages, so we need to explitly say what are the types of the pair key.
+
+### GetAllAddressesBalancesBetween
+
+This showcases how we can further specialise our range to limit the results further, by specifying
+the range between the second part of the key (in our case the denoms, which are strings).
+
+# IndexedMap
+
+`collections.IndexedMap` is a collection that uses under the hood a `collections.Map`, and has a struct, which contains the indexes that we need to define.
+
+## Example
+
+Let's say we have an `auth.BaseAccount` struct which looks like the following:
+
+```go
+type BaseAccount struct {
+	AccountNumber uint64     `protobuf:"varint,3,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
+	Sequence      uint64     `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
+}
+```
+
+First of all, when we save our accounts in state we map them using a primary key `sdk.AccAddress`.
+If it were to be a `collections.Map` it would be `collections.Map[sdk.AccAddres, authtypes.BaseAccount]`.
+
+Then we also want to be able to get an account not only by its `sdk.AccAddress`, but also by its `AccountNumber`.
+
+So we can say we want to create an `Index` that maps our `BaseAccount` to its `AccountNumber`.
+
+We also know that this `Index` is unique. Unique means that there can only be one `BaseAccount` that maps to a specific
+`AccountNumber`.
+
+First of all, we start by defining the object that contains our index:
+
+```go
+var AccountsNumberIndexPrefix = collections.NewPrefix(1)
+
+type AccountsIndexes struct {
+	Number *indexes.Unique[uint64, sdk.AccAddress, authtypes.BaseAccount]
+}
+
+func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, authtypes.BaseAccount] {
+	return []collections.Index[sdk.AccAddress, authtypes.BaseAccount]{a.Number}
+}
+
+func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
+	return AccountsIndexes{
+		Number: indexes.NewUnique(
+			sb, AccountsNumberIndexPrefix, "accounts_by_number",
+			collections.Uint64Key, sdk.AccAddressKey,
+			func(_ sdk.AccAddress, v authtypes.BaseAccount) (uint64, error) {
+				return v.AccountNumber, nil
+			},
+		),
+	}
+}
+```
+
+We create an `AccountIndexes` struct which contains a field: `Number`. This field represents our `AccountNumber` index.
+`AccountNumber` is a field of `authtypes.BaseAccount` and it's a `uint64`.
+
+Then we can see in our `AccountIndexes` struct the `Number` field is defined as:
+
+```go
+*indexes.Unique[uint64, sdk.AccAddress, authtypes.BaseAccount]
+```
+
+Where the first type parameter is `uint64`, which is the field type of our index.
+The second type parameter is the primary key `sdk.AccAddress`
+And the third type parameter is the actual object we're storing `authtypes.BaseAccount`.
+
+Then we implement a function called `IndexesList` on our `AccountIndexes` struct, this will be used
+by the `IndexedMap` to keep the underlying map in sync with the indexes, in our case `Number`.
+This function just needs to return the slice of indexes contained in the struct.
+
+Then we create a `NewAccountIndexes` function that instantiates and returns the `AccountsIndexes` struct.
+
+The function takes a `SchemaBuilder`. Then we instantiate our `indexes.Unique`, let's analyse the arguments we pass to
+`indexes.NewUnique`.
+
+#### Instantiating a `indexes.Unique`
+
+The first three arguments, we already know them, they are: `SchemaBuilder`, `Prefix` which is our index prefix (the partition
+where index keys relationship for the `Number` index will be maintained), and the human name for the `Number` index.
+
+The second argument is a `collections.Uint64Key` which is a key codec to deal with `uint64` keys, we pass that because
+the key we're trying to index is a `uint64` key (the account number), and then we pass as fifth argument the primary key codec,
+which in our case is `sdk.AccAddress` (remember: we're mapping `sdk.AccAddress` => `BaseAccount`).
+
+Then as last parameter we pass a function that: given the `BaseAccount` returns its `AccountNumber`.
+
+After this we can proceed instantiating our `IndexedMap`.
+
+```go
+var AccountsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+	Schema   collections.Schema
+	Accounts *collections.IndexedMap[sdk.AccAddress, authtypes.BaseAccount, AccountsIndexes]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Accounts: collections.NewIndexedMap(
+			sb, AccountsPrefix, "accounts",
+			sdk.AccAddressKey, codec.CollValue[authtypes.BaseAccount](cdc),
+			NewAccountIndexes(sb),
+		),
+	}
+}
+```
+
+As we can see here what we do, for now, is the same thing as we did for `collections.Map`.
+We pass it the `SchemaBuilder`, the `Prefix` where we plan to store the mapping between `sdk.AccAddress` and `authtypes.BaseAccount`,
+the human name and the respective `sdk.AccAddress` key codec and `authtypes.BaseAccount` value codec.
+
+Then we pass the instantiation of our `AccountIndexes` through `NewAccountIndexes`.
+
+Full example:
+
+```go
+package docs
+
+import (
+	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+var AccountsNumberIndexPrefix = collections.NewPrefix(1)
+
+type AccountsIndexes struct {
+	Number *indexes.Unique[uint64, sdk.AccAddress, authtypes.BaseAccount]
+}
+
+func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, authtypes.BaseAccount] {
+	return []collections.Index[sdk.AccAddress, authtypes.BaseAccount]{a.Number}
+}
+
+func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
+	return AccountsIndexes{
+		Number: indexes.NewUnique(
+			sb, AccountsNumberIndexPrefix, "accounts_by_number",
+			collections.Uint64Key, sdk.AccAddressKey,
+			func(_ sdk.AccAddress, v authtypes.BaseAccount) (uint64, error) {
+				return v.AccountNumber, nil
+			},
+		),
+	}
+}
+
+var AccountsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+	Schema   collections.Schema
+	Accounts *collections.IndexedMap[sdk.AccAddress, authtypes.BaseAccount, AccountsIndexes]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Accounts: collections.NewIndexedMap(
+			sb, AccountsPrefix, "accounts",
+			sdk.AccAddressKey, codec.CollValue[authtypes.BaseAccount](cdc),
+			NewAccountIndexes(sb),
+		),
+	}
+}
+```
+
+## Working with IndexedMaps
+
+Whilst instantiating `collections.IndexedMap` is tedious, working with them is extremely smooth.
+
+Let's take the full example, and expand it with some use-cases.
+
+```go
+package docs
+
+import (
+	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+var AccountsNumberIndexPrefix = collections.NewPrefix(1)
+
+type AccountsIndexes struct {
+	Number *indexes.Unique[uint64, sdk.AccAddress, authtypes.BaseAccount]
+}
+
+func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, authtypes.BaseAccount] {
+	return []collections.Index[sdk.AccAddress, authtypes.BaseAccount]{a.Number}
+}
+
+func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
+	return AccountsIndexes{
+		Number: indexes.NewUnique(
+			sb, AccountsNumberIndexPrefix, "accounts_by_number",
+			collections.Uint64Key, sdk.AccAddressKey,
+			func(_ sdk.AccAddress, v authtypes.BaseAccount) (uint64, error) {
+				return v.AccountNumber, nil
+			},
+		),
+	}
+}
+
+var AccountsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+	Schema   collections.Schema
+	Accounts *collections.IndexedMap[sdk.AccAddress, authtypes.BaseAccount, AccountsIndexes]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Accounts: collections.NewIndexedMap(
+			sb, AccountsPrefix, "accounts",
+			sdk.AccAddressKey, codec.CollValue[authtypes.BaseAccount](cdc),
+			NewAccountIndexes(sb),
+		),
+	}
+}
+
+func (k Keeper) CreateAccount(ctx sdk.Context, addr sdk.AccAddress) error {
+	nextAccountNumber := k.getNextAccountNumber()
+	
+	newAcc := authtypes.BaseAccount{
+		AccountNumber: nextAccountNumber,
+		Sequence:      0,
+	}
+	
+	return k.Accounts.Set(ctx, addr, newAcc)
+}
+
+func (k Keeper) RemoveAccount(ctx sdk.Context, addr sdk.AccAddress) error {
+	return k.Accounts.Remove(ctx, addr)
+} 
+
+func (k Keeper) GetAccountByNumber(ctx sdk.Context, accNumber uint64) (sdk.AccAddress, authtypes.BaseAccount, error) {
+	accAddress, err := k.Accounts.Indexes.Number.MatchExact(ctx, accNumber)
+	if err != nil {
+		return nil, authtypes.BaseAccount{}, err
+	}
+	
+	acc, err := k.Accounts.Get(ctx, accAddress)
+	return accAddress, acc, nil
+}
+
+func (k Keeper) GetAccountsByNumber(ctx sdk.Context, startAccNum, endAccNum uint64) ([]authtypes.BaseAccount, error) {
+	rng := new(collections.Range[uint64]).
+		StartInclusive(startAccNum).
+		EndInclusive(endAccNum)
+	
+	iter, err := k.Accounts.Indexes.Number.Iterate(ctx, rng)
+	if err != nil {
+		return nil, err
+	}
+	
+	return indexes.CollectValues(ctx, k.Accounts, iter)
+}
+
+
+func (k Keeper) getNextAccountNumber() uint64 {
+	return 0
+}
+```
+
+

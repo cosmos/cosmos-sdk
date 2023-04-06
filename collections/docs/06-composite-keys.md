@@ -136,7 +136,7 @@ We use the `collections.Join` function to generate the composite key.
 `collections.Pair` contains the two keys we have joined, it also exposes two methods: `K1` to fetch the 1st part of the
 key and `K2` to fetch the second part.
 
-The what we do, as always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int`in this case)
+As always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int`in this case)
 
 ### GetBalance
 

@@ -122,8 +122,8 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
 	}
 
-	if (!req.Params.BaseProposerReward.IsNil() && !req.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck
-		(!req.Params.BonusProposerReward.IsNil() && !req.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck
+	if (!req.Params.BaseProposerReward.IsNil() && !req.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck // deprecated but kept for backwards compatibility
+		(!req.Params.BonusProposerReward.IsNil() && !req.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck // deprecated but kept for backwards compatibility
 		return nil, errorsmod.Wrapf(errors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
 	}
 

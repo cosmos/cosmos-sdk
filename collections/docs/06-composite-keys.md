@@ -1,7 +1,7 @@
 # Composite keys
 
-So far we've worked only with simple keys, like uint64, the account address, etc.
-There are some more complex cases in which we need to deal with composite keys.
+So far we've worked only with simple keys, like `uint64`, the account address, etc.
+There are some more complex cases in, which we need to deal with composite keys.
 
 Composite keys are keys composed of multiple keys. How we can efficiently iterate
 over composite keys, etc.

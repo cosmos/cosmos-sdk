@@ -85,8 +85,8 @@ Since a module can have multiple collections, the following is expected:
 - module params will become a `collections.Item`
 - the `AllowList` is a `collections.KeySet`
 
-We don't want a collection to write over the state of the other so we pass it a prefix, which defines this storage partition
-owned by the collection.
+We don't want a collection to write over the state of the other collection so we pass it a prefix, which defines a storage
+partition owned by the collection.
 
 If you already built modules, the prefix translates to the items you were creating in your ``types/keys.go`` file, example: https://github.com/cosmos/cosmos-sdk/blob/main/x/feegrant/key.go#L27
 

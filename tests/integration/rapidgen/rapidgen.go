@@ -103,21 +103,11 @@ var (
 		Resolver:  protoregistry.GlobalTypes,
 		FieldMaps: []rapidproto.FieldMapper{GeneratorFieldMapper},
 	}
-	DefaultGeneratedTypes = []GeneratedType{
+	SignableTypes = []GeneratedType{
 		// auth
-		GenType(&authtypes.Params{}, &authapi.Params{}, GenOpts),
-		GenType(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
-		GenType(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
-		GenType(&authtypes.ModuleCredential{}, &authapi.ModuleCredential{}, GenOpts),
 		GenType(&authtypes.MsgUpdateParams{}, &authapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 
 		// authz
-		GenType(&authztypes.GenericAuthorization{}, &authzapi.GenericAuthorization{}, GenOpts),
-		GenType(&authztypes.Grant{}, &authzapi.Grant{},
-			GenOpts.WithAnyTypes(&authzapi.GenericAuthorization{}).
-				WithDisallowNil().
-				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}),
-		),
 		GenType(&authztypes.MsgGrant{}, &authzapi.MsgGrant{},
 			GenOpts.WithAnyTypes(&authzapi.GenericAuthorization{}).
 				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}).
@@ -135,15 +125,9 @@ var (
 		GenType(&banktypes.MsgMultiSend{}, &bankapi.MsgMultiSend{}, GenOpts.WithDisallowNil()),
 		GenType(&banktypes.MsgUpdateParams{}, &bankapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 		GenType(&banktypes.MsgSetSendEnabled{}, &bankapi.MsgSetSendEnabled{}, GenOpts),
-		GenType(&banktypes.SendAuthorization{}, &bankapi.SendAuthorization{}, GenOpts),
-		GenType(&banktypes.Params{}, &bankapi.Params{}, GenOpts),
 
 		// consensus
 		GenType(&consensustypes.MsgUpdateParams{}, &consensusapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
-
-		// crypto
-		GenType(&multisig.LegacyAminoPubKey{}, &multisigapi.LegacyAminoPubKey{},
-			GenOpts.WithAnyTypes(&ed25519.PubKey{}, &secp256k1.PubKey{})),
 
 		// distribution
 		GenType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, GenOpts),
@@ -153,10 +137,8 @@ var (
 		GenType(&disttypes.MsgUpdateParams{}, &distapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 		GenType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, GenOpts),
 		GenType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, GenOpts),
-		GenType(&disttypes.Params{}, &distapi.Params{}, GenOpts),
 
 		// evidence
-		GenType(&evidencetypes.Equivocation{}, &evidenceapi.Equivocation{}, GenOpts.WithDisallowNil()),
 		GenType(&evidencetypes.MsgSubmitEvidence{}, &evidenceapi.MsgSubmitEvidence{},
 			GenOpts.WithAnyTypes(&evidenceapi.Equivocation{}).
 				WithDisallowNil().
@@ -172,16 +154,6 @@ var (
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
 		),
 		GenType(&feegranttypes.MsgRevokeAllowance{}, &feegrantapi.MsgRevokeAllowance{}, GenOpts),
-		GenType(&feegranttypes.BasicAllowance{}, &feegrantapi.BasicAllowance{}, GenOpts.WithDisallowNil()),
-		GenType(&feegranttypes.PeriodicAllowance{}, &feegrantapi.PeriodicAllowance{}, GenOpts.WithDisallowNil()),
-		GenType(&feegranttypes.AllowedMsgAllowance{}, &feegrantapi.AllowedMsgAllowance{},
-			GenOpts.WithDisallowNil().
-				WithAnyTypes(
-					&feegrantapi.BasicAllowance{},
-					&feegrantapi.PeriodicAllowance{}).
-				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
-				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
-		),
 
 		// gov v1beta1
 		GenType(&gov_v1beta1_types.MsgSubmitProposal{}, &gov_v1beta1_api.MsgSubmitProposal{},
@@ -192,7 +164,6 @@ var (
 		GenType(&gov_v1beta1_types.MsgDeposit{}, &gov_v1beta1_api.MsgDeposit{}, GenOpts),
 		GenType(&gov_v1beta1_types.MsgVote{}, &gov_v1beta1_api.MsgVote{}, GenOpts),
 		GenType(&gov_v1beta1_types.MsgVoteWeighted{}, &gov_v1beta1_api.MsgVoteWeighted{}, GenOpts),
-		GenType(&gov_v1beta1_types.TextProposal{}, &gov_v1beta1_api.TextProposal{}, GenOpts),
 
 		// gov v1
 		GenType(&gov_v1_types.MsgSubmitProposal{}, &gov_v1_api.MsgSubmitProposal{},
@@ -234,14 +205,9 @@ var (
 		GenType(&grouptypes.MsgLeaveGroup{}, &groupapi.MsgLeaveGroup{}, GenOpts),
 
 		// mint
-		GenType(&minttypes.Params{}, &mintapi.Params{}, GenOpts),
 		GenType(&minttypes.MsgUpdateParams{}, &mintapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 
-		// params
-		GenType(&proposal.ParameterChangeProposal{}, &paramsapi.ParameterChangeProposal{}, GenOpts),
-
 		// slashing
-		GenType(&slashingtypes.Params{}, &slashingapi.Params{}, GenOpts.WithDisallowNil()),
 		GenType(&slashingtypes.MsgUnjail{}, &slashingapi.MsgUnjail{}, GenOpts),
 		GenType(&slashingtypes.MsgUpdateParams{}, &slashingapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 
@@ -256,23 +222,71 @@ var (
 		GenType(&stakingtypes.MsgUndelegate{}, &stakingapi.MsgUndelegate{}, GenOpts.WithDisallowNil()),
 		GenType(&stakingtypes.MsgBeginRedelegate{}, &stakingapi.MsgBeginRedelegate{}, GenOpts.WithDisallowNil()),
 		GenType(&stakingtypes.MsgUpdateParams{}, &stakingapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
-		GenType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, GenOpts),
 
 		// upgrade
-		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       // nolint:staticcheck // testing legacy code path
-		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), // nolint:staticcheck // testing legacy code path
-		GenType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, GenOpts.WithDisallowNil()),
 		GenType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, GenOpts.WithDisallowNil()),
 		GenType(&upgradetypes.MsgCancelUpgrade{}, &upgradeapi.MsgCancelUpgrade{}, GenOpts),
 
 		// vesting
-		GenType(&vestingtypes.BaseVestingAccount{}, &vestingapi.BaseVestingAccount{}, GenOpts.WithDisallowNil()),
-		GenType(&vestingtypes.ContinuousVestingAccount{}, &vestingapi.ContinuousVestingAccount{}, GenOpts.WithDisallowNil()),
-		GenType(&vestingtypes.DelayedVestingAccount{}, &vestingapi.DelayedVestingAccount{}, GenOpts.WithDisallowNil()),
-		GenType(&vestingtypes.PeriodicVestingAccount{}, &vestingapi.PeriodicVestingAccount{}, GenOpts.WithDisallowNil()),
-		GenType(&vestingtypes.PermanentLockedAccount{}, &vestingapi.PermanentLockedAccount{}, GenOpts.WithDisallowNil()),
 		GenType(&vestingtypes.MsgCreateVestingAccount{}, &vestingapi.MsgCreateVestingAccount{}, GenOpts),
 		GenType(&vestingtypes.MsgCreatePermanentLockedAccount{}, &vestingapi.MsgCreatePermanentLockedAccount{}, GenOpts),
 		GenType(&vestingtypes.MsgCreatePeriodicVestingAccount{}, &vestingapi.MsgCreatePeriodicVestingAccount{}, GenOpts),
 	}
+	NonsignableTypes = []GeneratedType{
+		GenType(&authtypes.Params{}, &authapi.Params{}, GenOpts),
+		GenType(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
+		GenType(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
+		GenType(&authtypes.ModuleCredential{}, &authapi.ModuleCredential{}, GenOpts),
+
+		GenType(&authztypes.GenericAuthorization{}, &authzapi.GenericAuthorization{}, GenOpts),
+		GenType(&authztypes.Grant{}, &authzapi.Grant{},
+			GenOpts.WithAnyTypes(&authzapi.GenericAuthorization{}).
+				WithDisallowNil().
+				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}),
+		),
+
+		GenType(&banktypes.SendAuthorization{}, &bankapi.SendAuthorization{}, GenOpts),
+		GenType(&banktypes.Params{}, &bankapi.Params{}, GenOpts),
+
+		// crypto
+		GenType(&multisig.LegacyAminoPubKey{}, &multisigapi.LegacyAminoPubKey{},
+			GenOpts.WithAnyTypes(&ed25519.PubKey{}, &secp256k1.PubKey{})),
+
+		GenType(&disttypes.Params{}, &distapi.Params{}, GenOpts),
+
+		GenType(&evidencetypes.Equivocation{}, &evidenceapi.Equivocation{}, GenOpts.WithDisallowNil()),
+
+		GenType(&feegranttypes.BasicAllowance{}, &feegrantapi.BasicAllowance{}, GenOpts.WithDisallowNil()),
+		GenType(&feegranttypes.PeriodicAllowance{}, &feegrantapi.PeriodicAllowance{}, GenOpts.WithDisallowNil()),
+		GenType(&feegranttypes.AllowedMsgAllowance{}, &feegrantapi.AllowedMsgAllowance{},
+			GenOpts.WithDisallowNil().
+				WithAnyTypes(
+					&feegrantapi.BasicAllowance{},
+					&feegrantapi.PeriodicAllowance{}).
+				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
+				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
+		),
+
+		GenType(&gov_v1beta1_types.TextProposal{}, &gov_v1beta1_api.TextProposal{}, GenOpts),
+
+		GenType(&minttypes.Params{}, &mintapi.Params{}, GenOpts),
+
+		// params
+		GenType(&proposal.ParameterChangeProposal{}, &paramsapi.ParameterChangeProposal{}, GenOpts),
+
+		GenType(&slashingtypes.Params{}, &slashingapi.Params{}, GenOpts.WithDisallowNil()),
+
+		GenType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, GenOpts),
+
+		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       // nolint:staticcheck // testing legacy code path
+		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), // nolint:staticcheck // testing legacy code path
+		GenType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, GenOpts.WithDisallowNil()),
+
+		GenType(&vestingtypes.BaseVestingAccount{}, &vestingapi.BaseVestingAccount{}, GenOpts.WithDisallowNil()),
+		GenType(&vestingtypes.ContinuousVestingAccount{}, &vestingapi.ContinuousVestingAccount{}, GenOpts.WithDisallowNil()),
+		GenType(&vestingtypes.DelayedVestingAccount{}, &vestingapi.DelayedVestingAccount{}, GenOpts.WithDisallowNil()),
+		GenType(&vestingtypes.PermanentLockedAccount{}, &vestingapi.PermanentLockedAccount{}, GenOpts.WithDisallowNil()),
+		GenType(&vestingtypes.PeriodicVestingAccount{}, &vestingapi.PeriodicVestingAccount{}, GenOpts.WithDisallowNil()),
+	}
+	DefaultGeneratedTypes = append(SignableTypes, NonsignableTypes...)
 )

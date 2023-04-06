@@ -20,7 +20,7 @@ that expose all you need to work with ranges.
 
 ## Example
 
-We have a collections.Map that maps accounts using uint64 IDs.
+We have a `collections.Map` that maps accounts using `uint64` IDs.
 
 ```go
 package collections

@@ -3,6 +3,7 @@ package tx
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/cosmos-proto/rapidproto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -10,10 +11,14 @@ import (
 
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/upgrade"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -54,8 +59,38 @@ func TestDecode(t *testing.T) {
 				require.NoError(t, err)
 
 				// TODO generate tx options
-				builder := encCfg.TxConfig.NewTxBuilder()
-				builder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))))
+				txBuilder := encCfg.TxConfig.NewTxBuilder()
+				fee := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
+				gas := uint64(200)
+				memo := "memo"
+				accSeq := uint64(2)
+
+				_, pubkey, _ := testdata.KeyTestPubAddr()
+
+				sig := signing.SignatureV2{
+					PubKey: pubkey,
+					Data: &signing.SingleSignatureData{
+						SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+						Signature: legacy.Cdc.MustMarshal(pubkey),
+					},
+					Sequence: accSeq,
+				}
+
+				err = txBuilder.SetMsgs(gogo.(sdk.Msg))
+				txBuilder.SetFeeAmount(fee)
+				txBuilder.SetGasLimit(gas)
+				txBuilder.SetMemo(memo)
+				err = txBuilder.SetSignatures(sig)
+				require.NoError(t, err)
+
+				tx := txBuilder.GetTx()
+				txBytes, err := encCfg.TxConfig.TxEncoder()(tx)
+				anyutil.Unpack()
+				decodeCtx, err := decode.NewContext(decode.Options{})
+				require.NoError(t, err)
+				decodedTx, err := decodeCtx.Decode(txBytes)
+				require.NoError(t, err)
+				require.Equal(t, tx.GetFee()[0].Amount, decodedTx.Tx.AuthInfo.Fee.Amount[0].Amount)
 			})
 		})
 	}

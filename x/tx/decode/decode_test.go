@@ -9,9 +9,6 @@ import (
 	"cosmossdk.io/x/tx/internal/testpb"
 )
 
-// test pulsar marshal/unmarshal
-// test gogo marshal/unmarshal (possibly done in ./tests)
-
 func TestDecode(t *testing.T) {
 	msg := &testpb.A{
 		UINT32:    0,
@@ -39,5 +36,5 @@ func TestDecode(t *testing.T) {
 	}
 	_, err := proto.Marshal(msg)
 	require.NoError(t, err)
-	// TODO: implement once a tx builder is available
+	// TODO implement tests once a tx builder is available
 }

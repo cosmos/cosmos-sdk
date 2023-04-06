@@ -1,6 +1,7 @@
 package decode
 
 import (
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
@@ -20,6 +21,7 @@ type DecodedTx struct {
 // Context contains the dependencies required for decoding transactions.
 type Context struct {
 	getSignersCtx *signing.GetSignersContext
+	typeResolver  protoregistry.MessageTypeResolver
 	protoFiles    *protoregistry.Files
 }
 
@@ -28,21 +30,25 @@ type Options struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
 	ProtoFiles     *protoregistry.Files
+	TypeResolver   protoregistry.MessageTypeResolver
 	SigningContext *signing.GetSignersContext
 }
 
 // NewContext creates a new Context for decoding transactions.
 func NewContext(options Options) (*Context, error) {
-	protoFiles := options.ProtoFiles
-	if protoFiles == nil {
-		protoFiles = protoregistry.GlobalFiles
+	if options.ProtoFiles == nil {
+		options.ProtoFiles = protoregistry.GlobalFiles
+	}
+
+	if options.TypeResolver == nil {
+		options.TypeResolver = protoregistry.GlobalTypes
 	}
 
 	getSignersCtx := options.SigningContext
 	if getSignersCtx == nil {
 		var err error
 		getSignersCtx, err = signing.NewGetSignersContext(signing.GetSignersOptions{
-			ProtoFiles: protoFiles,
+			ProtoFiles: options.ProtoFiles,
 		})
 		if err != nil {
 			return nil, err
@@ -51,7 +57,8 @@ func NewContext(options Options) (*Context, error) {
 
 	return &Context{
 		getSignersCtx: getSignersCtx,
-		protoFiles:    protoFiles,
+		protoFiles:    options.ProtoFiles,
+		typeResolver:  options.TypeResolver,
 	}, nil
 }
 
@@ -108,9 +115,17 @@ func (c *Context) Decode(txBytes []byte) (*DecodedTx, error) {
 		Signatures: raw.Signatures,
 	}
 
-	signers, err := c.getSignersCtx.GetSigners(theTx)
-	if err != nil {
-		return nil, err
+	var signers []string
+	for _, anyMsg := range body.Messages {
+		msg, signerErr := anyutil.Unpack(anyMsg, c.protoFiles, c.typeResolver)
+		if signerErr != nil {
+			return nil, errors.Wrap(ErrTxDecode, err.Error())
+		}
+		ss, signerErr := c.getSignersCtx.GetSigners(msg)
+		if signerErr != nil {
+			return nil, errors.Wrap(ErrTxDecode, err.Error())
+		}
+		signers = append(signers, ss...)
 	}
 
 	return &DecodedTx{

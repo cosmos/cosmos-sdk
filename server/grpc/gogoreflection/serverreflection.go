@@ -226,8 +226,8 @@ func decompress(b []byte) ([]byte, error) {
 }
 
 func typeForName(name string) (reflect.Type, error) {
-	pt, err := getMessageType(name)
-	if err != nil {
+	pt := getMessageType(name)
+	if pt == nil {
 		return nil, fmt.Errorf("unknown type: %q", name)
 	}
 	st := pt.Elem()

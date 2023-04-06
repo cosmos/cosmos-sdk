@@ -21,13 +21,13 @@ func getFileDescriptor(filePath string) []byte {
 	return proto.FileDescriptor(filePath) //nolint:staticcheck // keep for backward compatibility
 }
 
-func getMessageType(name string) (reflect.Type, error) {
+func getMessageType(name string) reflect.Type {
 	typ := gogoproto.MessageType(name)
 	if typ != nil {
-		return typ, nil
+		return typ
 	}
 
-	return proto.MessageType(name), nil //nolint:staticcheck // keep for backward compatibility
+	return proto.MessageType(name) //nolint:staticcheck // keep for backward compatibility
 }
 
 func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {

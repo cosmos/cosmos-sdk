@@ -79,6 +79,7 @@ func NewCometStarter(
 	if cfg.RPC.ListenAddress == defaultRPCListenAddr {
 		cfg.RPC.ListenAddress = ""
 	}
+
 	// Then if it was set to anything other than empty or the default value,
 	// fail with a clear explanation on how to enable RPC.
 	// The RPCListen method must be used in order to correctly pick an available listen address.

@@ -120,6 +120,7 @@ func TestCometStarter_PortContention(t *testing.T) {
 						return reuseAddrs[rand.Intn(len(reuseAddrs))]
 					})
 			})
+
 			// Ensure nodes are stopped completely,
 			// so that we don't get t.Cleanup errors around directories not being empty.
 			defer nodes.StopAndWait()

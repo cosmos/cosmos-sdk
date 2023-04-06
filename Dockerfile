@@ -12,8 +12,11 @@
 #
 # This image is pushed to the GHCR as https://ghcr.io/cosmos/simapp
 
-# bullseye already comes with build dependencies, so we don't need anything extra to install
-FROM --platform=$BUILDPLATFORM golang:1.19-bullseye AS build-env
+FROM --platform=$BUILDPLATFORM golang:1.19-alpine AS build-env
+
+# Install minimum necessary dependencies
+ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev
+RUN apk add --no-cache $PACKAGES
 
 # Set working directory for the build
 WORKDIR /go/src/github.com/cosmos/cosmos-sdk

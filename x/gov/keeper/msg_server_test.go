@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -16,6 +17,11 @@ import (
 const (
 	abc = "abc"
 	o1  = "-0.1"
+)
+
+var (
+	longAddress      = "cosmos1v9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpg0s5ed"
+	longAddressError = "address max length is 255"
 )
 
 func (suite *KeeperTestSuite) TestSubmitProposalReq() {
@@ -238,6 +244,8 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	)
 	suite.Require().NoError(err)
 
+	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
+
 	res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
@@ -293,7 +301,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: "address max length is 255",
+			expErrMsg: longAddressError,
 		},
 		"all good": {
 			preRun: func() uint64 {
@@ -365,6 +373,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
+	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
+
 	cases := map[string]struct {
 		preRun    func() uint64
 		vote      *v1.MsgVote
@@ -416,7 +426,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: "address max length is 255",
+			expErrMsg: longAddressError,
 		},
 		"all good": {
 			preRun: func() uint64 {
@@ -608,6 +618,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
+	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
+
 	cases := map[string]struct {
 		preRun    func() uint64
 		expErr    bool
@@ -648,7 +660,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: "address max length is 255",
+			expErrMsg: longAddressError,
 		},
 		"all good": {
 			preRun: func() uint64 {
@@ -720,6 +732,8 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
+	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
+
 	cases := map[string]struct {
 		preRun    func() uint64
 		vote      *v1beta1.MsgVote
@@ -761,7 +775,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: "address max length is 255",
+			expErrMsg: longAddressError,
 		},
 		"all good": {
 			preRun: func() uint64 {
@@ -1196,6 +1210,9 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			// Setup
 			govKeeper, ctx := suite.govKeeper, suite.ctx
 			address := simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 1, tc.accountBalance[0].Amount)[0]
+
+			suite.acctKeeper.EXPECT().StringToBytes(address.String()).Return(address, nil).AnyTimes()
+			suite.acctKeeper.EXPECT().BytesToString(address).Return(address.String(), nil).AnyTimes()
 
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit

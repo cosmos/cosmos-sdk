@@ -14,13 +14,13 @@ Let's have a look at the `Map.Iterate` method:
 func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V], error) 
 ```
 
-It accepts a `collections.Ranger[K]` which an API that instructs map on how to iterate over keys.
+It accepts a `collections.Ranger[K]`, which is an API that instructs map on how to iterate over keys.
 As always we don't need to implement anything here as `collections` already provides some generic `Ranger` implementers
 that expose all you need to work with ranges.
 
 ## Example
 
-We have a collections.Map that maps accounts using uint64 IDs.
+We have a `collections.Map` that maps accounts using `uint64` IDs.
 
 ```go
 package collections
@@ -121,7 +121,7 @@ Here we make use of the `collections.Range` helper to specialise our range.
 We make it start in a point through `StartInclusive` and end in the other with `EndExclusive`, then
 we instruct it to report us results in reverse order through `Descending`
 
-Then we pass the range instruction to `Iterate` and get an `Iterator` which will contain only the results
+Then we pass the range instruction to `Iterate` and get an `Iterator`, which will contain only the results
 we specified in the range.
 
 Then we use again th `Values` method of the `Iterator` to collect all the results.

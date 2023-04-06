@@ -1,7 +1,7 @@
 # Composite keys
 
-So far we've worked only with simple keys, like uint64, the account address, etc.
-There are some more complex cases in which we need to deal with composite keys.
+So far we've worked only with simple keys, like `uint64`, the account address, etc.
+There are some more complex cases in, which we need to deal with composite keys.
 
 Composite keys are keys composed of multiple keys. How we can efficiently iterate
 over composite keys, etc.
@@ -56,7 +56,7 @@ part is `string`.
 ### The Key Codec instantiation
 
 The arguments to instantiate are always the same, the only thing that changes is how we instantiate
-the ``KeyCodec``, since this key is composed of two keys we use `collections.PairKeyCodec` which generates
+the ``KeyCodec``, since this key is composed of two keys we use `collections.PairKeyCodec`, which generates
 a `KeyCodec` composed of two key codecs. The first one will encode the first part of the key, the second one will
 encode the second part of the key.
 
@@ -133,10 +133,10 @@ As we can see here we're setting the balance of an address for a specific denom.
 We use the `collections.Join` function to generate the composite key.
 `collections.Join` returns a `collections.Pair` (which is the key of our `collections.Map`)
 
-`collections.Pair` contains the two keys we have joined, it also exposes  two methods: `K1` to fetch the 1st part of the
+`collections.Pair` contains the two keys we have joined, it also exposes two methods: `K1` to fetch the 1st part of the
 key and `K2` to fetch the second part.
 
-The what we do, as always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int`in this case)
+As always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int`in this case)
 
 ### GetBalance
 

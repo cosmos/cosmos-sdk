@@ -3,6 +3,7 @@
 ## Changelog
 
 * 2023-01-17: Initial Draft (@alexanderbez)
+* 2023-04-06: Add upgrading section (@alexanderbez)
 
 ## Status
 
@@ -398,6 +399,33 @@ In order to facilitate existing event functionality, we propose that all `BeginB
 and `EndBlock` events have a dedicated `EventAttribute` with `key=block` and
 `value=begin_block|end_block`. The `EventAttribute` will be appended to each event
 in both `BeginBlock` and `EndBlock` events`. 
+
+
+### Upgrading
+
+CometBFT defines a consensus parameter, [`VoteExtensionsEnableHeight`](https://github.com/cometbft/cometbft/blob/v0.38.0-alpha.1/spec/abci/abci%2B%2B_app_requirements.md#abciparamsvoteextensionsenableheight),
+which specifies the height at which vote extensions are enabled and **required**.
+If the value is set to zero, which is the default, then vote extensions are
+disabled and an application is not required to implement and use vote extensions.
+
+However, if the value `H` is positive, at all heights greater than the configured
+height `H` vote extensions must be present (even if empty). When the configured
+height `H` is reached, `PrepareProposal` will not include vote extensions yet,
+but `ExtendVote` and `VerifyVoteExtension` will be called. Then, when reaching
+height `H+1`, `PrepareProposal` will include the vote extensions from height `H`.
+
+It is very important to note, for all heights after H:
+
+* Vote extensions CANNOT be disabled
+* They are mandatory, i.e. all pre-commit messages sent MUST have an extension
+  attached (even if empty)
+
+When an application updates to the Cosmos SDK version with CometBFT v0.38 support,
+in the upgrade handler it must ensure to set the consensus parameter
+`VoteExtensionsEnableHeight` to the correct value. E.g. if an application is set
+to perform an upgrade at height `H`, then the value of `VoteExtensionsEnableHeight`
+should be set to any value `>=H+1`. This means that at the upgrade height, `H`,
+vote extensions will not be enabled yet, but at height `H+1` they will be enabled.
 
 ## Consequences
 

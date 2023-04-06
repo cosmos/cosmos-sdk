@@ -133,7 +133,7 @@ As we can see here we're setting the balance of an address for a specific denom.
 We use the `collections.Join` function to generate the composite key.
 `collections.Join` returns a `collections.Pair` (which is the key of our `collections.Map`)
 
-`collections.Pair` contains the two keys we have joined, it also exposes  two methods: `K1` to fetch the 1st part of the
+`collections.Pair` contains the two keys we have joined, it also exposes two methods: `K1` to fetch the 1st part of the
 key and `K2` to fetch the second part.
 
 The what we do, as always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int`in this case)

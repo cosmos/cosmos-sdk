@@ -229,16 +229,16 @@ Generally speaking you will always find the respective key and value codecs for 
 to import that type. If you want to encode proto values refer to the codec `codec.CollValue` function, which allows you
 to encode any type implement the `proto.Message` interface.
 
-# Map
+## Map
 
 We analyse the first and most important collection type, the ``collections.Map``.
 This is the type that everything else builds on top of.
 
-## Use case
+### Use case
 
 A `collections.Map` is used to map arbitrary keys with arbitrary values.
 
-## Example
+### Example
 
 It's easier to explain a `collections.Map` capabilities through an example:
 
@@ -303,31 +303,31 @@ func (k Keeper) RemoveAccount(ctx sdk.Context, addr sdk.AccAddress) error {
 }
 ```
 
-### Set method
+#### Set method
 
 Set maps with the provided `AccAddress` (the key) to the `auth.BaseAccount` (the value).
 
 Under the hood the `collections.Map` will convert the key and value to bytes using the [key and value codec](README.md#key-and-value-codecs).
 It will prepend to our bytes key the [prefix](README.md#prefix) and store it in the KVStore of the module.
 
-### Has method
+#### Has method
 
 The has method reports if the provided key exists in the store.
 
-### Get method
+#### Get method
 
 The get method accepts the `AccAddress` and returns the associated `auth.BaseAccount` if it exists, otherwise it errors.
 
-### Remove method
+#### Remove method
 
 The remove method accepts the `AccAddress` and removes it from the store. It won't report errors
 if it does not exist, to check for existence before removal use the ``Has`` method.
 
-### Iteration
+#### Iteration
 
 Iteration has a separate section.
 
-# KeySet
+## KeySet
 
 The second type of collection is `collections.KeySet`, as the word suggests it maintains
 only a set of keys without values.
@@ -337,7 +337,7 @@ only a set of keys without values.
 A `collections.KeySet` is just a `collections.Map` with a `key` but no value.
 The value internally is always the same and is represented as an empty byte slice ```[]byte{}```.
 
-## Example
+### Example
 
 As always we explore the collection type through an example:
 
@@ -396,21 +396,21 @@ us to specify a `ValueCodec` but only a `KeyCodec`. This is because a `KeySet` o
 
 Let's explore the methods.
 
-### Has method
+#### Has method
 
 Has allows us to understand if a key is present in the `collections.KeySet` or not, functions in the same way as `collections.Map.Has
 `
 
-### Set method
+#### Set method
 
 Set inserts the provided key in the `KeySet`.
 
-### Remove method
+#### Remove method
 
 Remove removes the provided key from the `KeySet`, it does not error if the key does not exist,
 if existence check before removal is required it needs to be coupled with the `Has` method.
 
-# Item
+## Item
 
 The third type of collection is the `collections.Item`.
 It stores only one single item, it's useful for example for parameters, there's only one instance
@@ -421,7 +421,7 @@ of parameters in state always.
 A `collections.Item` is just a `collections.Map` with no key but just a value.
 The key is the prefix of the collection!
 
-## Example
+### Example
 
 ```go
 package collections
@@ -465,7 +465,7 @@ The first key difference we notice is that we specify only one type parameter, w
 The second key difference is that we don't specify the `KeyCodec`, since we store only one item we already know the key
 and the fact that it is constant.
 
-# Iteration
+## Iteration
 
 One of the key features of the ``KVStore`` is iterating over keys.
 
@@ -489,7 +489,7 @@ It accepts a `collections.Ranger[K]`, which is an API that instructs map on how 
 As always we don't need to implement anything here as `collections` already provides some generic `Ranger` implementers
 that expose all you need to work with ranges.
 
-## Example
+### Example
 
 We have a `collections.Map` that maps accounts using `uint64` IDs.
 
@@ -575,7 +575,7 @@ func (k Keeper) IterateAccounts(ctx sdk.Context, do func(id uint64, acc authtype
 
 Let's analyse each method in the example and how it makes use of the `Iterate` and the returned `Iterator` API.
 
-### GetAllAccounts
+#### GetAllAccounts
 
 In `GetAllAccounts` we pass to our `Iterate` a nil `Ranger`. This means that the returned `Iterator` will include
 all the existing keys within the collection.
@@ -586,7 +586,7 @@ Then we use some the `Values` method from the returned `Iterator` API to collect
 all the keys and values.
 
 
-### IterateAccountsBetween
+#### IterateAccountsBetween
 
 Here we make use of the `collections.Range` helper to specialise our range.
 We make it start in a point through `StartInclusive` and end in the other with `EndExclusive`, then
@@ -601,7 +601,7 @@ Then we use again th `Values` method of the `Iterator` to collect all the result
 for example uint64 cannot be prefix because it is of constant size, but a `string` key
 can be prefixed.
 
-### IterateAccounts
+#### IterateAccounts
 
 Here we showcase how to lazily collect values from an Iterator. 
 
@@ -619,7 +619,7 @@ For this `callback` pattern, collections expose a `Walk` API.
 
 :::
 
-# Composite keys
+## Composite keys
 
 So far we've worked only with simple keys, like `uint64`, the account address, etc.
 There are some more complex cases in, which we need to deal with composite keys.
@@ -639,7 +639,7 @@ of an address by prefixing over `(address)`.
 
 Let's see now how we can work with composite keys using collections.
 
-## Example
+### Example
 
 In our example we will show-case how we can use collections when we are dealing with balances, similar to bank,
 a balance is a mapping between `(address, denom) => math.Int` the composite key in our case is `(address, denom)`.
@@ -676,7 +676,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 }
 ```
 
-### The Map Key definition
+#### The Map Key definition
 
 First of all we can see that in order to define a composite key of two elements we use the `collections.Pair` type:
 ````go
@@ -686,7 +686,7 @@ collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
 `collections.Pair` defines a key composed of two other keys, in our case the first part is `sdk.AccAddress`, the second
 part is `string`.
 
-### The Key Codec instantiation
+#### The Key Codec instantiation
 
 The arguments to instantiate are always the same, the only thing that changes is how we instantiate
 the ``KeyCodec``, since this key is composed of two keys we use `collections.PairKeyCodec`, which generates
@@ -694,7 +694,7 @@ a `KeyCodec` composed of two key codecs. The first one will encode the first par
 encode the second part of the key.
 
 
-## Working with composite key collections
+### Working with composite key collections
 
 Let's expand on the example we used before:
 
@@ -760,7 +760,7 @@ func (k Keeper) GetAllAddressBalancesBetween(ctx sdk.Context, address sdk.AccAdd
 }
 ````
 
-### SetBalance
+#### SetBalance
 
 As we can see here we're setting the balance of an address for a specific denom.
 We use the `collections.Join` function to generate the composite key.
@@ -771,11 +771,11 @@ key and `K2` to fetch the second part.
 
 As always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int`in this case)
 
-### GetBalance
+#### GetBalance
 
 To get a value in composite key collection, we simply use `collections.Join` to compose the key.
 
-### GetAllAddressBalances
+#### GetAllAddressBalances
 
 We use `collections.PrefixedPairRange` to iterate over all the keys starting with the provided address.
 Concretely the iteration will report all the balances belonging to the provided address.
@@ -790,16 +790,16 @@ in `Pair` keys iterations.
 As we can see here we're passing the type parameters of the `collections.Pair` because golang type inference
 with respect to generics is not as permissive as other languages, so we need to explitly say what are the types of the pair key.
 
-### GetAllAddressesBalancesBetween
+#### GetAllAddressesBalancesBetween
 
 This showcases how we can further specialise our range to limit the results further, by specifying
 the range between the second part of the key (in our case the denoms, which are strings).
 
-# IndexedMap
+## IndexedMap
 
 `collections.IndexedMap` is a collection that uses under the hood a `collections.Map`, and has a struct, which contains the indexes that we need to define.
 
-## Example
+### Example
 
 Let's say we have an `auth.BaseAccount` struct which looks like the following:
 
@@ -962,7 +962,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
 }
 ```
 
-## Working with IndexedMaps
+### Working with IndexedMaps
 
 Whilst instantiating `collections.IndexedMap` is tedious, working with them is extremely smooth.
 
@@ -1063,5 +1063,3 @@ func (k Keeper) getNextAccountNumber() uint64 {
 	return 0
 }
 ```
-
-

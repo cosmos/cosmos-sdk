@@ -3,8 +3,20 @@
 So far we've worked only with simple keys, like `uint64`, the account address, etc.
 There are some more complex cases in, which we need to deal with composite keys.
 
-Composite keys are keys composed of multiple keys. How we can efficiently iterate
-over composite keys, etc.
+A key is composite when it is composed of multiple keys, for example bank balances as stored as the composite key
+`(AccAddress, string)` where the first part is the address holding the coins and the second part is the denom.
+
+Example, let's say address `BOB` holds `10atom,15osmo`, this is how it is stored in state:
+
+```
+(bob, atom) => 10
+(bob, osmos) => 15
+```
+
+Now this allows to efficiently get a specific denom balance of an address, by simply `getting` `(address, denom)`, or getting all the balances
+of an address by prefixing over `(address)`.
+
+Let's see now how we can work with composite keys using collections.
 
 # Example
 

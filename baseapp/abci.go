@@ -417,7 +417,7 @@ func (app *BaseApp) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.
 		mode = runTxModeReCheck
 
 	default:
-		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
+		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
 	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
@@ -459,7 +459,7 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 	// CometBFT must never call PrepareProposal with a height of 0.
 	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
-		errors.New("PrepareProposal called with invalid height")
+		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).

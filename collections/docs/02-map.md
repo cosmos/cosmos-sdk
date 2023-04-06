@@ -76,7 +76,7 @@ func (k Keeper) RemoveAccount(ctx sdk.Context, addr sdk.AccAddress) error {
 
 Set maps with the provided `AccAddress` (the key) to the `auth.BaseAccount` (the value). 
 
-Under the hood the `collections.Map` will conver the key and value to bytes using the [key and value codec](README.md#key-and-value-codecs).
+Under the hood the `collections.Map` will convert the key and value to bytes using the [key and value codec](README.md#key-and-value-codecs).
 It will prepend to our bytes key the [prefix](README.md#prefix) and store it in the KVStore of the module.
 
 ### Has method

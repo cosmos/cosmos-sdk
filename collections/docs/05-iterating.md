@@ -121,7 +121,7 @@ Here we make use of the `collections.Range` helper to specialise our range.
 We make it start in a point through `StartInclusive` and end in the other with `EndExclusive`, then
 we instruct it to report us results in reverse order through `Descending`
 
-Then we pass the range instruction to `Iterate` and get an `Iterator` which will contain only the results
+Then we pass the range instruction to `Iterate` and get an `Iterator`, which will contain only the results
 we specified in the range.
 
 Then we use again th `Values` method of the `Iterator` to collect all the results.

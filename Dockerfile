@@ -32,9 +32,8 @@ ARG TARGETOS TARGETARCH
 # install simapp, remove packages
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH make build
 
-
-# Final image, without build artifacts. `/base` already contains openssl, glibc and all required libs to start an app
-FROM gcr.io/distroless/base
+# Use alpine:3 as a base image
+FROM alpine:3
 
 EXPOSE 26656 26657 1317 9090
 # Run simd by default, omit entrypoint to ease using container with simcli

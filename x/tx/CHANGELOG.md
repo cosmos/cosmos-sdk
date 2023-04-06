@@ -31,6 +31,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* [#15414](https://github.com/cosmos/cosmos-sdk/pull/15414) Add basic transaction decoding support.
+
 ### API Breaking
 
 * [#15581](https://github.com/cosmos/cosmos-sdk/pull/15581) `GetSignersOptions` and `directaux.SignModeHandlerOptions` now

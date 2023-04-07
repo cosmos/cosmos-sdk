@@ -48,7 +48,7 @@ const (
 var _ abci.Application = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
-type BaseApp struct { //nolint: maligned
+type BaseApp struct {
 	// initialized on creation
 	logger            log.Logger
 	name              string                      // application name from abci.Info

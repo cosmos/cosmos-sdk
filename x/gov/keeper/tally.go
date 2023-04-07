@@ -36,9 +36,12 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 
 	keeper.IterateVotes(ctx, proposal.Id, func(vote v1.Vote) bool {
 		// if validator, just record it in the map
-		voter := sdk.MustAccAddressFromBech32(vote.Voter)
+		voter, err := keeper.authKeeper.StringToBytes(vote.Voter)
+		if err != nil {
+			panic(err)
+		}
 
-		valAddrStr := sdk.ValAddress(voter.Bytes()).String()
+		valAddrStr := sdk.ValAddress(voter).String()
 		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Options
 			currValidators[valAddrStr] = val
@@ -58,7 +61,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 				votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
 
 				for _, option := range vote.Options {
-					weight, _ := sdk.NewDecFromStr(option.Weight)
+					weight, _ := math.LegacyNewDecFromStr(option.Weight)
 					subPower := votingPower.Mul(weight)
 					results[option.Option] = results[option.Option].Add(subPower)
 				}
@@ -82,7 +85,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 		votingPower := sharesAfterDeductions.MulInt(val.BondedTokens).Quo(val.DelegatorShares)
 
 		for _, option := range val.Vote {
-			weight, _ := sdk.NewDecFromStr(option.Weight)
+			weight, _ := math.LegacyNewDecFromStr(option.Weight)
 			subPower := votingPower.Mul(weight)
 			results[option.Option] = results[option.Option].Add(subPower)
 		}
@@ -99,8 +102,8 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 	}
 
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.sk.TotalBondedTokens(ctx)))
-	quorum, _ := sdk.NewDecFromStr(params.Quorum)
+	percentVoting := totalVotingPower.Quo(math.LegacyNewDecFromInt(keeper.sk.TotalBondedTokens(ctx)))
+	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
 	if percentVoting.LT(quorum) {
 		return false, params.BurnVoteQuorum, tallyResults
 	}
@@ -111,7 +114,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 	}
 
 	// If more than 1/3 of voters veto, proposal fails
-	vetoThreshold, _ := sdk.NewDecFromStr(params.VetoThreshold)
+	vetoThreshold, _ := math.LegacyNewDecFromStr(params.VetoThreshold)
 	if results[v1.OptionNoWithVeto].Quo(totalVotingPower).GT(vetoThreshold) {
 		return false, params.BurnVoteVeto, tallyResults
 	}
@@ -125,7 +128,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 		thresholdStr = params.GetThreshold()
 	}
 
-	threshold, _ := sdk.NewDecFromStr(thresholdStr)
+	threshold, _ := math.LegacyNewDecFromStr(thresholdStr)
 	if results[v1.OptionYes].Quo(totalVotingPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults
 	}

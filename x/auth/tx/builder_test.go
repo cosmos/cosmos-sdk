@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -23,7 +24,7 @@ func TestTxBuilder(t *testing.T) {
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	txBuilder := newBuilder(nil)
 
-	memo := "sometestmemo" //nolint:goconst
+	memo := "testmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
 	any, err := codectypes.NewAnyWithValue(pubkey)
@@ -137,7 +138,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
-	badFeeAmount[0].Amount = sdk.NewInt(-5)
+	badFeeAmount[0].Amount = sdkmath.NewInt(-5)
 	txBuilder := newBuilder(nil)
 
 	var sig1, sig2 signing.SignatureV2

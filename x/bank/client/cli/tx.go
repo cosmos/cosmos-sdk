@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/address"
+	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -105,7 +106,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 				return err
 			}
 
-			totalAddrs := sdk.NewInt(int64(len(args) - 2))
+			totalAddrs := sdkmath.NewInt(int64(len(args) - 2))
 			// coins to be received by the addresses
 			sendCoins := coins
 			if split {

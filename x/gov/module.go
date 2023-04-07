@@ -13,6 +13,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -47,6 +48,7 @@ var (
 type AppModuleBasic struct {
 	cdc                    codec.Codec
 	legacyProposalHandlers []govclient.ProposalHandler // legacy proposal handlers which live in governance cli and rest
+	ac                     address.Codec
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object
@@ -109,8 +111,8 @@ func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Comma
 }
 
 // GetQueryCmd returns the root query command for the gov module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.ac)
 }
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
@@ -137,7 +139,7 @@ func NewAppModule(
 	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, ss govtypes.ParamSubspace,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -163,8 +165,7 @@ func init() {
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
-//nolint:revive
-type GovInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
@@ -182,8 +183,7 @@ type GovInputs struct {
 	LegacySubspace govtypes.ParamSubspace
 }
 
-//nolint:revive
-type GovOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Module       appmodule.AppModule
@@ -191,7 +191,7 @@ type GovOutputs struct {
 	HandlerRoute v1beta1.HandlerRoute
 }
 
-func ProvideModule(in GovInputs) GovOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	defaultConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
 		defaultConfig.MaxMetadataLen = in.Config.MaxMetadataLen
@@ -217,7 +217,7 @@ func ProvideModule(in GovInputs) GovOutputs {
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
-	return GovOutputs{Module: m, Keeper: k, HandlerRoute: hr}
+	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}
 }
 
 func ProvideKeyTable() paramtypes.KeyTable {
@@ -340,7 +340,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the gov content functions used to
 // simulate governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck
+func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
 	return simulation.ProposalContents()
 }
 

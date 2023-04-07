@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	_ module.BeginBlockAppModule = AppModule{}
+	_ appmodule.HasBeginBlocker  = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -168,8 +168,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	am.keeper.BeginBlocker(ctx, req)
+func (am AppModule) BeginBlock(ctx sdk.Context) {
+	am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions

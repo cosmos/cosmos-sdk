@@ -30,6 +30,7 @@ type Context struct {
 	txBytes              []byte
 	logger               log.Logger
 	voteInfo             []abci.VoteInfo
+	misbehaviors         []abci.Misbehavior
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
@@ -55,6 +56,7 @@ func (c Context) ChainID() string                               { return c.chain
 func (c Context) TxBytes() []byte                               { return c.txBytes }
 func (c Context) Logger() log.Logger                            { return c.logger }
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
+func (c Context) Misbehaviors() []abci.Misbehavior              { return c.misbehaviors }
 func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
 func (c Context) IsCheckTx() bool                               { return c.checkTx }
@@ -187,6 +189,12 @@ func (c Context) WithLogger(logger log.Logger) Context {
 // WithVoteInfos returns a Context with an updated consensus VoteInfo.
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
+	return c
+}
+
+// WithMisbehaviors returns a Context with an updated validator misbehaviors.
+func (c Context) WithMisbehaviors(misbehaviors []abci.Misbehavior) Context {
+	c.misbehaviors = misbehaviors
 	return c
 }
 

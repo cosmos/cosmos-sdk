@@ -145,6 +145,8 @@ func Example_oneModule() {
 	}
 
 	// verify that the begin and end blocker were called
+	// NOTE: in this example, we are testing auth, which doesn't have any begin or end blocker
+	// so verifying the block height is enough
 	if integrationApp.LastBlockHeight() != 2 {
 		panic(fmt.Errorf("expected block height to be 2, got %d", integrationApp.LastBlockHeight()))
 	}

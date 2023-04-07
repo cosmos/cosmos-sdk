@@ -68,7 +68,7 @@ type (
 	}
 
 	// HasValidateBasic defines a type that has a ValidateBasic method.
-	// ValidateBasic is deprecated and now faculatative.
+	// ValidateBasic is deprecated and now facultative.
 	// Prefer validating messages directly in the msg server.
 	HasValidateBasic interface {
 		// ValidateBasic does a simple validation check that

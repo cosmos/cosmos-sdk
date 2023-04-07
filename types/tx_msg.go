@@ -16,10 +16,6 @@ type (
 	Msg interface {
 		proto.Message
 
-		// ValidateBasic does a simple validation check that
-		// doesn't require access to any other information.
-		ValidateBasic() error
-
 		// GetSigners returns the addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
 		// CONTRACT: Returns addrs in some deterministic order.
@@ -42,12 +38,10 @@ type (
 
 	// Tx defines the interface a transaction must fulfill.
 	Tx interface {
+		HasValidateBasic
+
 		// GetMsgs gets the all the transaction's messages.
 		GetMsgs() []Msg
-
-		// ValidateBasic does a simple and lightweight validation check that doesn't
-		// require access to any other information.
-		ValidateBasic() error
 	}
 
 	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
@@ -71,6 +65,15 @@ type (
 		Tx
 
 		GetTimeoutHeight() uint64
+	}
+
+	// HasValidateBasic defines a type that has a ValidateBasic method.
+	// ValidateBasic is deprecated and now facultative.
+	// Prefer validating messages directly in the msg server.
+	HasValidateBasic interface {
+		// ValidateBasic does a simple validation check that
+		// doesn't require access to any other information.
+		ValidateBasic() error
 	}
 )
 

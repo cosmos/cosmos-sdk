@@ -166,8 +166,10 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			w := bytes.NewBuffer([]byte{})
 			clientCtx = clientCtx.WithOutput(w)
 
-			if err = msg.ValidateBasic(); err != nil {
-				return err
+			if m, ok := msg.(sdk.HasValidateBasic); ok {
+				if err := m.ValidateBasic(); err != nil {
+					return err
+				}
 			}
 
 			if err = txBldr.PrintUnsignedTx(clientCtx, msg); err != nil {

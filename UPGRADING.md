@@ -82,7 +82,6 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 )
 ```
 
-
 ### Packages
 
 #### Store

@@ -75,7 +75,7 @@ func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgR
 	}
 
 	if msg.MsgTypeUrl == "" {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("missing method name")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("missing msg method name")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

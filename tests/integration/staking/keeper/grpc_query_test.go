@@ -418,6 +418,8 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 			}
 		})
 	}
+	assert.Equal(t, true, false)
+
 }
 
 func TestGRPCQueryUnbondingDelegation(t *testing.T) {

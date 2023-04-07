@@ -100,12 +100,11 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	delStore := prefix.NewStore(store, types.GetDelegationsByValPrefixKey(sdk.ValAddress(valAddr)))
+	delStore := prefix.NewStore(store, types.GetDelegationsByValPrefixKey(valAddr))
 
 	var dels types.Delegations
-	pageRes, err := query.Paginate(delStore, req.Pagination, func(key, value []byte) error {
-		val, del, err := types.ParseDelegationsByValKey(key)
-		delBz := store.Get(types.GetDelegationKey(del, val))
+	pageRes, err := query.Paginate(delStore, req.Pagination, func(del, value []byte) error {
+		delBz := store.Get(types.GetDelegationKey(del, valAddr))
 
 		var delegation types.Delegation
 		k.cdc.Unmarshal(delBz, &delegation)

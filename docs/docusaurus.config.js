@@ -393,6 +393,10 @@ const config = {
             from: ["/main/migrations/pre-upgrade"],
             to: "/main/building-apps/app-upgrade",
           },
+          {
+            from: ["/main/tooling/depinject"],
+            to: "/main/packages/depinject",
+          },
         ],
       },
     ],

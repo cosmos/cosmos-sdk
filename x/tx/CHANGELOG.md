@@ -36,6 +36,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#15581](https://github.com/cosmos/cosmos-sdk/pull/15581) `GetSignersOptions` and `directaux.SignModeHandlerOptions` now
 require a `signing.ProtoFileResolver` interface instead of `protodesc.Resolver`.
 
+### Fixes
+* (signing/textual) [#15730](https://github.com/cosmos/cosmos-sdk/pull/15730) make IntValueRenderer.Parse: gracefully handle "" + fuzz
+
 ## v0.4.0
 
 ### API Breaking

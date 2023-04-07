@@ -92,31 +92,33 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	if req.ValidatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
+
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	if err != nil {
+		return nil, err
+	}
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	valStore := prefix.NewStore(store, types.DelegationKey)
-	delegations, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
-		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	delStore := prefix.NewStore(store, types.GetDelegationsByValPrefixKey(sdk.ValAddress(valAddr)))
+
+	var dels types.Delegations
+	pageRes, err := query.Paginate(delStore, req.Pagination, func(key, value []byte) error {
+		val, del, err := types.ParseDelegationsByValKey(key)
+		delBz := store.Get(types.GetDelegationKey(del, val))
+
+		var delegation types.Delegation
+		k.cdc.Unmarshal(delBz, &delegation)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		if !delegation.GetValidatorAddr().Equals(valAddr) {
-			return nil, nil
-		}
-
-		return delegation, nil
-	}, func() *types.Delegation {
-		return &types.Delegation{}
+		dels = append(dels, delegation)
+		return nil
 	})
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	dels := types.Delegations{}
-	for _, d := range delegations {
-		dels = append(dels, *d)
 	}
 
 	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, dels)

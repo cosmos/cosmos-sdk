@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"os"
+
 	"github.com/cockroachdb/errors"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"os"
 )
 
 type binaryType struct{}
@@ -55,7 +56,6 @@ func (f *fileBinaryValue) Set(s string) error {
 	}
 
 	return errors.New("input string is neither a valid file path, hex, or base64 encoded")
-
 }
 
 func (f *fileBinaryValue) Type() string {

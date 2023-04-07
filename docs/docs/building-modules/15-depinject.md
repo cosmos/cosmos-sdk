@@ -9,7 +9,6 @@ sidebar_position: 1
 ### Pre-requisite Readings
 
 * [Depinject Documentation](../packages/01-depinject.md)
-* [App Wiring in app.go](../building-apps/01-app-go-v2.md)
 
 :::
 
@@ -116,6 +115,6 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/module/module.go#L
 
 The module is now ready to be used with `depinject` by a chain developer.
 
-## App Wiring
+## Integrate in an application
 
 The App Wiring is done in `app_config.go` / `app.yaml` and `app_v2.go` and is explained in detail in the [overview of `app_v2.go`](../building-apps/01-app-go-v2.md).

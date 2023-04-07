@@ -193,7 +193,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx)).
-		WithVoteInfos(req.LastCommitInfo.GetVotes())
+		WithVoteInfos(req.LastCommitInfo.GetVotes()).
+		WithMisbehaviors(req.GetByzantineValidators())
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.

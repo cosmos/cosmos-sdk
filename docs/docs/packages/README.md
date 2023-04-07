@@ -1,6 +1,10 @@
-# SDK Packages
+---
+sidebar_position: 0
+---
 
-The SDK is a collection of Go modules. This section provides documentation on various packages that can used in development of a Cosmos SDK chain.
+# Packages
+
+The SDK is a collection of Go modules. This section provides documentation on various packages that can used when developing a Cosmos SDK chain.
 
 :::note
 For more information on the SDK's modules, see the [SDK Modules](https://docs.cosmos.network/main/modules) section.

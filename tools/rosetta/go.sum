@@ -35,8 +35,8 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RXyy7KQOVs=
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
-cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7 h1:4LrWK+uGP5IxznxtHHsHD+ZBs2+oZRH2loYOGjHLzZM=
-cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7/go.mod h1:yVns7mKgcsG+hZW/3C5FdJtC6QYWdFIcRlKb9+5HV5g=
+cosmossdk.io/api v0.4.0 h1:x90DmdidP6EhzktAa/6/IofSHidDnPjahdlrUvyQZQw=
+cosmossdk.io/api v0.4.0/go.mod h1:TWDzBhUBhI1LhSf2XSYpfIBf6D4mbLu/fvzvDfhcaYM=
 cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba h1:S4PYij/tX3Op/hwenVEN9D+M27JRcwSwVqE3UA0BnwM=
 cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba/go.mod h1:lpS+G8bGC2anqzWdndTzjnQnuMO/qAcgZUkGJp4i3rc=
 cosmossdk.io/core v0.6.1 h1:OBy7TI2W+/gyn2z40vVvruK3di+cAluinA6cybFbE7s=
@@ -172,8 +172,8 @@ github.com/cosmos/cosmos-db v1.0.0-rc.1 h1:SjnT8B6WKMW9WEIX32qMhnEEKcI7ZP0+G1Sa9
 github.com/cosmos/cosmos-db v1.0.0-rc.1/go.mod h1:Dnmk3flSf5lkwCqvvjNpoxjpXzhxnCAFzKHlbaForso=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQYKXTdEcpW6o=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
-github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330094838-d21f58c638d5 h1:zO3mov9MaHWNnYZyQ8Wz/CZhrjfizMKvvLH41Ro/FYk=
-github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330094838-d21f58c638d5/go.mod h1:aKJRE3RjbwJUFGKG+kTDLhrST9vzFr8FlsTlv4eD+80=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230407105549-64a355c27736 h1:s5qqDSbWPBetLak/tiFUdz58atedY5hzEKu2XAZV2oA=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230407105549-64a355c27736/go.mod h1:nUeoGQBaRyGM1OQpQpj3AcdObVkmC6xS6AhyZ8dBZhY=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=

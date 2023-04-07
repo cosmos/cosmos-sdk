@@ -14,7 +14,7 @@ For more information on SDK tooling, see the [Tooling](https://docs.cosmos.netwo
 
 ## Core
 
-* [Core](https://pkg.go.dev/cosmossdk.io/core) - Core library defining SDK interfaces
+* [Core](https://pkg.go.dev/cosmossdk.io/core) - Core library defining SDK interfaces ([ADR-063](https://docs.cosmos.network/main/architecture/adr-063-core-module-api))
 * [API](https://pkg.go.dev/cosmossdk.io/api) - API library containing generated SDK Pulsar API
 * [Store](https://pkg.go.dev/cosmossdk.io/store) - Implementation of the Cosmos SDK store
 
@@ -37,8 +37,3 @@ For more information on SDK tooling, see the [Tooling](https://docs.cosmos.netwo
 ## Example
 
 * [SimApp](https://pkg.go.dev/cosmossdk.io/simapp) - SimApp is **the** sample Cosmos SDK chain. This package should not be imported in your application.
-
-
-:::tip
-Learn more on how to import these packages in your application on [cosmossdk.io](https://cosmossdk.io).
-:::

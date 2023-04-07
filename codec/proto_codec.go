@@ -151,9 +151,7 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Messa
 // it marshals to JSON using proto codec.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
-//
-//nolint:stdmethods
-func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) {
+func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) { //nolint:stdmethods // we don't want to implement Marshaler interface
 	if o == nil {
 		return nil, fmt.Errorf("cannot protobuf JSON encode nil")
 	}

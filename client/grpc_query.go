@@ -2,7 +2,6 @@ package client
 
 import (
 	gocontext "context"
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -142,7 +141,3 @@ func (ctx Context) gRPCCodec() encoding.Codec {
 
 	return pc.GRPCCodec()
 }
-
-// errCodecNotSet is return by failingInterfaceRegistry in case there are attempt to decode
-// or encode a type which contains an interface field.
-var errCodecNotSet = errors.New("client: cannot encode or decode type which requires the application specific codec")

@@ -96,6 +96,10 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		opt(&cfg)
 	}
 
+	if cfg.AutomaticCommit {
+		defer app.Commit()
+	}
+
 	if cfg.AutomaticBlockCreation {
 		height := app.LastBlockHeight() + 1
 		app.logger.Info("Running beging block", "height", height)
@@ -103,7 +107,6 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		defer func() {
 			app.logger.Info("Running end block", "height", height)
 			app.EndBlock(cmtabcitypes.RequestEndBlock{})
-			app.Commit()
 		}()
 	}
 

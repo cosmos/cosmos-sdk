@@ -138,6 +138,8 @@ func Example_oneModule() {
 	},
 		// this allows to the begin and end blocker of the module before and after the message
 		integration.WithAutomaticBlockCreation(),
+		// this allows to commit the state after the message
+		integration.WithAutomaticCommit(),
 	)
 	if err != nil {
 		panic(err)

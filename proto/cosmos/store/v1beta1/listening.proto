@@ -20,7 +20,9 @@ message StoreKVPair {
 // BlockMetadata contains all the abci event data of a block
 // the file streamer dump them into files together with the state changes.
 message BlockMetadata {
-  tendermint.abci.RequestFinalizeBlock  request_finalize_block  = 1;
-  tendermint.abci.ResponseFinalizeBlock response_finalize_block = 2;  // TODO: should we renumber this?
   tendermint.abci.ResponseCommit        response_commit         = 6;
+  tendermint.abci.RequestFinalizeBlock  request_finalize_block  = 7;
+  tendermint.abci.ResponseFinalizeBlock response_finalize_block = 8;  // TODO: should we renumber this?
+
+  reserved 1, 2, 3, 4, 5;  // reserved for from previous use in comet <= 0.37
 }

@@ -651,7 +651,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 // BeginBlock performs begin block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.
-func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
+func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) ([]abci.Event, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
@@ -660,14 +660,12 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.
 		} else if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			err := module.BeginBlock(ctx)
 			if err != nil {
-				return abci.ResponseBeginBlock{}, err
+				return nil, err
 			}
 		}
 	}
 
-	return abci.ResponseBeginBlock{
-		Events: ctx.EventManager().ABCIEvents(),
-	}, nil
+	return ctx.EventManager().ABCIEvents(), nil
 }
 
 // EndBlock performs end block functionality for all modules. It creates a

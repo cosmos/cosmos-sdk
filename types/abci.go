@@ -11,7 +11,7 @@ type InitChainer func(ctx Context, req abci.RequestInitChain) (abci.ResponseInit
 //
 // Note: applications which set create_empty_blocks=false will not have regular block timing and should use
 // e.g. BFT timestamps rather than block height for any periodic BeginBlock logic
-type BeginBlocker func(ctx Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error)
+type BeginBlocker func(ctx Context, req abci.RequestBeginBlock) ([]abci.Event, error)
 
 // EndBlocker runs code after the transactions in a block and return updates to the validator set
 //

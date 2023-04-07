@@ -564,7 +564,7 @@ func (app *SimApp) setPostHandler() {
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
-func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
+func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ([]abci.Event, error) {
 	return app.ModuleManager.BeginBlock(ctx, req)
 }
 

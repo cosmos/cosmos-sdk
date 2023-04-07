@@ -116,7 +116,7 @@ func (a *App) Load(loadLatest bool) error {
 }
 
 // BeginBlocker application updates every begin block
-func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
+func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ([]abci.Event, error) {
 	return a.ModuleManager.BeginBlock(ctx, req)
 }
 

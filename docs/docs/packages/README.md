@@ -5,10 +5,18 @@ sidebar_position: 0
 # Packages
 
 The Cosmos SDK is a collection of Go modules. This section provides documentation on various packages that can used when developing a Cosmos SDK chain.
+It lists all standalone Go modules that are part of the Cosmos SDK.
 
-:::note
-For more information on the SDK's modules, see the [SDK Modules](https://docs.cosmos.network/main/modules) section.
+:::tip
+For more information on SDK modules, see the [SDK Modules](https://docs.cosmos.network/main/modules) section.
+For more information on SDK tooling, see the [Tooling](https://docs.cosmos.network/main/tooling) section.
 :::
+
+## Core
+
+* [Core](https://pkg.go.dev/cosmossdk.io/core) - Core library defining SDK interfaces
+* [API](https://pkg.go.dev/cosmossdk.io/api) - API library containing generated SDK Pulsar API
+* [Store](https://pkg.go.dev/cosmossdk.io/store) - Implementation of the Cosmos SDK store
 
 ## State Management
 
@@ -25,3 +33,12 @@ For more information on the SDK's modules, see the [SDK Modules](https://docs.co
 * [Log](https://pkg.go.dev/cosmossdk.io/log) - Logging library
 * [Errors](https://pkg.go.dev/cosmossdk.io/errors) - Error handling library
 * [Math](https://pkg.go.dev/cosmossdk.io/math) - Math library for SDK arithmetic operations
+
+## Example
+
+* [SimApp](https://pkg.go.dev/cosmossdk.io/simapp) - SimApp is **the** sample Cosmos SDK chain. This package should not be imported in your application.
+
+
+:::tip
+Learn more on how to import these packages in your application on [cosmossdk.io](https://cosmossdk.io).
+:::

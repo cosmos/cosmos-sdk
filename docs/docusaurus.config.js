@@ -386,6 +386,10 @@ const config = {
             to: "/main/modules/upgrade/",
           },
           {
+            from: ["/main/modules/capability"],
+            to: "/main/ecosystem",
+          },
+          {
             from: ["/main/run-node/cosmovisor"],
             to: "/main/tooling/cosmovisor",
           },

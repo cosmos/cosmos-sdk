@@ -3,7 +3,7 @@ module cosmossdk.io/x/feegrant
 go 1.20
 
 require (
-	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
+	cosmossdk.io/api v0.4.0
 	cosmossdk.io/core v0.6.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	github.com/cometbft/cometbft v0.37.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330132045-4b148aad6c22
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230407105549-64a355c27736
 	github.com/cosmos/gogoproto v1.4.7
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3

@@ -14,6 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
+const (
+	abc = "abc"
+	o1  = "-0.1"
+)
+
 var (
 	longAddress      = "cosmos1v9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpg0s5ed"
 	longAddressError = "address max length is 255"
@@ -977,7 +982,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			name: "invalid quorum",
 			input: func() *v1.MsgUpdateParams {
 				params1 := params
-				params1.Quorum = "abc" //nolint:goconst
+				params1.Quorum = abc
 
 				return &v1.MsgUpdateParams{
 					Authority: authority,
@@ -991,7 +996,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			name: "negative quorum",
 			input: func() *v1.MsgUpdateParams {
 				params1 := params
-				params1.Quorum = "-0.1"
+				params1.Quorum = o1
 
 				return &v1.MsgUpdateParams{
 					Authority: authority,
@@ -1019,7 +1024,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			name: "invalid threshold",
 			input: func() *v1.MsgUpdateParams {
 				params1 := params
-				params1.Threshold = "abc"
+				params1.Threshold = abc
 
 				return &v1.MsgUpdateParams{
 					Authority: authority,
@@ -1033,7 +1038,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			name: "negative threshold",
 			input: func() *v1.MsgUpdateParams {
 				params1 := params
-				params1.Threshold = "-0.1"
+				params1.Threshold = o1
 
 				return &v1.MsgUpdateParams{
 					Authority: authority,
@@ -1061,7 +1066,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			name: "invalid veto threshold",
 			input: func() *v1.MsgUpdateParams {
 				params1 := params
-				params1.VetoThreshold = "abc"
+				params1.VetoThreshold = abc
 
 				return &v1.MsgUpdateParams{
 					Authority: authority,
@@ -1075,7 +1080,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			name: "negative veto threshold",
 			input: func() *v1.MsgUpdateParams {
 				params1 := params
-				params1.VetoThreshold = "-0.1"
+				params1.VetoThreshold = o1
 
 				return &v1.MsgUpdateParams{
 					Authority: authority,

@@ -511,17 +511,18 @@ func (rs *Store) WorkingHash() []byte {
 		}
 
 		if !rs.removalMap[key] {
-			si := types.StoreInfo{}
-			si.Name = key.Name()
-			si.CommitId = types.CommitID{
-				Hash: store.WorkingHash(),
+			si := types.StoreInfo{
+				Name: key.Name(),
+				CommitId: types.CommitID{
+					Hash: store.WorkingHash(),
+				},
 			}
 			storeInfos = append(storeInfos, si)
 		}
 	}
 
 	sort.SliceStable(storeInfos, func(i, j int) bool {
-		return strings.Compare(storeInfos[i].Name, storeInfos[j].Name) < 0
+		return storeInfos[i].Name < storeInfos[j].Name
 	})
 
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()

@@ -40,11 +40,11 @@ func (ts *Store) GetPruning() pruningtypes.PruningOptions {
 
 // Implements CommitStore
 func (ts *Store) LastCommitID() (id types.CommitID) {
-	return
+	return id
 }
 
 func (ts *Store) WorkingHash() (hash []byte) {
-	return
+	return hash
 }
 
 // Implements Store.

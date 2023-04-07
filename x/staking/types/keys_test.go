@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -128,4 +129,22 @@ func TestTestGetValidatorQueueKeyOrder(t *testing.T) {
 	require.Equal(t, -1, bytes.Compare(keyA, endKey)) // keyA <= endKey
 	require.Equal(t, -1, bytes.Compare(keyB, endKey)) // keyB <= endKey
 	require.Equal(t, 1, bytes.Compare(keyC, endKey))  // keyB >= endKey
+}
+
+func TestGetHistoricalInfoKey(t *testing.T) {
+	type args struct {
+		height int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want []byte
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, types.GetHistoricalInfoKey(tt.args.height), "GetHistoricalInfoKey(%v)", tt.args.height)
+		})
+	}
 }

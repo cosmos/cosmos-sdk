@@ -76,7 +76,7 @@ func (qs QueryServer) Accounts(c context.Context, req *types.QueryAccountsReques
 }
 
 // DisabledList returns a list of disabled message urls
-func (qs QueryServer) DisabledList(c context.Context, req *types.QueryDisableListRequest) (*types.DisabledListResponse, error) {
+func (qs QueryServer) DisabledList(c context.Context, req *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(c)
 	// Iterate over disabled list and perform the callback
 

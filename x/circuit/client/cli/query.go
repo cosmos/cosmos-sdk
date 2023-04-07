@@ -40,7 +40,7 @@ func GetDisabeListCmd() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.DisabledList(cmd.Context(), &types.QueryDisableListRequest{})
+			res, err := queryClient.DisabledList(cmd.Context(), &types.QueryDisabledListRequest{})
 			if err != nil {
 				return err
 			}

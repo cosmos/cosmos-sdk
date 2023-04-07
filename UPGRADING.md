@@ -99,7 +99,7 @@ All the store imports are now renamed to use `cosmossdk.io/store` instead of `gi
 
 [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
 The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
-It is now recommended to perform message validation directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
+It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
 #### `x/auth`
 

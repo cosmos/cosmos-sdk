@@ -35,6 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#15581](https://github.com/cosmos/cosmos-sdk/pull/15581) `GetSignersOptions` and `directaux.SignModeHandlerOptions` now
 require a `signing.ProtoFileResolver` interface instead of `protodesc.Resolver`.
+* [#15742](https://github.com/cosmos/cosmos-sdk/pull/15742) The `direct_aux` package has been renamed to `directaux` in line with Go conventions. No other types were changed during the package rename.
 
 ### Bug Fixes
 

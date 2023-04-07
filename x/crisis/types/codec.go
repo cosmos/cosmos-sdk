@@ -29,7 +29,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
-var aminoCdc = codec.NewLegacyAmino()
+var (
+	aminoCdc  = codec.NewLegacyAmino()
+	ModuleCdc = codec.NewAminoCodec(aminoCdc)
+)
 
 func init() {
 	RegisterLegacyAminoCodec(aminoCdc)

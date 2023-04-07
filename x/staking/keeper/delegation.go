@@ -104,7 +104,7 @@ func (k Keeper) UpdateValidatorDelegations(ctx sdk.Context, existingValAddr, new
 	}
 }
 
-func (k Keeper) UpdateValidatorDelegationsOld(ctx sdk.Context, existingValAddr, newValAddr sdk.ValAddress) {
+func (k Keeper) UpdateValidatorDelegationsLegacy(ctx sdk.Context, existingValAddr, newValAddr sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := storetypes.KVStorePrefixIterator(store, types.DelegationKey)

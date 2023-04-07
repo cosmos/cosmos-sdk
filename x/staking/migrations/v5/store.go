@@ -1,8 +1,6 @@
 package v5
 
 import (
-	"fmt"
-
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,7 +21,6 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 		}
 
 		store.Set(types.GetDelegationsByValKey(val, del), []byte{})
-		fmt.Println(types.GetDelegationsByValKey(val, del), val.String(), del.String())
 	}
 
 	return store, nil

@@ -74,7 +74,7 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 	}
 }
 
-func BenchmarkGetValidatorDelegationsOld(b *testing.B) {
+func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 
 	powersNumber := 10
 
@@ -110,6 +110,6 @@ func BenchmarkGetValidatorDelegationsOld(b *testing.B) {
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		app.StakingKeeper.UpdateValidatorDelegationsOld(ctx, valAddrs[0], sdk.ValAddress("val"))
+		app.StakingKeeper.UpdateValidatorDelegationsLegacy(ctx, valAddrs[0], sdk.ValAddress("val"))
 	}
 }

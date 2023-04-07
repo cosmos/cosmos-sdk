@@ -124,7 +124,7 @@ func local_request_Query_Accounts_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 func request_Query_DisabledList_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryDisableListRequest
+	var protoReq QueryDisabledListRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.DisabledList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -133,7 +133,7 @@ func request_Query_DisabledList_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 func local_request_Query_DisabledList_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryDisableListRequest
+	var protoReq QueryDisabledListRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.DisabledList(ctx, &protoReq)

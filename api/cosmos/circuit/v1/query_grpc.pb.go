@@ -33,7 +33,7 @@ type QueryClient interface {
 	// Account returns account permissions.
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*AccountsResponse, error)
 	// DisabledList returns a list of disabled message urls
-	DisabledList(ctx context.Context, in *QueryDisableListRequest, opts ...grpc.CallOption) (*DisabledListResponse, error)
+	DisabledList(ctx context.Context, in *QueryDisabledListRequest, opts ...grpc.CallOption) (*DisabledListResponse, error)
 }
 
 type queryClient struct {
@@ -62,7 +62,7 @@ func (c *queryClient) Accounts(ctx context.Context, in *QueryAccountsRequest, op
 	return out, nil
 }
 
-func (c *queryClient) DisabledList(ctx context.Context, in *QueryDisableListRequest, opts ...grpc.CallOption) (*DisabledListResponse, error) {
+func (c *queryClient) DisabledList(ctx context.Context, in *QueryDisabledListRequest, opts ...grpc.CallOption) (*DisabledListResponse, error) {
 	out := new(DisabledListResponse)
 	err := c.cc.Invoke(ctx, Query_DisabledList_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -80,7 +80,7 @@ type QueryServer interface {
 	// Account returns account permissions.
 	Accounts(context.Context, *QueryAccountsRequest) (*AccountsResponse, error)
 	// DisabledList returns a list of disabled message urls
-	DisabledList(context.Context, *QueryDisableListRequest) (*DisabledListResponse, error)
+	DisabledList(context.Context, *QueryDisabledListRequest) (*DisabledListResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -94,7 +94,7 @@ func (UnimplementedQueryServer) Account(context.Context, *QueryAccountRequest) (
 func (UnimplementedQueryServer) Accounts(context.Context, *QueryAccountsRequest) (*AccountsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Accounts not implemented")
 }
-func (UnimplementedQueryServer) DisabledList(context.Context, *QueryDisableListRequest) (*DisabledListResponse, error) {
+func (UnimplementedQueryServer) DisabledList(context.Context, *QueryDisabledListRequest) (*DisabledListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisabledList not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
@@ -147,7 +147,7 @@ func _Query_Accounts_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 func _Query_DisabledList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryDisableListRequest)
+	in := new(QueryDisabledListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func _Query_DisabledList_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: Query_DisabledList_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).DisabledList(ctx, req.(*QueryDisableListRequest))
+		return srv.(QueryServer).DisabledList(ctx, req.(*QueryDisabledListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

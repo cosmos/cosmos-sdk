@@ -45,6 +45,9 @@ issues:
       text: "SA1019:"
       linters:
         - staticcheck
+    - text: "SA1019: codec.NewAminoCodec is deprecated" # TODO remove once migration path is set out
+      linters:
+        - staticcheck
     - text: "leading space"
       linters:
         - nolintlint

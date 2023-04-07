@@ -522,8 +522,12 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	}
 
 	for _, msg := range msgs {
-		err := msg.ValidateBasic()
-		if err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return err
 		}
 	}

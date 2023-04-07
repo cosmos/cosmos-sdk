@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7 // indirect
+	cosmossdk.io/api v0.4.0 // indirect
 	cosmossdk.io/collections v0.0.0-20230309163709-87da587416ba // indirect
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
@@ -137,12 +137,12 @@ require (
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/crypto v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto v0.0.0-20230320184635-7606e756e683 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect

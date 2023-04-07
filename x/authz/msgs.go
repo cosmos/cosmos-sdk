@@ -201,7 +201,12 @@ func (msg MsgExec) ValidateBasic() error {
 		return err
 	}
 	for _, msg := range msgs {
-		if err = msg.ValidateBasic(); err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err = m.ValidateBasic(); err != nil {
 			return err
 		}
 	}

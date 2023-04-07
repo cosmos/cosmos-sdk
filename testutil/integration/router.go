@@ -100,7 +100,7 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		defer app.Commit()
 	}
 
-	if cfg.AutomaticBlockCreation {
+	if cfg.AutomaticBeginEndBlock {
 		height := app.LastBlockHeight() + 1
 		app.logger.Info("Running beging block", "height", height)
 		app.BeginBlock(cmtabcitypes.RequestBeginBlock{Header: cmtproto.Header{Height: height, ChainID: appName}})

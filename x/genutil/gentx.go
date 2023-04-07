@@ -1,9 +1,11 @@
 package genutil
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,7 +40,7 @@ func SetGenTxsInAppGenesisState(
 // balance in the set of genesis accounts.
 func ValidateAccountInGenesis(
 	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
-	addr sdk.Address, coins sdk.Coins, cdc codec.JSONCodec,
+	addr sdk.Address, coins sdk.Coins, cdc codec.JSONCodec, ac address.Codec,
 ) error {
 	var stakingData stakingtypes.GenesisState
 	cdc.MustUnmarshalJSON(appGenesisState[stakingtypes.ModuleName], &stakingData)
@@ -50,11 +52,14 @@ func ValidateAccountInGenesis(
 
 	genBalIterator.IterateGenesisBalances(cdc, appGenesisState,
 		func(bal bankexported.GenesisBalance) (stop bool) {
-			accAddress := bal.GetAddress()
+			accAddress, err := bal.GetAddress(ac)
+			if err != nil {
+				return false
+			}
 			accCoins := bal.GetCoins()
 
 			// ensure that account is in genesis
-			if accAddress.Equals(addr) {
+			if bytes.Equal(accAddress, addr.Bytes()) {
 				// ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(

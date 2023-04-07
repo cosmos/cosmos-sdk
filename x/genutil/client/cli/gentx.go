@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 	"github.com/spf13/cobra"
 
@@ -27,7 +28,7 @@ import (
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
+func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, ac address.Codec) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -122,7 +123,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return err
 			}
-			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc)
+			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc, ac)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}

@@ -98,7 +98,6 @@ func Example() {
 
 // ExampleOneModule shows how to use the integration test framework to test the integration of a single module.
 // That module has no dependency on other modules.
-// This test as well run the BeginBlocker and EndBlocker of the module.
 func Example_oneModule() {
 	// in this example we are testing the integration of the auth module:
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})

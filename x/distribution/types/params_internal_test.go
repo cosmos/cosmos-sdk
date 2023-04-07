@@ -5,8 +5,6 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_validateAuxFuncs(t *testing.T) {
@@ -19,7 +17,7 @@ func Test_validateAuxFuncs(t *testing.T) {
 		wantErr bool
 	}{
 		{"wrong type", args{10.5}, true},
-		{"empty sdk.Dec", args{sdk.Dec{}}, true},
+		{"empty math.LegacyDec", args{math.LegacyDec{}}, true},
 		{"negative", args{math.LegacyNewDec(-1)}, true},
 		{"one dec", args{math.LegacyNewDec(1)}, false},
 		{"two dec", args{math.LegacyNewDec(2)}, true},

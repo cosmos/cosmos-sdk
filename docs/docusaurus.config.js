@@ -386,8 +386,8 @@ const config = {
             to: "/main/modules/upgrade/",
           },
           {
-            from: ["/main/modules/capability"],
-            to: "/main/ecosystem",
+            from: ["/main/modules/capability", "/main/ecosystem"],
+            to: "/main/modules",
           },
           {
             from: ["/main/spec/circuit-breaker"],

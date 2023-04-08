@@ -1,6 +1,8 @@
 package types
 
 import (
+	sdkmath "cosmossdk.io/math"
+	
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +28,7 @@ func InitialValidatorAccumulatedCommission() ValidatorAccumulatedCommission {
 }
 
 // create a new ValidatorSlashEvent
-func NewValidatorSlashEvent(validatorPeriod uint64, fraction sdk.Dec) ValidatorSlashEvent {
+func NewValidatorSlashEvent(validatorPeriod uint64, fraction sdkmath.LegacyDec) ValidatorSlashEvent {
 	return ValidatorSlashEvent{
 		ValidatorPeriod: validatorPeriod,
 		Fraction:        fraction,

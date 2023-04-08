@@ -77,7 +77,7 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 // RegisterInterfaces registers interfaces and implementations of the upgrade module.
-func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -85,7 +85,6 @@ func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 type AppModule struct {
 	AppModuleBasic
 	keeper *keeper.Keeper
-	ac     address.Codec
 }
 
 // NewAppModule creates a new AppModule object

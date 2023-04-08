@@ -1276,6 +1276,38 @@ func (s *coinTestSuite) TestMarshalJSONCoins() {
 	}
 }
 
+func (s *coinTestSuite) TestCoinValidate() {
+	testCases := []struct {
+		name    string
+		coin    sdk.Coin
+		wantErr string
+	}{
+		{"nil coin: nil Amount", sdk.Coin{}, "invalid denom"},
+		{"non-blank coin, nil Amount", sdk.Coin{Denom: "atom"}, "amount is nil"},
+		{"valid coin", sdk.Coin{Denom: "atom", Amount: math.NewInt(100)}, ""},
+		{"negative coin", sdk.Coin{Denom: "atom", Amount: math.NewInt(-999)}, "negative coin amount"},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t := s.T()
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.coin.Validate()
+			switch {
+			case tc.wantErr == "":
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				return
+			case err == nil:
+				t.Error("Expected an error")
+			case !strings.Contains(err.Error(), tc.wantErr):
+				t.Errorf("Error mismatch\n\tGot:  %q\nWant: %q", err, tc.wantErr)
+			}
+		})
+	}
+}
+
 func (s *coinTestSuite) TestCoinAminoEncoding() {
 	cdc := codec.NewLegacyAmino()
 	c := sdk.NewInt64Coin(testDenom1, 5)

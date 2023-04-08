@@ -26,8 +26,16 @@ var _ types.MsgServer = msgServer{}
 
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
 func (k msgServer) SoftwareUpgrade(goCtx context.Context, req *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
+	if _, err := sdk.AccAddressFromBech32(req.Authority); err != nil {
+		return nil, errors.Wrap(err, "authority")
+	}
+
 	if k.authority != req.Authority {
 		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority, req.Authority)
+	}
+
+	if err := req.Plan.ValidateBasic(); err != nil {
+		return nil, errors.Wrap(err, "plan")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -41,6 +49,10 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, req *types.MsgSoftware
 
 // CancelUpgrade implements the Msg/CancelUpgrade Msg service.
 func (k msgServer) CancelUpgrade(goCtx context.Context, req *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
+	if _, err := sdk.AccAddressFromBech32(req.Authority); err != nil {
+		return nil, errors.Wrap(err, "authority")
+	}
+
 	if k.authority != req.Authority {
 		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority, req.Authority)
 	}

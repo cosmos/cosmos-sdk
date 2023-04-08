@@ -8,6 +8,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -46,8 +47,13 @@ func Example() {
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil, nil)
 
 	// create the application and register all the modules from the previous step
-	// replace the name and the logger by testing values in a real test case (e.g. t.Name() and log.NewTestLogger(t))
-	integrationApp := integration.NewIntegrationApp("example", log.NewLogger(io.Discard), keys, authModule, mintModule)
+	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
+	integrationApp := integration.NewIntegrationApp(
+		log.NewLogger(io.Discard, log.OutputJSONOption()),
+		keys,
+		encodingCfg.Codec,
+		authModule, mintModule,
+	)
 
 	// register the message and query servers
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
@@ -79,8 +85,10 @@ func Example() {
 		panic(err)
 	}
 
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+
 	// we should also check the state of the application
-	got := mintKeeper.GetParams(integrationApp.SDKContext())
+	got := mintKeeper.GetParams(sdkCtx)
 	if diff := cmp.Diff(got, params); diff != "" {
 		panic(diff)
 	}
@@ -109,8 +117,13 @@ func Example_oneModule() {
 	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts, nil)
 
 	// create the application and register all the modules from the previous step
-	// replace the name and the logger by testing values in a real test case (e.g. t.Name() and log.NewTestLogger(t))
-	integrationApp := integration.NewIntegrationApp("example-one-module", log.NewLogger(io.Discard), keys, authModule)
+	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
+	integrationApp := integration.NewIntegrationApp(
+		log.NewLogger(io.Discard),
+		keys,
+		encodingCfg.Codec,
+		authModule,
+	)
 
 	// register the message and query servers
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
@@ -122,9 +135,21 @@ func Example_oneModule() {
 	result, err := integrationApp.RunMsg(&authtypes.MsgUpdateParams{
 		Authority: authority,
 		Params:    params,
-	})
+	},
+		// this allows to the begin and end blocker of the module before and after the message
+		integration.WithAutomaticBeginEndBlock(),
+		// this allows to commit the state after the message
+		integration.WithAutomaticCommit(),
+	)
 	if err != nil {
 		panic(err)
+	}
+
+	// verify that the begin and end blocker were called
+	// NOTE: in this example, we are testing auth, which doesn't have any begin or end blocker
+	// so verifying the block height is enough
+	if integrationApp.LastBlockHeight() != 2 {
+		panic(fmt.Errorf("expected block height to be 2, got %d", integrationApp.LastBlockHeight()))
 	}
 
 	// in this example the result is an empty response, a nil check is enough
@@ -140,8 +165,10 @@ func Example_oneModule() {
 		panic(err)
 	}
 
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+
 	// we should also check the state of the application
-	got := accountKeeper.GetParams(integrationApp.SDKContext())
+	got := accountKeeper.GetParams(sdkCtx)
 	if diff := cmp.Diff(got, params); diff != "" {
 		panic(diff)
 	}

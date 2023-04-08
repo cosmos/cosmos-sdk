@@ -390,6 +390,14 @@ const config = {
             to: "/main/ecosystem",
           },
           {
+            from: ["/main/spec/circuit-breaker"],
+            to: "/main/modules/circuit",
+          },
+          {
+            from: ["/main/spec/reserve-pool"],
+            to: "/main/modules/distribution",
+          },
+          {
             from: ["/main/run-node/cosmovisor"],
             to: "/main/tooling/cosmovisor",
           },

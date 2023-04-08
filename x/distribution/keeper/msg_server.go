@@ -174,18 +174,14 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, msg *types.MsgCommu
 }
 
 func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
-	if err := k.validateAuthority(req.Authority); err != nil {
-		return nil, err
-	}
-
-	authority, err := k.authKeeper.StringToBytes(req.Authority)
+	depositor, err := k.authKeeper.StringToBytes(req.Depositor)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// deposit coins from sender's account to the distribution module
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, authority, types.ModuleName, req.Amount); err != nil {
+	// deposit coins from depositor's account to the distribution module
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ModuleName, req.Amount); err != nil {
 		return nil, err
 	}
 
@@ -207,7 +203,7 @@ func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types
 	logger := k.Logger(ctx)
 	logger.Info(
 		"transferred from rewards to validator rewards pool",
-		"authority", req.Authority,
+		"depositor", req.Depositor,
 		"amount", req.Amount.String(),
 		"validator", req.ValidatorAddress,
 	)

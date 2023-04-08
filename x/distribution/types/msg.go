@@ -130,20 +130,20 @@ func (msg MsgCommunityPoolSpend) GetSignBytes() []byte {
 }
 
 // NewMsgDepositValidatorRewardsPool returns a new MsgDepositValidatorRewardsPool
-// with a sender and a funding amount.
+// with a depositor and a funding amount.
 func NewMsgDepositValidatorRewardsPool(depositor sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coins) *MsgDepositValidatorRewardsPool {
 	return &MsgDepositValidatorRewardsPool{
 		Amount:           amount,
-		Authority:        depositor.String(),
+		Depositor:        depositor.String(),
 		ValidatorAddress: valAddr.String(),
 	}
 }
 
 // GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes, which is the authority.
+// of GetSignBytes, which is the depositor.
 func (msg MsgDepositValidatorRewardsPool) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{authority}
+	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
+	return []sdk.AccAddress{depositor}
 }
 
 // GetSignBytes returns the raw bytes for a MsgDepositValidatorRewardsPool message

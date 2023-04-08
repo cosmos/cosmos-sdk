@@ -3,7 +3,6 @@ package v5_test
 import (
 	"math"
 	"math/rand"
-	"strconv"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	v5 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v5"
 	stackingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
@@ -44,7 +44,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	for height := range testCases {
 		testCases[height] = testCase{
-			oldKey:         getOldHistoricalInfoKey(height),
+			oldKey:         v1.GetHistoricalInfoKey(height),
 			newKey:         stackingtypes.GetHistoricalInfoKey(height),
 			historicalInfo: cdc.MustMarshal(createHistoricalInfo(height, "testChainID")),
 		}
@@ -64,10 +64,6 @@ func TestHistoricalKeysMigration(t *testing.T) {
 		require.NotNilf(t, store.Get(tc.newKey), "new key should be created, seed: %d", seed)
 		require.Equalf(t, tc.historicalInfo, store.Get(tc.newKey), "seed: %d", seed)
 	}
-}
-
-func getOldHistoricalInfoKey(height int64) []byte {
-	return append(stackingtypes.HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
 }
 
 func createHistoricalInfo(height int64, chainID string) *stackingtypes.HistoricalInfo {

@@ -3,12 +3,13 @@ package types_test
 import (
 	"bytes"
 	"encoding/hex"
+	math2 "math"
 	"math/big"
+	"strconv"
 	"testing"
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -132,19 +133,19 @@ func TestTestGetValidatorQueueKeyOrder(t *testing.T) {
 }
 
 func TestGetHistoricalInfoKey(t *testing.T) {
-	type args struct {
-		height int64
-	}
 	tests := []struct {
-		name string
-		args args
-		want []byte
+		height int64
+		want   []byte
 	}{
-		// TODO: Add test cases.
+		{0, append(types.HistoricalInfoKey, []byte{0, 0, 0, 0, 0, 0, 0, 0}...)},
+		{1, append(types.HistoricalInfoKey, []byte{0, 0, 0, 0, 0, 0, 0, 1}...)},
+		{2, append(types.HistoricalInfoKey, []byte{0, 0, 0, 0, 0, 0, 0, 2}...)},
+		{514, append(types.HistoricalInfoKey, []byte{0, 0, 0, 0, 0, 0, 2, 2}...)},
+		{math2.MaxInt64, append(types.HistoricalInfoKey, []byte{127, 255, 255, 255, 255, 255, 255, 255}...)},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, types.GetHistoricalInfoKey(tt.args.height), "GetHistoricalInfoKey(%v)", tt.args.height)
+		t.Run(strconv.FormatInt(tt.height, 10), func(t *testing.T) {
+			require.Equal(t, tt.want, types.GetHistoricalInfoKey(tt.height))
 		})
 	}
 }

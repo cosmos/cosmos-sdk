@@ -33,6 +33,7 @@ type IntegrationTestSuite struct {
 	suite.Suite
 
 	ctx                   sdk.Context
+	cdc                   codec.Codec
 	genesisAccount        *authtypes.BaseAccount
 	bankClient            types.QueryClient
 	testClient            testdata.QueryClient
@@ -96,6 +97,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// end of app init
 
 	s.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.cdc = cdc
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, bankKeeper)
 	testdata.RegisterQueryServer(queryHelper, testdata.QueryImpl{})

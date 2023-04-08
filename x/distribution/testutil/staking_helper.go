@@ -45,7 +45,7 @@ func SlashValidator(
 	consAddr sdk.ConsAddress,
 	infractionHeight int64,
 	power int64,
-	slashFactor sdk.Dec,
+	slashFactor math.LegacyDec,
 	validator *stakingtypes.Validator,
 	distrKeeper *keeper.Keeper,
 ) math.Int {
@@ -67,16 +67,16 @@ func SlashValidator(
 		panic("we can't test any other case here")
 	}
 
-	slashAmountDec := sdk.NewDecFromInt(validator.Tokens).Mul(sdk.NewDecWithPrec(5, 1))
+	slashAmountDec := math.LegacyNewDecFromInt(validator.Tokens).Mul(math.LegacyNewDecWithPrec(5, 1))
 	slashAmount := slashAmountDec.TruncateInt()
 
 	// cannot decrease balance below zero
-	tokensToBurn := sdk.MinInt(slashAmount, validator.Tokens)
-	tokensToBurn = sdk.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
+	tokensToBurn := math.MinInt(slashAmount, validator.Tokens)
+	tokensToBurn = math.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.IsPositive() {
-		effectiveFraction := sdk.NewDecFromInt(tokensToBurn).QuoRoundUp(sdk.NewDecFromInt(validator.Tokens))
+		effectiveFraction := math.LegacyNewDecFromInt(tokensToBurn).QuoRoundUp(math.LegacyNewDecFromInt(validator.Tokens))
 		// possible if power has changed
 		if effectiveFraction.GT(math.LegacyOneDec()) {
 			effectiveFraction = math.LegacyOneDec()
@@ -102,7 +102,7 @@ func Delegate(
 	amount math.Int,
 	delegation *stakingtypes.Delegation,
 ) (
-	newShares sdk.Dec,
+	newShares math.LegacyDec,
 	updatedDel stakingtypes.Delegation,
 	err error,
 ) {

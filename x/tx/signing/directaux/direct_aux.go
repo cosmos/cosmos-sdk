@@ -1,4 +1,4 @@
-package direct_aux
+package directaux
 
 import (
 	"context"

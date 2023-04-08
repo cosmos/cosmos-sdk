@@ -45,7 +45,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/keeper/msg_server.g
 
 ### Validation
 
-The message validation must perform all validation required (both *stateful* and *stateless*) to make sure the `message` is valid.
+The message server must perform all validation required (both *stateful* and *stateless*) to make sure the `message` is valid.
 The `signer` is charged for the gas cost of this validation.
 
 For example, a `msgServer` method for a `transfer` message should check that the sending account has enough funds to actually perform the transfer. 

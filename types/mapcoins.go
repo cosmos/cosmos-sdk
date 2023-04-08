@@ -14,6 +14,7 @@ func NewMapCoins(coins Coins) MapCoins {
 func (m MapCoins) Add(coins ...Coin) {
 	for _, coin := range coins {
 		existAmt, exists := m[coin.Denom]
+		// TODO: Once int supports in-place arithmetic, switch this to be in-place.
 		if exists {
 			m[coin.Denom] = existAmt.Add(coin.Amount)
 		} else {

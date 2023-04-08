@@ -67,34 +67,29 @@ func (s *PluginTestSuite) SetupTest() {
 	s.loggerCtx = NewMockContext(header, logger, streamingService)
 
 	// test abci message types
-	// s.beginBlockReq = abci.RequestBeginBlock{
-	// 	Header:              s.loggerCtx.BlockHeader(),
-	// 	ByzantineValidators: []abci.Misbehavior{},
-	// 	Hash:                []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
-	// 	LastCommitInfo:      abci.CommitInfo{Round: 1, Votes: []abci.VoteInfo{}},
-	// }
-	// s.beginBlockRes = abci.ResponseBeginBlock{
-	// 	Events: []abci.Event{{Type: "testEventType1"}},
-	// }
-	s.finalizeBlockReq = abci.RequestFinalizeBlock{Height: s.loggerCtx.BlockHeight()}
+
+	s.finalizeBlockReq = abci.RequestFinalizeBlock{
+		Height:            s.loggerCtx.BlockHeight(),
+		Txs:               [][]byte{{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}},
+		Misbehavior:       []abci.Misbehavior{},
+		Hash:              []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
+		DecidedLastCommit: abci.CommitInfo{},
+	}
 	s.finalizeBlockRes = abci.ResponseFinalizeBlock{
 		Events:                []abci.Event{},
 		ConsensusParamUpdates: &tmproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
+		TxResults: []*abci.ExecTxResult{{
+			Events:    []abci.Event{},
+			Code:      1,
+			Codespace: "mockCodeSpace",
+			Data:      []byte{5, 6, 7, 8},
+			GasUsed:   2,
+			GasWanted: 3,
+			Info:      "mockInfo",
+			Log:       "mockLog",
+		}},
 	}
-	// s.deliverTxReq = abci.RequestDeliverTx{
-	// 	Tx: []byte{9, 8, 7, 6, 5, 4, 3, 2, 1},
-	// }
-	// s.deliverTxRes = abci.ResponseDeliverTx{
-	// 	Events:    []abci.Event{},
-	// 	Code:      1,
-	// 	Codespace: "mockCodeSpace",
-	// 	Data:      []byte{5, 6, 7, 8},
-	// 	GasUsed:   2,
-	// 	GasWanted: 3,
-	// 	Info:      "mockInfo",
-	// 	Log:       "mockLog",
-	// }
 	s.commitRes = abci.ResponseCommit{}
 
 	// test store kv pair types
@@ -120,11 +115,6 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 
 				err := abciListener.ListenFinalizeBlock(s.loggerCtx, s.finalizeBlockReq, s.finalizeBlockRes)
 				assert.NoError(t, err, "ListenEndBlock")
-
-				// for range [50]int{} {
-				// 	err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
-				// 	assert.NoError(t, err, "ListenDeliverTx")
-				// }
 
 				err = abciListener.ListenCommit(s.loggerCtx, s.commitRes, s.changeSet)
 				assert.NoError(t, err, "ListenCommit")

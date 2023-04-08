@@ -177,7 +177,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k *
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:         moduletestutil.MakeTestTxConfig(),
 			Cdc:           nil,
 			Msg:           msg,
 			Context:       ctx,
@@ -235,7 +235,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k *ke
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestTxConfig(),
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,
@@ -302,7 +302,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:         moduletestutil.MakeTestTxConfig(),
 			Cdc:           nil,
 			Msg:           msg,
 			Context:       ctx,
@@ -379,7 +379,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestTxConfig(),
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,
@@ -460,7 +460,7 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestTxConfig(),
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,
@@ -563,7 +563,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestTxConfig(),
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,

@@ -56,7 +56,7 @@ Of course, it is possible to define different types of internal `keeper`s for th
 
 ## Implementing Methods
 
-`Keeper`s primarily expose getter and setter methods for the store(s) managed by their module. These methods should remain as simple as possible and strictly be limited to getting or setting the requested value, as validity checks should have already been performed via the `ValidateBasic()` method of the [`message`](./02-messages-and-queries.md#messages) and the [`Msg` server](./03-msg-services.md) when `keeper`s' methods are called.
+`Keeper`s primarily expose getter and setter methods for the store(s) managed by their module. These methods should remain as simple as possible and strictly be limited to getting or setting the requested value, as validity checks should have already been performed by the [`Msg` server](./03-msg-services.md) when `keeper`s' methods are called.
 
 Typically, a *getter* method will have the following signature
 

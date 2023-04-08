@@ -10,6 +10,11 @@ This section highlights some of the cosmos ecosystem tooling and where to find i
 
 See the official [`ibc-go` documentation](https://ibc.cosmos.network).
 
+### `x/capability`
+
+The capability module was once a Cosmos SDK module. From SDK v0.48, this module is maintained by the IBC team.
+Find out more on their [repository](https://github.com/cosmos/ibc-go/tree/fdd664698d79864f1e00e147f9879e58497b5ef1/modules/capability).
+
 ## CosmWasm smart contracts
 
 >CosmWasm is a smart contracting platform built for the Cosmos ecosystem. Simply put, it's the Cosmos (Cosm) way of using WebAssembly (Wasm) hence the name.

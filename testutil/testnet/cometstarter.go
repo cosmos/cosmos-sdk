@@ -47,7 +47,7 @@ type CometStarter struct {
 // NewCometStarter accepts a minimal set of arguments to start comet with an ABCI app.
 // For further configuration, chain other CometStarter methods before calling Start:
 //
-//     NewCometStarter(...).Logger(...).Start()
+//	NewCometStarter(...).Logger(...).Start()
 func NewCometStarter(
 	app abcitypes.Application,
 	cfg *cmtcfg.Config,
@@ -169,7 +169,6 @@ func (s *CometStarter) Start() (n *node.Node, err error) {
 			node.DefaultMetricsProvider(s.cfg.Instrumentation),
 			servercmtlog.CometZeroLogWrapper{Logger: s.logger},
 		)
-
 		if err != nil {
 			return nil, fmt.Errorf("failed to create comet node: %w", err)
 		}
@@ -207,7 +206,7 @@ func (s *CometStarter) initDisk() (cmttypes.PrivValidator, *p2p.NodeKey, error) 
 	fpv := privval.NewFilePV(s.valPrivKey, s.cfg.PrivValidatorKeyFile(), s.cfg.PrivValidatorStateFile())
 	fpv.Save()
 
-	if err := os.WriteFile(s.cfg.GenesisFile(), s.genesis, 0600); err != nil {
+	if err := os.WriteFile(s.cfg.GenesisFile(), s.genesis, 0o600); err != nil {
 		return nil, nil, fmt.Errorf("failed to write genesis file: %w", err)
 	}
 

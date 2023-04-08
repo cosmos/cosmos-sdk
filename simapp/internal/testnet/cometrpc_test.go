@@ -20,6 +20,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const memdb = "memdb"
+
 // A single comet server in a network runs an RPC server successfully.
 func TestCometRPC_SingleRPCServer(t *testing.T) {
 	const nVals = 2
@@ -55,7 +57,7 @@ func TestCometRPC_SingleRPCServer(t *testing.T) {
 		)
 
 		cfg := cmtcfg.DefaultConfig()
-		cfg.BaseConfig.DBBackend = "memdb"
+		cfg.BaseConfig.DBBackend = memdb
 
 		cs := testnet.NewCometStarter(
 			app,
@@ -146,7 +148,7 @@ func TestCometRPC_MultipleRPCError(t *testing.T) {
 		)
 
 		cfg := cmtcfg.DefaultConfig()
-		cfg.BaseConfig.DBBackend = "memdb"
+		cfg.BaseConfig.DBBackend = memdb
 
 		return testnet.NewCometStarter(
 			app,

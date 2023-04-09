@@ -26,12 +26,6 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
 }
 
-// ValidateBasic performs basic MsgUpdateParams message validation.
-func (msg MsgUpdateParams) ValidateBasic() error {
-	params := cmttypes.ConsensusParamsFromProto(msg.ToProtoConsensusParams())
-	return params.ValidateBasic()
-}
-
 func (msg MsgUpdateParams) ToProtoConsensusParams() cmtproto.ConsensusParams {
 	return cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{

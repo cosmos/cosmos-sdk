@@ -59,12 +59,12 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 var _ types.MsgServer = Keeper{}
 
-func (k Keeper) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if k.GetAuthority() != req.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), req.Authority)
+func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	consensusParams := req.ToProtoConsensusParams()
+	consensusParams := msg.ToProtoConsensusParams()
 	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (k Keeper) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*
 	if err := k.event.EventManager(ctx).EmitKV(
 		ctx,
 		"update_consensus_params",
-		event.Attribute{Key: "authority", Value: req.Authority},
+		event.Attribute{Key: "authority", Value: msg.Authority},
 		event.Attribute{Key: "parameters", Value: consensusParams.String()}); err != nil {
 		return nil, err
 	}

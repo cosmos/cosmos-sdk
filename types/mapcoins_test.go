@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func (s *coinTestSuite) TestMapCoinAdd() {
+func (s *coinTestSuite) TestMapCoinsAdd() {
 	cA0M0 := sdk.Coins{s.ca0, s.cm0}
 	cA0M1 := sdk.Coins{s.ca0, s.cm1}
 	cA1M1 := sdk.Coins{s.ca1, s.cm1}

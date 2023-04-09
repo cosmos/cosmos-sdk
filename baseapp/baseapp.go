@@ -62,17 +62,20 @@ type BaseApp struct {
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool         mempool.Mempool            // application side mempool
-	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
-	postHandler     sdk.PostHandler            // post handler, optional, e.g. for tips
-	initChainer     sdk.InitChainer            // initialize state with validators and state blob
-	beginBlocker    sdk.LegacyBeginBlocker     // logic to run before any txs
-	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
-	prepareProposal sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
-	endBlocker      sdk.LegacyEndBlocker       // logic to run after all txs, and to determine valset changes
-	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
-	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
-	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	mempool         mempool.Mempool                // application side mempool
+	anteHandler     sdk.AnteHandler                // ante handler for fee and auth
+	postHandler     sdk.PostHandler                // post handler, optional, e.g. for tips
+	initChainer     sdk.InitChainer                // initialize state with validators and state blob
+	beginBlocker    sdk.LegacyBeginBlocker         // (legacy ABCI) BeginBlock handler
+	endBlocker      sdk.LegacyEndBlocker           // (legacy ABCI) EndBlock handler
+	processProposal sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
+	prepareProposal sdk.PrepareProposalHandler     // ABCI PrepareProposal
+	extendVote      sdk.ExtendVoteHandler          // ABCI ExtendVote handler
+	verifyVoteExt   sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
+
+	addrPeerFilter sdk.PeerFilter // filter peers by address and port
+	idPeerFilter   sdk.PeerFilter // filter peers by node ID
+	fauxMerkleMode bool           // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager

@@ -74,31 +74,30 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 func BenchmarkSumOfCoinAdds(b *testing.B) {
 	// This benchmark tests the performance of adding a large number of coins
 	// into a single coin set.
-	// it does numAdds additions, each addition has (numIntersectingCoins) that contian denoms
+	// it does numAdds additions, each addition has (numIntersectingCoins) that contain denoms
 	// already in the sum, and (coinsPerAdd - numIntersectingCoins) that are new denoms.
-	benchmarkingFunc := func(coinsPerAdd, numIntersectingCoins, numAdds int, sumFn func([]Coins) Coins) func(b *testing.B) {
+	benchmarkingFunc := func(numAdds, coinsPerAdd, numIntersectingCoins int, sumFn func([]Coins) Coins) func(b *testing.B) {
 		return func(b *testing.B) {
 			b.ReportAllocs()
 			addCoins := make([]Coins, numAdds)
+			nonIntersectingCoins := coinsPerAdd - numIntersectingCoins
 
 			for i := 0; i < numAdds; i++ {
 				intersectCoins := make([]Coin, numIntersectingCoins)
+				num := NewInt(int64(i))
 				for j := 0; j < numIntersectingCoins; j++ {
-					intersectCoins[j] = NewCoin(coinName(j), NewInt(int64(i)))
+					intersectCoins[j] = NewCoin(coinName(j+1_000_000_000), num)
 				}
 				addCoins[i] = intersectCoins
-				for j := 0; j < coinsPerAdd; j++ {
-					addCoins[i] = addCoins[i].Add(NewCoin(coinName(i+j), NewInt(int64(i))))
+				for j := 0; j < nonIntersectingCoins; j++ {
+					addCoins[i] = addCoins[i].Add(NewCoin(coinName(i*nonIntersectingCoins+j), num))
 				}
 			}
 
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				sum := Coins{}
-				for j := 0; j < numAdds; j++ {
-					sum = sum.Add(addCoins[j]...)
-				}
+				sumFn(addCoins)
 			}
 		}
 	}
@@ -118,7 +117,9 @@ func BenchmarkSumOfCoinAdds(b *testing.B) {
 		return sum
 	}
 
-	benchmarkSizes := [][]int{{5, 2, 1000}, {10, 1, 10000}, {10, 10, 10000}}
+	// larger benchmarks with non-overlapping coins won't terminate in reasonable timeframes with sdk.Coins
+	// they work fine with MapCoins
+	benchmarkSizes := [][]int{{5, 2, 1000}, {10, 10, 10000}}
 	sumFns := []struct {
 		name string
 		fn   func([]Coins) Coins

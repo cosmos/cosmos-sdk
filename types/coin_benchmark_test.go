@@ -88,7 +88,7 @@ func BenchmarkSumOfCoinAdds(b *testing.B) {
 				}
 				addCoins[i] = intersectCoins
 				for j := 0; j < coinsPerAdd; j++ {
-					addCoins[i] = addCoins[i].Add(NewCoin(coinName(j), NewInt(int64(i))))
+					addCoins[i] = addCoins[i].Add(NewCoin(coinName(i+j), NewInt(int64(i))))
 				}
 			}
 
@@ -131,7 +131,7 @@ func BenchmarkSumOfCoinAdds(b *testing.B) {
 			intersectingCoinsPerAdd := benchmarkSizes[i][1]
 			numAdds := benchmarkSizes[i][2]
 			sumFn := sumFns[j]
-			b.Run(fmt.Sprintf("Fn: %s, num adds: %d, coinsPerAdd: %d, non-interesecting: %d",
+			b.Run(fmt.Sprintf("Fn: %s, num adds: %d, coinsPerAdd: %d, intersecting: %d",
 				sumFn.name, numAdds, coinsPerAdd, intersectingCoinsPerAdd),
 				benchmarkingFunc(numAdds, coinsPerAdd, intersectingCoinsPerAdd, sumFn.fn))
 		}

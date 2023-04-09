@@ -25,7 +25,7 @@ func (m MapCoins) Add(coins ...Coin) {
 
 func (m MapCoins) ToCoins() Coins {
 	if len(m) == 0 {
-		return nil
+		return Coins{}
 	}
 	coins := make(Coins, 0, len(m))
 	for denom, amount := range m {
@@ -36,7 +36,7 @@ func (m MapCoins) ToCoins() Coins {
 	}
 	coins.Sort()
 	if len(coins) == 0 {
-		return nil
+		return Coins{}
 	}
 	return coins
 }

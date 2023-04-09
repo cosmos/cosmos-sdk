@@ -114,7 +114,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"HistoricalInfoKey",
 			v1.GetHistoricalInfoKey(4),
-			types.GetHistoricalInfoKey(4),
+			v2.GetHistoricalInfoKey(4),
 		},
 	}
 

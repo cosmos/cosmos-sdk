@@ -10,7 +10,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	v5 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v5"
 	stackingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
@@ -44,7 +44,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	for height := range testCases {
 		testCases[height] = testCase{
-			oldKey:         v1.GetHistoricalInfoKey(height),
+			oldKey:         v2.GetHistoricalInfoKey(height),
 			newKey:         stackingtypes.GetHistoricalInfoKey(height),
 			historicalInfo: cdc.MustMarshal(createHistoricalInfo(height, "testChainID")),
 		}

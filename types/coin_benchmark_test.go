@@ -70,3 +70,70 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 		b.Run(fmt.Sprintf("sizes: A_%d, B_%d", sizeA, sizeB), benchmarkingFunc(sizeA, sizeB))
 	}
 }
+
+func BenchmarkSumOfCoinAdds(b *testing.B) {
+	// This benchmark tests the performance of adding a large number of coins
+	// into a single coin set.
+	// it does numAdds additions, each addition has (numIntersectingCoins) that contian denoms
+	// already in the sum, and (coinsPerAdd - numIntersectingCoins) that are new denoms.
+	benchmarkingFunc := func(coinsPerAdd, numIntersectingCoins, numAdds int, sumFn func([]Coins) Coins) func(b *testing.B) {
+		return func(b *testing.B) {
+			b.ReportAllocs()
+			addCoins := make([]Coins, numAdds)
+
+			for i := 0; i < numAdds; i++ {
+				intersectCoins := make([]Coin, numIntersectingCoins)
+				for j := 0; j < numIntersectingCoins; j++ {
+					intersectCoins[j] = NewCoin(coinName(j), NewInt(int64(i)))
+				}
+				addCoins[i] = intersectCoins
+				for j := 0; j < coinsPerAdd; j++ {
+					addCoins[i] = addCoins[i].Add(NewCoin(coinName(j), NewInt(int64(i))))
+				}
+			}
+
+			b.ResetTimer()
+
+			for i := 0; i < b.N; i++ {
+				sum := Coins{}
+				for j := 0; j < numAdds; j++ {
+					sum = sum.Add(addCoins[j]...)
+				}
+			}
+		}
+	}
+
+	MapCoinsSumFn := func(coins []Coins) Coins {
+		sum := MapCoins{}
+		for _, coin := range coins {
+			sum.Add(coin...)
+		}
+		return sum.ToCoins()
+	}
+	CoinsSumFn := func(coins []Coins) Coins {
+		sum := Coins{}
+		for _, coin := range coins {
+			sum = sum.Add(coin...)
+		}
+		return sum
+	}
+
+	benchmarkSizes := [][]int{{5, 2, 1000}, {10, 1, 10000}, {10, 10, 10000}}
+	sumFns := []struct {
+		name string
+		fn   func([]Coins) Coins
+	}{
+		{"MapCoins", MapCoinsSumFn}, {"Coins", CoinsSumFn},
+	}
+	for i := 0; i < len(benchmarkSizes); i++ {
+		for j := 0; j < 2; j++ {
+			coinsPerAdd := benchmarkSizes[i][0]
+			intersectingCoinsPerAdd := benchmarkSizes[i][1]
+			numAdds := benchmarkSizes[i][2]
+			sumFn := sumFns[j]
+			b.Run(fmt.Sprintf("Fn: %s, num adds: %d, coinsPerAdd: %d, non-interesecting: %d",
+				sumFn.name, numAdds, coinsPerAdd, intersectingCoinsPerAdd),
+				benchmarkingFunc(numAdds, coinsPerAdd, intersectingCoinsPerAdd, sumFn.fn))
+		}
+	}
+}

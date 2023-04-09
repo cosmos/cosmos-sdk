@@ -1,7 +1,6 @@
 package msgservice
 
 import (
-	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
@@ -40,7 +39,7 @@ func ValidateProtoAnnotations(protoFiles *protoregistry.Files) error {
 		return true
 	})
 
-	return errors.Join(serviceErrs...)
+	return serviceErrs[0]
 }
 
 // validateMsgServiceAnnotations validates that the service has the

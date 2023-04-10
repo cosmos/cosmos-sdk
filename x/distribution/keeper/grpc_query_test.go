@@ -18,6 +18,8 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestGRPCParams(t *testing.T) {
@@ -449,7 +451,7 @@ func TestGRPCCommunityPool(t *testing.T) {
 	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
 
 	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), types.FeePool{
-		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(0)}),
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
 	})
 
 	// Register MsgServer and QueryServer
@@ -480,7 +482,7 @@ func TestGRPCCommunityPool(t *testing.T) {
 		{
 			name: "valid request",
 			malleate: func() {
-				amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+				amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
 				assert.NilError(t, f.bankKeeper.MintCoins(integrationApp.SDKContext(), types.ModuleName, amount))
 				assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.SDKContext(), types.ModuleName, addr, amount))
 
@@ -502,6 +504,139 @@ func TestGRPCCommunityPool(t *testing.T) {
 
 			assert.NilError(t, err)
 			assert.DeepEqual(t, expPool, pool)
+		})
+	}
+}
+
+func TestGRPCDelegationRewards(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
+	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
+	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
+
+	integrationApp := integration.NewIntegrationApp(t.Name(), log.NewTestLogger(t), f.keys, authModule, bankModule, stakingModule, distrModule)
+
+	f.distrKeeper.SetFeePool(integrationApp.SDKContext(), types.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(1000)}),
+	})
+
+	// set module account coins
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(integrationApp.SDKContext(), int64(1000))
+	f.bankKeeper.MintCoins(integrationApp.SDKContext(), types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+
+	// Set default staking params
+	f.stakingKeeper.SetParams(integrationApp.SDKContext(), stakingtypes.DefaultParams())
+
+	// Register MsgServer and QueryServer
+	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
+	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+
+	qr := integrationApp.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
+	addr := sdk.AccAddress(PKS[0].Address())
+	valAddr := sdk.ValAddress(addr)
+	addr2 := sdk.AccAddress(PKS[1].Address())
+	valAddr2 := sdk.ValAddress(addr2)
+	delAddr := sdk.AccAddress(PKS[2].Address())
+
+	// send funds to val addr
+	funds := f.stakingKeeper.TokensFromConsensusPower(integrationApp.SDKContext(), int64(1000))
+	f.bankKeeper.SendCoinsFromModuleToAccount(integrationApp.SDKContext(), types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+
+	initialStake := int64(10)
+	tstaking := stakingtestutil.NewHelper(t, integrationApp.SDKContext(), f.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(valAddr, valConsPk0, sdk.NewInt(initialStake), true)
+
+	val, found := f.stakingKeeper.GetValidator(integrationApp.SDKContext(), valAddr)
+	assert.Assert(t, found)
+
+	// setup delegation
+	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
+	validator, issuedShares := val.AddTokensFromDel(delTokens)
+	delegation := stakingtypes.NewDelegation(delAddr, valAddr, issuedShares)
+	f.stakingKeeper.SetDelegation(integrationApp.SDKContext(), delegation)
+	f.distrKeeper.SetDelegatorStartingInfo(integrationApp.SDKContext(), validator.GetOperator(), delAddr, types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20))
+
+	// setup validator rewards
+	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
+	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
+	f.distrKeeper.SetValidatorHistoricalRewards(integrationApp.SDKContext(), validator.GetOperator(), 2, historicalRewards)
+	// setup current rewards and outstanding rewards
+	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
+	f.distrKeeper.SetValidatorCurrentRewards(integrationApp.SDKContext(), valAddr, currentRewards)
+	f.distrKeeper.SetValidatorOutstandingRewards(integrationApp.SDKContext(), valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins})
+
+	expRes := &types.QueryDelegationRewardsResponse{
+		Rewards: sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},
+	}
+
+	// test command delegation rewards grpc
+	testCases := []struct {
+		name      string
+		msg       *types.QueryDelegationRewardsRequest
+		expPass   bool
+		expErrMsg string
+	}{
+		{
+			name:      "empty request",
+			msg:       &types.QueryDelegationRewardsRequest{},
+			expPass:   false,
+			expErrMsg: "empty delegator address",
+		},
+		{
+			name: "empty delegator address",
+			msg: &types.QueryDelegationRewardsRequest{
+				DelegatorAddress: "",
+				ValidatorAddress: valAddr.String(),
+			},
+			expPass:   false,
+			expErrMsg: "empty delegator address",
+		},
+		{
+			name: "empty validator address",
+			msg: &types.QueryDelegationRewardsRequest{
+				DelegatorAddress: addr2.String(),
+				ValidatorAddress: "",
+			},
+			expPass:   false,
+			expErrMsg: "empty validator address",
+		},
+		{
+			name: "request with wrong delegator and validator",
+			msg: &types.QueryDelegationRewardsRequest{
+				DelegatorAddress: addr2.String(),
+				ValidatorAddress: valAddr2.String(),
+			},
+			expPass:   false,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name: "valid request",
+			msg: &types.QueryDelegationRewardsRequest{
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valAddr.String(),
+			},
+			expPass: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		tc := testCase
+		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
+			rewards, err := queryClient.DelegationRewards(integrationApp.SDKContext(), tc.msg)
+
+			if tc.expPass {
+				assert.NilError(t, err)
+				assert.DeepEqual(t, expRes, rewards)
+			} else {
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, rewards == nil)
+			}
 		})
 	}
 }

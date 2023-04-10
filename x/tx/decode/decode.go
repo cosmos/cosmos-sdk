@@ -12,7 +12,7 @@ import (
 
 // DecodedTx contains the decoded transaction, its signers, and other flags.
 type DecodedTx struct {
-	msgs                         []proto.Message
+	Messages                     []proto.Message
 	Tx                           *v1beta1.Tx
 	TxRaw                        *v1beta1.TxRaw
 	Signers                      []string
@@ -121,18 +121,18 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	for _, anyMsg := range body.Messages {
 		msg, signerErr := anyutil.Unpack(anyMsg, d.protoFiles, d.typeResolver)
 		if signerErr != nil {
-			return nil, errors.Wrap(ErrTxDecode, err.Error())
+			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
 		}
 		msgs = append(msgs, msg)
 		ss, signerErr := d.getSignersCtx.GetSigners(msg)
 		if signerErr != nil {
-			return nil, errors.Wrap(ErrTxDecode, err.Error())
+			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
 		}
 		signers = append(signers, ss...)
 	}
 
 	return &DecodedTx{
-		msgs:                         msgs,
+		Messages:                     msgs,
 		Tx:                           theTx,
 		TxRaw:                        &raw,
 		TxBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,

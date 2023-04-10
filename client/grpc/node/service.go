@@ -51,7 +51,10 @@ func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusRespo
 	blockTime := sdkCtx.BlockTime()
 
 	return &StatusResponse{
-		// EarliestStoreHeight: sdkCtx.MultiStore(), // todo get earliest version from store
+		// TODO: Get earliest version from store.
+		//
+		// Ref: ...
+		// EarliestStoreHeight: sdkCtx.MultiStore(),
 		LatestBlockHeight:          uint64(sdkCtx.BlockHeight()),
 		LatestBlockHeightTimestamp: &blockTime,
 	}, nil

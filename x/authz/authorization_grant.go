@@ -53,6 +53,10 @@ func (g Grant) GetAuthorization() (Authorization, error) {
 }
 
 func (g Grant) ValidateBasic() error {
+	if g.Authorization == nil {
+		return sdkerrors.ErrInvalidType.Wrap("authorization is nil")
+	}
+
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {

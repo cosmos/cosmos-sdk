@@ -592,6 +592,12 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
 	}
 
+	app.voteExtensionState.ctx = app.voteExtensionState.ctx.
+		WithConsensusParams(cp).
+		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
+		WithBlockHeight(req.Height).
+		WithHeaderHash(req.Hash)
+
 	// add a deferred recover handler in case extendVote panics
 	defer func() {
 		if err := recover(); err != nil {

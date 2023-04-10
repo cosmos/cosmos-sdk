@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/x/tx/decode"
@@ -98,13 +99,30 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		}
 	}
 
+	return h.GetSignDocBytes(
+		signerData.AccountNumber, body.TimeoutHeight, signerData.ChainId,
+		signerData.Sequence, body.Memo, txData.Body.Messages, fee)
+}
+
+func (h SignModeHandler) GetSignDocBytes(
+	accountNumber uint64,
+	timeoutHeight uint64,
+	chainId string,
+	sequence uint64,
+	memo string,
+	msgs []*anypb.Any,
+	fee *aminojsonpb.AminoSignFee) ([]byte, error) {
+
+	if fee == nil {
+		fee = &aminojsonpb.AminoSignFee{}
+	}
 	signDoc := &aminojsonpb.AminoSignDoc{
-		AccountNumber: signerData.AccountNumber,
-		TimeoutHeight: body.TimeoutHeight,
-		ChainId:       signerData.ChainId,
-		Sequence:      signerData.Sequence,
-		Memo:          body.Memo,
-		Msgs:          txData.Body.Messages,
+		AccountNumber: accountNumber,
+		TimeoutHeight: timeoutHeight,
+		ChainId:       chainId,
+		Sequence:      sequence,
+		Memo:          memo,
+		Msgs:          msgs,
 		Fee:           fee,
 	}
 

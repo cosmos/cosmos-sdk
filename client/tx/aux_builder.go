@@ -1,15 +1,18 @@
 package tx
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"fmt"
 
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	"cosmossdk.io/x/tx/signing/aminojson"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // AuxTxBuilder is a client-side builder for creating an AuxSignerData.
@@ -18,15 +21,19 @@ type AuxTxBuilder struct {
 	// TxBuilder. It's also added inside body.Messages, because:
 	// - b.msgs is used for constructing the AMINO sign bz,
 	// - b.body is used for constructing the DIRECT_AUX sign bz.
-	msgs          []sdk.Msg
-	body          *tx.TxBody
-	auxSignerData *tx.AuxSignerData
+	msgs             []sdk.Msg
+	body             *tx.TxBody
+	auxSignerData    *tx.AuxSignerData
+	aminoJSONHandler *aminojson.SignModeHandler
 }
 
 // NewAuxTxBuilder creates a new client-side builder for constructing an
 // AuxSignerData.
 func NewAuxTxBuilder() AuxTxBuilder {
-	return AuxTxBuilder{}
+	auxTxBuilder := AuxTxBuilder{
+		aminoJSONHandler: aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{}),
+	}
+	return auxTxBuilder
 }
 
 // SetAddress sets the aux signer's bech32 address.
@@ -190,16 +197,30 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 		}
 	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		{
-			signBz = legacytx.StdSignBytes(
-				b.auxSignerData.SignDoc.ChainId, b.auxSignerData.SignDoc.AccountNumber,
-				b.auxSignerData.SignDoc.Sequence, b.body.TimeoutHeight,
-				// Aux signer never signs over fee.
-				// For LEGACY_AMINO_JSON, we use the convention to sign
-				// over empty fees.
-				// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
-				legacytx.StdFee{},
-				b.msgs, b.body.Memo, b.auxSignerData.SignDoc.Tip,
-			)
+			if sd.Tip != nil {
+				if sd.Tip.Tipper == "" {
+					panic(fmt.Errorf("tipper cannot be empty"))
+				}
+			}
+
+			txMsgs := make([]*anypb.Any, len(b.msgs))
+			for _, msg := range b.body.Messages {
+				msgAny := &anypb.Any{
+					TypeUrl: msg.TypeUrl,
+					Value:   msg.Value,
+				}
+				txMsgs = append(txMsgs, msgAny)
+			}
+
+			// Aux signer never signs over fee.
+			// For LEGACY_AMINO_JSON, we use the convention to sign
+			// over empty fees.
+			// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
+			signBz, err = b.aminoJSONHandler.GetSignDocBytes(
+				sd.AccountNumber, b.body.TimeoutHeight, sd.ChainId, sd.Sequence, b.body.Memo, txMsgs, nil)
+			if err != nil {
+				return nil, err
+			}
 		}
 	default:
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got unknown sign mode %s", b.auxSignerData.Mode)

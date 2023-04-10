@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cockroachdb/errors"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -31,27 +33,42 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
 
-	// this is a relative index, so it counts blocks the validator *should* have signed
-	// will use the 0-value default signing info if not present, except for start height
+	// Compute the relative index, so we count the blocks the validator *should*
+	// have signed. We will use the 0-value default signing info if not present,
+	// except for start height. The index is in the range [0, SignedBlocksWindow)
+	// and is used to see if a validator signed a block at the given height, which
+	// is represented by a bit in the bitmap.
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
 
-	// Update signed block bit array & counter
-	// This counter just tracks the sum of the bit array
-	// That way we avoid needing to read/write the whole array each time
-	previous := k.GetValidatorMissedBlockBitArray(ctx, consAddr, index)
+	// determine if the validator signed the previous block
+	previous, err := k.GetMissedBlockBitmapValue(ctx, consAddr, index)
+	if err != nil {
+		panic(errors.Wrap(err, "failed to get the validator's bitmap value"))
+	}
+
 	missed := !signed
 	switch {
 	case !previous && missed:
-		// Array value has changed from not missed to missed, increment counter
-		k.SetValidatorMissedBlockBitArray(ctx, consAddr, index, true)
+		// Bitmap value has changed from not missed to missed, so we flip the bit
+		// and increment the counter.
+		if err := k.SetMissedBlockBitmapValue(ctx, consAddr, index, true); err != nil {
+			panic(err)
+		}
+
 		signInfo.MissedBlocksCounter++
+
 	case previous && !missed:
-		// Array value has changed from missed to not missed, decrement counter
-		k.SetValidatorMissedBlockBitArray(ctx, consAddr, index, false)
+		// Bitmap value has changed from missed to not missed, so we flip the bit
+		// and decrement the counter.
+		if err := k.SetMissedBlockBitmapValue(ctx, consAddr, index, false); err != nil {
+			panic(err)
+		}
+
 		signInfo.MissedBlocksCounter--
+
 	default:
-		// Array value at this index has not changed, no need to update counter
+		// bitmap value at this index has not changed, no need to update counter
 	}
 
 	minSignedPerWindow := k.MinSignedPerWindow(ctx)
@@ -105,10 +122,11 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
 
-			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
+			// We need to reset the counter & bitmap so that the validator won't be
+			// immediately slashed for downtime upon re-bonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0
-			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
+			k.DeleteMissedBlockBitmap(ctx, consAddr)
 
 			logger.Info(
 				"slashing and jailing validator due to liveness fault",

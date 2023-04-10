@@ -4,20 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -26,21 +18,9 @@ func TestGRPCParams(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
-	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
-	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
+	f.distrKeeper.SetParams(f.sdkCtx, types.DefaultParams())
 
-	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
-	// Register MsgServer and QueryServer
-	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
-
-	f.distrKeeper.SetParams(sdkCtx, types.DefaultParams())
-
-	qr := integrationApp.QueryHelper()
+	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	var (
@@ -71,7 +51,7 @@ func TestGRPCParams(t *testing.T) {
 					WithdrawAddrEnabled: true,
 				}
 
-				assert.NilError(t, f.distrKeeper.SetParams(sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
 				expParams = params
 			},
 			msg: &types.QueryParamsRequest{},
@@ -82,7 +62,7 @@ func TestGRPCParams(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
 			tc.malleate()
 
-			paramsRes, err := queryClient.Params(sdkCtx, tc.msg)
+			paramsRes, err := queryClient.Params(f.sdkCtx, tc.msg)
 			assert.NilError(t, err)
 			assert.Assert(t, paramsRes != nil)
 			assert.DeepEqual(t, paramsRes.Params, expParams)
@@ -95,23 +75,11 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
-	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
-	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
-
-	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
 	// set module account coins
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
-	f.bankKeeper.MintCoins(sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
 
-	// Register MsgServer and QueryServer
-	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
-
-	qr := integrationApp.QueryHelper()
+	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	valCommission := sdk.DecCoins{
@@ -123,17 +91,17 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	valAddr := sdk.ValAddress(addr)
 
 	// send funds to val addr
-	funds := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
-	f.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
 
 	initialStake := int64(10)
-	tstaking := stakingtestutil.NewHelper(t, sdkCtx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	// set outstanding rewards
-	f.distrKeeper.SetValidatorOutstandingRewards(sdkCtx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
-	rewards := f.distrKeeper.GetValidatorOutstandingRewards(sdkCtx, valAddr)
+	f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	rewards := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, valAddr)
 
 	testCases := []struct {
 		name      string
@@ -163,7 +131,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
-			validatorOutstandingRewards, err := queryClient.ValidatorOutstandingRewards(sdkCtx, tc.msg)
+			validatorOutstandingRewards, err := queryClient.ValidatorOutstandingRewards(f.sdkCtx, tc.msg)
 
 			if tc.expPass {
 				assert.NilError(t, err)
@@ -181,39 +149,27 @@ func TestGRPCValidatorCommission(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
-	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
-	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
-
-	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
 	// set module account coins
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
-	f.bankKeeper.MintCoins(sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
 
-	// Register MsgServer and QueryServer
-	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
-
-	qr := integrationApp.QueryHelper()
+	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	valAddr := sdk.ValAddress(addr)
 
 	// send funds to val addr
-	funds := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
-	f.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
 
 	initialStake := int64(10)
-	tstaking := stakingtestutil.NewHelper(t, sdkCtx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	commission := sdk.DecCoins{{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
-	f.distrKeeper.SetValidatorAccumulatedCommission(sdkCtx, valAddr, types.ValidatorAccumulatedCommission{Commission: commission})
+	f.distrKeeper.SetValidatorAccumulatedCommission(f.sdkCtx, valAddr, types.ValidatorAccumulatedCommission{Commission: commission})
 
 	testCases := []struct {
 		name      string
@@ -243,7 +199,7 @@ func TestGRPCValidatorCommission(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
-			commissionRes, err := queryClient.ValidatorCommission(sdkCtx, tc.msg)
+			commissionRes, err := queryClient.ValidatorCommission(f.sdkCtx, tc.msg)
 
 			if tc.expPass {
 				assert.NilError(t, err)
@@ -261,19 +217,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
-	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
-	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
-
-	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
-	// Register MsgServer and QueryServer
-	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
-
-	qr := integrationApp.QueryHelper()
+	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	addr := sdk.AccAddress(PKS[0].Address())
@@ -289,7 +233,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	}
 
 	for i, slash := range slashes {
-		f.distrKeeper.SetValidatorSlashEvent(sdkCtx, valAddr, uint64(i+2), 0, slash)
+		f.distrKeeper.SetValidatorSlashEvent(f.sdkCtx, valAddr, uint64(i+2), 0, slash)
 	}
 
 	var (
@@ -407,7 +351,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
 			tc.malleate()
 
-			slashesRes, err := queryClient.ValidatorSlashes(sdkCtx, req)
+			slashesRes, err := queryClient.ValidatorSlashes(f.sdkCtx, req)
 
 			if tc.expPass {
 				assert.NilError(t, err)
@@ -424,27 +368,15 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
-	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
-	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
+	f.distrKeeper.SetParams(f.sdkCtx, types.DefaultParams())
 
-	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
-	f.distrKeeper.SetParams(sdkCtx, types.DefaultParams())
-
-	// Register MsgServer and QueryServer
-	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
-
-	qr := integrationApp.QueryHelper()
+	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	addr2 := sdk.AccAddress(PKS[1].Address())
 
-	err := f.distrKeeper.SetWithdrawAddr(sdkCtx, addr, addr2)
+	err := f.distrKeeper.SetWithdrawAddr(f.sdkCtx, addr, addr2)
 	assert.Assert(t, err == nil)
 
 	testCases := []struct {
@@ -469,7 +401,7 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
-			withdrawAddress, err := queryClient.DelegatorWithdrawAddress(sdkCtx, tc.msg)
+			withdrawAddress, err := queryClient.DelegatorWithdrawAddress(f.sdkCtx, tc.msg)
 
 			if tc.expPass {
 				assert.NilError(t, err)
@@ -486,23 +418,11 @@ func TestGRPCCommunityPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
-	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
-	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
-
-	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
-	f.distrKeeper.SetFeePool(sdkCtx, types.FeePool{
+	f.distrKeeper.SetFeePool(f.sdkCtx, types.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
 	})
 
-	// Register MsgServer and QueryServer
-	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
-
-	qr := integrationApp.QueryHelper()
+	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	addr := sdk.AccAddress(PKS[0].Address())
@@ -527,10 +447,10 @@ func TestGRPCCommunityPool(t *testing.T) {
 			name: "valid request",
 			malleate: func() {
 				amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
-				assert.NilError(t, f.bankKeeper.MintCoins(sdkCtx, types.ModuleName, amount))
-				assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, addr, amount))
+				assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, amount))
+				assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, addr, amount))
 
-				err := f.distrKeeper.FundCommunityPool(sdkCtx, amount, addr)
+				err := f.distrKeeper.FundCommunityPool(f.sdkCtx, amount, addr)
 				assert.Assert(t, err == nil)
 				req = &types.QueryCommunityPoolRequest{}
 
@@ -544,7 +464,7 @@ func TestGRPCCommunityPool(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
 			testCase.malleate()
 
-			pool, err := queryClient.CommunityPool(sdkCtx, req)
+			pool, err := queryClient.CommunityPool(f.sdkCtx, req)
 
 			assert.NilError(t, err)
 			assert.DeepEqual(t, expPool, pool)
@@ -556,30 +476,18 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
-	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
-	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
-
-	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
-	f.distrKeeper.SetFeePool(sdkCtx, types.FeePool{
+	f.distrKeeper.SetFeePool(f.sdkCtx, types.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(1000)}),
 	})
 
 	// set module account coins
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
-	f.bankKeeper.MintCoins(sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
 
 	// Set default staking params
-	f.stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
+	f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams())
 
-	// Register MsgServer and QueryServer
-	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
-
-	qr := integrationApp.QueryHelper()
+	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	addr := sdk.AccAddress(PKS[0].Address())
@@ -589,32 +497,32 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	delAddr := sdk.AccAddress(PKS[2].Address())
 
 	// send funds to val addr
-	funds := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
-	f.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
 
 	initialStake := int64(10)
-	tstaking := stakingtestutil.NewHelper(t, sdkCtx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
-	val, found := f.stakingKeeper.GetValidator(sdkCtx, valAddr)
+	val, found := f.stakingKeeper.GetValidator(f.sdkCtx, valAddr)
 	assert.Assert(t, found)
 
 	// setup delegation
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator, issuedShares := val.AddTokensFromDel(delTokens)
 	delegation := stakingtypes.NewDelegation(delAddr, valAddr, issuedShares)
-	f.stakingKeeper.SetDelegation(sdkCtx, delegation)
-	f.distrKeeper.SetDelegatorStartingInfo(sdkCtx, validator.GetOperator(), delAddr, types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20))
+	f.stakingKeeper.SetDelegation(f.sdkCtx, delegation)
+	f.distrKeeper.SetDelegatorStartingInfo(f.sdkCtx, validator.GetOperator(), delAddr, types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20))
 
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	f.distrKeeper.SetValidatorHistoricalRewards(sdkCtx, validator.GetOperator(), 2, historicalRewards)
+	f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards)
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
-	f.distrKeeper.SetValidatorCurrentRewards(sdkCtx, valAddr, currentRewards)
-	f.distrKeeper.SetValidatorOutstandingRewards(sdkCtx, valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins})
+	f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, valAddr, currentRewards)
+	f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins})
 
 	expRes := &types.QueryDelegationRewardsResponse{
 		Rewards: sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},
@@ -673,7 +581,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
-			rewards, err := queryClient.DelegationRewards(sdkCtx, tc.msg)
+			rewards, err := queryClient.DelegationRewards(f.sdkCtx, tc.msg)
 
 			if tc.expPass {
 				assert.NilError(t, err)

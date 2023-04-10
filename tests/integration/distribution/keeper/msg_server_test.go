@@ -81,7 +81,7 @@ func initFixture(t assert.TestingT) *fixture {
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, keys[distrtypes.StoreKey], accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName, authority.String(),
+		cdc, keys[distrtypes.StoreKey], accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
 
 	f.cdc = cdc
@@ -201,7 +201,11 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := f.app.RunMsg(tc.msg)
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticCommit(),
+			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -275,7 +279,11 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			tc.preRun()
-			res, err := f.app.RunMsg(tc.msg)
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticCommit(),
+			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 
@@ -359,7 +367,11 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := f.app.RunMsg(tc.msg)
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticCommit(),
+			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -439,7 +451,11 @@ func TestMsgFundCommunityPool(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := f.app.RunMsg(tc.msg)
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticCommit(),
+			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -561,7 +577,11 @@ func TestMsgUpdateParams(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := f.app.RunMsg(tc.msg)
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticCommit(),
+			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -635,7 +655,11 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := f.app.RunMsg(tc.msg)
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticCommit(),
+			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -728,7 +752,11 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := f.app.RunMsg(tc.msg)
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticCommit(),
+			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {

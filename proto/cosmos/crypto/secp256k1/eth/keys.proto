@@ -1,17 +1,17 @@
 syntax = "proto3";
-package cosmos.crypto.secp256k1;
+package cosmos.crypto.secp256k1.eth;
 
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1";
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/eth";
 
 // PubKey defines a secp256k1 public key
 // Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
 // if the y-coordinate is the lexicographically largest of the two associated with
 // the x-coordinate. Otherwise the first byte is a 0x03.
 // This prefix is followed with the x-coordinate.
-message EthPubKey {
+message PubKey {
   option (amino.name) = "eth/PubKeySecp256k1";
   // The Amino encoding is simply the inner bytes field, and not the Amino
   // encoding of the whole PubKey struct.
@@ -30,7 +30,7 @@ message EthPubKey {
 }
 
 // PrivKey defines a secp256k1 private key.
-message EthPrivKey {
+message PrivKey {
   option (amino.name)             = "eth/PrivKeySecp256k1";
   option (amino.message_encoding) = "key_field";
 

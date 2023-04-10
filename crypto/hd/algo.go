@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/go-bip39"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	ethsecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/eth"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -108,9 +109,9 @@ func (s ethSecp256k1Algo) Derive() DeriveFn {
 // Generate generates a eth_secp256k1 private key from the given bytes.
 func (s ethSecp256k1Algo) Generate() GenerateFn {
 	return func(bz []byte) types.PrivKey {
-		bzArr := make([]byte, secp256k1.EthPrivKeySize)
+		bzArr := make([]byte, ethsecp256k1.PrivKeySize)
 		copy(bzArr, bz)
-		return &secp256k1.EthPrivKey{
+		return &ethsecp256k1.PrivKey{
 			Key: bzArr,
 		}
 	}
@@ -119,11 +120,11 @@ func (s ethSecp256k1Algo) Generate() GenerateFn {
 // `ECDSAify` converts a private key to an ECDSA private key.
 func ECDSAify(key []byte) ([]byte, error) {
 	// Convert the private key to an ECDSA private key.
-	x, err := secp256k1.EthPrivKey{Key: key}.ToECDSA()
+	x, err := ethsecp256k1.PrivKey{Key: key}.ToECDSA()
 	if err != nil {
 		return nil, err
 	}
 
 	// Return the private key as a byte slice.
-	return secp256k1.FromECDSA(x), nil
+	return ethsecp256k1.FromECDSA(x), nil
 }

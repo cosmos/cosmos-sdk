@@ -1,4 +1,4 @@
-package secp256k1
+package eth
 
 import (
 	"bytes"
@@ -19,16 +19,16 @@ import (
 )
 
 var (
-	_ cryptotypes.PrivKey  = &EthPrivKey{}
-	_ codec.AminoMarshaler = &EthPrivKey{}
+	_ cryptotypes.PrivKey  = &PrivKey{}
+	_ codec.AminoMarshaler = &PrivKey{}
 )
 
 const (
-	EthPrivKeySize     = 32
-	EthPubKeySize      = EthPrivKeySize + 1
+	PrivKeySize        = 32
+	PubKeySize         = PrivKeySize + 1
 	ethkeyType         = "ethsecp256k1"
-	EthPrivKeyName     = "eth/PrivKeySecp256k1"
-	EthPubKeyName      = "eth/PubKeySecp256k1"
+	PrivKeyName        = "eth/PrivKeySecp256k1"
+	PubKeyName         = "eth/PubKeySecp256k1"
 	RecoveryIDOffset   = 64
 	EthSignatureLength = RecoveryIDOffset + 1
 	DigestLength       = 32
@@ -48,56 +48,56 @@ const ()
 
 // GenerateKey generates a new random private key. It returns an error upon
 // failure.
-func GenerateKey() (*EthPrivKey, error) {
+func GenerateKey() (*PrivKey, error) {
 	priv, err := ecdsa.GenerateKey(secp.S256(), rand.Reader)
 	// priv, err := crypto.GenerateKey()
 	if err != nil {
 		return nil, err
 	}
 
-	return &EthPrivKey{
+	return &PrivKey{
 		Key: FromECDSA(priv),
 	}, nil
 }
 
 // Bytes returns the byte representation of the ECDSA Private Key.
-func (privKey EthPrivKey) Bytes() []byte {
+func (privKey PrivKey) Bytes() []byte {
 	bz := make([]byte, len(privKey.Key))
 	copy(bz, privKey.Key)
 
 	return bz
 }
 
-// EthPubKey returns the ECDSA private key's public key. If the privkey is not valid
+// PubKey returns the ECDSA private key's public key. If the privkey is not valid
 // it returns a nil value.
-func (privKey EthPrivKey) PubKey() cryptotypes.PubKey {
+func (privKey PrivKey) PubKey() cryptotypes.PubKey {
 	ecdsaPrivKey, err := privKey.ToECDSA()
 	if err != nil {
 		return nil
 	}
 
-	return &EthPubKey{
+	return &PubKey{
 		Key: secp.CompressPubkey(ecdsaPrivKey.PublicKey.X, ecdsaPrivKey.PublicKey.Y),
 	}
 }
 
 // Equals returns true if two ECDSA private keys are equal and false otherwise.
-func (privKey EthPrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
+func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 	return privKey.Type() == other.Type() && subtle.ConstantTimeCompare(privKey.Bytes(), other.Bytes()) == 1
 }
 
 // Type returns eth_secp256k1
-func (privKey EthPrivKey) Type() string {
+func (privKey PrivKey) Type() string {
 	return ethkeyType
 }
 
 // MarshalAmino overrides Amino binary marshaling.
-func (privKey EthPrivKey) MarshalAmino() ([]byte, error) {
+func (privKey PrivKey) MarshalAmino() ([]byte, error) {
 	return privKey.Key, nil
 }
 
 // UnmarshalAmino overrides Amino binary marshaling.
-func (privKey *EthPrivKey) UnmarshalAmino(bz []byte) error {
+func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PrivKeySize {
 		return fmt.Errorf("invalid privkey size, expected %d got %d", PrivKeySize, len(bz))
 	}
@@ -107,21 +107,21 @@ func (privKey *EthPrivKey) UnmarshalAmino(bz []byte) error {
 }
 
 // MarshalAminoJSON overrides Amino JSON marshaling.
-func (privKey EthPrivKey) MarshalAminoJSON() ([]byte, error) {
+func (privKey PrivKey) MarshalAminoJSON() ([]byte, error) {
 	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
 	// just its contents (i.e. the key bytes).
 	return privKey.MarshalAmino()
 }
 
 // UnmarshalAminoJSON overrides Amino JSON marshaling.
-func (privKey *EthPrivKey) UnmarshalAminoJSON(bz []byte) error {
+func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 	return privKey.UnmarshalAmino(bz)
 }
 
 // Sign creates a recoverable ECDSA signature on the secp256k1 curve over the
 // provided hash of the message. The produced signature is 65 bytes
 // where the last byte contains the recovery ID.
-func (privKey EthPrivKey) Sign(digestBz []byte) ([]byte, error) {
+func (privKey PrivKey) Sign(digestBz []byte) ([]byte, error) {
 	if len(digestBz) != DigestLength {
 		digestBz = Keccak256(digestBz)
 	}
@@ -144,7 +144,7 @@ func (privKey EthPrivKey) Sign(digestBz []byte) ([]byte, error) {
 }
 
 // ToECDSA returns the ECDSA private key as a reference to ecdsa.PrivateKey type.
-func (privKey EthPrivKey) ToECDSA() (*ecdsa.PrivateKey, error) {
+func (privKey PrivKey) ToECDSA() (*ecdsa.PrivateKey, error) {
 	priv := new(ecdsa.PrivateKey)
 	priv.PublicKey.Curve = secp.S256()
 	if 8*len(privKey.Key) != priv.Params().BitSize {
@@ -172,13 +172,13 @@ func (privKey EthPrivKey) ToECDSA() (*ecdsa.PrivateKey, error) {
 // secp256k1 Public Key
 
 var (
-	_ cryptotypes.PubKey   = &EthPubKey{}
-	_ codec.AminoMarshaler = &EthPubKey{}
+	_ cryptotypes.PubKey   = &PubKey{}
+	_ codec.AminoMarshaler = &PubKey{}
 )
 
 // Address returns the address of the ECDSA public key.
 // The function will return an empty address if the public key is invalid.
-func (pubKey EthPubKey) Address() cmtcrypto.Address {
+func (pubKey PubKey) Address() cmtcrypto.Address {
 	pubk, err := DecompressPubkey(pubKey.Key)
 	if err != nil || pubk == nil {
 		return nil
@@ -188,7 +188,7 @@ func (pubKey EthPubKey) Address() cmtcrypto.Address {
 }
 
 // Bytes returns the raw bytes of the ECDSA public key.
-func (pubKey EthPubKey) Bytes() []byte {
+func (pubKey PubKey) Bytes() []byte {
 	bz := make([]byte, len(pubKey.Key))
 	copy(bz, pubKey.Key)
 
@@ -196,27 +196,27 @@ func (pubKey EthPubKey) Bytes() []byte {
 }
 
 // String implements the fmt.Stringer interface.
-func (pubKey EthPubKey) String() string {
-	return fmt.Sprintf("EthPubKeySecp256k1{%X}", pubKey.Key)
+func (pubKey PubKey) String() string {
+	return fmt.Sprintf("PubKeySecp256k1{%X}", pubKey.Key)
 }
 
 // Type returns eth_secp256k1
-func (pubKey EthPubKey) Type() string {
+func (pubKey PubKey) Type() string {
 	return ethkeyType
 }
 
 // Equals returns true if the pubkey type is the same and their bytes are deeply equal.
-func (pubKey EthPubKey) Equals(other cryptotypes.PubKey) bool {
+func (pubKey PubKey) Equals(other cryptotypes.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
 }
 
 // MarshalAmino overrides Amino binary marshaling.
-func (pubKey EthPubKey) MarshalAmino() ([]byte, error) {
+func (pubKey PubKey) MarshalAmino() ([]byte, error) {
 	return pubKey.Key, nil
 }
 
 // UnmarshalAmino overrides Amino binary marshaling.
-func (pubKey *EthPubKey) UnmarshalAmino(bz []byte) error {
+func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PubKeySize {
 		return errorsmod.Wrapf(errortypes.ErrInvalidPubKey, "invalid pubkey size, expected %d, got %d", PubKeySize, len(bz))
 	}
@@ -226,14 +226,14 @@ func (pubKey *EthPubKey) UnmarshalAmino(bz []byte) error {
 }
 
 // MarshalAminoJSON overrides Amino JSON marshaling.
-func (pubKey EthPubKey) MarshalAminoJSON() ([]byte, error) {
+func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
 	// just its contents (i.e. the key bytes).
 	return pubKey.MarshalAmino()
 }
 
 // UnmarshalAminoJSON overrides Amino JSON marshaling.
-func (pubKey *EthPubKey) UnmarshalAminoJSON(bz []byte) error {
+func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
 }
 
@@ -243,12 +243,12 @@ func (pubKey *EthPubKey) UnmarshalAminoJSON(bz []byte) error {
 // from the original message.
 //
 // CONTRACT: The signature should be in [R || S] format.
-func (pubKey EthPubKey) VerifySignature(msg, sig []byte) bool {
+func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
 	return pubKey.verifySignatureECDSA(msg, sig)
 }
 
 // Perform standard ECDSA signature verification for the given raw bytes and signature.
-func (pubKey EthPubKey) verifySignatureECDSA(msg, sig []byte) bool {
+func (pubKey PubKey) verifySignatureECDSA(msg, sig []byte) bool {
 	if len(sig) == EthSignatureLength {
 		// remove recovery ID (V) if contained in the signature
 		sig = sig[:len(sig)-1]

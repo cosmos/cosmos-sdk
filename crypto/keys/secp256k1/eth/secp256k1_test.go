@@ -1,4 +1,4 @@
-package secp256k1
+package eth
 
 import (
 	"crypto/ecdsa"
@@ -56,7 +56,7 @@ func TestPrivKey_PubKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// validate type and equality
-	pubKey := &EthPubKey{
+	pubKey := &PubKey{
 		Key: privKey.PubKey().Bytes(),
 	}
 	require.Implements(t, (*cryptotypes.PubKey)(nil), pubKey)
@@ -81,7 +81,7 @@ func TestMarshalAmino(t *testing.T) {
 	privKey, err := GenerateKey()
 	require.NoError(t, err)
 
-	pubKey := privKey.PubKey().(*EthPubKey)
+	pubKey := privKey.PubKey().(*PubKey)
 
 	testCases := []struct {
 		desc      string
@@ -93,14 +93,14 @@ func TestMarshalAmino(t *testing.T) {
 		{
 			"ethsecp256k1 private key",
 			privKey,
-			&EthPrivKey{},
+			&PrivKey{},
 			append([]byte{32}, privKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(privKey.Bytes()) + "\"",
 		},
 		{
 			"ethsecp256k1 public key",
 			pubKey,
-			&EthPubKey{},
+			&PubKey{},
 			append([]byte{33}, pubKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(pubKey.Bytes()) + "\"",
 		},

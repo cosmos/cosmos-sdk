@@ -21,19 +21,15 @@ type AuxTxBuilder struct {
 	// TxBuilder. It's also added inside body.Messages, because:
 	// - b.msgs is used for constructing the AMINO sign bz,
 	// - b.body is used for constructing the DIRECT_AUX sign bz.
-	msgs             []sdk.Msg
-	body             *tx.TxBody
-	auxSignerData    *tx.AuxSignerData
-	aminoJSONHandler *aminojson.SignModeHandler
+	msgs          []sdk.Msg
+	body          *tx.TxBody
+	auxSignerData *tx.AuxSignerData
 }
 
 // NewAuxTxBuilder creates a new client-side builder for constructing an
 // AuxSignerData.
 func NewAuxTxBuilder() AuxTxBuilder {
-	auxTxBuilder := AuxTxBuilder{
-		aminoJSONHandler: aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{}),
-	}
-	return auxTxBuilder
+	return AuxTxBuilder{}
 }
 
 // SetAddress sets the aux signer's bech32 address.
@@ -197,6 +193,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 		}
 	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		{
+			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
 			if sd.Tip != nil {
 				if sd.Tip.Tipper == "" {
 					panic(fmt.Errorf("tipper cannot be empty"))
@@ -216,7 +213,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 			// For LEGACY_AMINO_JSON, we use the convention to sign
 			// over empty fees.
 			// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
-			signBz, err = b.aminoJSONHandler.GetSignDocBytes(
+			signBz, err = handler.GetSignDocBytes(
 				sd.AccountNumber, b.body.TimeoutHeight, sd.ChainId, sd.Sequence, b.body.Memo, txMsgs, nil)
 			if err != nil {
 				return nil, err

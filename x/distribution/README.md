@@ -517,6 +517,11 @@ The distribution module contains the following parameters:
 * [0] `communitytax` must be positive and cannot exceed 1.00.
 * `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.
 
+:::note
+The reserve pool is the pool of collected funds for use by governance taken via the `CommunityTax`.
+Currently with the Cosmos SDK, tokens collected by the CommunityTax are accounted for but unspendable.
+:::
+
 ## Client
 
 ## CLI

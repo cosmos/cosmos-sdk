@@ -17,22 +17,10 @@ type StdoutPlugin struct {
 	BlockHeight int64
 }
 
-func (a *StdoutPlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
-	a.BlockHeight = req.Header.Height
+func (a *StdoutPlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
+	a.BlockHeight = req.Height
 	// process tx messages (i.e: sent to external system)
-	fmt.Printf("listen-begin-block: block-height=%d req=%v res=%v", a.BlockHeight, req, res)
-	return nil
-}
-
-func (a *StdoutPlugin) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
-	// process end block messages (i.e: sent to external system)
-	fmt.Printf("listen-end-block: block-height=%d req=%v res=%v", a.BlockHeight, req, res)
-	return nil
-}
-
-func (a *StdoutPlugin) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
-	// process tx messages (i.e: sent to external system)
-	fmt.Printf("listen-deliver-tx: block-height=%d req=%v res=%v", a.BlockHeight, req, res)
+	fmt.Printf("listen-finalize-block: block-height=%d req=%v res=%v", a.BlockHeight, req, res)
 	return nil
 }
 

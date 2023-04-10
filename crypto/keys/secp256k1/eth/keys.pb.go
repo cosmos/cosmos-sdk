@@ -44,8 +44,7 @@ func (m *PubKey) XXX_Unmarshal(b []byte) error {
 func (m *PubKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_PubKey.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
+	} else { 
 		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err

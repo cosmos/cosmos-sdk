@@ -1,11 +1,10 @@
 package hd
 
 import (
-	"github.com/cosmos/go-bip39"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	ethsecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/eth"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/eth"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/go-bip39"
 )
 
 // PubKeyType defines an algorithm to derive key-pairs which can be used for cryptographic signing.
@@ -25,23 +24,26 @@ const (
 	Sr25519Type = PubKeyType("sr25519")
 )
 
-// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
-var Secp256k1 = secp256k1Algo{}
+var (
+	// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
+	Secp256k1 = secp256k1Algo{keyType: Secp256k1Type}
+	// Secp256k1 uses the Ethereum secp256k1 ECDSA parameters.
+	EthSecp256k1 = secp256k1Algo{keyType: EthSecp256k1Type}
+)
 
 type (
 	DeriveFn   func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error)
 	GenerateFn func(bz []byte) types.PrivKey
 )
 
-type WalletGenerator interface {
-	Derive(mnemonic, bip39Passphrase, hdPath string) ([]byte, error)
-	Generate(bz []byte) types.PrivKey
+// secp256k1Algo represents a key derivation algorithmn.
+type secp256k1Algo struct {
+	keyType PubKeyType
 }
 
-type secp256k1Algo struct{}
-
+// Name returns the keyType of the algorithmn.
 func (s secp256k1Algo) Name() PubKeyType {
-	return Secp256k1Type
+	return s.keyType
 }
 
 // Derive derives and returns the secp256k1 private key for the given seed and HD path.
@@ -56,9 +58,8 @@ func (s secp256k1Algo) Derive() DeriveFn {
 		if len(hdPath) == 0 {
 			return masterPriv[:], nil
 		}
-		derivedKey, err := DerivePrivateKeyForPath(masterPriv, ch, hdPath)
 
-		return derivedKey, err
+		return DerivePrivateKeyForPath(masterPriv, ch, hdPath)
 	}
 }
 
@@ -67,64 +68,9 @@ func (s secp256k1Algo) Generate() GenerateFn {
 	return func(bz []byte) types.PrivKey {
 		bzArr := make([]byte, secp256k1.PrivKeySize)
 		copy(bzArr, bz)
-
-		return &secp256k1.PrivKey{Key: bzArr}
-	}
-}
-
-var (
-	// EthSecp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
-	EthSecp256k1 = ethSecp256k1Algo{}
-)
-
-type ethSecp256k1Algo struct{}
-
-// Name returns eth_secp256k1
-func (s ethSecp256k1Algo) Name() PubKeyType {
-	return EthSecp256k1Type
-}
-
-// `Derive` derives and returns the eth_secp256k1 private key for the given mnemonic and HD path.
-func (s ethSecp256k1Algo) Derive() DeriveFn {
-	return func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error) {
-		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
-		if err != nil {
-			return nil, err
+		if s.keyType == EthSecp256k1Type {
+			return &eth.PrivKey{Key: bz}
 		}
-
-		masterPriv, ch := ComputeMastersFromSeed(seed)
-		if len(hdPath) == 0 {
-			return ECDSAify(masterPriv[:])
-		}
-
-		derivedKey, err := DerivePrivateKeyForPath(masterPriv, ch, hdPath)
-		if err != nil {
-			return nil, err
-		}
-
-		return ECDSAify(derivedKey)
+		return &secp256k1.PrivKey{Key: bz}
 	}
-}
-
-// Generate generates a eth_secp256k1 private key from the given bytes.
-func (s ethSecp256k1Algo) Generate() GenerateFn {
-	return func(bz []byte) types.PrivKey {
-		bzArr := make([]byte, ethsecp256k1.PrivKeySize)
-		copy(bzArr, bz)
-		return &ethsecp256k1.PrivKey{
-			Key: bzArr,
-		}
-	}
-}
-
-// `ECDSAify` converts a private key to an ECDSA private key.
-func ECDSAify(key []byte) ([]byte, error) {
-	// Convert the private key to an ECDSA private key.
-	x, err := ethsecp256k1.PrivKey{Key: key}.ToECDSA()
-	if err != nil {
-		return nil, err
-	}
-
-	// Return the private key as a byte slice.
-	return ethsecp256k1.FromECDSA(x), nil
 }

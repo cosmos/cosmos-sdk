@@ -29,8 +29,14 @@ To learn more about the process of building modules, visit the [building modules
 
 ## IBC
 
-The IBC module for the SDK has moved to its [own repository](https://github.com/cosmos/ibc-go).
+The IBC module for the SDK is maintained by the IBC Go team in its [own repository](https://github.com/cosmos/ibc-go).
+
+Additionally, the [capability module](https://github.com/cosmos/ibc-go/tree/fdd664698d79864f1e00e147f9879e58497b5ef1/modules/capability) is from v0.48+ maintained by the IBC Go team in its [own repository](https://github.com/cosmos/ibc-go/tree/fdd664698d79864f1e00e147f9879e58497b5ef1/modules/capability).
 
 ## CosmWasm
 
-The CosmWasm module enables smart contracts, and has its [own repository](https://github.com/CosmWasm/cosmwasm) and [documentation site](https://docs.cosmwasm.com/docs).
+The CosmWasm module enables smart contracts, learn more by going to their [documentation site](https://book.cosmwasm.com/), or visit [the repository](https://github.com/CosmWasm/cosmwasm).
+
+## EVM
+
+Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://docs.evmos.org/modules/evm/).

@@ -86,24 +86,29 @@ through several steps, beginning with decoding `Tx`.
 
 When `Tx` is received by the application from the underlying consensus engine (e.g. CometBFT ), it is still in its [encoded](../core/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../core/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
 
-### ValidateBasic
+### ValidateBasic (deprecated)
 
 Messages ([`sdk.Msg`](../core/01-transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction. 
 To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../core/00-baseapp.md#checktx) and [`DeliverTx`](../core/00-baseapp.md#delivertx) transactions.
 `ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state). 
 
+:::warning
+The `ValidateBasic` method on messages has been deprecated in favor of validating messages directly in their respective [`Msg` services](../building-modules/03-msg-services.md#Validation).
+
+Read [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) for more details.
+:::
+
+:::note
+`BaseApp` still calls `ValidateBasic` on messages that implements that method for backwards compatibility.
+:::
+
 #### Guideline
 
-Gas is not charged when `ValidateBasic` is executed, so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the `CheckTx` phase.
-Other validation operations must be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
-
-For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
-
-See also [Msg Service Validation](../building-modules/03-msg-services.md#Validation).
+`ValidateBasic` should not be used anymore. Message validation should be performed in the `Msg` service when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
 
 ### AnteHandler
 
-After the `ValidateBasic` checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction, and other core operations related to blockchain transactions.
+`AnteHandler`s even though optional, are in practice very often used to perform signature verification, gas calculation, fee deduction, and other core operations related to blockchain transactions.
 
 A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the `AnteHandler` to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 

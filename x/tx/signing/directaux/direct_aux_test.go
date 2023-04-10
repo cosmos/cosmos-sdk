@@ -1,4 +1,4 @@
-package direct_aux_test
+package directaux_test
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 
 	"cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/tx/signing/direct_aux"
+	"cosmossdk.io/x/tx/signing/directaux"
 )
 
 func TestDirectAuxHandler(t *testing.T) {
@@ -91,7 +91,7 @@ func TestDirectAuxHandler(t *testing.T) {
 		ValidatorAddressCodec: dummyAddressCodec{},
 	})
 	require.NoError(t, err)
-	modeHandler, err := direct_aux.NewSignModeHandler(direct_aux.SignModeHandlerOptions{
+	modeHandler, err := directaux.NewSignModeHandler(directaux.SignModeHandlerOptions{
 		SignersContext: signersCtx,
 	})
 	require.NoError(t, err)

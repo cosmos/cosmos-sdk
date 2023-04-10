@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/stretchr/testify/require"
 
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	dur "google.golang.org/protobuf/types/known/durationpb"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
@@ -31,12 +30,21 @@ type timestampJsonTest struct {
 	Text  string
 }
 
-func TestTimestampJsonTestcases(t *testing.T) {
+func TestTimestampJsonTestcasesTestData(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/timestamp.json")
 	require.NoError(t, err)
+	testTimestampJsonTestcases(t, raw)
+}
 
+// Tests to ensure that we compare standardized forms of the final timestamppb.Timestamp.
+// Please see issue https://github.com/cosmos/cosmos-sdk/issues/15761
+func TestTimestampJsonTestcasesExtraneousNanos(t *testing.T) {
+	testTimestampJsonTestcases(t, []byte(`[{"proto":{"nAnos":1000000000},"text":"1970-01-01T00:00:01Z"}]`))
+}
+
+func testTimestampJsonTestcases(t *testing.T, raw []byte) {
 	var testcases []timestampJsonTest
-	err = json.Unmarshal(raw, &testcases)
+	err := json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
 	for i, tc := range testcases {
@@ -64,7 +72,11 @@ func TestTimestampJsonTestcases(t *testing.T) {
 			msg := val.Message().Interface()
 			require.IsType(t, &tspb.Timestamp{}, msg)
 			timestamp := msg.(*tspb.Timestamp)
-			require.True(t, proto.Equal(timestamp, tc.Proto))
+			// Please avoid using proto.Equal to compare timestamps given they aren't
+			// in standardized form and will produce false positives for example given input:
+			//  []byte(`[{"proto":{"nanos":1000000000}}]`)
+			// Per issue: https://github.com/cosmos/cosmos-sdk/issues/15761
+			require.True(t, timestamp.AsTime().Equal(tc.Proto.AsTime()))
 		})
 	}
 }

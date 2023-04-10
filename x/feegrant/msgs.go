@@ -37,11 +37,6 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 	}, nil
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgGrantAllowance) ValidateBasic() error {
-	return nil
-}
-
 // GetSigners gets the granter account associated with an allowance
 func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
 	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
@@ -75,11 +70,6 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 
 func NewMsgRevokeAllowance(granter, grantee sdk.AccAddress) MsgRevokeAllowance {
 	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
-}
-
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgRevokeAllowance) ValidateBasic() error {
-	return nil
 }
 
 // GetSigners gets the granter address associated with an Allowance

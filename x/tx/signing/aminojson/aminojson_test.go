@@ -101,7 +101,6 @@ func TestAminoJsonSignMode(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-
 }
 
 func TestNewSignModeHandler(t *testing.T) {

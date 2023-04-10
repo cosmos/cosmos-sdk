@@ -86,15 +86,32 @@ type BaseApp struct {
 	// - checkState is set on InitChain and reset on Commit
 	// - finalizeBlockState is set on InitChain and FinalizeBlock and set to nil
 	// on Commit.
-	checkState           *state // for CheckTx
-	processProposalState *state // for ProcessProposal
-	prepareProposalState *state // for PrepareProposal
-	finalizeBlockState   *state // for FinalizeBlock
+	//
+	// - checkState: Used for CheckTx, which is set based on the previous block's
+	// state. This state is never committed.
+	// - prepareProposalState: Used for PrepareProposal, which is set based on the
+	// previous block's state. This state is never committed. In case of multiple
+	// consensus rounds, the state is always reset to the previous block's state.
+	// - voteExtensionState: Used for ExtendVote and VerifyVoteExtension, which is
+	// set based on the previous block's state. This state is never committed. In
+	// case of multiple rounds, the state is always reset to the previous block's
+	// state.
+	// processProposalState: Used for ProcessProposal, which is set based on the
+	// the previous block's state. This state is never committed. In case of
+	// multiple rounds, the state is always reset to the previous block's state.
+	// finalizeBlockState: Used for FinalizeBlock, which is set based on the
+	// previous block's state. This state is committed.
+	checkState           *state
+	prepareProposalState *state
+	processProposalState *state
+	voteExtensionState   *state
+	finalizeBlockState   *state
 
-	// an inter-block write-through cache provided to the context during deliverState
+	// An inter-block write-through cache provided to the context during the ABCI
+	// FinalizeBlock call.
 	interBlockCache storetypes.MultiStorePersistentCache
 
-	// absent validators from begin block
+	// absent validators from FinalizeBlock
 	voteInfos []abci.VoteInfo
 
 	// paramStore is used to query for ABCI consensus parameters from an
@@ -105,7 +122,7 @@ type BaseApp struct {
 	// transaction. This is mainly used for DoS and spam prevention.
 	minGasPrices sdk.DecCoins
 
-	// initialHeight is the initial height at which we start the baseapp
+	// initialHeight is the initial height at which we start the BaseApp
 	initialHeight int64
 
 	// flag for sealing options and parameters to a BaseApp

@@ -6,12 +6,11 @@ import (
 	"path/filepath"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/simapp"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
+	"github.com/cosmos/cosmos-sdk/testutil/testnet/miniapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -66,13 +65,10 @@ func Example_basicUsage() {
 			panic(err)
 		}
 
-		// TODO: use a different minimal app for this.
-		app := simapp.NewSimApp(
+		app := miniapp.New(
 			logger.With("instance", idx),
 			dbm.NewMemDB(),
 			nil,
-			true,
-			simtestutil.NewAppOptionsWithFlagHome(rootDir),
 			baseapp.SetChainID(chainID),
 		)
 

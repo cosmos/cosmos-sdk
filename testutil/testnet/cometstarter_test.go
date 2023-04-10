@@ -8,12 +8,11 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/simapp"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
+	"github.com/cosmos/cosmos-sdk/testutil/testnet/miniapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -68,7 +67,7 @@ func TestCometStarter_PortContention(t *testing.T) {
 	cmtVals := valPKs.CometGenesisValidators()
 	stakingVals := cmtVals.StakingValidators()
 
-	const chainID = "simapp-cometstarter"
+	const chainID = "cometstarter-contention"
 
 	b := testnet.DefaultGenesisBuilderOnlyValidators(
 		chainID,
@@ -90,12 +89,10 @@ func TestCometStarter_PortContention(t *testing.T) {
 			nodes, err := testnet.NewNetwork(nVals, func(idx int) *testnet.CometStarter {
 				rootDir := t.TempDir()
 
-				app := simapp.NewSimApp(
+				app := miniapp.New(
 					logger.With("instance", idx),
 					dbm.NewMemDB(),
 					nil,
-					true,
-					simtestutil.NewAppOptionsWithFlagHome(rootDir),
 					baseapp.SetChainID(chainID),
 				)
 

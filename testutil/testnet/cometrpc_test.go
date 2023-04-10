@@ -6,21 +6,19 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/simapp"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
+	"github.com/cosmos/cosmos-sdk/testutil/testnet/miniapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 )
 
-// A single comet server in a network runs an RPC server successfully.
 func TestCometRPC_SingleRPCServer(t *testing.T) {
 	const nVals = 2
 
@@ -45,12 +43,10 @@ func TestCometRPC_SingleRPCServer(t *testing.T) {
 	nodes, err := testnet.NewNetwork(nVals, func(idx int) *testnet.CometStarter {
 		rootDir := t.TempDir()
 
-		app := simapp.NewSimApp(
+		app := miniapp.New(
 			logger,
 			dbm.NewMemDB(),
 			nil,
-			true,
-			simtestutil.NewAppOptionsWithFlagHome(rootDir),
 			baseapp.SetChainID(chainID),
 		)
 
@@ -136,12 +132,10 @@ func TestCometRPC_MultipleRPCError(t *testing.T) {
 	nodes, err := testnet.NewNetwork(nVals, func(idx int) *testnet.CometStarter {
 		rootDir := t.TempDir()
 
-		app := simapp.NewSimApp(
+		app := miniapp.New(
 			logger,
 			dbm.NewMemDB(),
 			nil,
-			true,
-			simtestutil.NewAppOptionsWithFlagHome(rootDir),
 			baseapp.SetChainID(chainID),
 		)
 

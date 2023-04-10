@@ -467,11 +467,19 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 		return nil, errors.New("PrepareProposal method not set")
 	}
 
-	// always reset state given that PrepareProposal can timeout and be called again
-	emptyHeader := cmtproto.Header{ChainID: app.chainID}
-	app.setState(execModePrepareProposal, emptyHeader)
+	// Always reset state given that PrepareProposal can timeout and be called
+	// again in a subsequent round.
+	header := cmtproto.Header{
+		ChainID:            app.chainID,
+		Height:             req.Height,
+		Time:               req.Time,
+		ProposerAddress:    req.ProposerAddress,
+		NextValidatorsHash: req.NextValidatorsHash,
+	}
+	app.setState(execModePrepareProposal, header)
 
 	// CometBFT must never call PrepareProposal with a height of 0.
+	//
 	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
@@ -502,7 +510,8 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 
 	resp, err = app.prepareProposal(app.prepareProposalState.ctx, req)
 	if err != nil {
-		return nil, err
+		app.logger.Error("failed to prepare proposal", "height", req.Height, "error", err)
+		return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 	}
 
 	return resp, nil
@@ -534,9 +543,21 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 		return nil, errors.New("ProcessProposal called with invalid height")
 	}
 
-	// always reset state given that ProcessProposal can timeout and be called again
-	emptyHeader := cmtproto.Header{ChainID: app.chainID}
-	app.setState(execModeProcessProposal, emptyHeader)
+	// Always reset state given that ProcessProposal can timeout and be called
+	// again in a subsequent round.
+	header := cmtproto.Header{
+		ChainID:            app.chainID,
+		Height:             req.Height,
+		Time:               req.Time,
+		ProposerAddress:    req.ProposerAddress,
+		NextValidatorsHash: req.NextValidatorsHash,
+	}
+	app.setState(execModeProcessProposal, header)
+
+	// Since the application can get access to FinalizeBlock state and write to it,
+	// we must be sure to reset it in case ProcessProposal timeouts and is called
+	// again in a subsequent round.
+	app.setState(execModeFinalize, header)
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(app.voteInfos).
@@ -564,7 +585,8 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 
 	resp, err = app.processProposal(app.processProposalState.ctx, req)
 	if err != nil {
-		return nil, err
+		app.logger.Error("failed to process proposal", "height", req.Height, "error", err)
+		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 	}
 
 	return resp, nil

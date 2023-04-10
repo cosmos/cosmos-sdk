@@ -149,7 +149,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 			},
 			0,
 			true,
-			"empty class id",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
 			"nft id is empty",
@@ -160,18 +160,18 @@ func (s *CLITestSuite) TestCLITxSend() {
 			},
 			0,
 			true,
-			"empty nft id",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
-			"invalid receiver address",
+			"empty receiver address",
 			[]string{
 				testClassID,
 				testID,
-				"invalid receiver",
+				"",
 			},
 			0,
 			true,
-			"Invalid receiver address",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
 			"valid transaction",
@@ -189,7 +189,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			args := append(tc.args, extraArgs...) //nolint:gocritic // false positive
+			args := append(tc.args, extraArgs...)
 			cmd := cli.NewCmdSend()
 			cmd.SetContext(s.ctx)
 			cmd.SetArgs(args)

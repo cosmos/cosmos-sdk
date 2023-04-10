@@ -22,7 +22,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.crypto.PrivKey", priv)
 	registry.RegisterImplementations(priv, &secp256k1.PrivKey{})
 	registry.RegisterImplementations(priv, &secp256k1.EthPrivKey{})
-	registry.RegisterImplementations(priv, &ed25519.PrivKey{}) //nolint
+	registry.RegisterImplementations(priv, &ed25519.PrivKey{})
 
 	secp256r1.RegisterInterfaces(registry)
 }

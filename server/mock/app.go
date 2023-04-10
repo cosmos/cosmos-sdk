@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -47,7 +47,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		Methods: []grpc.MethodDesc{
 			{
 				MethodName: "Test",
-				Handler:    _Msg_Test_Handler,
+				Handler:    MsgTestHandler,
 			},
 		},
 	}
@@ -147,7 +147,7 @@ type MsgServerImpl struct {
 	capKeyMainStore *storetypes.KVStoreKey
 }
 
-func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) { //nolint:revive
+func MsgTestHandler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) { // nolint: revive // refactor this in a followup pr
 	in := new(KVStoreTx)
 	if err := dec(in); err != nil {
 		return nil, err

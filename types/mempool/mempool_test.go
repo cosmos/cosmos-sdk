@@ -5,11 +5,11 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -36,7 +36,7 @@ func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
 func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+func (t testPubKey) VerifySignature(msg, sig []byte) bool { panic("not implemented") }
 
 func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
 

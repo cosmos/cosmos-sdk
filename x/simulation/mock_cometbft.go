@@ -9,7 +9,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
@@ -60,7 +59,7 @@ func (vals mockValidators) getKeys() []string {
 }
 
 // randomProposer picks a random proposer from the current validator set
-func (vals mockValidators) randomProposer(r *rand.Rand) cmtbytes.HexBytes {
+func (vals mockValidators) randomProposer(r *rand.Rand) []byte {
 	keys := vals.getKeys()
 	if len(keys) == 0 {
 		return nil
@@ -70,7 +69,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) cmtbytes.HexBytes {
 
 	proposer := vals[key].val
 	pk, err := cryptoenc.PubKeyFromProto(proposer.PubKey)
-	if err != nil { //nolint:wsl
+	if err != nil {
 		panic(err)
 	}
 

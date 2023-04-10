@@ -6,12 +6,15 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,10 +51,20 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper)
+	suite.accountKeeper.EXPECT().StringToBytes(suite.addrs[0].String()).Return(suite.addrs[0], nil).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(suite.addrs[1].String()).Return(suite.addrs[1], nil).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(suite.addrs[2].String()).Return(suite.addrs[2], nil).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(suite.addrs[3].String()).Return(suite.addrs[3], nil).AnyTimes()
+
+	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[0]).Return(suite.addrs[0].String(), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[1]).Return(suite.addrs[1].String(), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[2]).Return(suite.addrs[2].String(), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[3]).Return(suite.addrs[3].String(), nil).AnyTimes()
+
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper)
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
-	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(555)))
+	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(555)))
 }
 
 func (suite *KeeperTestSuite) TestKeeperCrud() {
@@ -165,9 +178,12 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 			suite.Equal(tc.allowance, allow)
 		})
 	}
-	accAddr, err := sdk.AccAddressFromBech32("cosmos1rxr4mq58w3gtnx5tsc438mwjjafv3mja7k5pnu")
+	address := "cosmos1rxr4mq58w3gtnx5tsc438mwjjafv3mja7k5pnu"
+	accAddr, err := codecaddress.NewBech32Codec("cosmos").StringToBytes(address)
 	suite.Require().NoError(err)
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(address).Return(accAddr, nil).AnyTimes()
+	suite.accountKeeper.EXPECT().BytesToString(accAddr).Return(address, nil).AnyTimes()
 
 	// let's grant and revoke authorization to non existing account
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[3], accAddr, basic2)
@@ -176,7 +192,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	_, err = suite.feegrantKeeper.GetAllowance(suite.ctx, suite.addrs[3], accAddr)
 	suite.Require().NoError(err)
 
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[3].String(), Grantee: accAddr.String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[3].String(), Grantee: address})
 	suite.Require().NoError(err)
 }
 

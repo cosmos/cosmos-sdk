@@ -432,7 +432,7 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 func TestFormatInt(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
-	raw, err := os.ReadFile("../x/tx/textual/internal/testdata/integers.json")
+	raw, err := os.ReadFile("testdata/integers.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -471,6 +471,11 @@ func TestFormatIntNonDigits(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFormatIntEmptyString(t *testing.T) {
+	_, err := math.FormatInt("")
+	require.ErrorContains(t, err, "cannot format empty string")
 }
 
 func TestFormatIntCorrectness(t *testing.T) {

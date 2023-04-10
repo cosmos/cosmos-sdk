@@ -8,7 +8,7 @@ import (
 )
 
 func TestHelpers(t *testing.T) {
-	// uses MultiPair scenario.
+	// uses ReversePair scenario.
 	// We store balances as:
 	// Key: Pair[Address=string, Denom=string] => Value: Amount=uint64
 
@@ -22,7 +22,7 @@ func TestHelpers(t *testing.T) {
 		keyCodec,
 		collections.Uint64Value,
 		balanceIndex{
-			Denom: NewMultiPair[Amount](sb, collections.NewPrefix("denom_index"), "denom_index", keyCodec),
+			Denom: NewReversePair[Amount](sb, collections.NewPrefix("denom_index"), "denom_index", keyCodec),
 		},
 	)
 

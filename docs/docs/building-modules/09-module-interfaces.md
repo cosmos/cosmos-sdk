@@ -43,7 +43,7 @@ In general, the getter function does the following:
     * **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new transaction.
         * The function typically starts by getting the `clientCtx`, which can be done with `client.GetClientTxContext(cmd)`. The `clientCtx` contains information relevant to transaction handling, including information about the user. In this example, the `clientCtx` is used to retrieve the address of the sender by calling `clientCtx.GetFromAddress()`.
         * If applicable, the command's arguments are parsed. In this example, the arguments `[to_address]` and `[amount]` are both parsed.
-        * A [message](./02-messages-and-queries.md) is created using the parsed arguments and information from the `clientCtx`. The constructor function of the message type is called directly. In this case, `types.NewMsgSend(fromAddr, toAddr, amount)`. Its good practice to call [`msg.ValidateBasic()`](../basics/01-tx-lifecycle.md#ValidateBasic) and other validation methods before broadcasting the message.
+        * A [message](./02-messages-and-queries.md) is created using the parsed arguments and information from the `clientCtx`. The constructor function of the message type is called directly. In this case, `types.NewMsgSend(fromAddr, toAddr, amount)`. Its good practice to call, if possible, the necessary [message validation methods](../building-modules/03-msg-services.md#Validation) before broadcasting the message.
         * Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `tx.GenerateOrBroadcastTxCLI(clientCtx, flags, msg)`.
 * **Adds transaction flags:** All transaction commands must add a set of transaction [flags](#flags). The transaction flags are used to collect additional information from the user (e.g. the amount of fees the user is willing to pay). The transaction flags are added to the constructed command using `AddTxFlagsToCmd(cmd)`.
 * **Returns the command:** Finally, the transaction command is returned.
@@ -156,6 +156,6 @@ Modules that want to expose REST queries should add `google.api.http` annotation
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/auth/v1beta1/query.proto#L14-L89
 ```
 
-gRPC gateway is started in-process along with the application and Tendermint. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml).
+gRPC gateway is started in-process along with the application and CometBFT. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml).
 
 The Cosmos SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml) defines if swagger documentation should be automatically registered.

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
@@ -229,7 +229,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := mempool.NewPriorityMempool()
+			pool := mempool.DefaultPriorityMempool()
 
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
@@ -253,7 +253,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 				require.NoError(t, pool.Remove(tx))
 			}
 
-			require.NoError(t, mempool.IsEmpty(pool))
+			require.NoError(t, mempool.IsEmpty[int64](pool))
 		})
 	}
 }
@@ -275,7 +275,7 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 	}
 
 	for i := 0; i < 100; i++ {
-		s.mempool = mempool.NewPriorityMempool()
+		s.mempool = mempool.DefaultPriorityMempool()
 		var shuffled []txSpec
 		for _, t := range txSet {
 			tx := txSpec{
@@ -372,9 +372,15 @@ func validateOrder(mtxs []sdk.Tx) error {
 
 func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	s.iterations = 0
-	s.mempool = mempool.NewPriorityMempool(mempool.PriorityNonceWithOnRead(func(tx sdk.Tx) {
-		s.iterations++
-	}))
+	s.mempool = mempool.NewPriorityMempool(
+		mempool.PriorityNonceMempoolConfig[int64]{
+			TxPriority: mempool.NewDefaultTxPriority(),
+			OnRead: func(tx sdk.Tx) {
+				s.iterations++
+			},
+		},
+	)
+
 	t := s.T()
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
@@ -409,7 +415,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 
 func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	s.iterations = 0
-	s.mempool = mempool.NewPriorityMempool()
+	s.mempool = mempool.DefaultPriorityMempool()
 
 	t := s.T()
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
@@ -458,7 +464,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 		seed, s.iterations, duration.Milliseconds())
 }
 
-func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
+func genRandomTxs(seed int64, countTx, countAccount int) (res []testTx) {
 	maxPriority := 100
 	r := rand.New(rand.NewSource(seed))
 	accounts := simtypes.RandomAccounts(r, countAccount)
@@ -485,7 +491,7 @@ func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
 
 // since there are multiple valid ordered graph traversals for a given set of txs strict
 // validation against the ordered txs generated from this function is not possible as written
-func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffled []testTx) {
+func genOrderedTxs(seed int64, maxTx, numAcc int) (ordered, shuffled []testTx) {
 	r := rand.New(rand.NewSource(seed))
 	accountNonces := make(map[string]uint64)
 	prange := 10
@@ -589,7 +595,7 @@ func TestPriorityNonceMempool_NextSenderTx(t *testing.T) {
 	accA := accounts[0].Address
 	accB := accounts[1].Address
 
-	mp := mempool.NewPriorityMempool()
+	mp := mempool.DefaultPriorityMempool()
 
 	txs := []testTx{
 		{priority: 20, nonce: 1, address: accA},
@@ -633,13 +639,19 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	}
 
 	// unlimited
-	mp := mempool.NewPriorityMempool(mempool.PriorityNonceWithMaxTx(0))
+	mp := mempool.NewPriorityMempool(
+		mempool.PriorityNonceMempoolConfig[int64]{
+			TxPriority: mempool.NewDefaultTxPriority(),
+			MaxTx:      0,
+		},
+	)
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
 		require.NoError(t, mp.Insert(c, tx))
 		require.Equal(t, i+1, mp.CountTx())
 	}
-	mp = mempool.NewPriorityMempool()
+
+	mp = mempool.DefaultPriorityMempool()
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
 		require.NoError(t, mp.Insert(c, tx))
@@ -647,7 +659,12 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	}
 
 	// limit: 3
-	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithMaxTx(3))
+	mp = mempool.NewPriorityMempool(
+		mempool.PriorityNonceMempoolConfig[int64]{
+			TxPriority: mempool.NewDefaultTxPriority(),
+			MaxTx:      3,
+		},
+	)
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
@@ -661,7 +678,12 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	}
 
 	// disabled
-	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithMaxTx(-1))
+	mp = mempool.NewPriorityMempool(
+		mempool.PriorityNonceMempoolConfig[int64]{
+			TxPriority: mempool.NewDefaultTxPriority(),
+			MaxTx:      -1,
+		},
+	)
 	for _, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
@@ -683,7 +705,7 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	}
 
 	// test Priority with default mempool
-	mp := mempool.NewPriorityMempool()
+	mp := mempool.DefaultPriorityMempool()
 	for _, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
 		require.NoError(t, mp.Insert(c, tx))
@@ -697,10 +719,15 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	// we set a TestTxReplacement rule which the priority of the new Tx must be 20% more than the priority of the old Tx
 	// otherwise, the Insert will return error
 	feeBump := 20
-	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithTxReplacement(func(op, np int64, oTx, nTx sdk.Tx) bool {
-		threshold := int64(100 + feeBump)
-		return np >= op*threshold/100
-	}))
+	mp = mempool.NewPriorityMempool(
+		mempool.PriorityNonceMempoolConfig[int64]{
+			TxPriority: mempool.NewDefaultTxPriority(),
+			TxReplacement: func(op, np int64, oTx, nTx sdk.Tx) bool {
+				threshold := int64(100 + feeBump)
+				return np >= op*threshold/100
+			},
+		},
+	)
 
 	c := ctx.WithPriority(txs[0].priority)
 	require.NoError(t, mp.Insert(c, txs[0]))

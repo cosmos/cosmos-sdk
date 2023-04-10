@@ -23,7 +23,7 @@ func NewDecodeStore(cdc codec.BinaryCodec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &infoB)
 			return fmt.Sprintf("%v\n%v", infoA, infoB)
 
-		case bytes.Equal(kvA.Key[:1], types.ValidatorMissedBlockBitArrayKeyPrefix):
+		case bytes.Equal(kvA.Key[:1], types.ValidatorMissedBlockBitmapKeyPrefix):
 			var missedA, missedB gogotypes.BoolValue
 			cdc.MustUnmarshal(kvA.Value, &missedA)
 			cdc.MustUnmarshal(kvB.Value, &missedB)

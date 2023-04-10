@@ -20,7 +20,7 @@ var (
 
 // NewMsgSend - construct a msg to send coins from one account to another.
 //
-//nolint:interfacer
+
 func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
 	return &MsgSend{FromAddress: fromAddr.String(), ToAddress: toAddr.String(), Amount: amount}
 }
@@ -58,8 +58,8 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
-func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
-	return &MsgMultiSend{Inputs: in, Outputs: out}
+func NewMsgMultiSend(in Input, out []Output) *MsgMultiSend {
+	return &MsgMultiSend{Inputs: []Input{in}, Outputs: out}
 }
 
 // ValidateBasic Implements Msg.
@@ -79,7 +79,7 @@ func (msg MsgMultiSend) ValidateBasic() error {
 		return ErrNoOutputs
 	}
 
-	return ValidateInputsOutputs(msg.Inputs, msg.Outputs)
+	return ValidateInputOutputs(msg.Inputs[0], msg.Outputs)
 }
 
 // GetSignBytes Implements Msg.
@@ -89,13 +89,13 @@ func (msg MsgMultiSend) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
-	addrs := make([]sdk.AccAddress, len(msg.Inputs))
-	for i, in := range msg.Inputs {
-		inAddr, _ := sdk.AccAddressFromBech32(in.Address)
-		addrs[i] = inAddr
+	// should not happen as ValidateBasic would have failed
+	if len(msg.Inputs) == 0 {
+		return nil
 	}
 
-	return addrs
+	addrs, _ := sdk.AccAddressFromBech32(msg.Inputs[0].Address)
+	return []sdk.AccAddress{addrs}
 }
 
 // ValidateBasic - validate transaction input
@@ -116,8 +116,6 @@ func (in Input) ValidateBasic() error {
 }
 
 // NewInput - create a transaction input, used with MsgMultiSend
-//
-//nolint:interfacer
 func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 	return Input{
 		Address: addr.String(),
@@ -143,8 +141,6 @@ func (out Output) ValidateBasic() error {
 }
 
 // NewOutput - create a transaction output, used with MsgMultiSend
-//
-//nolint:interfacer
 func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 	return Output{
 		Address: addr.String(),
@@ -152,17 +148,15 @@ func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 	}
 }
 
-// ValidateInputsOutputs validates that each respective input and output is
+// ValidateInputOutputs validates that each respective input and output is
 // valid and that the sum of inputs is equal to the sum of outputs.
-func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
+func ValidateInputOutputs(input Input, outputs []Output) error {
 	var totalIn, totalOut sdk.Coins
 
-	for _, in := range inputs {
-		if err := in.ValidateBasic(); err != nil {
-			return err
-		}
-		totalIn = totalIn.Add(in.Coins...)
+	if err := input.ValidateBasic(); err != nil {
+		return err
 	}
+	totalIn = input.Coins
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {

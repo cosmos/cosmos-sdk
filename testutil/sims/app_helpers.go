@@ -9,11 +9,11 @@ import (
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -78,6 +78,7 @@ type StartupConfig struct {
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
+	DB              dbm.DB
 }
 
 func DefaultStartUpConfig() StartupConfig {
@@ -88,6 +89,7 @@ func DefaultStartUpConfig() StartupConfig {
 		ValidatorSet:    CreateRandomValidatorSet,
 		AtGenesis:       false,
 		GenesisAccounts: []GenesisAccount{ga},
+		DB:              dbm.NewMemDB(),
 	}
 }
 
@@ -124,9 +126,9 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	if startupConfig.BaseAppOption != nil {
-		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, startupConfig.BaseAppOption)
+		app = appBuilder.Build(log.NewNopLogger(), startupConfig.DB, nil, startupConfig.BaseAppOption)
 	} else {
-		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+		app = appBuilder.Build(log.NewNopLogger(), startupConfig.DB, nil)
 	}
 	if err := app.Load(true); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)

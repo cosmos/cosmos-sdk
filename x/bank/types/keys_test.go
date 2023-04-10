@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func cloneAppend(bz []byte, tail []byte) (res []byte) {
+func cloneAppend(bz, tail []byte) (res []byte) {
 	res = make([]byte, len(bz)+len(tail))
 	copy(res, bz)
 	copy(res[len(bz):], tail)
@@ -67,13 +67,4 @@ func TestCreateDenomAddressPrefix(t *testing.T) {
 	key = types.CreateDenomAddressPrefix("abc")
 	require.Len(key, len(types.DenomAddressPrefix)+4)
 	require.Equal(append(types.DenomAddressPrefix, 'a', 'b', 'c', 0), key)
-}
-
-func TestCreateSendEnabledKey(t *testing.T) {
-	denom := "bazcoin"
-	expected := cloneAppend(types.SendEnabledPrefix, []byte(denom))
-	actual := types.CreateSendEnabledKey(denom)
-	assert.Equal(t, expected, actual, "full byte slice")
-	assert.Equal(t, types.SendEnabledPrefix, actual[:len(types.SendEnabledPrefix)], "prefix")
-	assert.Equal(t, []byte(denom), actual[len(types.SendEnabledPrefix):], "denom part")
 }

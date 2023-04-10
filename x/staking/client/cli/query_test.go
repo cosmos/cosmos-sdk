@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -124,7 +125,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryDelegation()
+			cmd := cli.GetCmdQueryDelegation(address.NewBech32Codec("cosmos"))
 			clientCtx := s.clientCtx
 
 			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -169,7 +170,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryDelegations()
+			cmd := cli.GetCmdQueryDelegations(address.NewBech32Codec("cosmos"))
 			clientCtx := s.clientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -215,7 +216,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryDelegations()
+			cmd := cli.GetCmdQueryDelegations(address.NewBech32Codec("cosmos"))
 			clientCtx := s.clientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -256,7 +257,7 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryUnbondingDelegations()
+			cmd := cli.GetCmdQueryUnbondingDelegations(address.NewBech32Codec("cosmos"))
 			clientCtx := s.clientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -311,7 +312,7 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryUnbondingDelegation()
+			cmd := cli.GetCmdQueryUnbondingDelegation(address.NewBech32Codec("cosmos"))
 			clientCtx := s.clientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -398,7 +399,7 @@ func (s *CLITestSuite) TestGetCmdQueryRedelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryRedelegations()
+			cmd := cli.GetCmdQueryRedelegations(address.NewBech32Codec("cosmos"))
 			clientCtx := s.clientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -465,7 +466,7 @@ func (s *CLITestSuite) TestGetCmdQueryRedelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryRedelegation()
+			cmd := cli.GetCmdQueryRedelegation(address.NewBech32Codec("cosmos"))
 			clientCtx := s.clientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

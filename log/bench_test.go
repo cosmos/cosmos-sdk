@@ -2,6 +2,7 @@ package log_test
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"testing"
 	"time"
@@ -9,6 +10,8 @@ import (
 	"cosmossdk.io/log"
 	"github.com/rs/zerolog"
 )
+
+const message = "test message"
 
 func BenchmarkLoggers(b *testing.B) {
 	b.ReportAllocs()
@@ -61,14 +64,13 @@ func BenchmarkLoggers(b *testing.B) {
 		},
 	}...)
 
-	const message = "test message"
-
 	// If running with "go test -v", print out the log messages as a sanity check.
 	if testing.Verbose() {
 		checkBuf := new(bytes.Buffer)
 		for _, bc := range benchCases {
 			checkBuf.Reset()
-			logger := log.ZeroLogWrapper{Logger: zerolog.New(checkBuf)}
+			zl := zerolog.New(checkBuf)
+			logger := log.NewCustomLogger(zl)
 			logger.Info(message, bc.keyVals...)
 
 			b.Logf("zero logger output for %s: %s", bc.name, checkBuf.String())
@@ -82,7 +84,8 @@ func BenchmarkLoggers(b *testing.B) {
 		for _, bc := range benchCases {
 			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
-				logger := log.ZeroLogWrapper{Logger: zerolog.New(io.Discard)}
+				zl := zerolog.New(io.Discard)
+				logger := log.NewCustomLogger(zl)
 
 				for i := 0; i < b.N; i++ {
 					logger.Info(message, bc.keyVals...)
@@ -91,25 +94,9 @@ func BenchmarkLoggers(b *testing.B) {
 		}
 	})
 
-	// zerolog offers a no-op writer.
-	// It appears to be slower than our custom NopLogger,
-	// so include it in the nop benchmarks as a point of reference.
-	b.Run("zerolog nop", func(b *testing.B) {
-		for _, bc := range nopCases {
-			bc := bc
-			b.Run(bc.name, func(b *testing.B) {
-				logger := log.ZeroLogWrapper{Logger: zerolog.Nop()}
-
-				for i := 0; i < b.N; i++ {
-					logger.Info(message, bc.keyVals...)
-				}
-			})
-		}
-	})
-
-	// The nop logger we use in tests,
+	// The nop logger we use expose in the public API,
 	// also useful as a reference for how expensive zerolog is.
-	b.Run("nop logger", func(b *testing.B) {
+	b.Run("specialized nop logger", func(b *testing.B) {
 		for _, bc := range nopCases {
 			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
@@ -119,6 +106,55 @@ func BenchmarkLoggers(b *testing.B) {
 					logger.Info(message, bc.keyVals...)
 				}
 			})
+		}
+	})
+
+	// To compare with the custom nop logger.
+	// The zerolog wrapper is about 1/3 the speed of the specialized nop logger,
+	// so we offer the specialized version in the exported API.
+	b.Run("zerolog nop logger", func(b *testing.B) {
+		for _, bc := range nopCases {
+			bc := bc
+			b.Run(bc.name, func(b *testing.B) {
+				logger := log.NewCustomLogger(zerolog.Nop())
+
+				for i := 0; i < b.N; i++ {
+					logger.Info(message, bc.keyVals...)
+				}
+			})
+		}
+	})
+}
+
+func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
+	b.ReportAllocs()
+
+	errorToLog := errors.New("error")
+	byteSliceToLog := []byte{0xde, 0xad, 0xbe, 0xef}
+
+	b.Run("logger structured", func(b *testing.B) {
+		zl := zerolog.New(io.Discard)
+		logger := log.NewCustomLogger(zl)
+		zerolog := logger.Impl().(*zerolog.Logger)
+		for i := 0; i < b.N; i++ {
+			zerolog.Info().Int64("foo", 100000).Msg(message)
+			zerolog.Info().Str("foo", "foo").Msg(message)
+			zerolog.Error().
+				Int64("foo", 100000).
+				Str("bar", "foo").
+				Bytes("other", byteSliceToLog).
+				Err(errorToLog).
+				Msg(message)
+		}
+	})
+
+	b.Run("logger", func(b *testing.B) {
+		zl := zerolog.New(io.Discard)
+		logger := log.NewCustomLogger(zl)
+		for i := 0; i < b.N; i++ {
+			logger.Info(message, "foo", 100000)
+			logger.Info(message, "foo", "foo")
+			logger.Error(message, "foo", 100000, "bar", "foo", "other", byteSliceToLog, "error", errorToLog)
 		}
 	})
 }

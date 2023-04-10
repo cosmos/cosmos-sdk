@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/grpc/encoding"
-	"google.golang.org/protobuf/proto"
-
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -26,6 +29,7 @@ type ProtoCodecMarshaler interface {
 // encoding.
 type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
+	getSignersCtx     *signing.GetSignersContext
 }
 
 var (
@@ -35,7 +39,17 @@ var (
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
-	return &ProtoCodec{interfaceRegistry: interfaceRegistry}
+	getSignersCtx, err := signing.NewGetSignersContext(
+		signing.GetSignersOptions{
+			ProtoFiles: interfaceRegistry,
+		})
+	if err != nil {
+		panic(err)
+	}
+	return &ProtoCodec{
+		interfaceRegistry: interfaceRegistry,
+		getSignersCtx:     getSignersCtx,
+	}
 }
 
 // Marshal implements BinaryMarshaler.Marshal method.
@@ -137,9 +151,7 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Messa
 // it marshals to JSON using proto codec.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
-//
-//nolint:stdmethods
-func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) {
+func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) { //nolint:stdmethods // we don't want to implement Marshaler interface
 	if o == nil {
 		return nil, fmt.Errorf("cannot protobuf JSON encode nil")
 	}
@@ -186,7 +198,7 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr gogoproto.Message) {
 	}
 }
 
-// MarshalInterface is a convenience function for proto marshalling interfaces. It packs
+// MarshalInterface is a convenience function for proto marshaling interfaces. It packs
 // the provided value, which must be an interface, in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use Marshal instead
 func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
@@ -224,7 +236,7 @@ func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	return pc.UnpackAny(any, ptr)
 }
 
-// MarshalInterfaceJSON is a convenience function for proto marshalling interfaces. It
+// MarshalInterfaceJSON is a convenience function for proto marshaling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) {
@@ -265,10 +277,41 @@ func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
 }
 
+func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]string, proto.Message, error) {
+	msgv2, err := anyutil.Unpack(&anypb.Any{
+		TypeUrl: msg.TypeUrl,
+		Value:   msg.Value,
+	}, pc.interfaceRegistry, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	signers, err := pc.getSignersCtx.GetSigners(msgv2)
+	return signers, msgv2, err
+}
+
+func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([]string, error) {
+	return pc.getSignersCtx.GetSigners(msg)
+}
+
+func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([]string, proto.Message, error) {
+	if msgV2, ok := msg.(proto.Message); ok {
+		signers, err := pc.getSignersCtx.GetSigners(msgV2)
+		return signers, msgV2, err
+	}
+	a, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, nil, err
+	}
+	return pc.GetMsgAnySigners(a)
+}
+
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec
 func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
 	return &grpcProtoCodec{cdc: pc}
 }
+
+func (pc *ProtoCodec) mustEmbedCodec() {}
 
 var errUnknownProtoType = errors.New("codec: unknown proto type") // sentinel error
 

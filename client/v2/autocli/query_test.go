@@ -3,20 +3,27 @@ package autocli
 import (
 	"bytes"
 	"context"
-	"net"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
 	"cosmossdk.io/client/v2/internal/testpb"
 )
+
+var buildModuleQueryCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+
+	err := b.AddQueryServiceCommands(cmd, testCmdDesc)
+	return cmd, err
+}
 
 var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	Service: testpb.Query_ServiceDesc.ServiceName,
@@ -66,6 +73,15 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"hidden_bool": {
 					Hidden: true,
 				},
+				"a_coin": {
+					Usage: "some random coin",
+				},
+				"duration": {
+					Usage: "some random duration",
+				},
+				"bz": {
+					Usage: "some bytes",
+				},
 			},
 		},
 	},
@@ -92,52 +108,26 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
-func testExec(t *testing.T, args ...string) *testClientConn {
-	server := grpc.NewServer()
-	testpb.RegisterQueryServer(server, &testEchoServer{})
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	assert.NilError(t, err)
-	go func() {
-		err := server.Serve(listener)
-		if err != nil {
-			panic(err)
-		}
-	}()
-	defer server.GracefulStop()
-	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.NilError(t, err)
-	defer func() {
-		err := clientConn.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	conn := &testClientConn{
-		ClientConn: clientConn,
-		t:          t,
-		out:        &bytes.Buffer{},
-	}
-	b := &Builder{
-		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
-			return conn, nil
-		},
-	}
-	cmd, err := b.BuildModuleQueryCommand("test", testCmdDesc)
-	assert.NilError(t, err)
-	cmd.SetArgs(args)
-	cmd.SetOut(conn.out)
-	assert.NilError(t, cmd.Execute())
-	return conn
-}
-
-func TestEverything(t *testing.T) {
-	conn := testExec(t,
+func TestCoin(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1",
 		"abc",
-		`{"denom":"foo","amount":"1234"}`,
-		`{"denom":"bar","amount":"4321"}`,
+		"1234foo",
+		"4321bar",
+		"--a-coin", "100000foo",
+		"--duration", "4h3s",
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+}
+
+func TestEverything(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"123.123123124foo",
+		"4321bar",
 		"--a-bool",
 		"--an-enum", "one",
 		"--a-message", `{"bar":"abc", "baz":-3}`,
@@ -148,8 +138,8 @@ func TestEverything(t *testing.T) {
 		"--i64", "-234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
-		"--a-coin", `{"denom":"foo","amount":"100000"}`,
-		"--an-address", "cosmossdghdsfoi2134sdgh",
+		"--a-coin", "100000foo",
+		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",
 		"--page-key", "MTIzNTQ4N3NnaGRhcw==",
@@ -173,15 +163,36 @@ func TestEverything(t *testing.T) {
 		"--uints", "1,2,3",
 		"--uints", "4",
 	)
+	errOut := conn.errorOut.String()
+	res := conn.out.String()
+	fmt.Println(errOut, res)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+}
+
+func TestJSONParsing(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", "1foo",
+		"--some-messages", `{"bar":"baz"}`,
+		"-u", "27", // shorthand
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", "1foo",
+		"--some-messages", "testdata/some_message.json",
+		"-u", "27", // shorthand
+	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
 func TestOptions(t *testing.T) {
-	conn := testExec(t,
+	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "123foo",
 		"-u", "27", // shorthand
-		"--u64", // no opt default value
+		"--u64", "5", // no opt default value
 	)
 	lastReq := conn.lastRequest.(*testpb.EchoRequest)
 	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set
@@ -189,27 +200,134 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
+func TestBinaryFlag(t *testing.T) {
+	// Create a temporary file with some content
+	tempFile, err := os.Open("testdata/file.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := []byte("this is just a test file")
+	if err := tempFile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test cases
+	tests := []struct {
+		name     string
+		input    string
+		expected []byte
+		hasError bool
+		err      string
+	}{
+		{
+			name:     "Valid file path with extension",
+			input:    tempFile.Name(),
+			expected: content,
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Valid hex-encoded string",
+			input:    "68656c6c6f20776f726c64",
+			expected: []byte("hello world"),
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Valid base64-encoded string",
+			input:    "SGVsbG8gV29ybGQ=",
+			expected: []byte("Hello World"),
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Invalid input (not a file path or encoded string)",
+			input:    "not a file or encoded string",
+			expected: nil,
+			hasError: true,
+			err:      "input string is neither a valid file path, hex, or base64 encoded",
+		},
+	}
+
+	// Run test cases
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			conn := testExecCommon(t, buildModuleQueryCommand,
+				"echo",
+				"1", "abc", `{"denom":"foo","amount":"1"}`,
+				"--bz", tc.input,
+			)
+			errorOut := conn.errorOut.String()
+			if errorOut == "" {
+				lastReq := conn.lastRequest.(*testpb.EchoRequest)
+				assert.DeepEqual(t, tc.expected, lastReq.Bz)
+			} else {
+				assert.Assert(t, strings.Contains(conn.errorOut.String(), tc.err))
+			}
+		})
+	}
+}
+
+func TestAddressValidation(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", "1foo",
+		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+	)
+	assert.Equal(t, "", conn.errorOut.String())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", "1foo",
+		"--an-address", "regen1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+	)
+	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", "1foo",
+		"--an-address", "cosmps1BAD_ENCODING",
+	)
+	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
+}
+
+func TestOutputFormat(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", "1foo",
+		"--output", "json",
+	)
+	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", "1foo",
+		"--output", "text",
+	)
+	fmt.Println(conn.out.String())
+	assert.Assert(t, strings.Contains(conn.out.String(), "  positional1: 1"))
+}
+
 func TestHelp(t *testing.T) {
-	conn := testExec(t, "-h")
+	conn := testExecCommon(t, buildModuleQueryCommand, "-h")
 	golden.Assert(t, conn.out.String(), "help-toplevel.golden")
 
-	conn = testExec(t, "echo", "-h")
+	conn = testExecCommon(t, buildModuleQueryCommand, "echo", "-h")
 	golden.Assert(t, conn.out.String(), "help-echo.golden")
 
-	conn = testExec(t, "deprecatedecho", "echo", "-h")
+	conn = testExecCommon(t, buildModuleQueryCommand, "deprecatedecho", "echo", "-h")
 	golden.Assert(t, conn.out.String(), "help-deprecated.golden")
 
-	conn = testExec(t, "skipecho", "-h")
+	conn = testExecCommon(t, buildModuleQueryCommand, "skipecho", "-h")
 	golden.Assert(t, conn.out.String(), "help-skip.golden")
 }
 
 func TestDeprecated(t *testing.T) {
-	conn := testExec(t, "echo",
+	conn := testExecCommon(t, buildModuleQueryCommand, "echo",
 		"1", "abc", `{}`,
 		"--deprecated-field", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--deprecated-field has been deprecated"))
 
-	conn = testExec(t, "echo",
+	conn = testExecCommon(t, buildModuleQueryCommand, "echo",
 		"1", "abc", `{}`,
 		"-s", "foo")
 	assert.Assert(t, strings.Contains(conn.out.String(), "--shorthand-deprecated-field has been deprecated"))
@@ -236,19 +354,26 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 func TestNotFoundErrors(t *testing.T) {
 	b := &Builder{}
 
+	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+		cmd := topLevelCmd("query", "Querying subcommands")
+
+		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
+		return cmd, err
+	}
+
 	// bad service
-	_, err := b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "foo"})
+	_, err := buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "foo"})
 	assert.ErrorContains(t, err, "can't find service foo")
 
 	// bad method
-	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service:           testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "bar"}},
 	})
 	assert.ErrorContains(t, err, "rpc method \"bar\" not found")
 
 	// bad positional field
-	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
@@ -264,7 +389,7 @@ func TestNotFoundErrors(t *testing.T) {
 	assert.ErrorContains(t, err, "can't find field foo")
 
 	// bad flag field
-	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
@@ -284,9 +409,10 @@ type testClientConn struct {
 	lastRequest  interface{}
 	lastResponse interface{}
 	out          *bytes.Buffer
+	errorOut     *bytes.Buffer
 }
 
-func (t *testClientConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (t *testClientConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
 	err := t.ClientConn.Invoke(ctx, method, args, reply, opts...)
 	t.lastRequest = args
 	t.lastResponse = reply

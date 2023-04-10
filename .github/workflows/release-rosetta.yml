@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: 1.20.1
+          go-version: 1.20.3
       # get 'v*.*.*' part from 'rosetta/v*.*.*' and save to $GITHUB_ENV
       - name: Set env
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/rosetta/}" >> $GITHUB_ENV

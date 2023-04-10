@@ -8,6 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -122,7 +123,10 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -136,13 +140,11 @@ func (am AppModule) Name() string {
 }
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(registrar, am.keeper)
+	return nil
 }
-
-// RegisterInvariants registers the evidence module's invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
@@ -167,7 +169,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(ctx, req, am.keeper)
+	am.keeper.BeginBlocker(ctx, req)
 }
 
 // AppModuleSimulation functions
@@ -197,8 +199,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type EvidenceInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Key *store.KVStoreKey
@@ -208,17 +209,16 @@ type EvidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
-//nolint:revive
-type EvidenceOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper
 	Module         appmodule.AppModule
 }
 
-func ProvideModule(in EvidenceInputs) EvidenceOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper)
 	m := NewAppModule(*k)
 
-	return EvidenceOutputs{EvidenceKeeper: *k, Module: m}
+	return ModuleOutputs{EvidenceKeeper: *k, Module: m}
 }

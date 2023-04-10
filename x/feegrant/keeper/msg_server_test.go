@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"errors"
 	"time"
 
 	"cosmossdk.io/x/feegrant"
+
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/golang/mock/gomock"
 )
@@ -14,6 +16,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 	ctx := suite.ctx.WithBlockTime(time.Now())
 	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 	yesterday := ctx.BlockTime().AddDate(0, 0, -1)
+
+	addressCodec := codecaddress.NewBech32Codec("cosmos")
 
 	testCases := []struct {
 		name      string
@@ -26,8 +30,11 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{})
 				suite.Require().NoError(err)
+				invalid := "invalid-granter"
+				suite.accountKeeper.EXPECT().StringToBytes(invalid).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
+
 				return &feegrant.MsgGrantAllowance{
-					Granter:   "invalid-granter",
+					Granter:   invalid,
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
@@ -40,9 +47,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{})
 				suite.Require().NoError(err)
+				invalid := "invalid-grantee"
+				suite.accountKeeper.EXPECT().StringToBytes(invalid).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
+
 				return &feegrant.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
-					Grantee:   "invalid-grantee",
+					Grantee:   invalid,
 					Allowance: any,
 				}
 			},
@@ -53,17 +63,26 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 			"valid: grantee account doesn't exist",
 			func() *feegrant.MsgGrantAllowance {
 				grantee := "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"
-				granteeAccAddr := types.MustAccAddressFromBech32(grantee)
+				granteeAccAddr, err := addressCodec.StringToBytes(grantee)
+				suite.Require().NoError(err)
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
+				suite.Require().NoError(err)
 
 				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAccAddr).Return(nil).AnyTimes()
+				suite.accountKeeper.EXPECT().StringToBytes(grantee).Return(granteeAccAddr, nil).AnyTimes()
+				suite.accountKeeper.EXPECT().BytesToString(granteeAccAddr).Return(grantee, nil).AnyTimes()
 
 				acc := authtypes.NewBaseAccountWithAddress(granteeAccAddr)
-				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), types.MustAccAddressFromBech32(grantee)).Return(acc).AnyTimes()
+				add, err := addressCodec.StringToBytes(grantee)
+				suite.Require().NoError(err)
+
+				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), add).Return(acc).AnyTimes()
 				suite.accountKeeper.EXPECT().SetAccount(gomock.Any(), acc).Return()
+				suite.accountKeeper.EXPECT().StringToBytes(grantee).Return(granteeAccAddr, nil).AnyTimes()
+				suite.accountKeeper.EXPECT().BytesToString(granteeAccAddr).Return(grantee, nil).AnyTimes()
 
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
@@ -134,6 +153,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
+					PeriodSpendLimit: suite.atom,
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
@@ -153,6 +173,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
+					PeriodSpendLimit: suite.atom,
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
@@ -179,6 +200,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 func (suite *KeeperTestSuite) TestRevokeAllowance() {
 	oneYear := suite.ctx.BlockTime().AddDate(1, 0, 0)
 
+	invalidGranter := "invalid-granter"
+	suite.accountKeeper.EXPECT().StringToBytes(invalidGranter).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
+
+	invalidGrantee := "invalid-grantee"
+	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
+
 	testCases := []struct {
 		name      string
 		request   *feegrant.MsgRevokeAllowance
@@ -189,7 +216,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 		{
 			"error: invalid granter",
 			&feegrant.MsgRevokeAllowance{
-				Granter: "invalid-granter",
+				Granter: invalidGranter,
 				Grantee: suite.addrs[1].String(),
 			},
 			func() {},
@@ -200,7 +227,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			"error: invalid grantee",
 			&feegrant.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
-				Grantee: "invalid-grantee",
+				Grantee: invalidGrantee,
 			},
 			func() {},
 			true,
@@ -228,11 +255,13 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 					Granter: suite.addrs[0].String(),
 					Grantee: suite.addrs[1].String(),
 				})
+
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
+					PeriodSpendLimit: suite.atom,
 				})
 				suite.Require().NoError(err)
 				req := &feegrant.MsgGrantAllowance{

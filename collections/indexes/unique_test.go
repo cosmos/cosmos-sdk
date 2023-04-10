@@ -15,15 +15,15 @@ func TestUniqueIndex(t *testing.T) {
 	})
 
 	// map company with id 1 to vat 1_1
-	err := ui.Reference(ctx, 1, company{Vat: 1_1}, nil)
+	err := ui.Reference(ctx, 1, company{Vat: 1_1}, func() (company, error) { return company{}, collections.ErrNotFound })
 	require.NoError(t, err)
 
 	// map company with id 2 to vat 2_2
-	err = ui.Reference(ctx, 2, company{Vat: 2_2}, nil)
+	err = ui.Reference(ctx, 2, company{Vat: 2_2}, func() (company, error) { return company{}, collections.ErrNotFound })
 	require.NoError(t, err)
 
 	// mapping company 3 with vat 1_1 must yield to a ErrConflict
-	err = ui.Reference(ctx, 1, company{Vat: 1_1}, nil)
+	err = ui.Reference(ctx, 1, company{Vat: 1_1}, func() (company, error) { return company{}, collections.ErrNotFound })
 	require.ErrorIs(t, err, collections.ErrConflict)
 
 	// assert references are correct
@@ -36,7 +36,7 @@ func TestUniqueIndex(t *testing.T) {
 	require.Equal(t, uint64(2), id)
 
 	// on reference updates, the new referencing key is created and the old is removed
-	err = ui.Reference(ctx, 1, company{Vat: 1_2}, &company{Vat: 1_1})
+	err = ui.Reference(ctx, 1, company{Vat: 1_2}, func() (company, error) { return company{Vat: 1_1}, nil })
 	require.NoError(t, err)
 	id, err = ui.MatchExact(ctx, 1_2) // assert a new reference is created
 	require.NoError(t, err)

@@ -58,12 +58,12 @@ func TestDirectModeHandler(t *testing.T) {
 
 	directHandler := direct.SignModeHandler{}
 
-	chainId := "test-chain"
+	chainID := "test-chain"
 	accNum := uint64(1)
 
 	signingData := signing.SignerData{
 		Address:       "",
-		ChainId:       chainId,
+		ChainID:       chainID,
 		AccountNumber: accNum,
 		PubKey:        pk,
 	}
@@ -89,7 +89,7 @@ func TestDirectModeHandler(t *testing.T) {
 	signBytes2, err := proto.Marshal(&txv1beta1.SignDoc{
 		BodyBytes:     txData.BodyBytes,
 		AuthInfoBytes: txData.AuthInfoBytes,
-		ChainId:       chainId,
+		ChainId:       chainID,
 		AccountNumber: accNum,
 	})
 	require.NoError(t, err)

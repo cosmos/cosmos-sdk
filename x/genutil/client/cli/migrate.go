@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -20,47 +21,35 @@ import (
 
 const flagGenesisTime = "genesis-time"
 
-// Allow applications to extend and modify the migration process.
-//
-// Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
-var migrationMap = types.MigrationMap{
+// MigrationMap is a map of SDK versions to their respective genesis migration functions.
+var MigrationMap = types.MigrationMap{
 	"v0.43": v043.Migrate, // NOTE: v0.43, v0.44 and v0.45 are genesis compatible.
 	"v0.46": v046.Migrate,
 	"v0.47": v047.Migrate,
 }
 
-// GetMigrationCallback returns a MigrationCallback for a given version.
-func GetMigrationCallback(version string) types.MigrationCallback {
-	return migrationMap[version]
-}
-
-// GetMigrationVersions get all migration version in a sorted slice.
-func GetMigrationVersions() []string {
-	versions := maps.Keys(migrationMap)
-	sort.Strings(versions)
-
-	return versions
-}
-
 // MigrateGenesisCmd returns a command to execute genesis state migration.
-func MigrateGenesisCmd() *cobra.Command {
+// Applications should pass their own migration map to this function.
+// When the application migration includes a SDK migration, the Cosmos SDK migration function should as well be called.
+func MigrateGenesisCmd(migrations types.MigrationMap) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "migrate [target-version] [genesis-file]",
-		Short: "Migrate genesis to a specified target version",
-		Long: fmt.Sprintf(`Migrate the source genesis into the target version and print to STDOUT.
-
-Example:
-$ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
-`, version.AppName),
-		Args: cobra.ExactArgs(2),
+		Use:     "migrate [target-version] [genesis-file]",
+		Short:   "Migrate genesis to a specified target version",
+		Long:    "Migrate the source genesis into the target version and print to STDOUT",
+		Example: fmt.Sprintf("%s migrate v0.47 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z", version.AppName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			var err error
-
 			target := args[0]
-			importGenesis := args[1]
+			migrationFunc, ok := migrations[target]
+			if !ok || migrationFunc == nil {
+				versions := maps.Keys(migrations)
+				sort.Strings(versions)
+				return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(versions, ", "))
+			}
 
+			importGenesis := args[1]
 			appGenesis, err := types.AppGenesisFromFile(importGenesis)
 			if err != nil {
 				return err
@@ -83,13 +72,10 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return fmt.Errorf("failed to JSON unmarshal initial genesis state: %w", err)
 			}
 
-			migrationFunc := GetMigrationCallback(target)
-			if migrationFunc == nil {
-				return fmt.Errorf("unknown migration function for version: %s", target)
+			newGenState, err := migrationFunc(initialState, clientCtx)
+			if err != nil {
+				return fmt.Errorf("failed to migrate genesis state: %w", err)
 			}
-
-			// TODO: handler error from migrationFunc call
-			newGenState := migrationFunc(initialState, clientCtx)
 
 			appGenesis.AppState, err = json.Marshal(newGenState)
 			if err != nil {

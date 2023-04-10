@@ -15,9 +15,11 @@ docs/docs/spec
 docs/docs/architecture
 docs/docs/rfc
 docs/docs/tooling/01-cosmovisor.md
-docs/docs/tooling/02-depinject.md
-docs/docs/tooling/03-confix.md
-docs/docs/tooling/04-hubl.md
+docs/docs/tooling/02-confix.md
+docs/docs/tooling/03-hubl.md
+docs/docs/packages/01-depinject.md
+docs/docs/packages/02-collections.md
+docs/docs/packages/03-orm.md
 docs/run-node/04-rosetta.md
 docs/migrations/02-upgrading.md
 

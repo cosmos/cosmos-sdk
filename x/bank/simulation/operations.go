@@ -147,7 +147,7 @@ func sendMsgSend(
 			return err
 		}
 	}
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+	txGen := moduletestutil.MakeTestTxConfig()
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
@@ -350,7 +350,7 @@ func sendMsgMultiSend(
 			return err
 		}
 	}
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+	txGen := moduletestutil.MakeTestTxConfig()
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,

@@ -29,11 +29,11 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (k msgServer) SetWithdrawAddress(goCtx context.Context, msg *types.MsgSetWithdrawAddress) (*types.MsgSetWithdrawAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
-	withdrawAddress, err := sdk.AccAddressFromBech32(msg.WithdrawAddress)
+	withdrawAddress, err := k.authKeeper.StringToBytes(msg.WithdrawAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (k msgServer) WithdrawDelegatorReward(goCtx context.Context, msg *types.Msg
 	if err != nil {
 		return nil, err
 	}
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	depositer, err := sdk.AccAddressFromBech32(msg.Depositor)
+	depositer, err := k.authKeeper.StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
 	}
 
-	if (!req.Params.BaseProposerReward.IsNil() && !req.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck
-		(!req.Params.BonusProposerReward.IsNil() && !req.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck
+	if (!req.Params.BaseProposerReward.IsNil() && !req.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck // deprecated but kept for backwards compatibility
+		(!req.Params.BonusProposerReward.IsNil() && !req.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck // deprecated but kept for backwards compatibility
 		return nil, errorsmod.Wrapf(errors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
 	}
 
@@ -142,7 +142,7 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	recipient, err := sdk.AccAddressFromBech32(req.Recipient)
+	recipient, err := k.authKeeper.StringToBytes(req.Recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	authority, err := sdk.AccAddressFromBech32(req.Authority)
+	authority, err := k.authKeeper.StringToBytes(req.Authority)
 	if err != nil {
 		return nil, err
 	}

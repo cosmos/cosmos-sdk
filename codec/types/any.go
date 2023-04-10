@@ -1,4 +1,3 @@
-// nolint
 package types
 
 import (
@@ -11,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// nolint:revive // XXX is reqired for proto compatibility
 type Any struct {
 	// A URL/resource name that uniquely identifies the type of the serialized
 	// protocol buffer message. This string must contain at least

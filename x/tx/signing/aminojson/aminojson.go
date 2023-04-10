@@ -104,6 +104,8 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		signerData.Sequence, body.Memo, txData.Body.Messages, fee)
 }
 
+// GetSignDocBytes returns the bytes to sign for a given AminoSignDoc. It is the last step in GetSignBytes.
+// It is exposed for a usage in the client/tx package, AuxTxBuilder.
 func (h SignModeHandler) GetSignDocBytes(
 	accountNumber uint64,
 	timeoutHeight uint64,

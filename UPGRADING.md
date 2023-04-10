@@ -95,6 +95,12 @@ All the store imports are now renamed to use `cosmossdk.io/store` instead of `gi
 
 ### Modules
 
+#### `**all**`
+
+[RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
+The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
+It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
+
 #### `x/auth`
 
 Methods in the `AccountKeeper` now use `context.Context` instead of `sdk.Context`. Any module that has an interface for it will need to update and re-generate mocks if needed.

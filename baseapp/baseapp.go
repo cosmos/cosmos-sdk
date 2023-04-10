@@ -459,6 +459,16 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	}
 }
 
+// GetFinalizeBlockStateCtx returns the Context associated with the FinalizeBlock
+// state. This Context can be used to write data derived from processing vote
+// extensions to application state during ProcessProposal.
+//
+// NOTE: Do no use or write to state using this Context unless you intend for
+// that state to be committed.
+func (app *BaseApp) GetFinalizeBlockStateCtx() sdk.Context {
+	return app.finalizeBlockState.ctx
+}
+
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
 func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams {

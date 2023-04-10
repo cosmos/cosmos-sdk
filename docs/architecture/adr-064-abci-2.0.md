@@ -284,8 +284,8 @@ propose to allow application developers to manually retrieve the `finalizeState`
 context (see [`FinalizeBlock`](#finalizeblock-1) below). Using this context,
 state can be directly written to `finalizeState` which will be used during
 `FinalizeBlock` and eventually committed to the application state. Note, since
-`ProcessProposal` could timeout and thus require another round of consensus,
-we will reset `finalizeState` in the beginning of `ProcessProposal`.
+`ProcessProposal` can timeout and thus require another round of consensus, we
+will reset `finalizeState` in the beginning of `ProcessProposal`.
 
 A `ProcessProposal` handler could look like the following:
 

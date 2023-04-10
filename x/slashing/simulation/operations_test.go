@@ -180,7 +180,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 
 	var msg types.MsgUnjail
-	types.Amino.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddr)

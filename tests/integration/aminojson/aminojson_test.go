@@ -537,8 +537,8 @@ func TestDecimalMutation(t *testing.T) {
 
 	// prior to the merge of https://github.com/cosmos/cosmos-sdk/pull/15506
 	// gogoproto.Marshal would mutate Decimal fields changing JSON output as shown in the assertions below
-	//require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
-	//require.Equal(t,
+	// require.NotEqual(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))
+	// require.Equal(t,
 	//	`{"rate":"0.000000000000000000","max_rate":"0.000000000000000000","max_change_rate":"0.000000000000000000"}`,
 	//	string(rateBz))
 

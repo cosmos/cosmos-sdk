@@ -38,7 +38,7 @@ Each `Msg` service method must have exactly one argument, which must implement t
   rpc Send(MsgSend) returns (MsgSendResponse);
 ```
 
-`sdk.Msg` interface is a simplified version of the Amino `LegacyMsg` interface described [below](#legacy-amino-msgs) with only `ValidateBasic()` and `GetSigners()` methods. For backwards compatibility with [Amino `LegacyMsg`s](#legacy-amino-msgs), existing `LegacyMsg` types should be used as the request parameter for `service` RPC definitions. Newer `sdk.Msg` types, which only support `service` definitions, should use canonical `Msg...` name.
+`sdk.Msg` interface is a simplified version of the Amino `LegacyMsg` interface described [below](#legacy-amino-msgs) with the `GetSigners()` method. For backwards compatibility with [Amino `LegacyMsg`s](#legacy-amino-msgs), existing `LegacyMsg` types should be used as the request parameter for `service` RPC definitions. Newer `sdk.Msg` types, which only support `service` definitions, should use canonical `Msg...` name.
 
 The Cosmos SDK uses Protobuf definitions to generate client and server code:
 
@@ -63,7 +63,6 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/tx_msg.go#L14-L26
 
 It extends `proto.Message` and contains the following methods:
 
-* [`ValidateBasic() error`](../basics/01-tx-lifecycle.md#ValidateBasic).
 * `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
 * `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
 

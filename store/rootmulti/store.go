@@ -827,7 +827,6 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 				node, err := exporter.Next()
 				if err == iavltree.ErrorExportDone {
 					rs.logger.Debug("snapshot Done", "store", store.name, "nodeCount", nodeCount)
-					nodeCount = 0
 					break
 				} else if err != nil {
 					return err

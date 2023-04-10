@@ -23,7 +23,7 @@ type SignModeHandler struct {
 
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
-	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving proto types when unpacking any messages.
+	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving protobuf types when unpacking any messages.
 	TypeResolver protoregistry.MessageTypeResolver
 
 	// SignersContext is the signing.Context to use for getting signers.
@@ -59,18 +59,18 @@ func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 
 // getFirstSigner returns the first signer from the first message in the tx. It replicates behavior in
 // https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L142
-func (h SignModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
+func (h SignModeHandler) getFirstSigner(txData signing.TxData) ([]byte, error) {
 	if len(txData.Body.Messages) == 0 {
-		return "", fmt.Errorf("no signer found")
+		return nil, fmt.Errorf("no signer found")
 	}
 
 	msg, err := anyutil.Unpack(txData.Body.Messages[0], h.fileResolver, h.typeResolver)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	signer, err := h.signersContext.GetSigners(msg)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return signer[0], nil
 }

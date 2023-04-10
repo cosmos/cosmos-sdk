@@ -17,7 +17,8 @@ import (
 
 // Context is a context for retrieving the list of signers from a
 // message where signers are specified by the cosmos.msg.v1.signer protobuf
-// option.
+// option. It also contains the ProtoFileResolver and address.Codec's used
+// for resolving message descriptors and converting addresses.
 type Context struct {
 	protoFiles            ProtoFileResolver
 	addressCodec          address.Codec

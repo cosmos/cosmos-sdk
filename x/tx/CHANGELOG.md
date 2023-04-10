@@ -33,7 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking
 
-* [#15709](https://github.com/cosmos/cosmos-sdk/pull/15709) `GetSignersContext` has been renamed to just `signing.Context` and now returns `[][]byte` instead of `[]string` and requires `address.Codec`s for account and validator addresses.
+* [#15709](https://github.com/cosmos/cosmos-sdk/pull/15709) `GetSignersContext` has been renamed to `signing.Context` and now returns `[][]byte` instead of `[]string` and requires `address.Codec`s for account and validator addresses.
 
 ## v0.5.0
 

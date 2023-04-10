@@ -236,8 +236,8 @@ func (st *Store) Delete(key []byte) {
 // DeleteVersionsTo deletes versions upto the given version from the MutableTree. An error
 // is returned if any single version is invalid or the delete fails. All writes
 // happen in a single batch with a single commit.
-func (st *Store) DeleteVersionsTo(versions int64) error {
-	return st.tree.DeleteVersionsTo(versions)
+func (st *Store) DeleteVersionsTo(version int64) error {
+	return st.tree.DeleteVersionsTo(version)
 }
 
 // LoadVersionForOverwriting attempts to load a tree at a previously committed

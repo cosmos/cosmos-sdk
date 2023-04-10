@@ -12,20 +12,21 @@ import (
 
 // DecodedTx contains the decoded transaction, its signers, and other flags.
 type DecodedTx struct {
+	Messages                     []proto.Message
 	Tx                           *v1beta1.Tx
 	TxRaw                        *v1beta1.TxRaw
 	Signers                      []string
 	TxBodyHasUnknownNonCriticals bool
 }
 
-// Context contains the dependencies required for decoding transactions.
-type Context struct {
+// Decoder contains the dependencies required for decoding transactions.
+type Decoder struct {
 	getSignersCtx *signing.GetSignersContext
 	typeResolver  protoregistry.MessageTypeResolver
 	protoFiles    *protoregistry.Files
 }
 
-// Options are options for creating a Context.
+// Options are options for creating a Decoder.
 type Options struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
@@ -34,8 +35,8 @@ type Options struct {
 	SigningContext *signing.GetSignersContext
 }
 
-// NewContext creates a new Context for decoding transactions.
-func NewContext(options Options) (*Context, error) {
+// NewDecoder creates a new Decoder for decoding transactions.
+func NewDecoder(options Options) (*Decoder, error) {
 	if options.ProtoFiles == nil {
 		options.ProtoFiles = protoregistry.GlobalFiles
 	}
@@ -55,7 +56,7 @@ func NewContext(options Options) (*Context, error) {
 		}
 	}
 
-	return &Context{
+	return &Decoder{
 		getSignersCtx: getSignersCtx,
 		protoFiles:    options.ProtoFiles,
 		typeResolver:  options.TypeResolver,
@@ -63,7 +64,7 @@ func NewContext(options Options) (*Context, error) {
 }
 
 // Decode decodes raw protobuf encoded transaction bytes into a DecodedTx.
-func (c *Context) Decode(txBytes []byte) (*DecodedTx, error) {
+func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	// Make sure txBytes follow ADR-027.
 	err := rejectNonADR027TxRaw(txBytes)
 	if err != nil {
@@ -73,7 +74,7 @@ func (c *Context) Decode(txBytes []byte) (*DecodedTx, error) {
 	var raw v1beta1.TxRaw
 
 	// reject all unknown proto fields in the root TxRaw
-	err = RejectUnknownFieldsStrict(txBytes, raw.ProtoReflect().Descriptor(), c.protoFiles)
+	err = RejectUnknownFieldsStrict(txBytes, raw.ProtoReflect().Descriptor(), d.protoFiles)
 	if err != nil {
 		return nil, errors.Wrap(ErrTxDecode, err.Error())
 	}
@@ -86,7 +87,7 @@ func (c *Context) Decode(txBytes []byte) (*DecodedTx, error) {
 	var body v1beta1.TxBody
 
 	// allow non-critical unknown fields in TxBody
-	txBodyHasUnknownNonCriticals, err := RejectUnknownFields(raw.BodyBytes, body.ProtoReflect().Descriptor(), true, c.protoFiles)
+	txBodyHasUnknownNonCriticals, err := RejectUnknownFields(raw.BodyBytes, body.ProtoReflect().Descriptor(), true, d.protoFiles)
 	if err != nil {
 		return nil, errors.Wrap(ErrTxDecode, err.Error())
 	}
@@ -99,7 +100,7 @@ func (c *Context) Decode(txBytes []byte) (*DecodedTx, error) {
 	var authInfo v1beta1.AuthInfo
 
 	// reject all unknown proto fields in AuthInfo
-	err = RejectUnknownFieldsStrict(raw.AuthInfoBytes, authInfo.ProtoReflect().Descriptor(), c.protoFiles)
+	err = RejectUnknownFieldsStrict(raw.AuthInfoBytes, authInfo.ProtoReflect().Descriptor(), d.protoFiles)
 	if err != nil {
 		return nil, errors.Wrap(ErrTxDecode, err.Error())
 	}
@@ -116,19 +117,22 @@ func (c *Context) Decode(txBytes []byte) (*DecodedTx, error) {
 	}
 
 	var signers []string
+	var msgs []proto.Message
 	for _, anyMsg := range body.Messages {
-		msg, signerErr := anyutil.Unpack(anyMsg, c.protoFiles, c.typeResolver)
+		msg, signerErr := anyutil.Unpack(anyMsg, d.protoFiles, d.typeResolver)
 		if signerErr != nil {
-			return nil, errors.Wrap(ErrTxDecode, err.Error())
+			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
 		}
-		ss, signerErr := c.getSignersCtx.GetSigners(msg)
+		msgs = append(msgs, msg)
+		ss, signerErr := d.getSignersCtx.GetSigners(msg)
 		if signerErr != nil {
-			return nil, errors.Wrap(ErrTxDecode, err.Error())
+			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
 		}
 		signers = append(signers, ss...)
 	}
 
 	return &DecodedTx{
+		Messages:                     msgs,
 		Tx:                           theTx,
 		TxRaw:                        &raw,
 		TxBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,

@@ -100,7 +100,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	}
 
 	return h.GetSignDocBytes(
-		signerData.AccountNumber, body.TimeoutHeight, signerData.ChainId,
+		signerData.AccountNumber, body.TimeoutHeight, signerData.ChainID,
 		signerData.Sequence, body.Memo, txData.Body.Messages, fee)
 }
 
@@ -109,7 +109,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 func (h SignModeHandler) GetSignDocBytes(
 	accountNumber uint64,
 	timeoutHeight uint64,
-	chainId string,
+	chainID string,
 	sequence uint64,
 	memo string,
 	msgs []*anypb.Any,
@@ -121,7 +121,7 @@ func (h SignModeHandler) GetSignDocBytes(
 	signDoc := &aminojsonpb.AminoSignDoc{
 		AccountNumber: accountNumber,
 		TimeoutHeight: timeoutHeight,
-		ChainId:       chainId,
+		ChainId:       chainID,
 		Sequence:      sequence,
 		Memo:          memo,
 		Msgs:          msgs,

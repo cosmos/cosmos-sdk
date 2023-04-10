@@ -36,6 +36,6 @@ func TestPrivKeySecp256k1SignVerify(t *testing.T) {
 
 			pub := tt.privKey.PubKey()
 			assert.Equal(t, tt.wantVerifyPasses, pub.VerifySignature(msg, got))
-		}) 
+		})
 	}
 }

@@ -23,7 +23,7 @@ package eth
 import (
 	fmt "fmt"
 
-	secp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/eth"
 )
 
@@ -43,19 +43,7 @@ func (privKey PrivKey) Sign(digestBz []byte) ([]byte, error) {
 		return nil, fmt.Errorf("hash is required to be exactly %d bytes (%d)", DigestLength, len(digestBz))
 	}
 
-	key, err := privKey.ToECDSA()
-	if err != nil {
-		return nil, err
-	}
-
-	seckey := FromECDSA(key)
-	defer func() {
-		for i := range seckey {
-			seckey[i] = 0
-		}
-	}()
-
-	return secp.Sign(digestBz, seckey)
+	return secp256k1.Sign(digestBz, privKey.Key)
 }
 
 // VerifySignature verifies that the ECDSA public key created a given signature over
@@ -76,5 +64,5 @@ func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
 	}
 
 	// the signature needs to be in [R || S] format when provided to VerifySignature
-	return secp.VerifySignature(pubKey.Key, msg, sig)
+	return secp256k1.VerifySignature(pubKey.Key, msg, sig)
 }

@@ -34,7 +34,6 @@ func (a Address) String() string {
 // Hex returns an EIP55-compliant hex string representation of the address.
 func (a Address) Hex() string {
 	buf := a.hex()
-
 	// compute checksum
 	sha := sha3.NewLegacyKeccak256()
 	sha.Write(buf[2:])
@@ -50,7 +49,7 @@ func (a Address) Hex() string {
 			buf[i] -= 32
 		}
 	}
-	return string(buf[:])
+	return string(buf)
 }
 
 func (a Address) hex() []byte {

@@ -157,8 +157,7 @@ func (pubKey PubKey) Address() cmtcrypto.Address {
 	if err != nil || pubk == nil {
 		return nil
 	}
-	pubBytes := FromECDSAPub(pubk)
-	return cmtcrypto.Address(eth.Keccak256(pubBytes[1:])[12:])
+	return cmtcrypto.Address(eth.Keccak256(FromECDSAPub(pubk)[1:])[12:])
 }
 
 // Bytes returns the raw bytes of the ECDSA public key.

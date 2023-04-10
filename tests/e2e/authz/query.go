@@ -234,7 +234,7 @@ func (s *E2ETestSuite) TestQueryGranterGrants() {
 			},
 			false,
 			"",
-			8,
+			7,
 		},
 		{
 			"valid case with pagination",

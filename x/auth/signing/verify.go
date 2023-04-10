@@ -86,7 +86,7 @@ func VerifySignatureV2(
 // checks if the sign mode handler supports SignModeHandlerWithContext, in
 // which case it passes the context.Context argument. Otherwise, it fallbacks
 // to GetSignBytes.
-func GetSignBytesWithContext(h SignModeHandler, ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) { //nolint:revive
+func GetSignBytesWithContext(h SignModeHandler, ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) { //nolint:revive // refactor this in a future pr
 	hWithCtx, ok := h.(SignModeHandlerWithContext)
 	if ok {
 		return hWithCtx.GetSignBytesWithContext(ctx, mode, data, tx)

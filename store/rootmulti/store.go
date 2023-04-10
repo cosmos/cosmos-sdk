@@ -501,7 +501,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			if err != nil {
 				if commitInfo == nil {
 					var errCommitInfo error
-					commitInfo, errCommitInfo = rs.GetCommitInfo(version)
+					commitInfo, errCommitInfo = getCommitInfo(rs.db, version)
 
 					if errCommitInfo != nil {
 						return nil, errCommitInfo

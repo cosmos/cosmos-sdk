@@ -34,8 +34,8 @@ type Options struct {
 	SigningContext *signing.GetSignersContext
 }
 
-// NewContext creates a new Decoder for decoding transactions.
-func NewContext(options Options) (*Decoder, error) {
+// NewDecoder creates a new Decoder for decoding transactions.
+func NewDecoder(options Options) (*Decoder, error) {
 	if options.ProtoFiles == nil {
 		options.ProtoFiles = protoregistry.GlobalFiles
 	}

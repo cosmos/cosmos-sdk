@@ -4,9 +4,49 @@ import (
 	"context"
 	"fmt"
 	"github.com/cockroachdb/errors"
+	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"strings"
 )
+
+func bindSimpleMapFlag(flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, name, shorthand, usage string) HasValue {
+	if !field.IsMap() {
+		return nil
+	}
+	keyType := field.MapKey().Kind()
+	if keyType != protoreflect.StringKind {
+		return nil
+	}
+	valueType := field.MapValue().Kind()
+
+	switch valueType {
+	case protoreflect.StringKind:
+		val := flagSet.StringToStringP(name, shorthand, nil, usage)
+		return newMapValue(val, protoreflect.ValueOfString)
+	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+		val := flagSet.StringToInt64P(name, shorthand, nil, usage)
+		return newMapValue(val, protoreflect.ValueOfInt64)
+	default:
+		return nil
+	}
+}
+
+type mapValue[K comparable, V any] struct {
+	value               *map[K]V
+	toProtoreflectValue func(V) protoreflect.Value
+}
+
+func newMapValue[K comparable, V any](mapV *map[K]V, toProtoreflectValue func(V) protoreflect.Value) mapValue[K, V] {
+	return mapValue[K, V]{value: mapV, toProtoreflectValue: toProtoreflectValue}
+}
+
+func (v mapValue[K, V]) Get(mutable protoreflect.Value) (protoreflect.Value, error) {
+	protoMap := mutable.Map()
+	for k, val := range *v.value {
+		protoMap.Set(protoreflect.MapKey(protoreflect.ValueOf(k)), v.toProtoreflectValue(val))
+	}
+	return mutable, nil
+}
 
 type compositeMapType struct {
 	keyType, valueType Type
@@ -18,15 +58,6 @@ type compositeMapValue struct {
 	values    protoreflect.Map
 	ctx       context.Context
 	opts      *Builder
-}
-
-type mapValue[K comparable, T any] struct {
-	value               *map[K]T
-	toProtoreflectValue func(T) protoreflect.Value
-}
-
-func newMapValue[K comparable, T any](mapV *map[K]T, toProtoreflectValue func(T) protoreflect.Value) mapValue[K, T] {
-	return mapValue[K, T]{value: mapV, toProtoreflectValue: toProtoreflectValue}
 }
 
 func (m compositeMapType) DefaultValue() string {

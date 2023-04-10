@@ -163,7 +163,7 @@ func (r *SignModeHandler) GetMessageValueRenderer(md protoreflect.MessageDescrip
 func (r *SignModeHandler) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRendererCreator{}
-		r.scalars["cosmos.Int"] = func(fd protoreflect.FieldDescriptor) ValueRenderer { return NewIntValueRenderer(fd) }
+		r.scalars["cosmos.Int"] = NewIntValueRenderer
 		r.scalars["cosmos.Dec"] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewDecValueRenderer() }
 	}
 	if r.messages == nil {
@@ -195,7 +195,7 @@ func (r *SignModeHandler) GetSignBytes(ctx context.Context, signerData signing.S
 		AuthInfoBytes: txData.AuthInfoBytes,
 		SignerData: &textualpb.SignerData{
 			Address:       signerData.Address,
-			ChainId:       signerData.ChainId,
+			ChainId:       signerData.ChainID,
 			AccountNumber: signerData.AccountNumber,
 			Sequence:      signerData.Sequence,
 			PubKey:        signerData.PubKey,

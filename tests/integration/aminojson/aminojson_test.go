@@ -7,11 +7,8 @@ import (
 	"testing"
 	"time"
 
-	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -20,42 +17,31 @@ import (
 	"github.com/cosmos/cosmos-proto/rapidproto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/api/amino"
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	authzapi "cosmossdk.io/api/cosmos/authz/v1beta1"
 	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	consensusapi "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	multisigapi "cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
-	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
-	feegrantapi "cosmossdk.io/api/cosmos/feegrant/v1beta1"
-	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
-	groupapi "cosmossdk.io/api/cosmos/group/v1"
-	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
-	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	"cosmossdk.io/x/evidence"
-	evidencetypes "cosmossdk.io/x/evidence/types"
-	feegranttypes "cosmossdk.io/x/feegrant"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	gogo_testpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/gogo/testpb"
 	pulsar_testpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/pulsar/testpb"
+	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -72,249 +58,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-)
-
-type generatedType struct {
-	pulsar proto.Message
-	gogo   gogoproto.Message
-	opts   rapidproto.GeneratorOptions
-}
-
-func genType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.GeneratorOptions) generatedType {
-	return generatedType{
-		pulsar: pulsar,
-		gogo:   gogo,
-		opts:   opts,
-	}
-}
-
-func withDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOptions {
-	return opts.
-		WithAnyTypes(
-			&groupapi.ThresholdDecisionPolicy{},
-			&groupapi.PercentageDecisionPolicy{}).
-		WithDisallowNil().
-		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.ThresholdDecisionPolicy{}).
-		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.PercentageDecisionPolicy{})
-}
-
-func generatorFieldMapper(t *rapid.T, field protoreflect.FieldDescriptor, name string) (protoreflect.Value, bool) {
-	opts := field.Options()
-	switch {
-	case proto.HasExtension(opts, cosmos_proto.E_Scalar):
-		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
-		switch scalar {
-		case "cosmos.Int":
-			i32 := rapid.Int32().Draw(t, name)
-			return protoreflect.ValueOfString(fmt.Sprintf("%d", i32)), true
-		case "cosmos.Dec":
-			return protoreflect.ValueOfString(""), true
-		}
-	case field.Kind() == protoreflect.BytesKind:
-		if proto.HasExtension(opts, amino.E_Encoding) {
-			encoding := proto.GetExtension(opts, amino.E_Encoding).(string)
-			if encoding == "cosmos_dec_bytes" {
-				return protoreflect.ValueOfBytes([]byte{}), true
-			}
-		}
-	}
-
-	return protoreflect.Value{}, false
-}
-
-var (
-	genOpts = rapidproto.GeneratorOptions{
-		Resolver:  protoregistry.GlobalTypes,
-		FieldMaps: []rapidproto.FieldMapper{generatorFieldMapper},
-	}
-	genTypes = []generatedType{
-		// auth
-		genType(&authtypes.Params{}, &authapi.Params{}, genOpts),
-		genType(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, genOpts.WithAnyTypes(&ed25519.PubKey{})),
-		genType(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, genOpts.WithAnyTypes(&ed25519.PubKey{})),
-		genType(&authtypes.ModuleCredential{}, &authapi.ModuleCredential{}, genOpts),
-		genType(&authtypes.MsgUpdateParams{}, &authapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
-
-		// authz
-		genType(&authztypes.GenericAuthorization{}, &authzapi.GenericAuthorization{}, genOpts),
-		genType(&authztypes.Grant{}, &authzapi.Grant{},
-			genOpts.WithAnyTypes(&authzapi.GenericAuthorization{}).
-				WithDisallowNil().
-				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}),
-		),
-		genType(&authztypes.MsgGrant{}, &authzapi.MsgGrant{},
-			genOpts.WithAnyTypes(&authzapi.GenericAuthorization{}).
-				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}).
-				WithDisallowNil(),
-		),
-		genType(&authztypes.MsgExec{}, &authzapi.MsgExec{},
-			genOpts.WithAnyTypes(&authzapi.MsgGrant{}, &authzapi.GenericAuthorization{}).
-				WithDisallowNil().
-				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &authzapi.MsgGrant{}),
-		),
-
-		// bank
-		genType(&banktypes.MsgSend{}, &bankapi.MsgSend{}, genOpts.WithDisallowNil()),
-		genType(&banktypes.MsgMultiSend{}, &bankapi.MsgMultiSend{}, genOpts.WithDisallowNil()),
-		genType(&banktypes.MsgUpdateParams{}, &bankapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
-		genType(&banktypes.MsgSetSendEnabled{}, &bankapi.MsgSetSendEnabled{}, genOpts),
-		genType(&banktypes.SendAuthorization{}, &bankapi.SendAuthorization{}, genOpts),
-		genType(&banktypes.Params{}, &bankapi.Params{}, genOpts),
-
-		// consensus
-		genType(&consensustypes.MsgUpdateParams{}, &consensusapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
-
-		// crypto
-		genType(&multisig.LegacyAminoPubKey{}, &multisigapi.LegacyAminoPubKey{},
-			genOpts.WithAnyTypes(&ed25519.PubKey{}, &secp256k1.PubKey{})),
-
-		// distribution
-		genType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, genOpts),
-		genType(&disttypes.MsgWithdrawValidatorCommission{}, &distapi.MsgWithdrawValidatorCommission{}, genOpts),
-		genType(&disttypes.MsgSetWithdrawAddress{}, &distapi.MsgSetWithdrawAddress{}, genOpts),
-		genType(&disttypes.MsgFundCommunityPool{}, &distapi.MsgFundCommunityPool{}, genOpts),
-		genType(&disttypes.MsgUpdateParams{}, &distapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
-		genType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, genOpts),
-		genType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, genOpts),
-		genType(&disttypes.Params{}, &distapi.Params{}, genOpts),
-
-		// evidence
-		genType(&evidencetypes.Equivocation{}, &evidenceapi.Equivocation{}, genOpts.WithDisallowNil()),
-		genType(&evidencetypes.MsgSubmitEvidence{}, &evidenceapi.MsgSubmitEvidence{},
-			genOpts.WithAnyTypes(&evidenceapi.Equivocation{}).
-				WithDisallowNil().
-				WithInterfaceHint("cosmos.evidence.v1beta1.Evidence", &evidenceapi.Equivocation{})),
-
-		// feegrant
-		genType(&feegranttypes.MsgGrantAllowance{}, &feegrantapi.MsgGrantAllowance{},
-			genOpts.WithDisallowNil().
-				WithAnyTypes(
-					&feegrantapi.BasicAllowance{},
-					&feegrantapi.PeriodicAllowance{}).
-				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
-				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
-		),
-		genType(&feegranttypes.MsgRevokeAllowance{}, &feegrantapi.MsgRevokeAllowance{}, genOpts),
-		genType(&feegranttypes.BasicAllowance{}, &feegrantapi.BasicAllowance{}, genOpts.WithDisallowNil()),
-		genType(&feegranttypes.PeriodicAllowance{}, &feegrantapi.PeriodicAllowance{}, genOpts.WithDisallowNil()),
-		genType(&feegranttypes.AllowedMsgAllowance{}, &feegrantapi.AllowedMsgAllowance{},
-			genOpts.WithDisallowNil().
-				WithAnyTypes(
-					&feegrantapi.BasicAllowance{},
-					&feegrantapi.PeriodicAllowance{}).
-				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
-				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
-		),
-
-		// gov v1beta1
-		genType(&gov_v1beta1_types.MsgSubmitProposal{}, &gov_v1beta1_api.MsgSubmitProposal{},
-			genOpts.WithAnyTypes(&gov_v1beta1_api.TextProposal{}).
-				WithDisallowNil().
-				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{}),
-		),
-		genType(&gov_v1beta1_types.MsgDeposit{}, &gov_v1beta1_api.MsgDeposit{}, genOpts),
-		genType(&gov_v1beta1_types.MsgVote{}, &gov_v1beta1_api.MsgVote{}, genOpts),
-		genType(&gov_v1beta1_types.MsgVoteWeighted{}, &gov_v1beta1_api.MsgVoteWeighted{}, genOpts),
-		genType(&gov_v1beta1_types.TextProposal{}, &gov_v1beta1_api.TextProposal{}, genOpts),
-
-		// gov v1
-		genType(&gov_v1_types.MsgSubmitProposal{}, &gov_v1_api.MsgSubmitProposal{},
-			genOpts.WithAnyTypes(&gov_v1_api.MsgVote{}, &gov_v1_api.MsgVoteWeighted{}, &gov_v1_api.MsgDeposit{},
-				&gov_v1_api.MsgExecLegacyContent{}, &gov_v1_api.MsgUpdateParams{}).
-				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{}).
-				WithDisallowNil(),
-		),
-		genType(&gov_v1_types.MsgDeposit{}, &gov_v1_api.MsgDeposit{}, genOpts),
-		genType(&gov_v1_types.MsgVote{}, &gov_v1_api.MsgVote{}, genOpts),
-		genType(&gov_v1_types.MsgVoteWeighted{}, &gov_v1_api.MsgVoteWeighted{}, genOpts),
-		genType(&gov_v1_types.MsgExecLegacyContent{}, &gov_v1_api.MsgExecLegacyContent{},
-			genOpts.WithAnyTypes(&gov_v1beta1_api.TextProposal{}).
-				WithDisallowNil().
-				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{})),
-		genType(&gov_v1_types.MsgUpdateParams{}, &gov_v1_api.MsgUpdateParams{}, genOpts.WithDisallowNil()),
-
-		// group
-		genType(&grouptypes.MsgCreateGroup{}, &groupapi.MsgCreateGroup{}, genOpts),
-		genType(&grouptypes.MsgUpdateGroupMembers{}, &groupapi.MsgUpdateGroupMembers{}, genOpts),
-		genType(&grouptypes.MsgUpdateGroupAdmin{}, &groupapi.MsgUpdateGroupAdmin{}, genOpts),
-		genType(&grouptypes.MsgUpdateGroupMetadata{}, &groupapi.MsgUpdateGroupMetadata{}, genOpts),
-		genType(&grouptypes.MsgCreateGroupWithPolicy{}, &groupapi.MsgCreateGroupWithPolicy{},
-			withDecisionPolicy(genOpts)),
-		genType(&grouptypes.MsgCreateGroupPolicy{}, &groupapi.MsgCreateGroupPolicy{},
-			withDecisionPolicy(genOpts)),
-		genType(&grouptypes.MsgUpdateGroupPolicyAdmin{}, &groupapi.MsgUpdateGroupPolicyAdmin{}, genOpts),
-		genType(&grouptypes.MsgUpdateGroupPolicyDecisionPolicy{}, &groupapi.MsgUpdateGroupPolicyDecisionPolicy{},
-			withDecisionPolicy(genOpts)),
-		genType(&grouptypes.MsgUpdateGroupPolicyMetadata{}, &groupapi.MsgUpdateGroupPolicyMetadata{}, genOpts),
-		genType(&grouptypes.MsgSubmitProposal{}, &groupapi.MsgSubmitProposal{},
-			genOpts.WithDisallowNil().
-				WithAnyTypes(&groupapi.MsgCreateGroup{}, &groupapi.MsgUpdateGroupMembers{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgCreateGroup{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgUpdateGroupMembers{}),
-		),
-		genType(&grouptypes.MsgVote{}, &groupapi.MsgVote{}, genOpts),
-		genType(&grouptypes.MsgExec{}, &groupapi.MsgExec{}, genOpts),
-		genType(&grouptypes.MsgLeaveGroup{}, &groupapi.MsgLeaveGroup{}, genOpts),
-
-		// mint
-		genType(&minttypes.Params{}, &mintapi.Params{}, genOpts),
-		genType(&minttypes.MsgUpdateParams{}, &mintapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
-
-		// params
-		genType(&proposal.ParameterChangeProposal{}, &paramsapi.ParameterChangeProposal{}, genOpts),
-
-		// slashing
-		genType(&slashingtypes.Params{}, &slashingapi.Params{}, genOpts.WithDisallowNil()),
-		genType(&slashingtypes.MsgUnjail{}, &slashingapi.MsgUnjail{}, genOpts),
-		genType(&slashingtypes.MsgUpdateParams{}, &slashingapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
-
-		// staking
-		genType(&stakingtypes.MsgCreateValidator{}, &stakingapi.MsgCreateValidator{},
-			genOpts.WithDisallowNil().
-				WithAnyTypes(&ed25519.PubKey{}).
-				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{}),
-		),
-		genType(&stakingtypes.MsgEditValidator{}, &stakingapi.MsgEditValidator{}, genOpts.WithDisallowNil()),
-		genType(&stakingtypes.MsgDelegate{}, &stakingapi.MsgDelegate{}, genOpts.WithDisallowNil()),
-		genType(&stakingtypes.MsgUndelegate{}, &stakingapi.MsgUndelegate{}, genOpts.WithDisallowNil()),
-		genType(&stakingtypes.MsgBeginRedelegate{}, &stakingapi.MsgBeginRedelegate{}, genOpts.WithDisallowNil()),
-		genType(&stakingtypes.MsgUpdateParams{}, &stakingapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
-		genType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, genOpts),
-
-		// upgrade
-		genType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, genOpts),       // nolint:staticcheck // testing legacy code path
-		genType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, genOpts.WithDisallowNil()), // nolint:staticcheck // testing legacy code path
-		genType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, genOpts.WithDisallowNil()),
-		genType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, genOpts.WithDisallowNil()),
-		genType(&upgradetypes.MsgCancelUpgrade{}, &upgradeapi.MsgCancelUpgrade{}, genOpts),
-
-		// vesting
-		genType(&vestingtypes.BaseVestingAccount{}, &vestingapi.BaseVestingAccount{}, genOpts.WithDisallowNil()),
-		genType(&vestingtypes.ContinuousVestingAccount{}, &vestingapi.ContinuousVestingAccount{}, genOpts.WithDisallowNil()),
-		genType(&vestingtypes.DelayedVestingAccount{}, &vestingapi.DelayedVestingAccount{}, genOpts.WithDisallowNil()),
-		genType(&vestingtypes.PeriodicVestingAccount{}, &vestingapi.PeriodicVestingAccount{}, genOpts.WithDisallowNil()),
-		genType(&vestingtypes.PermanentLockedAccount{}, &vestingapi.PermanentLockedAccount{}, genOpts.WithDisallowNil()),
-		genType(&vestingtypes.MsgCreateVestingAccount{}, &vestingapi.MsgCreateVestingAccount{}, genOpts),
-		genType(&vestingtypes.MsgCreatePermanentLockedAccount{}, &vestingapi.MsgCreatePermanentLockedAccount{}, genOpts),
-		genType(&vestingtypes.MsgCreatePeriodicVestingAccount{}, &vestingapi.MsgCreatePeriodicVestingAccount{}, genOpts),
-	}
 )
 
 // TestAminoJSON_Equivalence tests that x/tx/Encoder encoding is equivalent to the legacy Encoder encoding.
@@ -339,11 +93,11 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
-	for _, tt := range genTypes {
-		name := string(tt.pulsar.ProtoReflect().Descriptor().FullName())
+	for _, tt := range rapidgen.DefaultGeneratedTypes {
+		name := string(tt.Pulsar.ProtoReflect().Descriptor().FullName())
 		t.Run(name, func(t *testing.T) {
-			gen := rapidproto.MessageGenerator(tt.pulsar, tt.opts)
-			fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
+			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
+			fmt.Printf("testing %s\n", tt.Pulsar.ProtoReflect().Descriptor().FullName())
 			rapid.Check(t, func(t *rapid.T) {
 				// uncomment to debug; catch a panic and inspect application state
 				// defer func() {
@@ -356,8 +110,8 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				msg := gen.Draw(t, "msg")
 				postFixPulsarMessage(msg)
 
-				gogo := tt.gogo
-				sanity := tt.pulsar
+				gogo := tt.Gogo
+				sanity := tt.Pulsar
 
 				protoBz, err := proto.Marshal(msg)
 				require.NoError(t, err)
@@ -382,9 +136,9 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				}
 
 				handlerOptions := signing_testutil.HandlerArgumentOptions{
-					ChainId:       "test-chain",
+					ChainID:       "test-chain",
 					Memo:          "sometestmemo",
-					Msg:           tt.pulsar,
+					Msg:           tt.Pulsar,
 					AccNum:        1,
 					AccSeq:        2,
 					SignerAddress: "signerAddress",
@@ -408,7 +162,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				theTx := txBuilder.GetTx()
 
 				legacySigningData := signing.SignerData{
-					ChainID:       handlerOptions.ChainId,
+					ChainID:       handlerOptions.ChainID,
 					Address:       handlerOptions.SignerAddress,
 					AccountNumber: handlerOptions.AccNum,
 					Sequence:      handlerOptions.AccSeq,
@@ -683,7 +437,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			}
 
 			handlerOptions := signing_testutil.HandlerArgumentOptions{
-				ChainId:       "test-chain",
+				ChainID:       "test-chain",
 				Memo:          "sometestmemo",
 				Msg:           tc.pulsar,
 				AccNum:        1,
@@ -709,7 +463,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			theTx := txBuilder.GetTx()
 
 			legacySigningData := signing.SignerData{
-				ChainID:       handlerOptions.ChainId,
+				ChainID:       handlerOptions.ChainID,
 				Address:       handlerOptions.SignerAddress,
 				AccountNumber: handlerOptions.AccNum,
 				Sequence:      handlerOptions.AccSeq,

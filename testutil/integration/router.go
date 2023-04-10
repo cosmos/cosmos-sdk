@@ -1,9 +1,10 @@
 package integration
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/cometbft/cometbft/abci/types"
+	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
@@ -18,18 +19,19 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
+const appName = "integration-app"
+
 // App is a test application that can be used to test the integration of modules.
 type App struct {
 	*baseapp.BaseApp
 
-	ctx    sdk.Context
-	logger log.Logger
-
+	ctx         sdk.Context
+	logger      log.Logger
 	queryHelper *baseapp.QueryServiceTestHelper
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application is able to route messages to their respective handlers.
-func NewIntegrationApp(nameSuffix string, logger log.Logger, keys map[string]*storetypes.KVStoreKey, modules ...module.AppModuleBasic) *App {
+func NewIntegrationApp(logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -38,11 +40,25 @@ func NewIntegrationApp(nameSuffix string, logger log.Logger, keys map[string]*st
 	}
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
-
-	bApp := baseapp.NewBaseApp(fmt.Sprintf("integration-app-%s", nameSuffix), logger, db, txConfig.TxDecoder())
+	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
-	bApp.SetInitChainer(func(ctx sdk.Context, req types.RequestInitChain) (types.ResponseInitChain, error) {
-		return types.ResponseInitChain{}, nil
+
+	bApp.SetInitChainer(func(ctx sdk.Context, req cmtabcitypes.RequestInitChain) (cmtabcitypes.ResponseInitChain, error) {
+		for _, mod := range modules {
+			if m, ok := mod.(module.HasGenesis); ok {
+				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
+			}
+		}
+
+		return cmtabcitypes.ResponseInitChain{}, nil
+	})
+
+	moduleManager := module.NewManager(modules...)
+	bApp.SetBeginBlocker(func(ctx sdk.Context, req cmtabcitypes.RequestBeginBlock) (cmtabcitypes.ResponseBeginBlock, error) {
+		return moduleManager.BeginBlock(ctx, req)
+	})
+	bApp.SetEndBlocker(func(ctx sdk.Context, req cmtabcitypes.RequestEndBlock) (cmtabcitypes.ResponseEndBlock, error) {
+		return moduleManager.EndBlock(ctx, req)
 	})
 
 	router := baseapp.NewMsgServiceRouter()
@@ -53,7 +69,10 @@ func NewIntegrationApp(nameSuffix string, logger log.Logger, keys map[string]*st
 		panic(fmt.Errorf("failed to load application version from store: %w", err))
 	}
 
-	ctx := bApp.NewContext(true, cmtproto.Header{})
+	bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName})
+	bApp.Commit()
+
+	ctx := bApp.NewContext(true, cmtproto.Header{ChainID: appName})
 
 	return &App{
 		BaseApp: bApp,
@@ -70,7 +89,27 @@ func NewIntegrationApp(nameSuffix string, logger log.Logger, keys map[string]*st
 // The result of the message execution is returned as a Any type.
 // That any type can be unmarshaled to the expected response type.
 // If the message execution fails, an error is returned.
-func (app *App) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
+func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
+	// set options
+	cfg := Config{}
+	for _, opt := range option {
+		opt(&cfg)
+	}
+
+	if cfg.AutomaticCommit {
+		defer app.Commit()
+	}
+
+	if cfg.AutomaticBeginEndBlock {
+		height := app.LastBlockHeight() + 1
+		app.logger.Info("Running beging block", "height", height)
+		app.BeginBlock(cmtabcitypes.RequestBeginBlock{Header: cmtproto.Header{Height: height, ChainID: appName}})
+		defer func() {
+			app.logger.Info("Running end block", "height", height)
+			app.EndBlock(cmtabcitypes.RequestEndBlock{})
+		}()
+	}
+
 	app.logger.Info("Running msg", "msg", msg.String())
 
 	handler := app.MsgServiceRouter().Handler(msg)
@@ -96,10 +135,14 @@ func (app *App) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
 	return response, nil
 }
 
-func (app *App) SDKContext() sdk.Context {
+// Context returns the application context.
+// It can be unwraped to a sdk.Context, with the sdk.UnwrapSDKContext function.
+func (app *App) Context() context.Context {
 	return app.ctx
 }
 
+// QueryHelper returns the application query helper.
+// It can be used when registering query services.
 func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 	return app.queryHelper
 }

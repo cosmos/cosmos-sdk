@@ -47,23 +47,6 @@ func (msg MsgGrant) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// ValidateBasic implements Msg
-func (msg MsgGrant) ValidateBasic() error {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
-	}
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-
-	if granter.Equals(grantee) {
-		return ErrGranteeIsGranter
-	}
-	return msg.Grant.ValidateBasic()
-}
-
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrant) GetSignBytes() []byte {
 	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
@@ -121,28 +104,6 @@ func (msg MsgRevoke) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// ValidateBasic implements MsgRequest.ValidateBasic
-func (msg MsgRevoke) ValidateBasic() error {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
-	}
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-
-	if granter.Equals(grantee) {
-		return ErrGranteeIsGranter
-	}
-
-	if msg.MsgTypeUrl == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("missing method name")
-	}
-
-	return nil
-}
-
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevoke) GetSignBytes() []byte {
 	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
@@ -184,34 +145,6 @@ func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
 func (msg MsgExec) GetSigners() []sdk.AccAddress {
 	grantee, _ := sdk.AccAddressFromBech32(msg.Grantee)
 	return []sdk.AccAddress{grantee}
-}
-
-// ValidateBasic implements Msg
-func (msg MsgExec) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Grantee); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-
-	if len(msg.Msgs) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
-	}
-
-	msgs, err := msg.GetMessages()
-	if err != nil {
-		return err
-	}
-	for _, msg := range msgs {
-		m, ok := msg.(sdk.HasValidateBasic)
-		if !ok {
-			continue
-		}
-
-		if err = m.ValidateBasic(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.

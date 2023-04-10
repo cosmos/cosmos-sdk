@@ -93,7 +93,8 @@ func TestGetSigners(t *testing.T) {
 				Signer: []string{
 					hex.EncodeToString([]byte("foo")),
 					hex.EncodeToString([]byte("bar")),
-				}}},
+				},
+			}},
 			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{

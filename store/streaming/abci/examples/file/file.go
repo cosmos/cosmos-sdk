@@ -46,10 +46,10 @@ func (a *FilePlugin) writeToFile(file string, data []byte) error {
 func (a *FilePlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
 	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
 	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
-	if err := a.writeToFile("Finalize-block-req", d1); err != nil {
+	if err := a.writeToFile("finalize-block-req", d1); err != nil {
 		return err
 	}
-	if err := a.writeToFile("Finalize-block-res", d2); err != nil {
+	if err := a.writeToFile("finalize-block-res", d2); err != nil {
 		return err
 	}
 	return nil

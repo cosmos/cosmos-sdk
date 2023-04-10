@@ -18,13 +18,13 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *
 	if err != nil {
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	gasInfo, result, _, _, err := app.runTx(runTxModeCheck, bz)
+	gasInfo, result, _, _, err := app.runTx(execModeCheck, bz)
 	return gasInfo, result, err
 }
 
 // Simulate executes a tx in simulate mode to get result and gas info.
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	gasInfo, result, _, _, err := app.runTx(runTxModeSimulate, txBytes)
+	gasInfo, result, _, _, err := app.runTx(execModeSimulate, txBytes)
 	return gasInfo, result, err
 }
 

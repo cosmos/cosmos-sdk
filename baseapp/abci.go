@@ -75,8 +75,8 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 	}
 
 	// initialize states with a correct header
-	app.setState(runTxModeFinalize, initHeader)
-	app.setState(runTxModeCheck, initHeader)
+	app.setState(execModeFinalize, initHeader)
+	app.setState(execModeCheck, initHeader)
 
 	// Store the consensus params in the BaseApp's param store. Note, this must be
 	// done after the finalizeBlockState and context have been set as it's persisted
@@ -422,14 +422,14 @@ func (app *BaseApp) legacyEndBlock(req *abci.RequestFinalizeBlock) sdk.LegacyRes
 // will contain relevant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
-	var mode runTxMode
+	var mode execMode
 
 	switch {
 	case req.Type == abci.CheckTxType_New:
-		mode = runTxModeCheck
+		mode = execModeCheck
 
 	case req.Type == abci.CheckTxType_Recheck:
-		mode = runTxModeReCheck
+		mode = execModeReCheck
 
 	default:
 		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
@@ -469,7 +469,7 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 
 	// always reset state given that PrepareProposal can timeout and be called again
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
-	app.setState(runTxPrepareProposal, emptyHeader)
+	app.setState(execModePrepareProposal, emptyHeader)
 
 	// CometBFT must never call PrepareProposal with a height of 0.
 	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
@@ -536,7 +536,7 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 
 	// always reset state given that ProcessProposal can timeout and be called again
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
-	app.setState(runTxProcessProposal, emptyHeader)
+	app.setState(execModeProcessProposal, emptyHeader)
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(app.voteInfos).
@@ -570,6 +570,87 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 	return resp, nil
 }
 
+// ExtendVote implements the ExtendVote ABCI method and returns a ResponseExtendVote.
+// It calls the application's ExtendVote handler which is responsible for performing
+// application-specific business logic when sending a pre-commit for the NEXT
+// block height. The extensions response may be non-deterministic but must always
+// be returned, even if empty.
+//
+// Agreed upon vote extensions are made available to the proposer of the next
+// height and are committed in subsequent height, i.e. H+2. An error is returned
+// if vote extensions are not enabled or if extendVote fails or panics.
+func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
+	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
+	// and be called again in a subsequent round.
+	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
+	app.setState(execModeVoteExtension, emptyHeader)
+
+	// If vote extensions are not enabled, as a safety precaution, we return an
+	// error.
+	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
+	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
+		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
+	}
+
+	// add a deferred recover handler in case extendVote panics
+	defer func() {
+		if err := recover(); err != nil {
+			app.logger.Error(
+				"panic recovered in ExtendVote",
+				"height", req.Height,
+				"hash", fmt.Sprintf("%X", req.Hash),
+				"panic", err,
+			)
+			err = fmt.Errorf("recovered panic in ExtendVote: %w", err)
+		}
+	}()
+
+	resp, err = app.extendVote(app.voteExtensionState.ctx, req)
+	if err != nil {
+		app.logger.Error("failed to extend vote", "height", req.Height, "error", err)
+		return nil, fmt.Errorf("failed to extend vote: %w", err)
+	}
+
+	return resp, err
+}
+
+// VerifyVoteExtension implements the VerifyVoteExtension ABCI method and returns
+// a ResponseVerifyVoteExtension. It calls the applications' VerifyVoteExtension
+// handler which is responsible for performing application-specific business
+// logic in verifying a vote extension from another validator during the pre-commit
+// phase. The response MUST be deterministic. An error is returned if vote
+// extensions are not enabled or if verifyVoteExt fails or panics.
+func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
+	// If vote extensions are not enabled, as a safety precaution, we return an
+	// error.
+	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
+	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
+		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
+	}
+
+	// add a deferred recover handler in case verifyVoteExt panics
+	defer func() {
+		if err := recover(); err != nil {
+			app.logger.Error(
+				"panic recovered in VerifyVoteExtension",
+				"height", req.Height,
+				"hash", fmt.Sprintf("%X", req.Hash),
+				"validator", fmt.Sprintf("%X", req.ValidatorAddress),
+				"panic", err,
+			)
+			err = fmt.Errorf("recovered panic in VerifyVoteExtension: %w", err)
+		}
+	}()
+
+	resp, err = app.verifyVoteExt(app.voteExtensionState.ctx, req)
+	if err != nil {
+		app.logger.Error("failed to verify vote extension", "height", req.Height, "error", err)
+		return nil, fmt.Errorf("failed to verify vote extension: %w", err)
+	}
+
+	return resp, err
+}
+
 func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
@@ -598,7 +679,7 @@ func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, anteEvents, err := app.runTx(runTxModeFinalize, tx)
+	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx)
 	if err != nil {
 		resultStr = "failed"
 		resp = sdkerrors.ResponseExecTxResultWithEvents(
@@ -647,7 +728,7 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 	// already be initialized in InitChain. Otherwise app.finalizeBlockState will be
 	// nil, since it is reset on Commit.
 	if app.finalizeBlockState == nil {
-		app.setState(runTxModeFinalize, header)
+		app.setState(execModeFinalize, header)
 	} else {
 		// In the first block, app.finalizeBlockState.ctx will already be initialized
 		// by InitChain. Context is now updated with Header information.
@@ -733,7 +814,7 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 	//
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
-	app.setState(runTxModeCheck, header)
+	app.setState(execModeCheck, header)
 
 	app.finalizeBlockState = nil
 

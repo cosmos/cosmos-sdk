@@ -26,8 +26,7 @@ import (
 )
 
 type (
-	// Enum mode for app.runTx
-	runTxMode uint8
+	execMode uint8
 
 	// StoreLoader defines a customizable function to control how we load the CommitMultiStore
 	// from disk. This is useful for state migration, when loading a datastore written with
@@ -37,12 +36,13 @@ type (
 )
 
 const (
-	runTxModeCheck       runTxMode = iota // Check a transaction
-	runTxModeReCheck                      // Recheck a (pending) transaction after a commit
-	runTxModeSimulate                     // Simulate a transaction
-	runTxModeFinalize                     // Finalize a block proposal
-	runTxPrepareProposal                  // Prepare a block proposal
-	runTxProcessProposal                  // Process a block proposal
+	execModeCheck           execMode = iota // Check a transaction
+	execModeReCheck                         // Recheck a (pending) transaction after a commit
+	execModeSimulate                        // Simulate a transaction
+	execModePrepareProposal                 // Prepare a block proposal
+	execModeProcessProposal                 // Process a block proposal
+	execModeVoteExtension                   // Extend or verify a pre-commit vote
+	execModeFinalize                        // Finalize a block proposal
 )
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -375,7 +375,7 @@ func (app *BaseApp) Init() error {
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.setState(runTxModeCheck, emptyHeader)
+	app.setState(execModeCheck, emptyHeader)
 	app.Seal()
 
 	if app.cms == nil {
@@ -426,7 +426,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // setState sets the BaseApp's state for the corresponding mode with a branched
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
 // multi-store branch, and provided header.
-func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
+func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
 		ms:  ms,
@@ -434,18 +434,21 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 	}
 
 	switch mode {
-	case runTxModeCheck:
+	case execModeCheck:
 		baseState.ctx = baseState.ctx.WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices)
 		app.checkState = baseState
 
-	case runTxModeFinalize:
-		app.finalizeBlockState = baseState
-
-	case runTxPrepareProposal:
+	case execModePrepareProposal:
 		app.prepareProposalState = baseState
 
-	case runTxProcessProposal:
+	case execModeProcessProposal:
 		app.processProposalState = baseState
+
+	case execModeVoteExtension:
+		app.voteExtensionState = baseState
+
+	case execModeFinalize:
+		app.finalizeBlockState = baseState
 
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
@@ -559,15 +562,15 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-func (app *BaseApp) getState(mode runTxMode) *state {
+func (app *BaseApp) getState(mode execMode) *state {
 	switch mode {
-	case runTxModeFinalize:
+	case execModeFinalize:
 		return app.finalizeBlockState
 
-	case runTxPrepareProposal:
+	case execModePrepareProposal:
 		return app.prepareProposalState
 
-	case runTxProcessProposal:
+	case execModeProcessProposal:
 		return app.processProposalState
 
 	default:
@@ -584,7 +587,7 @@ func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
+func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	modeState := app.getState(mode)
 	if modeState == nil {
 		panic(fmt.Sprintf("state is nil for mode %v", mode))
@@ -595,11 +598,11 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
-	if mode == runTxModeReCheck {
+	if mode == execModeReCheck {
 		ctx = ctx.WithIsReCheckTx(true)
 	}
 
-	if mode == runTxModeSimulate {
+	if mode == execModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}
 
@@ -632,7 +635,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 // Note, gas execution info is always returned. A reference to a Result is
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
@@ -704,7 +707,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
-		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
+		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is a store branch, or something else
@@ -730,7 +733,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteEvents = events.ToABCIEvents()
 	}
 
-	if mode == runTxModeCheck {
+	if mode == execModeCheck {
 		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
@@ -762,7 +765,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			// Note that the state is still preserved.
 			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate, err == nil)
+			newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
 			if err != nil {
 				return gInfo, nil, anteEvents, priority, err
 			}
@@ -777,7 +780,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			msCache.Write()
 		}
 
-		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
+		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == execModeSimulate) {
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
 		}
@@ -791,14 +794,14 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 // and DeliverTx. An error is returned if any single message fails or if a
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode execMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
-		if mode != runTxModeDeliver && mode != runTxModeSimulate {
+		if mode != runTxModeDeliver && mode != execModeSimulate {
 			break
 		}
 
@@ -886,7 +889,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 		return nil, err
 	}
 
-	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+	_, _, _, _, err = app.runTx(execModePrepareProposal, bz)
 	if err != nil {
 		return nil, err
 	}
@@ -905,7 +908,7 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 
-	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz)
+	_, _, _, _, err = app.runTx(execModeProcessProposal, txBz)
 	if err != nil {
 		return nil, err
 	}

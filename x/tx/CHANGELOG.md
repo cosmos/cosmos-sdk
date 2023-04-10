@@ -31,6 +31,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
 * [#15414](https://github.com/cosmos/cosmos-sdk/pull/15414) Add basic transaction decoding support.
 
 ### API Breaking

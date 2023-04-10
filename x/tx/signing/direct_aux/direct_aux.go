@@ -16,7 +16,7 @@ import (
 
 // SignModeHandler is the SIGN_MODE_DIRECT_AUX implementation of signing.SignModeHandler.
 type SignModeHandler struct {
-	signersContext *signing.GetSignersContext
+	signersContext *signing.Context
 	fileResolver   signing.ProtoFileResolver
 	typeResolver   protoregistry.MessageTypeResolver
 }
@@ -26,8 +26,8 @@ type SignModeHandlerOptions struct {
 	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving proto types when unpacking any messages.
 	TypeResolver protoregistry.MessageTypeResolver
 
-	// SignersContext is the signing.GetSignersContext to use for getting signers.
-	SignersContext *signing.GetSignersContext
+	// SignersContext is the signing.Context to use for getting signers.
+	SignersContext *signing.Context
 }
 
 // NewSignModeHandler returns a new SignModeHandler.

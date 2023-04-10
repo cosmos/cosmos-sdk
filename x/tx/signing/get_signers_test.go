@@ -15,7 +15,7 @@ import (
 )
 
 func TestGetSigners(t *testing.T) {
-	ctx, err := NewGetSignersContext(GetSignersOptions{
+	ctx, err := NewContext(ContextOptions{
 		AddressCodec:          dummyAddressCodec{},
 		ValidatorAddressCodec: dummyValidatorAddressCodec{},
 	})

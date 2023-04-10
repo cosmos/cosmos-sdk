@@ -15,18 +15,18 @@ import (
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 )
 
-// GetSignersContext is a context for retrieving the list of signers from a
+// Context is a context for retrieving the list of signers from a
 // message where signers are specified by the cosmos.msg.v1.signer protobuf
 // option.
-type GetSignersContext struct {
+type Context struct {
 	protoFiles            ProtoFileResolver
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
 	getSignersFuncs       map[protoreflect.FullName]getSignersFunc
 }
 
-// GetSignersOptions are options for creating GetSignersContext.
-type GetSignersOptions struct {
+// ContextOptions are options for creating Context.
+type ContextOptions struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
 	ProtoFiles ProtoFileResolver
@@ -45,8 +45,8 @@ type ProtoFileResolver interface {
 	RangeFiles(func(protoreflect.FileDescriptor) bool)
 }
 
-// NewGetSignersContext creates a new GetSignersContext using the provided options.
-func NewGetSignersContext(options GetSignersOptions) (*GetSignersContext, error) {
+// NewContext creates a new Context using the provided options.
+func NewContext(options ContextOptions) (*Context, error) {
 	protoFiles := options.ProtoFiles
 	if protoFiles == nil {
 		protoFiles = protoregistry.GlobalFiles
@@ -60,7 +60,7 @@ func NewGetSignersContext(options GetSignersOptions) (*GetSignersContext, error)
 		return nil, errors.New("validator address codec is required")
 	}
 
-	c := &GetSignersContext{
+	c := &Context{
 		protoFiles:            protoFiles,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
@@ -86,7 +86,7 @@ func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, 
 // annotation
 // - it will pre-populate the context's internal cache for getSignersFuncs
 // so that calling it in antehandlers will be faster.
-func (c *GetSignersContext) init() error {
+func (c *Context) init() error {
 	var errs []error
 	c.protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		for i := 0; i < fd.Services().Len(); i++ {
@@ -113,7 +113,7 @@ func (c *GetSignersContext) init() error {
 	return errors.Join(errs...)
 }
 
-func (c *GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
 	signersFields, err := getSignersFieldNames(descriptor)
 	if err != nil {
 		return nil, err
@@ -261,7 +261,7 @@ func (c *GetSignersContext) makeGetSignersFunc(descriptor protoreflect.MessageDe
 	}, nil
 }
 
-func (c *GetSignersContext) getAddressCodec(field protoreflect.FieldDescriptor) address.Codec {
+func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Codec {
 	scalarOpt := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
 	addrCdc := c.addressCodec
 	if scalarOpt != nil {
@@ -274,7 +274,7 @@ func (c *GetSignersContext) getAddressCodec(field protoreflect.FieldDescriptor) 
 }
 
 // GetSigners returns the signers for a given message.
-func (c *GetSignersContext) GetSigners(msg proto.Message) ([][]byte, error) {
+func (c *Context) GetSigners(msg proto.Message) ([][]byte, error) {
 	messageDescriptor := msg.ProtoReflect().Descriptor()
 	f, ok := c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {
@@ -290,16 +290,16 @@ func (c *GetSignersContext) GetSigners(msg proto.Message) ([][]byte, error) {
 }
 
 // AddressCodec returns the address codec used by the context.
-func (c *GetSignersContext) AddressCodec() address.Codec {
+func (c *Context) AddressCodec() address.Codec {
 	return c.addressCodec
 }
 
 // ValidatorAddressCodec returns the validator address codec used by the context.
-func (c *GetSignersContext) ValidatorAddressCodec() address.Codec {
+func (c *Context) ValidatorAddressCodec() address.Codec {
 	return c.validatorAddressCodec
 }
 
 // ProtoFileResolver returns the proto file resolver used by the context.
-func (c *GetSignersContext) ProtoFileResolver() ProtoFileResolver {
+func (c *Context) ProtoFileResolver() ProtoFileResolver {
 	return c.protoFiles
 }

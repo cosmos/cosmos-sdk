@@ -173,19 +173,19 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, msg *types.MsgCommu
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
 
-func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
-	depositor, err := k.authKeeper.StringToBytes(req.Depositor)
+func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
+	depositor, err := k.authKeeper.StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// deposit coins from depositor's account to the distribution module
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ModuleName, req.Amount); err != nil {
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ModuleName, msg.Amount); err != nil {
 		return nil, err
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -197,15 +197,15 @@ func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types
 
 	// Allocate tokens from the distribution module to the validator, which are
 	// then distributed to the validator's delegators.
-	reward := sdk.NewDecCoinsFromCoins(req.Amount...)
+	reward := sdk.NewDecCoinsFromCoins(msg.Amount...)
 	k.AllocateTokensToValidator(ctx, validator, reward)
 
 	logger := k.Logger(ctx)
 	logger.Info(
 		"transferred from rewards to validator rewards pool",
-		"depositor", req.Depositor,
-		"amount", req.Amount.String(),
-		"validator", req.ValidatorAddress,
+		"depositor", msg.Depositor,
+		"amount", msg.Amount.String(),
+		"validator", msg.ValidatorAddress,
 	)
 
 	return &types.MsgDepositValidatorRewardsPoolResponse{}, nil

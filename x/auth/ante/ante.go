@@ -20,7 +20,7 @@ type HandlerOptions struct {
 	ExtensionOptionChecker ExtensionOptionChecker
 	FeegrantKeeper         FeegrantKeeper
 	SignModeHandler        authsigning.SignModeHandler
-	SignModeHandlerV2      txsigning.SignModeHandler
+	SignModeHandlerV2      *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker           TxFeeChecker
 }

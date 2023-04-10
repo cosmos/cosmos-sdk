@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -46,17 +47,36 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 	}
 }
 
+func translateSignMode(mode signing.SignMode) (signingv1beta1.SignMode, error) {
+	switch mode {
+	case signing.SignMode_SIGN_MODE_DIRECT:
+		return signingv1beta1.SignMode_SIGN_MODE_DIRECT, nil
+	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+		return signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, nil
+	case signing.SignMode_SIGN_MODE_TEXTUAL:
+		return signingv1beta1.SignMode_SIGN_MODE_TEXTUAL, nil
+	case signing.SignMode_SIGN_MODE_DIRECT_AUX:
+		return signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX, nil
+	default:
+		return signingv1beta1.SignMode_SIGN_MODE_UNSPECIFIED, fmt.Errorf("unsupported sign mode %s", mode)
+	}
+}
+
 func VerifySignatureV2(
 	ctx context.Context,
 	pubKey cryptotypes.PubKey,
 	signerData txsigning.SignerData,
 	signatureData signing.SignatureData,
-	handler txsigning.SignModeHandler,
+	handler *txsigning.HandlerMap,
 	txData txsigning.TxData) error {
 
 	switch data := signatureData.(type) {
 	case *signing.SingleSignatureData:
-		signBytes, err := handler.GetSignBytes(ctx, signerData, txData)
+		signMode, err := translateSignMode(data.SignMode)
+		if err != nil {
+			return err
+		}
+		signBytes, err := handler.GetSignBytes(ctx, signMode, signerData, txData)
 		if err != nil {
 			return err
 		}
@@ -71,7 +91,11 @@ func VerifySignatureV2(
 			return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
 		}
 		err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
-			return handler.GetSignBytes(ctx, signerData, txData)
+			signMode, err := translateSignMode(mode)
+			if err != nil {
+				return nil, err
+			}
+			return handler.GetSignBytes(ctx, signMode, signerData, txData)
 		}, data)
 		if err != nil {
 			return err

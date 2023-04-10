@@ -68,7 +68,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	// migrator
 	m := keeper.NewMigrator(accountKeeper, app.GRPCQueryRouter(), legacySubspace)
 	// set the account to store with map acc addr to acc number
-	require.NoError(t, m.V45_SetAccount(ctx, acc))
+	require.NoError(t, m.V45SetAccount(ctx, acc))
 
 	testCases := []struct {
 		name        string

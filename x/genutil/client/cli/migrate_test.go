@@ -9,14 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
-
-func TestGetMigrationCallback(t *testing.T) {
-	for _, version := range cli.GetMigrationVersions() {
-		require.NotNil(t, cli.GetMigrationCallback(version))
-	}
-}
 
 func TestMigrateGenesis(t *testing.T) {
 	testCases := []struct {
@@ -28,9 +23,9 @@ func TestMigrateGenesis(t *testing.T) {
 		check     func(jsonOut string)
 	}{
 		{
-			"migrate 0.37 to 0.42",
+			"migrate 0.37 to 0.43",
 			v037Exported,
-			"v0.42",
+			"v0.43",
 			true, "make sure that you have correctly migrated all CometBFT consensus params", func(_ string) {},
 		},
 		{
@@ -42,7 +37,7 @@ func TestMigrateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"v0.10",
-			true, "unknown migration function for version: v0.10", func(_ string) {},
+			true, "unknown migration function for version: v0.10 (supported versions v0.43, v0.46, v0.47)", func(_ string) {},
 		},
 		{
 			"invalid target version",
@@ -53,7 +48,7 @@ func TestMigrateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"v0.10",
-			true, "unknown migration function for version: v0.10", func(_ string) {},
+			true, "unknown migration function for version: v0.10 (supported versions v0.43, v0.46, v0.47)", func(_ string) {},
 		},
 	}
 
@@ -61,7 +56,12 @@ func TestMigrateGenesis(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			genesisFile := testutil.WriteToNewTempFile(t, tc.genesis)
-			jsonOutput, err := clitestutil.ExecTestCLICmd(client.Context{}, cli.MigrateGenesisCmd(), []string{tc.target, genesisFile.Name()})
+			jsonOutput, err := clitestutil.ExecTestCLICmd(
+				// the codec does not contain any modules so that genutil does not bring unnecessary dependencies in the test
+				client.Context{Codec: moduletestutil.MakeTestEncodingConfig().Codec},
+				cli.MigrateGenesisCmd(cli.MigrationMap),
+				[]string{tc.target, genesisFile.Name()},
+			)
 			if tc.expErr {
 				require.Contains(t, err.Error(), tc.expErrMsg)
 			} else {

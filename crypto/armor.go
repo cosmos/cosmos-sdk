@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"github.com/cometbft/cometbft/crypto"
-	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck
+	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck // TODO: remove this dependency
 
 	errorsmod "cosmossdk.io/errors"
 

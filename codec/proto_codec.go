@@ -151,9 +151,7 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Messa
 // it marshals to JSON using proto codec.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
-//
-//nolint:stdmethods
-func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) {
+func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) { //nolint:stdmethods // we don't want to implement Marshaler interface
 	if o == nil {
 		return nil, fmt.Errorf("cannot protobuf JSON encode nil")
 	}
@@ -300,13 +298,12 @@ func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([]string, proto.Me
 	if msgV2, ok := msg.(proto.Message); ok {
 		signers, err := pc.getSignersCtx.GetSigners(msgV2)
 		return signers, msgV2, err
-	} else {
-		a, err := types.NewAnyWithValue(msg)
-		if err != nil {
-			return nil, nil, err
-		}
-		return pc.GetMsgAnySigners(a)
 	}
+	a, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, nil, err
+	}
+	return pc.GetMsgAnySigners(a)
 }
 
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec

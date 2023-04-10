@@ -98,7 +98,12 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	}
 
 	for idx, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return errorsmod.Wrap(types.ErrInvalidProposalMsg,
 				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
 		}
@@ -109,7 +114,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&m)
+	bz := codec.Amino.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -147,7 +152,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -176,7 +181,7 @@ func (msg MsgVote) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -230,7 +235,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -250,7 +255,7 @@ func NewMsgExecLegacyContent(content *codectypes.Any, authority string) *MsgExec
 
 // GetSignBytes returns the message bytes to sign over.
 func (c MsgExecLegacyContent) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&c)
+	bz := codec.Amino.MustMarshalJSON(&c)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -287,7 +292,7 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -316,7 +321,7 @@ func (msg MsgCancelProposal) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgCancelProposal) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

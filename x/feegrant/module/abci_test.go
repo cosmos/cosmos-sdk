@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,7 +52,7 @@ func TestFeegrantPruning(t *testing.T) {
 	accountKeeper.EXPECT().BytesToString(granter2.Bytes()).Return(granter2.String(), nil).AnyTimes()
 	accountKeeper.EXPECT().BytesToString(granter3.Bytes()).Return(granter3.String(), nil).AnyTimes()
 
-	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, key, accountKeeper)
+	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper)
 
 	feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,

@@ -4,16 +4,14 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DefaultParams returns default distribution parameters
 func DefaultParams() Params {
 	return Params{
-		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:  sdk.ZeroDec(),            // deprecated
-		BonusProposerReward: sdk.ZeroDec(),            // deprecated
+		CommunityTax:        math.LegacyNewDecWithPrec(2, 2), // 2%
+		BaseProposerReward:  math.LegacyZeroDec(),            // deprecated
+		BonusProposerReward: math.LegacyZeroDec(),            // deprecated
 		WithdrawAddrEnabled: true,
 	}
 }
@@ -30,7 +28,7 @@ func (p Params) ValidateBasic() error {
 }
 
 func validateCommunityTax(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

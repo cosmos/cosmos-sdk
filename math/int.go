@@ -457,6 +457,10 @@ var stringsBuilderPool = &sync.Pool{
 // string following ADR-050. This function operates with string manipulation
 // (instead of manipulating the int or sdk.Int object).
 func FormatInt(v string) (string, error) {
+	if len(v) == 0 {
+		return "", fmt.Errorf("cannot format empty string")
+	}
+
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"

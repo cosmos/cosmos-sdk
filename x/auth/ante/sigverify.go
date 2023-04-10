@@ -297,13 +297,11 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			var verifyErr error
 
 			if svd.signModeHandlerV2 != nil {
-				// TODO
-				// any other way to do this?
 				anyPk, _ := codectypes.NewAnyWithValue(pubKey)
 
 				signerData := txsigning.SignerData{
 					Address:       acc.GetAddress().String(),
-					ChainId:       chainID,
+					ChainID:       chainID,
 					AccountNumber: accNum,
 					Sequence:      acc.GetSequence(),
 					PubKey: &anypb.Any{
@@ -311,10 +309,12 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 						Value:   anyPk.Value,
 					},
 				}
-				decodeCtx, err := decode.NewContext(decode.Options{})
+				decodeCtx, err := decode.NewDecoder(decode.Options{})
 				if err != nil {
 					return ctx, err
 				}
+				// note: this is performance hit is temporary. Ultimately, the tx will be decoded once in BaseApp,
+				// but for now we need double decoding to support both SignModeHandlers.
 				decodedTx, err := decodeCtx.Decode(ctx.TxBytes())
 				if err != nil {
 					return ctx, err

@@ -103,6 +103,10 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
+	// set module account coins
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
+	f.bankKeeper.MintCoins(sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+
 	// Register MsgServer and QueryServer
 	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
 	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
@@ -117,6 +121,15 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	valAddr := sdk.ValAddress(addr)
+
+	// send funds to val addr
+	funds := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
+	f.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+
+	initialStake := int64(10)
+	tstaking := stakingtestutil.NewHelper(t, sdkCtx, f.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	// set outstanding rewards
 	f.distrKeeper.SetValidatorOutstandingRewards(sdkCtx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
@@ -133,6 +146,12 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 			msg:       &types.QueryValidatorOutstandingRewardsRequest{},
 			expPass:   false,
 			expErrMsg: "empty validator address",
+		},
+		{
+			name:      "invalid address",
+			msg:       &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String()},
+			expPass:   false,
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name:    "valid request",
@@ -170,6 +189,10 @@ func TestGRPCValidatorCommission(t *testing.T) {
 	integrationApp := integration.NewIntegrationApp(log.NewTestLogger(t), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
+	// set module account coins
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
+	f.bankKeeper.MintCoins(sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+
 	// Register MsgServer and QueryServer
 	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
 	types.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
@@ -179,6 +202,15 @@ func TestGRPCValidatorCommission(t *testing.T) {
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	valAddr := sdk.ValAddress(addr)
+
+	// send funds to val addr
+	funds := f.stakingKeeper.TokensFromConsensusPower(sdkCtx, int64(1000))
+	f.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, sdk.AccAddress(valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+
+	initialStake := int64(10)
+	tstaking := stakingtestutil.NewHelper(t, sdkCtx, f.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	commission := sdk.DecCoins{{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
 	f.distrKeeper.SetValidatorAccumulatedCommission(sdkCtx, valAddr, types.ValidatorAccumulatedCommission{Commission: commission})
@@ -194,6 +226,12 @@ func TestGRPCValidatorCommission(t *testing.T) {
 			msg:       &types.QueryValidatorCommissionRequest{},
 			expPass:   false,
 			expErrMsg: "empty validator address",
+		},
+		{
+			name:      "invalid validator",
+			msg:       &types.QueryValidatorCommissionRequest{ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String()},
+			expPass:   false,
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name:    "valid request",

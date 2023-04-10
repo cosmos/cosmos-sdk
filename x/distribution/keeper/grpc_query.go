@@ -6,9 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/store/prefix"
-
 	"cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -93,6 +92,11 @@ func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.Query
 	if err != nil {
 		return nil, err
 	}
+
+	validator := k.stakingKeeper.Validator(ctx, valAdr)
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
+	}
 	rewards := k.GetValidatorOutstandingRewards(ctx, valAdr)
 
 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: rewards}, nil
@@ -113,6 +117,11 @@ func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidato
 	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
+	}
+
+	validator := k.stakingKeeper.Validator(ctx, valAdr)
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
 	}
 	commission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
 

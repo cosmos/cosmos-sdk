@@ -63,4 +63,5 @@ message Params {
   uint64 tx_size_cost_per_byte     = 3;
   uint64 sig_verify_cost_ed25519   = 4 [(gogoproto.customname) = "SigVerifyCostED25519"];
   uint64 sig_verify_cost_secp256k1 = 5 [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
+  uint64 sig_verify_cost_ethsecp256k1 = 6 [(gogoproto.customname) = "SigVerifyCostEthSecp256k1"];
 }

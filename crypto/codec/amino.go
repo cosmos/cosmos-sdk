@@ -22,7 +22,7 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 		ed25519.PubKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName, nil)
-	cdc.RegisterConcrete(&ethsecp256k1.PubKey{}, //nolint:staticcheck
+	cdc.RegisterConcrete(&ethsecp256k1.PubKey{},
 		ethsecp256k1.PubKeyName, nil)
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
 		kmultisig.PubKeyAminoRoute, nil)

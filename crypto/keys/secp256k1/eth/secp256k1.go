@@ -3,7 +3,6 @@ package eth
 import (
 	"bytes"
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/subtle"
 	"errors"
@@ -15,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	secp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/eth"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -50,7 +50,6 @@ const ()
 // failure.
 func GenerateKey() (*PrivKey, error) {
 	priv, err := ecdsa.GenerateKey(secp.S256(), rand.Reader)
-	// priv, err := crypto.GenerateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -118,31 +117,6 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 	return privKey.UnmarshalAmino(bz)
 }
 
-// Sign creates a recoverable ECDSA signature on the secp256k1 curve over the
-// provided hash of the message. The produced signature is 65 bytes
-// where the last byte contains the recovery ID.
-func (privKey PrivKey) Sign(digestBz []byte) ([]byte, error) {
-	if len(digestBz) != DigestLength {
-		digestBz = Keccak256(digestBz)
-	}
-
-	key, err := privKey.ToECDSA()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(digestBz) != DigestLength {
-		return nil, fmt.Errorf("hash is required to be exactly %d bytes (%d)", DigestLength, len(digestBz))
-	}
-	seckey := FromECDSA(key)
-	defer func() {
-		for i := range seckey {
-			seckey[i] = 0
-		}
-	}()
-	return secp.Sign(digestBz, seckey)
-}
-
 // ToECDSA returns the ECDSA private key as a reference to ecdsa.PrivateKey type.
 func (privKey PrivKey) ToECDSA() (*ecdsa.PrivateKey, error) {
 	priv := new(ecdsa.PrivateKey)
@@ -184,7 +158,7 @@ func (pubKey PubKey) Address() cmtcrypto.Address {
 		return nil
 	}
 	pubBytes := FromECDSAPub(pubk)
-	return cmtcrypto.Address(Keccak256(pubBytes[1:])[12:])
+	return cmtcrypto.Address(eth.Keccak256(pubBytes[1:])[12:])
 }
 
 // Bytes returns the raw bytes of the ECDSA public key.
@@ -235,66 +209,4 @@ func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAminoJSON overrides Amino JSON marshaling.
 func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
-}
-
-// VerifySignature verifies that the ECDSA public key created a given signature over
-// the provided message. It will calculate the Keccak256 hash of the message
-// prior to verification and approve verification if the signature can be verified
-// from the original message.
-//
-// CONTRACT: The signature should be in [R || S] format.
-func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
-	return pubKey.verifySignatureECDSA(msg, sig)
-}
-
-// Perform standard ECDSA signature verification for the given raw bytes and signature.
-func (pubKey PubKey) verifySignatureECDSA(msg, sig []byte) bool {
-	if len(sig) == EthSignatureLength {
-		// remove recovery ID (V) if contained in the signature
-		sig = sig[:len(sig)-1]
-	}
-
-	// the signature needs to be in [R || S] format when provided to VerifySignature
-	return secp.VerifySignature(pubKey.Key, Keccak256(msg), sig)
-}
-
-// ----------------------------------------------------------------------------
-// Helper Functions
-
-func DecompressPubkey(pubkey []byte) (*ecdsa.PublicKey, error) {
-	x, y := secp.DecompressPubkey(pubkey)
-	if x == nil {
-		return nil, fmt.Errorf("invalid public key")
-	}
-	return &ecdsa.PublicKey{X: x, Y: y, Curve: secp.S256()}, nil
-}
-
-func paddedBigBytes(bigint *big.Int, n int) []byte {
-	if bigint.BitLen()/8 >= n {
-		return bigint.Bytes()
-	}
-	ret := make([]byte, n)
-	i := len(ret)
-	for _, d := range bigint.Bits() {
-		for j := 0; j < wordBytes && i > 0; j++ {
-			i--
-			ret[i] = byte(d)
-			d >>= 8
-		}
-	}
-	return ret
-}
-
-func FromECDSA(priv *ecdsa.PrivateKey) []byte {
-	if priv == nil {
-		return nil
-	}
-	return paddedBigBytes(priv.D, priv.Params().BitSize/8)
-}
-
-func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
-	if pub == nil || pub.X == nil || pub.Y == nil {
-		return nil
-	}
-	return elliptic.Marshal(secp.S256(), pub.X, pub.Y)
 }

@@ -12,13 +12,14 @@ import (
 
 	secp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/eth"
 )
 
 func pubkeyToAddress(pub ecdsa.PublicKey) []byte {
 	if pub.X == nil || pub.Y == nil {
 		return nil
 	}
-	return Keccak256(elliptic.Marshal(secp.S256(), pub.X, pub.Y)[1:])[12:]
+	return eth.Keccak256(elliptic.Marshal(secp.S256(), pub.X, pub.Y)[1:])[12:]
 }
 
 func TestPrivKey(t *testing.T) {
@@ -42,7 +43,7 @@ func TestPrivKey(t *testing.T) {
 
 	// validate we can sign some bytes
 	msg := []byte("hello world")
-	sigHash := Keccak256(msg)
+	sigHash := eth.Keccak256(msg)
 	expectedSig, err := secp.Sign(sigHash, privKey.Bytes())
 	require.NoError(t, err)
 
@@ -68,12 +69,10 @@ func TestPrivKey_PubKey(t *testing.T) {
 
 	// validate signature
 	msg := []byte("hello world")
-	sigHash := Keccak256(msg)
-	sig, err := privKey.Sign(sigHash)
+	sig, err := privKey.Sign(msg)
 	require.NoError(t, err)
 
-	res := pubKey.VerifySignature(msg, sig)
-	require.True(t, res)
+	require.True(t, pubKey.VerifySignature(msg, sig))
 }
 
 func TestMarshalAmino(t *testing.T) {

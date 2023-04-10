@@ -1779,12 +1779,13 @@ func (x *fastReflection_ModuleCredential) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_Params                           protoreflect.MessageDescriptor
-	fd_Params_max_memo_characters       protoreflect.FieldDescriptor
-	fd_Params_tx_sig_limit              protoreflect.FieldDescriptor
-	fd_Params_tx_size_cost_per_byte     protoreflect.FieldDescriptor
-	fd_Params_sig_verify_cost_ed25519   protoreflect.FieldDescriptor
-	fd_Params_sig_verify_cost_secp256k1 protoreflect.FieldDescriptor
+	md_Params                              protoreflect.MessageDescriptor
+	fd_Params_max_memo_characters          protoreflect.FieldDescriptor
+	fd_Params_tx_sig_limit                 protoreflect.FieldDescriptor
+	fd_Params_tx_size_cost_per_byte        protoreflect.FieldDescriptor
+	fd_Params_sig_verify_cost_ed25519      protoreflect.FieldDescriptor
+	fd_Params_sig_verify_cost_secp256k1    protoreflect.FieldDescriptor
+	fd_Params_sig_verify_cost_ethsecp256k1 protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1795,6 +1796,7 @@ func init() {
 	fd_Params_tx_size_cost_per_byte = md_Params.Fields().ByName("tx_size_cost_per_byte")
 	fd_Params_sig_verify_cost_ed25519 = md_Params.Fields().ByName("sig_verify_cost_ed25519")
 	fd_Params_sig_verify_cost_secp256k1 = md_Params.Fields().ByName("sig_verify_cost_secp256k1")
+	fd_Params_sig_verify_cost_ethsecp256k1 = md_Params.Fields().ByName("sig_verify_cost_ethsecp256k1")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -1892,6 +1894,12 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.SigVerifyCostEthsecp256K1 != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.SigVerifyCostEthsecp256K1)
+		if !f(fd_Params_sig_verify_cost_ethsecp256k1, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1917,6 +1925,8 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.SigVerifyCostEd25519 != uint64(0)
 	case "cosmos.auth.v1beta1.Params.sig_verify_cost_secp256k1":
 		return x.SigVerifyCostSecp256K1 != uint64(0)
+	case "cosmos.auth.v1beta1.Params.sig_verify_cost_ethsecp256k1":
+		return x.SigVerifyCostEthsecp256K1 != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.Params"))
@@ -1943,6 +1953,8 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.SigVerifyCostEd25519 = uint64(0)
 	case "cosmos.auth.v1beta1.Params.sig_verify_cost_secp256k1":
 		x.SigVerifyCostSecp256K1 = uint64(0)
+	case "cosmos.auth.v1beta1.Params.sig_verify_cost_ethsecp256k1":
+		x.SigVerifyCostEthsecp256K1 = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.Params"))
@@ -1974,6 +1986,9 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "cosmos.auth.v1beta1.Params.sig_verify_cost_secp256k1":
 		value := x.SigVerifyCostSecp256K1
 		return protoreflect.ValueOfUint64(value)
+	case "cosmos.auth.v1beta1.Params.sig_verify_cost_ethsecp256k1":
+		value := x.SigVerifyCostEthsecp256K1
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.Params"))
@@ -2004,6 +2019,8 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.SigVerifyCostEd25519 = value.Uint()
 	case "cosmos.auth.v1beta1.Params.sig_verify_cost_secp256k1":
 		x.SigVerifyCostSecp256K1 = value.Uint()
+	case "cosmos.auth.v1beta1.Params.sig_verify_cost_ethsecp256k1":
+		x.SigVerifyCostEthsecp256K1 = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.Params"))
@@ -2034,6 +2051,8 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 		panic(fmt.Errorf("field sig_verify_cost_ed25519 of message cosmos.auth.v1beta1.Params is not mutable"))
 	case "cosmos.auth.v1beta1.Params.sig_verify_cost_secp256k1":
 		panic(fmt.Errorf("field sig_verify_cost_secp256k1 of message cosmos.auth.v1beta1.Params is not mutable"))
+	case "cosmos.auth.v1beta1.Params.sig_verify_cost_ethsecp256k1":
+		panic(fmt.Errorf("field sig_verify_cost_ethsecp256k1 of message cosmos.auth.v1beta1.Params is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.Params"))
@@ -2056,6 +2075,8 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 	case "cosmos.auth.v1beta1.Params.sig_verify_cost_ed25519":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.auth.v1beta1.Params.sig_verify_cost_secp256k1":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.auth.v1beta1.Params.sig_verify_cost_ethsecp256k1":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
@@ -2141,6 +2162,9 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.SigVerifyCostSecp256K1 != 0 {
 			n += 1 + runtime.Sov(uint64(x.SigVerifyCostSecp256K1))
 		}
+		if x.SigVerifyCostEthsecp256K1 != 0 {
+			n += 1 + runtime.Sov(uint64(x.SigVerifyCostEthsecp256K1))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -2169,6 +2193,11 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.SigVerifyCostEthsecp256K1 != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.SigVerifyCostEthsecp256K1))
+			i--
+			dAtA[i] = 0x30
 		}
 		if x.SigVerifyCostSecp256K1 != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.SigVerifyCostSecp256K1))
@@ -2335,6 +2364,25 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 					b := dAtA[iNdEx]
 					iNdEx++
 					x.SigVerifyCostSecp256K1 |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 6:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SigVerifyCostEthsecp256K1", wireType)
+				}
+				x.SigVerifyCostEthsecp256K1 = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.SigVerifyCostEthsecp256K1 |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -2556,11 +2604,12 @@ type Params struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	MaxMemoCharacters      uint64 `protobuf:"varint,1,opt,name=max_memo_characters,json=maxMemoCharacters,proto3" json:"max_memo_characters,omitempty"`
-	TxSigLimit             uint64 `protobuf:"varint,2,opt,name=tx_sig_limit,json=txSigLimit,proto3" json:"tx_sig_limit,omitempty"`
-	TxSizeCostPerByte      uint64 `protobuf:"varint,3,opt,name=tx_size_cost_per_byte,json=txSizeCostPerByte,proto3" json:"tx_size_cost_per_byte,omitempty"`
-	SigVerifyCostEd25519   uint64 `protobuf:"varint,4,opt,name=sig_verify_cost_ed25519,json=sigVerifyCostEd25519,proto3" json:"sig_verify_cost_ed25519,omitempty"`
-	SigVerifyCostSecp256K1 uint64 `protobuf:"varint,5,opt,name=sig_verify_cost_secp256k1,json=sigVerifyCostSecp256k1,proto3" json:"sig_verify_cost_secp256k1,omitempty"`
+	MaxMemoCharacters         uint64 `protobuf:"varint,1,opt,name=max_memo_characters,json=maxMemoCharacters,proto3" json:"max_memo_characters,omitempty"`
+	TxSigLimit                uint64 `protobuf:"varint,2,opt,name=tx_sig_limit,json=txSigLimit,proto3" json:"tx_sig_limit,omitempty"`
+	TxSizeCostPerByte         uint64 `protobuf:"varint,3,opt,name=tx_size_cost_per_byte,json=txSizeCostPerByte,proto3" json:"tx_size_cost_per_byte,omitempty"`
+	SigVerifyCostEd25519      uint64 `protobuf:"varint,4,opt,name=sig_verify_cost_ed25519,json=sigVerifyCostEd25519,proto3" json:"sig_verify_cost_ed25519,omitempty"`
+	SigVerifyCostSecp256K1    uint64 `protobuf:"varint,5,opt,name=sig_verify_cost_secp256k1,json=sigVerifyCostSecp256k1,proto3" json:"sig_verify_cost_secp256k1,omitempty"`
+	SigVerifyCostEthsecp256K1 uint64 `protobuf:"varint,6,opt,name=sig_verify_cost_ethsecp256k1,json=sigVerifyCostEthsecp256k1,proto3" json:"sig_verify_cost_ethsecp256k1,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -2618,6 +2667,13 @@ func (x *Params) GetSigVerifyCostSecp256K1() uint64 {
 	return 0
 }
 
+func (x *Params) GetSigVerifyCostEthsecp256K1() uint64 {
+	if x != nil {
+		return x.SigVerifyCostEthsecp256K1
+	}
+	return 0
+}
+
 var File_cosmos_auth_v1beta1_auth_proto protoreflect.FileDescriptor
 
 var file_cosmos_auth_v1beta1_auth_proto_rawDesc = []byte{
@@ -2671,8 +2727,8 @@ var file_cosmos_auth_v1beta1_auth_proto_rawDesc = []byte{
 	0x18, 0x02, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x0e, 0x64, 0x65, 0x72, 0x69, 0x76, 0x61, 0x74, 0x69,
 	0x6f, 0x6e, 0x4b, 0x65, 0x79, 0x73, 0x3a, 0x26, 0x8a, 0xe7, 0xb0, 0x2a, 0x21, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x22, 0xd7,
-	0x02, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x2e, 0x0a, 0x13, 0x6d, 0x61, 0x78,
+	0x6f, 0x75, 0x6e, 0x74, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x22, 0xb7,
+	0x03, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x2e, 0x0a, 0x13, 0x6d, 0x61, 0x78,
 	0x5f, 0x6d, 0x65, 0x6d, 0x6f, 0x5f, 0x63, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x73,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x11, 0x6d, 0x61, 0x78, 0x4d, 0x65, 0x6d, 0x6f, 0x43,
 	0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x73, 0x12, 0x20, 0x0a, 0x0c, 0x74, 0x78, 0x5f,
@@ -2691,6 +2747,12 @@ var file_cosmos_auth_v1beta1_auth_proto_rawDesc = []byte{
 	0x04, 0x42, 0x1a, 0xe2, 0xde, 0x1f, 0x16, 0x53, 0x69, 0x67, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79,
 	0x43, 0x6f, 0x73, 0x74, 0x53, 0x65, 0x63, 0x70, 0x32, 0x35, 0x36, 0x6b, 0x31, 0x52, 0x16, 0x73,
 	0x69, 0x67, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x43, 0x6f, 0x73, 0x74, 0x53, 0x65, 0x63, 0x70,
+	0x32, 0x35, 0x36, 0x6b, 0x31, 0x12, 0x5e, 0x0a, 0x1c, 0x73, 0x69, 0x67, 0x5f, 0x76, 0x65, 0x72,
+	0x69, 0x66, 0x79, 0x5f, 0x63, 0x6f, 0x73, 0x74, 0x5f, 0x65, 0x74, 0x68, 0x73, 0x65, 0x63, 0x70,
+	0x32, 0x35, 0x36, 0x6b, 0x31, 0x18, 0x06, 0x20, 0x01, 0x28, 0x04, 0x42, 0x1d, 0xe2, 0xde, 0x1f,
+	0x19, 0x53, 0x69, 0x67, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x43, 0x6f, 0x73, 0x74, 0x45, 0x74,
+	0x68, 0x53, 0x65, 0x63, 0x70, 0x32, 0x35, 0x36, 0x6b, 0x31, 0x52, 0x19, 0x73, 0x69, 0x67, 0x56,
+	0x65, 0x72, 0x69, 0x66, 0x79, 0x43, 0x6f, 0x73, 0x74, 0x45, 0x74, 0x68, 0x73, 0x65, 0x63, 0x70,
 	0x32, 0x35, 0x36, 0x6b, 0x31, 0x3a, 0x21, 0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x18,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f, 0x61, 0x75, 0x74,
 	0x68, 0x2f, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0xc4, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d,

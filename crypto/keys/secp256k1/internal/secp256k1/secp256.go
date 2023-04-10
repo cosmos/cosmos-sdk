@@ -168,6 +168,8 @@ func CompressPubkey(x, y *big.Int) []byte {
 	return out
 }
 
+
+
 func checkSignature(sig []byte) error {
 	if len(sig) != 65 {
 		return ErrInvalidSignatureLen

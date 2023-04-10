@@ -601,7 +601,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 				"hash", fmt.Sprintf("%X", req.Hash),
 				"panic", err,
 			)
-			err = fmt.Errorf("recovered panic in ExtendVote: %w", err)
+			err = fmt.Errorf("recovered application panic in ExtendVote: %w", err)
 		}
 	}()
 
@@ -638,7 +638,7 @@ func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVeri
 				"validator", fmt.Sprintf("%X", req.ValidatorAddress),
 				"panic", err,
 			)
-			err = fmt.Errorf("recovered panic in VerifyVoteExtension: %w", err)
+			err = fmt.Errorf("recovered application panic in VerifyVoteExtension: %w", err)
 		}
 	}()
 

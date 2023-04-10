@@ -548,7 +548,8 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			// we use commit info to check if the store existed at this version or not
 			if err != nil {
 				if commitInfo == nil {
-					commitInfo, errCommitInfo := rs.GetCommitInfo(version)
+					var errCommitInfo error
+					commitInfo, errCommitInfo = rs.GetCommitInfo(version)
 
 					if errCommitInfo != nil {
 						return nil, errCommitInfo

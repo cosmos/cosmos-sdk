@@ -15,7 +15,7 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-func TestIntJsonTestcases(t *testing.T) {
+func TestIntJSONTestcases(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
 	raw, err := os.ReadFile("./internal/testdata/integers.json")

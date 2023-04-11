@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/collections"
 	"fmt"
+
+	"cosmossdk.io/collections"
 
 	"cosmossdk.io/log"
 	gogotypes "github.com/cosmos/gogoproto/types"

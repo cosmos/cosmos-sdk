@@ -3,7 +3,6 @@ package types
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -11,41 +10,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
-
-func TestMsgSendValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte("from________________"))
-	addr2 := sdk.AccAddress([]byte("to__________________"))
-	addrEmpty := sdk.AccAddress([]byte(""))
-	addrLong := sdk.AccAddress([]byte("Purposefully long address"))
-
-	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
-	atom0 := sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
-	atom123eth123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 123))
-	atom123eth0 := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 0)}
-
-	cases := []struct {
-		expectedErr string // empty means no error expected
-		msg         *MsgSend
-	}{
-		{"", NewMsgSend(addr1, addr2, atom123)},                                // valid send
-		{"", NewMsgSend(addr1, addr2, atom123eth123)},                          // valid send with multiple coins
-		{"", NewMsgSend(addrLong, addr2, atom123)},                             // valid send with long addr sender
-		{"", NewMsgSend(addr1, addrLong, atom123)},                             // valid send with long addr recipient
-		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
-		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
-		{"invalid from address: empty address string is not allowed: invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
-		{"invalid to address: empty address string is not allowed: invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
-	}
-
-	for _, tc := range cases {
-		err := tc.msg.ValidateBasic()
-		if tc.expectedErr == "" {
-			require.Nil(t, err)
-		} else {
-			require.EqualError(t, err, tc.expectedErr)
-		}
-	}
-}
 
 func TestMsgSendGetSignBytes(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("input"))
@@ -140,93 +104,6 @@ func TestOutputValidation(t *testing.T) {
 	}
 }
 
-func TestMsgMultiSendValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte("_______alice________"))
-	addr2 := sdk.AccAddress([]byte("________bob_________"))
-	addr3 := sdk.AccAddress([]byte("_______addr3________"))
-	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
-	atom124 := sdk.NewCoins(sdk.NewInt64Coin("atom", 124))
-	atom246 := sdk.NewCoins(sdk.NewInt64Coin("atom", 246))
-
-	input1 := NewInput(addr1, atom123)
-	input2 := NewInput(addr1, atom246)
-	output1 := NewOutput(addr2, atom123)
-	output2 := NewOutput(addr2, atom124)
-	output3 := NewOutput(addr2, atom123)
-	output4 := NewOutput(addr3, atom123)
-
-	var emptyAddr sdk.AccAddress
-
-	cases := []struct {
-		valid     bool
-		tx        MsgMultiSend
-		expErrMsg string
-	}{
-		{false, MsgMultiSend{}, "no inputs to send transaction"},                           // no input or output
-		{false, MsgMultiSend{Inputs: []Input{input1}}, "no outputs to send transaction"},   // just input
-		{false, MsgMultiSend{Outputs: []Output{output1}}, "no inputs to send transaction"}, // just output
-		{
-			false,
-			MsgMultiSend{
-				Inputs:  []Input{NewInput(emptyAddr, atom123)}, // invalid input
-				Outputs: []Output{output1},
-			},
-			"invalid input address",
-		},
-		{
-			false,
-			MsgMultiSend{
-				Inputs:  []Input{input1},
-				Outputs: []Output{{emptyAddr.String(), atom123}}, // invalid output
-			},
-			"invalid output address",
-		},
-		{
-			false,
-			MsgMultiSend{
-				Inputs:  []Input{input1},
-				Outputs: []Output{output2}, // amounts don't match
-			},
-			"sum inputs != sum outputs",
-		},
-		{
-			true,
-			MsgMultiSend{
-				Inputs:  []Input{input1},
-				Outputs: []Output{output1},
-			},
-			"",
-		},
-		{
-			false,
-			MsgMultiSend{
-				Inputs:  []Input{input1, input2},
-				Outputs: []Output{output3, output4},
-			},
-			"multiple senders not allowed",
-		},
-		{
-			true,
-			MsgMultiSend{
-				Inputs:  []Input{NewInput(addr2, atom123.MulInt(sdkmath.NewInt(2)))},
-				Outputs: []Output{output1, output1},
-			},
-			"",
-		},
-	}
-
-	for i, tc := range cases {
-		err := tc.tx.ValidateBasic()
-		if tc.valid {
-			require.Nil(t, err, "%d: %+v", i, err)
-			require.Nil(t, err)
-		} else {
-			require.NotNil(t, err, "%d", i)
-			require.Contains(t, err.Error(), tc.expErrMsg)
-		}
-	}
-}
-
 func TestMsgMultiSendGetSignBytes(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("input"))
 	addr2 := sdk.AccAddress([]byte("output"))
@@ -286,101 +163,4 @@ func TestMsgSetSendEnabledGetSigners(t *testing.T) {
 	expected := []sdk.AccAddress{govModuleAddr}
 	actual := msg.GetSigners()
 	assert.Equal(t, expected, actual)
-}
-
-func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
-	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	tests := []struct {
-		name string
-		msg  MsgSetSendEnabled
-		exp  string
-	}{
-		{
-			name: "valid with two entries",
-			msg: MsgSetSendEnabled{
-				Authority: govModuleAddr,
-				SendEnabled: []*SendEnabled{
-					{"somecoina", true},
-					{"somecoinb", false},
-				},
-				UseDefaultFor: []string{"defcoinc", "defcoind"},
-			},
-			exp: "",
-		},
-		{
-			name: "valid with two entries but no authority",
-			msg: MsgSetSendEnabled{
-				Authority: "",
-				SendEnabled: []*SendEnabled{
-					{"somecoina", true},
-					{"somecoinb", false},
-				},
-				UseDefaultFor: []string{"defcoinc", "defcoind"},
-			},
-			exp: "",
-		},
-		{
-			name: "bad authority",
-			msg: MsgSetSendEnabled{
-				Authority: "farva",
-				SendEnabled: []*SendEnabled{
-					{"somecoina", true},
-					{"somecoinb", false},
-				},
-			},
-			exp: "invalid authority address: decoding bech32 failed: invalid bech32 string length 5: invalid address",
-		},
-		{
-			name: "bad first denom name",
-			msg: MsgSetSendEnabled{
-				Authority: govModuleAddr,
-				SendEnabled: []*SendEnabled{
-					{"Not A Denom", true},
-					{"somecoinb", false},
-				},
-			},
-			exp: `invalid SendEnabled denom "Not A Denom": invalid denom: Not A Denom: invalid request`,
-		},
-		{
-			name: "bad second denom",
-			msg: MsgSetSendEnabled{
-				Authority: govModuleAddr,
-				SendEnabled: []*SendEnabled{
-					{"somecoina", true},
-					{"", false},
-				},
-			},
-			exp: `invalid SendEnabled denom "": invalid denom: : invalid request`,
-		},
-		{
-			name: "duplicate denom",
-			msg: MsgSetSendEnabled{
-				Authority: govModuleAddr,
-				SendEnabled: []*SendEnabled{
-					{"copycoin", true},
-					{"copycoin", false},
-				},
-			},
-			exp: `duplicate denom entries found for "copycoin": invalid request`,
-		},
-		{
-			name: "bad denom to delete",
-			msg: MsgSetSendEnabled{
-				Authority:     govModuleAddr,
-				UseDefaultFor: []string{"very \t bad denom string~~~!"},
-			},
-			exp: "invalid UseDefaultFor denom \"very \\t bad denom string~~~!\": invalid denom: very \t bad denom string~~~!: invalid request",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(tt *testing.T) {
-			actual := tc.msg.ValidateBasic()
-			if len(tc.exp) > 0 {
-				require.EqualError(tt, actual, tc.exp)
-			} else {
-				require.NoError(tt, actual)
-			}
-		})
-	}
 }

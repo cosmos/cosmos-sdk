@@ -29,16 +29,27 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
-		return nil, err
-	}
-
+	// basic validations start
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
 		return nil, err
 	}
+
 	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
 	if err != nil {
+		return nil, err
+	}
+
+	if !msg.Amount.IsValid() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
+	if !msg.Amount.IsAllPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+	// basic validations end
+
+	if err := k.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
 	}
 
@@ -69,6 +80,24 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*types.MsgMultiSendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// basic validations start
+	if len(msg.Inputs) == 0 {
+		return nil, types.ErrNoInputs
+	}
+
+	if len(msg.Inputs) != 1 {
+		return nil, types.ErrMultipleSenders
+	}
+
+	if len(msg.Outputs) == 0 {
+		return nil, types.ErrNoOutputs
+	}
+
+	if err := validateInputOutputs(msg.Inputs[0], msg.Outputs); err != nil {
+		return nil, err
+	}
+	// basic validations end
+
 	// NOTE: totalIn == totalOut should already have been checked
 	for _, in := range msg.Inputs {
 		if err := k.IsSendEnabledCoins(ctx, in.Coins...); err != nil {
@@ -93,6 +122,11 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 }
 
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	// basic params validations
+	if err := req.Params.Validate(); err != nil {
+		return nil, err
+	}
+
 	if k.GetAuthority() != req.Authority {
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), req.Authority)
 	}
@@ -106,6 +140,33 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 }
 
 func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEnabled) (*types.MsgSetSendEnabledResponse, error) {
+	// basic validations start
+	if len(msg.Authority) > 0 {
+		if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+		}
+	}
+
+	seen := map[string]bool{}
+	for _, se := range msg.SendEnabled {
+		if _, alreadySeen := seen[se.Denom]; alreadySeen {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate denom entries found for %q", se.Denom)
+		}
+
+		seen[se.Denom] = true
+
+		if err := se.Validate(); err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid SendEnabled denom %q: %s", se.Denom, err)
+		}
+	}
+
+	for _, denom := range msg.UseDefaultFor {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid UseDefaultFor denom %q: %s", denom, err)
+		}
+	}
+	// basic validations end
+
 	if k.GetAuthority() != msg.Authority {
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
 	}
@@ -119,4 +180,30 @@ func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEn
 	}
 
 	return &types.MsgSetSendEnabledResponse{}, nil
+}
+
+// validateInputOutputs validates that each respective input and output is
+// valid and that the sum of inputs is equal to the sum of outputs.
+func validateInputOutputs(input types.Input, outputs []types.Output) error {
+	var totalIn, totalOut sdk.Coins
+
+	if err := input.ValidateBasic(); err != nil {
+		return err
+	}
+	totalIn = input.Coins
+
+	for _, out := range outputs {
+		if err := out.ValidateBasic(); err != nil {
+			return err
+		}
+
+		totalOut = totalOut.Add(out.Coins...)
+	}
+
+	// make sure inputs and outputs match
+	if !totalIn.Equal(totalOut) {
+		return types.ErrInputOutputMismatch
+	}
+
+	return nil
 }

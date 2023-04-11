@@ -19,7 +19,7 @@ func (ms MemberRequests) ValidateBasic() error {
 	index := make(map[string]struct{}, len(ms.Members))
 	for i := range ms.Members {
 		member := ms.Members[i]
-		if err := member.ValidateBasic(); err != nil {
+		if err := member.Validate(); err != nil {
 			return err
 		}
 		addr := member.Address

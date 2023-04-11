@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -294,6 +295,9 @@ func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) erro
 
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
-	params, _ = ak.ParamsState.Get(ctx)
+	params, err := ak.ParamsState.Get(ctx)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		panic(err)
+	}
 	return params
 }

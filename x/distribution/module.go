@@ -217,7 +217,7 @@ func init() {
 	)
 }
 
-type DistrInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -232,7 +232,7 @@ type DistrInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-type DistrOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	DistrKeeper keeper.Keeper
@@ -240,7 +240,7 @@ type DistrOutputs struct {
 	Hooks       staking.StakingHooksWrapper
 }
 
-func ProvideModule(in DistrInputs) DistrOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
@@ -264,7 +264,7 @@ func ProvideModule(in DistrInputs) DistrOutputs {
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
 
-	return DistrOutputs{
+	return ModuleOutputs{
 		DistrKeeper: k,
 		Module:      m,
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},

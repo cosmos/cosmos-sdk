@@ -36,7 +36,7 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.ValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshal(&info)},
-			{Key: types.ValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshal(&missed)},
+			{Key: types.ValidatorMissedBlockBitmapKey(consAddr1, 6), Value: cdc.MustMarshal(&missed)},
 			{Key: types.AddrPubkeyRelationKey(delAddr1), Value: bz},
 			{Key: []byte{0x99}, Value: []byte{0x99}}, // This test should panic
 		},

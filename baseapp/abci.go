@@ -52,7 +52,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// or processing the first block or not.
 	app.initialHeight = req.InitialHeight
 
-	// if req.InitialHeight is > 1, then we set the initial version on the stores
+	// if req.InitialHeight is > 1, then we set the initial version on all stores
 	if req.InitialHeight > 1 {
 		initHeader.Height = req.InitialHeight
 		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {

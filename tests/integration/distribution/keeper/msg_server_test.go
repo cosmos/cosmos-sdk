@@ -131,6 +131,17 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 
 	// setup staking validator
 	valAddr := sdk.ValAddress(addr)
+	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
+	f.sdkCtx = f.sdkCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
+		{
+			Validator: cmtabcitypes.Validator{
+				Address: valAddr,
+				Power:   100,
+			},
+			SignedLastBlock: true,
+		},
+	})
+
 	validator, err := stakingtypes.NewValidator(valAddr, PKS[0], stakingtypes.Description{})
 	assert.NilError(t, err)
 	commission := stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyOneDec())
@@ -203,24 +214,9 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			req := cmtabcitypes.RequestBeginBlock{
-				LastCommitInfo: cmtabcitypes.CommitInfo{
-					Round: 1,
-					Votes: []cmtabcitypes.VoteInfo{
-						{
-							Validator: cmtabcitypes.Validator{
-								Address: valAddr,
-								Power:   100,
-							},
-							SignedLastBlock: true,
-						},
-					},
-				},
-			}
 			res, err := f.app.RunMsg(
 				tc.msg,
-				// integration.WithAutomaticBeginEndBlock(),
-				integration.WithCustomBeginBlock(req),
+				integration.WithAutomaticBeginEndBlock(),
 				integration.WithAutomaticCommit(),
 			)
 
@@ -229,7 +225,29 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				panic(fmt.Errorf("expected block height to be %d, got %d", height, f.app.LastBlockHeight()))
 			}
 
-			
+			// queryClient := distrtypes.NewQueryClient(f.app.QueryHelper())
+			prevProposerConsAddr := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+			assert.Assert(t, prevProposerConsAddr.Empty() == false)
+			// // fmt.Printf("f.sdkCtx.VoteInfos(): %v\n", f.sdkCtx.VoteInfos())
+			// check := func(ctx sdk.Context, expRewards sdk.DecCoins) {
+			// 	// fmt.Printf("ctx.VoteInfos(): %v\n", ctx.VoteInfos())
+			// 	// macc := f.accountKeeper.GetModuleAccount(ctx, distrtypes.ModuleName)
+			// 	// amount := f.bankKeeper.GetAllBalances(ctx, macc.GetAddress())
+			// 	// fmt.Printf("amount: %v\n", amount)
+			// 	// fmt.Printf("macc: %v\n", macc)
+			// 	distribution.BeginBlocker(ctx, f.distrKeeper)
+			// 	resp, err := queryClient.DelegationTotalRewards(ctx, &distrtypes.QueryDelegationTotalRewardsRequest{
+			// 		DelegatorAddress: delAddr.String(),
+			// 	})
+			// 	assert.NilError(t, err)
+			// 	assert.Assert(t, resp != nil)
+			// 	fmt.Printf("res.Rewards: %v\n", resp.Rewards)
+			// 	assert.DeepEqual(t, resp.Total, expRewards)
+			// 	consAddr := f.distrKeeper.GetPreviousProposerConsAddr(ctx)
+			// 	assert.DeepEqual(t, consAddr, valConsAddr)
+			// }
+
+			// check(f.sdkCtx, sdk.NewDecCoins(sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(10))))
 
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)

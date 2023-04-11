@@ -7,6 +7,7 @@ updates:
     directory: "/"
     schedule:
       interval: daily
+      time: "01:00"
 
   - package-ecosystem: npm
     directory: "/docs"
@@ -20,6 +21,7 @@ updates:
     directory: "/"
     schedule:
       interval: daily
+      time: "01:05"
     labels:
       - "A:automerge"
       - dependencies
@@ -27,6 +29,7 @@ updates:
     directory: "/simapp"
     schedule:
       interval: daily
+      time: "01:10"
     labels:
       - "A:automerge"
       - dependencies
@@ -35,6 +38,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
+      time: "01:15"
     labels:
       - "A:automerge"
       - dependencies
@@ -43,6 +47,7 @@ updates:
     schedule:
       interval: weekly
       day: tuesday
+      time: "01:20"
     labels:
       - "A:automerge"
       - dependencies
@@ -51,6 +56,7 @@ updates:
     schedule:
       interval: weekly
       day: wednesday
+      time: "01:25"
     labels:
       - "A:automerge"
       - dependencies
@@ -59,6 +65,7 @@ updates:
     schedule:
       interval: weekly
       day: thursday
+      time: "01:30"
     labels:
       - "A:automerge"
       - dependencies
@@ -67,6 +74,7 @@ updates:
     schedule:
       interval: weekly
       day: friday
+      time: "01:35"
     labels:
       - "A:automerge"
       - dependencies
@@ -75,6 +83,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
+      time: "01:40"
     labels:
       - "A:automerge"
       - dependencies
@@ -83,6 +92,7 @@ updates:
     schedule:
       interval: weekly
       day: tuesday
+      time: "01:45"
     labels:
       - "A:automerge"
       - dependencies
@@ -91,6 +101,7 @@ updates:
     schedule:
       interval: weekly
       day: wednesday
+      time: "01:50"
     labels:
       - "A:automerge"
       - dependencies
@@ -99,6 +110,7 @@ updates:
     schedule:
       interval: weekly
       day: thursday
+      time: "01:55"
     labels:
       - "A:automerge"
       - dependencies
@@ -107,6 +119,7 @@ updates:
     schedule:
       interval: weekly
       day: friday
+      time: "02:00"
     labels:
       - "A:automerge"
       - dependencies
@@ -115,6 +128,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
+      time: "02:05"
     labels:
       - "A:automerge"
       - dependencies
@@ -123,6 +137,7 @@ updates:
     schedule:
       interval: weekly
       day: tuesday
+      time: "02:10"
     labels:
       - "A:automerge"
       - dependencies
@@ -131,6 +146,7 @@ updates:
     schedule:
       interval: weekly
       day: thursday
+      time: "02:15"
     labels:
       - "A:automerge"
       - dependencies
@@ -139,6 +155,7 @@ updates:
     schedule:
       interval: weekly
       day: friday
+      time: "02:20"
     labels:
       - "A:automerge"
       - dependencies
@@ -147,6 +164,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
+      time: "02:25"
     labels:
       - "A:automerge"
       - dependencies
@@ -155,6 +173,7 @@ updates:
     schedule:
       interval: weekly
       day: tuesday
+      time: "02:30"
     labels:
       - "A:automerge"
       - dependencies
@@ -163,6 +182,7 @@ updates:
     schedule:
       interval: weekly
       day: wednesday
+      time: "02:35"
     labels:
       - "A:automerge"
       - dependencies
@@ -172,6 +192,7 @@ updates:
     schedule:
       interval: weekly
       day: thursday
+      time: "02:40"
     labels:
       - "A:automerge"
       - dependencies
@@ -180,6 +201,7 @@ updates:
     schedule:
       interval: weekly
       day: friday
+      time: "02:45"
     labels:
       - "A:automerge"
       - dependencies
@@ -188,6 +210,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
+      time: "02:50"
     labels:
       - "A:automerge"
       - dependencies
@@ -196,6 +219,7 @@ updates:
     schedule:
       interval: weekly
       day: tuesday
+      time: "02:55"
     labels:
       - "A:automerge"
       - dependencies
@@ -206,6 +230,7 @@ updates:
     target-branch: "release/v0.47.x"
     schedule:
       interval: daily
+      time: "03:00"
     labels:
       - "A:automerge"
       - dependencies

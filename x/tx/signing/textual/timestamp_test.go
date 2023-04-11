@@ -16,7 +16,7 @@ import (
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// timestampJsonTest is the type of test cases in the testdata file.
+// timestampJSONTest is the type of test cases in the testdata file.
 // If the test case has a Proto, try to Format() it. If Error is set, expect
 // an error, otherwise match Text, then Parse() the text and expect it to
 // match (via proto.Equals()) the original Proto. If the test case has no
@@ -24,26 +24,26 @@ import (
 //
 // The Timestamp proto seconds field is int64, but restricted in range
 // by convention and will fit within a JSON number.
-type timestampJsonTest struct {
+type timestampJSONTest struct {
 	Proto *tspb.Timestamp
 	Error bool
 	Text  string
 }
 
-func TestTimestampJsonTestcasesTestData(t *testing.T) {
+func TestTimestampJSONTestcasesTestData(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/timestamp.json")
 	require.NoError(t, err)
-	testTimestampJsonTestcases(t, raw)
+	testTimestampJSONTestcases(t, raw)
 }
 
 // Tests to ensure that we compare standardized forms of the final timestamppb.Timestamp.
 // Please see issue https://github.com/cosmos/cosmos-sdk/issues/15761
 func TestTimestampJsonTestcasesExtraneousNanos(t *testing.T) {
-	testTimestampJsonTestcases(t, []byte(`[{"proto":{"nAnos":1000000000},"text":"1970-01-01T00:00:01Z"}]`))
+	testTimestampJSONTestcases(t, []byte(`[{"proto":{"nAnos":1000000000},"text":"1970-01-01T00:00:01Z"}]`))
 }
 
-func testTimestampJsonTestcases(t *testing.T, raw []byte) {
-	var testcases []timestampJsonTest
+func testTimestampJSONTestcases(t *testing.T, raw []byte) {
+	var testcases []timestampJSONTest
 	err := json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 

@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/log v1.0.0
 	cosmossdk.io/math v1.0.0
 	github.com/armon/go-metrics v0.4.1
-	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664
+	github.com/cometbft/cometbft v0.38.0-alpha.1
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/gogoproto v1.4.7
@@ -39,7 +39,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -57,6 +56,7 @@ require (
 	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect

@@ -375,7 +375,7 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 				fmt.Sprintf("--%s=%s", cli.FlagAllowList, fmt.Sprintf("%s,%s", s.grantee[1], s.grantee[1])),
 			},
 			true,
-			"duplicate entry",
+			"duplicate address",
 		},
 		{
 			"Valid tx generic authorization",

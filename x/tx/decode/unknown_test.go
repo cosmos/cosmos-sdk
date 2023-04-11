@@ -2,6 +2,7 @@ package decode_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -501,7 +502,8 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			desc := tt.recv.ProtoReflect().Descriptor()
 			gotErr := decode.RejectUnknownFieldsStrict(protoBlob, desc, ProtoResolver)
 			if tt.wantErr != nil {
-				require.EqualError(t, gotErr, tt.wantErr.Error())
+				gotErrString := strings.ReplaceAll(gotErr.Error(), "\u00a0", " ")
+				require.Equal(t, gotErrString, tt.wantErr.Error())
 			} else {
 				require.NoError(t, gotErr)
 			}
@@ -636,8 +638,6 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 
 			c1 := new(testpb.Customer1)
 			c1Desc := c1.ProtoReflect().Descriptor()
-			// err = proto.Unmarshal(blob, c1)
-			// require.NoError(t, err)
 			gotErr := decode.RejectUnknownFieldsStrict(blob, c1Desc, ProtoResolver)
 			if tt.wantErr != nil {
 				require.EqualError(t, gotErr, tt.wantErr.Error())

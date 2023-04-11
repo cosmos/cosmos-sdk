@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -197,15 +199,38 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			expErr: false,
 		},
 	}
-
+	height := f.app.LastBlockHeight()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			req := cmtabcitypes.RequestBeginBlock{
+				LastCommitInfo: cmtabcitypes.CommitInfo{
+					Round: 1,
+					Votes: []cmtabcitypes.VoteInfo{
+						{
+							Validator: cmtabcitypes.Validator{
+								Address: valAddr,
+								Power:   100,
+							},
+							SignedLastBlock: true,
+						},
+					},
+				},
+			}
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
+				// integration.WithAutomaticBeginEndBlock(),
+				integration.WithCustomBeginBlock(req),
 				integration.WithAutomaticCommit(),
 			)
+
+			height++
+			if f.app.LastBlockHeight() != height {
+				panic(fmt.Errorf("expected block height to be %d, got %d", height, f.app.LastBlockHeight()))
+			}
+
+			
+
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {

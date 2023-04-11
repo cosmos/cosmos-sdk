@@ -181,13 +181,24 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	mgr := snapshots.NewManager(store, opts, hung, nil, log.NewNopLogger())
 	require.Equal(t, opts.Interval, hung.snapshotInterval)
 
+	// Channel to ensure the test doesn't finish until the goroutine is done.
+	// Without this, there are intermittent test failures about
+	// the t.TempDir() cleanup failing due to the directory not being empty.
+	done := make(chan struct{})
+
 	go func() {
+		defer close(done)
 		_, err := mgr.Create(1)
 		require.NoError(t, err)
 		_, didPruneHeight := hung.prunedHeights[1]
 		require.True(t, didPruneHeight)
 	}()
 	time.Sleep(10 * time.Millisecond)
+
+	t.Cleanup(func() {
+		<-done
+	})
+
 	t.Cleanup(hung.Close)
 
 	return mgr

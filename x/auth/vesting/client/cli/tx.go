@@ -74,7 +74,6 @@ timestamp.`,
 			delayed, _ := cmd.Flags().GetBool(FlagDelayed)
 
 			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, endTime, delayed)
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -111,7 +110,6 @@ tokens.`,
 			}
 
 			msg := types.NewMsgCreatePermanentLockedAccount(clientCtx.GetFromAddress(), toAddr, amount)
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -190,15 +188,12 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				if p.Length < 0 {
 					return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
 				}
+
 				period := types.Period{Length: p.Length, Amount: amount}
 				periods = append(periods, period)
 			}
 
 			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, vestingData.StartTime, periods)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

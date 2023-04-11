@@ -1,12 +1,7 @@
 package types
 
 import (
-	"fmt"
-
-	errorsmod "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -31,30 +26,6 @@ func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coin
 	}
 }
 
-// ValidateBasic Implements Msg.
-func (msg MsgCreateVestingAccount) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
-	}
-
-	if !msg.Amount.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
-	}
-
-	if !msg.Amount.IsAllPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
-	}
-
-	if msg.EndTime <= 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid end time")
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreateVestingAccount.
 func (msg MsgCreateVestingAccount) GetSignBytes() []byte {
@@ -74,26 +45,6 @@ func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount 
 		ToAddress:   toAddr.String(),
 		Amount:      amount,
 	}
-}
-
-// ValidateBasic Implements Msg.
-func (msg MsgCreatePermanentLockedAccount) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
-	}
-
-	if !msg.Amount.IsValid() {
-		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
-	}
-
-	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
-	}
-
-	return nil
 }
 
 // GetSignBytes returns the bytes all expected signers must sign over for a
@@ -131,35 +82,4 @@ func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
 // MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic Implements Msg.
-func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return err
-	}
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return err
-	}
-	if err := sdk.VerifyAddressFormat(from); err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
-	}
-
-	if err := sdk.VerifyAddressFormat(to); err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
-	}
-
-	if msg.StartTime < 1 {
-		return fmt.Errorf("invalid start time of %d, length must be greater than 0", msg.StartTime)
-	}
-
-	for i, period := range msg.VestingPeriods {
-		if period.Length < 1 {
-			return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
-		}
-	}
-
-	return nil
 }

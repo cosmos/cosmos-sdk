@@ -22,10 +22,6 @@ func errUnknownField(typ string, tagNum int, wireType protowire.Type) error {
 	return decode.ErrUnknownField.Wrapf("%s: {TagNum: %d, WireType:%q}", typ, tagNum, wt)
 }
 
-func errMismatchedField(typ string, wireType protowire.Type) error {
-	return fmt.Errorf("invalid wire type %s for field %s", decode.WireTypeToString(wireType), typ)
-}
-
 var ProtoResolver = protoregistry.GlobalFiles
 
 func TestRejectUnknownFieldsRepeated(t *testing.T) {

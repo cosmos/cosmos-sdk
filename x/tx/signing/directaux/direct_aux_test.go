@@ -66,7 +66,7 @@ func TestDirectAuxHandler(t *testing.T) {
 	}
 
 	signingData := signing.SignerData{
-		ChainId:       chainID,
+		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      accSeq,
 		Address:       "",
@@ -88,7 +88,7 @@ func TestDirectAuxHandler(t *testing.T) {
 
 	t.Log("verify fee payer cannot use SIGN_MODE_DIRECT_AUX")
 	feePayerSigningData := signing.SignerData{
-		ChainId:       chainID,
+		ChainID:       chainID,
 		AccountNumber: accNum,
 		Address:       feePayerAddr,
 		PubKey:        anyPk,

@@ -200,7 +200,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 				}
 			}
 
-			txMsgs := make([]*anypb.Any, len(b.msgs))
+			var txMsgs []*anypb.Any
 			for _, msg := range b.body.Messages {
 				msgAny := &anypb.Any{
 					TypeUrl: msg.TypeUrl,

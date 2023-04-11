@@ -54,7 +54,7 @@ type getSignersFunc func(proto.Message) []string
 
 func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, error) {
 	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
-	if signersFields == nil || len(signersFields) == 0 {
+	if len(signersFields) == 0 {
 		return nil, fmt.Errorf("no cosmos.msg.v1.signer option found for message %s", descriptor.FullName())
 	}
 

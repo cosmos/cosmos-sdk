@@ -3,7 +3,6 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.20
 
 require (
-	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230330094838-d21f58c638d5
 	github.com/cosmos/gogoproto v1.4.7
 	github.com/golang/protobuf v1.5.3
@@ -22,6 +21,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/log v1.0.0 // indirect
 	cosmossdk.io/math v1.0.0 // indirect
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect

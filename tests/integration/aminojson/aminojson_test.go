@@ -136,7 +136,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				}
 
 				handlerOptions := signing_testutil.HandlerArgumentOptions{
-					ChainId:       "test-chain",
+					ChainID:       "test-chain",
 					Memo:          "sometestmemo",
 					Msg:           tt.Pulsar,
 					AccNum:        1,
@@ -162,7 +162,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				theTx := txBuilder.GetTx()
 
 				legacySigningData := signing.SignerData{
-					ChainID:       handlerOptions.ChainId,
+					ChainID:       handlerOptions.ChainID,
 					Address:       handlerOptions.SignerAddress,
 					AccountNumber: handlerOptions.AccNum,
 					Sequence:      handlerOptions.AccSeq,
@@ -437,7 +437,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			}
 
 			handlerOptions := signing_testutil.HandlerArgumentOptions{
-				ChainId:       "test-chain",
+				ChainID:       "test-chain",
 				Memo:          "sometestmemo",
 				Msg:           tc.pulsar,
 				AccNum:        1,
@@ -463,7 +463,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			theTx := txBuilder.GetTx()
 
 			legacySigningData := signing.SignerData{
-				ChainID:       handlerOptions.ChainId,
+				ChainID:       handlerOptions.ChainID,
 				Address:       handlerOptions.SignerAddress,
 				AccountNumber: handlerOptions.AccNum,
 				Sequence:      handlerOptions.AccSeq,

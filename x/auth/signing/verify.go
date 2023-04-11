@@ -62,6 +62,8 @@ func translateSignMode(mode signing.SignMode) (signingv1beta1.SignMode, error) {
 	}
 }
 
+// VerifySignatureV2 verifies a transaction signature contained in SignatureData abstracting over different signing
+// modes. It differs from VerifySignature in that it uses the new txsigning.TxData interface in x/tx.
 func VerifySignatureV2(
 	ctx context.Context,
 	pubKey cryptotypes.PubKey,

@@ -21,9 +21,7 @@ type StdSignMsg struct {
 
 // get message bytes
 func (msg StdSignMsg) Bytes() []byte {
-	// this function appears to unused but is public, can it be removed to fully deprecate StdSignBytes?
-	panic("not implemented")
-	//return StdSignBytes(msg.ChainID, msg.AccountNumber, msg.Sequence, msg.TimeoutHeight, msg.Fee, msg.Msgs, msg.Memo, nil)
+	panic("not implemented; implementation removed in #15713")
 }
 
 func (msg StdSignMsg) UnpackInterfaces(unpacker types.AnyUnpacker) error {

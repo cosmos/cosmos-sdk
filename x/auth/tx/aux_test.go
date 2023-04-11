@@ -8,6 +8,7 @@ import (
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -55,8 +56,8 @@ func TestBuilderWithAux(t *testing.T) {
 	aux2Builder.SetTimeoutHeight(3)
 	aux2Builder.SetMemo(memo)
 	aux2Builder.SetChainID(chainID)
-	aux2Builder.SetMsgs(msg)
-	aux2Builder.SetPubKey(aux2Pk)
+	require.NoError(t, aux2Builder.SetMsgs(msg))
+	require.NoError(t, aux2Builder.SetPubKey(aux2Pk))
 	aux2Builder.SetTip(tip)
 	extOptAny, err := codectypes.NewAnyWithValue(extOpt)
 	require.NoError(t, err)

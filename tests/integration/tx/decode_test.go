@@ -112,7 +112,7 @@ func TestDecode(t *testing.T) {
 
 				tx := txBuilder.GetTx()
 				txBytes, err := encCfg.TxConfig.TxEncoder()(tx)
-				decodeCtx, err := decode.NewContext(decode.Options{})
+				decodeCtx, err := decode.NewDecoder(decode.Options{})
 				require.NoError(t, err)
 				decodedTx, err := decodeCtx.Decode(txBytes)
 				require.NoError(t, err)

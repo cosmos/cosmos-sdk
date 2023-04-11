@@ -261,11 +261,15 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 	return protoreflect.ValueOfMessage(msg), nil
 }
 
-func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Screen, l protoreflect.List, vr ValueRenderer) error {
+var (
 	// <int> <field_kind>
-	headerRegex := *regexp.MustCompile(`(\d+) .+`)
-	res := headerRegex.FindAllStringSubmatch(screens[0].Content, -1)
+	headerRegex = regexp.MustCompile(`(\d+) .+`)
+	// <field_name> (<int>/<int>): <value rendered 1st line>
+	elementRegex = regexp.MustCompile(`(.+) \(\d+\/\d+\)`)
+)
 
+func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Screen, l protoreflect.List, vr ValueRenderer) error {
+	res := headerRegex.FindAllStringSubmatch(screens[0].Content, -1)
 	if res == nil {
 		return errors.New("failed to match <int> <field_kind>")
 	}

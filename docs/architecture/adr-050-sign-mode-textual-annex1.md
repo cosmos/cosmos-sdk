@@ -114,7 +114,7 @@ End of Allowed messages
 
 * Applies to all Protobuf messages that do not have a custom encoding.
 * Field names follow [sentence case](https://en.wiktionary.org/wiki/sentence_case)
-    * replace `_` with a space
+    * replace each `_` with a space
     * capitalize first letter of the sentence
 * Field names are ordered by their Protobuf field number
 * Screen title is the field name, and screen content is the value.

@@ -3,7 +3,6 @@ package signing
 import (
 	"context"
 	"fmt"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +18,7 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 		if err != nil {
 			return err
 		}
-		if !pubKey.VerifySignature(signBytes, data.Signature) {
+		if signing.VerifySig(signBytes, data.Signature, pubKey) {
 			return fmt.Errorf("unable to verify single signer signature")
 		}
 		return nil

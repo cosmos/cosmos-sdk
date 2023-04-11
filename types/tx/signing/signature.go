@@ -1,8 +1,9 @@
 package signing
 
 import (
+	"bytes"
 	"fmt"
-
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -103,4 +104,20 @@ func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (sd *SignatureDescriptor) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(sd.PublicKey, new(cryptotypes.PubKey))
+}
+
+func VerifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey) bool {
+	hash := tmhash.Sum(append(signBytes, sig...))
+	cachePub, ok := cryptotypes.SignatureCache().Get(hash)
+	if ok {
+		cryptotypes.SignatureCache().Remove(hash)
+		return bytes.Equal(pubKey.Bytes(), []byte(cachePub))
+	}
+	if !pubKey.VerifySignature(signBytes, sig) {
+		return false
+	}
+
+	cryptotypes.SignatureCache().Add(hash, pubKey.Bytes())
+
+	return true
 }

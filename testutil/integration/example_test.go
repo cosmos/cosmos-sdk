@@ -23,8 +23,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var logger = log.NewNopLogger()
-
 // Example shows how to use the integration test framework to test the integration of SDK modules.
 // Panics are used in this example, but in a real test case, you should use the testing.T object and assertions.
 func Example() {
@@ -34,7 +32,9 @@ func Example() {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
-	cms := integration.SetMultiStore(keys, logger)
+	logger := log.NewLogger(io.Discard, log.OutputJSONOption())
+
+	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -58,7 +58,7 @@ func Example() {
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	integrationApp := integration.NewIntegrationApp(
 		newCtx,
-		log.NewLogger(io.Discard, log.OutputJSONOption()),
+		logger,
 		keys,
 		encodingCfg.Codec,
 		authModule, mintModule,
@@ -113,7 +113,9 @@ func Example_oneModule() {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
-	cms := integration.SetMultiStore(keys, logger)
+	logger := log.NewLogger(io.Discard)
+
+	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -132,7 +134,7 @@ func Example_oneModule() {
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	integrationApp := integration.NewIntegrationApp(
 		newCtx,
-		log.NewLogger(io.Discard),
+		logger,
 		keys,
 		encodingCfg.Codec,
 		authModule,

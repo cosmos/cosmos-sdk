@@ -611,6 +611,10 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
 	}
 
+	if app.extendVote == nil {
+		return nil, errors.New("application ExtendVote handler not set")
+	}
+
 	app.voteExtensionState.ctx = app.voteExtensionState.ctx.
 		WithConsensusParams(cp).
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
@@ -654,6 +658,10 @@ func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVeri
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
 	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
+	}
+
+	if app.verifyVoteExt == nil {
+		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
 	// add a deferred recover handler in case verifyVoteExt panics

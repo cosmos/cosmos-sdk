@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/collections"
 	"fmt"
 
 	"cosmossdk.io/log"
@@ -68,6 +69,10 @@ type AccountKeeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+
+	// State
+
+	ParamsState collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -89,6 +94,8 @@ func NewAccountKeeper(
 
 	bech32Codec := NewBech32Codec(bech32Prefix)
 
+	sb := collections.NewSchemaBuilder(storeService)
+
 	return AccountKeeper{
 		storeService: storeService,
 		proto:        proto,
@@ -96,6 +103,7 @@ func NewAccountKeeper(
 		permAddrs:    permAddrs,
 		addressCdc:   bech32Codec,
 		authority:    authority,
+		ParamsState:  collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 }
 

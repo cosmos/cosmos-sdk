@@ -118,6 +118,8 @@ func initFixture(t assert.TestingT) *fixture {
 	f.addr = sdk.AccAddress(PKS[0].Address())
 	f.valAddr = sdk.ValAddress(f.addr)
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
+
+	// set proposer and vote infos
 	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
 		{
 			Validator: cmtabcitypes.Validator{
@@ -160,15 +162,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 
 	// setup staking validator
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
-	f.sdkCtx = f.sdkCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
-		{
-			Validator: cmtabcitypes.Validator{
-				Address: f.valAddr,
-				Power:   100,
-			},
-			SignedLastBlock: true,
-		},
-	})
 	f.distrKeeper.SetPreviousProposerConsAddr(f.sdkCtx, valConsAddr)
 
 	validator, err := stakingtypes.NewValidator(f.valAddr, PKS[0], stakingtypes.Description{})
@@ -257,6 +250,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			// queryClient := distrtypes.NewQueryClient(f.app.QueryHelper())
 			prevProposerConsAddr := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
 			assert.Assert(t, prevProposerConsAddr.Empty() == false)
+			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
+
 			// // fmt.Printf("f.sdkCtx.VoteInfos(): %v\n", f.sdkCtx.VoteInfos())
 			// check := func(ctx sdk.Context, expRewards sdk.DecCoins) {
 			// 	// fmt.Printf("ctx.VoteInfos(): %v\n", ctx.VoteInfos())

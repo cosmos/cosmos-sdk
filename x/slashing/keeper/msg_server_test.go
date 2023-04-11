@@ -151,6 +151,16 @@ func (s *KeeperTestSuite) TestUnjail() {
 		expErrMsg string
 	}{
 		{
+			name: "invalid validator address: invalid request",
+			malleate: func() *slashingtypes.MsgUnjail {
+				return &slashingtypes.MsgUnjail{
+					ValidatorAddr: "invalid",
+				}
+			},
+			expErr:    true,
+			expErrMsg: "decoding bech32 failed",
+		},
+		{
 			name: "no self delegation: invalid request",
 			malleate: func() *slashingtypes.MsgUnjail {
 				_, pubKey, addr := testdata.KeyTestPubAddr()

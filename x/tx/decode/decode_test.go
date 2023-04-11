@@ -98,5 +98,4 @@ func TestDecode(t *testing.T) {
 				decodeTx.Tx.Body.Messages[0].TypeUrl)
 		})
 	}
-
 }

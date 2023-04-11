@@ -14,12 +14,14 @@ import (
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -28,11 +30,26 @@ import (
 type (
 	execMode uint8
 
-	// StoreLoader defines a customizable function to control how we load the CommitMultiStore
-	// from disk. This is useful for state migration, when loading a datastore written with
-	// an older version of the software. In particular, if a module changed the substore key name
-	// (or removed a substore) between two versions of the software.
+	// StoreLoader defines a customizable function to control how we load the
+	// CommitMultiStore from disk. This is useful for state migration, when
+	// loading a datastore written with an older version of the software. In
+	// particular, if a module changed the substore key name (or removed a substore)
+	// between two versions of the software.
 	StoreLoader func(ms storetypes.CommitMultiStore) error
+
+	// Validator defines the interface contract require for verifying vote extension
+	// signatures. Typically, this will be implemented by the x/staking module,
+	// which has knowledge of the CometBFT public key.
+	Validator interface {
+		CmtConsPublicKey() (cmtprotocrypto.PublicKey, error)
+	}
+
+	// ValidatorStore defines the interface contract require for verifying vote
+	// extension signatures. Typically, this will be implemented by the x/staking
+	// module, which has knowledge of the CometBFT public key.
+	ValidatorStore interface {
+		GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (Validator, error)
+	}
 )
 
 const (
@@ -74,6 +91,7 @@ type BaseApp struct {
 	extendVote      sdk.ExtendVoteHandler          // ABCI ExtendVote handler
 	verifyVoteExt   sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
 
+	valStore       ValidatorStore
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
 	fauxMerkleMode bool           // if true, IAVL MountStores uses MountStoresDB for simulation speed.

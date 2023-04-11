@@ -70,7 +70,7 @@ require (
 	github.com/cosmos/iavl v0.21.0-beta.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
-	github.com/creachadair/atomicfile v0.2.8 // indirect
+	github.com/creachadair/atomicfile v0.3.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect

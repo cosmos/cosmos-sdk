@@ -20,6 +20,12 @@ var _ signing.SignModeHandler = signModeLegacyAminoJSONHandler{}
 // SignModeHandler.
 type signModeLegacyAminoJSONHandler struct{}
 
+// NewSignModeLegacyAminoJSONHandler returns a new signModeLegacyAminoJSONHandler.
+// Note: The public constructor is only used for testing.
+func NewSignModeLegacyAminoJSONHandler() signing.SignModeHandler {
+	return signModeLegacyAminoJSONHandler{}
+}
+
 func (s signModeLegacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
 	return signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }

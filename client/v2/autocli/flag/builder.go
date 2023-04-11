@@ -34,6 +34,7 @@ func (b *Builder) init() {
 		b.messageFlagTypes = map[protoreflect.FullName]Type{}
 		b.messageFlagTypes["google.protobuf.Timestamp"] = timestampType{}
 		b.messageFlagTypes["google.protobuf.Duration"] = durationType{}
+		b.messageFlagTypes["cosmos.base.v1beta1.Coin"] = coinType{}
 	}
 
 	if b.scalarFlagTypes == nil {

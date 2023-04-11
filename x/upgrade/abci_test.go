@@ -6,18 +6,12 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/upgrade"
-	"cosmossdk.io/x/upgrade/keeper"
-	"cosmossdk.io/x/upgrade/types"
-
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,6 +20,12 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/x/upgrade"
+	"cosmossdk.io/x/upgrade/keeper"
+	"cosmossdk.io/x/upgrade/types"
 )
 
 type TestSuite struct {
@@ -58,7 +58,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 
 	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: height})
 
-	s.module = upgrade.NewAppModule(s.keeper)
+	s.module = upgrade.NewAppModule(s.keeper, addresscodec.NewBech32Codec("cosmos"))
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
 	return &s
 }
@@ -476,7 +476,7 @@ func TestDowngradeVerification(t *testing.T) {
 	skip := map[int64]bool{}
 	tempDir := t.TempDir()
 	k := keeper.NewKeeper(skip, key, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	m := upgrade.NewAppModule(k)
+	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 	handler := upgrade.NewSoftwareUpgradeProposalHandler(k)
 
 	// submit a plan.
@@ -525,7 +525,7 @@ func TestDowngradeVerification(t *testing.T) {
 
 		// downgrade. now keeper does not have the handler.
 		k := keeper.NewKeeper(skip, key, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-		m := upgrade.NewAppModule(k)
+		m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 		// assertions
 		lastAppliedPlan, _ := k.GetLastCompletedUpgrade(ctx)

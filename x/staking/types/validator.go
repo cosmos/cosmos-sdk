@@ -39,8 +39,6 @@ var (
 var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
-//
-//nolint:interfacer
 func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {

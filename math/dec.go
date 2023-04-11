@@ -715,7 +715,7 @@ func (d LegacyDec) Ceil() LegacyDec {
 	return LegacyNewDecFromBigInt(quo.Add(quo, oneInt))
 }
 
-// MaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
+// LegacyMaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
 // Its negative form is the least Dec that can be passed in.
 var LegacyMaxSortableDec LegacyDec
 

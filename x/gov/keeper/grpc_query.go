@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,7 +67,7 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 
 			// match voter address (if supplied)
 			if len(req.Voter) > 0 {
-				voter, err := sdk.AccAddressFromBech32(req.Voter)
+				voter, err := q.authKeeper.StringToBytes(req.Voter)
 				if err != nil {
 					return nil, err
 				}
@@ -76,7 +77,7 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 
 			// match depositor (if supplied)
 			if len(req.Depositor) > 0 {
-				depositor, err := sdk.AccAddressFromBech32(req.Depositor)
+				depositor, err := q.authKeeper.StringToBytes(req.Depositor)
 				if err != nil {
 					return nil, err
 				}
@@ -114,7 +115,7 @@ func (q Keeper) Vote(c context.Context, req *v1.QueryVoteRequest) (*v1.QueryVote
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	voter, err := sdk.AccAddressFromBech32(req.Voter)
+	voter, err := q.authKeeper.StringToBytes(req.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +171,7 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 
 	response := &v1.QueryParamsResponse{}
 
-	//nolint:staticcheck
+	//nolint:staticcheck // needed for legacy parameters
 	switch req.ParamsType {
 	case v1.ParamDeposit:
 		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
@@ -210,7 +211,7 @@ func (q Keeper) Deposit(c context.Context, req *v1.QueryDepositRequest) (*v1.Que
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	depositor, err := sdk.AccAddressFromBech32(req.Depositor)
+	depositor, err := q.authKeeper.StringToBytes(req.Depositor)
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +382,7 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 	}, nil
 }
 
-//nolint:staticcheck
+//nolint:staticcheck // this is needed for legacy param support
 func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
 	resp, err := q.keeper.Params(c, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,
@@ -402,15 +403,15 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 	}
 
 	if resp.TallyParams != nil {
-		quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
+		quorum, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Quorum)
 		if err != nil {
 			return nil, err
 		}
-		threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
+		threshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Threshold)
 		if err != nil {
 			return nil, err
 		}
-		vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
+		vetoThreshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.VetoThreshold)
 		if err != nil {
 			return nil, err
 		}

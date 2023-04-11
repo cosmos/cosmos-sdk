@@ -5,15 +5,19 @@ import (
 	"reflect"
 	"testing"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/status"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -167,4 +171,36 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 		}
 		b.SetBytes(int64(len(blob)))
 	}
+}
+
+func TestGetSigners(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	testAddr := sdk.AccAddress([]byte("test"))
+	testAddrStr := testAddr.String()
+	testAddr2 := sdk.AccAddress([]byte("test2"))
+	testAddrStr2 := testAddr2.String()
+
+	msgSendV1 := banktypes.NewMsgSend(testAddr, testAddr2, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1))))
+	msgSendV2 := &bankv1beta1.MsgSend{
+		FromAddress: testAddrStr,
+		ToAddress:   testAddrStr2,
+		Amount:      []*basev1beta1.Coin{{Denom: "foo", Amount: "1"}},
+	}
+
+	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
+	require.NoError(t, err)
+	require.Equal(t, []string{testAddrStr}, signers)
+	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
+
+	signers, err = cdc.GetMsgV2Signers(msgSendV2)
+	require.NoError(t, err)
+	require.Equal(t, []string{testAddrStr}, signers)
+
+	msgSendAny, err := types.NewAnyWithValue(msgSendV1)
+	require.NoError(t, err)
+	signers, msgSendV2Copy, err = cdc.GetMsgAnySigners(msgSendAny)
+	require.NoError(t, err)
+	require.Equal(t, []string{testAddrStr}, signers)
+	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
 }

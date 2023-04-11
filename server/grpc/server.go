@@ -91,7 +91,7 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 	// the server failed to start properly.
 	select {
 	case <-ctx.Done():
-		// The calling process cancelled or closed the provided context, so we must
+		// The calling process canceled or closed the provided context, so we must
 		// gracefully stop the gRPC server.
 		logger.Info("stopping gRPC server...", "address", cfg.Address)
 		grpcSrv.GracefulStop()

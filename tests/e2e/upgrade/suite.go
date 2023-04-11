@@ -93,7 +93,7 @@ func (s *E2ETestSuite) TestModuleVersionsCLI() {
 				}
 				jsonVM, _ := clientCtx.Codec.MarshalJSON(&pm)
 				expectedRes := string(jsonVM)
-				// append new line to match behaviour of PrintProto
+				// append new line to match behavior of PrintProto
 				expectedRes += "\n"
 
 				// get actual module versions list response from cli

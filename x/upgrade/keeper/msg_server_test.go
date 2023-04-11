@@ -16,6 +16,18 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 		errMsg    string
 	}{
 		{
+			"invalid authority address",
+			&types.MsgSoftwareUpgrade{
+				Authority: "authority",
+				Plan: types.Plan{
+					Name:   "all-good",
+					Height: 123450000,
+				},
+			},
+			true,
+			"authority: decoding bech32 failed",
+		},
+		{
 			"unauthorized authority address",
 			&types.MsgSoftwareUpgrade{
 				Authority: s.addrs[0].String(),
@@ -86,6 +98,14 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 		errMsg    string
 	}{
 		{
+			"invalid authority address",
+			&types.MsgCancelUpgrade{
+				Authority: "authority",
+			},
+			true,
+			"authority: decoding bech32 failed",
+		},
+		{
 			"unauthorized authority address",
 			&types.MsgCancelUpgrade{
 				Authority: s.addrs[0].String(),
@@ -94,7 +114,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 			"expected gov account as only signer for proposal message",
 		},
 		{
-			"upgrade cancelled successfully",
+			"upgrade canceled successfully",
 			&types.MsgCancelUpgrade{
 				Authority: govAccAddr,
 			},

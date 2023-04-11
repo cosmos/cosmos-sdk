@@ -5,15 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-
 	store "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,7 +30,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/slashing module consensus version.
-const ConsensusVersion = 3
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
@@ -148,6 +146,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
 	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the slashing module. It returns
@@ -212,8 +214,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type SlashingInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config      *modulev1.Module
@@ -229,8 +230,7 @@ type SlashingInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-//nolint:revive
-type SlashingOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Keeper keeper.Keeper
@@ -238,7 +238,7 @@ type SlashingOutputs struct {
 	Hooks  staking.StakingHooksWrapper
 }
 
-func ProvideModule(in SlashingInputs) SlashingOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
@@ -247,7 +247,7 @@ func ProvideModule(in SlashingInputs) SlashingOutputs {
 
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authority.String())
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
-	return SlashingOutputs{
+	return ModuleOutputs{
 		Keeper: k,
 		Module: m,
 		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},

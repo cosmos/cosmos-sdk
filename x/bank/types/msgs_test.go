@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -207,7 +208,7 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		{
 			true,
 			MsgMultiSend{
-				Inputs:  []Input{NewInput(addr2, atom123.MulInt(sdk.NewInt(2)))},
+				Inputs:  []Input{NewInput(addr2, atom123.MulInt(sdkmath.NewInt(2)))},
 				Outputs: []Output{output1, output1},
 			},
 			"",

@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/x/nft/client/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -40,7 +41,7 @@ func ExecQueryNFT(val *network.Validator, classID, nftID string) (testutil.Buffe
 }
 
 func ExecQueryNFTs(val *network.Validator, classID, owner string) (testutil.BufferWriter, error) {
-	cmd := cli.GetCmdQueryNFTs()
+	cmd := cli.GetCmdQueryNFTs(address.NewBech32Codec("cosmos"))
 	var args []string
 	args = append(args, fmt.Sprintf("--%s=%s", cli.FlagClassID, classID))
 	args = append(args, fmt.Sprintf("--%s=%s", cli.FlagOwner, owner))

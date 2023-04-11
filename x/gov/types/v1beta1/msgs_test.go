@@ -140,8 +140,8 @@ func TestMsgVoteWeighted(t *testing.T) {
 			WeightedVoteOption{Option: OptionAbstain, Weight: math.LegacyNewDec(1)},
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{ // duplicate option
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+			WeightedVoteOption{Option: OptionYes, Weight: math.LegacyNewDecWithPrec(5, 1)},
+			WeightedVoteOption{Option: OptionYes, Weight: math.LegacyNewDecWithPrec(5, 1)},
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{ // zero weight
 			WeightedVoteOption{Option: OptionYes, Weight: math.LegacyNewDec(0)},
@@ -152,7 +152,7 @@ func TestMsgVoteWeighted(t *testing.T) {
 		{0, addrs[0], WeightedVoteOptions{}, false},
 		{0, addrs[0], NewNonSplitVoteOption(VoteOption(0x13)), false},
 		{0, addrs[0], WeightedVoteOptions{ // weight sum <1
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+			WeightedVoteOption{Option: OptionYes, Weight: math.LegacyNewDecWithPrec(5, 1)},
 		}, false},
 	}
 

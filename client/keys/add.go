@@ -302,7 +302,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemonic, outputFormat string) error {
 	switch outputFormat {
-	case OutputFormatText:
+	case flags.OutputFormatText:
 		cmd.PrintErrln()
 		if err := printKeyringRecord(cmd.OutOrStdout(), k, MkAccKeyOutput, outputFormat); err != nil {
 			return err
@@ -314,7 +314,7 @@ func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemo
 				return fmt.Errorf("failed to print mnemonic: %v", err)
 			}
 		}
-	case OutputFormatJSON:
+	case flags.OutputFormatJSON:
 		out, err := MkAccKeyOutput(k)
 		if err != nil {
 			return err

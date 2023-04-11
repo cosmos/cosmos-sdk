@@ -19,7 +19,7 @@ func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOpti
 	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
 		txCmdDesc := modOpts.Tx
 		if txCmdDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
+			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 			err := b.AddMsgServiceCommands(subCmd, txCmdDesc)
 			if err != nil {
 				return err

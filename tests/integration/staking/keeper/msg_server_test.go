@@ -165,7 +165,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				assert.ErrorContains(t, err, testCase.expErrMsg)
 			} else {
 				assert.NilError(t, err)
-				balanceForNotBondedPool := bankKeeper.GetBalance(ctx, sdk.AccAddress(notBondedPool.GetAddress()), bondDenom)
+				balanceForNotBondedPool := bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
 				assert.DeepEqual(t, balanceForNotBondedPool, moduleBalance.Sub(testCase.req.Amount))
 				moduleBalance = moduleBalance.Sub(testCase.req.Amount)
 			}

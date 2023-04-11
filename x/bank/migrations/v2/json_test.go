@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -27,17 +28,17 @@ func TestMigrateJSON(t *testing.T) {
 			{
 				Address: voter.String(),
 				Coins: sdk.Coins{
-					sdk.NewCoin("foo", sdk.NewInt(10)),
-					sdk.NewCoin("bar", sdk.NewInt(20)),
-					sdk.NewCoin("foobar", sdk.NewInt(0)),
+					sdk.NewCoin("foo", sdkmath.NewInt(10)),
+					sdk.NewCoin("bar", sdkmath.NewInt(20)),
+					sdk.NewCoin("foobar", sdkmath.NewInt(0)),
 				},
 			},
 		},
 		Supply: sdk.Coins{
-			sdk.NewCoin("foo", sdk.NewInt(10)),
-			sdk.NewCoin("bar", sdk.NewInt(20)),
-			sdk.NewCoin("foobar", sdk.NewInt(0)),
-			sdk.NewCoin("barfoo", sdk.NewInt(0)),
+			sdk.NewCoin("foo", sdkmath.NewInt(10)),
+			sdk.NewCoin("bar", sdkmath.NewInt(20)),
+			sdk.NewCoin("foobar", sdkmath.NewInt(0)),
+			sdk.NewCoin("barfoo", sdkmath.NewInt(0)),
 		},
 	}
 

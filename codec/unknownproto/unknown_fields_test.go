@@ -656,11 +656,11 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 func TestPackedEncoding(t *testing.T) {
 	data := testdata.TestRepeatedUints{Nums: []uint64{12, 13}}
 
-	marshalled, err := data.Marshal()
+	marshaled, err := data.Marshal()
 	require.NoError(t, err)
 
 	unmarshalled := &testdata.TestRepeatedUints{}
-	_, err = RejectUnknownFields(marshalled, unmarshalled, false, DefaultAnyResolver{})
+	_, err = RejectUnknownFields(marshaled, unmarshalled, false, DefaultAnyResolver{})
 	require.NoError(t, err)
 }
 

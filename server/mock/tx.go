@@ -121,13 +121,14 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
-	if len(split) == 1 { //nolint:gocritic
+	switch len(split) {
+	case 1:
 		k := split[0]
 		tx = &KVStoreTx{k, k, txBytes, nil}
-	} else if len(split) == 2 {
+	case 2:
 		k, v := split[0], split[1]
 		tx = &KVStoreTx{k, v, txBytes, nil}
-	} else {
+	default:
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}
 

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	abci_server "github.com/cometbft/cometbft/abci/server"
-	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
@@ -146,7 +145,7 @@ func TestInitDefaultBondDenom(t *testing.T) {
 
 	cmd.SetArgs([]string{
 		"appnode-test",
-		fmt.Sprintf("--%s=%s", cli.HomeFlag, home),
+		fmt.Sprintf("--%s=%s", flags.FlagHome, home),
 		fmt.Sprintf("--%s=testtoken", genutilcli.FlagDefaultBondDenom),
 	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -171,7 +170,7 @@ func TestEmptyState(t *testing.T) {
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 	cmd := genutilcli.InitCmd(testMbm, home)
-	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", flags.FlagHome, home)})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
@@ -180,7 +179,7 @@ func TestEmptyState(t *testing.T) {
 	os.Stdout = w
 
 	cmd = server.ExportCmd(nil, home)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, home)})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)

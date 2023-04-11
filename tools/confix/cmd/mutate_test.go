@@ -16,14 +16,14 @@ import (
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T) (client.Context, func()) {
 	home := t.TempDir()
-	chainId := "test-chain" //nolint:revive
+	chainID := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
 		WithViper("").
-		WithChainID(chainId)
+		WithChainID(chainID)
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	assert.NilError(t, err)
-	assert.Equal(t, clientCtx.ChainID, chainId)
+	assert.Equal(t, clientCtx.ChainID, chainID)
 	return clientCtx, func() { _ = os.RemoveAll(home) }
 }
 

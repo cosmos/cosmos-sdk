@@ -10,8 +10,8 @@ type SignerData struct {
 	// In case of multisigs, this should be the multisig's address.
 	Address string
 
-	// ChainId is the chain that this transaction is targeted
-	ChainId string
+	// ChainID is the chain that this transaction is targeting.
+	ChainID string
 
 	// AccountNumber is the account number of the signer.
 	//

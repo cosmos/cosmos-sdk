@@ -1,9 +1,10 @@
 syntax = "proto3";
 package cosmos.circuit.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/circuit/types";
+option go_package = "cosmossdk.io/x/circuit/types";
 
 import "cosmos/msg/v1/msg.proto";
+import "cosmos/circuit/v1/types.proto";
 
 // Msg defines the crisis Msg service.
 service Msg {
@@ -35,43 +36,12 @@ message MsgAuthorizeCircuitBreaker {
   // permissions are the circuit breaker permissions that the grantee receives.
   // These will overwrite any existing permissions. LEVEL_NONE_UNSPECIFIED can
   // be specified to revoke all permissions.
-  CircuitBreakerPermissions permissions = 3;
+  Permissions permissions = 3;
 }
 
 // MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker response type.
-message MsgAuthorizeCircuitBreakerResponse {}
-
-// CircuitBreakerPermissions are the permissions that an account has to trip
-// or reset the circuit breaker.
-message CircuitBreakerPermissions {
-  // level is the level of permissions granted to this account.
-  Level level = 1;
-
-  // limit_msg_types is used with LEVEL_SOME_MSGS to limit the lists of Msg type
-  // name that the account can pause. It is an error to use limit_msg_types with
-  // a level other than LEVEL_SOME_MSGS.
-  repeated string limit_msg_types = 2;
-
-  // Level is the permission level.
-  enum Level {
-    // LEVEL_NONE_UNSPECIFIED indicates that the account will have no circuit
-    // breaker permissions.
-    LEVEL_NONE_UNSPECIFIED = 0;
-
-    // LEVEL_SOME_MSGS indicates that the account will have permission to
-    // trip or reset the circuit breaker for some Msg type URLs. If this level
-    // is chosen, a non-empty list of Msg type URLs must be provided in
-    // limit_type_urls.
-    LEVEL_SOME_MSGS = 1;
-
-    // LEVEL_ALL_MSGS indicates that the account can trip or reset the circuit
-    // breaker for Msg's of all type URLs.
-    LEVEL_ALL_MSGS = 2;
-
-    // LEVEL_SUPER_ADMIN indicates that the account can take all circuit breaker
-    // actions and can grant permissions to other accounts.
-    LEVEL_SUPER_ADMIN = 3;
-  }
+message MsgAuthorizeCircuitBreakerResponse {
+  bool success = 1;
 }
 
 // MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker request type.
@@ -90,7 +60,9 @@ message MsgTripCircuitBreaker {
 }
 
 // MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker response type.
-message MsgTripCircuitBreakerResponse {}
+message MsgTripCircuitBreakerResponse {
+  bool success = 1;
+}
 
 // MsgResetCircuitBreaker defines the Msg/ResetCircuitBreaker request type.
 message MsgResetCircuitBreaker {
@@ -106,4 +78,6 @@ message MsgResetCircuitBreaker {
 }
 
 // MsgResetCircuitBreakerResponse defines the Msg/ResetCircuitBreaker response type.
-message MsgResetCircuitBreakerResponse {}
+message MsgResetCircuitBreakerResponse {
+  bool success = 1;
+}

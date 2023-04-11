@@ -16,15 +16,6 @@ func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) erro
 
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
-	store := ak.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ParamsKey)
-	if err != nil {
-		panic(err)
-	}
-
-	if bz == nil {
-		return params
-	}
-	ak.cdc.MustUnmarshal(bz, &params)
+	params, _ = ak.ParamsState.Get(ctx)
 	return params
 }

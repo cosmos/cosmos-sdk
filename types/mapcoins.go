@@ -34,9 +34,9 @@ func (m MapCoins) ToCoins() Coins {
 		}
 		coins = append(coins, NewCoin(denom, amount))
 	}
-	coins.Sort()
 	if len(coins) == 0 {
 		return Coins{}
 	}
+	coins.Sort()
 	return coins
 }

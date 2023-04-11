@@ -31,7 +31,7 @@ type App struct {
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application is able to route messages to their respective handlers.
-func NewIntegrationApp(logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
+func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -72,7 +72,7 @@ func NewIntegrationApp(logger log.Logger, keys map[string]*storetypes.KVStoreKey
 	bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName})
 	bApp.Commit()
 
-	ctx := bApp.NewContext(true, cmtproto.Header{ChainID: appName})
+	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{
 		BaseApp: bApp,

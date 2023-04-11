@@ -3,17 +3,12 @@ package integration_test
 import (
 	"fmt"
 	"io"
-	"testing"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/google/go-cmp/cmp"
-
-	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
@@ -28,6 +23,8 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+var logger = log.NewNopLogger()
+
 // Example shows how to use the integration test framework to test the integration of SDK modules.
 // Panics are used in this example, but in a real test case, you should use the testing.T object and assertions.
 func Example() {
@@ -37,14 +34,8 @@ func Example() {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	for key := range keys {
-		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
-	}
-	_ = cms.LoadLatestVersion()
-
-	newCtx := sdk.NewContext(cms, types.Header{}, true, log.NewTestLogger(&testing.T{}))
+	cms := integration.SetMultiStore(keys, logger)
+	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -122,14 +113,8 @@ func Example_oneModule() {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	for key := range keys {
-		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
-	}
-	_ = cms.LoadLatestVersion()
-
-	newCtx := sdk.NewContext(cms, types.Header{}, true, log.NewTestLogger(&testing.T{}))
+	cms := integration.SetMultiStore(keys, logger)
+	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,

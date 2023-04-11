@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // MigrateStore performs in-place store migrations from v4 to v5.
@@ -23,7 +22,7 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 	// prefix (0x50) || heightBytes (string representation of height in 10 base)
 	// new key is of format:
 	// prefix (0x50) || heightBytes (byte array representation using big-endian byte order)
-	oldStore := prefix.NewStore(store, types.HistoricalInfoKey)
+	oldStore := prefix.NewStore(store, HistoricalInfoKey)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer sdk.LogDeferred(logger, func() error { return oldStoreIter.Close() })
@@ -36,7 +35,7 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 			return fmt.Errorf("can't parse height from key %q to int64: %v", strHeight, err)
 		}
 
-		newStoreKey := types.GetHistoricalInfoKey(intHeight)
+		newStoreKey := GetHistoricalInfoKey(intHeight)
 
 		// Set new key on store. Values don't change.
 		store.Set(newStoreKey, oldStoreIter.Value())

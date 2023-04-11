@@ -45,7 +45,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	for height := range testCases {
 		testCases[height] = testCase{
 			oldKey:         v2.GetHistoricalInfoKey(height),
-			newKey:         stackingtypes.GetHistoricalInfoKey(height),
+			newKey:         v5.GetHistoricalInfoKey(height),
 			historicalInfo: cdc.MustMarshal(createHistoricalInfo(height, "testChainID")),
 		}
 	}

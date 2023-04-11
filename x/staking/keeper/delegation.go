@@ -71,7 +71,9 @@ func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress)
 		}
 
 		bz := store.Get(types.GetDelegationKey(del, val))
-		k.cdc.Unmarshal(bz, &delegation)
+		if err := k.cdc.Unmarshal(bz, &delegation); err != nil {
+			panic(err)
+		}
 
 		delegations = append(delegations, delegation)
 	}
@@ -93,10 +95,12 @@ func (k Keeper) UpdateValidatorDelegations(ctx sdk.Context, existingValAddr, new
 		}
 
 		delbz := store.Get(types.GetDelegationKey(del, val))
-
 		delegation := types.MustUnmarshalDelegation(k.cdc, delbz)
+
 		// remove old operator addr from delegation
-		k.RemoveDelegation(ctx, delegation)
+		if err := k.RemoveDelegation(ctx, delegation); err != nil {
+			panic(err)
+		}
 
 		delegation.ValidatorAddress = newValAddr.String()
 		// add with new operator addr

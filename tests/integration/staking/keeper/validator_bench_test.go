@@ -37,7 +37,6 @@ func BenchmarkGetValidator(b *testing.B) {
 
 func BenchmarkGetValidatorDelegations(b *testing.B) {
 	powersNumber := 10
-
 	var totalPower int64
 	powers := make([]int64, powersNumber)
 	for i := range powers {
@@ -46,22 +45,17 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 	}
 
 	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
-
 	for _, validator := range vals {
 		app.StakingKeeper.SetValidator(ctx, validator)
 	}
 
 	delegationsNum := 1000
-
 	delegators := make([]sdk.AccAddress, delegationsNum)
-
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-
 			banktestutil.FundAccount(app.BankKeeper, ctx, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
-
 			NewDel := types.NewDelegation(delegator, val, sdk.NewDec(int64(i)))
 			app.StakingKeeper.SetDelegation(ctx, NewDel)
 			delegators[i] = delegator
@@ -75,9 +69,7 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 }
 
 func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
-
 	powersNumber := 10
-
 	var totalPower int64
 	powers := make([]int64, powersNumber)
 	for i := range powers {
@@ -86,22 +78,17 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 	}
 
 	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
-
 	for _, validator := range vals {
 		app.StakingKeeper.SetValidator(ctx, validator)
 	}
 
 	delegationsNum := 1000
-
 	delegators := make([]sdk.AccAddress, delegationsNum)
-
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-
 			banktestutil.FundAccount(app.BankKeeper, ctx, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
-
 			NewDel := types.NewDelegation(delegator, val, sdk.NewDec(int64(i)))
 			app.StakingKeeper.SetDelegation(ctx, NewDel)
 			delegators[i] = delegator

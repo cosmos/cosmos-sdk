@@ -20,17 +20,21 @@ import (
 // option. It also contains the ProtoFileResolver and address.Codec's used
 // for resolving message descriptors and converting addresses.
 type Context struct {
-	protoFiles            ProtoFileResolver
+	fileResolver          ProtoFileResolver
+	typeResolver          protoregistry.MessageTypeResolver
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
 	getSignersFuncs       map[protoreflect.FullName]getSignersFunc
 }
 
-// ContextOptions are options for creating Context.
-type ContextOptions struct {
-	// ProtoFiles are the protobuf files to use for resolving message descriptors.
+// Options are options for creating Context which will be used for signing operations.
+type Options struct {
+	// FileResolver is the protobuf file resolver to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
-	ProtoFiles ProtoFileResolver
+	FileResolver ProtoFileResolver
+
+	// TypeResolver is the protobuf type resolver to use for resolving message types.
+	TypeResolver protoregistry.MessageTypeResolver
 
 	// AddressCodec is the codec for converting addresses between strings and bytes.
 	AddressCodec address.Codec
@@ -47,10 +51,15 @@ type ProtoFileResolver interface {
 }
 
 // NewContext creates a new Context using the provided options.
-func NewContext(options ContextOptions) (*Context, error) {
-	protoFiles := options.ProtoFiles
+func NewContext(options Options) (*Context, error) {
+	protoFiles := options.FileResolver
 	if protoFiles == nil {
 		protoFiles = protoregistry.GlobalFiles
+	}
+
+	protoTypes := options.TypeResolver
+	if protoTypes == nil {
+		protoTypes = protoregistry.GlobalTypes
 	}
 
 	if options.AddressCodec == nil {
@@ -62,7 +71,8 @@ func NewContext(options ContextOptions) (*Context, error) {
 	}
 
 	c := &Context{
-		protoFiles:            protoFiles,
+		fileResolver:          protoFiles,
+		typeResolver:          protoTypes,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
 		getSignersFuncs:       map[protoreflect.FullName]getSignersFunc{},
@@ -89,7 +99,7 @@ func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, 
 // so that calling it in antehandlers will be faster.
 func (c *Context) init() error {
 	var errs []error
-	c.protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
+	c.fileResolver.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		for i := 0; i < fd.Services().Len(); i++ {
 			sd := fd.Services().Get(i)
 			// We use the heuristic that services named "Msg" are exactly the
@@ -300,7 +310,11 @@ func (c *Context) ValidatorAddressCodec() address.Codec {
 	return c.validatorAddressCodec
 }
 
-// ProtoFileResolver returns the proto file resolver used by the context.
-func (c *Context) ProtoFileResolver() ProtoFileResolver {
-	return c.protoFiles
+// FileResolver returns the proto file resolver used by the context.
+func (c *Context) FileResolver() ProtoFileResolver {
+	return c.fileResolver
+}
+
+func (c *Context) TypeResolver() protoregistry.MessageTypeResolver {
+	return c.typeResolver
 }

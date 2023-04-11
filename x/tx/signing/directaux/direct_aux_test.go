@@ -86,7 +86,7 @@ func TestDirectAuxHandler(t *testing.T) {
 		AuthInfoBytes: authInfoBz,
 		BodyBytes:     bodyBz,
 	}
-	signersCtx, err := signing.NewContext(signing.ContextOptions{
+	signersCtx, err := signing.NewContext(signing.Options{
 		AddressCodec:          dummyAddressCodec{},
 		ValidatorAddressCodec: dummyAddressCodec{},
 	})

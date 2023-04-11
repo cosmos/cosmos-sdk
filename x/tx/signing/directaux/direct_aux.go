@@ -39,7 +39,7 @@ func NewSignModeHandler(options SignModeHandlerOptions) (SignModeHandler, error)
 	}
 	h.signersContext = options.SignersContext
 
-	h.fileResolver = h.signersContext.ProtoFileResolver()
+	h.fileResolver = h.signersContext.FileResolver()
 
 	if options.TypeResolver == nil {
 		h.typeResolver = protoregistry.GlobalTypes

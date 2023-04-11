@@ -21,33 +21,39 @@ import (
 func init() {
 	appmodule.Register(&txconfigv1.Config{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Provide(ProvideTxConfig),
 	)
 }
 
 type ModuleInputs struct {
 	depinject.In
 
-	Config              *txconfigv1.Config
-	ProtoCodecMarshaler codec.ProtoCodecMarshaler
+	Config *txconfigv1.Config
 
 	AccountKeeper ante.AccountKeeper `optional:"true"`
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper authtypes.BankKeeper `optional:"true"`
 	// TxBankKeeper is the expected bank keeper to be passed to Textual
-	TxBankKeeper   BankKeeper
 	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
 
-	CustomSignModeHandlers func() []signing.SignModeHandler `optional:"true"`
+	TxConfig client.TxConfig
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	TxConfig      client.TxConfig
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in ModuleInputs) ModuleOutputs {
+type TxConfigInputs struct {
+	depinject.In
+	ProtoCodecMarshaler    codec.ProtoCodecMarshaler
+	CustomSignModeHandlers func() []signing.SignModeHandler `optional:"true"`
+	// TxBankKeeper is the expected bank keeper to be passed to Textual
+	TxBankKeeper BankKeeper
+}
+
+func ProvideTxConfig(in TxConfigInputs) client.TxConfig {
 	textual, err := NewTextualWithBankKeeper(in.TxBankKeeper)
 	if err != nil {
 		panic(err)
@@ -58,11 +64,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	} else {
 		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual, in.CustomSignModeHandlers()...)
 	}
+	return txConfig
+}
 
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers
 		if !in.Config.SkipAnteHandler {
-			anteHandler, err := newAnteHandler(txConfig, in)
+			anteHandler, err := newAnteHandler(in)
 			if err != nil {
 				panic(err)
 			}
@@ -94,14 +103,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		}
 
 		// TxDecoder/TxEncoder
-		app.SetTxDecoder(txConfig.TxDecoder())
-		app.SetTxEncoder(txConfig.TxEncoder())
+		app.SetTxDecoder(in.TxConfig.TxDecoder())
+		app.SetTxEncoder(in.TxConfig.TxEncoder())
 	}
 
-	return ModuleOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
+	return ModuleOutputs{BaseAppOption: baseAppOption}
 }
 
-func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
+func newAnteHandler(in ModuleInputs) (sdk.AnteHandler, error) {
 	if in.BankKeeper == nil {
 		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
 	}
@@ -110,7 +119,7 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 		ante.HandlerOptions{
 			AccountKeeper:   in.AccountKeeper,
 			BankKeeper:      in.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
+			SignModeHandler: in.TxConfig.SignModeHandler(),
 			FeegrantKeeper:  in.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},

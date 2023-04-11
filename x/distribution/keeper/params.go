@@ -19,7 +19,8 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return params
 }
 
-// SetParams sets the distribution parameters to the param space.
+// SetParams sets the distribution parameters.
+// NOTE: This method performs no validation of the parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)

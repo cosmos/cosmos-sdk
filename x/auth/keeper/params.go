@@ -7,6 +7,7 @@ import (
 )
 
 // SetParams sets the auth module's parameters.
+// NOTE: This method performs no validation of the parameters.
 func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
 	store := ak.storeService.OpenKVStore(ctx)
 	bz := ak.cdc.MustMarshal(&params)

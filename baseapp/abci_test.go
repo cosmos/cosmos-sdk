@@ -1405,12 +1405,8 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
-<<<<<<< HEAD
-		ConsensusParams: &tmproto.ConsensusParams{},
-=======
 		InitialHeight:   1,
-		ConsensusParams: &cmtproto.ConsensusParams{},
->>>>>>> f95585b40 (fix: use initialHeight correctly (#15789))
+		ConsensusParams: &tmproto.ConsensusParams{},
 	})
 
 	reqPrepareProposal := abci.RequestPrepareProposal{

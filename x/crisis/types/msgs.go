@@ -1,10 +1,7 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -35,14 +32,6 @@ func (msg MsgVerifyInvariant) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// quick validity check
-func (msg MsgVerifyInvariant) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
-	}
-	return nil
-}
-
 // FullInvariantRoute - get the messages full invariant route
 func (msg MsgVerifyInvariant) FullInvariantRoute() string {
 	return msg.InvariantModuleName + "/" + msg.InvariantRoute
@@ -60,21 +49,4 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateParams) GetSignBytes() []byte {
 	bz := aminoCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
-}
-
-// ValidateBasic performs basic MsgUpdateParams message validation.
-func (msg MsgUpdateParams) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return errorsmod.Wrap(err, "invalid authority address")
-	}
-
-	if !msg.ConstantFee.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "invalid costant fee")
-	}
-
-	if msg.ConstantFee.IsNegative() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "negative costant fee")
-	}
-
-	return nil
 }

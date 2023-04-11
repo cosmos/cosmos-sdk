@@ -158,12 +158,15 @@ func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx,
 		}
 
 		// verify message correctness
-		if err = msg.ValidateBasic(); err != nil {
-			return nil, crgerrs.WrapError(
-				crgerrs.ErrBadArgument,
-				fmt.Sprintf("validation of operation at index %d failed: %s", op.OperationIdentifier.Index, err),
-			)
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err = m.ValidateBasic(); err != nil {
+				return nil, crgerrs.WrapError(
+					crgerrs.ErrBadArgument,
+					fmt.Sprintf("validation of operation at index %d failed: %s", op.OperationIdentifier.Index, err),
+				)
+			}
 		}
+
 		signers := msg.GetSigners()
 		// check if there are enough signers
 		if len(signers) == 0 {

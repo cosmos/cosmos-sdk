@@ -96,6 +96,17 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	require.NotNil(t, kvStore)
 	require.Equal(t, kvStore.Get(k), v)
 
+	// add new module stores (store4 and store5) to multi stores and commit
+	ms.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(types.NewKVStoreKey("store5"), types.StoreTypeIAVL, nil)
+	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
+	require.NoError(t, err)
+	ms.Commit()
+
+	// cache multistore of version before adding store4 should works
+	_, err = ms.CacheMultiStoreWithVersion(1)
+	require.NoError(t, err)
+
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
 		kvStore.Set(k, []byte("newValue"))

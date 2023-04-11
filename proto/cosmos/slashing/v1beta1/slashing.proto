@@ -16,20 +16,24 @@ message ValidatorSigningInfo {
   option (gogoproto.equal) = true;
 
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // Height at which validator was first a candidate OR was unjailed
+  // Height at which validator was first a candidate OR was un-jailed
   int64 start_height = 2;
-  // Index which is incremented each time the validator was a bonded
-  // in a block and may have signed a precommit or not. This in conjunction with the
-  // `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
+  // Index which is incremented every time a validator is bonded in a block and
+  // _may_ have signed a pre-commit or not. This in conjunction with the
+  // signed_blocks_window param determines the index in the missed block bitmap.
   int64 index_offset = 3;
   // Timestamp until which the validator is jailed due to liveness downtime.
-  google.protobuf.Timestamp jailed_until = 4
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  // Whether or not a validator has been tombstoned (killed out of validator set). It is set
-  // once the validator commits an equivocation or for any other configured misbehiavor.
+  google.protobuf.Timestamp jailed_until = 4 [
+    (gogoproto.stdtime)    = true,
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  // Whether or not a validator has been tombstoned (killed out of validator
+  // set). It is set once the validator commits an equivocation or for any other
+  // configured misbehavior.
   bool tombstoned = 5;
-  // A counter kept to avoid unnecessary array reads.
-  // Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
+  // A counter of missed (unsigned) blocks. It is used to avoid unnecessary
+  // reads in the missed block bitmap.
   int64 missed_blocks_counter = 6;
 }
 
@@ -44,8 +48,11 @@ message Params {
     (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
-  google.protobuf.Duration downtime_jail_duration = 3
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdduration) = true];
+  google.protobuf.Duration downtime_jail_duration = 3 [
+    (gogoproto.nullable)    = false,
+    (amino.dont_omitempty)  = true,
+    (gogoproto.stdduration) = true
+  ];
   bytes slash_fraction_double_sign = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,

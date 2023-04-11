@@ -40,11 +40,12 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 // NewTxConfigWithTextual is like NewTxConfig with the ability to add
 // a SIGN_MODE_TEXTUAL renderer. It is currently still EXPERIMENTAL, for should
 // be used for TESTING purposes only, until Textual is fully released.
-func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, textual *textual.SignModeHandler, customSignModes ...signing.SignModeHandler) client.TxConfig {
+func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
+	textual *textual.SignModeHandler, customSignModes ...signing.SignModeHandler) client.TxConfig {
 	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual, customSignModes...))
 }
 
-// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
+// NewTxConfigWithHandler returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
 func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler signing.SignModeHandler) client.TxConfig {
 	return &config{
 		handler:     handler,

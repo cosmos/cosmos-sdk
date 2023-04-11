@@ -6,10 +6,6 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/x/tx/signing/aminojson"
-	"cosmossdk.io/x/tx/signing/directaux"
-	stdsign "cosmossdk.io/x/tx/signing/std"
-	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -66,7 +62,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers
 		if !in.Config.SkipAnteHandler {
-			anteHandler, err := newAnteHandler(in)
+			anteHandler, err := newAnteHandler(txConfig, in)
 			if err != nil {
 				panic(err)
 			}
@@ -105,28 +101,18 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
 }
 
-func newAnteHandler(in ModuleInputs) (sdk.AnteHandler, error) {
+func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
 	if in.BankKeeper == nil {
 		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
 	}
 
-	signOptions := stdsign.SignModeOptions{
-		Textual:   textual.SignModeOptions{},
-		DirectAux: directaux.SignModeHandlerOptions{},
-		AminoJSON: aminojson.SignModeHandlerOptions{},
-	}
-	handlerMap, err := signOptions.HandlerMap()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create sign mode handler map: %w", err)
-	}
-
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:     in.AccountKeeper,
-			BankKeeper:        in.BankKeeper,
-			SignModeHandlerV2: handlerMap,
-			FeegrantKeeper:    in.FeeGrantKeeper,
-			SigGasConsumer:    ante.DefaultSigVerificationGasConsumer,
+			AccountKeeper:   in.AccountKeeper,
+			BankKeeper:      in.BankKeeper,
+			SignModeHandler: txConfig.SignModeHandler(),
+			FeegrantKeeper:  in.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 	)
 	if err != nil {

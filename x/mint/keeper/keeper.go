@@ -81,13 +81,9 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 }
 
 // SetParams sets the x/mint module parameters.
-func (k Keeper) SetParams(ctx sdk.Context, p types.Params) error {
-	if err := p.Validate(); err != nil {
-		return err
-	}
-
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&p)
+	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.ParamsKey, bz)
 
 	return nil

@@ -8,10 +8,6 @@ import (
 
 // SetParams sets the auth module's parameters.
 func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
-	if err := params.Validate(); err != nil {
-		return err
-	}
-
 	store := ak.storeService.OpenKVStore(ctx)
 	bz := ak.cdc.MustMarshal(&params)
 	return store.Set(types.ParamsKey, bz)

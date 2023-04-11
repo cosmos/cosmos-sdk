@@ -21,10 +21,6 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 
 // SetParams sets the distribution parameters to the param space.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	if err := params.ValidateBasic(); err != nil {
-		return err
-	}
-
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {

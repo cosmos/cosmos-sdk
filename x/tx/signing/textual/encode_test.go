@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type encodingJsonTest struct {
+type encodingJSONTest struct {
 	Screens  []Screen
 	Encoding string
 }
@@ -20,7 +20,7 @@ func TestEncodingJson(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/encode.json")
 	require.NoError(t, err)
 
-	var testcases []encodingJsonTest
+	var testcases []encodingJSONTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 

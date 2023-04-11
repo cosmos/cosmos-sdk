@@ -51,6 +51,28 @@ func (s *TestSuite) TestSend() {
 		errMsg string
 	}{
 		{
+			name: "empty nft id",
+			req: &nft.MsgSend{
+				ClassId:  testClassID,
+				Id:       "",
+				Sender:   s.addrs[0].String(),
+				Receiver: s.addrs[1].String(),
+			},
+			expErr: true,
+			errMsg: "empty nft id",
+		},
+		{
+			name: "empty class id",
+			req: &nft.MsgSend{
+				ClassId:  "",
+				Id:       testID,
+				Sender:   s.addrs[0].String(),
+				Receiver: s.addrs[1].String(),
+			},
+			expErr: true,
+			errMsg: "empty class id",
+		},
+		{
 			name: "invalid class id",
 			req: &nft.MsgSend{
 				ClassId:  "invalid ClassId",

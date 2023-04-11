@@ -12,7 +12,7 @@ import (
 )
 
 type HandlerArgumentOptions struct {
-	ChainId       string
+	ChainID       string
 	Memo          string
 	Msg           proto.Message
 	AccNum        uint64
@@ -79,7 +79,7 @@ func MakeHandlerArguments(options HandlerArgumentOptions) (signing.SignerData, s
 
 	signerAddress := options.SignerAddress
 	signerData := signing.SignerData{
-		ChainId:       options.ChainId,
+		ChainID:       options.ChainID,
 		AccountNumber: options.AccNum,
 		Sequence:      options.AccSeq,
 		Address:       signerAddress,

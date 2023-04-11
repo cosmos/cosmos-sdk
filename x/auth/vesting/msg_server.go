@@ -2,7 +2,6 @@ package vesting
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/armon/go-metrics"
 
@@ -162,13 +161,13 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	}
 
 	if msg.StartTime < 1 {
-		return nil, fmt.Errorf("invalid start time of %d, length must be greater than 0", msg.StartTime)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %d, length must be greater than 0", msg.StartTime)
 	}
 
 	var totalCoins sdk.Coins
 	for i, period := range msg.VestingPeriods {
 		if period.Length < 1 {
-			return nil, fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 
 		totalCoins = totalCoins.Add(period.Amount...)

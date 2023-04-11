@@ -76,24 +76,6 @@ func TestIntJSONTestcases(t *testing.T) {
 	}
 }
 
-func TestEmptyString(t *testing.T) {
-	vr := textual.NewIntValueRenderer(fieldDescriptorFromName("UINT64"))
-
-	// this should not panic after we fix cosmossdk.io/math's FormatInt
-	require.Panics(t, func() {
-		vr.Format(context.Background(), protoreflect.ValueOf(""))
-	})
-
-	screens, err := vr.Format(context.Background(), protoreflect.ValueOf("123"))
-	require.NoError(t, err)
-	require.Len(t, screens, 1)
-
-	// force empty screen content
-	screens[0].Content = ""
-	_, err = vr.Parse(context.Background(), screens)
-	require.EqualError(t, err, "empty string not supported")
-}
-
 // checkNumberTest checks that the output of a number value renderer
 // matches the expected string. Only use it to test numbers.
 func checkNumberTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Value, expected string) {

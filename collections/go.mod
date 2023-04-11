@@ -10,7 +10,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.3.1 // indirect
+	cosmossdk.io/api v0.4.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

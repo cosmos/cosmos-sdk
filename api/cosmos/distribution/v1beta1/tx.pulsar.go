@@ -5549,7 +5549,7 @@ func (x *_MsgDepositValidatorRewardsPool_3_list) IsValid() bool {
 
 var (
 	md_MsgDepositValidatorRewardsPool                   protoreflect.MessageDescriptor
-	fd_MsgDepositValidatorRewardsPool_authority         protoreflect.FieldDescriptor
+	fd_MsgDepositValidatorRewardsPool_depositor         protoreflect.FieldDescriptor
 	fd_MsgDepositValidatorRewardsPool_validator_address protoreflect.FieldDescriptor
 	fd_MsgDepositValidatorRewardsPool_amount            protoreflect.FieldDescriptor
 )
@@ -5557,7 +5557,7 @@ var (
 func init() {
 	file_cosmos_distribution_v1beta1_tx_proto_init()
 	md_MsgDepositValidatorRewardsPool = File_cosmos_distribution_v1beta1_tx_proto.Messages().ByName("MsgDepositValidatorRewardsPool")
-	fd_MsgDepositValidatorRewardsPool_authority = md_MsgDepositValidatorRewardsPool.Fields().ByName("authority")
+	fd_MsgDepositValidatorRewardsPool_depositor = md_MsgDepositValidatorRewardsPool.Fields().ByName("depositor")
 	fd_MsgDepositValidatorRewardsPool_validator_address = md_MsgDepositValidatorRewardsPool.Fields().ByName("validator_address")
 	fd_MsgDepositValidatorRewardsPool_amount = md_MsgDepositValidatorRewardsPool.Fields().ByName("amount")
 }
@@ -5627,9 +5627,9 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) Interface() protoreflect
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgDepositValidatorRewardsPool) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Authority != "" {
-		value := protoreflect.ValueOfString(x.Authority)
-		if !f(fd_MsgDepositValidatorRewardsPool_authority, value) {
+	if x.Depositor != "" {
+		value := protoreflect.ValueOfString(x.Depositor)
+		if !f(fd_MsgDepositValidatorRewardsPool_depositor, value) {
 			return
 		}
 	}
@@ -5660,8 +5660,8 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) Range(f func(protoreflec
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgDepositValidatorRewardsPool) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.authority":
-		return x.Authority != ""
+	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.depositor":
+		return x.Depositor != ""
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.validator_address":
 		return x.ValidatorAddress != ""
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.amount":
@@ -5682,8 +5682,8 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) Has(fd protoreflect.Fiel
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgDepositValidatorRewardsPool) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.authority":
-		x.Authority = ""
+	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.depositor":
+		x.Depositor = ""
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.validator_address":
 		x.ValidatorAddress = ""
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.amount":
@@ -5704,8 +5704,8 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) Clear(fd protoreflect.Fi
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgDepositValidatorRewardsPool) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.authority":
-		value := x.Authority
+	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.depositor":
+		value := x.Depositor
 		return protoreflect.ValueOfString(value)
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.validator_address":
 		value := x.ValidatorAddress
@@ -5736,8 +5736,8 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) Get(descriptor protorefl
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgDepositValidatorRewardsPool) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.authority":
-		x.Authority = value.Interface().(string)
+	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.depositor":
+		x.Depositor = value.Interface().(string)
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.validator_address":
 		x.ValidatorAddress = value.Interface().(string)
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.amount":
@@ -5770,8 +5770,8 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) Mutable(fd protoreflect.
 		}
 		value := &_MsgDepositValidatorRewardsPool_3_list{list: &x.Amount}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.authority":
-		panic(fmt.Errorf("field authority of message cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool is not mutable"))
+	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.depositor":
+		panic(fmt.Errorf("field depositor of message cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool is not mutable"))
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.validator_address":
 		panic(fmt.Errorf("field validator_address of message cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool is not mutable"))
 	default:
@@ -5787,7 +5787,7 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) Mutable(fd protoreflect.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgDepositValidatorRewardsPool) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.authority":
+	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.depositor":
 		return protoreflect.ValueOfString("")
 	case "cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool.validator_address":
 		return protoreflect.ValueOfString("")
@@ -5863,7 +5863,7 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) ProtoMethods() *protoifa
 		var n int
 		var l int
 		_ = l
-		l = len(x.Authority)
+		l = len(x.Depositor)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -5929,10 +5929,10 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) ProtoMethods() *protoifa
 			i--
 			dAtA[i] = 0x12
 		}
-		if len(x.Authority) > 0 {
-			i -= len(x.Authority)
-			copy(dAtA[i:], x.Authority)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
+		if len(x.Depositor) > 0 {
+			i -= len(x.Depositor)
+			copy(dAtA[i:], x.Depositor)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Depositor)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -5987,7 +5987,7 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) ProtoMethods() *protoifa
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Depositor", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -6015,7 +6015,7 @@ func (x *fastReflection_MsgDepositValidatorRewardsPool) ProtoMethods() *protoifa
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Authority = string(dAtA[iNdEx:postIndex])
+				x.Depositor = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -6966,7 +6966,7 @@ type MsgDepositValidatorRewardsPool struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Authority        string          `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	Depositor        string          `protobuf:"bytes,1,opt,name=depositor,proto3" json:"depositor,omitempty"`
 	ValidatorAddress string          `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 	Amount           []*v1beta1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`
 }
@@ -6991,9 +6991,9 @@ func (*MsgDepositValidatorRewardsPool) Descriptor() ([]byte, []int) {
 	return file_cosmos_distribution_v1beta1_tx_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *MsgDepositValidatorRewardsPool) GetAuthority() string {
+func (x *MsgDepositValidatorRewardsPool) GetDepositor() string {
 	if x != nil {
-		return x.Authority
+		return x.Depositor
 	}
 	return ""
 }
@@ -7180,10 +7180,10 @@ var file_cosmos_distribution_v1beta1_tx_proto_rawDesc = []byte{
 	0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xdc, 0x02, 0x0a, 0x1e,
 	0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
 	0x74, 0x6f, 0x72, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x36,
-	0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0a, 0x09, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74,
-	0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x45, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x64, 0x65, 0x70,
+	0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x12, 0x45, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
 	0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
 	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x76, 0x61, 0x6c,
@@ -7196,7 +7196,7 @@ var file_cosmos_distribution_v1beta1_tx_proto_rawDesc = []byte{
 	0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x9a, 0xe7, 0xb0, 0x2a, 0x0c, 0x6c,
 	0x65, 0x67, 0x61, 0x63, 0x79, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01,
 	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x40, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0,
-	0x1f, 0x00, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79,
+	0x1f, 0x00, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72,
 	0x8a, 0xe7, 0xb0, 0x2a, 0x25, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f,
 	0x64, 0x69, 0x73, 0x74, 0x72, 0x2f, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
 	0x56, 0x61, 0x6c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x22, 0x28, 0x0a, 0x26, 0x4d, 0x73,

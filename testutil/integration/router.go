@@ -8,6 +8,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -31,7 +33,7 @@ type App struct {
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application is able to route messages to their respective handlers.
-func NewIntegrationApp(logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
+func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -72,7 +74,7 @@ func NewIntegrationApp(logger log.Logger, keys map[string]*storetypes.KVStoreKey
 	bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName})
 	bApp.Commit()
 
-	ctx := bApp.NewContext(true, cmtproto.Header{ChainID: appName})
+	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{
 		BaseApp: bApp,
@@ -145,4 +147,15 @@ func (app *App) Context() context.Context {
 // It can be used when registering query services.
 func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 	return app.queryHelper
+}
+
+// CreateMultiStore is a helper for setting up multiple stores for provided modules.
+func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger) storetypes.CommitMultiStore {
+	db := dbm.NewMemDB()
+	cms := store.NewCommitMultiStore(db, logger, metrics.NewNoOpMetrics())
+	for key := range keys {
+		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
+	}
+	_ = cms.LoadLatestVersion()
+	return cms
 }

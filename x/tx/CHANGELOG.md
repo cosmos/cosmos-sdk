@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* [#15414](https://github.com/cosmos/cosmos-sdk/pull/15414) Add basic transaction decoding support.
+
 ### API Breaking
 
 * [#15709](https://github.com/cosmos/cosmos-sdk/pull/15709) `GetSignersContext` has been renamed to `signing.Context` and now returns `[][]byte` instead of `[]string` and requires `address.Codec`s for account and validator addresses.

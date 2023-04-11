@@ -1,8 +1,7 @@
 package decode_test
 
 import (
-	"fmt"
-	"strings"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -457,7 +456,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			recv: new(testpb.TestVersion1),
 			// behavior change from previous implementation: we allow mismatched wire -> proto types,
 			// but this will still error on ConsumeFieldValue
-			wantErr: fmt.Errorf(`could not consume field value for tagNum: 8, wireType: "unknown type: 7"; proto: cannot parse reserved wire type`),
+			wantErr: errors.New("cannot parse reserved wire type"),
 		},
 		{
 			name: "From nested proto message, message index 0",
@@ -502,8 +501,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			desc := tt.recv.ProtoReflect().Descriptor()
 			gotErr := decode.RejectUnknownFieldsStrict(protoBlob, desc, ProtoResolver)
 			if tt.wantErr != nil {
-				gotErrString := strings.ReplaceAll(gotErr.Error(), "\u00a0", " ")
-				require.Equal(t, gotErrString, tt.wantErr.Error())
+				require.ErrorContains(t, gotErr, tt.wantErr.Error())
 			} else {
 				require.NoError(t, gotErr)
 			}

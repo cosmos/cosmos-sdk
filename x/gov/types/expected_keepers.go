@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 
+	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,6 +37,8 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
+	addresscodec.Codec
+
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 
 	GetModuleAddress(name string) sdk.AccAddress

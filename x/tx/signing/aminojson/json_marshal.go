@@ -186,15 +186,16 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		if !msg.Has(f) {
 			// msg.WhichOneof(oneof) == nil: no field of the oneof has been set
 			// !emptyOneOfWritten: we haven't written a null for this oneof yet (only write one null per empty oneof)
-			if isOneOf && msg.WhichOneof(oneof) == nil && !emptyOneOfWritten[oneofFieldName] {
+			switch {
+			case isOneOf && msg.WhichOneof(oneof) == nil && !emptyOneOfWritten[oneofFieldName]:
 				name = oneofFieldName
 				writeNil = true
 				emptyOneOfWritten[oneofFieldName] = true
-			} else if omitEmpty(f) {
+			case omitEmpty(f):
 				continue
-			} else if f.Kind() == protoreflect.MessageKind &&
+			case f.Kind() == protoreflect.MessageKind &&
 				f.Cardinality() != protoreflect.Repeated &&
-				!v.Message().IsValid() {
+				!v.Message().IsValid():
 				return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
 			}
 		}

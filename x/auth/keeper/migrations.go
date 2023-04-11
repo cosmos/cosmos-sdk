@@ -63,7 +63,7 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 // set the account without map to accAddr to accNumber.
 //
 // NOTE: This is used for testing purposes only.
-func (m Migrator) V45_SetAccount(ctx sdk.Context, acc sdk.AccountI) error { //nolint:revive
+func (m Migrator) V45SetAccount(ctx sdk.Context, acc sdk.AccountI) error {
 	addr := acc.GetAddress()
 	store := m.keeper.storeService.OpenKVStore(ctx)
 

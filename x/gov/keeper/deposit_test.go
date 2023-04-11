@@ -7,6 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -35,7 +36,7 @@ func TestDeposits(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			govKeeper, _, bankKeeper, stakingKeeper, distKeeper, _, ctx := setupGovKeeper(t)
+			govKeeper, authKeeper, bankKeeper, stakingKeeper, distKeeper, _, ctx := setupGovKeeper(t)
 			trackMockBalances(bankKeeper, distKeeper)
 
 			// With expedited proposals the minimum deposit is higher, so we must
@@ -47,6 +48,10 @@ func TestDeposits(t *testing.T) {
 			}
 
 			TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000*depositMultiplier))
+			for _, addr := range TestAddrs {
+				authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+				authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+			}
 
 			tp := TestProposal
 			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], tc.expedited)
@@ -297,10 +302,14 @@ func TestChargeDeposit(t *testing.T) {
 			}
 
 			t.Run(testName(i), func(t *testing.T) {
-				govKeeper, _, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+				govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
 				params := v1.DefaultParams()
 				params.ProposalCancelRatio = tc.proposalCancelRatio
 				TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(10000000000))
+				for _, addr := range TestAddrs {
+					authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+					authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+				}
 
 				switch i {
 				case 0:
@@ -326,10 +335,12 @@ func TestChargeDeposit(t *testing.T) {
 				_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fiveStake)
 				require.NoError(t, err)
 
+				codec := address.NewBech32Codec("cosmos")
 				// get balances of dest address
 				var prevBalance sdk.Coin
 				if len(params.ProposalCancelDest) != 0 {
-					accAddr := sdk.MustAccAddressFromBech32(params.ProposalCancelDest)
+					accAddr, err := codec.StringToBytes(params.ProposalCancelDest)
+					require.NoError(t, err)
 					prevBalance = bankKeeper.GetBalance(ctx, accAddr, sdk.DefaultBondDenom)
 				}
 
@@ -345,7 +356,8 @@ func TestChargeDeposit(t *testing.T) {
 				require.NoError(t, err)
 
 				if len(params.ProposalCancelDest) != 0 {
-					accAddr := sdk.MustAccAddressFromBech32(params.ProposalCancelDest)
+					accAddr, err := codec.StringToBytes(params.ProposalCancelDest)
+					require.NoError(t, err)
 					newBalanceAfterCancelProposal := bankKeeper.GetBalance(ctx, accAddr, sdk.DefaultBondDenom)
 					cancellationCharges := sdkmath.NewInt(0)
 					for _, deposits := range allDeposits {

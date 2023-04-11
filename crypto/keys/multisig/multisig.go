@@ -77,7 +77,7 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 				if err != nil {
 					return err
 				}
-				if signing.VerifySig(msg, si.Signature, pubKeys[i]) {
+				if !signing.VerifySig(msg, si.Signature, pubKeys[i]) {
 					return fmt.Errorf("unable to verify signature at index %d", i)
 				}
 			case *signing.MultiSignatureData:

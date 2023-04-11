@@ -111,7 +111,7 @@ func VerifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey) bool {
 	cachePub, ok := cryptotypes.SignatureCache().Get(hash)
 	if ok {
 		cryptotypes.SignatureCache().Remove(hash)
-		return bytes.Equal(pubKey.Bytes(), []byte(cachePub))
+		return bytes.Equal(pubKey.Bytes(), cachePub)
 	}
 	if !pubKey.VerifySignature(signBytes, sig) {
 		return false

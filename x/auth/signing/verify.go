@@ -18,7 +18,7 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 		if err != nil {
 			return err
 		}
-		if signing.VerifySig(signBytes, data.Signature, pubKey) {
+		if !signing.VerifySig(signBytes, data.Signature, pubKey) {
 			return fmt.Errorf("unable to verify single signer signature")
 		}
 		return nil

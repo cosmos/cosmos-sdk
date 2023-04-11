@@ -31,7 +31,7 @@ type App struct {
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application is able to route messages to their respective handlers.
-func NewIntegrationApp(logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
+func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -72,7 +72,7 @@ func NewIntegrationApp(logger log.Logger, keys map[string]*storetypes.KVStoreKey
 	bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName})
 	bApp.Commit()
 
-	ctx := bApp.NewContext(true, cmtproto.Header{ChainID: appName})
+	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{
 		BaseApp: bApp,
@@ -102,10 +102,8 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 
 	if cfg.AutomaticBeginEndBlock {
 		height := app.LastBlockHeight() + 1
-		cfg.CustomBeginBlock.Header.Height = height
-		cfg.CustomBeginBlock.Header.ChainID = appName
-		app.logger.Info("Running begin block", "height", height)
-		app.BeginBlock(cfg.CustomBeginBlock)
+		app.logger.Info("Running beging block", "height", height)
+		app.BeginBlock(cmtabcitypes.RequestBeginBlock{Header: cmtproto.Header{Height: height, ChainID: appName}})
 		defer func() {
 			app.logger.Info("Running end block", "height", height)
 			app.EndBlock(cmtabcitypes.RequestEndBlock{})

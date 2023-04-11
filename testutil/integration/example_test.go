@@ -6,7 +6,11 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -17,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/google/go-cmp/cmp"
 )
 
 // Example shows how to use the integration test framework to test the integration of SDK modules.
@@ -28,6 +31,8 @@ func Example() {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, mint.AppModuleBasic{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
+
+	testCtx := testutil.DefaultContext(keys[minttypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -49,6 +54,7 @@ func Example() {
 	// create the application and register all the modules from the previous step
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	integrationApp := integration.NewIntegrationApp(
+		testCtx,
 		log.NewLogger(io.Discard, log.OutputJSONOption()),
 		keys,
 		encodingCfg.Codec,
@@ -103,6 +109,7 @@ func Example_oneModule() {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
+	testCtx := testutil.DefaultContext(keys[authtypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -119,6 +126,7 @@ func Example_oneModule() {
 	// create the application and register all the modules from the previous step
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	integrationApp := integration.NewIntegrationApp(
+		testCtx,
 		log.NewLogger(io.Discard),
 		keys,
 		encodingCfg.Codec,

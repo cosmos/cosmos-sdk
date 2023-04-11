@@ -282,7 +282,7 @@ In certain contexts, it may be useful or necessary for applications to persist
 data derived from vote extensions. In order to facilitate this use case, we
 propose to allow application developers to manually retrieve the `finalizeState`
 context (see [`FinalizeBlock`](#finalizeblock-1) below). Using this context,
-state can be directly written to `finalizeState` which will be used during
+state can be directly written to `finalizeState`, which will be used during
 `FinalizeBlock` and eventually committed to the application state. Note, since
 `ProcessProposal` can timeout and thus require another round of consensus, we
 will reset `finalizeState` in the beginning of `ProcessProposal`.

@@ -34,10 +34,13 @@ type Screen struct {
 // here, so that optionally more value renderers could be built, for example, a
 // separate one for a different language.
 type ValueRenderer interface {
-	// Format should render the value to a text plus annotation.
+	// Format renders the Protobuf value to a list of Screens.
 	Format(context.Context, protoreflect.Value) ([]Screen, error)
 
-	// Parse should be the inverse of Format.
+	// Parse is the inverse of Format. It must be able to parse all valid
+	// screens, meaning only those generated using this renderer's Format method.
+	// However the behavior of Parse on invalid screens is not specified,
+	// and does not necessarily error.
 	Parse(context.Context, []Screen) (protoreflect.Value, error)
 }
 
@@ -46,9 +49,13 @@ type ValueRenderer interface {
 type RepeatedValueRenderer interface {
 	ValueRenderer
 
-	// FormatRepeated should render the value to a text plus annotation.
+	// FormatRepeated renders the Protobuf list value to a list of Screens.
 	FormatRepeated(context.Context, protoreflect.Value) ([]Screen, error)
 
-	// ParseRepeated should be the inverse of Format.  The list will be populated with the repeated values.
+	// ParseRepeated is the inverse of FormatRepeated. It must parse all
+	// valid screens, meaning only those generated using this renderer's
+	// FormatRepeated method. However the behavior on invalid screens is not
+	// specified, and does not necessarily error. The `protoreflect.List`
+	// argument will be mutated and populated with the repeated values.
 	ParseRepeated(context.Context, []Screen, protoreflect.List) error
 }

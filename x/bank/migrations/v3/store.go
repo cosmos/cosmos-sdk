@@ -57,7 +57,7 @@ func addDenomReverseIndex(store storetypes.KVStore, cdc codec.BinaryCodec, logge
 			return err
 		}
 
-		newStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+		newStore := prefix.NewStore(store, CreateAccountBalancesPrefix(addr))
 		newStore.Set([]byte(coin.Denom), bz)
 
 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
@@ -93,4 +93,9 @@ func migrateDenomMetadata(store storetypes.KVStore, logger log.Logger) error {
 	}
 
 	return nil
+}
+
+// CreateAccountBalancesPrefix creates the prefix for an account's balances.
+func CreateAccountBalancesPrefix(addr []byte) []byte {
+	return append(types.BalancesPrefix.Bytes(), address.MustLengthPrefix(addr)...)
 }

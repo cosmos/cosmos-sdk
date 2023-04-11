@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	storetypes "cosmossdk.io/store/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -39,7 +38,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorMissedBlockBitArrayKey",
 			v1.ValidatorMissedBlockBitArrayKey(consAddr, 2),
-			types.ValidatorMissedBlockBitArrayKey(consAddr, 2),
+			v2.ValidatorMissedBlockBitArrayKey(consAddr, 2),
 		},
 		{
 			"AddrPubkeyRelationKey",

@@ -42,7 +42,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	for _, b := range balances {
-		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+		addrPrefixStore := prefix.NewStore(store, v3.CreateAccountBalancesPrefix(addr))
 		bz := addrPrefixStore.Get([]byte(b.Denom))
 		var expected math.Int
 		require.NoError(t, expected.Unmarshal(bz))

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	dpb "google.golang.org/protobuf/types/known/durationpb"
 )
@@ -23,9 +24,9 @@ func NewDurationValueRenderer() ValueRenderer {
 }
 
 const (
-	min_sec  = 60
-	hour_sec = 60 * min_sec
-	day_sec  = 24 * hour_sec
+	minSec  = 60
+	hourSec = 60 * minSec
+	daySec  = 24 * hourSec
 )
 
 type factors struct {
@@ -34,12 +35,12 @@ type factors struct {
 
 func factorSeconds(x int64) factors {
 	var f factors
-	f.days = x / day_sec
-	x -= f.days * day_sec
-	f.hours = x / hour_sec
-	x -= f.hours * hour_sec
-	f.minutes = x / min_sec
-	x -= f.minutes * min_sec
+	f.days = x / daySec
+	x -= f.days * daySec
+	f.hours = x / hourSec
+	x -= f.hours * hourSec
+	f.minutes = x / minSec
+	x -= f.minutes * minSec
 	f.seconds = x
 	return f
 }
@@ -84,8 +85,7 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value) 
 	if duration.Seconds < 0 || duration.Nanos < 0 {
 		negative = true
 		// copy to avoid side-effecting our input
-		d := *duration
-		duration = &d
+		duration = proto.Clone(duration).(*dpb.Duration)
 		duration.Seconds *= -1
 		duration.Nanos *= -1
 	}
@@ -172,7 +172,7 @@ func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (prot
 	}
 
 	dur := &dpb.Duration{}
-	dur.Seconds = days*day_sec + hours*hour_sec + minutes*min_sec + seconds
+	dur.Seconds = days*daySec + hours*hourSec + minutes*minSec + seconds
 	// #nosec G701
 	// Since there are 9 digits or fewer, this conversion is safe.
 	dur.Nanos = int32(nanos)

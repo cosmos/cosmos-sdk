@@ -78,8 +78,8 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 
 // parseInt parses a value-rendered string into an integer
 func parseInt(v string) (string, error) {
-	if v == "" {
-		return "", errors.New("empty string not supported")
+	if len(v) == 0 {
+		return "", errors.New("expecting a non-empty string")
 	}
 
 	sign := ""

@@ -25,7 +25,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"authority: decoding bech32 failed",
+			"expected gov account as only signer for proposal message",
 		},
 		{
 			"unauthorized authority address",
@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: "authority",
 			},
 			true,
-			"authority: decoding bech32 failed",
+			"expected gov account as only signer for proposal message",
 		},
 		{
 			"unauthorized authority address",

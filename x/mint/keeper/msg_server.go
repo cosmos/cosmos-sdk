@@ -26,10 +26,6 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 
 // UpdateParams updates the params.
 func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return nil, errors.Wrap(err, "invalid authority address")
-	}
-
 	if ms.authority != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.authority, msg.Authority)
 	}

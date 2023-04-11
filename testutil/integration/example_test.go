@@ -3,14 +3,19 @@ package integration_test
 import (
 	"fmt"
 	"io"
+	"testing"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/google/go-cmp/cmp"
 
+	dbm "github.com/cosmos/cosmos-db"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -32,7 +37,14 @@ func Example() {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
-	testCtx := testutil.DefaultContext(keys[minttypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
+	db := dbm.NewMemDB()
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	for key := range keys {
+		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
+	}
+	_ = cms.LoadLatestVersion()
+
+	newCtx := sdk.NewContext(cms, types.Header{}, true, log.NewTestLogger(&testing.T{}))
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -54,7 +66,7 @@ func Example() {
 	// create the application and register all the modules from the previous step
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	integrationApp := integration.NewIntegrationApp(
-		testCtx,
+		newCtx,
 		log.NewLogger(io.Discard, log.OutputJSONOption()),
 		keys,
 		encodingCfg.Codec,
@@ -109,7 +121,15 @@ func Example_oneModule() {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
-	testCtx := testutil.DefaultContext(keys[authtypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
+
+	db := dbm.NewMemDB()
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	for key := range keys {
+		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
+	}
+	_ = cms.LoadLatestVersion()
+
+	newCtx := sdk.NewContext(cms, types.Header{}, true, log.NewTestLogger(&testing.T{}))
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -126,7 +146,7 @@ func Example_oneModule() {
 	// create the application and register all the modules from the previous step
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	integrationApp := integration.NewIntegrationApp(
-		testCtx,
+		newCtx,
 		log.NewLogger(io.Discard),
 		keys,
 		encodingCfg.Codec,

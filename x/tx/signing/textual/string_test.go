@@ -12,15 +12,15 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type stringJsonTest struct {
+type stringJSONTest struct {
 	Text string
 }
 
-func TestStringJsonTestcases(t *testing.T) {
+func TestStringJSONTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/string.json")
 	require.NoError(t, err)
 
-	var testcases []stringJsonTest
+	var testcases []stringJSONTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 

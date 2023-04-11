@@ -35,19 +35,20 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // liveness activity.
 type ValidatorSigningInfo struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// Height at which validator was first a candidate OR was unjailed
+	// Height at which validator was first a candidate OR was un-jailed
 	StartHeight int64 `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty"`
-	// Index which is incremented each time the validator was a bonded
-	// in a block and may have signed a precommit or not. This in conjunction with the
-	// `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
+	// Index which is incremented every time a validator is bonded in a block and
+	// _may_ have signed a pre-commit or not. This in conjunction with the
+	// signed_blocks_window param determines the index in the missed block bitmap.
 	IndexOffset int64 `protobuf:"varint,3,opt,name=index_offset,json=indexOffset,proto3" json:"index_offset,omitempty"`
 	// Timestamp until which the validator is jailed due to liveness downtime.
 	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
-	// Whether or not a validator has been tombstoned (killed out of validator set). It is set
-	// once the validator commits an equivocation or for any other configured misbehiavor.
+	// Whether or not a validator has been tombstoned (killed out of validator
+	// set). It is set once the validator commits an equivocation or for any other
+	// configured misbehavior.
 	Tombstoned bool `protobuf:"varint,5,opt,name=tombstoned,proto3" json:"tombstoned,omitempty"`
-	// A counter kept to avoid unnecessary array reads.
-	// Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
+	// A counter of missed (unsigned) blocks. It is used to avoid unnecessary
+	// reads in the missed block bitmap.
 	MissedBlocksCounter int64 `protobuf:"varint,6,opt,name=missed_blocks_counter,json=missedBlocksCounter,proto3" json:"missed_blocks_counter,omitempty"`
 }
 

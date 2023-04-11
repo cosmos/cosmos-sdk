@@ -28,6 +28,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		delegatorAddr sdk.AccAddress
 		withdrawAddr  sdk.AccAddress
 		expErr        bool
+		expErrMsg     string
 	}{
 		{
 			name:          "valid case",
@@ -46,29 +47,35 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 			delegatorAddr: emptyDelAddr,
 			withdrawAddr:  f.addrs[0],
 			expErr:        true,
+			expErrMsg:     "invalid delegator address",
 		},
 		{
 			name:          "empty withdraw address",
 			delegatorAddr: f.addrs[0],
 			withdrawAddr:  emptyDelAddr,
 			expErr:        true,
+			expErrMsg:     "invalid withdraw address",
 		},
 		{
 			name:          "both empty addresses",
 			delegatorAddr: emptyDelAddr,
 			withdrawAddr:  emptyDelAddr,
 			expErr:        true,
+			expErrMsg:     "invalid delegator address",
 		},
 	}
 
 	for _, tc := range tests {
-		msg := types.NewMsgSetWithdrawAddress(tc.delegatorAddr, tc.withdrawAddr)
-		_, err := f.msgServer.SetWithdrawAddress(f.ctx, msg)
-		if tc.expErr {
-			require.NotNil(t, err)
-		} else {
-			require.Nil(t, err)
-		}
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgSetWithdrawAddress(tc.delegatorAddr, tc.withdrawAddr)
+			_, err := f.msgServer.SetWithdrawAddress(f.ctx, msg)
+			if tc.expErr {
+				require.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				require.Nil(t, err)
+			}
+		})
 	}
 }
 
@@ -81,34 +88,41 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		delegatorAddr sdk.AccAddress
 		validatorAddr sdk.ValAddress
 		expErr        bool
+		expErrMsg     string
 	}{
 		{
 			name:          "empty delegator address",
 			delegatorAddr: emptyDelAddr,
 			validatorAddr: f.valAddrs[0],
 			expErr:        true,
+			expErrMsg:     "invalid delegator address",
 		},
 		{
 			name:          "empty validator address",
 			delegatorAddr: f.addrs[0],
 			validatorAddr: emptyValAddr,
 			expErr:        true,
+			expErrMsg:     "invalid validator address",
 		},
 		{
 			name:          "both empty addresses",
 			delegatorAddr: emptyDelAddr,
 			validatorAddr: emptyValAddr,
 			expErr:        true,
+			expErrMsg:     "invalid validator address",
 		},
 	}
 	for _, tc := range tests {
-		msg := types.NewMsgWithdrawDelegatorReward(tc.delegatorAddr, tc.validatorAddr)
-		_, err := f.msgServer.WithdrawDelegatorReward(f.ctx, msg)
-		if tc.expErr {
-			require.NotNil(t, err)
-		} else {
-			require.Nil(t, err)
-		}
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgWithdrawDelegatorReward(tc.delegatorAddr, tc.validatorAddr)
+			_, err := f.msgServer.WithdrawDelegatorReward(f.ctx, msg)
+			if tc.expErr {
+				require.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				require.Nil(t, err)
+			}
+		})
 	}
 }
 
@@ -120,26 +134,32 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		name          string
 		validatorAddr sdk.ValAddress
 		expErr        bool
+		expErrMsg     string
 	}{
 		{
-			name:          "valid withdraw",
+			name:          "valid withdraw (but validator has no commission)",
 			validatorAddr: f.valAddrs[0],
 			expErr:        true,
+			expErrMsg:     "no validator commission to withdraw",
 		},
 		{
 			name:          "empty validator address",
 			validatorAddr: emptyValAddr,
 			expErr:        true,
+			expErrMsg:     "invalid validator address",
 		},
 	}
 	for _, tc := range tests {
-		msg := types.NewMsgWithdrawValidatorCommission(tc.validatorAddr)
-		_, err := f.msgServer.WithdrawValidatorCommission(f.ctx, msg)
-		if tc.expErr {
-			require.NotNil(t, err)
-		} else {
-			require.Nil(t, err)
-		}
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgWithdrawValidatorCommission(tc.validatorAddr)
+			_, err := f.msgServer.WithdrawValidatorCommission(f.ctx, msg)
+			if tc.expErr {
+				require.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				require.Nil(t, err)
+			}
+		})
 	}
 }
 
@@ -152,18 +172,21 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		amount    sdk.Coins
 		depositor sdk.AccAddress
 		expErr    bool
+		expErrMsg string
 	}{
 		{
 			name:      "no depositor",
 			amount:    sdk.NewCoins(sdk.NewInt64Coin("stake", 10000)),
 			depositor: sdk.AccAddress{},
 			expErr:    true,
+			expErrMsg: "invalid depositor address",
 		},
 		{
 			name:      "invalid coin",
 			amount:    sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("stake", 10)},
 			depositor: f.addrs[0],
 			expErr:    true,
+			expErrMsg: "10stake,10stake: invalid coins",
 		},
 		{
 			name:      "valid deposit",
@@ -173,13 +196,16 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		msg := types.NewMsgFundCommunityPool(tc.amount, tc.depositor)
-		_, err := f.msgServer.FundCommunityPool(f.ctx, msg)
-		if tc.expErr {
-			require.NotNil(t, err)
-		} else {
-			require.Nil(t, err)
-		}
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgFundCommunityPool(tc.amount, tc.depositor)
+			_, err := f.msgServer.FundCommunityPool(f.ctx, msg)
+			if tc.expErr {
+				require.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				require.Nil(t, err)
+			}
+		})
 	}
 }
 

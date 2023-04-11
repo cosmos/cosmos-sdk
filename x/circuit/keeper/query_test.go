@@ -71,7 +71,7 @@ func TestQueryDisabledList(t *testing.T) {
 	qs := QueryServer{keeper: f.Keeper}
 
 	// test the DisabledList method
-	disabledList, err := qs.DisabledList(f.Ctx, &types.QueryDisableListRequest{})
+	disabledList, err := qs.DisabledList(f.Ctx, &types.QueryDisabledListRequest{})
 	require.NoError(t, err)
 	require.Equal(t, []string{"test"}, disabledList.DisabledList)
 }

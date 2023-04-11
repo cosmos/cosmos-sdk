@@ -134,7 +134,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			}
 
 			if msr.circuitBreaker != nil {
-				msgURL := sdk.MsgTypeURL(req)
+				msgURL := sdk.MsgTypeURL(msg)
 				if !msr.circuitBreaker.IsAllowed(ctx, msgURL) {
 					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
 				}

@@ -193,9 +193,9 @@ require (
 // It must be in sync with SimApp temporary replaces
 replace (
 	cosmossdk.io/api => ../api
-	cosmossdk.io/x/circuit => ../x/circuit
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/store => ../store
+	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft

@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const msgSend = "cosmos.bank.v1beta1.MsgSend"
+
 func Test_AuthorizeCircuitBreaker(t *testing.T) {
 	ft := setupFixture(t)
 
@@ -56,7 +58,7 @@ func Test_AuthorizeCircuitBreaker(t *testing.T) {
 
 	// user successfully grants another user perms to a specific permission
 
-	somemsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{"cosmos.bank.v1beta1.MsgSend"}}
+	somemsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{msgSend}}
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[3], Permissions: somemsgs}
 	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
 	require.NoError(t, err)
@@ -78,7 +80,7 @@ func Test_AuthorizeCircuitBreaker(t *testing.T) {
 	require.Equal(t, &types.Permissions{Level: types.Permissions_LEVEL_NONE_UNSPECIFIED, LimitTypeUrls: nil}, perms, "user should have no perms by default")
 
 	// admin tries grants another user permission ALL_MSGS with limited urls populated
-	invalidmsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{"cosmos.bank.v1beta1.MsgSend"}}
+	invalidmsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{msgSend}}
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: addresses[0], Grantee: addresses[4], Permissions: invalidmsgs}
 	_, err = srv.AuthorizeCircuitBreaker(ft.Ctx, msg)
 	require.NoError(t, err)
@@ -90,7 +92,7 @@ func Test_TripCircuitBreaker(t *testing.T) {
 	srv := msgServer{
 		Keeper: ft.Keeper,
 	}
-	url := "cosmos.bank.v1beta1.MsgSend"
+	url := msgSend
 
 	// admin trips circuit breaker
 	admintrip := &types.MsgTripCircuitBreaker{Authority: addresses[0], MsgTypeUrls: []string{url}}

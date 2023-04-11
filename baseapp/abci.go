@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"fmt"
@@ -17,10 +16,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -1018,76 +1014,6 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 	}
 
 	return path
-}
-
-// ValidateVoteExtensions defines a helper function for verifying vote extension
-// signatures that may be passed or manually injected into a block proposal from
-// a proposer in ProcessProposal. It returns an error if any signature is invalid
-// or if unexpected vote extensions and/or signatures are found.
-func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64, extCommit abci.ExtendedCommitInfo) error {
-	cp := ctx.ConsensusParams()
-	extsEnabled := cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight > 0
-
-	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
-		var buf bytes.Buffer
-		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
-			return nil, err
-		}
-
-		return buf.Bytes(), nil
-	}
-
-	for _, vote := range extCommit.Votes {
-		if !extsEnabled {
-			if len(vote.VoteExtension) > 0 {
-				return fmt.Errorf("vote extensions disabled; received non-empty vote extension at height %d", currentHeight)
-			}
-			if len(vote.ExtensionSignature) > 0 {
-				return fmt.Errorf("vote extensions disabled; received non-empty vote extension signature at height %d", currentHeight)
-			}
-
-			continue
-		}
-
-		if len(vote.ExtensionSignature) == 0 {
-			return fmt.Errorf("vote extensions enabled; received empty vote extension signature at height %d", currentHeight)
-		}
-
-		valConsAddr := cmtcrypto.Address(vote.Validator.Address)
-
-		validator, err := app.valStore.GetValidatorByConsAddr(ctx, valConsAddr)
-		if err != nil {
-			return fmt.Errorf("failed to get validator %X: %w", valConsAddr, err)
-		}
-
-		cmtPubKeyProto, err := validator.CmtConsPublicKey()
-		if err != nil {
-			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
-		}
-
-		cmtPubKey, err := cryptoenc.PubKeyFromProto(cmtPubKeyProto)
-		if err != nil {
-			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
-		}
-
-		cve := cmtproto.CanonicalVoteExtension{
-			Extension: vote.VoteExtension,
-			Height:    currentHeight - 1, // the vote extension was signed in the previous height
-			Round:     int64(extCommit.Round),
-			ChainId:   app.chainID,
-		}
-
-		extSignBytes, err := marshalDelimitedFn(&cve)
-		if err != nil {
-			return fmt.Errorf("failed to encode CanonicalVoteExtension: %w", err)
-		}
-
-		if !cmtPubKey.VerifySignature(extSignBytes, vote.ExtensionSignature) {
-			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
-		}
-	}
-
-	return nil
 }
 
 // FilterPeerByAddrPort filters peers by address/port.

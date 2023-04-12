@@ -386,12 +386,28 @@ const config = {
             to: "/main/modules/upgrade/",
           },
           {
+            from: ["/main/modules/capability", "/main/ecosystem"],
+            to: "/main/modules",
+          },
+          {
+            from: ["/main/spec/circuit-breaker"],
+            to: "/main/modules/circuit",
+          },
+          {
+            from: ["/main/spec/reserve-pool"],
+            to: "/main/modules/distribution",
+          },
+          {
             from: ["/main/run-node/cosmovisor"],
             to: "/main/tooling/cosmovisor",
           },
           {
             from: ["/main/migrations/pre-upgrade"],
             to: "/main/building-apps/app-upgrade",
+          },
+          {
+            from: ["/main/tooling/depinject"],
+            to: "/main/packages/depinject",
           },
         ],
       },

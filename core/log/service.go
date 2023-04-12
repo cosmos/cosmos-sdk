@@ -1,7 +1,6 @@
 package log
 
 // Service is the same as the Cosmos SDK logger interface (copied from cosmossdk.io/log).
-// It maintains as much backward compatibility with the CometBFT logger as possible.
 // All functionalities of the logger are available through the Impl() method.
 type Service interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.

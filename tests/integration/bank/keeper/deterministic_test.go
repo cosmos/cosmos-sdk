@@ -478,5 +478,5 @@ func TestGRPCDenomOwners(t *testing.T) {
 	req := &banktypes.QueryDenomOwnersRequest{
 		Denom: coin1.GetDenom(),
 	}
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomOwners, 2525, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomOwners, 2516, false)
 }

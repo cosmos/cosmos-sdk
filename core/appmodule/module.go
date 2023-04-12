@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"cosmossdk.io/depinject"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"google.golang.org/grpc"
 )
 
@@ -57,23 +56,4 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
-}
-
-// ValidatorUpdateService is the extension interface that modules should implement
-// if they are conducting validator set updates
-type ValidatorUpdateService interface {
-	SetValidatorUpdates(context.Context, []abci.ValidatorUpdate)
-}
-
-// BlockInfoService is the extension interface that modules should implement
-// if they require block information
-type BlockInfoService interface {
-	GetHeight() int64                // GetHeight returns the height of the block
-	Misbehavior() []abci.Misbehavior // Misbehavior returns the misbehavior of the block
-	GetHeaderHash() []byte           // GetHeaderHash returns the hash of the block header
-	// GetValidatorsHash returns the hash of the validators
-	// For Comet, it is the hash of the next validators
-	GetValidatorsHash() []byte
-	GetProposerAddress() []byte            // GetProposerAddress returns the address of the block proposer
-	GetDecidedLastCommit() abci.CommitInfo // GetDecidedLastCommit returns the last commit info
 }

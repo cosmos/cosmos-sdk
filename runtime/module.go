@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/store"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -208,4 +209,8 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
+}
+
+func ProvideLoggerService(key depinject.ModuleKey, app *AppBuilder) log.Service {
+	return app.app.Logger().With("module", fmt.Sprintf("x/%s", key.Name()))
 }

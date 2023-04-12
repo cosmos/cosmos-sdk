@@ -166,15 +166,28 @@ the block or app hash is left to the runtime to specify).
 Events emitted by `EmitKVEvent` and `EmitProtoEventNonConsensus` are not considered to be part of consensus and cannot be observed
 by other modules. If there is a client-side need to add events in patch releases, these methods can be used.
 
-#### Logger Service
+#### Logger
 
-A logger (`cosmossdk.io/log`) is provided by default by the `runtime` package.
-Modules using it should not need to add any context related to the module name,
-as the runtime will do this when providing, following the current pattern in the SDK:
+A logger (`cosmossdk.io/log`) must be supplied using `depinject`, and will
+be made available for modules to use via `depinject.In`.
+Modules using it should follow the current pattern in the SDK by adding the module name before using it.
 
 ```go
-func ProvideLogger(key depinject.ModuleKey, app *AppBuilder) log.Logger {
-	return app.app.Logger().With("module", fmt.Sprintf("x/%s", key.Name()))
+type ModuleInputs struct {
+	depinject.In
+
+	Logger log.Logger
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+  // ...
+  // add the module name to the logger
+	logger := in.Logger.With("module", "x/"+types.ModuleName)
+
+	someKeeper := keeper.NewBaseKeeper(
+		logger,
+	)
+  // ...
 }
 ```
 

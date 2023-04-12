@@ -212,10 +212,3 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 func ProvideEventService() event.Service {
 	return EventService{}
 }
-
-// func ProvideLogger(key depinject.ModuleKey, logger log.Logger) log.Logger {
-// 	// if app.app.Logger() == nil {
-// 	// 	panic("app is not initialized")
-// 	// }
-// 	return logger.With("module", fmt.Sprintf("x/%s", key.Name()))
-// }

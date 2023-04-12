@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -68,6 +69,9 @@ func (s *TestSuite) SetupTest() {
 		s.accountKeeper.EXPECT().BytesToString(s.addrs[i]).Return(s.addrs[i].String(), nil).AnyTimes()
 		s.accountKeeper.EXPECT().StringToBytes(s.addrs[i].String()).Return(s.addrs[i], nil).AnyTimes()
 	}
+
+	// add empty string to the list of expected calls
+	s.accountKeeper.EXPECT().StringToBytes("").Return(nil, errors.New("unable to decode")).AnyTimes()
 
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 
@@ -141,9 +145,15 @@ func (s *TestSuite) setNextAccount() {
 	s.Require().NoError(err)
 	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
 
+	addrcdc := address.NewBech32Codec("cosmos")
+	addrst, err := addrcdc.BytesToString(ac.Address())
+	s.Require().NoError(err)
+
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(ac.Address())).Return(nil).AnyTimes()
 	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
 	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), sdk.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
+	s.accountKeeper.EXPECT().StringToBytes(addrst).Return(ac.Address().Bytes(), nil).AnyTimes()
+	s.accountKeeper.EXPECT().BytesToString(ac.Address().Bytes()).Return(addrst, nil).AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -165,6 +175,8 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 			Address: addressPool[i].String(),
 			Weight:  "1",
 		}
+		s.accountKeeper.EXPECT().StringToBytes(addressPool[i].String()).Return(addressPool[i].Bytes(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addressPool[i].Bytes()).Return(addressPool[i].String(), nil).AnyTimes()
 	}
 
 	g, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -2964,6 +2976,11 @@ func (s *TestSuite) TestLeaveGroup() {
 	admin2 := addrs[5]
 	admin3 := addrs[6]
 	require := s.Require()
+
+	for _, addr := range addrs {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr.Bytes(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
 
 	members := []group.MemberRequest{
 		{

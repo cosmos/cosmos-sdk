@@ -119,10 +119,13 @@ func (s *TestSuite) SetupTest() {
 	groupSeq := s.groupKeeper.GetGroupSequence(s.sdkCtx)
 	s.Require().Equal(groupSeq, uint64(1))
 
-	_, err = s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
+	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
+	s.Require().NoError(err)
+
+	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(policyRes.Address)
 	s.Require().NoError(err)
 	s.policy = policy
-	s.groupPolicyAddr = s.addrs[0]
+	s.groupPolicyAddr = addrbz
 
 	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
 	s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
@@ -2434,6 +2437,8 @@ func (s *TestSuite) TestExecProposal() {
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10001)},
 	}
 	proposers := []string{addr2.String()}
+
+	fmt.Println(s.groupPolicyAddr.String())
 
 	specs := map[string]struct {
 		srcBlockTime      time.Time

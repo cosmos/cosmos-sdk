@@ -487,7 +487,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 
 	policyAcc, err := k.getGroupPolicyInfo(ctx, req.GroupPolicyAddress)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "load group policy")
+		return nil, errorsmod.Wrapf(err, "load group policy: %s", req.GroupPolicyAddress)
 	}
 
 	g, err := k.getGroupInfo(ctx, policyAcc.GroupId)

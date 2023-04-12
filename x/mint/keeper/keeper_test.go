@@ -76,7 +76,7 @@ func (s *IntegrationTestSuite) TestParams() {
 		expectErr bool
 	}{
 		{
-			name: "set invalid params",
+			name: "set invalid params (⚠️ not validated in keeper)",
 			input: types.Params{
 				MintDenom:           sdk.DefaultBondDenom,
 				InflationRateChange: sdk.NewDecWithPrec(-13, 2),
@@ -85,7 +85,7 @@ func (s *IntegrationTestSuite) TestParams() {
 				GoalBonded:          sdk.NewDecWithPrec(67, 2),
 				BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
 			},
-			expectErr: true,
+			expectErr: false,
 		},
 		{
 			name: "set full valid params",

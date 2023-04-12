@@ -72,7 +72,7 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 		nanosBz[i] = byte(nanosInt)
 		nanosInt >>= 8
 	}
-	nanosBz[0] = nanosBz[0] | 0xC0
+	nanosBz[0] |= 0xC0
 	_, err = w.Write(nanosBz[:])
 	return err
 }
@@ -151,9 +151,9 @@ func (t TimestampCodec) Compare(v1, v2 protoreflect.Value) int {
 	c := compareInt(s1, s2)
 	if c != 0 {
 		return c
-	} else {
-		return compareInt(n1, n2)
 	}
+
+	return compareInt(n1, n2)
 }
 
 func (t TimestampCodec) IsOrdered() bool {
@@ -215,9 +215,9 @@ func (t TimestampV0Codec) Compare(v1, v2 protoreflect.Value) int {
 	c := compareInt(s1, s2)
 	if c != 0 {
 		return c
-	} else {
-		return compareInt(n1, n2)
 	}
+
+	return compareInt(n1, n2)
 }
 
 func (t TimestampV0Codec) IsOrdered() bool {

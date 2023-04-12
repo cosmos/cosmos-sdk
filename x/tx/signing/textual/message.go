@@ -264,8 +264,6 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 var (
 	// <int> <field_kind>
 	headerRegex = regexp.MustCompile(`(\d+) .+`)
-	// <field_name> (<int>/<int>): <value rendered 1st line>
-	elementRegex = regexp.MustCompile(`(.+) \(\d+\/\d+\)`)
 )
 
 func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Screen, l protoreflect.List, vr ValueRenderer) error {

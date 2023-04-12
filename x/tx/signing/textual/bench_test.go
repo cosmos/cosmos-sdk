@@ -133,7 +133,7 @@ func BenchmarkMessageValueRenderer_parseRepeated(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		for _, rs := range rsL {
-			sink, err = rs.rend.Parse(ctx, rs.screens)
+			sink, _ = rs.rend.Parse(ctx, rs.screens)
 		}
 	}
 

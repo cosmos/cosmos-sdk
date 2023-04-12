@@ -64,6 +64,17 @@ func (s *CLITestSuite) TestSendTxCmd() {
 			extraArgs,
 			true,
 		},
+		{
+			"invalid coins",
+			func() client.Context {
+				return s.baseCtx
+			},
+			accounts[0].Address,
+			accounts[0].Address,
+			nil,
+			extraArgs,
+			true,
+		},
 	}
 
 	for _, tc := range testCases {

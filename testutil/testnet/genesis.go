@@ -1,12 +1,14 @@
 package testnet
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	cmttypes "github.com/cometbft/cometbft/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -143,7 +145,10 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 	}
 
 	// Generate bytes to be signed.
-	bytesToSign, err := txConf.SignModeHandler().GetSignBytes(
+	bytesToSign, err := authsigning.AdaptSigningArgs(
+		context.Background(),
+		txConf.TxEncoder(),
+		txConf.SignModeHandler(),
 		signing.SignMode_SIGN_MODE_DIRECT,
 		authsigning.SignerData{
 			ChainID: b.chainID,
@@ -152,6 +157,7 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 
 			// No account or sequence number for gentx.
 		},
+		pubKey,
 		txb.GetTx(),
 	)
 	if err != nil {

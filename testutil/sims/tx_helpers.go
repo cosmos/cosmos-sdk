@@ -26,7 +26,10 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 	// create a random length memo
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	signMode := txConfig.SignModeHandler().DefaultMode()
+	// TODO
+	// support default mode?
+	//signMode := txConfig.SignModeHandler().DefaultMode()
+	signMode := signing.SignMode_SIGN_MODE_DIRECT
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -63,7 +66,9 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 			PubKey:        p.PubKey(),
 		}
 
-		signBytes, err := authsign.GetSignBytesWithContext(txConfig.SignModeHandler(), context.Background(), signMode, signerData, tx.GetTx())
+		signBytes, err := authsign.AdaptSigningArgs(
+			context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), signMode, signerData, p.PubKey(),
+			tx.GetTx())
 		if err != nil {
 			panic(err)
 		}

@@ -5,16 +5,17 @@ import (
 	"io"
 	"os"
 
-	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -90,9 +91,13 @@ func NewRootCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			signModes, err := signing.APISignModesToInternal(encodingConfig.TxConfig.SignModeHandler().SupportedModes())
+			if err != nil {
+				return err
+			}
 			txConfigWithTextual := tx.NewTxConfigWithTextual(
 				codec.NewProtoCodec(encodingConfig.InterfaceRegistry),
-				encodingConfig.TxConfig.SignModeHandler().Modes(),
+				signModes,
 				txt,
 			)
 			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)

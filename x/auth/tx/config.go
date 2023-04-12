@@ -13,7 +13,7 @@ import (
 )
 
 type config struct {
-	handler     txsigning.SignModeHandler
+	handler     *txsigning.HandlerMap
 	decoder     sdk.TxDecoder
 	encoder     sdk.TxEncoder
 	jsonDecoder sdk.TxDecoder
@@ -48,7 +48,7 @@ func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignMod
 }
 
 // NewTxConfigWithHandler returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
-func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler txsigning.SignModeHandler) client.TxConfig {
+func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler *txsigning.HandlerMap) client.TxConfig {
 	return &config{
 		handler:     handler,
 		decoder:     DefaultTxDecoder(protoCodec),
@@ -73,7 +73,7 @@ func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	return newBuilder, nil
 }
 
-func (g config) SignModeHandler() txsigning.SignModeHandler {
+func (g config) SignModeHandler() *txsigning.HandlerMap {
 	return g.handler
 }
 

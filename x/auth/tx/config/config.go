@@ -6,6 +6,7 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -37,7 +37,7 @@ type ModuleInputs struct {
 	TxBankKeeper   BankKeeper
 	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
 
-	CustomSignModeHandlers func() []signing.SignModeHandler `optional:"true"`
+	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
 }
 
 type ModuleOutputs struct {

@@ -18,7 +18,7 @@ type HandlerOptions struct {
 	BankKeeper             types.BankKeeper
 	ExtensionOptionChecker ExtensionOptionChecker
 	FeegrantKeeper         FeegrantKeeper
-	SignModeHandler        txsigning.SignModeHandler
+	SignModeHandler        *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker           TxFeeChecker
 }

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net"
 
-	"cosmossdk.io/log"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -44,8 +45,8 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 	// time.
 	err := reflection.Register(grpcSrv, reflection.Config{
 		SigningModes: func() map[string]int32 {
-			modes := make(map[string]int32, len(clientCtx.TxConfig.SignModeHandler().Modes()))
-			for _, m := range clientCtx.TxConfig.SignModeHandler().Modes() {
+			modes := make(map[string]int32, len(clientCtx.TxConfig.SignModeHandler().SupportedModes()))
+			for _, m := range clientCtx.TxConfig.SignModeHandler().SupportedModes() {
 				modes[m.String()] = (int32)(m)
 			}
 

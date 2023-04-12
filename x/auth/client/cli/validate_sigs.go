@@ -4,10 +4,14 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/anypb"
 
+	"cosmossdk.io/x/tx/decode"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -111,8 +115,46 @@ func printAndValidateSigs(
 				Sequence:      accSeq,
 				PubKey:        pubKey,
 			}
+			// TODO abstract, clean up
+			anyPk, err := codectypes.NewAnyWithValue(pubKey)
+			if err != nil {
+				cmd.PrintErrf("failed to pack public key: %v", err)
+				return false
+			}
+			txSignerData := txsigning.SignerData{
+				ChainID:       signingData.ChainID,
+				AccountNumber: signingData.AccountNumber,
+				Sequence:      signingData.Sequence,
+				Address:       signingData.Address,
+				PubKey: &anypb.Any{
+					TypeUrl: anyPk.TypeUrl,
+					Value:   anyPk.Value,
+				},
+			}
 
-			err = authsigning.VerifySignature(cmd.Context(), pubKey, signingData, sig.Data, signModeHandler, sigTx)
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(tx)
+			if err != nil {
+				cmd.PrintErrf("failed to encode transaction: %v", err)
+				return false
+			}
+			decodeCtx, err := decode.NewDecoder(decode.Options{})
+			if err != nil {
+				cmd.PrintErrf("failed to create decoder: %v", err)
+				return false
+			}
+			decodedTx, err := decodeCtx.Decode(txBytes)
+			if err != nil {
+				cmd.PrintErrf("failed to decode transaction: %v", err)
+				return false
+			}
+			txData := txsigning.TxData{
+				Body:          decodedTx.Tx.Body,
+				AuthInfo:      decodedTx.Tx.AuthInfo,
+				AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
+				BodyBytes:     decodedTx.TxRaw.BodyBytes,
+			}
+
+			err = authsigning.VerifySignature(cmd.Context(), pubKey, txSignerData, sig.Data, signModeHandler, txData)
 			if err != nil {
 				return false
 			}

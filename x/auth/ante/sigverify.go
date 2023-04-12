@@ -206,10 +206,10 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
-	signModeHandler txsigning.SignModeHandler
+	signModeHandler *txsigning.HandlerMap
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler txsigning.SignModeHandler) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak:              ak,
 		signModeHandler: signModeHandler,
@@ -315,7 +315,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 				AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
 				BodyBytes:     decodedTx.TxRaw.BodyBytes,
 			}
-			err = authsigning.VerifySignatureV2(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
+			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
 			if err != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {

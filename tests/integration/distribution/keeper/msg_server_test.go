@@ -9,12 +9,12 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
+
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
-
-	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -35,6 +35,11 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+)
+
+var (
+	emptyDelAddr sdk.AccAddress
+	emptyValAddr sdk.ValAddress
 )
 
 type fixture struct {
@@ -206,6 +211,33 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		expErrMsg string
 	}{
 		{
+			name: "empty delegator address",
+			msg: &distrtypes.MsgWithdrawDelegatorReward{
+				DelegatorAddress: emptyDelAddr.String(),
+				ValidatorAddress: f.valAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid delegator address",
+		},
+		{
+			name: "empty validator address",
+			msg: &distrtypes.MsgWithdrawDelegatorReward{
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: emptyValAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid validator address",
+		},
+		{
+			name: "both empty addresses",
+			msg: &distrtypes.MsgWithdrawDelegatorReward{
+				DelegatorAddress: emptyDelAddr.String(),
+				ValidatorAddress: emptyValAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid validator address",
+		},
+		{
 			name: "delegator with no delegations",
 			msg: &distrtypes.MsgWithdrawDelegatorReward{
 				DelegatorAddress: sdk.AccAddress([]byte("invalid")).String(),
@@ -301,6 +333,48 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		expErrMsg string
 	}{
 		{
+			name: "empty delegator address",
+			preRun: func() {
+				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params.WithdrawAddrEnabled = true
+				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+			},
+			msg: &distrtypes.MsgSetWithdrawAddress{
+				DelegatorAddress: emptyDelAddr.String(),
+				WithdrawAddress:  withdrawAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid delegator address",
+		},
+		{
+			name: "empty withdraw address",
+			preRun: func() {
+				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params.WithdrawAddrEnabled = true
+				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+			},
+			msg: &distrtypes.MsgSetWithdrawAddress{
+				DelegatorAddress: delAddr.String(),
+				WithdrawAddress:  emptyDelAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid withdraw address",
+		},
+		{
+			name: "both empty addresses",
+			preRun: func() {
+				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params.WithdrawAddrEnabled = true
+				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+			},
+			msg: &distrtypes.MsgSetWithdrawAddress{
+				DelegatorAddress: emptyDelAddr.String(),
+				WithdrawAddress:  emptyDelAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid delegator address",
+		},
+		{
 			name: "withdraw address disabled",
 			preRun: func() {
 				params := f.distrKeeper.GetParams(f.sdkCtx)
@@ -313,6 +387,19 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 			},
 			expErr:    true,
 			expErrMsg: "set withdraw address disabled",
+		},
+		{
+			name: "valid msg with same delegator and withdraw address",
+			preRun: func() {
+				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params.WithdrawAddrEnabled = true
+				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+			},
+			msg: &distrtypes.MsgSetWithdrawAddress{
+				DelegatorAddress: delAddr.String(),
+				WithdrawAddress:  delAddr.String(),
+			},
+			expErr: false,
 		},
 		{
 			name: "valid msg",
@@ -354,7 +441,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 
 				// query the delegator withdraw address
 				addr := f.distrKeeper.GetDelegatorWithdrawAddr(f.sdkCtx, delAddr)
-				assert.DeepEqual(t, addr, withdrawAddr)
+				assert.DeepEqual(t, addr.String(), tc.msg.WithdrawAddress)
 			}
 		})
 	}
@@ -397,6 +484,14 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		expErr    bool
 		expErrMsg string
 	}{
+		{
+			name: "empty validator address",
+			msg: &distrtypes.MsgWithdrawValidatorCommission{
+				ValidatorAddress: emptyValAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid validator address",
+		},
 		{
 			name: "validator with no commission",
 			msg: &distrtypes.MsgWithdrawValidatorCommission{
@@ -480,6 +575,24 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		expErr    bool
 		expErrMsg string
 	}{
+		{
+			name: "no depositor address",
+			msg: &distrtypes.MsgFundCommunityPool{
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+				Depositor: emptyDelAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid depositor address",
+		},
+		{
+			name: "invalid coin",
+			msg: &distrtypes.MsgFundCommunityPool{
+				Amount:    sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("stake", 10)},
+				Depositor: addr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "10stake,10stake: invalid coins",
+		},
 		{
 			name: "depositor address with no funds",
 			msg: &distrtypes.MsgFundCommunityPool{
@@ -593,7 +706,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "base and bonus proposer reward are deprecated fields and should not be used",
+			expErrMsg: "cannot update base or bonus proposer reward because these are deprecated fields",
 		},
 		{
 			name: "bonus proposer reward set",
@@ -607,7 +720,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "base and bonus proposer reward are deprecated fields and should not be used",
+			expErrMsg: "cannot update base or bonus proposer reward because these are deprecated fields",
 		},
 		{
 			name: "all good",
@@ -774,7 +887,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 		{
 			name: "happy path (staking token)",
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
-				Authority:        addr.String(),
+				Depositor:        addr.String(),
 				ValidatorAddress: valAddr1.String(),
 				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(f.sdkCtx), sdk.NewInt(100))),
 			},
@@ -782,7 +895,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 		{
 			name: "happy path (non-staking token)",
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
-				Authority:        addr.String(),
+				Depositor:        addr.String(),
 				ValidatorAddress: valAddr1.String(),
 				Amount:           amt,
 			},
@@ -790,7 +903,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 		{
 			name: "invalid validator",
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
-				Authority:        addr.String(),
+				Depositor:        addr.String(),
 				ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String(),
 				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(f.sdkCtx), sdk.NewInt(100))),
 			},

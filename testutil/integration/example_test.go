@@ -3,17 +3,13 @@ package integration_test
 import (
 	"fmt"
 	"io"
-	"testing"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/google/go-cmp/cmp"
-
-	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
@@ -37,14 +33,11 @@ func Example() {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	for key := range keys {
-		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
-	}
-	_ = cms.LoadLatestVersion()
+	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
+	logger := log.NewNopLogger()
 
-	newCtx := sdk.NewContext(cms, types.Header{}, true, log.NewTestLogger(&testing.T{}))
+	cms := integration.CreateMultiStore(keys, logger)
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -64,10 +57,9 @@ func Example() {
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil, nil)
 
 	// create the application and register all the modules from the previous step
-	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	integrationApp := integration.NewIntegrationApp(
 		newCtx,
-		log.NewLogger(io.Discard, log.OutputJSONOption()),
+		logger,
 		keys,
 		encodingCfg.Codec,
 		authModule, mintModule,
@@ -122,14 +114,11 @@ func Example_oneModule() {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	for key := range keys {
-		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
-	}
-	_ = cms.LoadLatestVersion()
+	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
+	logger := log.NewLogger(io.Discard)
 
-	newCtx := sdk.NewContext(cms, types.Header{}, true, log.NewTestLogger(&testing.T{}))
+	cms := integration.CreateMultiStore(keys, logger)
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -144,10 +133,9 @@ func Example_oneModule() {
 	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts, nil)
 
 	// create the application and register all the modules from the previous step
-	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	integrationApp := integration.NewIntegrationApp(
 		newCtx,
-		log.NewLogger(io.Discard),
+		logger,
 		keys,
 		encodingCfg.Codec,
 		authModule,

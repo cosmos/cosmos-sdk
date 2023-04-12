@@ -55,10 +55,10 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 
 	moduleManager := module.NewManager(modules...)
 	bApp.SetBeginBlocker(func(ctx sdk.Context, req cmtabcitypes.RequestBeginBlock) (cmtabcitypes.ResponseBeginBlock, error) {
-		return moduleManager.BeginBlock(ctx, req)
+		return moduleManager.BeginBlock(sdkCtx, req)
 	})
 	bApp.SetEndBlocker(func(ctx sdk.Context, req cmtabcitypes.RequestEndBlock) (cmtabcitypes.ResponseEndBlock, error) {
-		return moduleManager.EndBlock(ctx, req)
+		return moduleManager.EndBlock(sdkCtx, req)
 	})
 
 	router := baseapp.NewMsgServiceRouter()

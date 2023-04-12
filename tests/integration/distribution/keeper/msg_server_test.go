@@ -11,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -48,8 +49,9 @@ type fixture struct {
 	sdkCtx sdk.Context
 	app    *integration.App
 
-	addr    sdk.AccAddress
-	valAddr sdk.ValAddress
+	addr        sdk.AccAddress
+	valAddr     sdk.ValAddress
+	valConsAddr sdk.ConsAddress
 }
 
 func initFixture(t assert.TestingT) *fixture {
@@ -117,10 +119,10 @@ func initFixture(t assert.TestingT) *fixture {
 
 	f.addr = sdk.AccAddress(PKS[0].Address())
 	f.valAddr = sdk.ValAddress(f.addr)
-	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
+	f.valConsAddr = sdk.ConsAddress(valConsPk0.Address())
 
 	// set proposer and vote infos
-	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
+	ctx := newCtx.WithProposer(f.valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
 		{
 			Validator: cmtabcitypes.Validator{
 				Address: f.valAddr,
@@ -151,6 +153,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	f.distrKeeper.SetFeePool(f.sdkCtx, distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)}),
 	})
+	f.distrKeeper.SetParams(f.sdkCtx, distrtypes.DefaultParams())
 	initFeePool := f.distrKeeper.GetFeePool(f.sdkCtx)
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
@@ -161,9 +164,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 
 	// setup staking validator
-	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
-	f.distrKeeper.SetPreviousProposerConsAddr(f.sdkCtx, valConsAddr)
-
 	validator, err := stakingtypes.NewValidator(f.valAddr, PKS[0], stakingtypes.Description{})
 	assert.NilError(t, err)
 	commission := stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyOneDec())
@@ -233,6 +233,9 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		},
 	}
 	height := f.app.LastBlockHeight()
+	require.Panics(t, func() {
+		f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+	})
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -247,31 +250,14 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				panic(fmt.Errorf("expected block height to be %d, got %d", height, f.app.LastBlockHeight()))
 			}
 
-			// queryClient := distrtypes.NewQueryClient(f.app.QueryHelper())
 			prevProposerConsAddr := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
 			assert.Assert(t, prevProposerConsAddr.Empty() == false)
-			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
-
-			// // fmt.Printf("f.sdkCtx.VoteInfos(): %v\n", f.sdkCtx.VoteInfos())
-			// check := func(ctx sdk.Context, expRewards sdk.DecCoins) {
-			// 	// fmt.Printf("ctx.VoteInfos(): %v\n", ctx.VoteInfos())
-			// 	// macc := f.accountKeeper.GetModuleAccount(ctx, distrtypes.ModuleName)
-			// 	// amount := f.bankKeeper.GetAllBalances(ctx, macc.GetAddress())
-			// 	// fmt.Printf("amount: %v\n", amount)
-			// 	// fmt.Printf("macc: %v\n", macc)
-			// 	distribution.BeginBlocker(ctx, f.distrKeeper)
-			// 	resp, err := queryClient.DelegationTotalRewards(ctx, &distrtypes.QueryDelegationTotalRewardsRequest{
-			// 		DelegatorAddress: delAddr.String(),
-			// 	})
-			// 	assert.NilError(t, err)
-			// 	assert.Assert(t, resp != nil)
-			// 	fmt.Printf("res.Rewards: %v\n", resp.Rewards)
-			// 	assert.DeepEqual(t, resp.Total, expRewards)
-			// 	consAddr := f.distrKeeper.GetPreviousProposerConsAddr(ctx)
-			// 	assert.DeepEqual(t, consAddr, valConsAddr)
-			// }
-
-			// check(f.sdkCtx, sdk.NewDecCoins(sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(10))))
+			assert.DeepEqual(t, prevProposerConsAddr, f.valConsAddr)
+			var previousTotalPower int64
+			for _, voteInfo := range f.sdkCtx.VoteInfos() {
+				previousTotalPower += voteInfo.Validator.Power
+			}
+			assert.Equal(t, previousTotalPower, int64(100))
 
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)

@@ -2,6 +2,7 @@ package textual
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -79,6 +80,10 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 
 // parseInt parses a value-rendered string into an integer
 func parseInt(v string) (string, error) {
+	if len(v) == 0 {
+		return "", errors.New("expecting a non-empty string")
+	}
+
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"

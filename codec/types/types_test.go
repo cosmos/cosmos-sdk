@@ -44,7 +44,7 @@ var (
 func (dog FakeDog) Reset()                  {}
 func (dog FakeDog) String() string          { return "fakedog" }
 func (dog FakeDog) ProtoMessage()           {}
-func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata.Dog{}) } //nolint:revive
+func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata.Dog{}) } //nolint:revive // XXX_ prefix is intentional
 func (dog FakeDog) Greet() string           { return "fakedog" }
 
 func TestRegister(t *testing.T) {

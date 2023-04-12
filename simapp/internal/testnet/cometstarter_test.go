@@ -120,25 +120,15 @@ func TestCometStarter_PortContention(t *testing.T) {
 						return reuseAddrs[rand.Intn(len(reuseAddrs))]
 					})
 			})
+
+			// Ensure nodes are stopped completely,
+			// so that we don't get t.Cleanup errors around directories not being empty.
 			defer nodes.StopAndWait()
 			require.NoError(t, err)
 
-			heightAdvanced := false
-			for j := 0; j < 40; j++ {
-				cs := nodes[0].ConsensusState()
-				if cs.GetLastHeight() < 2 {
-					time.Sleep(250 * time.Millisecond)
-					continue
-				}
-
-				// Saw height advance.
-				heightAdvanced = true
-				break
-			}
-
-			if !heightAdvanced {
-				t.Fatalf("consensus height did not advance in approximately 10 seconds")
-			}
+			// Ensure that the height advances.
+			// Looking for height 2 seems more meaningful than 1.
+			require.NoError(t, testnet.WaitForNodeHeight(nodes[0], 2, 10*time.Second))
 		})
 	}
 }

@@ -226,7 +226,7 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+		txGen := moduletestutil.MakeTestTxConfig()
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
@@ -317,7 +317,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.K
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:         moduletestutil.MakeTestTxConfig(),
 			Cdc:           nil,
 			Msg:           msg,
 			Context:       ctx,
@@ -366,7 +366,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k *ke
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestTxConfig(),
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,
@@ -417,7 +417,7 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestTxConfig(),
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,
@@ -460,7 +460,7 @@ func SimulateMsgCancelProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestTxConfig(),
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,

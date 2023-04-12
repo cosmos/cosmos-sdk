@@ -199,8 +199,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type EvidenceInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Key *store.KVStoreKey
@@ -210,17 +209,16 @@ type EvidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
-//nolint:revive
-type EvidenceOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper
 	Module         appmodule.AppModule
 }
 
-func ProvideModule(in EvidenceInputs) EvidenceOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper)
 	m := NewAppModule(*k)
 
-	return EvidenceOutputs{EvidenceKeeper: *k, Module: m}
+	return ModuleOutputs{EvidenceKeeper: *k, Module: m}
 }

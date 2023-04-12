@@ -37,6 +37,8 @@ type CometStarter struct {
 
 	rootDir string
 
+	rpcListen bool
+
 	tcpAddrChooser func() string
 
 	startTries int
@@ -71,7 +73,19 @@ func NewCometStarter(
 	//
 	// At that point, we should keep the default as RPC off,
 	// but we should add a RPCListen method to opt in to enabling it.
-	cfg.RPC.ListenAddress = ""
+
+	// If RPC.ListenAddress is the default value, clear it.
+	const defaultRPCListenAddr = "tcp://127.0.0.1:26657"
+	if cfg.RPC.ListenAddress == defaultRPCListenAddr {
+		cfg.RPC.ListenAddress = ""
+	}
+
+	// Then if it was set to anything other than empty or the default value,
+	// fail with a clear explanation on how to enable RPC.
+	// The RPCListen method must be used in order to correctly pick an available listen address.
+	if cfg.RPC.ListenAddress != "" {
+		panic(fmt.Errorf("NewCometStarter: cfg.RPC.ListenAddress must be empty (but was %q); use (*CometStarter).RPCListen() instead", cfg.RPC.ListenAddress))
+	}
 
 	// defaultStartTries is somewhat arbitrary.
 	// Occasionally TestCometStarter_PortContention would fail with 10 tries,
@@ -98,8 +112,33 @@ func (s *CometStarter) Logger(logger log.Logger) *CometStarter {
 	return s
 }
 
+// RPCListen enables the RPC listener service on the underlying Comet node.
+// The RPC service must be enabled this way so that s can choose a dynamic port,
+// retrying if necessary.
+//
+// Note that there is a limitation in CometBFT v0.37 that
+// prevents more than one RPC server running at a time.
+// Once the Cosmos SDK has adopted CometBFT v0.38 or newer,
+// that limitation will be removed.
+func (s *CometStarter) RPCListen() *CometStarter {
+	s.rpcListen = true
+	return s
+}
+
 // Start returns a started Comet node.
-func (s *CometStarter) Start() (*node.Node, error) {
+func (s *CometStarter) Start() (n *node.Node, err error) {
+	if s.rpcListen {
+		if err := globalCometMu.Acquire(); err != nil {
+			return nil, err
+		}
+
+		// Wrap this defer in an anonymous function so we don't immediately evaluate n,
+		// which would always be nil at thi spoint.
+		defer func() {
+			globalCometMu.Release(n)
+		}()
+	}
+
 	fpv, nodeKey, err := s.initDisk()
 	if err != nil {
 		return nil, err
@@ -116,6 +155,9 @@ func (s *CometStarter) Start() (*node.Node, error) {
 
 	for i := 0; i < s.startTries; i++ {
 		s.cfg.P2P.ListenAddress = s.likelyAvailableAddress()
+		if s.rpcListen {
+			s.cfg.RPC.ListenAddress = s.likelyAvailableAddress()
+		}
 
 		n, err := node.NewNode(
 			s.cfg,

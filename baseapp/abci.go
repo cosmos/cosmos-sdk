@@ -58,7 +58,6 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 		initHeader.Height = req.InitialHeight
 		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
 			return nil, err
-		}
 	}
 
 	// initialize states with a correct header

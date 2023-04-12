@@ -37,7 +37,7 @@ type wrapper struct {
 
 	txBodyHasUnknownNonCriticals bool
 
-	signers []string
+	signers [][]byte
 	msgsV2  []protov2.Message
 }
 
@@ -188,7 +188,7 @@ func (w *wrapper) initSignersAndMsgsV2() {
 	}
 }
 
-func (w *wrapper) GetSigners() []string {
+func (w *wrapper) GetSigners() [][]byte {
 	if w.signers == nil {
 		w.initSignersAndMsgsV2()
 	}

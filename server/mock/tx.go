@@ -116,7 +116,7 @@ func (msg *KVStoreTx) ValidateBasic() error {
 	return nil
 }
 
-func (msg *KVStoreTx) GetSigners() []string {
+func (msg *KVStoreTx) GetSigners() [][]byte {
 	return nil
 }
 

@@ -34,13 +34,13 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 // GetSigners retrieves all the signers of a tx.
 // This includes all unique signers of the messages (in order),
 // as well as the FeePayer (if specified and not already included).
-func (t *Tx) GetSigners(codec codec.Codec) ([]string, []protov2.Message, error) {
-	var signers []string
+func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
+	var signers [][]byte
 	seen := map[string]bool{}
 
 	var msgsv2 []protov2.Message
 	for _, msg := range t.Body.Messages {
-		xs, msgv2, err := codec.GetMsgAnySigners(msg)
+		xs, msgv2, err := cdc.GetMsgAnySigners(msg)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -48,19 +48,26 @@ func (t *Tx) GetSigners(codec codec.Codec) ([]string, []protov2.Message, error) 
 		msgsv2 = append(msgsv2, msgv2)
 
 		for _, signer := range xs {
-			if !seen[signer] {
+			if !seen[string(signer)] {
 				signers = append(signers, signer)
-				seen[signer] = true
+				seen[string(signer)] = true
 			}
 		}
 	}
 
 	// ensure any specified fee payer is included in the required signers (at the end)
 	feePayer := t.AuthInfo.Fee.Payer
-	if feePayer != "" && !seen[feePayer] {
-		payerAddr := feePayer
-		signers = append(signers, payerAddr)
-		seen[feePayer] = true
+	var feePayerAddr []byte
+	if feePayer != "" {
+		var err error
+		feePayerAddr, err = cdc.GetSigningContext().AddressCodec().StringToBytes(feePayer)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	if feePayerAddr != nil && !seen[string(feePayerAddr)] {
+		signers = append(signers, feePayerAddr)
+		seen[string(feePayerAddr)] = true
 	}
 
 	return signers, msgsv2, nil
@@ -74,13 +81,17 @@ func (t *Tx) GetFee() sdk.Coins {
 	return t.AuthInfo.Fee.Amount
 }
 
-func (t *Tx) FeePayer(codec codec.Codec) string {
+func (t *Tx) FeePayer(cdc codec.Codec) []byte {
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		return feePayer
+		feePayerAddr, err := cdc.GetSigningContext().AddressCodec().StringToBytes(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return feePayerAddr
 	}
 	// use first signer as default if no payer specified
-	signers, _, err := t.GetSigners(codec)
+	signers, _, err := t.GetSigners(cdc)
 	if err != nil {
 		panic(err)
 	}

@@ -116,12 +116,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			var pubkey cryptotypes.PubKey
 
-			signerAddr, err := sdk.AccAddressFromBech32(signer)
-			if err != nil {
-				return ctx, err
-			}
-
-			acc := cgts.ak.GetAccount(ctx, signerAddr)
+			acc := cgts.ak.GetAccount(ctx, signer)
 
 			// use placeholder simSecp256k1Pubkey if sig is nil
 			if acc == nil || acc.GetPubKey() == nil {

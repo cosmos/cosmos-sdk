@@ -853,8 +853,12 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2
 	if err != nil {
 		panic(err)
 	}
-	if len(signers) > 0 && signers[0] != "" {
-		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, signers[0]))
+	if len(signers) > 0 && signers[0] != nil {
+		addrStr, err := cdc.GetSigningContext().AddressCodec().BytesToString(signers[0])
+		if err != nil {
+			panic(err)
+		}
+		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, addrStr))
 	}
 
 	// verify that events have no module attribute set

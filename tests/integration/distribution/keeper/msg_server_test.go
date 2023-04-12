@@ -55,15 +55,13 @@ type fixture struct {
 	valAddr sdk.ValAddress
 }
 
-func initFixture(t assert.TestingT) *fixture {
-	f := &fixture{}
-
+func initFixture(t testing.TB) *fixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
-	logger := log.NewTestLogger(&testing.T{})
+	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
 
 	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
@@ -124,26 +122,24 @@ func initFixture(t assert.TestingT) *fixture {
 
 	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, authModule, bankModule, stakingModule, distrModule)
 
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
 
-	f.app = integrationApp
-
-	sdkCtx := sdk.UnwrapSDKContext(f.app.Context())
-	f.sdkCtx = sdkCtx
-	f.cdc = cdc
-	f.keys = keys
-
-	f.accountKeeper = accountKeeper
-	f.bankKeeper = bankKeeper
-	f.stakingKeeper = stakingKeeper
-	f.distrKeeper = distrKeeper
-
-	f.addr = addr
-	f.valAddr = valAddr
-
-	return f
+	return &fixture{
+		app:           integrationApp,
+		sdkCtx:        sdkCtx,
+		cdc:           cdc,
+		keys:          keys,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
+		distrKeeper:   distrKeeper,
+		stakingKeeper: stakingKeeper,
+		addr:          addr,
+		valAddr:       valAddr,
+	}
 }
 
 func TestMsgWithdrawDelegatorReward(t *testing.T) {

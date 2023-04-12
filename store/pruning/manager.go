@@ -66,7 +66,7 @@ func (m *Manager) GetOptions() types.PruningOptions {
 }
 
 // HandleHeightSnapshot persists the snapshot height to be pruned at the next appropriate
-// height defined by the pruning strategy.
+// height defined by the pruning strategy. Flushes the update to disk and panics if the flush fails.
 // The input height must be greater than 0 and pruning strategy any but pruning nothing.
 // If one of these conditions is not met, this function does nothing.
 func (m *Manager) HandleHeightSnapshot(height int64) {

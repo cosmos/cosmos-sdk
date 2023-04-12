@@ -18,4 +18,12 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: 1.20.3
-      - run: make lint
+      # Per https://go.dev/doc/gc-guide#Memory_limit, setting GOGC=off
+      # in conjunction with GOMEMLIMIT will still run GC when needed to stay within memory limits.
+      #
+      # Linux runners are noted to have 7GB of RAM according to:
+      # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      #
+      # And the GC guide suggests setting GOMEMLIMIT slightly under the available memory
+      # when running on a dedicated system, which is a safe assumption in the CI job case.
+      - run: GOMEMLIMIT=6800MiB GOGC=off make lint

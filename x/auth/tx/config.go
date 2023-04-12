@@ -3,17 +3,17 @@ package tx
 import (
 	"fmt"
 
+	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type config struct {
-	handler     signing.SignModeHandler
+	handler     txsigning.SignModeHandler
 	decoder     sdk.TxDecoder
 	encoder     sdk.TxEncoder
 	jsonDecoder sdk.TxDecoder
@@ -27,25 +27,28 @@ type config struct {
 // NOTE: Use NewTxConfigWithHandler to provide a custom signing handler in case the sign mode
 // is not supported by default (eg: SignMode_SIGN_MODE_EIP_191). Use NewTxConfigWithTextual
 // to enable SIGN_MODE_TEXTUAL (for testing purposes for now).
-func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, customSignModes ...signing.SignModeHandler) client.TxConfig {
+func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
+	customSignModes ...txsigning.SignModeHandler) client.TxConfig {
 	for _, m := range enabledSignModes {
 		if m == signingtypes.SignMode_SIGN_MODE_TEXTUAL {
 			panic("cannot use NewTxConfig with SIGN_MODE_TEXTUAL enabled; please use NewTxConfigWithTextual")
 		}
 	}
 
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, &textual.SignModeHandler{}, customSignModes...))
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, &textual.SignModeHandler{},
+		customSignModes...))
 }
 
 // NewTxConfigWithTextual is like NewTxConfig with the ability to add
 // a SIGN_MODE_TEXTUAL renderer. It is currently still EXPERIMENTAL, for should
 // be used for TESTING purposes only, until Textual is fully released.
-func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, textual *textual.SignModeHandler, customSignModes ...signing.SignModeHandler) client.TxConfig {
+func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
+	textual *textual.SignModeHandler, customSignModes ...txsigning.SignModeHandler) client.TxConfig {
 	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual, customSignModes...))
 }
 
-// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
-func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler signing.SignModeHandler) client.TxConfig {
+// NewTxConfigWithHandler returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
+func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler txsigning.SignModeHandler) client.TxConfig {
 	return &config{
 		handler:     handler,
 		decoder:     DefaultTxDecoder(protoCodec),
@@ -70,7 +73,7 @@ func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	return newBuilder, nil
 }
 
-func (g config) SignModeHandler() signing.SignModeHandler {
+func (g config) SignModeHandler() txsigning.SignModeHandler {
 	return g.handler
 }
 

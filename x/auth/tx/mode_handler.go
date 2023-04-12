@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -24,7 +25,11 @@ var DefaultSignModes = []signingtypes.SignMode{
 
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
 // SIGN_MODE_DIRECT, SIGN_MODE_DIRECT_AUX and SIGN_MODE_LEGACY_AMINO_JSON.
-func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHandler, customSignModes ...signing.SignModeHandler) signing.SignModeHandler {
+func makeSignModeHandler(
+	modes []signingtypes.SignMode,
+	txt *textual.SignModeHandler,
+	customSignModes ...txsigning.SignModeHandler,
+) txsigning.SignModeHandler {
 	if len(modes) < 1 {
 		panic(fmt.Errorf("no sign modes enabled"))
 	}

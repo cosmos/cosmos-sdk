@@ -4,12 +4,14 @@ import (
 	"strconv"
 	"testing"
 
-	"cosmossdk.io/x/upgrade/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/x/upgrade/types"
 )
 
 func TestParsePlan(t *testing.T) {
-	fs := NewCmdSubmitUpgradeProposal().Flags()
+	fs := NewCmdSubmitUpgradeProposal(addresscodec.NewBech32Codec("cosmos")).Flags()
 
 	proposal := types.MsgSoftwareUpgrade{
 		Plan: types.Plan{

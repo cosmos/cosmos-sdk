@@ -546,8 +546,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		// When Textual is wired up, the context argument should be retrieved from the client context.
-		err = tx.Sign(context.TODO(), txFactory, nodeDirName, txBuilder, true)
+		err = tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true)
 		if err != nil {
 			return nil, err
 		}

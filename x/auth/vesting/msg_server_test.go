@@ -11,6 +11,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -41,6 +42,7 @@ type VestingTestSuite struct {
 
 func (s *VestingTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
@@ -51,7 +53,7 @@ func (s *VestingTestSuite) SetupTest() {
 	s.bankKeeper = vestingtestutil.NewMockBankKeeper(ctrl)
 	s.accountKeeper = authkeeper.NewAccountKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		"cosmos",
@@ -70,6 +72,39 @@ func (s *VestingTestSuite) TestCreateVestingAccount() {
 		expErr    bool
 		expErrMsg string
 	}{
+		"empty from address": {
+			input: vestingtypes.NewMsgCreateVestingAccount(
+				[]byte{},
+				to1Addr,
+				sdk.Coins{fooCoin},
+				time.Now().Unix(),
+				true,
+			),
+			expErr:    true,
+			expErrMsg: "invalid 'from' address",
+		},
+		"empty to address": {
+			input: vestingtypes.NewMsgCreateVestingAccount(
+				fromAddr,
+				[]byte{},
+				sdk.Coins{fooCoin},
+				time.Now().Unix(),
+				true,
+			),
+			expErr:    true,
+			expErrMsg: "invalid 'to' address",
+		},
+		"": {
+			input: vestingtypes.NewMsgCreateVestingAccount(
+				fromAddr,
+				to1Addr,
+				sdk.Coins{fooCoin},
+				-10,
+				true,
+			),
+			expErr:    true,
+			expErrMsg: "invalid end time",
+		},
 		"create for existing account": {
 			preRun: func() {
 				toAcc := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
@@ -123,7 +158,9 @@ func (s *VestingTestSuite) TestCreateVestingAccount() {
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-			tc.preRun()
+			if tc.preRun != nil {
+				tc.preRun()
+			}
 			_, err := s.msgServer.CreateVestingAccount(s.ctx, tc.input)
 			if tc.expErr {
 				s.Require().Error(err)
@@ -142,6 +179,24 @@ func (s *VestingTestSuite) TestCreatePermanentLockedAccount() {
 		expErr    bool
 		expErrMsg string
 	}{
+		"empty from address": {
+			input: vestingtypes.NewMsgCreatePermanentLockedAccount(
+				[]byte{},
+				to1Addr,
+				sdk.Coins{fooCoin},
+			),
+			expErr:    true,
+			expErrMsg: "invalid 'from' address",
+		},
+		"empty to address": {
+			input: vestingtypes.NewMsgCreatePermanentLockedAccount(
+				fromAddr,
+				[]byte{},
+				sdk.Coins{fooCoin},
+			),
+			expErr:    true,
+			expErrMsg: "invalid 'to' address",
+		},
 		"create for existing account": {
 			preRun: func() {
 				toAcc := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
@@ -175,7 +230,10 @@ func (s *VestingTestSuite) TestCreatePermanentLockedAccount() {
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-			tc.preRun()
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+
 			_, err := s.msgServer.CreatePermanentLockedAccount(s.ctx, tc.input)
 			if tc.expErr {
 				s.Require().Error(err)
@@ -195,6 +253,70 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 		expErr    bool
 		expErrMsg string
 	}{
+		{
+			name: "empty from address",
+			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
+				[]byte{},
+				to1Addr,
+				time.Now().Unix(),
+				[]vestingtypes.Period{
+					{
+						Length: 10,
+						Amount: sdk.NewCoins(periodCoin),
+					},
+				},
+			),
+			expErr:    true,
+			expErrMsg: "invalid 'from' address",
+		},
+		{
+			name: "empty to address",
+			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
+				fromAddr,
+				[]byte{},
+				time.Now().Unix(),
+				[]vestingtypes.Period{
+					{
+						Length: 10,
+						Amount: sdk.NewCoins(periodCoin),
+					},
+				},
+			),
+			expErr:    true,
+			expErrMsg: "invalid 'to' address",
+		},
+		{
+			name: "invalid start time",
+			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
+				fromAddr,
+				to1Addr,
+				0,
+				[]vestingtypes.Period{
+					{
+						Length: 10,
+						Amount: sdk.NewCoins(periodCoin),
+					},
+				},
+			),
+			expErr:    true,
+			expErrMsg: "invalid start time",
+		},
+		{
+			name: "invalid period",
+			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
+				fromAddr,
+				to1Addr,
+				time.Now().Unix(),
+				[]vestingtypes.Period{
+					{
+						Length: 0,
+						Amount: sdk.NewCoins(periodCoin),
+					},
+				},
+			),
+			expErr:    true,
+			expErrMsg: "invalid period",
+		},
 		{
 			name: "create for existing account",
 			preRun: func() {
@@ -243,7 +365,9 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			tc.preRun()
+			if tc.preRun != nil {
+				tc.preRun()
+			}
 			_, err := s.msgServer.CreatePeriodicVestingAccount(s.ctx, tc.input)
 			if tc.expErr {
 				s.Require().Error(err)

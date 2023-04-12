@@ -60,7 +60,7 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 
 func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Server {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
-	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
+	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshaling issue.
 	marshalerOption := &gateway.JSONPb{
 		EmitDefaults: true,
 		Indent:       "  ",
@@ -77,7 +77,7 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
 
 			// This is necessary to get error details properly
-			// marshalled in unary requests.
+			// marshaled in unary requests.
 			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
 
 			// Custom header matcher for mapping request headers to
@@ -159,7 +159,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	// the server failed to start properly.
 	select {
 	case <-ctx.Done():
-		// The calling process cancelled or closed the provided context, so we must
+		// The calling process canceled or closed the provided context, so we must
 		// gracefully stop the API server.
 		s.logger.Info("stopping API server...", "address", cfg.API.Address)
 		return s.Close()

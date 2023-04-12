@@ -401,17 +401,18 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.ValidatorDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			switch {
+			case tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
 				assert.Assert(t, len(res.DelegationResponses) == 1)
 				assert.Assert(t, res.Pagination.NextKey != nil)
 				assert.Equal(t, uint64(2), res.Pagination.Total)
 				assert.Equal(t, addrVal1, res.DelegationResponses[0].Delegation.ValidatorAddress)
 				assert.DeepEqual(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
-			} else if !tc.expPass && !tc.expErr {
+			case !tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
 				assert.Assert(t, res.DelegationResponses == nil)
-			} else {
+			default:
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)
 			}
@@ -549,16 +550,17 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			switch {
+			case tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
 				assert.Assert(t, res.Pagination.NextKey != nil)
 				assert.Equal(t, uint64(2), res.Pagination.Total)
 				assert.Assert(t, len(res.UnbondingResponses) == 1)
 				assert.DeepEqual(t, unbond, res.UnbondingResponses[0])
-			} else if !tc.expPass && !tc.expErr {
+			case !tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
 				assert.Assert(t, res.UnbondingResponses == nil)
-			} else {
+			default:
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)
 			}
@@ -747,17 +749,18 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.Redelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			switch {
+			case tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
 				assert.Assert(t, len(res.RedelegationResponses) == len(redel.Entries))
 				assert.Equal(t, redel.DelegatorAddress, res.RedelegationResponses[0].Redelegation.DelegatorAddress)
 				assert.Equal(t, redel.ValidatorSrcAddress, res.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
 				assert.Equal(t, redel.ValidatorDstAddress, res.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
 				assert.Assert(t, len(redel.Entries) == len(res.RedelegationResponses[0].Entries))
-			} else if !tc.expPass && !tc.expErr {
+			case !tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
 				assert.Assert(t, res.RedelegationResponses == nil)
-			} else {
+			default:
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)
 			}

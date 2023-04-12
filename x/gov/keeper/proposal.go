@@ -42,8 +42,10 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		msgsStr += fmt.Sprintf(",%s", sdk.MsgTypeURL(msg))
 
 		// perform a basic validation of the message
-		if err := msg.ValidateBasic(); err != nil {
-			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, err.Error())
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := m.ValidateBasic(); err != nil {
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, err.Error())
+			}
 		}
 
 		signers := msg.GetSigners()

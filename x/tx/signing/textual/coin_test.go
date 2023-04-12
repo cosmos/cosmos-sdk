@@ -52,18 +52,18 @@ func addMetadataToContext(ctx context.Context, metadata *bankv1beta1.Metadata) c
 
 func TestMetadataQuerier(t *testing.T) {
 	// Errors on nil metadata querier
-	txt := textual.NewSignModeHandler(nil)
-	vr, err := txt.GetFieldValueRenderer(fieldDescriptorFromName("COIN"))
-	require.NoError(t, err)
-	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
+	_, err := textual.NewSignModeHandler(textual.SignModeOptions{})
 	require.Error(t, err)
 
 	// Errors if metadata querier returns an error
 	expErr := fmt.Errorf("mock error")
-	txt = textual.NewSignModeHandler(func(_ context.Context, _ string) (*bankv1beta1.Metadata, error) {
-		return nil, expErr
+	txt, err := textual.NewSignModeHandler(textual.SignModeOptions{
+		CoinMetadataQuerier: func(_ context.Context, _ string) (*bankv1beta1.Metadata, error) {
+			return nil, expErr
+		},
 	})
-	vr, err = txt.GetFieldValueRenderer(fieldDescriptorFromName("COIN"))
+	require.NoError(t, err)
+	vr, err := txt.GetFieldValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
 	require.ErrorIs(t, err, expErr)
@@ -71,14 +71,15 @@ func TestMetadataQuerier(t *testing.T) {
 	require.ErrorIs(t, err, expErr)
 }
 
-func TestCoinJsonTestcases(t *testing.T) {
-	var testcases []coinJsonTest
+func TestCoinJSONTestcases(t *testing.T) {
+	var testcases []coinJSONTest
 	raw, err := os.ReadFile("./internal/testdata/coin.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := textual.NewSignModeHandler(mockCoinMetadataQuerier)
+	textual, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: mockCoinMetadataQuerier})
+	require.NoError(t, err)
 	vr, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 
@@ -120,7 +121,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 // an error, otherwise match Text, then Parse() the text and expect it to
 // match (via proto.Equals()) the original Proto. If the test case has no
 // Proto, try to Parse() the Text and expect an error if Error is set.
-type coinJsonTest struct {
+type coinJSONTest struct {
 	Proto    *basev1beta1.Coin
 	Metadata *bankv1beta1.Metadata
 	Error    bool

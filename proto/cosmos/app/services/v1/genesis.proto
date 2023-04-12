@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+// GenesisService is a service that modules implement to support genesis.
+service Genesis {
+  // DescribeGenesis describes the fields that a module uses in its genesis state.
+  // This method is defined instead of a DefaultGenesis method because it is
+  // assumed that all genesis is represented as a set of fields where each field
+  // is an array of elements.
+  rpc DescribeGenesis(DescribeGenesisRequest) returns (DescribeGenesisResponse) {}
+
+  // ValidateGenesis validates the genesis state of the module.
+  rpc ValidateGenesis(stream ValidateGenesisRequest) returns (ValidateGenesisResponse) {}
+
+  // InitGenesis initializes a module with the provided genesis state.
+  rpc InitGenesis(stream InitGenesisRequest) returns (InitGenesisResponse) {}
+
+  // ExportGenesis exports the state of the module.
+  rpc ExportGenesis(ExportGenesisRequest) returns (stream ExportGenesisResponse) {}
+}
+
+// DescribeGenesisRequest is the Genesis/DescribeGenesis request type.
+message DescribeGenesisRequest {}
+
+// DescribeGenesisResponse is the Genesis/DescribeGenesis response type.
+message DescribeGenesisResponse {
+  // fields is the list of fields that the module uses in its genesis state.
+  repeated GenesisField fields = 1;
+}
+
+// InitGenesisRequest is the Genesis/InitGenesis request type.
+message InitGenesisRequest {
+  // chunk is a chunk of genesis data the module should initialize with.
+  GenesisChunk chunk = 1;
+}
+
+// InitGenesisResponse is the Genesis/InitGenesis response type.
+message InitGenesisResponse {}
+
+// ExportGenesisRequest is the Genesis/ExportGenesis request type.
+message ExportGenesisRequest {}
+
+// ExportGenesisResponse is the Genesis/ExportGenesis response type.
+message ExportGenesisResponse {
+  // chunk is a chunk of genesis data the module is exporting.
+  GenesisChunk chunk = 1;
+}
+
+// ValidateGenesisRequest is the Genesis/ValidateGenesis request type.
+message ValidateGenesisRequest {
+  // chunk is a chunk of genesis data the module should validate.
+  GenesisChunk chunk = 1;
+}
+
+// ValidateGenesisResponse is the Genesis/ValidateGenesis response type.
+message ValidateGenesisResponse {}
+
+// GenesisChunk represents either the start of a field in genesis data or an element in a field.
+// Streams should always start with a start_field chunk, then send all of the elements for that
+// chunk, then send the next start_field chunk, and so on.
+message GenesisChunk {
+  // sum is a oneof that represents the type of the chunk.
+  oneof sum {
+    // start_field indicates that the next chunk will be the first element in the field
+    // described by start_field.
+    GenesisField start_field = 1;
+
+    // element is the next element in the field encoded using the RPC encoding that this module understands.
+    // That may be zerocopy protobuf, protobuf binary, or JSON.
+    bytes element = 2;
+
+    // kv_pair is the next element in the field encoded as a key value pair.
+    KVPair kv_pair = 3;
+  }
+}
+
+// GenesisField describes a field in a genesis state.
+message GenesisField {
+  // name is the name of the field.
+  string name = 1;
+
+  // element_type is the type of the elements in the field.
+  GenesisElementType element_type = 2;
+}
+
+// KVPair is a key value pair in a genesis chunk.
+message KVPair {
+  // key is the key of the key value pair encoded in the RPC encoding that this module understands.
+  bytes key = 1;
+
+  // value is the value of the key value pair encoded in the RPC encoding that this module understands.
+  bytes value = 2;
+}
+
+// GenesisElementType is a type that represents the type of an element in a genesis stream.
+message GenesisElementType {
+  // sum is a oneof that represents the type of the element in the stream.
+  oneof sum {
+    // type can be any type that can be used as a protobuf field type except map types
+    // including scalar, message, enum, and repeated types.
+    string type = 1;
+
+    //pair_type indicates that each entry in the stream will be a key value pair with
+    // the key and value types specified in pair_type.
+    PairType pair_type = 2;
+  }
+}
+
+// PairType is a type that represents the type of a key value pair.
+message PairType {
+  // key_type is the type of the key in the key value pair. Any valid value for GenesisElementType.type
+  // is a valid value for key_type.
+  string key_type = 1;
+
+  // value_type is the type of the value in the key value pair. Any valid value for GenesisElementType.type
+  // is a valid value for value_type.
+  string value_type = 2;
+}

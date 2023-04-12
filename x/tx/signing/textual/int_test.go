@@ -15,7 +15,7 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-func TestIntJsonTestcases(t *testing.T) {
+func TestIntJSONTestcases(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
 	raw, err := os.ReadFile("./internal/testdata/integers.json")
@@ -23,7 +23,8 @@ func TestIntJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := textual.NewSignModeHandler(nil)
+	textual, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: EmptyCoinMetadataQuerier})
+	require.NoError(t, err)
 
 	for _, tc := range testcases {
 		t.Run(tc[0], func(t *testing.T) {

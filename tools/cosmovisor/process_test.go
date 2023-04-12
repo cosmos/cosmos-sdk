@@ -4,8 +4,10 @@
 package cosmovisor_test
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -35,7 +37,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
-	stdout, stderr := NewBuffer(), NewBuffer()
+	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
@@ -79,7 +81,7 @@ func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
-	stdout, stderr := NewBuffer(), NewBuffer()
+	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
@@ -112,7 +114,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
-	logger := log.NewLoggerWithKV(os.Stdout, log.ModuleKey, "cosmovisor")
+	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
@@ -123,7 +125,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(err)
 
-	stdout, stderr := NewBuffer(), NewBuffer()
+	stdout, stderr := newBuffer(), newBuffer()
 	args := []string{"some", "args", upgradeFilename}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
 
@@ -239,4 +241,32 @@ func TestUpgradeSkipHeights(t *testing.T) {
 		h := cosmovisor.UpgradeSkipHeights(tc.args)
 		require.Equal(h, tc.expectRes)
 	}
+}
+
+// buffer is a thread safe bytes buffer
+type buffer struct {
+	b bytes.Buffer
+	m sync.Mutex
+}
+
+func newBuffer() *buffer {
+	return &buffer{}
+}
+
+func (b *buffer) Write(bz []byte) (int, error) {
+	b.m.Lock()
+	defer b.m.Unlock()
+	return b.b.Write(bz)
+}
+
+func (b *buffer) String() string {
+	b.m.Lock()
+	defer b.m.Unlock()
+	return b.b.String()
+}
+
+func (b *buffer) Reset() {
+	b.m.Lock()
+	defer b.m.Unlock()
+	b.b.Reset()
 }

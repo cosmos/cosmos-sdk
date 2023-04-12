@@ -22,14 +22,15 @@ type enumTest struct {
 	Text  string
 }
 
-func TestEnumJsonTestcases(t *testing.T) {
+func TestEnumJSONTestcases(t *testing.T) {
 	var testcases []enumTest
 	raw, err := os.ReadFile("./internal/testdata/enum.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := textual.NewSignModeHandler(nil)
+	textual, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: EmptyCoinMetadataQuerier})
+	require.NoError(t, err)
 
 	for _, tc := range testcases {
 		t.Run(tc.Text, func(t *testing.T) {
@@ -60,11 +61,16 @@ func TestEnumJsonTestcases(t *testing.T) {
 // treats empty and default values as the same, we actually parse the protojson
 // encoded string to retrieve which field is set.
 func getFd(proto json.RawMessage, m *testpb.Baz) protoreflect.FieldDescriptor {
-	if strings.Contains(string(proto), `"ee"`) {
-		return m.ProtoReflect().Descriptor().Fields().ByNumber(1)
-	} else if strings.Contains(string(proto), `"ie"`) {
-		return m.ProtoReflect().Descriptor().Fields().ByNumber(2)
-	} else {
-		return m.ProtoReflect().Descriptor().Fields().ByNumber(3)
+	var fnum protoreflect.FieldNumber
+
+	switch {
+	case strings.Contains(string(proto), `"ee"`):
+		fnum = 1
+	case strings.Contains(string(proto), `"ie"`):
+		fnum = 2
+	default:
+		fnum = 3
 	}
+
+	return m.ProtoReflect().Descriptor().Fields().ByNumber(fnum)
 }

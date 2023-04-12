@@ -35,6 +35,7 @@ type (
 		AvailableVersions() []int
 		LoadVersionForOverwriting(targetVersion int64) (int64, error)
 		LazyLoadVersionForOverwriting(targetVersion int64) (int64, error)
+		TraverseStateChanges(startVersion, endVersion int64, fn func(version int64, changeSet *iavl.ChangeSet) error) error
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree

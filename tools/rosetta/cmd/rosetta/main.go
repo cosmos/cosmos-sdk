@@ -11,7 +11,7 @@ import (
 
 func main() {
 	var (
-		logger            = log.NewLoggerWithKV(os.Stdout, log.ModuleKey, "rosetta")
+		logger            = log.NewLogger(os.Stdout).With(log.ModuleKey, "rosetta")
 		interfaceRegistry = codectypes.NewInterfaceRegistry()
 		cdc               = codec.NewProtoCodec(interfaceRegistry)
 	)

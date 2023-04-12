@@ -44,7 +44,7 @@ func (gs *Store) Get(key []byte) (value []byte) {
 }
 
 // Implements KVStore.
-func (gs *Store) Set(key []byte, value []byte) {
+func (gs *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
@@ -121,7 +121,7 @@ func newGasIterator(gasMeter types.GasMeter, gasConfig types.GasConfig, parent t
 }
 
 // Implements Iterator.
-func (gi *gasIterator) Domain() (start []byte, end []byte) {
+func (gi *gasIterator) Domain() (start, end []byte) {
 	return gi.parent.Domain()
 }
 

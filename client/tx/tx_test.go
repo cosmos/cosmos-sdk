@@ -1,18 +1,16 @@
 package tx_test
 
 import (
-	gocontext "context"
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
-	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,6 +19,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -30,13 +29,8 @@ import (
 )
 
 func newTestTxConfig(t *testing.T) (client.TxConfig, codec.Codec) {
-	var (
-		pcdc codec.ProtoCodecMarshaler
-		cdc  codec.Codec
-	)
-	err := depinject.Inject(clienttestutil.TestConfig, &pcdc, &cdc)
-	require.NoError(t, err)
-	return authtx.NewTxConfig(pcdc, authtx.DefaultSignModes), cdc
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	return authtx.NewTxConfig(codec.NewProtoCodec(encodingConfig.InterfaceRegistry), authtx.DefaultSignModes), encodingConfig.Codec
 }
 
 // mockContext is a mock client.Context to return abitrary simulation response, used to
@@ -46,7 +40,7 @@ type mockContext struct {
 	wantErr bool
 }
 
-func (m mockContext) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
+func (m mockContext) Invoke(grpcCtx context.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
 	if m.wantErr {
 		return fmt.Errorf("mock err")
 	}
@@ -59,7 +53,7 @@ func (m mockContext) Invoke(grpcCtx gocontext.Context, method string, req, reply
 	return nil
 }
 
-func (mockContext) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
+func (mockContext) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	panic("not implemented")
 }
 
@@ -353,7 +347,7 @@ func TestSign(t *testing.T) {
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = tx.Sign(nil, tc.txf, tc.from, tc.txb, tc.overwrite) //nolint:staticcheck
+			err = tx.Sign(context.TODO(), tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
@@ -424,7 +418,7 @@ func TestPreprocessHook(t *testing.T) {
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 
-	err = tx.Sign(nil, txfDirect, from, txb, false) //nolint:staticcheck
+	err = tx.Sign(context.TODO(), txfDirect, from, txb, false)
 	requireT.NoError(err)
 
 	// Run preprocessing

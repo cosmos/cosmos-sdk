@@ -48,7 +48,7 @@ const (
 var _ abci.Application = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
-type BaseApp struct { //nolint: maligned
+type BaseApp struct {
 	// initialized on creation
 	logger            log.Logger
 	name              string                      // application name from abci.Info
@@ -356,10 +356,6 @@ func (app *BaseApp) Init() error {
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(runTxModeCheck, emptyHeader)
-
-	// needed for ABCI Replay Blocks mode which calls Prepare/Process proposal (InitChain is not called)
-	app.setState(runTxPrepareProposal, emptyHeader)
-	app.setState(runTxProcessProposal, emptyHeader)
 	app.Seal()
 
 	if app.cms == nil {
@@ -438,30 +434,26 @@ func (app *BaseApp) setState(mode runTxMode, header cmtproto.Header) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *cmtproto.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams {
 	if app.paramStore == nil {
-		return nil
+		return cmtproto.ConsensusParams{}
 	}
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("consensus key is nil: %w", err))
 	}
 
 	return cp
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *cmtproto.ConsensusParams) {
+func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
 
-	if cp == nil {
-		return
-	}
-
-	app.paramStore.Set(ctx, cp)
+	return app.paramStore.Set(ctx, cp)
 	// We're explicitly not storing the CometBFT app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
 }
@@ -478,7 +470,7 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 // one.
 func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	cp := app.GetConsensusParams(ctx)
-	if cp == nil || cp.Block == nil {
+	if cp.Block == nil {
 		return 0
 	}
 
@@ -501,19 +493,21 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 		return fmt.Errorf("invalid height: %d", req.Header.Height)
 	}
 
-	// expectedHeight holds the expected height to validate.
+	lastBlockHeight := app.LastBlockHeight()
+
+	// expectedHeight holds the expected height to validate
 	var expectedHeight int64
-	if app.LastBlockHeight() == 0 && app.initialHeight > 1 {
-		// In this case, we're validating the first block of the chain (no
-		// previous commit). The height we're expecting is the initial height.
+	if lastBlockHeight == 0 && app.initialHeight > 1 {
+		// In this case, we're validating the first block of the chain, i.e no
+		// previous commit. The height we're expecting is the initial height.
 		expectedHeight = app.initialHeight
 	} else {
 		// This case can mean two things:
-		// - either there was already a previous commit in the store, in which
-		// case we increment the version from there,
-		// - or there was no previous commit, and initial version was not set,
-		// in which case we start at version 1.
-		expectedHeight = app.LastBlockHeight() + 1
+		//
+		// - Either there was already a previous commit in the store, in which
+		// case we increment the version from there.
+		// - Or there was no previous commit, in which case we start at version 1.
+		expectedHeight = lastBlockHeight + 1
 	}
 
 	if req.Header.Height != expectedHeight {
@@ -530,8 +524,12 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	}
 
 	for _, msg := range msgs {
-		err := msg.ValidateBasic()
-		if err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return err
 		}
 	}
@@ -869,7 +867,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 		return nil, err
 	}
 
-	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz) //nolint:dogsled
+	_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
 	if err != nil {
 		return nil, err
 	}
@@ -888,7 +886,7 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 
-	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz) //nolint:dogsled
+	_, _, _, _, err = app.runTx(runTxProcessProposal, txBz)
 	if err != nil {
 		return nil, err
 	}

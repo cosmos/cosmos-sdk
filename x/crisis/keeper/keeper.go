@@ -32,7 +32,7 @@ type Keeper struct {
 // NewKeeper creates a new Keeper object
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, invCheckPeriod uint,
-	supplyKeeper types.SupplyKeeper, feeCollectorName string, authority string,
+	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string,
 ) *Keeper {
 	return &Keeper{
 		storeKey:         storeKey,

@@ -253,7 +253,7 @@ func mockStoreWithStuff() types.KVStore {
 	return store
 }
 
-func checkValue(t *testing.T, store types.KVStore, key []byte, expected []byte) {
+func checkValue(t *testing.T, store types.KVStore, key, expected []byte) {
 	bz := store.Get(key)
 	require.Equal(t, expected, bz)
 }

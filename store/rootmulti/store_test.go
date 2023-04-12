@@ -96,6 +96,17 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	require.NotNil(t, kvStore)
 	require.Equal(t, kvStore.Get(k), v)
 
+	// add new module stores (store4 and store5) to multi stores and commit
+	ms.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(types.NewKVStoreKey("store5"), types.StoreTypeIAVL, nil)
+	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
+	require.NoError(t, err)
+	ms.Commit()
+
+	// cache multistore of version before adding store4 should works
+	_, err = ms.CacheMultiStoreWithVersion(1)
+	require.NoError(t, err)
+
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
 		kvStore.Set(k, []byte("newValue"))
@@ -204,7 +215,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	expectedCommitID := getExpectedCommitID(store, 1)
 	checkStore(t, store, expectedCommitID, commitID)
 
-	ci, err := getCommitInfo(db, 1)
+	ci, err := store.GetCommitInfo(1)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), ci.Version)
 	require.Equal(t, 3, len(ci.StoreInfos))
@@ -294,7 +305,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, v4, rl4.Get(k4))
 
 	// check commitInfo in storage
-	ci, err = getCommitInfo(db, 2)
+	ci, err = reload.GetCommitInfo(2)
 	require.NoError(t, err)
 	require.Equal(t, int64(2), ci.Version)
 	require.Equal(t, 3, len(ci.StoreInfos), ci.StoreInfos)
@@ -349,7 +360,7 @@ func TestMultiStoreRestart(t *testing.T) {
 
 		multi.Commit()
 
-		cinfo, err := getCommitInfo(multi.db, int64(i))
+		cinfo, err := multi.GetCommitInfo(int64(i))
 		require.NoError(t, err)
 		require.Equal(t, int64(i), cinfo.Version)
 	}
@@ -364,7 +375,7 @@ func TestMultiStoreRestart(t *testing.T) {
 
 	multi.Commit()
 
-	flushedCinfo, err := getCommitInfo(multi.db, 3)
+	flushedCinfo, err := multi.GetCommitInfo(3)
 	require.Nil(t, err)
 	require.NotEqual(t, initCid, flushedCinfo, "CID is different after flush to disk")
 
@@ -374,7 +385,7 @@ func TestMultiStoreRestart(t *testing.T) {
 
 	multi.Commit()
 
-	postFlushCinfo, err := getCommitInfo(multi.db, 4)
+	postFlushCinfo, err := multi.GetCommitInfo(4)
 	require.NoError(t, err)
 	require.Equal(t, int64(4), postFlushCinfo.Version, "Commit changed after in-memory commit")
 
@@ -757,7 +768,7 @@ func TestCommitOrdered(t *testing.T) {
 	typeID := multi.Commit()
 	require.Equal(t, int64(1), typeID.Version)
 
-	ci, err := getCommitInfo(db, 1)
+	ci, err := multi.GetCommitInfo(1)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), ci.Version)
 	require.Equal(t, 3, len(ci.StoreInfos))
@@ -860,7 +871,7 @@ type MockListener struct {
 	stateCache []types.StoreKVPair
 }
 
-func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error {
+func (tl *MockListener) OnWrite(storeKey types.StoreKey, key, value []byte, delete bool) error {
 	tl.stateCache = append(tl.stateCache, types.StoreKVPair{
 		StoreKey: storeKey.Name(),
 		Key:      key,

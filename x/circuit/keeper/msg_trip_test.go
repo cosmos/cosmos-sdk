@@ -20,7 +20,7 @@ func (s *tripSuite) Before(t *testing.T) {
 	s.baseFixture = initFixture(t)
 }
 
-func (s *tripSuite) HasPermission(a string, b string) {
+func (s *tripSuite) HasPermission(a, b string) {
 	panic("PENDING")
 }
 
@@ -28,7 +28,7 @@ func (s *tripSuite) HasNoPermissions(a string) {
 	panic("PENDING")
 }
 
-func (s *tripSuite) AttemptsToTripCircuit(a string, b string, c gocuke.DocString) {
+func (s *tripSuite) AttemptsToTripCircuit(a, b string, c gocuke.DocString) {
 	panic("PENDING")
 }
 

@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+// Store defines a service for interacting with key-value stores.
+service Store {
+  // Has queries if a key exists in the store.
+  rpc Has(HasRequest) returns (HasResponse);
+
+  // Get queries the value of a key in the store.
+  rpc Get(GetRequest) returns (GetResponse);
+
+  // Set sets a key-value pair in the store.
+  rpc Set(SetRequest) returns (SetResponse);
+
+  // Delete deletes a key-value pair in the store.
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  // Iterator queries the store for all keys between a certain start and end range.
+  rpc Iterator(IteratorRequest) returns (stream IteratorResponse);
+}
+
+// HasRequest is the Store/Has request type.
+message HasRequest {
+  // key is the key to query.
+  bytes key = 1;
+}
+
+// HasResponse is the Store/Has response type.
+// A NotFound error is returned if the key does not exist.
+message HasResponse {}
+
+// GetRequest is the Store/Get request type.
+message GetRequest {
+  // key is the key to query.
+  bytes key = 1;
+}
+
+// GetResponse is the Store/Get response type.
+// A NotFound error is returned if the key does not exist.
+message GetResponse {
+  // value is the value of the key.
+  bytes value = 1;
+}
+
+// SetRequest is the Store/Set request type.
+message SetRequest {
+  // key is the key to set.
+  bytes key = 1;
+  // value is the value to set.
+  bytes value = 2;
+}
+
+// SetResponse is the Store/Set response type.
+message SetResponse {}
+
+// DeleteRequest is the Store/Delete request type.
+message DeleteRequest {
+  // key is the key to delete.
+  bytes key = 1;
+}
+
+// DeleteResponse is the Store/Delete response type.
+message DeleteResponse {}
+
+// IteratorRequest is the Store/Iterator request type.
+message IteratorRequest {
+  // start is the start key. If it is left empty, iteration starts from the first key.
+  bytes start = 1;
+
+  // end is the end key. If it is left empty, iteration ends at the last key.
+  bytes end = 2;
+
+  // reverse defines if iteration should be done in reverse order.
+  bool reverse = 3;
+}
+
+// IteratorResponse is the Store/Iterator response type.
+message IteratorResponse {
+  // key is the key of the key-value pair.
+  bytes key = 1;
+  // value is the value of the key-value pair.
+  bytes value = 2;
+}

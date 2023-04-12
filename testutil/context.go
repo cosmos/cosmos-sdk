@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"testing"
+	"time"
 
 	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -16,7 +17,7 @@ import (
 )
 
 // DefaultContext creates a sdk.Context with a fresh MemDB that can be used in tests.
-func DefaultContext(key storetypes.StoreKey, tkey storetypes.StoreKey) sdk.Context {
+func DefaultContext(key, tkey storetypes.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
@@ -36,7 +37,7 @@ type TestContext struct {
 	CMS store.CommitMultiStore
 }
 
-func DefaultContextWithDB(t *testing.T, key storetypes.StoreKey, tkey storetypes.StoreKey) TestContext {
+func DefaultContextWithDB(t testing.TB, key, tkey storetypes.StoreKey) TestContext {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
@@ -44,7 +45,7 @@ func DefaultContextWithDB(t *testing.T, key storetypes.StoreKey, tkey storetypes
 	err := cms.LoadLatestVersion()
 	assert.NoError(t, err)
 
-	ctx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 
 	return TestContext{ctx, db, cms}
 }

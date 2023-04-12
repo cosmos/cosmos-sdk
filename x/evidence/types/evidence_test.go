@@ -82,7 +82,7 @@ func TestEvidenceAddressConversion(t *testing.T) {
 		Time:             time.Now(),
 		TotalVotingPower: 100,
 	}
-	evidence := types.FromABCIEvidence(tmEvidence).(*types.Equivocation)
+	evidence := types.FromABCIEvidence(tmEvidence)
 	consAddr := evidence.GetConsensusAddress()
 	// Check the address is the same after conversion
 	require.Equal(t, tmEvidence.Validator.Address, consAddr.Bytes())

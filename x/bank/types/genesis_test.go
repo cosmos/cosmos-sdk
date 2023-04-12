@@ -170,9 +170,9 @@ func TestMigrateSendEnabled(t *testing.T) {
 				Params: Params{},
 				Balances: []Balance{{
 					Address: "balance1",
-					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", sdk.NewInt(8))},
+					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", math.NewInt(8))},
 				}},
-				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdk.NewInt(800))},
+				Supply: sdk.Coins{sdk.NewCoin("supplycoin", math.NewInt(800))},
 				DenomMetadata: []Metadata{{
 					Description: "metadesk",
 					DenomUnits:  nil,
@@ -188,9 +188,9 @@ func TestMigrateSendEnabled(t *testing.T) {
 				Params: Params{},
 				Balances: []Balance{{
 					Address: "balance1",
-					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", sdk.NewInt(8))},
+					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", math.NewInt(8))},
 				}},
-				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdk.NewInt(800))},
+				Supply: sdk.Coins{sdk.NewCoin("supplycoin", math.NewInt(800))},
 				DenomMetadata: []Metadata{{
 					Description: "metadesk",
 					DenomUnits:  nil,

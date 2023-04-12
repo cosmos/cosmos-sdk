@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -207,7 +208,7 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		{
 			true,
 			MsgMultiSend{
-				Inputs:  []Input{NewInput(addr2, atom123.MulInt(sdk.NewInt(2)))},
+				Inputs:  []Input{NewInput(addr2, atom123.MulInt(sdkmath.NewInt(2)))},
 				Outputs: []Output{output1, output1},
 			},
 			"",
@@ -241,19 +242,13 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 }
 
 func TestMsgMultiSendGetSigners(t *testing.T) {
-	addrs := make([]string, 3)
-	inputs := make([]Input, 3)
-	for i, v := range []string{"input111111111111111", "input222222222222222", "input333333333333333"} {
-		addr := sdk.AccAddress([]byte(v))
-		inputs[i] = NewInput(addr, nil)
-		addrs[i] = addr.String()
-	}
-	msg := NewMsgMultiSend(inputs, nil)
+	addr := sdk.AccAddress([]byte("input111111111111111"))
+	input := NewInput(addr, nil)
+	msg := NewMsgMultiSend(input, nil)
 
 	res := msg.GetSigners()
-	for i, signer := range res {
-		require.Equal(t, signer.String(), addrs[i])
-	}
+	require.Equal(t, 1, len(res))
+	require.True(t, addr.Equals(res[0]))
 }
 
 func TestNewMsgSetSendEnabled(t *testing.T) {

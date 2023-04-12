@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+// BeginBlock is a service that a module defines to execute logic at the beginning of a block.
+service BeginBlock {
+  // BeginBlock is called at the beginning of a block.
+  rpc BeginBlock (BeginBlockRequest) returns (BeginBlockResponse);
+}
+
+// BeginBlockRequest is the BeginBlock/BeginBlock request type.
+message BeginBlockRequest {}
+
+// BeginBlockResponse is the BeginBlock/BeginBlock response type.
+message BeginBlockResponse {}
+
+// EndBlock is a service that a module defines to execute logic at the end of a block.
+service EndBlock {
+  // EndBlock is called at the end of a block.
+  rpc EndBlock (EndBlockRequest) returns (EndBlockResponse);
+}
+
+// EndBlockRequest is the EndBlock/EndBlock request type.
+message EndBlockRequest {}
+
+// EndBlockResponse is the EndBlock/EndBlock response type.
+message EndBlockResponse {}

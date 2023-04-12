@@ -64,7 +64,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 	}
 
 	for _, delegation := range data.Delegations {
-		delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.StringToBytes(delegation.DelegatorAddress)
+		if err != nil {
+			panic(fmt.Errorf("invalid delegator address: %s", err))
+		}
 
 		// Call the before-creation hook if not exported
 		if !data.Exported {

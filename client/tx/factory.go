@@ -168,7 +168,7 @@ func (f Factory) WithFees(fees string) Factory {
 }
 
 // WithTips returns a copy of the Factory with an updated tip.
-func (f Factory) WithTips(tip string, tipper string) Factory {
+func (f Factory) WithTips(tip, tipper string) Factory {
 	parsedTips, err := sdk.ParseCoinsNormalized(tip)
 	if err != nil {
 		panic(err)

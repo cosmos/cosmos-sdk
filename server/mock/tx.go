@@ -37,7 +37,7 @@ func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
 func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+func (t testPubKey) VerifySignature(msg, sig []byte) bool { panic("not implemented") }
 
 func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
 
@@ -53,7 +53,7 @@ func (msg *KVStoreTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error)
 	return res, nil
 }
 
-func (msg *KVStoreTx) VerifySignature(msgByte []byte, sig []byte) bool {
+func (msg *KVStoreTx) VerifySignature(msgByte, sig []byte) bool {
 	panic("implement me")
 }
 
@@ -121,13 +121,14 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
-	if len(split) == 1 { //nolint:gocritic
+	switch len(split) {
+	case 1:
 		k := split[0]
 		tx = &KVStoreTx{k, k, txBytes, nil}
-	} else if len(split) == 2 {
+	case 2:
 		k, v := split[0], split[1]
 		tx = &KVStoreTx{k, v, txBytes, nil}
-	} else {
+	default:
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}
 

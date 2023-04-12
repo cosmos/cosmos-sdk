@@ -23,8 +23,6 @@ var (
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-//
-//nolint:interfacer
 func NewMsgSubmitProposal(
 	messages []sdk.Msg,
 	initialDeposit sdk.Coins,
@@ -100,7 +98,12 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	}
 
 	for idx, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return errorsmod.Wrap(types.ErrInvalidProposalMsg,
 				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
 		}
@@ -111,7 +114,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&m)
+	bz := codec.Amino.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -127,8 +130,6 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
-//
-//nolint:interfacer
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
@@ -151,7 +152,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -162,8 +163,6 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
-//
-//nolint:interfacer
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, metadata string) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option, metadata}
 }
@@ -182,7 +181,7 @@ func (msg MsgVote) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -193,8 +192,6 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
-//
-//nolint:interfacer
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
 }
@@ -238,7 +235,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -248,9 +245,7 @@ func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{voter}
 }
 
-// NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance
-//
-//nolint:interfacer
+// NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance.
 func NewMsgExecLegacyContent(content *codectypes.Any, authority string) *MsgExecLegacyContent {
 	return &MsgExecLegacyContent{
 		Content:   content,
@@ -260,7 +255,7 @@ func NewMsgExecLegacyContent(content *codectypes.Any, authority string) *MsgExec
 
 // GetSignBytes returns the message bytes to sign over.
 func (c MsgExecLegacyContent) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&c)
+	bz := codec.Amino.MustMarshalJSON(&c)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -297,7 +292,7 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -307,9 +302,7 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{authority}
 }
 
-// NewMsgCancelProposal creates a new MsgCancelProposal instance
-//
-//nolint:interfacer
+// NewMsgCancelProposal creates a new MsgCancelProposal instance.
 func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal {
 	return &MsgCancelProposal{
 		ProposalId: proposalID,
@@ -328,7 +321,7 @@ func (msg MsgCancelProposal) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgCancelProposal) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

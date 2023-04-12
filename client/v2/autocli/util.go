@@ -1,8 +1,9 @@
 package autocli
 
 import (
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"strings"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/client/v2/internal/strcase"
 	"github.com/spf13/cobra"

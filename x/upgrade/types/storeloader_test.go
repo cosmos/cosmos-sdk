@@ -74,7 +74,7 @@ func TestSetLoader(t *testing.T) {
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
 
-	err = os.WriteFile(upgradeInfoFilePath, data, 0o644) //nolint:gosec
+	err = os.WriteFile(upgradeInfoFilePath, data, 0o600)
 	require.NoError(t, err)
 
 	// make sure it exists before running everything

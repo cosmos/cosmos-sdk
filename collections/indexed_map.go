@@ -2,8 +2,6 @@ package collections
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"cosmossdk.io/collections/codec"
 )
@@ -21,12 +19,12 @@ type Indexes[PrimaryKey, Value any] interface {
 // Index represents an index of the Value indexed using the type PrimaryKey.
 type Index[PrimaryKey, Value any] interface {
 	// Reference creates a reference between the provided primary key and value.
-	// If oldValue is not nil then the Index must update the references
-	// of the primary key associated with the new value and remove the
-	// old invalid references.
-	Reference(ctx context.Context, pk PrimaryKey, newValue Value, oldValue *Value) error
+	// It provides a lazyOldValue function that if called will attempt to fetch
+	// the previous old value, returns ErrNotFound if no value existed.
+	Reference(ctx context.Context, pk PrimaryKey, newValue Value, lazyOldValue func() (Value, error)) error
 	// Unreference removes the reference between the primary key and value.
-	Unreference(ctx context.Context, pk PrimaryKey, value Value) error
+	// If error is ErrNotFound then it means that the value did not exist before.
+	Unreference(ctx context.Context, pk PrimaryKey, lazyOldValue func() (Value, error)) error
 }
 
 // IndexedMap works like a Map but creates references between fields of Value and its PrimaryKey.
@@ -40,10 +38,10 @@ type IndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]] struct {
 }
 
 // NewIndexedMap instantiates a new IndexedMap. Accepts a SchemaBuilder, a Prefix,
-// a humanised name that defines the name of the collection, the primary key codec
+// a humanized name that defines the name of the collection, the primary key codec
 // which is basically what IndexedMap uses to encode the primary key to bytes,
 // the value codec which is what the IndexedMap uses to encode the value.
-// Then it expects the initialised indexes.
+// Then it expects the initialized indexes.
 func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
 	schema *SchemaBuilder,
 	prefix Prefix,
@@ -76,26 +74,10 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Has(ctx context.Context, pk Primary
 // Set maps the value using the primary key. It will also iterate every index and instruct them to
 // add or update the indexes.
 func (m *IndexedMap[PrimaryKey, Value, Idx]) Set(ctx context.Context, pk PrimaryKey, value Value) error {
-	// we need to see if there was a previous instance of the value
-	oldValue, err := m.m.Get(ctx, pk)
-	switch {
-	// update indexes
-	case err == nil:
-		err = m.ref(ctx, pk, value, &oldValue)
-		if err != nil {
-			return fmt.Errorf("collections: indexing error: %w", err)
-		}
-	// create new indexes
-	case errors.Is(err, ErrNotFound):
-		err = m.ref(ctx, pk, value, nil)
-		if err != nil {
-			return fmt.Errorf("collections: indexing error: %w", err)
-		}
-	// cannot move forward error
-	default:
+	err := m.ref(ctx, pk, value)
+	if err != nil {
 		return err
 	}
-
 	return m.m.Set(ctx, pk, value)
 }
 
@@ -103,13 +85,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Set(ctx context.Context, pk Primary
 // it iterates over all the indexes and instructs them to remove all the references
 // associated with the removed value.
 func (m *IndexedMap[PrimaryKey, Value, Idx]) Remove(ctx context.Context, pk PrimaryKey) error {
-	oldValue, err := m.m.Get(ctx, pk)
-	if err != nil {
-		// TODO retain Map behaviour? which does not error in case we remove a non-existing object
-		return err
-	}
-
-	err = m.unref(ctx, pk, oldValue)
+	err := m.unref(ctx, pk)
 	if err != nil {
 		return err
 	}
@@ -134,9 +110,9 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value
 	return m.m.ValueCodec()
 }
 
-func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value, oldValue *Value) error {
+func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value) error {
 	for _, index := range m.Indexes.IndexesList() {
-		err := index.Reference(ctx, pk, value, oldValue)
+		err := index.Reference(ctx, pk, value, cachedGet[PrimaryKey, Value](ctx, m, pk))
 		if err != nil {
 			return err
 		}
@@ -144,12 +120,34 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk Primary
 	return nil
 }
 
-func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk PrimaryKey, value Value) error {
+func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk PrimaryKey) error {
 	for _, index := range m.Indexes.IndexesList() {
-		err := index.Unreference(ctx, pk, value)
+		err := index.Unreference(ctx, pk, cachedGet[PrimaryKey, Value](ctx, m, pk))
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// cachedGet returns a function that gets the value V, given the key K but
+// returns always the same result on multiple calls.
+func cachedGet[K, V any, M interface {
+	Get(ctx context.Context, key K) (V, error)
+}](ctx context.Context, m M, key K,
+) func() (V, error) {
+	var (
+		value      V
+		err        error
+		calledOnce bool
+	)
+
+	return func() (V, error) {
+		if calledOnce {
+			return value, err
+		}
+		value, err = m.Get(ctx, key)
+		calledOnce = true
+		return value, err
+	}
 }

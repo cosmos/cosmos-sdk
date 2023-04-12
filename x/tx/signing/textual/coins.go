@@ -37,7 +37,11 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 
 	// Since this value renderer has a FormatRepeated method, the Format one
 	// here only handles single coin.
-	coin := v.Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin)
+	coin := &basev1beta1.Coin{}
+	err := coerceToMessage(v.Interface().(protoreflect.Message).Interface(), coin)
+	if err != nil {
+		return nil, err
+	}
 
 	metadata, err := vr.coinMetadataQuerier(ctx, coin.Denom)
 	if err != nil {
@@ -61,7 +65,11 @@ func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.
 	coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
 	var err error
 	for i := 0; i < protoCoins.Len(); i++ {
-		coin := protoCoins.Get(i).Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin)
+		coin := &basev1beta1.Coin{}
+		err := coerceToMessage(protoCoins.Get(i).Interface().(protoreflect.Message).Interface(), coin)
+		if err != nil {
+			return nil, err
+		}
 		coins[i] = coin
 		metadatas[i], err = vr.coinMetadataQuerier(ctx, coin.Denom)
 		if err != nil {

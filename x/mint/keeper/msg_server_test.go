@@ -12,9 +12,16 @@ func (s *IntegrationTestSuite) TestUpdateParams() {
 		expectErr bool
 	}{
 		{
-			name: "set invalid authority",
+			name: "set invalid authority (not an address)",
 			request: &types.MsgUpdateParams{
 				Authority: "foo",
+			},
+			expectErr: true,
+		},
+		{
+			name: "set invalid authority (not defined authority)",
+			request: &types.MsgUpdateParams{
+				Authority: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
 			},
 			expectErr: true,
 		},

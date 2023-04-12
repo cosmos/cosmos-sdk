@@ -191,7 +191,7 @@ var (
 )
 
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
-func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMetadata string, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
+func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMetadata, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
 	m := &MsgCreateGroupWithPolicy{
 		Admin:               admin,
 		Members:             members,
@@ -344,7 +344,7 @@ var (
 )
 
 // NewMsgUpdateGroupPolicyDecisionPolicy creates a new MsgUpdateGroupPolicyDecisionPolicy.
-func NewMsgUpdateGroupPolicyDecisionPolicy(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
+func NewMsgUpdateGroupPolicyDecisionPolicy(admin, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
 	m := &MsgUpdateGroupPolicyDecisionPolicy{
 		Admin:              admin.String(),
 		GroupPolicyAddress: address.String(),
@@ -588,7 +588,12 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	}
 
 	for i, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return errorsmod.Wrapf(err, "msg %d", i)
 		}
 	}

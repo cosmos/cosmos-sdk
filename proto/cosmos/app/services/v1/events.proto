@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+import "google/protobuf/any.proto";
+
+// EventManager defines a service for emitting events.
+service EventManager {
+  // EmitEvent emits an event.
+  rpc EmitEvent (EmitEventRequest) returns (EmitEventResponse);
+
+  // Subscribe subscribes to an event type. Modules that subscribe to events must implement the EventListener
+  // service to receive events that have been subscribed to.
+  rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
+
+  // Unsubscribe unsubscribes from an event type.
+  rpc Unsubscribe (UnsubscribeRequest) returns (UnsubscribeResponse);
+}
+
+// EmitEventRequest is the EventManager/EmitEvent request type.
+message EmitEventRequest {
+  // event is the event to emit.
+  google.protobuf.Any event = 1;
+}
+
+// EmitEventResponse is the EventManager/EmitEvent response type.
+message EmitEventResponse {}
+
+// SubscribeRequest is the EventManager/Subscribe request type.
+message SubscribeRequest {
+  // event_type is the message name of event to subscribe to.
+  string event_type = 1;
+}
+
+// SubscribeResponse is the EventManager/Subscribe response type.
+message SubscribeResponse {}
+
+// UnsubscribeRequest is the EventManager/Unsubscribe request type.
+message UnsubscribeRequest {
+  // event_type is the type of event to unsubscribe from.
+  string event_type = 1;
+}
+
+// UnsubscribeResponse is the EventManager/Unsubscribe response type.
+message UnsubscribeResponse {}
+
+// EventListener defines a service that a module should implement to listen to events.
+service EventListener {
+  // OnEvent is called when an event is emitted that the module has subscribed to.
+  rpc OnEvent (OnEventRequest) returns (OnEventResponse);
+}
+
+// OnEventRequest is the EventListener/OnEvent request type.
+message OnEventRequest {
+  // event is the event that was emitted.
+  google.protobuf.Any event = 1;
+}
+
+// OnEventResponse is the EventListener/OnEvent response type.
+message OnEventResponse {}

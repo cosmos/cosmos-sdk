@@ -34,8 +34,7 @@ type ValidatorUpdateService interface {
 	SetValidatorUpdates(context.Context, []abci.ValidatorUpdate)
 }
 
-// BlockInfoService is the extension interface that modules should implement
-// if they require block information
+// BlockInfoService is the service that runtime will provide to modules which need Comet block information.
 type BlockInfoService interface {
 	GetHeight() int64                // GetHeight returns the height of the block
 	Misbehavior() []abci.Misbehavior // Misbehavior returns the misbehavior of the block

@@ -16,47 +16,35 @@ import (
 
 // SignModeHandler is the SIGN_MODE_DIRECT_AUX implementation of signing.SignModeHandler.
 type SignModeHandler struct {
-	signersContext *signing.GetSignersContext
+	signersContext *signing.Context
 	fileResolver   signing.ProtoFileResolver
 	typeResolver   protoregistry.MessageTypeResolver
 }
 
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
-	// FileResolver is the protodesc.Resolver to use for resolving proto files when unpacking any messages.
-	FileResolver signing.ProtoFileResolver
-
-	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving proto types when unpacking any messages.
+	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving protobuf types when unpacking any messages.
 	TypeResolver protoregistry.MessageTypeResolver
 
-	// SignersContext is the signing.GetSignersContext to use for getting signers.
-	SignersContext *signing.GetSignersContext
+	// SignersContext is the signing.Context to use for getting signers.
+	SignersContext *signing.Context
 }
 
 // NewSignModeHandler returns a new SignModeHandler.
 func NewSignModeHandler(options SignModeHandlerOptions) (SignModeHandler, error) {
 	h := SignModeHandler{}
 
-	if options.FileResolver == nil {
-		h.fileResolver = protoregistry.GlobalFiles
-	} else {
-		h.fileResolver = options.FileResolver
+	if options.SignersContext == nil {
+		return h, fmt.Errorf("signers context is required")
 	}
+	h.signersContext = options.SignersContext
+
+	h.fileResolver = h.signersContext.FileResolver()
 
 	if options.TypeResolver == nil {
 		h.typeResolver = protoregistry.GlobalTypes
 	} else {
 		h.typeResolver = options.TypeResolver
-	}
-
-	if options.SignersContext == nil {
-		var err error
-		h.signersContext, err = signing.NewGetSignersContext(signing.GetSignersOptions{ProtoFiles: h.fileResolver})
-		if err != nil {
-			return h, err
-		}
-	} else {
-		h.signersContext = options.SignersContext
 	}
 
 	return h, nil
@@ -71,18 +59,18 @@ func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 
 // getFirstSigner returns the first signer from the first message in the tx. It replicates behavior in
 // https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L142
-func (h SignModeHandler) getFirstSigner(txData signing.TxData) (string, error) {
+func (h SignModeHandler) getFirstSigner(txData signing.TxData) ([]byte, error) {
 	if len(txData.Body.Messages) == 0 {
-		return "", fmt.Errorf("no signer found")
+		return nil, fmt.Errorf("no signer found")
 	}
 
 	msg, err := anyutil.Unpack(txData.Body.Messages[0], h.fileResolver, h.typeResolver)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	signer, err := h.signersContext.GetSigners(msg)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return signer[0], nil
 }
@@ -97,7 +85,10 @@ func (h SignModeHandler) GetSignBytes(
 		if err != nil {
 			return nil, err
 		}
-		feePayer = fp
+		feePayer, err = h.signersContext.AddressCodec().BytesToString(fp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if feePayer == signerData.Address {
 		return nil, fmt.Errorf("fee payer %s cannot sign with %s: unauthorized",

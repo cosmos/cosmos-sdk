@@ -218,8 +218,8 @@ func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json
 
 	first := true
 	for decoder.More() {
-		var rawJson json.RawMessage
-		err := decoder.Decode(&rawJson)
+		var rawJSON json.RawMessage
+		err := decoder.Decode(&rawJSON)
 		if err != nil {
 			return ormerrors.JSONImportError.Wrapf("%s", err)
 		}
@@ -227,7 +227,7 @@ func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json
 		if first {
 			first = false
 			if onFirst != nil {
-				if onFirst(rawJson) {
+				if onFirst(rawJSON) {
 					// if onFirst handled this, skip decoding into a proto message
 					continue
 				}
@@ -235,7 +235,7 @@ func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json
 		}
 
 		msg := t.MessageType().New().Interface()
-		err = unmarshalOptions.Unmarshal(rawJson, msg)
+		err = unmarshalOptions.Unmarshal(rawJSON, msg)
 		if err != nil {
 			return err
 		}
@@ -283,9 +283,9 @@ func (t tableImpl) ValidateJSON(reader io.Reader) error {
 	return t.decodeJson(reader, func(message proto.Message) error {
 		if t.customJSONValidator != nil {
 			return t.customJSONValidator(message)
-		} else {
-			return DefaultJSONValidator(message)
 		}
+
+		return DefaultJSONValidator(message)
 	})
 }
 

@@ -174,19 +174,19 @@ Modules using it should follow the current pattern in the SDK by adding the modu
 
 ```go
 type ModuleInputs struct {
-	depinject.In
+  depinject.In
 
-	Logger log.Logger
+  Logger log.Logger
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
   // ...
   // add the module name to the logger
-	logger := in.Logger.With("module", "x/"+types.ModuleName)
+  logger := in.Logger.With("module", "x/"+types.ModuleName)
 
-	someKeeper := keeper.NewBaseKeeper(
-		logger,
-	)
+  someKeeper := keeper.NewBaseKeeper(
+    logger,
+  )
   // ...
 }
 ```

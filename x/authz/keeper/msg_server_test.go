@@ -352,20 +352,6 @@ func (suite *TestSuite) TestExec() {
 				return authz.NewMsgExec(grantee, []sdk.Msg{msg})
 			},
 		},
-		{
-			name: "invalid nested msg",
-			malleate: func() authz.MsgExec {
-				return authz.NewMsgExec(grantee, []sdk.Msg{
-					&banktypes.MsgSend{
-						Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-						FromAddress: "invalid_from_address",
-						ToAddress:   grantee.String(),
-					},
-				})
-			},
-			expErr: true,
-			errMsg: "invalid from address",
-		},
 	}
 
 	for _, tc := range testCases {

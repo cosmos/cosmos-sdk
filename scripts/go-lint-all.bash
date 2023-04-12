@@ -9,7 +9,7 @@ lint_module() {
   local root="$1"
   shift
   cd "$(dirname "$root")" &&
-    echo "linting $(grep "^module" go.mod)" &&
+    echo "linting $(grep "^module" go.mod) [$(date -Iseconds -u)]" &&
     golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@"
 }
 export -f lint_module

@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections"
 
 	"cosmossdk.io/log"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -68,6 +71,10 @@ type AccountKeeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+
+	// State
+
+	ParamsState collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -89,6 +96,8 @@ func NewAccountKeeper(
 
 	bech32Codec := NewBech32Codec(bech32Prefix)
 
+	sb := collections.NewSchemaBuilder(storeService)
+
 	return AccountKeeper{
 		storeService: storeService,
 		proto:        proto,
@@ -96,6 +105,7 @@ func NewAccountKeeper(
 		permAddrs:    permAddrs,
 		addressCdc:   bech32Codec,
 		authority:    authority,
+		ParamsState:  collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 }
 
@@ -273,4 +283,21 @@ func (ak AccountKeeper) getBech32Prefix() (string, error) {
 	}
 
 	return bech32Codec.bech32Prefix, nil
+}
+
+// SetParams sets the auth module's parameters.
+func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+	return ak.ParamsState.Set(ctx, params)
+}
+
+// GetParams gets the auth module's parameters.
+func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
+	params, err := ak.ParamsState.Get(ctx)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		panic(err)
+	}
+	return params
 }

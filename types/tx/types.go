@@ -60,7 +60,7 @@ func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
 	var feePayerAddr []byte
 	if feePayer != "" {
 		var err error
-		feePayerAddr, err = cdc.GetSigningContext().AddressCodec().StringToBytes(feePayer)
+		feePayerAddr, err = cdc.SigningContext().AddressCodec().StringToBytes(feePayer)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -84,7 +84,7 @@ func (t *Tx) GetFee() sdk.Coins {
 func (t *Tx) FeePayer(cdc codec.Codec) []byte {
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		feePayerAddr, err := cdc.GetSigningContext().AddressCodec().StringToBytes(feePayer)
+		feePayerAddr, err := cdc.SigningContext().AddressCodec().StringToBytes(feePayer)
 		if err != nil {
 			panic(err)
 		}

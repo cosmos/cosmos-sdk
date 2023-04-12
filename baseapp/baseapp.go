@@ -854,7 +854,7 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2
 		panic(err)
 	}
 	if len(signers) > 0 && signers[0] != nil {
-		addrStr, err := cdc.GetSigningContext().AddressCodec().BytesToString(signers[0])
+		addrStr, err := cdc.SigningContext().AddressCodec().BytesToString(signers[0])
 		if err != nil {
 			panic(err)
 		}

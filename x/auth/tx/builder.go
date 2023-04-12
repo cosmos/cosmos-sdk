@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -226,10 +227,14 @@ func (w *wrapper) GetFee() sdk.Coins {
 	return w.tx.AuthInfo.Fee.Amount
 }
 
-func (w *wrapper) FeePayer() string {
+func (w *wrapper) FeePayer() []byte {
 	feePayer := w.tx.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		return feePayer
+		feePayerAddr, err := w.cdc.SigningContext().AddressCodec().StringToBytes(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return feePayerAddr
 	}
 	// use first signer as default if no payer specified
 	return w.GetSigners()[0]
@@ -544,7 +549,11 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	// Get the aux signer's index in GetSigners.
 	signerIndex := -1
 	for i, signer := range w.GetSigners() {
-		if signer == data.Address {
+		addrBz, err := w.cdc.SigningContext().AddressCodec().StringToBytes(data.Address)
+		if err != nil {
+			return err
+		}
+		if bytes.Equal(signer, addrBz) {
 			signerIndex = i
 		}
 	}

@@ -61,7 +61,7 @@ type (
 		Tx
 		GetGas() uint64
 		GetFee() Coins
-		FeePayer() string
+		FeePayer() []byte
 		FeeGranter() string
 	}
 

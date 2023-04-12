@@ -324,7 +324,7 @@ func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
 	return &grpcProtoCodec{cdc: pc}
 }
 
-func (pc *ProtoCodec) GetSigningContext() *signing.Context {
+func (pc *ProtoCodec) SigningContext() *signing.Context {
 	return pc.getSignersCtx
 }
 

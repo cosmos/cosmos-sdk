@@ -65,12 +65,12 @@ func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress)
 
 	for ; iterator.Valid(); iterator.Next() {
 		var delegation types.Delegation
-		val, del, err := types.ParseDelegationsByValKey(iterator.Key())
+		valAddr, delAddr, err := types.ParseDelegationsByValKey(iterator.Key())
 		if err != nil {
 			panic(err)
 		}
 
-		bz := store.Get(types.GetDelegationKey(del, val))
+		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 		if err := k.cdc.Unmarshal(bz, &delegation); err != nil {
 			panic(err)
 		}
@@ -89,13 +89,13 @@ func (k Keeper) UpdateValidatorDelegations(ctx sdk.Context, existingValAddr, new
 
 	for ; itr.Valid(); itr.Next() {
 		key := itr.Key()
-		val, del, err := types.ParseDelegationsByValKey(key)
+		valAddr, delAddr, err := types.ParseDelegationsByValKey(key)
 		if err != nil {
 			panic(err)
 		}
 
-		delbz := store.Get(types.GetDelegationKey(del, val))
-		delegation := types.MustUnmarshalDelegation(k.cdc, delbz)
+		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
+		delegation := types.MustUnmarshalDelegation(k.cdc, bz)
 
 		// remove old operator addr from delegation
 		if err := k.RemoveDelegation(ctx, delegation); err != nil {

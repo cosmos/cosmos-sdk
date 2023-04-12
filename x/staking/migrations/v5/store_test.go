@@ -52,12 +52,12 @@ func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeKey storetypes.Sto
 	iterator := storetypes.KVStorePrefixIterator(store, types.GetDelegationsByValPrefixKey(valAddr))
 	for ; iterator.Valid(); iterator.Next() {
 		var delegation types.Delegation
-		val, del, err := types.ParseDelegationsByValKey(iterator.Key())
+		valAddr, delAddr, err := types.ParseDelegationsByValKey(iterator.Key())
 		if err != nil {
 			panic(err)
 		}
 
-		bz := store.Get(types.GetDelegationKey(del, val))
+		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 
 		cdc.MustUnmarshal(bz, &delegation)
 

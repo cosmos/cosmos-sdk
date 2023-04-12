@@ -104,10 +104,10 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 
 	var dels types.Delegations
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(del, value []byte) error {
-		delBz := store.Get(types.GetDelegationKey(del, valAddr))
+		bz := store.Get(types.GetDelegationKey(del, valAddr))
 
 		var delegation types.Delegation
-		k.cdc.Unmarshal(delBz, &delegation)
+		k.cdc.Unmarshal(bz, &delegation)
 		if err != nil {
 			return err
 		}

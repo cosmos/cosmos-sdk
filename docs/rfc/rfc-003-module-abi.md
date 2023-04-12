@@ -49,7 +49,7 @@ When the host calls `cosmos_read_file_descriptors` the module should call `callb
 
 ### Module Registration
 
-A single code unit may register one or more modules. Each module is indentified by a unique protobuf configuration type as with Cosmos SDK `appconfig` modules, ex. `cosmos.bank.module.v1.Module`. Module registration happens similarly to `depinject` registration in the SDK where each module can define one or more provider functions. Each provider is described statically by a `ProviderInfo` (see below) so that the framework can build the dependency graph in the correct order.
+A single code unit may register one or more modules. Each module is identified by a unique protobuf configuration type as with Cosmos SDK `appconfig` modules, ex. `cosmos.bank.module.v1.Module`. Module registration happens similarly to `depinject` registration in the SDK where each module can define one or more provider functions. Each provider is described statically by a `ProviderInfo` (see below) so that the framework can build the dependency graph in the correct order.
 
 The `cosmos_register_modules` function is called to register module providers. Each module should call the `register` function that is passed in with:
 * a `ModuleInfo` message (as described below) encoded with [Cosmos Proto Zero-Copy Encoding DRAFT Spec](/6ICE-uQpTDSF1PxiJbPUXw) is passed as `module_info_data` with its size set to `module_info_size`
@@ -105,9 +105,6 @@ message Output {
     oneof type {
       // service is the fully-qualified name of the service.
       string service = 1;
-      
-      // event_listener is the fully qualified name of the event type.
-      string event_listener = 2;
     }
   }
 }
@@ -117,13 +114,18 @@ A set of functions and macros would be provided in languages like Rust to do thi
 
 ## Services
 
-Almost all functions that a module invokes and provides are described by `service` definitions in .proto files. These correspond to the `service` provider input and output type.
+This design takes a "services all the way down" architecture approach. All functions that a module invokes and provides
+are described by `service` definitions in .proto files. These correspond to the `service` provider input and output
+type.
 
 The following types of services are supported:
 * transaction services which are annotated by the `cosmos.msg.v1.service` annotation and contain state machine logic that can be invoked via transactions and inter-module calls
 * query services which are un-annotated and are executed in a read-only context. Only service methods annotated with `cosmos.query.v1.module_query_safe` can be called from other modules
 * internal services which can only be called from other modules annotated with `cosmos.msg.v1.internal_service` (TBD). Internal services also receive the name of the calling module in their context pointer to do authentication. In this way, even a service like storage could be managed in this way because it knows which module called it.
-* app module services to support things like genesis, begin and end blockers. These services can be defined once per module.
+* app module services to support things like genesis, begin and end blockers. These services can be defined once per module and are annotated with `cosmos.app.services.v1.module_service` option.
+
+Refer to the [`cosmos.app.services.v1`](../../proto/cosmos/app/services/v1) protobuf package to see the core set of
+services that are supported by the framework.
 
 ### Service Methods
 
@@ -160,11 +162,6 @@ By default, all response buffers should be 64kb in length as specified in [Cosmo
 ### Client and Server Streaming Methods
 
 TODO
-
-## Event Listeners
-
-TODO
-
 
 ## Abandoned Ideas (Optional)
 

@@ -2,8 +2,12 @@ syntax = "proto3";
 
 package cosmos.app.services.v1;
 
+import "cosmos/app/services/v1/option.proto";
+
 // GenesisService is a service that modules implement to support genesis.
 service Genesis {
+  option (cosmos.app.services.v1.module_service) = true;
+
   // DescribeGenesis describes the fields that a module uses in its genesis state.
   // This method is defined instead of a DefaultGenesis method because it is
   // assumed that all genesis is represented as a set of fields where each field

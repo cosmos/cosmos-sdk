@@ -2,8 +2,12 @@ syntax = "proto3";
 
 package cosmos.app.services.v1;
 
+import "cosmos/app/services/v1/option.proto";
+
 // BeginBlock is a service that a module defines to execute logic at the beginning of a block.
 service BeginBlock {
+  option (cosmos.app.services.v1.module_service) = true;
+
   // BeginBlock is called at the beginning of a block.
   rpc BeginBlock (BeginBlockRequest) returns (BeginBlockResponse);
 }
@@ -16,6 +20,8 @@ message BeginBlockResponse {}
 
 // EndBlock is a service that a module defines to execute logic at the end of a block.
 service EndBlock {
+  option (cosmos.app.services.v1.module_service) = true;
+
   // EndBlock is called at the end of a block.
   rpc EndBlock (EndBlockRequest) returns (EndBlockResponse);
 }

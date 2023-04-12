@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.ServiceOptions {
+  // module_service indicates that modules may implement this service and that
+  // the service is only callable by the framework.
+  bool module_service = 11115550;
+}

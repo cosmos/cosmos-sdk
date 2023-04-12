@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+import "google/protobuf/any.proto";
+import "cosmos/app/services/v1/option.proto";
+
+// Upgrade is a service that a module defines to execute logic during an upgrade.
+service Upgrade {
+  option (cosmos.app.services.v1.module_service) = true;
+
+  // Upgrade is called whenever there is an upgrade to the module.
+  rpc Upgrade (UpgradeRequest) returns (UpgradeResponse);
+}
+
+// UpgradeRequest is the Upgrade/Upgrade request type.
+message UpgradeRequest {
+  // upgrade_from is the module config object of the previous version of the module.
+  google.protobuf.Any upgrade_from = 1;
+}
+
+// UpgradeResponse is the Upgrade/Upgrade response type.
+message UpgradeResponse {}

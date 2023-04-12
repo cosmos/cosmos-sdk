@@ -2,8 +2,12 @@ syntax = "proto3";
 
 package cosmos.app.services.v1;
 
+import "cosmos/msg/v1/msg.proto";
+
 // Store defines a service for interacting with key-value stores.
 service Store {
+  option (cosmos.msg.v1.internal_service) = true;
+
   // Has queries if a key exists in the store.
   rpc Has(HasRequest) returns (HasResponse);
 

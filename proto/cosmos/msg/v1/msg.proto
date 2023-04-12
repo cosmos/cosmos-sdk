@@ -14,6 +14,11 @@ extend google.protobuf.ServiceOptions {
   // Tooling can use this annotation to distinguish between Msg services and
   // other types of services via reflection.
   bool service = 11110000;
+
+  // internal_service indicates that the service is an internal Msg service
+  // that cannot be called by external clients. Internal services follow
+  // slightly different semantics than external Msg services.
+  bool internal_service = 11110001;
 }
 
 extend google.protobuf.MessageOptions {

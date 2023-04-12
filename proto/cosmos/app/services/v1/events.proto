@@ -3,9 +3,14 @@ syntax = "proto3";
 package cosmos.app.services.v1;
 
 import "google/protobuf/any.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/app/services/v1/option.proto";
+
 
 // EventManager defines a service for emitting events.
 service EventManager {
+  option (cosmos.msg.v1.internal_service) = true;
+
   // EmitEvent emits an event.
   rpc EmitEvent (EmitEventRequest) returns (EmitEventResponse);
 
@@ -46,6 +51,8 @@ message UnsubscribeResponse {}
 
 // EventListener defines a service that a module should implement to listen to events.
 service EventListener {
+  option (cosmos.app.services.v1.module_service) = true;
+
   // OnEvent is called when an event is emitted that the module has subscribed to.
   rpc OnEvent (OnEventRequest) returns (OnEventResponse);
 }

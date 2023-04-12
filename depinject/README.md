@@ -12,15 +12,15 @@ sidebar_position: 1
 
 `depinject` is particularly useful for developing blockchain applications:
 
--   With multiple interdependent components, modules, or services. Helping manage their dependencies effectively.
--   That require decoupling of these components, making it easier to test, modify, or replace individual parts without affecting the entire system.
--   That are wanting to simplify the setup and initialisation of modules and their dependencies by reducing boilerplate code and automating dependency management.
+*   With multiple interdependent components, modules, or services. Helping manage their dependencies effectively.
+*   That require decoupling of these components, making it easier to test, modify, or replace individual parts without affecting the entire system.
+*   That are wanting to simplify the setup and initialisation of modules and their dependencies by reducing boilerplate code and automating dependency management.
 
 By using `depinject`, developers can achieve:
 
--   Cleaner and more organised code.
--   Improved modularity and maintainability.
--   A more maintainable and modular structure for their blockchain applications, ultimately enhancing development velocity and code quality.
+*   Cleaner and more organised code.
+*   Improved modularity and maintainability.
+*   A more maintainable and modular structure for their blockchain applications, ultimately enhancing development velocity and code quality.
 
 * [Go Doc](https://pkg.go.dev/cosmossdk.io/depinject)
 

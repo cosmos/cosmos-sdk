@@ -58,6 +58,7 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 		initHeader.Height = req.InitialHeight
 		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
 			return nil, err
+		}
 	}
 
 	// initialize states with a correct header
@@ -619,14 +620,14 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 
 	// add a deferred recover handler in case extendVote panics
 	defer func() {
-		if err := recover(); err != nil {
+		if r := recover(); r != nil {
 			app.logger.Error(
 				"panic recovered in ExtendVote",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
 				"panic", err,
 			)
-			err = fmt.Errorf("recovered application panic in ExtendVote: %w", err)
+			err = fmt.Errorf("recovered application panic in ExtendVote: %v", r)
 		}
 	}()
 
@@ -662,15 +663,15 @@ func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVeri
 
 	// add a deferred recover handler in case verifyVoteExt panics
 	defer func() {
-		if err := recover(); err != nil {
+		if r := recover(); r != nil {
 			app.logger.Error(
 				"panic recovered in VerifyVoteExtension",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
 				"validator", fmt.Sprintf("%X", req.ValidatorAddress),
-				"panic", err,
+				"panic", r,
 			)
-			err = fmt.Errorf("recovered application panic in VerifyVoteExtension: %w", err)
+			err = fmt.Errorf("recovered application panic in VerifyVoteExtension: %v", r)
 		}
 	}()
 

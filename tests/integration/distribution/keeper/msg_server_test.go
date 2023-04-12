@@ -54,9 +54,8 @@ type fixture struct {
 	sdkCtx sdk.Context
 	app    *integration.App
 
-	addr        sdk.AccAddress
-	valAddr     sdk.ValAddress
-	valConsAddr sdk.ConsAddress
+	addr    sdk.AccAddress
+	valAddr sdk.ValAddress
 }
 
 func initFixture(t assert.TestingT) *fixture {
@@ -124,10 +123,10 @@ func initFixture(t assert.TestingT) *fixture {
 
 	f.addr = sdk.AccAddress(PKS[0].Address())
 	f.valAddr = sdk.ValAddress(f.addr)
-	f.valConsAddr = sdk.ConsAddress(valConsPk0.Address())
+	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	// set proposer and vote infos
-	ctx := newCtx.WithProposer(f.valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
+	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
 		{
 			Validator: cmtabcitypes.Validator{
 				Address: f.valAddr,
@@ -162,6 +161,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	initFeePool := f.distrKeeper.GetFeePool(f.sdkCtx)
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
+	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5).Quo(math.LegacyNewDec(4))),
@@ -284,7 +284,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 
 			prevProposerConsAddr := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
 			assert.Assert(t, prevProposerConsAddr.Empty() == false)
-			assert.DeepEqual(t, prevProposerConsAddr, f.valConsAddr)
+			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
 			var previousTotalPower int64
 			for _, voteInfo := range f.sdkCtx.VoteInfos() {
 				previousTotalPower += voteInfo.Validator.Power

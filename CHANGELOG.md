@@ -158,7 +158,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `InterfaceRegistry` is now a private interface and implements `protodesc.Resolver` plus the `RangeFiles` method
      All implementations of `InterfaceRegistry` by other users must now embed the official implementation.
     * `AminoCodec` is marked as deprecated.
-* (genesis) [] Remove get address command from genesis cmd
+* (genesis) [#15826](https://github.com/cosmos/cosmos-sdk/pull/15826) Remove get address command from genesis cmd
 
 ### Client Breaking Changes
 

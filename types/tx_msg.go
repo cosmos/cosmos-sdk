@@ -14,13 +14,7 @@ import (
 
 type (
 	// Msg defines the interface a transaction message needed to fulfill.
-	Msg interface {
-		proto.Message
-
-		// ValidateBasic does a simple validation check that
-		// doesn't require access to any other information.
-		ValidateBasic() error
-	}
+	Msg = proto.Message
 
 	// LegacyMsg defines the interface a transaction message needed to fulfill up through
 	// v0.47.
@@ -49,6 +43,7 @@ type (
 
 	// HasMsgs defines an interface a transaction must fulfill.
 	HasMsgs interface {
+		HasValidateBasic
 		// GetMsgs gets the all the transaction's messages.
 		GetMsgs() []Msg
 	}
@@ -59,10 +54,6 @@ type (
 
 		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
 		GetMsgsV2() []protov2.Message
-
-		// ValidateBasic does a simple and lightweight validation check that doesn't
-		// require access to any other information.
-		ValidateBasic() error
 	}
 
 	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
@@ -86,6 +77,15 @@ type (
 		Tx
 
 		GetTimeoutHeight() uint64
+	}
+
+	// HasValidateBasic defines a type that has a ValidateBasic method.
+	// ValidateBasic is deprecated and now facultative.
+	// Prefer validating messages directly in the msg server.
+	HasValidateBasic interface {
+		// ValidateBasic does a simple validation check that
+		// doesn't require access to any other information.
+		ValidateBasic() error
 	}
 )
 

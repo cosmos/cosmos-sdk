@@ -3,6 +3,7 @@ package module_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +31,7 @@ func TestFeegrantPruning(t *testing.T) {
 	granter2 := addrs[1]
 	granter3 := addrs[2]
 	grantee := addrs[3]
-	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
+	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
 	now := testCtx.Ctx.BlockTime()
 	oneDay := now.AddDate(0, 0, 1)
 
@@ -50,7 +52,7 @@ func TestFeegrantPruning(t *testing.T) {
 	accountKeeper.EXPECT().BytesToString(granter2.Bytes()).Return(granter2.String(), nil).AnyTimes()
 	accountKeeper.EXPECT().BytesToString(granter3.Bytes()).Return(granter3.String(), nil).AnyTimes()
 
-	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, key, accountKeeper)
+	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper)
 
 	feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,

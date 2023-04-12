@@ -28,48 +28,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Level is the permission level.
-type CircuitBreakerPermissions_Level int32
-
-const (
-	// LEVEL_NONE_UNSPECIFIED indicates that the account will have no circuit
-	// breaker permissions.
-	CircuitBreakerPermissions_LEVEL_NONE_UNSPECIFIED CircuitBreakerPermissions_Level = 0
-	// LEVEL_SOME_MSGS indicates that the account will have permission to
-	// trip or reset the circuit breaker for some Msg type URLs. If this level
-	// is chosen, a non-empty list of Msg type URLs must be provided in
-	// limit_type_urls.
-	CircuitBreakerPermissions_LEVEL_SOME_MSGS CircuitBreakerPermissions_Level = 1
-	// LEVEL_ALL_MSGS indicates that the account can trip or reset the circuit
-	// breaker for Msg's of all type URLs.
-	CircuitBreakerPermissions_LEVEL_ALL_MSGS CircuitBreakerPermissions_Level = 2
-	// LEVEL_SUPER_ADMIN indicates that the account can take all circuit breaker
-	// actions and can grant permissions to other accounts.
-	CircuitBreakerPermissions_LEVEL_SUPER_ADMIN CircuitBreakerPermissions_Level = 3
-)
-
-var CircuitBreakerPermissions_Level_name = map[int32]string{
-	0: "LEVEL_NONE_UNSPECIFIED",
-	1: "LEVEL_SOME_MSGS",
-	2: "LEVEL_ALL_MSGS",
-	3: "LEVEL_SUPER_ADMIN",
-}
-
-var CircuitBreakerPermissions_Level_value = map[string]int32{
-	"LEVEL_NONE_UNSPECIFIED": 0,
-	"LEVEL_SOME_MSGS":        1,
-	"LEVEL_ALL_MSGS":         2,
-	"LEVEL_SUPER_ADMIN":      3,
-}
-
-func (x CircuitBreakerPermissions_Level) String() string {
-	return proto.EnumName(CircuitBreakerPermissions_Level_name, int32(x))
-}
-
-func (CircuitBreakerPermissions_Level) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_a02145e57a6fbb1d, []int{2, 0}
-}
-
 // MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker request type.
 type MsgAuthorizeCircuitBreaker struct {
 	// granter is the granter of the circuit breaker permissions and must have
@@ -80,7 +38,7 @@ type MsgAuthorizeCircuitBreaker struct {
 	// permissions are the circuit breaker permissions that the grantee receives.
 	// These will overwrite any existing permissions. LEVEL_NONE_UNSPECIFIED can
 	// be specified to revoke all permissions.
-	Permissions *CircuitBreakerPermissions `protobuf:"bytes,3,opt,name=permissions,proto3" json:"permissions,omitempty"`
+	Permissions *Permissions `protobuf:"bytes,3,opt,name=permissions,proto3" json:"permissions,omitempty"`
 }
 
 func (m *MsgAuthorizeCircuitBreaker) Reset()         { *m = MsgAuthorizeCircuitBreaker{} }
@@ -130,7 +88,7 @@ func (m *MsgAuthorizeCircuitBreaker) GetGrantee() string {
 	return ""
 }
 
-func (m *MsgAuthorizeCircuitBreaker) GetPermissions() *CircuitBreakerPermissions {
+func (m *MsgAuthorizeCircuitBreaker) GetPermissions() *Permissions {
 	if m != nil {
 		return m.Permissions
 	}
@@ -139,6 +97,7 @@ func (m *MsgAuthorizeCircuitBreaker) GetPermissions() *CircuitBreakerPermissions
 
 // MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker response type.
 type MsgAuthorizeCircuitBreakerResponse struct {
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 }
 
 func (m *MsgAuthorizeCircuitBreakerResponse) Reset()         { *m = MsgAuthorizeCircuitBreakerResponse{} }
@@ -174,62 +133,11 @@ func (m *MsgAuthorizeCircuitBreakerResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAuthorizeCircuitBreakerResponse proto.InternalMessageInfo
 
-// CircuitBreakerPermissions are the permissions that an account has to trip
-// or reset the circuit breaker.
-type CircuitBreakerPermissions struct {
-	// level is the level of permissions granted to this account.
-	Level CircuitBreakerPermissions_Level `protobuf:"varint,1,opt,name=level,proto3,enum=cosmos.circuit.v1.CircuitBreakerPermissions_Level" json:"level,omitempty"`
-	// limit_msg_types is used with LEVEL_SOME_MSGS to limit the lists of Msg type
-	// name that the account can pause. It is an error to use limit_msg_types with
-	// a level other than LEVEL_SOME_MSGS.
-	LimitMsgTypes []string `protobuf:"bytes,2,rep,name=limit_msg_types,json=limitMsgTypes,proto3" json:"limit_msg_types,omitempty"`
-}
-
-func (m *CircuitBreakerPermissions) Reset()         { *m = CircuitBreakerPermissions{} }
-func (m *CircuitBreakerPermissions) String() string { return proto.CompactTextString(m) }
-func (*CircuitBreakerPermissions) ProtoMessage()    {}
-func (*CircuitBreakerPermissions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a02145e57a6fbb1d, []int{2}
-}
-func (m *CircuitBreakerPermissions) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *CircuitBreakerPermissions) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_CircuitBreakerPermissions.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *CircuitBreakerPermissions) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CircuitBreakerPermissions.Merge(m, src)
-}
-func (m *CircuitBreakerPermissions) XXX_Size() int {
-	return m.Size()
-}
-func (m *CircuitBreakerPermissions) XXX_DiscardUnknown() {
-	xxx_messageInfo_CircuitBreakerPermissions.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_CircuitBreakerPermissions proto.InternalMessageInfo
-
-func (m *CircuitBreakerPermissions) GetLevel() CircuitBreakerPermissions_Level {
+func (m *MsgAuthorizeCircuitBreakerResponse) GetSuccess() bool {
 	if m != nil {
-		return m.Level
+		return m.Success
 	}
-	return CircuitBreakerPermissions_LEVEL_NONE_UNSPECIFIED
-}
-
-func (m *CircuitBreakerPermissions) GetLimitMsgTypes() []string {
-	if m != nil {
-		return m.LimitMsgTypes
-	}
-	return nil
+	return false
 }
 
 // MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker request type.
@@ -248,7 +156,7 @@ func (m *MsgTripCircuitBreaker) Reset()         { *m = MsgTripCircuitBreaker{} }
 func (m *MsgTripCircuitBreaker) String() string { return proto.CompactTextString(m) }
 func (*MsgTripCircuitBreaker) ProtoMessage()    {}
 func (*MsgTripCircuitBreaker) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a02145e57a6fbb1d, []int{3}
+	return fileDescriptor_a02145e57a6fbb1d, []int{2}
 }
 func (m *MsgTripCircuitBreaker) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -293,13 +201,14 @@ func (m *MsgTripCircuitBreaker) GetMsgTypeUrls() []string {
 
 // MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker response type.
 type MsgTripCircuitBreakerResponse struct {
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 }
 
 func (m *MsgTripCircuitBreakerResponse) Reset()         { *m = MsgTripCircuitBreakerResponse{} }
 func (m *MsgTripCircuitBreakerResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgTripCircuitBreakerResponse) ProtoMessage()    {}
 func (*MsgTripCircuitBreakerResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a02145e57a6fbb1d, []int{4}
+	return fileDescriptor_a02145e57a6fbb1d, []int{3}
 }
 func (m *MsgTripCircuitBreakerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -328,6 +237,13 @@ func (m *MsgTripCircuitBreakerResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgTripCircuitBreakerResponse proto.InternalMessageInfo
 
+func (m *MsgTripCircuitBreakerResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 // MsgResetCircuitBreaker defines the Msg/ResetCircuitBreaker request type.
 type MsgResetCircuitBreaker struct {
 	// authority is the account authorized to trip or reset the circuit breaker.
@@ -342,7 +258,7 @@ func (m *MsgResetCircuitBreaker) Reset()         { *m = MsgResetCircuitBreaker{}
 func (m *MsgResetCircuitBreaker) String() string { return proto.CompactTextString(m) }
 func (*MsgResetCircuitBreaker) ProtoMessage()    {}
 func (*MsgResetCircuitBreaker) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a02145e57a6fbb1d, []int{5}
+	return fileDescriptor_a02145e57a6fbb1d, []int{4}
 }
 func (m *MsgResetCircuitBreaker) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -387,13 +303,14 @@ func (m *MsgResetCircuitBreaker) GetMsgTypeUrls() []string {
 
 // MsgResetCircuitBreakerResponse defines the Msg/ResetCircuitBreaker response type.
 type MsgResetCircuitBreakerResponse struct {
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 }
 
 func (m *MsgResetCircuitBreakerResponse) Reset()         { *m = MsgResetCircuitBreakerResponse{} }
 func (m *MsgResetCircuitBreakerResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgResetCircuitBreakerResponse) ProtoMessage()    {}
 func (*MsgResetCircuitBreakerResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a02145e57a6fbb1d, []int{6}
+	return fileDescriptor_a02145e57a6fbb1d, []int{5}
 }
 func (m *MsgResetCircuitBreakerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -422,11 +339,16 @@ func (m *MsgResetCircuitBreakerResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgResetCircuitBreakerResponse proto.InternalMessageInfo
 
+func (m *MsgResetCircuitBreakerResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 func init() {
-	proto.RegisterEnum("cosmos.circuit.v1.CircuitBreakerPermissions_Level", CircuitBreakerPermissions_Level_name, CircuitBreakerPermissions_Level_value)
 	proto.RegisterType((*MsgAuthorizeCircuitBreaker)(nil), "cosmos.circuit.v1.MsgAuthorizeCircuitBreaker")
 	proto.RegisterType((*MsgAuthorizeCircuitBreakerResponse)(nil), "cosmos.circuit.v1.MsgAuthorizeCircuitBreakerResponse")
-	proto.RegisterType((*CircuitBreakerPermissions)(nil), "cosmos.circuit.v1.CircuitBreakerPermissions")
 	proto.RegisterType((*MsgTripCircuitBreaker)(nil), "cosmos.circuit.v1.MsgTripCircuitBreaker")
 	proto.RegisterType((*MsgTripCircuitBreakerResponse)(nil), "cosmos.circuit.v1.MsgTripCircuitBreakerResponse")
 	proto.RegisterType((*MsgResetCircuitBreaker)(nil), "cosmos.circuit.v1.MsgResetCircuitBreaker")
@@ -436,41 +358,34 @@ func init() {
 func init() { proto.RegisterFile("cosmos/circuit/v1/tx.proto", fileDescriptor_a02145e57a6fbb1d) }
 
 var fileDescriptor_a02145e57a6fbb1d = []byte{
-	// 543 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0xcd, 0x26, 0x0a, 0x28, 0x13, 0x9a, 0xa6, 0x5b, 0xb5, 0x0d, 0x16, 0x98, 0xc8, 0x42, 0x28,
-	0x54, 0xad, 0x43, 0x82, 0xb8, 0xf4, 0x96, 0xb6, 0x2e, 0x44, 0x8a, 0xd3, 0xc8, 0x21, 0x1c, 0xb8,
-	0x58, 0xa9, 0x59, 0xb9, 0x4b, 0xed, 0xd8, 0xda, 0xdd, 0x44, 0x2d, 0x17, 0x10, 0x5f, 0xc0, 0x97,
-	0xa0, 0x7e, 0x06, 0xc7, 0x1e, 0x39, 0xa2, 0xe4, 0xd0, 0x3b, 0xe2, 0x03, 0x90, 0xed, 0x38, 0x29,
-	0xd4, 0x11, 0xad, 0x38, 0x59, 0x9e, 0x79, 0xf3, 0xde, 0x5b, 0xbf, 0xf5, 0x80, 0x64, 0x79, 0xdc,
-	0xf5, 0x78, 0xd5, 0xa2, 0xcc, 0x1a, 0x52, 0x51, 0x1d, 0xd5, 0xaa, 0xe2, 0x54, 0xf5, 0x99, 0x27,
-	0x3c, 0xbc, 0x12, 0xf5, 0xd4, 0x69, 0x4f, 0x1d, 0xd5, 0xa4, 0x8d, 0x29, 0xdc, 0xe5, 0x76, 0x00,
-	0x75, 0xb9, 0x1d, 0x61, 0x95, 0xaf, 0x08, 0x24, 0x9d, 0xdb, 0x8d, 0xa1, 0x38, 0xf6, 0x18, 0xfd,
-	0x40, 0xf6, 0xa2, 0x99, 0x5d, 0x46, 0xfa, 0x27, 0x84, 0xe1, 0x12, 0xdc, 0xb5, 0x59, 0x7f, 0x20,
-	0x08, 0x2b, 0xa1, 0x32, 0xaa, 0xe4, 0x8c, 0xf8, 0x75, 0xde, 0x21, 0xa5, 0xf4, 0xd5, 0x0e, 0xc1,
-	0x6d, 0xc8, 0xfb, 0x84, 0xb9, 0x94, 0x73, 0xea, 0x0d, 0x78, 0x29, 0x53, 0x46, 0x95, 0x7c, 0x7d,
-	0x4b, 0xbd, 0x66, 0x4a, 0xfd, 0x53, 0xab, 0x33, 0x9f, 0x31, 0xae, 0x12, 0xec, 0xdc, 0xfb, 0x7c,
-	0x79, 0xbe, 0x19, 0xeb, 0x2a, 0x8f, 0x41, 0x59, 0xec, 0xd7, 0x20, 0xdc, 0xf7, 0x06, 0x9c, 0x28,
-	0x3f, 0x11, 0xdc, 0x5f, 0x48, 0x8f, 0x5f, 0x41, 0xd6, 0x21, 0x23, 0xe2, 0x84, 0x67, 0x2a, 0xd4,
-	0xeb, 0xb7, 0xf1, 0xa6, 0xb6, 0x82, 0x49, 0x23, 0x22, 0xc0, 0x4f, 0x60, 0xd9, 0xa1, 0x2e, 0x15,
-	0xa6, 0xcb, 0x6d, 0x53, 0x9c, 0xf9, 0x84, 0x97, 0xd2, 0xe5, 0x4c, 0x25, 0x67, 0x2c, 0x85, 0x65,
-	0x9d, 0xdb, 0xaf, 0x83, 0xa2, 0x62, 0x41, 0x36, 0x9c, 0xc3, 0x12, 0xac, 0xb7, 0xb4, 0x37, 0x5a,
-	0xcb, 0x6c, 0x1f, 0xb6, 0x35, 0xb3, 0xd7, 0xee, 0x76, 0xb4, 0xbd, 0xe6, 0x41, 0x53, 0xdb, 0x2f,
-	0xa6, 0xf0, 0x2a, 0x2c, 0x47, 0xbd, 0xee, 0xa1, 0xae, 0x99, 0x7a, 0xf7, 0x65, 0xb7, 0x88, 0x30,
-	0x86, 0x42, 0x54, 0x6c, 0xb4, 0x5a, 0x51, 0x2d, 0x8d, 0xd7, 0x60, 0x65, 0x0a, 0xec, 0x75, 0x34,
-	0xc3, 0x6c, 0xec, 0xeb, 0xcd, 0x76, 0x31, 0xa3, 0x50, 0x58, 0x0b, 0x04, 0x19, 0xf5, 0xff, 0x4a,
-	0xf1, 0x01, 0xe4, 0xfa, 0xd1, 0x07, 0x13, 0x67, 0xd3, 0x1c, 0xe7, 0x05, 0xac, 0xc0, 0x52, 0xec,
-	0xde, 0x1c, 0x32, 0x27, 0x3e, 0x41, 0xde, 0x8d, 0xcc, 0xf7, 0x98, 0xc3, 0x77, 0x0a, 0x41, 0x06,
-	0xf3, 0x19, 0xe5, 0x11, 0x3c, 0x4c, 0x94, 0x9a, 0x05, 0xf0, 0x1e, 0xd6, 0x75, 0x6e, 0x1b, 0x84,
-	0x13, 0xf1, 0x7f, 0x66, 0x32, 0xff, 0x36, 0x53, 0x06, 0x39, 0x59, 0x2b, 0x76, 0x53, 0xff, 0x95,
-	0x86, 0x8c, 0xce, 0x6d, 0xfc, 0x11, 0x36, 0x16, 0xdd, 0xf4, 0xed, 0x84, 0x4b, 0xb0, 0xf8, 0xa2,
-	0x49, 0x2f, 0x6e, 0x05, 0x8f, 0x8d, 0x60, 0x1f, 0x70, 0x42, 0x3e, 0x95, 0x64, 0xb2, 0xeb, 0x48,
-	0xe9, 0xd9, 0x4d, 0x91, 0x33, 0x45, 0x0e, 0xab, 0x49, 0x29, 0x3c, 0x4d, 0x26, 0x4a, 0x80, 0x4a,
-	0xb5, 0x1b, 0x43, 0x63, 0x51, 0x29, 0xfb, 0xe9, 0xf2, 0x7c, 0x13, 0xed, 0x1e, 0x7c, 0x1b, 0xcb,
-	0xe8, 0x62, 0x2c, 0xa3, 0x1f, 0x63, 0x19, 0x7d, 0x99, 0xc8, 0xa9, 0x8b, 0x89, 0x9c, 0xfa, 0x3e,
-	0x91, 0x53, 0x6f, 0xb7, 0x6c, 0x2a, 0x8e, 0x87, 0x47, 0xaa, 0xe5, 0xb9, 0xd5, 0x78, 0x93, 0x85,
-	0x8f, 0x6d, 0xfe, 0xee, 0xa4, 0x7a, 0x3a, 0x5b, 0x6b, 0xe1, 0x2f, 0x75, 0x74, 0x27, 0xdc, 0x55,
-	0xcf, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0xa7, 0x99, 0x58, 0xf0, 0xf5, 0x04, 0x00, 0x00,
+	// 429 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x93, 0xcf, 0xae, 0xd2, 0x40,
+	0x14, 0x87, 0x19, 0x1a, 0xff, 0x30, 0xa8, 0x89, 0x35, 0x7a, 0x9b, 0xc9, 0xbd, 0x13, 0xd2, 0x55,
+	0xbd, 0x89, 0xad, 0x60, 0x34, 0x91, 0x85, 0x51, 0x5c, 0x37, 0x31, 0x0d, 0x6e, 0xdc, 0x10, 0xac,
+	0x93, 0x71, 0x84, 0x32, 0xcd, 0x9c, 0x96, 0x80, 0x1b, 0x8d, 0x4f, 0xe0, 0x23, 0xf8, 0x08, 0x3c,
+	0x86, 0x4b, 0x96, 0x2e, 0x0d, 0x2c, 0x78, 0x01, 0x1f, 0xc0, 0x94, 0x52, 0x4a, 0x64, 0x08, 0x98,
+	0xbb, 0x1c, 0xce, 0x37, 0xe7, 0xf7, 0x0d, 0xa7, 0x07, 0x93, 0x50, 0x42, 0x24, 0xc1, 0x0b, 0x85,
+	0x0a, 0x53, 0x91, 0x78, 0xe3, 0xa6, 0x97, 0x4c, 0xdc, 0x58, 0xc9, 0x44, 0x9a, 0x77, 0xf3, 0x9a,
+	0xbb, 0xa9, 0xb9, 0xe3, 0x26, 0x39, 0xdb, 0xe0, 0x11, 0xf0, 0x0c, 0x8d, 0x80, 0xe7, 0x2c, 0xb9,
+	0xd0, 0xf4, 0x99, 0xc6, 0x0c, 0xf2, 0xb2, 0xfd, 0x03, 0x61, 0xe2, 0x03, 0x7f, 0x95, 0x26, 0x1f,
+	0xa5, 0x12, 0x9f, 0xd9, 0xeb, 0x1c, 0xeb, 0x28, 0xd6, 0x1f, 0x30, 0x65, 0x5a, 0xf8, 0x06, 0x57,
+	0xfd, 0x51, 0xc2, 0x94, 0x85, 0x1a, 0xc8, 0xa9, 0x05, 0xc5, 0xb1, 0xac, 0x30, 0xab, 0xba, 0x5b,
+	0x61, 0xe6, 0x4b, 0x5c, 0x8f, 0x99, 0x8a, 0x04, 0x80, 0x90, 0x23, 0xb0, 0x8c, 0x06, 0x72, 0xea,
+	0x2d, 0xea, 0xee, 0x39, 0xbb, 0x6f, 0x4a, 0x2a, 0xd8, 0xbd, 0xd2, 0xbe, 0xf5, 0x6d, 0x35, 0xbb,
+	0x2c, 0x92, 0xec, 0x17, 0xd8, 0x3e, 0x6c, 0x18, 0x30, 0x88, 0xe5, 0x08, 0x58, 0xe6, 0x03, 0x69,
+	0x18, 0x32, 0x80, 0xb5, 0xe9, 0xcd, 0xa0, 0x38, 0xda, 0x02, 0xdf, 0xf7, 0x81, 0x77, 0x95, 0x88,
+	0xff, 0x79, 0xdc, 0x39, 0xae, 0xf5, 0xf3, 0xae, 0xc9, 0x74, 0xf3, 0xbc, 0xf2, 0x07, 0xd3, 0xc6,
+	0xb7, 0x23, 0xe0, 0xbd, 0xec, 0xcf, 0xea, 0xa5, 0x6a, 0x08, 0x56, 0xb5, 0x61, 0x38, 0xb5, 0xa0,
+	0x1e, 0x01, 0xef, 0x4e, 0x63, 0xf6, 0x56, 0x0d, 0xa1, 0x7d, 0x27, 0x13, 0x2d, 0xef, 0xd8, 0xcf,
+	0xf1, 0x85, 0x36, 0xea, 0x04, 0xcb, 0x4f, 0xf8, 0x81, 0x0f, 0x3c, 0x60, 0xc0, 0x92, 0xab, 0x69,
+	0x1a, 0xc7, 0x35, 0xdb, 0x98, 0xea, 0xb3, 0x8e, 0x7b, 0xb6, 0xfe, 0x54, 0xb1, 0xe1, 0x03, 0x37,
+	0xbf, 0xe0, 0xb3, 0x43, 0x1f, 0xcd, 0x23, 0xcd, 0xac, 0x0f, 0x4f, 0x90, 0x3c, 0xfd, 0x2f, 0x7c,
+	0xab, 0x18, 0x63, 0x53, 0x33, 0x53, 0x47, 0xdf, 0x6c, 0x9f, 0x24, 0x8f, 0x4f, 0x25, 0xb7, 0x89,
+	0x80, 0xef, 0xe9, 0xe6, 0xf3, 0x50, 0xdf, 0x48, 0x83, 0x92, 0xe6, 0xc9, 0x68, 0x11, 0x4a, 0xae,
+	0x7d, 0x5d, 0xcd, 0x2e, 0x51, 0xe7, 0xd9, 0xcf, 0x05, 0x45, 0xf3, 0x05, 0x45, 0xbf, 0x17, 0x14,
+	0x7d, 0x5f, 0xd2, 0xca, 0x7c, 0x49, 0x2b, 0xbf, 0x96, 0xb4, 0xf2, 0xee, 0x3c, 0x6f, 0x09, 0x1f,
+	0x06, 0xae, 0x90, 0xde, 0x64, 0xbb, 0xe8, 0xeb, 0x2d, 0x7f, 0x7f, 0x7d, 0xbd, 0xe6, 0x4f, 0xfe,
+	0x06, 0x00, 0x00, 0xff, 0xff, 0x89, 0x07, 0x74, 0x02, 0x4f, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -704,40 +619,13 @@ func (m *MsgAuthorizeCircuitBreakerResponse) MarshalToSizedBuffer(dAtA []byte) (
 	_ = i
 	var l int
 	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *CircuitBreakerPermissions) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *CircuitBreakerPermissions) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *CircuitBreakerPermissions) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.LimitMsgTypes) > 0 {
-		for iNdEx := len(m.LimitMsgTypes) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.LimitMsgTypes[iNdEx])
-			copy(dAtA[i:], m.LimitMsgTypes[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.LimitMsgTypes[iNdEx])))
-			i--
-			dAtA[i] = 0x12
+	if m.Success {
+		i--
+		if m.Success {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
 		}
-	}
-	if m.Level != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.Level))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -803,6 +691,16 @@ func (m *MsgTripCircuitBreakerResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	_ = i
 	var l int
 	_ = l
+	if m.Success {
+		i--
+		if m.Success {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -865,6 +763,16 @@ func (m *MsgResetCircuitBreakerResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	_ = i
 	var l int
 	_ = l
+	if m.Success {
+		i--
+		if m.Success {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -906,23 +814,8 @@ func (m *MsgAuthorizeCircuitBreakerResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	return n
-}
-
-func (m *CircuitBreakerPermissions) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Level != 0 {
-		n += 1 + sovTx(uint64(m.Level))
-	}
-	if len(m.LimitMsgTypes) > 0 {
-		for _, s := range m.LimitMsgTypes {
-			l = len(s)
-			n += 1 + l + sovTx(uint64(l))
-		}
+	if m.Success {
+		n += 2
 	}
 	return n
 }
@@ -952,6 +845,9 @@ func (m *MsgTripCircuitBreakerResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.Success {
+		n += 2
+	}
 	return n
 }
 
@@ -980,6 +876,9 @@ func (m *MsgResetCircuitBreakerResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.Success {
+		n += 2
+	}
 	return n
 }
 
@@ -1112,7 +1011,7 @@ func (m *MsgAuthorizeCircuitBreaker) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Permissions == nil {
-				m.Permissions = &CircuitBreakerPermissions{}
+				m.Permissions = &Permissions{}
 			}
 			if err := m.Permissions.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1168,61 +1067,11 @@ func (m *MsgAuthorizeCircuitBreakerResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgAuthorizeCircuitBreakerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *CircuitBreakerPermissions) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: CircuitBreakerPermissions: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CircuitBreakerPermissions: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Level", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
 			}
-			m.Level = 0
+			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1232,43 +1081,12 @@ func (m *CircuitBreakerPermissions) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Level |= CircuitBreakerPermissions_Level(b&0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LimitMsgTypes", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LimitMsgTypes = append(m.LimitMsgTypes, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
+			m.Success = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1433,6 +1251,26 @@ func (m *MsgTripCircuitBreakerResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgTripCircuitBreakerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Success = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1597,6 +1435,26 @@ func (m *MsgResetCircuitBreakerResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgResetCircuitBreakerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Success = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

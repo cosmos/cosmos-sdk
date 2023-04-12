@@ -73,6 +73,10 @@ Examples:
 				return err
 			}
 
+			if strings.EqualFold(args[0], clientCtx.GetFromAddress().String()) {
+				return errors.New("grantee and granter should be different")
+			}
+
 			grantee, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
@@ -98,6 +102,15 @@ Examples:
 				allowList, err := cmd.Flags().GetStringSlice(FlagAllowList)
 				if err != nil {
 					return err
+				}
+
+				// check for duplicates
+				for i := 0; i < len(allowList); i++ {
+					for j := i + 1; j < len(allowList); j++ {
+						if allowList[i] == allowList[j] {
+							return fmt.Errorf("duplicate address %s in allow-list", allowList[i])
+						}
+					}
 				}
 
 				allowed, err := bech32toAccAddresses(allowList, ac)

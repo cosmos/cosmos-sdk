@@ -6,7 +6,6 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -19,7 +18,7 @@ const (
 
 // GenCommunityTax randomized CommunityTax
 func GenCommunityTax(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
+	return math.LegacyNewDecWithPrec(1, 2).Add(math.LegacyNewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
 // GenWithdrawEnabled returns a randomized WithdrawEnabled parameter.
@@ -29,7 +28,7 @@ func GenWithdrawEnabled(r *rand.Rand) bool {
 
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(simState *module.SimulationState) {
-	var communityTax sdk.Dec
+	var communityTax math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, CommunityTax, &communityTax, simState.Rand,
 		func(r *rand.Rand) { communityTax = GenCommunityTax(r) },

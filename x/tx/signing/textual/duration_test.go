@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/stretchr/testify/require"
 
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	dpb "google.golang.org/protobuf/types/known/durationpb"
 )
@@ -54,7 +53,7 @@ func TestDurationJSON(t *testing.T) {
 			msg := val.Message().Interface()
 			require.IsType(t, &dpb.Duration{}, msg)
 			duration := msg.(*dpb.Duration)
-			require.True(t, proto.Equal(duration, tc.Proto), "%v vs %v", duration, tc.Proto)
+			require.Equal(t, duration.AsDuration(), tc.Proto.AsDuration(), "%v vs %v", duration, tc.Proto)
 		})
 	}
 }

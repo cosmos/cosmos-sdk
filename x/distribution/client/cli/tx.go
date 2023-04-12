@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -26,7 +27,7 @@ const (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/distribution transaction commands.
-func NewTxCmd() *cobra.Command {
+func NewTxCmd(ac address.Codec) *cobra.Command {
 	distTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Distribution transactions subcommands",
@@ -38,7 +39,7 @@ func NewTxCmd() *cobra.Command {
 	distTxCmd.AddCommand(
 		NewWithdrawRewardsCmd(),
 		NewWithdrawAllRewardsCmd(),
-		NewSetWithdrawAddrCmd(),
+		NewSetWithdrawAddrCmd(ac),
 		NewFundCommunityPoolCmd(),
 		NewDepositValidatorRewardsPoolCmd(),
 	)
@@ -181,7 +182,7 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 }
 
 // NewSetWithdrawAddrCmd returns a CLI command handler for creating a MsgSetWithdrawAddress transaction.
-func NewSetWithdrawAddrCmd() *cobra.Command {
+func NewSetWithdrawAddrCmd(ac address.Codec) *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -203,7 +204,7 @@ $ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 			delAddr := clientCtx.GetFromAddress()
-			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
+			withdrawAddr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}

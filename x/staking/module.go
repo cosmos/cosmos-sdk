@@ -62,7 +62,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the module's interface types
-func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -206,8 +206,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type StakingInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config        *modulev1.Module
@@ -221,16 +220,14 @@ type StakingInputs struct {
 }
 
 // Dependency Injection Outputs
-//
-//nolint:revive
-type StakingOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	StakingKeeper *keeper.Keeper
 	Module        appmodule.AppModule
 }
 
-func ProvideModule(in StakingInputs) StakingOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
@@ -245,7 +242,7 @@ func ProvideModule(in StakingInputs) StakingOutputs {
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
-	return StakingOutputs{StakingKeeper: k, Module: m}
+	return ModuleOutputs{StakingKeeper: k, Module: m}
 }
 
 func InvokeSetStakingHooks(

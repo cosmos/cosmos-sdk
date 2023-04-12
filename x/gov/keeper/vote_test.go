@@ -12,8 +12,12 @@ import (
 )
 
 func TestVotes(t *testing.T) {
-	govKeeper, _, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
 	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000))
+	for _, addr := range addrs {
+		authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+		authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+	}
 
 	tp := TestProposal
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)

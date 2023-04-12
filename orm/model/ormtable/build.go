@@ -109,7 +109,7 @@ func Build(options Options) (Table, error) {
 		}
 	case singletonDesc != nil:
 		if singletonDesc.Id == 0 {
-			return nil, ormerrors.InvalidTableID.Wrapf("%s", messageDescriptor.FullName())
+			return nil, ormerrors.InvalidTableId.Wrapf("%s", messageDescriptor.FullName())
 		}
 
 		prefix := encodeutil.AppendVarUInt32(options.Prefix, singletonDesc.Id)
@@ -134,7 +134,7 @@ func Build(options Options) (Table, error) {
 
 	tableId := tableDesc.Id
 	if tableId == 0 {
-		return nil, ormerrors.InvalidTableID.Wrapf("table %s", messageDescriptor.FullName())
+		return nil, ormerrors.InvalidTableId.Wrapf("table %s", messageDescriptor.FullName())
 	}
 
 	prefix := options.Prefix

@@ -14,7 +14,7 @@ func IsNotFound(err error) bool {
 
 // nolint: revive // avoid break API
 var (
-	InvalidTableID                = errors.New(codespace, 1, "invalid or missing table or single id, need a non-zero value")
+	InvalidTableId                = errors.New(codespace, 1, "invalid or missing table or single id, need a non-zero value")
 	MissingPrimaryKey             = errors.New(codespace, 2, "table is missing primary key")
 	InvalidKeyFieldsDefinition    = errors.New(codespace, 3, "invalid field definition for key")
 	DuplicateKeyField             = errors.New(codespace, 4, "duplicate field in key")

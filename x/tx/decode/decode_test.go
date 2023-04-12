@@ -43,6 +43,7 @@ func TestDecode(t *testing.T) {
 		AddressCodec:          dummyAddressCodec{},
 		ValidatorAddressCodec: dummyAddressCodec{},
 	})
+	require.NoError(t, err)
 	decoder, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
 	})

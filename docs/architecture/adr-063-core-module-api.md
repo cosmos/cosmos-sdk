@@ -162,42 +162,13 @@ by other modules. If there is a client-side need to add events in patch releases
 
 #### Logger Service
 
-The logger `Service` will be defined in the `cosmossdk.io/core/log` package and it implements the full Cosmos SDK logger interface.
-
-```go
-package log
-
-// Service is the same as the Cosmos SDK logger interface (copied from cosmossdk.io/log).
-// All functionalities of the logger are available through the Impl() method.
-type Service interface {
-	// Info takes a message and a set of key/value pairs and logs with level INFO.
-	// The key of the tuple must be a string.
-	Info(msg string, keyVals ...any)
-
-	// Error takes a message and a set of key/value pairs and logs with level ERR.
-	// The key of the tuple must be a string.
-	Error(msg string, keyVals ...any)
-
-	// Debug takes a message and a set of key/value pairs and logs with level DEBUG.
-	// The key of the tuple must be a string.
-	Debug(msg string, keyVals ...any)
-
-	// With returns a new wrapped logger with additional context provided by a set.
-	With(keyVals ...any) Service
-
-	// Impl returns the underlying logger implementation.
-	// It is used to access the full functionalities of the underlying logger.
-	// Advanced users can type cast the returned value to the actual logger.
-	Impl() any
-}
-```
-
-Modules using this service should not need to add any context related to the module name,
+A logger (`cosmossdk.io/log`) is provided by default by the `runtime` package.
+Modules using it should not need to add any context related to the module name,
 as the runtime will do this when providing, following the current pattern in the SDK:
 
 ```go
-func ProvideLoggerService(key depinject.ModuleKey, app *AppBuilder) log.Service {
-	return LoggerService{app.app.Logger().With("module", fmt.Sprintf("x/%s", key.Name()))}
+func ProvideLogger(key depinject.ModuleKey, app *AppBuilder) log.Logger {
+	return app.app.Logger().With("module", fmt.Sprintf("x/%s", key.Name()))
 }
 ```
 

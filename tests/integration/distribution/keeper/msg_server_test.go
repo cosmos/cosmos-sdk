@@ -6,13 +6,10 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -43,16 +40,16 @@ var (
 )
 
 type fixture struct {
-	cdc  codec.Codec
-	keys map[string]*storetypes.KVStoreKey
+	app *integration.App
+
+	sdkCtx sdk.Context
+	cdc    codec.Codec
+	keys   map[string]*storetypes.KVStoreKey
 
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 	distrKeeper   distrkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
-
-	sdkCtx sdk.Context
-	app    *integration.App
 
 	addr    sdk.AccAddress
 	valAddr sdk.ValAddress
@@ -66,14 +63,10 @@ func initFixture(t assert.TestingT) *fixture {
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	for key := range keys {
-		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
-	}
-	_ = cms.LoadLatestVersion()
+	logger := log.NewTestLogger(&testing.T{})
+	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, types.Header{}, true, log.NewTestLogger(&testing.T{}))
+	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -109,43 +102,46 @@ func initFixture(t assert.TestingT) *fixture {
 		cdc, keys[distrtypes.StoreKey], accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
 
-	f.cdc = cdc
-	f.keys = keys
-	f.accountKeeper = accountKeeper
-	f.bankKeeper = bankKeeper
-	f.stakingKeeper = stakingKeeper
-	f.distrKeeper = distrKeeper
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)
 
-	authModule := auth.NewAppModule(f.cdc, f.accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(f.cdc, f.bankKeeper, f.accountKeeper, nil)
-	stakingModule := staking.NewAppModule(f.cdc, f.stakingKeeper, f.accountKeeper, f.bankKeeper, nil)
-	distrModule := distribution.NewAppModule(f.cdc, f.distrKeeper, f.accountKeeper, f.bankKeeper, f.stakingKeeper, nil)
-
-	f.addr = sdk.AccAddress(PKS[0].Address())
-	f.valAddr = sdk.ValAddress(f.addr)
+	addr := sdk.AccAddress(PKS[0].Address())
+	valAddr := sdk.ValAddress(addr)
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	// set proposer and vote infos
 	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
 		{
 			Validator: cmtabcitypes.Validator{
-				Address: f.valAddr,
+				Address: valAddr,
 				Power:   100,
 			},
 			SignedLastBlock: true,
 		},
 	})
 
-	integrationApp := integration.NewIntegrationApp(ctx, log.NewTestLogger(&testing.T{}), f.keys, f.cdc, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, authModule, bankModule, stakingModule, distrModule)
 
 	// Register MsgServer and QueryServer
-	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(f.distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(f.distrKeeper))
+	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
 
 	f.app = integrationApp
 
 	sdkCtx := sdk.UnwrapSDKContext(f.app.Context())
 	f.sdkCtx = sdkCtx
+	f.cdc = cdc
+	f.keys = keys
+
+	f.accountKeeper = accountKeeper
+	f.bankKeeper = bankKeeper
+	f.stakingKeeper = stakingKeeper
+	f.distrKeeper = distrKeeper
+
+	f.addr = addr
+	f.valAddr = valAddr
 
 	return f
 }

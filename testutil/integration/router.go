@@ -56,10 +56,10 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	})
 
 	moduleManager := module.NewManager(modules...)
-	bApp.SetBeginBlocker(func(ctx sdk.Context, req cmtabcitypes.RequestBeginBlock) (cmtabcitypes.ResponseBeginBlock, error) {
+	bApp.SetBeginBlocker(func(_ sdk.Context, req cmtabcitypes.RequestBeginBlock) (cmtabcitypes.ResponseBeginBlock, error) {
 		return moduleManager.BeginBlock(sdkCtx, req)
 	})
-	bApp.SetEndBlocker(func(ctx sdk.Context, req cmtabcitypes.RequestEndBlock) (cmtabcitypes.ResponseEndBlock, error) {
+	bApp.SetEndBlocker(func(_ sdk.Context, req cmtabcitypes.RequestEndBlock) (cmtabcitypes.ResponseEndBlock, error) {
 		return moduleManager.EndBlock(sdkCtx, req)
 	})
 

@@ -66,6 +66,7 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
+			ProvideLoggerService,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -212,5 +213,5 @@ func ProvideEventService() event.Service {
 }
 
 func ProvideLoggerService(key depinject.ModuleKey, app *AppBuilder) log.Service {
-	return app.app.Logger().With("module", fmt.Sprintf("x/%s", key.Name()))
+	return LoggerService{app.app.Logger().With("module", fmt.Sprintf("x/%s", key.Name()))}
 }

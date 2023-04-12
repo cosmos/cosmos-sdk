@@ -570,7 +570,7 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 	err := ms.LoadVersion(numVersions - 1)
 	require.NoError(t, err)
 
-	// Ensure already snapshot heights were loaded
+	// Ensure already pruned snapshot heights were loaded
 	require.NoError(t, ms.pruningManager.LoadSnapshotHeights(db))
 
 	// Test pruning the same heights again

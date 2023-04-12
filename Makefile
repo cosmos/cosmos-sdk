@@ -2,7 +2,7 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-export VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
+export VERSION := $(shell echo $(shell git describe --tags --always --match "v*") | sed 's/^v//')
 export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -379,12 +379,12 @@ golangci_version=v1.51.2
 lint:
 	@echo "--> Running linter"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@sh ./scripts/go-lint-all.sh --timeout=15m
+	@./scripts/go-lint-all.bash --timeout=15m
 
 lint-fix:
 	@echo "--> Running linter"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@sh ./scripts/go-lint-all.sh --fix
+	@./scripts/go-lint-all.bash --fix
 
 .PHONY: lint lint-fix
 

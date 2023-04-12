@@ -42,7 +42,7 @@ func (suite *TestSuite) TestGrant() {
 		errMsg   string
 	}{
 		{
-			name: "indentical grantee and granter",
+			name: "identical grantee and granter",
 			malleate: func() *authz.MsgGrant {
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
 				suite.Require().NoError(err)
@@ -217,7 +217,7 @@ func (suite *TestSuite) TestRevoke() {
 		errMsg   string
 	}{
 		{
-			name: "indentical grantee and granter",
+			name: "identical grantee and granter",
 			malleate: func() *authz.MsgRevoke {
 				return &authz.MsgRevoke{
 					Granter:    grantee.String(),

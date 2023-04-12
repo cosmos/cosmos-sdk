@@ -60,6 +60,10 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 				return err
 			}
 
+			if len(coins) == 0 {
+				return fmt.Errorf("invalid coins")
+			}
+
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

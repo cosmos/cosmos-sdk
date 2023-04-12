@@ -358,6 +358,5 @@ func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 				suite.Require().NoError(err)
 			}
 		})
-
 	}
 }

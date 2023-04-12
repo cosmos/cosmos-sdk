@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -66,7 +65,6 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
-			ProvideLogger,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -212,6 +210,9 @@ func ProvideEventService() event.Service {
 	return EventService{}
 }
 
-func ProvideLogger(key depinject.ModuleKey, app *AppBuilder) log.Logger {
-	return app.app.Logger().With("module", fmt.Sprintf("x/%s", key.Name()))
-}
+// func ProvideLogger(key depinject.ModuleKey, logger log.Logger) log.Logger {
+// 	// if app.app.Logger() == nil {
+// 	// 	panic("app is not initialized")
+// 	// }
+// 	return logger.With("module", fmt.Sprintf("x/%s", key.Name()))
+// }

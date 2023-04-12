@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
@@ -93,11 +92,6 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak t
 	}
 	k.Schema = schema
 	return k
-}
-
-// Logger returns a module-specific logger.
-func (k BaseViewKeeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // HasBalance returns whether or not an account has at least amt balance.

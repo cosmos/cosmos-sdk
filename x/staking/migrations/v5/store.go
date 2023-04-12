@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) (storetypes.KVStore, error) {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
 	iterator := storetypes.KVStorePrefixIterator(store, DelegationKey)
@@ -17,11 +17,11 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 		key := iterator.Key()
 		del, val, err := types.ParseDelegationKey(key)
 		if err != nil {
-			return store, err
+			return err
 		}
 
 		store.Set(types.GetDelegationsByValKey(val, del), []byte{})
 	}
 
-	return store, nil
+	return nil
 }

@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+service Genesis {
+  rpc ValidateGenesis (stream ValidateGenesisRequest) returns (ValidateGenesisResponse) {}
+  rpc InitGenesis (stream InitGenesisRequest) returns (InitGenesisResponse) {}
+  rpc ExportGenesis (ExportGenesisRequest) returns (stream ExportGenesisResponse) {}
+}
+
+message InitGenesisRequest {
+  GenesisChunk chunk = 1;
+}
+
+message InitGenesisResponse {}
+
+message ExportGenesisRequest {}
+
+message ExportGenesisResponse {
+  GenesisChunk chunk = 1;
+}
+
+message ValidateGenesisRequest {
+  GenesisChunk chunk = 1;
+}
+
+message ValidateGenesisResponse {}
+
+message GenesisChunk {
+  oneof sum {
+    string start_message_type = 1;
+    bytes message_bytes = 2;
+  }
+}

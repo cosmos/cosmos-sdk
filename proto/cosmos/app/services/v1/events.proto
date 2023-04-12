@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+import "google/protobuf/any.proto";
+
+service EventManager {
+  rpc EmitEvent (EmitEventRequest) returns (EmitEventResponse);
+}
+
+message EmitEventRequest {
+  google.protobuf.Any event = 1;
+}
+
+message EmitEventResponse {}
+
+service EventListener {
+  rpc OnEvent (OnEventRequest) returns (OnEventResponse);
+}
+
+message OnEventRequest {
+  google.protobuf.Any event = 1;
+}
+
+message OnEventResponse {}

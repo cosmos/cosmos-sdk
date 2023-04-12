@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+service BeginBlock {
+  rpc BeginBlock (BeginBlockRequest) returns (BeginBlockResponse);
+}
+
+message BeginBlockRequest {}
+
+message BeginBlockResponse {}
+
+service EndBlock {
+  rpc EndBlock (EndBlockRequest) returns (EndBlockResponse);
+}
+
+message EndBlockRequest {}
+
+message EndBlockResponse {}

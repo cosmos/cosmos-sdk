@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package cosmos.app.services.v1;
+
+service Store {
+  rpc Has(HasRequest) returns (HasResponse);
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Set(SetRequest) returns (SetResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc Iterator(IteratorRequest) returns (stream IteratorResponse);
+}
+
+message HasRequest {
+  bytes key = 1;
+}
+
+message HasResponse {
+  bool exists = 1;
+}
+
+message GetRequest {
+  bytes key = 1;
+}
+
+message GetResponse {
+  bytes value = 1;
+}
+
+message SetRequest {
+  bytes key = 1;
+  bytes value = 2;
+}
+
+message SetResponse {}
+
+message DeleteRequest {
+  bytes key = 1;
+}
+
+message DeleteResponse {}
+
+message IteratorRequest {
+  bytes start = 1;
+  bytes end = 2;
+  bool reverse = 3;
+}
+
+message IteratorResponse {
+  bytes key = 1;
+  bytes value = 2;
+}

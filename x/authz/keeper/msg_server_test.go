@@ -360,7 +360,8 @@ func (suite *TestSuite) TestExec() {
 						Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 						FromAddress: "invalid_from_address",
 						ToAddress:   grantee.String(),
-					}})
+					},
+				})
 			},
 			expErr: true,
 			errMsg: "invalid from address",

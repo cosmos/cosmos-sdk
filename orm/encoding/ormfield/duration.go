@@ -51,9 +51,9 @@ func (d DurationCodec) Compare(v1, v2 protoreflect.Value) int {
 	c := compareInt(s1, s2)
 	if c != 0 {
 		return c
-	} else {
-		return compareInt(n1, n2)
 	}
+
+	return compareInt(n1, n2)
 }
 
 func (d DurationCodec) IsOrdered() bool {

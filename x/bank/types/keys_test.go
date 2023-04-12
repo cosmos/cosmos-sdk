@@ -1,11 +1,12 @@
 package types
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestBalanceValueCodec(t *testing.T) {

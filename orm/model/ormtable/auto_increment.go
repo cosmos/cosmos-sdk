@@ -130,7 +130,7 @@ func (t autoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err err
 }
 
 func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
-	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxSeq uint64) error {
+	return t.decodeAutoIncJSON(nil, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
 		pkey := messageRef.Get(t.autoIncField).Uint()
 		if pkey > maxSeq {
@@ -152,7 +152,7 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 		return err
 	}
 
-	return t.decodeAutoIncJson(backend, reader, func(message proto.Message, maxSeq uint64) error {
+	return t.decodeAutoIncJSON(backend, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
 		pkey := messageRef.Get(t.autoIncField).Uint()
 		if pkey == 0 {
@@ -160,21 +160,21 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 			// generate one
 			_, err = t.save(ctx, backend, message, saveModeInsert)
 			return err
-		} else {
-			if pkey > maxSeq {
-				return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
-					"sequence number", pkey, maxSeq)
-			}
-			// we do have a primary key and calling Save will fail because it expects
-			// either no primary key or SAVE_MODE_UPDATE. So instead we drop one level
-			// down and insert using tableImpl which doesn't know about
-			// auto-incrementing primary keys.
-			return t.tableImpl.save(ctx, backend, message, saveModeInsert)
 		}
+
+		if pkey > maxSeq {
+			return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
+				"sequence number", pkey, maxSeq)
+		}
+		// we do have a primary key and calling Save will fail because it expects
+		// either no primary key or SAVE_MODE_UPDATE. So instead we drop one level
+		// down and insert using tableImpl which doesn't know about
+		// auto-incrementing primary keys.
+		return t.tableImpl.save(ctx, backend, message, saveModeInsert)
 	})
 }
 
-func (t autoIncrementTable) decodeAutoIncJson(backend Backend, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
+func (t autoIncrementTable) decodeAutoIncJSON(backend Backend, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
 	decoder, err := t.startDecodeJson(reader)
 	if err != nil {
 		return err

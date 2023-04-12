@@ -93,16 +93,12 @@ func (store *Store) Delete(key []byte) {
 	store.setCacheValue(key, nil, true)
 }
 
-type cEntry struct {
-	key string
-	val *cValue
-}
-
-func (store *Store) deleteCaches() {
+func (store *Store) resetCaches() {
 	if len(store.cache) > 100_000 {
 		// Cache is too large. We likely did something linear time
 		// (e.g. Epoch block, Genesis block, etc). Free the old caches from memory, and let them get re-allocated.
 		// TODO: In a future CacheKV redesign, such linear workloads should get into a different cache instantiation.
+		// 100_000 is arbitrarily chosen as it solved Osmosis' InitGenesis RAM problem.
 		store.cache = make(map[string]*cValue)
 		store.unsortedCache = make(map[string]struct{})
 	} else {
@@ -129,6 +125,11 @@ func (store *Store) Write() {
 		return
 	}
 
+	type cEntry struct {
+		key string
+		val *cValue
+	}
+
 	// We need a copy of all of the keys.
 	// Not the best. To reduce RAM pressure, we copy the values as well
 	// and clear out the old caches right after the copy.
@@ -139,7 +140,7 @@ func (store *Store) Write() {
 			sortedCache = append(sortedCache, cEntry{key, dbValue})
 		}
 	}
-	store.deleteCaches()
+	store.resetCaches()
 	sort.Slice(sortedCache, func(i, j int) bool {
 		return sortedCache[i].key < sortedCache[j].key
 	})

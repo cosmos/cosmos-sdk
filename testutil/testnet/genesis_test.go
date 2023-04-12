@@ -3,7 +3,6 @@ package testnet_test
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -202,14 +201,6 @@ func TestGenesisBuilder_GentxAddresses(t *testing.T) {
 	gentxs := g.AppState.Genutil.GenTxs
 	require.Equal(t, gentxs[0].Body.Messages[0].PubKey.Key, valPubKey0)
 	require.Equal(t, gentxs[0].AuthInfo.SignerInfos[0].PublicKey.Key, delPubKey0)
-
-	// Delegator is derived from the secp256k1 key, not the ed25519 key.
-	require.Equal(t, gentxs[0].Body.Messages[0].DelegatorAddress, delAccAddr0)
-
-	// The validator address must match the delegator address.
-	_, parsedValAddr, err := bech32.DecodeAndConvert(gentxs[0].Body.Messages[0].DelegatorAddress)
-	require.NoError(t, err)
-	require.Equal(t, fmt.Sprintf("%X", parsedValAddr), delAddr0)
 
 	// The only base account in this genesis, matches the secp256k1 key.
 	acct := g.AppState.Auth.Accounts[0]

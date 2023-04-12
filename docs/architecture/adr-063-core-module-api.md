@@ -180,14 +180,12 @@ type ModuleInputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-  // ...
   // add the module name to the logger
   logger := in.Logger.With("module", "x/"+types.ModuleName)
 
-  someKeeper := keeper.NewBaseKeeper(
+  keeper := keeper.NewKeeper(
     logger,
   )
-  // ...
 }
 ```
 

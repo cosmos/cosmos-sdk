@@ -49,32 +49,22 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
 	initHeader := cmtproto.Header{ChainID: req.ChainId, Time: req.Time}
+	app.initialHeight = req.InitialHeight
 
 	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
-	// Set the initial height, which will be used to determine if we are proposing
-	// or processing the first block or not.
-	app.initialHeight = req.InitialHeight
-
-	// if req.InitialHeight is > 1, then we set the initial version on all stores
+	// If req.InitialHeight is > 1, then we set the initial version in the
+	// stores.
 	if req.InitialHeight > 1 {
-<<<<<<< HEAD
 		app.initialHeight = req.InitialHeight
 		initHeader = cmtproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
 
-		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
-			return nil, err
-||||||| 401d0d72c9
-		app.initialHeight = req.InitialHeight
-		initHeader = cmtproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
-		err := app.cms.SetInitialVersion(req.InitialHeight)
-		if err != nil {
-			panic(err)
-=======
-		initHeader.Height = req.InitialHeight
-		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
-			panic(err)
->>>>>>> main
+		// if req.InitialHeight is > 1, then we set the initial version on all stores
+		if req.InitialHeight > 1 {
+			initHeader.Height = req.InitialHeight
+			if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -560,8 +550,12 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 
 	// Since the application can get access to FinalizeBlock state and write to it,
 	// we must be sure to reset it in case ProcessProposal timeouts and is called
-	// again in a subsequent round.
-	app.setState(execModeFinalize, header)
+	// again in a subsequent round. However, we only want to do this after we've
+	// processed the first block, as we want to avoid overwriting the finalizeState
+	// after state changes during InitChain.
+	if req.Height > app.initialHeight {
+		app.setState(execModeFinalize, header)
+	}
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(app.voteInfos).
@@ -1118,7 +1112,7 @@ func (app *BaseApp) FilterPeerByID(info string) *abci.ResponseQuery {
 // ProcessProposal. We use finalizeBlockState on the first block to be able to
 // access any state changes made in InitChain.
 func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
-	if height == 1 {
+	if height == app.initialHeight {
 		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
 
 		// clear all context data set during InitChain to avoid inconsistent behavior

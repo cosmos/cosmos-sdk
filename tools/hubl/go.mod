@@ -3,14 +3,14 @@ module cosmossdk.io/tools/hubl
 go 1.20
 
 require (
-	cosmossdk.io/api v0.3.2-0.20230313131911-55bf5d4efbe7
+	cosmossdk.io/api v0.4.0
 	cosmossdk.io/client/v2 v2.0.0-20230320224637-dca0e7374a1d
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cockroachdb/errors v1.9.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.7
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
 )
@@ -36,7 +36,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230315223031-1e5ddd10389e // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/cometbft/cometbft v0.37.0 // indirect
+	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
@@ -105,12 +105,12 @@ require (
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
-	golang.org/x/crypto v0.7.0 // indirect
+	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto v0.0.0-20230320184635-7606e756e683 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

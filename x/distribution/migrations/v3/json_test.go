@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	v3 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v3"
@@ -24,8 +24,8 @@ func TestMigrateJSON(t *testing.T) {
 	distrGenState := types.DefaultGenesisState()
 
 	oldDistrState := distrGenState
-	oldDistrState.Params.BaseProposerReward = sdk.NewDecWithPrec(1, 2)
-	oldDistrState.Params.BonusProposerReward = sdk.NewDecWithPrec(4, 2)
+	oldDistrState.Params.BaseProposerReward = sdkmath.LegacyNewDecWithPrec(1, 2)
+	oldDistrState.Params.BonusProposerReward = sdkmath.LegacyNewDecWithPrec(4, 2)
 
 	migrated := v3.MigrateJSON(oldDistrState)
 	require.Equal(t, migrated, distrGenState)

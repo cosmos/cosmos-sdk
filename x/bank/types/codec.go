@@ -41,7 +41,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 var (
 	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino) //nolint:staticcheck // TODO: remove once amino is removed
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

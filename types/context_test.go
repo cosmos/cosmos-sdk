@@ -139,7 +139,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck,revive
+	newContext := context.WithValue(ctx.Context(), struct{}{}, "value")
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 

@@ -461,7 +461,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
 
 	for i := 0; i < 10; i++ {
-		addr := sdk.AccAddress([]byte(fmt.Sprintf("account-%d", i)))
+		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
 
 		bal := sdk.NewCoins(sdk.NewCoin(
 			sdk.DefaultBondDenom,

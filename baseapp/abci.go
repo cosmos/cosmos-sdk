@@ -129,7 +129,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 }
 
 // Info implements the ABCI interface.
-func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
+func (app *BaseApp) Info(_ abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.cms.LastCommitID()
 
 	return abci.ResponseInfo{
@@ -593,7 +593,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 }
 
 // ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseListSnapshots {
+func (app *BaseApp) ListSnapshots(_ abci.RequestListSnapshots) abci.ResponseListSnapshots {
 	resp := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}
 	if app.snapshotManager == nil {
 		return resp

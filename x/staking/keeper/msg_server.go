@@ -37,7 +37,38 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	if msg.Pubkey == nil {
+		return nil, types.ErrEmptyValidatorPubKey
+	}
+
+	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
+	}
+
+	if msg.Description == (types.Description{}) {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+	}
+
+	if msg.Commission == (types.CommissionRates{}) {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
+	}
+
+	if err := msg.Commission.Validate(); err != nil {
 		return nil, err
+	}
+
+	if !msg.MinSelfDelegation.IsPositive() {
+		return nil, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"minimum self delegation must be a positive integer",
+		)
+	}
+
+	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
+		return nil, types.ErrSelfDelegationBelowMinimum
 	}
 
 	if msg.Commission.Rate.LT(k.MinCommissionRate(ctx)) {
@@ -480,6 +511,10 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 
 	if k.authority != msg.Authority {
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+
+	if err := msg.Params.Validate(); err != nil {
+		return nil, err
 	}
 
 	// store params

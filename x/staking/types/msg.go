@@ -71,48 +71,6 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgCreateValidator) ValidateBasic() error {
-	// note that unmarshaling from bech32 ensures both non-empty and valid
-	_, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
-	}
-
-	if msg.Pubkey == nil {
-		return ErrEmptyValidatorPubKey
-	}
-
-	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
-	}
-
-	if msg.Description == (Description{}) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
-	}
-
-	if msg.Commission == (CommissionRates{}) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
-	}
-
-	if err := msg.Commission.Validate(); err != nil {
-		return err
-	}
-
-	if !msg.MinSelfDelegation.IsPositive() {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
-	}
-
-	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		return ErrSelfDelegationBelowMinimum
-	}
-
-	return nil
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey
@@ -345,14 +303,6 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 func (m MsgUpdateParams) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
-}
-
-// ValidateBasic executes sanity validation on the provided data
-func (m MsgUpdateParams) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
-		return errorsmod.Wrap(err, "invalid authority address")
-	}
-	return m.Params.Validate()
 }
 
 // GetSigners returns the expected signers for a MsgUpdateParams message

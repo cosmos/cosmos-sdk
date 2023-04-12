@@ -29,8 +29,7 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 // ValidatorUpdateService & BlockInfoService
 // ======================================================
 
-// ValidatorUpdateService is the extension interface that modules should implement
-// if they are conducting validator set updates
+// ValidatorUpdateService is the service that runtime will provide to the module that sets validator updates.
 type ValidatorUpdateService interface {
 	SetValidatorUpdates(context.Context, []abci.ValidatorUpdate)
 }

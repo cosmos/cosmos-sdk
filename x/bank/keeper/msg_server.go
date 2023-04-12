@@ -87,7 +87,7 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 		return nil, types.ErrNoOutputs
 	}
 
-	if err := validateInputOutputs(msg.Inputs[0], msg.Outputs); err != nil {
+	if err := types.ValidateInputOutputs(msg.Inputs[0], msg.Outputs); err != nil {
 		return nil, err
 	}
 
@@ -121,7 +121,6 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), req.Authority)
 	}
 
-	// basic params validations
 	if err := req.Params.Validate(); err != nil {
 		return nil, err
 	}
@@ -167,30 +166,4 @@ func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEn
 	}
 
 	return &types.MsgSetSendEnabledResponse{}, nil
-}
-
-// validateInputOutputs validates that each respective input and output is
-// valid and that the sum of inputs is equal to the sum of outputs.
-func validateInputOutputs(input types.Input, outputs []types.Output) error {
-	var totalIn, totalOut sdk.Coins
-
-	if err := input.ValidateBasic(); err != nil {
-		return err
-	}
-	totalIn = input.Coins
-
-	for _, out := range outputs {
-		if err := out.ValidateBasic(); err != nil {
-			return err
-		}
-
-		totalOut = totalOut.Add(out.Coins...)
-	}
-
-	// make sure inputs and outputs match
-	if !totalIn.Equal(totalOut) {
-		return types.ErrInputOutputMismatch
-	}
-
-	return nil
 }

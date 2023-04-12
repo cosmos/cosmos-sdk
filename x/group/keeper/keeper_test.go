@@ -1596,6 +1596,8 @@ func (s *TestSuite) TestSubmitProposal() {
 	s.setNextAccount()
 	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
+
+	s.accountKeeper.EXPECT().StringToBytes(res.Address).Return(sdk.MustAccAddressFromBech32(res.Address).Bytes(), nil).AnyTimes()
 	noMinExecPeriodPolicyAddr, err := s.accountKeeper.StringToBytes(res.Address)
 	s.Require().NoError(err)
 

@@ -54,23 +54,9 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 
 	// if req.InitialHeight is > 1, then we set the initial version on all stores
 	if req.InitialHeight > 1 {
-<<<<<<< HEAD
-		app.initialHeight = req.InitialHeight
-		initHeader = cmtproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
-
-		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
-			return nil, err
-||||||| 401d0d72c9
-		app.initialHeight = req.InitialHeight
-		initHeader = cmtproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
-		err := app.cms.SetInitialVersion(req.InitialHeight)
-		if err != nil {
-			panic(err)
-=======
 		initHeader.Height = req.InitialHeight
 		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
 			panic(err)
->>>>>>> main
 		}
 	}
 

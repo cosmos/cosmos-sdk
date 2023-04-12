@@ -797,7 +797,7 @@ func TestJSONExportImport(t *testing.T) {
 	assertTablesEqual(t, table, store, store2)
 }
 
-func assertTablesEqual(t assert.TestingT, table ormtable.Table, ctx, ctx2 context.Context) {
+func assertTablesEqual(t assert.TestingT, table ormtable.Table, ctx, ctx2 context.Context) { //nolint:revive // ignore long function name
 	it, err := table.List(ctx, nil)
 	assert.NilError(t, err)
 	it2, err := table.List(ctx2, nil)

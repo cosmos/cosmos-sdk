@@ -140,9 +140,9 @@ func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 
 		if t.customJSONValidator != nil {
 			return t.customJSONValidator(message)
-		} else {
-			return DefaultJSONValidator(message)
 		}
+
+		return DefaultJSONValidator(message)
 	})
 }
 
@@ -175,14 +175,14 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 }
 
 func (t autoIncrementTable) decodeAutoIncJSON(backend Backend, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
-	decoder, err := t.startDecodeJson(reader)
+	decoder, err := t.startDecodeJSON(reader)
 	if err != nil {
 		return err
 	}
 
 	var seq uint64
 
-	return t.doDecodeJson(decoder,
+	return t.doDecodeJSON(decoder,
 		func(message json.RawMessage) bool {
 			err = json.Unmarshal(message, &seq)
 			if err == nil {

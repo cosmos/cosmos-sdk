@@ -162,7 +162,7 @@ func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint6
 			Amount:  amount,
 		}
 	} else {
-		balance.Amount = balance.Amount + amount
+		balance.Amount += amount
 	}
 
 	return k.store.BalanceTable().Save(ctx, balance)
@@ -179,7 +179,7 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 		return fmt.Errorf("insufficient funds")
 	}
 
-	balance.Amount = balance.Amount - amount
+	balance.Amount -= amount
 
 	if balance.Amount == 0 {
 		return balanceStore.Delete(ctx, balance)

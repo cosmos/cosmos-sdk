@@ -72,15 +72,16 @@ func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, erro
 	case protoreflect.BytesKind:
 		if nonTerminal {
 			return NonTerminalBytesCodec{}, nil
-		} else {
-			return BytesCodec{}, nil
 		}
+
+		return BytesCodec{}, nil
 	case protoreflect.StringKind:
 		if nonTerminal {
 			return NonTerminalStringCodec{}, nil
-		} else {
-			return StringCodec{}, nil
 		}
+
+		return StringCodec{}, nil
+
 	case protoreflect.Uint32Kind:
 		return CompactUint32Codec{}, nil
 	case protoreflect.Fixed32Kind:

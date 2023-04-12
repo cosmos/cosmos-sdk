@@ -3,7 +3,6 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -259,7 +258,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 	testCases := []struct {
 		name     string
-		req      *types.MsgSetSendEnabled
+		req      *banktypes.MsgSetSendEnabled
 		isExpErr bool
 		errMsg   string
 	}{

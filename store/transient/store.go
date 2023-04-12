@@ -39,12 +39,12 @@ func (ts *Store) GetPruning() pruningtypes.PruningOptions {
 }
 
 // Implements CommitStore
-func (ts *Store) LastCommitID() (id types.CommitID) {
-	return id
+func (ts *Store) LastCommitID() types.CommitID {
+	return types.CommitID{}
 }
 
-func (ts *Store) WorkingHash() (hash []byte) {
-	return hash
+func (ts *Store) WorkingHash() []byte {
+	return []byte{}
 }
 
 // Implements Store.

@@ -104,6 +104,7 @@ func TestDecode(t *testing.T) {
 				require.True(t, ok)
 
 				err = txBuilder.SetMsgs(gogoMsg)
+				require.NoError(t, err)
 				txBuilder.SetFeeAmount(fee)
 				txBuilder.SetGasLimit(gas)
 				txBuilder.SetMemo(memo)
@@ -112,6 +113,7 @@ func TestDecode(t *testing.T) {
 
 				tx := txBuilder.GetTx()
 				txBytes, err := encCfg.TxConfig.TxEncoder()(tx)
+				require.NoError(t, err)
 				decodeCtx, err := decode.NewDecoder(decode.Options{})
 				require.NoError(t, err)
 				decodedTx, err := decodeCtx.Decode(txBytes)

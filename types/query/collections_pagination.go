@@ -2,11 +2,12 @@ package query
 
 import (
 	"context"
+	"errors"
+	"fmt"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	storetypes "cosmossdk.io/store/types"
-	"errors"
-	"fmt"
 )
 
 // WithCollectionPaginationPairPrefix applies a prefix to a collection, whose key is a collection.Pair,
@@ -276,7 +277,7 @@ func encodeCollKey[K, V any, C Collection[K, V]](coll C, key K) ([]byte, error) 
 	return buffer, err
 }
 
-func getCollIter[K, V any, C Collection[K, V]](ctx context.Context, coll C, prefix []byte, start []byte, reverse bool) (collections.Iterator[K, V], error) {
+func getCollIter[K, V any, C Collection[K, V]](ctx context.Context, coll C, prefix, start []byte, reverse bool) (collections.Iterator[K, V], error) {
 	// TODO: maybe can be simplified
 	if reverse {
 		var end []byte

@@ -302,7 +302,7 @@ func (w *writer) F(format string, args ...interface{}) {
 }
 
 func (w *writer) Indent() {
-	w.indent += 1
+	w.indent++
 	w.updateIndent()
 }
 
@@ -314,6 +314,6 @@ func (w *writer) updateIndent() {
 }
 
 func (w *writer) Dedent() {
-	w.indent -= 1
+	w.indent--
 	w.updateIndent()
 }

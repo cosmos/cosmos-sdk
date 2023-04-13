@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,7 +18,7 @@ const (
 
 var (
 	// ParamsKey is the prefix for params key
-	ParamsKey = []byte{0x00}
+	ParamsKey = collections.NewPrefix(0)
 
 	// AddressStoreKeyPrefix prefix for account-by-address store
 	AddressStoreKeyPrefix = []byte{0x01}

@@ -215,7 +215,7 @@ type EndBlockAppModule interface {
 
 type HasABCIEndblock interface {
 	AppModule
-	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
+	EndBlock(context.Context) ([]sdk.ValidatorUpdate, error)
 }
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
@@ -713,7 +713,9 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 					return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
 				}
 
-				validatorUpdates = moduleValUpdates
+				for _, updates := range moduleValUpdates {
+					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
+				}
 			}
 		} else {
 			continue

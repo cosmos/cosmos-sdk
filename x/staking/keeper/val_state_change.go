@@ -16,7 +16,7 @@ import (
 
 // BlockValidatorUpdates calculates the ValidatorUpdates for the current block
 // Called in each EndBlock
-func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
+func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []sdk.ValidatorUpdate {
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
@@ -98,7 +98,12 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		)
 	}
 
-	return validatorUpdates
+	var valUpdates = make([]sdk.ValidatorUpdate, 0, len(validatorUpdates))
+	for _, valUpdate := range validatorUpdates {
+		valUpdates = append(valUpdates, sdk.ValidatorUpdate{PubKey: valUpdate.PubKey, Power: valUpdate.Power})
+	}
+
+	return valUpdates
 }
 
 // ApplyAndReturnValidatorSetUpdates applies and return accumulated updates to the bonded validator set. Also,

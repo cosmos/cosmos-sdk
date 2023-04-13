@@ -3,6 +3,7 @@ package cosmos.base.abci.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "tendermint/abci/types.proto";
+import "tendermint/crypto/keys.proto";
 import "tendermint/types/block.proto";
 import "google/protobuf/any.proto";
 
@@ -174,4 +175,12 @@ message SearchBlocksResult {
   int64 limit = 5;
   // List of blocks in current page
   repeated tendermint.types.Block blocks = 6;
+}
+
+// ValidatorUpdate
+message ValidatorUpdate {
+  option (gogoproto.stringer) = true;
+
+  tendermint.crypto.PublicKey pub_key = 1 [(gogoproto.nullable) = false];
+  int64                       power   = 2;
 }

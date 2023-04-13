@@ -30,5 +30,14 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, wantValue, gotValue)
 
-	// case
+	// case the global account number was not set
+	kv, ctx = colltest.MockStore()
+	wantValue = collections.DefaultSequenceStart
+
+	err = Migrate(ctx, kv, seq)
+	require.NoError(t, err)
+
+	gotValue, err = seq.Next(ctx)
+	require.NoError(t, err)
+	require.Equal(t, wantValue, gotValue)
 }

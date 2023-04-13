@@ -47,10 +47,8 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 			return fmt.Errorf("negative duration nanos is out of range %d, must be between %d and %d", nanosInt, DurationNanosMin, 0)
 		}
 		nanosInt = -nanosInt
-	} else {
-		if nanosInt < 0 || nanosInt > DurationNanosMax {
-			return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", nanosInt, 0, DurationNanosMax)
-		}
+	} else if nanosInt < 0 || nanosInt > DurationNanosMax {
+		return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", nanosInt, 0, DurationNanosMax)
 	}
 
 	return encodeNanos(nanosInt, w)
@@ -166,9 +164,8 @@ func (d DurationV0Codec) Compare(v1, v2 protoreflect.Value) int {
 	c := compareInt(s1, s2)
 	if c != 0 {
 		return c
-	} else {
-		return compareInt(n1, n2)
 	}
+	return compareInt(n1, n2)
 }
 
 func (d DurationV0Codec) IsOrdered() bool {

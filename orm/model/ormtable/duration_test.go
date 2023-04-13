@@ -16,6 +16,7 @@ func TestDurationIndex(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleDuration{}).ProtoReflect().Type(),
 	})
+	assert.NilError(t, err)
 	backend := testkv.NewDebugBackend(testkv.NewSplitMemBackend(), &testkv.EntryCodecDebugger{
 		EntryCodec: table,
 	})
@@ -67,6 +68,7 @@ func TestDurationIndex(t *testing.T) {
 	assert.NilError(t, err)
 
 	res, err := store.Get(ctx, id)
+	assert.NilError(t, err)
 	assert.Assert(t, res.Dur == nil)
 
 	it, err = store.List(ctx, testpb.ExampleDurationDurIndexKey{})

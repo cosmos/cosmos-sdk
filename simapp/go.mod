@@ -15,6 +15,7 @@ require (
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
+	cosmossdk.io/x/tx v0.5.1-0.20230407182919-057d2e09bd63 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
@@ -38,7 +39,6 @@ require (
 	cloud.google.com/go/storage v1.30.0 // indirect
 	cosmossdk.io/collections v0.0.0-20230411101845-3d1a0b8840e4 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/x/tx v0.5.1-0.20230407182919-057d2e09bd63 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -203,7 +203,6 @@ replace (
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/tx => ../x/tx
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

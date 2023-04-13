@@ -1,0 +1,34 @@
+package v6
+
+import (
+	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/colltest"
+	"github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
+	"testing"
+)
+
+func TestMigrate(t *testing.T) {
+	kv, ctx := colltest.MockStore()
+	sb := collections.NewSchemaBuilder(kv)
+	seq := collections.NewSequence(sb, collections.NewPrefix(0), "seq")
+
+	wantValue := uint64(100)
+
+	// set old sequence to wanted value
+	legacySeqBytes, err := (&types.UInt64Value{Value: wantValue}).Marshal()
+	require.NoError(t, err)
+
+	err = kv.OpenKVStore(ctx).Set(LegacyGlobalAccountNumberKey, legacySeqBytes)
+	require.NoError(t, err)
+
+	err = Migrate(ctx, kv, seq)
+	require.NoError(t, err)
+
+	// check that after migration the sequence is what we want it to be
+	gotValue, err := seq.Peek(ctx)
+	require.NoError(t, err)
+	require.Equal(t, wantValue, gotValue)
+
+	// case
+}

@@ -1,16 +1,15 @@
 package runtime
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	"golang.org/x/exp/slices"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"golang.org/x/exp/slices"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -52,6 +51,8 @@ type App struct {
 	// initChainer is the init chainer function defined by the app config.
 	// this is only required if the chain wants to add special InitChainer logic.
 	initChainer sdk.InitChainer
+
+	ValSetUpdate []abci.ValidatorUpdate
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -122,7 +123,19 @@ func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.Re
 
 // EndBlocker application updates every end block
 func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
-	return a.ModuleManager.EndBlock(ctx, req)
+	endblock, err := a.ModuleManager.EndBlock(ctx, req)
+	if err != nil {
+		return abci.ResponseEndBlock{}, err
+	}
+	endblock.ValidatorUpdates = a.ValSetUpdate
+
+	return endblock, nil
+}
+
+// SetValidatorUpdates sets the validator updates for the next block.
+// CONTRACT: this must be called for modules that are updating the validator set
+func (a *App) SetValidatorUpdates(ctx context.Context, valset []abci.ValidatorUpdate) {
+	a.ValSetUpdate = valset
 }
 
 // InitChainer initializes the chain.

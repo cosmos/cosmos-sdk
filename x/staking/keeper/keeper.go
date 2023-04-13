@@ -9,6 +9,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -27,6 +28,8 @@ type Keeper struct {
 	bankKeeper types.BankKeeper
 	hooks      types.StakingHooks
 	authority  string
+
+	validatorService runtime.ValidatorUpdateService
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -36,6 +39,7 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	authority string,
+	vs runtime.ValidatorUpdateService,
 ) *Keeper {
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
@@ -46,18 +50,23 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
+	if vs == nil {
+		panic("validator service not set")
+	}
+
 	// ensure that authority is a valid AccAddress
 	if _, err := ak.StringToBytes(authority); err != nil {
 		panic("authority is not a valid acc address")
 	}
 
 	return &Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		authKeeper: ak,
-		bankKeeper: bk,
-		hooks:      nil,
-		authority:  authority,
+		storeKey:         key,
+		cdc:              cdc,
+		authKeeper:       ak,
+		bankKeeper:       bk,
+		hooks:            nil,
+		authority:        authority,
+		validatorService: vs,
 	}
 }
 

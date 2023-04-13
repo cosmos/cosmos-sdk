@@ -209,3 +209,7 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 func ProvideEventService() event.Service {
 	return EventService{}
 }
+
+func ProvideSetValidatorService(ab *AppBuilder) ValidatorUpdateService {
+	return ab.app
+}

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
@@ -90,7 +91,6 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 		balances = append(balances, sdk.NewCoin(key.K2(), zeroAmt))
 		return false, nil // not including results as they're appended here
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
-
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}

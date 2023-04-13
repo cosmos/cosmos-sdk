@@ -42,7 +42,7 @@ func TestAutoIncrementScenario(t *testing.T) {
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
 }
 
-func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, ctx context.Context) {
+func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, ctx context.Context) { //nolint:revive // ignore linting on testing function signature
 	store, err := testpb.NewExampleAutoIncrementTableTable(table)
 	assert.NilError(t, err)
 
@@ -57,10 +57,10 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, c
 	assert.Equal(t, curSeq, uint64(1))
 
 	ex2 := &testpb.ExampleAutoIncrementTable{X: "bar", Y: 10}
-	newId, err := table.InsertReturningPKey(ctx, ex2)
+	newID, err := table.InsertReturningPKey(ctx, ex2)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(2), ex2.Id)
-	assert.Equal(t, newId, ex2.Id)
+	assert.Equal(t, newID, ex2.Id)
 	curSeq, err = table.LastInsertedSequence(ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, curSeq, uint64(2))

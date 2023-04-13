@@ -265,10 +265,8 @@ func (ak AccountKeeper) getBech32Prefix() (string, error) {
 }
 
 // SetParams sets the auth module's parameters.
+// CONTRACT: This method performs no validation of the parameters.
 func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
-	if err := params.Validate(); err != nil {
-		return err
-	}
 	return ak.ParamsState.Set(ctx, params)
 }
 

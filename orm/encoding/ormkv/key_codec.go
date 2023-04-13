@@ -177,11 +177,12 @@ func (cdc *KeyCodec) CompareKeys(values1, values2 []protoreflect.Value) int {
 	}
 
 	// values are equal but arrays of different length
-	if j == k {
+	switch {
+	case j == k:
 		return 0
-	} else if j < k {
+	case j < k:
 		return -1
-	} else {
+	default:
 		return 1
 	}
 }
@@ -247,19 +248,20 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 		y := end[i]
 
 		cmp = fieldCdc.Compare(x, y)
-		if cmp > 0 {
+		switch {
+		case cmp > 0:
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 				"start must be before end for field %s",
 				cdc.fieldDescriptors[i].FullName(),
 			)
-		} else if !fieldCdc.IsOrdered() && cmp != 0 {
+		case !fieldCdc.IsOrdered() && cmp != 0:
 			descriptor := cdc.fieldDescriptors[i]
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 				"field %s of kind %s doesn't support ordered range iteration",
 				descriptor.FullName(),
 				descriptor.Kind(),
 			)
-		} else if cmp < 0 {
+		case cmp < 0:
 			break
 		}
 	}

@@ -152,9 +152,7 @@ func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
 	if err != nil {
 		panic(err)
 	}
-	// a collection's sequence starts from 1 not 0, like this function
-	// is expected to, in order to better support field presence semantics
-	return n - 1
+	return n
 }
 
 // GetModulePermissions fetches per-module account permissions.

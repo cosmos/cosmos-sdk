@@ -31,7 +31,7 @@ func TestMigrate(t *testing.T) {
 	require.Equal(t, wantValue, gotValue)
 
 	// case the global account number was not set
-	kv, ctx = colltest.MockStore()
+	ctx = kv.NewStoreContext() // this resets the store to zero
 	wantValue = collections.DefaultSequenceStart
 
 	err = Migrate(ctx, kv, seq)

@@ -6,15 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-
-	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -30,7 +27,6 @@ type ProtoCodecMarshaler interface {
 // encoding.
 type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
-	getSignersCtx     *signing.Context
 }
 
 var (
@@ -40,29 +36,9 @@ var (
 
 // Deprecated: NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
-	getSignersCtx, err := signing.NewContext(
-		signing.Options{
-			FileResolver:          interfaceRegistry,
-			AddressCodec:          failingAddressCodec{},
-			ValidatorAddressCodec: failingAddressCodec{},
-		})
-	if err != nil {
-		panic(err)
-	}
 	return &ProtoCodec{
 		interfaceRegistry: interfaceRegistry,
-		getSignersCtx:     getSignersCtx,
 	}
-}
-
-type Options struct {
-	InterfaceRegistry     types.InterfaceRegistry
-	AddressCodec          address.Codec
-	ValidatorAddressCodec address.Codec
-}
-
-func NewProtoCodecWithOptions(options Options) *ProtoCodec {
-	panic("TODO")
 }
 
 // Marshal implements BinaryMarshaler.Marshal method.
@@ -299,17 +275,17 @@ func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, proto.Message, 
 		return nil, nil, err
 	}
 
-	signers, err := pc.getSignersCtx.GetSigners(msgv2)
+	signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgv2)
 	return signers, msgv2, err
 }
 
 func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([][]byte, error) {
-	return pc.getSignersCtx.GetSigners(msg)
+	return pc.interfaceRegistry.SigningContext().GetSigners(msg)
 }
 
 func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
 	if msgV2, ok := msg.(proto.Message); ok {
-		signers, err := pc.getSignersCtx.GetSigners(msgV2)
+		signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgV2)
 		return signers, msgV2, err
 	}
 	a, err := types.NewAnyWithValue(msg)
@@ -322,10 +298,6 @@ func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Me
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec
 func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
 	return &grpcProtoCodec{cdc: pc}
-}
-
-func (pc *ProtoCodec) SigningContext() *signing.Context {
-	return pc.getSignersCtx
 }
 
 func (pc *ProtoCodec) mustEmbedCodec() {}
@@ -368,14 +340,4 @@ func assertNotNil(i interface{}) error {
 		return errors.New("can't marshal <nil> value")
 	}
 	return nil
-}
-
-type failingAddressCodec struct{}
-
-func (f failingAddressCodec) StringToBytes(text string) ([]byte, error) {
-	return nil, fmt.Errorf("ProtoCodec requires a proper address codec implementation")
-}
-
-func (f failingAddressCodec) BytesToString(bz []byte) (string, error) {
-	return "", fmt.Errorf("ProtoCodec requires a proper address codec implementation")
 }

@@ -1,7 +1,6 @@
 package codec
 
 import (
-	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 	protov2 "google.golang.org/protobuf/proto"
@@ -36,8 +35,6 @@ type (
 		// decoded google.golang.org/protobuf/proto.Message that was used to extract the
 		// signers so that this can be used in other contexts.
 		GetMsgV1Signers(msg proto.Message) ([][]byte, protov2.Message, error)
-
-		SigningContext() *signing.Context
 
 		// mustEmbedCodec requires that all implementations of Codec embed an official implementation from the codec
 		// package. This allows new methods to be added to the Codec interface without breaking backwards compatibility.

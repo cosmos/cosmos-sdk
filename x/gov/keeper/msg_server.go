@@ -323,10 +323,6 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *v1.MsgUpdateParams) 
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
 	if err := msg.Params.ValidateBasic(); err != nil {
 		return nil, err
 	}

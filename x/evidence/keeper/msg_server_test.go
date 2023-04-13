@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) TestSubmitEvidence() {
 			name:      "invalid address",
 			req:       &types.MsgSubmitEvidence{},
 			expErr:    true,
-			expErrMsg: "invalid submitter address: empty address string is not allowed: invalid address",
+			expErrMsg: "invalid submitter address: decoding bech32 failed: invalid bech32 string length 0",
 		},
 		{
 			name: "missing evidence",

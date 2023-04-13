@@ -1,11 +1,12 @@
 package v6
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestMigrate(t *testing.T) {

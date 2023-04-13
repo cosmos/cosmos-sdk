@@ -19,10 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var (
-	coinPos  = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
-	coinZero = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
-)
+var coinPos = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
 
 func TestMsgDecode(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()

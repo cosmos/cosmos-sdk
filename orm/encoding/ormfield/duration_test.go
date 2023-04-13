@@ -86,7 +86,7 @@ func TestDuration(t *testing.T) {
 	})
 }
 
-func TestOutOfRange(t *testing.T) {
+func TestDurationOutOfRange(t *testing.T) {
 	t.Parallel()
 	cdc := ormfield.DurationCodec{}
 

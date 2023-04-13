@@ -29,6 +29,7 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 		return fmt.Errorf("duration seconds is out of range %d, must be between %d and %d", secondsInt, DurationSecondsMin, DurationSecondsMax)
 	}
 	negative := secondsInt < 0
+	// we subtract the min duration value to make sure secondsInt is always non-negative and starts at 0
 	secondsInt -= DurationSecondsMin
 	err := encodeSeconds(secondsInt, w)
 	if err != nil {
@@ -61,6 +62,7 @@ func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, err
 	}
 
+	// we add the min duration value to get back the original value
 	seconds += DurationSecondsMin
 
 	negative := seconds < 0

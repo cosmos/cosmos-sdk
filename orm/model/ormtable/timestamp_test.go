@@ -20,9 +20,6 @@ func TestTimestampIndex(t *testing.T) {
 	assert.NilError(t, err)
 	backend := testkv.NewDebugBackend(testkv.NewSplitMemBackend(), &testkv.EntryCodecDebugger{
 		EntryCodec: table,
-		//Print: func(s string) {
-		//	t.Log(s)
-		//},
 	})
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleTimestampTable(table)

@@ -18,9 +18,6 @@ func TestDurationIndex(t *testing.T) {
 	})
 	backend := testkv.NewDebugBackend(testkv.NewSplitMemBackend(), &testkv.EntryCodecDebugger{
 		EntryCodec: table,
-		//Print: func(s string) {
-		//	t.Log(s)
-		//},
 	})
 	ctx := ormtable.WrapContextDefault(backend)
 	store, err := testpb.NewExampleDurationTable(table)

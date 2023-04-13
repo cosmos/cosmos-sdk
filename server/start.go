@@ -350,7 +350,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
-		app.RegisterNodeService(clientCtx)
+		app.RegisterNodeService(clientCtx, config)
 	}
 
 	metrics, err := startTelemetry(config)

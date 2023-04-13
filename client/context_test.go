@@ -32,10 +32,10 @@ func TestContext_PrintProto(t *testing.T) {
 		Size_: "big",
 		Name:  "Spot",
 	}
-	any, err := types.NewAnyWithValue(animal)
+	anyAnimal, err := types.NewAnyWithValue(animal)
 	require.NoError(t, err)
 	hasAnimal := &testdata.HasAnimal{
-		Animal: any,
+		Animal: anyAnimal,
 		X:      10,
 	}
 
@@ -75,10 +75,10 @@ func TestContext_PrintObjectLegacy(t *testing.T) {
 		Size_: "big",
 		Name:  "Spot",
 	}
-	any, err := types.NewAnyWithValue(animal)
+	anyAnimal, err := types.NewAnyWithValue(animal)
 	require.NoError(t, err)
 	hasAnimal := &testdata.HasAnimal{
-		Animal: any,
+		Animal: anyAnimal,
 		X:      10,
 	}
 

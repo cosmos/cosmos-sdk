@@ -30,5 +30,6 @@ message MsgCreateDogResponse {
 // https://github.com/cosmos/cosmos-sdk/issues/6213.
 message TestMsg {
   option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "signers";
   repeated string signers            = 1;
 }

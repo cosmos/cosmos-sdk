@@ -168,15 +168,18 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 
 			var defaultGenTxGas uint64 = 10000000
 			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, defaultGenTxGas, suite.ctx.ChainID(), accNums, seqs, feeAcc, privs...)
+			txBytes, err := protoTxCfg.TxEncoder()(tx)
 			require.NoError(t, err)
-			_, err = feeAnteHandler(suite.ctx, tx, false) // tests only feegrant ante
+			bytesCtx := suite.ctx.WithTxBytes(txBytes)
+			require.NoError(t, err)
+			_, err = feeAnteHandler(bytesCtx, tx, false) // tests only feegrant ante
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
 				testutil.AssertError(t, err, tc.err, tc.errMsg)
 			}
 
-			_, err = anteHandlerStack(suite.ctx, tx, false) // tests while stack
+			_, err = anteHandlerStack(bytesCtx, tx, false) // tests while stack
 			if tc.valid {
 				require.NoError(t, err)
 			} else {

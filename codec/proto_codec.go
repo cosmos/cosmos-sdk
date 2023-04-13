@@ -29,7 +29,7 @@ type ProtoCodecMarshaler interface {
 // encoding.
 type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
-	signersCtx        *signing.Context
+	getSignersCtx     *signing.GetSignersContext
 }
 
 var (
@@ -39,16 +39,16 @@ var (
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
-	signerCtx, err := signing.NewContext(
-		signing.Options{
-			FileResolver: interfaceRegistry,
+	getSignersCtx, err := signing.NewGetSignersContext(
+		signing.GetSignersOptions{
+			ProtoFiles: interfaceRegistry,
 		})
 	if err != nil {
 		panic(err)
 	}
 	return &ProtoCodec{
 		interfaceRegistry: interfaceRegistry,
-		signersCtx:        signerCtx,
+		getSignersCtx:     getSignersCtx,
 	}
 }
 
@@ -286,44 +286,18 @@ func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]string, proto.Message, 
 		return nil, nil, err
 	}
 
-	bzSigners, err := pc.signersCtx.GetSigners(msgv2)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	strSigners := make([]string, len(bzSigners))
-	for i, bz := range bzSigners {
-		strSigners[i] = string(bz)
-	}
-	return strSigners, msgv2, err
+	signers, err := pc.getSignersCtx.GetSigners(msgv2)
+	return signers, msgv2, err
 }
 
 func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([]string, error) {
-	bzSigners, err := pc.signersCtx.GetSigners(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	strSigners := make([]string, len(bzSigners))
-	for i, bz := range bzSigners {
-		strSigners[i] = string(bz)
-	}
-	return strSigners, nil
+	return pc.getSignersCtx.GetSigners(msg)
 }
 
 func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([]string, proto.Message, error) {
 	if msgV2, ok := msg.(proto.Message); ok {
-		bzSigners, err := pc.signersCtx.GetSigners(msgV2)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		strSigners := make([]string, len(bzSigners))
-		for i, bz := range bzSigners {
-			strSigners[i] = string(bz)
-		}
-
-		return strSigners, msgV2, err
+		signers, err := pc.getSignersCtx.GetSigners(msgV2)
+		return signers, msgV2, err
 	}
 	a, err := types.NewAnyWithValue(msg)
 	if err != nil {

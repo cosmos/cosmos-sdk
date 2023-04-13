@@ -15,7 +15,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
-		del, val, err := types.ParseDelegationKey(key)
+		del, val, err := ParseDelegationKey(key)
 		if err != nil {
 			return err
 		}

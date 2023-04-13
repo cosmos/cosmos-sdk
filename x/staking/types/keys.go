@@ -212,40 +212,6 @@ func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(delAddr), address.MustLengthPrefix(valAddr)...)
 }
 
-// ParseDelegationKey parses given key and returns delagator, validator address bytes
-func ParseDelegationKey(bz []byte) (sdk.AccAddress, sdk.ValAddress, error) {
-	prefixLength := len(DelegationKey)
-	if prefix := bz[:prefixLength]; !bytes.Equal(prefix, DelegationKey) {
-		return nil, nil, fmt.Errorf("invalid prefix; expected: %X, got: %x", DelegationKey, prefix)
-	}
-
-	bz = bz[prefixLength:] // remove the prefix byte
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse: %X", bz)
-	}
-
-	delAddrLen := bz[0]
-	bz = bz[1:] // remove the length byte of delegator address.
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", bz)
-	}
-
-	del := bz[0:int(delAddrLen)]
-	bz = bz[int(delAddrLen):] // remove the length byte of a delegator address
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", bz)
-	}
-
-	bz = bz[1:] // remove the validator address bytes.
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse validator address: %X", bz)
-	}
-
-	val := bz
-
-	return del, val, nil
-}
-
 // GetDelegationsByValKey creates the key for delegations by validator address
 // VALUE: staking/Delegation
 func GetDelegationsByValKey(valAddr sdk.ValAddress, delAddr sdk.AccAddress) []byte {

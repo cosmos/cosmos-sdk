@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -99,7 +98,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&appBuilder)
 		require.NoError(t, err)
 
-		bapp := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+		bapp := appBuilder.Build(dbm.NewMemDB(), nil)
 		err = bapp.Load(true)
 		require.NoError(t, err)
 

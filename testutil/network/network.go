@@ -182,7 +182,11 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
-	if err := depinject.Inject(appConfig,
+	if err := depinject.Inject(
+		depinject.Configs(
+			appConfig,
+			// depinject.Supply(log.NewNopLogger()),
+		),
 		&appBuilder,
 		&txConfig,
 		&cdc,

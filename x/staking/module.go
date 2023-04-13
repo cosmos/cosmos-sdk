@@ -15,10 +15,10 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -36,7 +36,9 @@ const (
 )
 
 var (
-	_ module.EndBlockAppModule   = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasBeginBlocker  = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -196,9 +198,9 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 
 // EndBlock returns the end blocker for the staking module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	// am.keeper.EndBlocker(ctx) // TODO uncomment
-	return EndBlocker(ctx, am.keeper)
+func (am AppModule) EndBlock(ctx context.Context) error {
+	am.keeper.EndBlocker(ctx)
+	return nil // handle error in the future
 }
 
 func init() {
@@ -218,7 +220,7 @@ type ModuleInputs struct {
 	Cdc           codec.Codec
 	Key           *store.KVStoreKey
 
-	Vs runtime.ValidatorUpdateService
+	Vs baseapp.ValidatorUpdateService
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace

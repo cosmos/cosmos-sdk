@@ -210,6 +210,6 @@ func ProvideEventService() event.Service {
 	return EventService{}
 }
 
-func ProvideSetValidatorService(ab *AppBuilder) ValidatorUpdateService {
+func ProvideSetValidatorService(ab *AppBuilder) baseapp.ValidatorUpdateService {
 	return ab.app
 }

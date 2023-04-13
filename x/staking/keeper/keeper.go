@@ -8,8 +8,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -29,7 +29,7 @@ type Keeper struct {
 	hooks      types.StakingHooks
 	authority  string
 
-	validatorService runtime.ValidatorUpdateService
+	validatorService baseapp.ValidatorUpdateService
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -39,7 +39,7 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	authority string,
-	vs runtime.ValidatorUpdateService,
+	vs baseapp.ValidatorUpdateService,
 ) *Keeper {
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {

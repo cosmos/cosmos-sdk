@@ -123,19 +123,13 @@ func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.Re
 
 // EndBlocker application updates every end block
 func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
-	endblock, err := a.ModuleManager.EndBlock(ctx, req)
-	if err != nil {
-		return abci.ResponseEndBlock{}, err
-	}
-	endblock.ValidatorUpdates = a.ValSetUpdate
-
-	return endblock, nil
+	return a.ModuleManager.EndBlock(ctx, req)
 }
 
 // SetValidatorUpdates sets the validator updates for the next block.
 // CONTRACT: this must be called for modules that are updating the validator set
-func (a *App) SetValidatorUpdates(ctx context.Context, valset []abci.ValidatorUpdate) {
-	a.ValSetUpdate = valset
+func (a *App) SetValidatorUpdates(ctx context.Context, updates []abci.ValidatorUpdate) {
+	a.BaseApp.SetValidatorUpdates(ctx, updates)
 }
 
 // InitChainer initializes the chain.

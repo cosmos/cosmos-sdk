@@ -74,6 +74,8 @@ type BaseApp struct {
 	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
 	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
+	ValidatorSetUpdate // absorb validator setupdate type
+
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
 
@@ -225,6 +227,11 @@ func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgService
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
+}
+
+// ValidatorService returns the ValidatorUpdateService of a BaseApp.
+func (app *BaseApp) ValidatorService() ValidatorUpdateService {
+	return app
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp

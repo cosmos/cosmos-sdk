@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -17,12 +18,8 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 }
 
 // Called every block, update validator set
-func (k *Keeper) EndBlocker(ctx sdk.Context) {
+func (k *Keeper) EndBlocker(ctx context.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
-	if k.validatorService == nil {
-		panic("validator service not set")
-	}
-
-	k.validatorService.SetValidatorUpdates(ctx, k.BlockValidatorUpdates(ctx))
+	k.validatorService.SetValidatorUpdates(ctx, k.BlockValidatorUpdates(sdk.UnwrapSDKContext(ctx)))
 }

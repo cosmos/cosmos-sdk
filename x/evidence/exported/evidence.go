@@ -1,7 +1,6 @@
 package exported
 
 import (
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,7 @@ type Evidence interface {
 
 	Route() string
 	String() string
-	Hash() cmtbytes.HexBytes
+	Hash() []byte
 	ValidateBasic() error
 
 	// Height at which the infraction occurred

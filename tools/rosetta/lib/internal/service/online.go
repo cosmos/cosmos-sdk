@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/rs/zerolog"
 
+	"cosmossdk.io/log"
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 )
@@ -18,14 +18,14 @@ const (
 
 // NewOnlineNetwork builds a single network adapter.
 // It will get the Genesis block on the beginning to avoid calling it everytime.
-func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, logger *zerolog.Logger) (crgtypes.API, error) {
+func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, logger log.Logger) (crgtypes.API, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
 
 	var genesisHeight int64 = 1 // to get genesis block height
 	genesisBlock, err := client.BlockByHeight(ctx, &genesisHeight)
 	if err != nil {
-		logger.Err(err).Msg("failed to get genesis block height")
+		logger.Error("failed to get genesis block height", "err", err)
 	}
 
 	return OnlineNetwork{

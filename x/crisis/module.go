@@ -1,6 +1,7 @@
 package crisis
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -35,10 +36,7 @@ import (
 // ConsensusVersion defines the current x/crisis module consensus version.
 const ConsensusVersion = 2
 
-var (
-	_ module.EndBlockAppModule = AppModule{}
-	_ module.AppModuleBasic    = AppModuleBasic{}
-)
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 // Module init related flags
 const (
@@ -74,7 +72,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return types.ValidateGenesis(&data)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the capability module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the crisis module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
@@ -120,7 +118,10 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -137,9 +138,6 @@ func AddModuleInitFlags(startCmd *cobra.Command) {
 func (AppModule) Name() string {
 	return types.ModuleName
 }
-
-// RegisterInvariants performs a no-op.
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -178,9 +176,10 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the crisis module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, *am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	EndBlocker(c, *am.keeper)
+	return nil
 }
 
 // App Wiring Setup
@@ -192,8 +191,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type CrisisInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config  *modulev1.Module
@@ -207,15 +205,14 @@ type CrisisInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-//nolint:revive
-type CrisisOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Module       appmodule.AppModule
 	CrisisKeeper *keeper.Keeper
 }
 
-func ProvideModule(in CrisisInputs) CrisisOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var invalidCheckPeriod uint
 	if in.AppOpts != nil {
 		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
@@ -248,5 +245,5 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return CrisisOutputs{CrisisKeeper: k, Module: m}
+	return ModuleOutputs{CrisisKeeper: k, Module: m}
 }

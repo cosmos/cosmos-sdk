@@ -612,10 +612,8 @@ func BenchmarkMarshalTo(b *testing.B) {
 		for _, bi := range bis {
 			if n, err := bi.in.MarshalTo(data); err != nil {
 				b.Fatal(err)
-			} else {
-				if !bytes.Equal(data[:n], bi.want) {
-					b.Fatalf("Mismatch\nGot:  % x\nWant: % x\n", data[:n], bi.want)
-				}
+			} else if !bytes.Equal(data[:n], bi.want) {
+				b.Fatalf("Mismatch\nGot:  % x\nWant: % x\n", data[:n], bi.want)
 			}
 		}
 	}
@@ -671,7 +669,7 @@ func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 func TestFormatDec(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
-	raw, err := os.ReadFile("../x/tx/textual/internal/testdata/decimals.json")
+	raw, err := os.ReadFile("./testdata/decimals.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)

@@ -64,7 +64,7 @@ type Index interface {
 	//			it = LimitIterator(it, defaultLimit)
 	//
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	PrefixScan(store storetypes.KVStore, startI interface{}, endI interface{}) (Iterator, error)
+	PrefixScan(store storetypes.KVStore, startI, endI interface{}) (Iterator, error)
 
 	// ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
 	// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
@@ -75,7 +75,7 @@ type Index interface {
 	// this as an endpoint to the public without further limits. See `LimitIterator`
 	//
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	ReversePrefixScan(store storetypes.KVStore, startI interface{}, endI interface{}) (Iterator, error)
+	ReversePrefixScan(store storetypes.KVStore, startI, endI interface{}) (Iterator, error)
 }
 
 // Iterator allows iteration through a sequence of key value pairs

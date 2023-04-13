@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -37,7 +38,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			func() {
 				numEvidence := 1
 				evidence = suite.populateEvidence(suite.ctx, numEvidence)
-				evidenceHash := evidence[0].Hash().String()
+				evidenceHash := strings.ToUpper(hex.EncodeToString(evidence[0].Hash()))
 				reqHash := strings.Repeat("a", len(evidenceHash))
 				req = types.NewQueryEvidenceRequest(reqHash)
 			},
@@ -51,7 +52,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			func() {
 				numEvidence := 100
 				evidence = suite.populateEvidence(suite.ctx, numEvidence)
-				req = types.NewQueryEvidenceRequest(evidence[0].Hash().String())
+				req = types.NewQueryEvidenceRequest(strings.ToUpper(hex.EncodeToString(evidence[0].Hash())))
 			},
 			true,
 			"",

@@ -46,6 +46,10 @@ func NewCmdSend() *cobra.Command {
 				return err
 			}
 
+			if args[0] == "" || args[1] == "" || args[2] == "" {
+				return fmt.Errorf("class-id, nft-id and receiver cannot be empty")
+			}
+
 			msg := nft.MsgSend{
 				ClassId:  args[0],
 				Id:       args[1],

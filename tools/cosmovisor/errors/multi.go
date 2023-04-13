@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rs/zerolog"
+	"cosmossdk.io/log"
 )
 
 // MultiError is an error combining multiple other errors.
@@ -70,16 +70,16 @@ func (e MultiError) String() string {
 	return e.Error()
 }
 
-func LogErrors(logger *zerolog.Logger, msg string, err error) {
+func LogErrors(logger log.Logger, msg string, err error) {
 	switch err := err.(type) {
 	case *MultiError:
 		if msg != "" {
-			logger.Error().Msg(msg)
+			logger.Error(msg)
 		}
 		for i, e := range err.GetErrors() {
-			logger.Error().Err(e).Msg(fmt.Sprintf("  %d:", i+1))
+			logger.Error(fmt.Sprintf("  %d:", i+1), "error", e)
 		}
 	default:
-		logger.Error().Err(err).Msg(msg)
+		logger.Error(msg, "error", err)
 	}
 }

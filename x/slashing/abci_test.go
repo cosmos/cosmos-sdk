@@ -58,17 +58,12 @@ func TestBeginBlocker(t *testing.T) {
 		Power:   power,
 	}
 
-	// mark the validator as having signed
-	req := abci.RequestBeginBlock{
-		LastCommitInfo: abci.CommitInfo{
-			Votes: []abci.VoteInfo{{
-				Validator:       val,
-				SignedLastBlock: true,
-			}},
-		},
-	}
+	ctx = ctx.WithVoteInfos([]abci.VoteInfo{{
+		Validator:       val,
+		SignedLastBlock: true,
+	}})
 
-	slashing.BeginBlocker(ctx, req, slashingKeeper)
+	slashing.BeginBlocker(ctx, slashingKeeper)
 
 	info, found := slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
 	require.True(t, found)
@@ -81,32 +76,24 @@ func TestBeginBlocker(t *testing.T) {
 
 	// for 1000 blocks, mark the validator as having signed
 	for ; height < slashingKeeper.SignedBlocksWindow(ctx); height++ {
-		ctx = ctx.WithBlockHeight(height)
-		req = abci.RequestBeginBlock{
-			LastCommitInfo: abci.CommitInfo{
-				Votes: []abci.VoteInfo{{
-					Validator:       val,
-					SignedLastBlock: true,
-				}},
-			},
-		}
+		ctx = ctx.WithBlockHeight(height).
+			WithVoteInfos([]abci.VoteInfo{{
+				Validator:       val,
+				SignedLastBlock: true,
+			}})
 
-		slashing.BeginBlocker(ctx, req, slashingKeeper)
+		slashing.BeginBlocker(ctx, slashingKeeper)
 	}
 
 	// for 500 blocks, mark the validator as having not signed
 	for ; height < ((slashingKeeper.SignedBlocksWindow(ctx) * 2) - slashingKeeper.MinSignedPerWindow(ctx) + 1); height++ {
-		ctx = ctx.WithBlockHeight(height)
-		req = abci.RequestBeginBlock{
-			LastCommitInfo: abci.CommitInfo{
-				Votes: []abci.VoteInfo{{
-					Validator:       val,
-					SignedLastBlock: false,
-				}},
-			},
-		}
+		ctx = ctx.WithBlockHeight(height).
+			WithVoteInfos([]abci.VoteInfo{{
+				Validator:       val,
+				SignedLastBlock: false,
+			}})
 
-		slashing.BeginBlocker(ctx, req, slashingKeeper)
+		slashing.BeginBlocker(ctx, slashingKeeper)
 	}
 
 	// end block

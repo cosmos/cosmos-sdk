@@ -257,20 +257,20 @@ The Cosmos SDK is also switching away from gogoproto to the official `google.gol
 * `anypb.MarshalFrom`
 * `anypb.Any#MarshalFrom`
 
-Instead, the Cosmos SDK provides helper functions in `"github.com/cosmos/cosmos-proto/any"`, which create an official `anypb.Any` without inserting the prefixes:
-* `any.New`
-* `any.MarshalFrom`
+Instead, the Cosmos SDK provides helper functions in `"github.com/cosmos/cosmos-proto/anyutil"`, which create an official `anypb.Any` without inserting the prefixes:
+* `anyutil.New`
+* `anyutil.MarshalFrom`
 
 For example, to pack a `sdk.Msg` called `internalMsg`, use:
 
 ```diff
 import (
 - 	"google.golang.org/protobuf/types/known/anypb"
-+	"github.com/cosmos/cosmos-proto/any"
++	"github.com/cosmos/cosmos-proto/anyutil"
 )
 
 - anyMsg, err := anypb.New(internalMsg.Message().Interface())
-+ anyMsg, err := any.New(internalMsg.Message().Interface())
++ anyMsg, err := anyutil.New(internalMsg.Message().Interface())
 
 - fmt.Println(anyMsg.TypeURL) // type.googleapis.com/cosmos.bank.v1beta1.MsgSend
 + fmt.Println(anyMsg.TypeURL) // /cosmos.bank.v1beta1.MsgSend

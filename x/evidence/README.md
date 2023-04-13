@@ -54,7 +54,7 @@ type Evidence interface {
 
 	Route() string
 	String() string
-	Hash() cmtbytes.HexBytes
+	Hash() []byte
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
@@ -153,7 +153,7 @@ as follows:
 ```go
 func SubmitEvidence(ctx Context, evidence Evidence) error {
   if _, ok := GetEvidence(ctx, evidence.Hash()); ok {
-    return errorsmod.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
+    return errorsmod.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
   }
   if !router.HasRoute(evidence.Route()) {
     return errorsmod.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
@@ -167,7 +167,7 @@ func SubmitEvidence(ctx Context, evidence Evidence) error {
   ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSubmitEvidence,
-			sdk.NewAttribute(types.AttributeKeyEvidenceHash, evidence.Hash().String()),
+			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
 		),
 	)
 

@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   title: Cosmos SDK - gRPC Gateway docs
-  description: A REST interface for state queries
+  description: A REST interface for state queries.
   version: 1.0.0
 paths:
   /cosmos/auth/v1beta1/account_info/{address}:

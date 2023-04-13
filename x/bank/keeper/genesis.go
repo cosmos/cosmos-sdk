@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -24,8 +26,11 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	for _, balance := range genState.Balances {
 		addr := balance.GetAddress()
 
-		if err := k.initBalances(ctx, addr, balance.Coins); err != nil {
-			panic(fmt.Errorf("error on setting balances %w", err))
+		for _, coin := range balance.Coins {
+			err := k.Balances.Set(ctx, collections.Join(addr, coin.Denom), coin.Amount)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		totalSupply = totalSupply.Add(balance.Coins...)

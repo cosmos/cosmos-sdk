@@ -8,14 +8,10 @@ import (
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
@@ -94,6 +90,11 @@ func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOpti
 // SetMempool sets the mempool on BaseApp.
 func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetMempool(mempool) }
+}
+
+// SetChainID sets the chain ID in BaseApp.
+func SetChainID(chainID string) func(*BaseApp) {
+	return func(app *BaseApp) { app.chainID = chainID }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -241,29 +242,6 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
 
-// SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
-func (app *BaseApp) SetStreamingService(
-	appOpts servertypes.AppOptions,
-	appCodec storetypes.Codec,
-	keys map[string]*storetypes.KVStoreKey,
-) error {
-	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
-	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, app.logger, keys, homePath)
-	if err != nil {
-		return err
-	}
-	// add the listeners for each StoreKey
-	for _, streamer := range streamers {
-		for key, lis := range streamer.Listeners() {
-			app.cms.AddListeners(key, lis)
-		}
-		// register the StreamingService within the BaseApp
-		// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
-		app.abciListeners = append(app.abciListeners, streamer)
-	}
-	return nil
-}
-
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
@@ -313,4 +291,9 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 	}
 
 	app.cms.SetMetrics(gatherer)
+}
+
+// SetStreamingManager sets the streaming manager for the BaseApp.
+func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
+	app.streamingManager = manager
 }

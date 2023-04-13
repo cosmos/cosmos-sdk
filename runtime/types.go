@@ -34,7 +34,7 @@ type AppI interface {
 	LoadHeight(height int64) error
 
 	// Exports the state of the application for a genesis file.
-	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string, modulesToExport []string) (types.ExportedApp, error)
+	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (types.ExportedApp, error)
 
 	// Helper for the simulation framework.
 	SimulationManager() *module.SimulationManager

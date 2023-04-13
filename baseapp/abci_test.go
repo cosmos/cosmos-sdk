@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -46,8 +47,8 @@ func TestABCI_Info(t *testing.T) {
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	logger := log.NewTestLogger(t)
+	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
 
 	capKey := storetypes.NewKVStoreKey("main")
 	capKey2 := storetypes.NewKVStoreKey("key2")
@@ -66,8 +67,13 @@ func TestABCI_InitChain(t *testing.T) {
 		Data: key,
 	}
 
+	// initChain is nil and chain ID is wrong - panics
+	require.Panics(t, func() {
+		app.InitChain(abci.RequestInitChain{ChainId: "wrong-chain-id"})
+	})
+
 	// initChain is nil - nothing happens
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{ChainId: "test-chain-id"})
 	res := app.Query(query)
 	require.Equal(t, 0, len(res.Value))
 
@@ -126,8 +132,7 @@ func TestABCI_InitChain(t *testing.T) {
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -142,8 +147,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -566,7 +570,6 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 func TestABCI_EndBlock(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := defaultLogger()
 
 	cp := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
@@ -574,7 +577,7 @@ func TestABCI_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,
@@ -1211,7 +1214,7 @@ func TestABCI_Query(t *testing.T) {
 }
 
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
-	logger := defaultLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 
@@ -1364,7 +1367,8 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 		tx2Bytes,
 	}
 	reqProcessProposal := abci.RequestProcessProposal{
-		Txs: reqProposalTxBytes[:],
+		Txs:    reqProposalTxBytes[:],
+		Height: reqPrepareProposal.Height,
 	}
 
 	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
@@ -1403,6 +1407,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
 
 	suite.baseApp.InitChain(abci.RequestInitChain{
+		InitialHeight:   1,
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1415,7 +1420,8 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 
 	reqProposalTxBytes := [][]byte{}
 	reqProcessProposal := abci.RequestProcessProposal{
-		Txs: reqProposalTxBytes,
+		Txs:    reqProposalTxBytes,
+		Height: reqPrepareProposal.Height,
 	}
 
 	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
@@ -1550,7 +1556,68 @@ func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	})
 
 	require.NotPanics(t, func() {
-		res := suite.baseApp.ProcessProposal(abci.RequestProcessProposal{})
+		res := suite.baseApp.ProcessProposal(abci.RequestProcessProposal{Height: 1})
 		require.Equal(t, res.Status, abci.ResponseProcessProposal_REJECT)
+	})
+}
+
+// TestABCI_Proposal_Reset_State ensures that state is reset between runs of
+// PrepareProposal and ProcessProposal in case they are called multiple times.
+// This is only valid for heights > 1, given that on height 1 we always set the
+// state to be deliverState.
+func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
+	someKey := []byte("some-key")
+
+	prepareOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+			// This key should not exist given that we reset the state on every call.
+			require.False(t, ctx.KVStore(capKey1).Has(someKey))
+			ctx.KVStore(capKey1).Set(someKey, someKey)
+			return abci.ResponsePrepareProposal{Txs: req.Txs}
+		})
+	}
+
+	processOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetProcessProposal(func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+			// This key should not exist given that we reset the state on every call.
+			require.False(t, ctx.KVStore(capKey1).Has(someKey))
+			ctx.KVStore(capKey1).Set(someKey, someKey)
+			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+		})
+	}
+
+	suite := NewBaseAppSuite(t, prepareOpt, processOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     2, // this value can't be 0
+	}
+
+	// Let's pretend something happened and PrepareProposal gets called many
+	// times, this must be safe to do.
+	for i := 0; i < 5; i++ {
+		resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
+		require.Equal(t, 0, len(resPrepareProposal.Txs))
+	}
+
+	reqProposalTxBytes := [][]byte{}
+	reqProcessProposal := abci.RequestProcessProposal{
+		Txs:    reqProposalTxBytes,
+		Height: 2,
+	}
+
+	// Let's pretend something happened and ProcessProposal gets called many
+	// times, this must be safe to do.
+	for i := 0; i < 5; i++ {
+		resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
+		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	}
+
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
 	})
 }

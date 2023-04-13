@@ -31,6 +31,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Improvements
+## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.0.0) - 2023-03-30
 
-* [#15158](https://github.com/cosmos/cosmos-sdk/pull/15158) Ensure zero allocations during logging calls to Debug(), Info(), Error()
+* [#15601](https://github.com/cosmos/cosmos-sdk/pull/15601) Introduce logger options. These options allow to configure the logger with filters, different level and output format.
+
+## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v0.1.0) - 2023-03-13
+
+* Introducing a standalone SDK logger package (`comossdk.io/log`).
+  It replaces CometBFT logger and provides a common interface for all SDK components.
+  The default logger (`NewLogger`) is using [zerolog](https://github.com/rs/zerolog),
+  but it can be easily replaced with any implementation that implements the `log.Logger` interface.

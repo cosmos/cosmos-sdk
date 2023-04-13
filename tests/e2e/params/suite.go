@@ -20,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -58,7 +57,7 @@ func (s *E2ETestSuite) SetupSuite() {
 			appBuilder   *runtime.AppBuilder
 			paramsKeeper keeper.Keeper
 		)
-		if err := depinject.Inject(testutil.AppConfig, &appBuilder, &paramsKeeper); err != nil {
+		if err := depinject.Inject(AppConfig, &appBuilder, &paramsKeeper); err != nil {
 			panic(err)
 		}
 
@@ -72,6 +71,7 @@ func (s *E2ETestSuite) SetupSuite() {
 			nil,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+			baseapp.SetChainID(s.cfg.ChainID),
 		)
 
 		s.Require().NoError(app.Load(false))

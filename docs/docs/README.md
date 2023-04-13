@@ -28,10 +28,10 @@ Get familiar with the SDK and explore its main concepts.
 Check out the docs for the various parts of the Cosmos stack.
 
 * [**Cosmos Hub**](https://hub.cosmos.network) - The first of thousands of interconnected blockchains on the Cosmos Network.
-* [**Tendermint Core**](https://docs.tendermint.com) - The leading BFT engine for building blockchains, powering Cosmos SDK.
+* [**CometBFT**](https://docs.cometbft.com) - The leading BFT engine for building blockchains, powering Cosmos SDK.
 
 ## Help & Support
 
+* [**GitHub Discussions**](https://github.com/orgs/cosmos/discussions) - Ask questions and discuss SDK development on GitHub.
 * [**Discord**](https://discord.gg/cosmosnetwork) - Chat with Cosmos developers on Discord.
-* [**GitHub Discussions**](https://github.com/cosmos/cosmos-sdk/discussions) - Ask questions and discuss SDK development on GitHub.
 * [**Found an issue?**](https://github.com/cosmos/cosmos-sdk/edit/main/docs/docs/README.md) - Help us improve this page by suggesting edits on GitHub.

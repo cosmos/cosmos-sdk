@@ -50,6 +50,10 @@ func TestAuthzAuthorizations(t *testing.T) {
 	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, &coin100)
 	require.Equal(t, beginRedelAuth.MsgTypeURL(), sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}))
 
+	// verify MethodName for CancelUnbondingDelegation
+	cancelUnbondAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION, &coin100)
+	require.Equal(t, cancelUnbondAuth.MsgTypeURL(), sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}))
+
 	validators1_2 := []string{val1.String(), val2.String()}
 
 	testCases := []struct {
@@ -275,6 +279,73 @@ func TestAuthzAuthorizations(t *testing.T) {
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
 			stakingtypes.NewMsgBeginRedelegate(delAddr, val1, val1, coin100),
+			true,
+			false,
+			nil,
+		},
+		{
+			"cancel unbonding delegation: expect 0 remaining coins",
+			[]sdk.ValAddress{val1},
+			[]sdk.ValAddress{},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
+			&coin100,
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin100),
+			false,
+			true,
+			nil,
+		},
+		{
+			"cancel unbonding delegation: verify remaining coins",
+			[]sdk.ValAddress{val1},
+			[]sdk.ValAddress{},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
+			&coin100,
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin50),
+			false,
+			false,
+			&stakingtypes.StakeAuthorization{
+				Validators: &stakingtypes.StakeAuthorization_AllowList{
+					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{val1.String()}},
+				},
+				MaxTokens:         &coin50,
+				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
+			},
+		},
+		{
+			"cancel unbonding delegation: testing with invalid validator",
+			[]sdk.ValAddress{val1, val2},
+			[]sdk.ValAddress{},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
+			&coin100,
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val3, ctx.BlockHeight(), coin50),
+			true,
+			false,
+			nil,
+		},
+		{
+			"cancel unbonding delegation: testing delegate without spent limit",
+			[]sdk.ValAddress{val1, val2},
+			[]sdk.ValAddress{},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
+			nil,
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val2, ctx.BlockHeight(), coin100),
+			false,
+			false,
+			&stakingtypes.StakeAuthorization{
+				Validators: &stakingtypes.StakeAuthorization_AllowList{
+					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
+				},
+				MaxTokens:         nil,
+				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
+			},
+		},
+		{
+			"cancel unbonding delegation: fail cannot undelegate, permission denied",
+			[]sdk.ValAddress{},
+			[]sdk.ValAddress{val1},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
+			&coin100,
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin100),
 			true,
 			false,
 			nil,

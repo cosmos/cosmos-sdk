@@ -10,8 +10,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 
 	"cosmossdk.io/core/store"
-
-	"github.com/hashicorp/go-multierror"
 )
 
 // SchemaBuilder is used for building schemas. The Build method should always
@@ -19,20 +17,25 @@ import (
 // collections with the builder after initialization will result in panics.
 type SchemaBuilder struct {
 	schema *Schema
-	err    *multierror.Error
+	err    error
+}
+
+// NewSchemaBuilderFromAccessor creates a new schema builder from the provided store accessor function.
+func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) store.KVStore) *SchemaBuilder {
+	return &SchemaBuilder{
+		schema: &Schema{
+			storeAccessor:       accessorFunc,
+			collectionsByName:   map[string]collection{},
+			collectionsByPrefix: map[string]collection{},
+		},
+	}
 }
 
 // NewSchemaBuilder creates a new schema builder from the provided store key.
 // Callers should always call the SchemaBuilder.Build method when they are
 // done adding collections to the schema.
 func NewSchemaBuilder(service store.KVStoreService) *SchemaBuilder {
-	return &SchemaBuilder{
-		schema: &Schema{
-			storeAccessor:       service.OpenKVStore,
-			collectionsByName:   map[string]collection{},
-			collectionsByPrefix: map[string]collection{},
-		},
-	}
+	return NewSchemaBuilderFromAccessor(service.OpenKVStore)
 }
 
 // Build should be called after all collections that are part of the schema
@@ -86,22 +89,30 @@ func (s *SchemaBuilder) addCollection(collection collection) {
 	name := collection.getName()
 
 	if _, ok := s.schema.collectionsByPrefix[string(prefix)]; ok {
-		s.err = multierror.Append(s.err, fmt.Errorf("prefix %v already taken within schema", prefix))
+		s.appendError(fmt.Errorf("prefix %v already taken within schema", prefix))
 		return
 	}
 
 	if _, ok := s.schema.collectionsByName[name]; ok {
-		s.err = multierror.Append(s.err, fmt.Errorf("name %s already taken within schema", name))
+		s.appendError(fmt.Errorf("name %s already taken within schema", name))
 		return
 	}
 
 	if !nameRegex.MatchString(name) {
-		s.err = multierror.Append(s.err, fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
+		s.appendError(fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
 		return
 	}
 
 	s.schema.collectionsByPrefix[string(prefix)] = collection
 	s.schema.collectionsByName[name] = collection
+}
+
+func (s *SchemaBuilder) appendError(err error) {
+	if s.err == nil {
+		s.err = err
+		return
+	}
+	s.err = fmt.Errorf("%w\n%w", s.err, err)
 }
 
 // NameRegex is the regular expression that all valid collection names must match.

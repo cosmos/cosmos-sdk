@@ -19,7 +19,6 @@ import (
 
 func TestDecodeStore(t *testing.T) {
 	var evidenceKeeper keeper.Keeper
-
 	err := depinject.Inject(testutil.AppConfig, &evidenceKeeper)
 	require.NoError(t, err)
 

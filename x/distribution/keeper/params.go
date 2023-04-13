@@ -8,8 +8,8 @@ import (
 )
 
 // GetParams returns the total set of distribution parameters.
-func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
-	store := clientCtx.KVStore(k.storeKey)
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.ParamsKey)
 	if bz == nil {
 		return params
@@ -19,12 +19,9 @@ func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	return params
 }
 
-// SetParams sets the distribution parameters to the param space.
+// SetParams sets the distribution parameters.
+// CONTRACT: This method performs no validation of the parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	if err := params.ValidateBasic(); err != nil {
-		return err
-	}
-
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {

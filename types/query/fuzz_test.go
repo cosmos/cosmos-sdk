@@ -85,7 +85,7 @@ func FuzzPagination(f *testing.F) {
 		authStore := suite.ctx.KVStore(suite.app.UnsafeFindStoreKey(types.StoreKey))
 		balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 		accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
-		_, _ = query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
+		_, _ = query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
 			var amount math.Int
 			err := amount.Unmarshal(value)
 			if err != nil {

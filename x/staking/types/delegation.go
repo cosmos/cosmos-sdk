@@ -14,8 +14,6 @@ import (
 var _ DelegationI = Delegation{}
 
 // NewDelegation creates a new delegation object
-//
-//nolint:interfacer
 func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr.String(),
@@ -115,8 +113,6 @@ func UnmarshalUBDE(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegation
 }
 
 // NewUnbondingDelegation - create a new unbonding delegation object
-//
-//nolint:interfacer
 func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int, id uint64,
@@ -213,7 +209,6 @@ func (e RedelegationEntry) OnHold() bool {
 	return e.UnbondingOnHoldRefCount > 0
 }
 
-//nolint:interfacer
 func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int, sharesDst sdk.Dec, id uint64,
@@ -311,8 +306,6 @@ func (d DelegationResponses) String() (out string) {
 }
 
 // NewRedelegationResponse crates a new RedelegationEntryResponse instance.
-//
-//nolint:interfacer
 func NewRedelegationResponse(
 	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,
 ) RedelegationResponse {

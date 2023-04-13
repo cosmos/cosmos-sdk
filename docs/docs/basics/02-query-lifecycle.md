@@ -75,9 +75,9 @@ The preceding examples show how an external user can interact with a node by que
 
 The first thing that is created in the execution of a CLI command is a `client.Context`. A `client.Context` is an object that stores all the data needed to process a request on the user side. In particular, a `client.Context` stores the following:
 
-* **Codec**: The [encoder/decoder](../core/05-encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object. The default codec used by the CLI is Protobuf.
+* **Codec**: The [encoder/decoder](../core/05-encoding.md) used by the application, used to marshal the parameters and query before making the CometBFT RPC request and unmarshal the returned response into a JSON object. The default codec used by the CLI is Protobuf.
 * **Account Decoder**: The account decoder from the [`auth`](../modules/auth/README.md) module, which translates `[]byte`s into accounts.
-* **RPC Client**: The Tendermint RPC Client, or node, to which requests are relayed.
+* **RPC Client**: The CometBFT RPC Client, or node, to which requests are relayed.
 * **Keyring**: A [Key Manager](../basics/03-accounts.md#keyring) used to sign transactions and handle other operations with keys.
 * **Output Writer**: A [Writer](https://pkg.go.dev/io/#Writer) used to output the response.
 * **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query, and `--indent`, which indicates to add an indent to the JSON response.
@@ -96,7 +96,7 @@ At this point in the lifecycle, the user has created a CLI command with all of t
 
 #### Encoding
 
-In our case (querying an address's delegations), `MyQuery` contains an [address](./03-accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it is ultimately relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `client.Context` is used to marshal the address.
+In our case (querying an address's delegations), `MyQuery` contains an [address](./03-accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it is ultimately relayed to a consensus engine (e.g. CometBFT) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `client.Context` is used to marshal the address.
 
 Here is what the code looks like for the CLI command:
 
@@ -122,9 +122,9 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/query.go#L79-L113
 
 ## RPC
 
-With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../core/05-encoding.md) which then processes the request. Note that, while the RPC is made to the consensus engine (e.g. Tendermint Core) of a full-node, queries are not part of consensus and so are not broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
+With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../core/05-encoding.md) which then processes the request. Note that, while the RPC is made to the consensus engine (e.g. CometBFT) of a full-node, queries are not part of consensus and so are not broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
 
-Read more about ABCI Clients and Tendermint RPC in the [Tendermint documentation](https://docs.tendermint.com/master/rpc/).
+Read more about ABCI Clients and CometBFT RPC in the [CometBFT documentation](https://docs.cometbft.com/v0.37/spec/rpc/).
 
 ## Application Query Handling
 
@@ -136,7 +136,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.tendermint.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.cometbft.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
 
 ### CLI Response
 

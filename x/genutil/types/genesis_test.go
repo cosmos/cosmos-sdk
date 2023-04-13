@@ -62,7 +62,7 @@ func TestAppGenesis_ValidGenesis(t *testing.T) {
 	assert.NilError(t, err)
 	assert.DeepEqual(t, appGenesis.Consensus.Params, genesis.Consensus.Params)
 
-	// validate marshalling of app genesis
+	// validate marshaling of app genesis
 	rawAppGenesis, err = json.Marshal(&appGenesis)
 	assert.NilError(t, err)
 	golden.Assert(t, string(rawAppGenesis), "app_genesis.json")

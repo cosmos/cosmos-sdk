@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package cosmos.store.streaming.abci;
+
+import "tendermint/abci/types.proto";
+import "cosmos/store/v1beta1/listening.proto";
+
+option go_package = "cosmossdk.io/store/streaming/abci";
+
+// ListenBeginBlockRequest is the request type for the ListenBeginBlock RPC method
+message ListenBeginBlockRequest {
+  tendermint.abci.RequestBeginBlock  req = 1;
+  tendermint.abci.ResponseBeginBlock res = 2;
+}
+
+// ListenBeginBlockResponse is the response type for the ListenBeginBlock RPC method
+message ListenBeginBlockResponse {}
+
+// ListenEndBlockRequest is the request type for the ListenEndBlock RPC method
+message ListenEndBlockRequest {
+  tendermint.abci.RequestEndBlock  req = 1;
+  tendermint.abci.ResponseEndBlock res = 2;
+}
+
+// ListenEndBlockResponse is the response type for the ListenEndBlock RPC method
+message ListenEndBlockResponse {}
+
+// ListenDeliverTxRequest is the request type for the ListenDeliverTx RPC method
+message ListenDeliverTxRequest {
+  // explicitly pass in block height as neither RequestDeliverTx or ResponseDeliverTx contain it
+  int64                             block_height = 1;
+  tendermint.abci.RequestDeliverTx  req          = 2;
+  tendermint.abci.ResponseDeliverTx res          = 3;
+}
+
+// ListenDeliverTxResponse is the response type for the ListenDeliverTx RPC method
+message ListenDeliverTxResponse {}
+
+// ListenCommitRequest is the request type for the ListenCommit RPC method
+message ListenCommitRequest {
+  // explicitly pass in block height as ResponseCommit does not contain this info
+  int64                          block_height          = 1;
+  tendermint.abci.ResponseCommit res                   = 2;
+  repeated cosmos.store.v1beta1.StoreKVPair change_set = 3;
+}
+
+// ListenCommitResponse is the response type for the ListenCommit RPC method
+message ListenCommitResponse {}
+
+// ABCIListenerService is the service for the BaseApp ABCIListener interface
+service ABCIListenerService {
+  // ListenBeginBlock is the corresponding endpoint for ABCIListener.ListenBeginBlock
+  rpc ListenBeginBlock(ListenBeginBlockRequest) returns (ListenBeginBlockResponse);
+  // ListenEndBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
+  rpc ListenEndBlock(ListenEndBlockRequest) returns (ListenEndBlockResponse);
+  // ListenDeliverTx is the corresponding endpoint for ABCIListener.ListenDeliverTx
+  rpc ListenDeliverTx(ListenDeliverTxRequest) returns (ListenDeliverTxResponse);
+  // ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
+  rpc ListenCommit(ListenCommitRequest) returns (ListenCommitResponse);
+}

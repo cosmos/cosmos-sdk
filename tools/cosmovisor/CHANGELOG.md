@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## Features
+
+* [#15361](https://github.com/cosmos/cosmos-sdk/pull/15361) Add `cosmovisor config` command to display the configuration used by cosmovisor.
+
 ## Client Breaking Changes
 
 * [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Cosmovisor supports only upgrade plan with a checksum. This is enforced by the `x/upgrade` module for better security.
@@ -44,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Refactor Cosmovisor to use `x/upgrade` validation logic.
 * [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Refactor Cosmovisor to depend only on the `x/upgrade` module.
+* [#15362](https://github.com/cosmos/cosmos-sdk/pull/15362) Allow disabling Cosmovisor logs
 
 ## v1.4.0 2022-10-23
 

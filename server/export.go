@@ -1,8 +1,10 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,7 +26,8 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
@@ -41,16 +44,24 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			}
 
 			if appExporter == nil {
-				if _, err := fmt.Fprintln(os.Stderr, "WARNING: App exporter not defined. Returning genesis file."); err != nil {
+				if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "WARNING: App exporter not defined. Returning genesis file."); err != nil {
 					return err
 				}
 
-				genesis, err := os.ReadFile(config.GenesisFile())
+				// Open file in read-only mode so we can copy it to stdout.
+				// It is possible that the genesis file is large,
+				// so we don't need to read it all into memory
+				// before we stream it out.
+				f, err := os.OpenFile(config.GenesisFile(), os.O_RDONLY, 0)
 				if err != nil {
 					return err
 				}
+				defer f.Close()
 
-				fmt.Println(string(genesis))
+				if _, err := io.Copy(cmd.OutOrStdout(), f); err != nil {
+					return err
+				}
+
 				return nil
 			}
 
@@ -68,7 +79,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper, modulesToExport)
 			if err != nil {
-				return fmt.Errorf("error exporting state: %v", err)
+				return fmt.Errorf("error exporting state: %w", err)
 			}
 
 			appGenesis, err := genutiltypes.AppGenesisFromFile(serverCtx.Config.GenesisFile())
@@ -85,12 +96,10 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
-			cmd.SetOut(cmd.OutOrStdout())
-			cmd.SetErr(cmd.OutOrStderr())
-
 			if outputDocument == "" {
-				cmd.Println(string(out))
-				return nil
+				// Copy the entire genesis file to stdout.
+				_, err := io.Copy(cmd.OutOrStdout(), bytes.NewReader(out))
+				return err
 			}
 
 			if err = appGenesis.SaveAs(outputDocument); err != nil {

@@ -35,12 +35,17 @@ const sidebars = {
         {
           type: "link",
           label: "REST API Spec",
-          href: "https://v1.cosmos.network/rpc/v0.45.1",
+          href: "https://docs.cosmos.network/swagger/",
+        },
+        {
+          type: "link",
+          label: "Awesome Cosmos",
+          href: "https://github.com/cosmos/awesome-cosmos",
         },
         {
           type: "link",
           label: "Support",
-          href: "https://discord.gg/cosmosnetwork",
+          href: "https://github.com/orgs/cosmos/discussions",
         },
       ],
     },

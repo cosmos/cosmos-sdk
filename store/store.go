@@ -1,9 +1,9 @@
 package store
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cache"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"

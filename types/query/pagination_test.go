@@ -231,7 +231,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	res1, err := queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().NoError(err)
-	s.Require().Equal(res1.Balances.Len(), 2)
+	s.Require().Equal(2, res1.Balances.Len())
 	s.Require().NotNil(res1.Pagination.NextKey)
 
 	s.T().Log("verify paginate with custom limit and countTotal, Reverse false")
@@ -354,7 +354,7 @@ func (s *paginationTestSuite) TestPaginate() {
 	authStore := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
-	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key, value []byte) error {
 		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {

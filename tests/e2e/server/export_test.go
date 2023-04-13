@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
@@ -155,10 +154,10 @@ func TestExportCmd_Output(t *testing.T) {
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, genutiltypes.AppGenesis, *cobra.Command) {
 	t.Helper()
 
+	logger := log.NewTestLogger(t)
 	err := createConfigFolder(tempDir)
 	assert.NilError(t, err)
 
-	logger := cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 

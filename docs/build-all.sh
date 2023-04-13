@@ -17,6 +17,8 @@ echo "building docusaurus main docs"
 mv ~/versioned_docs ~/versioned_sidebars .
 npm ci && npm run build
 mv build ~/output
+echo "adding swagger docs"
+cp -r ../client/docs/swagger-ui ~/output/swagger
 while read -r branch path_prefix; do
     echo "building vuepress $branch docs"
     (git clean -fdx && git reset --hard && git checkout $branch && npm install && VUEPRESS_BASE="/$path_prefix/" npm run build)

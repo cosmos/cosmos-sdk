@@ -43,10 +43,12 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/keeper/msg_server.g
 
 `sdk.Msg` processing usually follows these 3 steps:
 
-### Validation 
+### Validation
 
-Before a `msgServer` method is executed, the message's [`ValidateBasic()`](../basics/01-tx-lifecycle.md#ValidateBasic) method has already been called. Since `msg.ValidateBasic()` performs only the most basic checks, this stage must perform all other validation (both *stateful* and *stateless*) to make sure the `message` is valid. Checks performed in the `msgServer` method can be more expensive and the signer is charged gas for these operations.
-For example, a `msgServer` method for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. 
+The message server must perform all validation required (both *stateful* and *stateless*) to make sure the `message` is valid.
+The `signer` is charged for the gas cost of this validation.
+
+For example, a `msgServer` method for a `transfer` message should check that the sending account has enough funds to actually perform the transfer. 
 
 It is recommended to implement all validation checks in a separate function that passes state values as arguments. This implementation simplifies testing. As expected, expensive validation functions charge additional gas. Example:
 
@@ -59,6 +61,11 @@ ValidateMsgA(msg MsgA, now Time, gm GasMeter) error {
 	return signatureVerificaton(msg.Prover, msg.Data)
 }
 ```
+
+:::warning
+Previously, the `ValidateBasic` method was used to perform simple and stateless validation checks.
+This way of validating is deprecated, this means the `msgServer` must perform all validation checks.
+:::
 
 ### State Transition
 

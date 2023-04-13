@@ -153,7 +153,7 @@ func indirect(ptr interface{}) interface{} {
 }
 
 func TestGetSubspaces(t *testing.T) {
-	_, _, _, _, keeper := testComponents() //nolint:dogsled
+	_, _, _, _, keeper := testComponents()
 
 	table := types.NewKeyTable(
 		types.NewParamSetPair([]byte("string"), "", validateNoOp),

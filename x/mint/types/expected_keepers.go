@@ -1,6 +1,8 @@
 package types // noalias
 
 import (
+	context "context"
+
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,8 +19,8 @@ type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
-	SetModuleAccount(sdk.Context, sdk.ModuleAccountI)
-	GetModuleAccount(ctx sdk.Context, moduleName string) sdk.ModuleAccountI
+	SetModuleAccount(context.Context, sdk.ModuleAccountI)
+	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 }
 
 // BankKeeper defines the contract needed to be fulfilled for banking and supply

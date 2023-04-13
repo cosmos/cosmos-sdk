@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# gRPC, REST, and Tendermint Endpoints
+# gRPC, REST, and CometBFT Endpoints
 
 :::note Synopsis
 This document presents an overview of all the endpoints a node exposes: gRPC, REST as well as some other endpoints.
@@ -14,10 +14,10 @@ Each node exposes the following endpoints for users to interact with a node, eac
 
 * the gRPC server (default port: `9090`),
 * the REST server (default port: `1317`),
-* the Tendermint RPC endpoint (default port: `26657`).
+* the CometBFT RPC endpoint (default port: `26657`).
 
 :::tip
-The node also exposes some other endpoints, such as the Tendermint P2P endpoint, or the [Prometheus endpoint](https://docs.tendermint.com/master/nodes/metrics.html#metrics), which are not directly related to the Cosmos SDK. Please refer to the [Tendermint documentation](https://docs.tendermint.com/master/tendermint-core/using-tendermint.html#configuration) for more information about these endpoints.
+The node also exposes some other endpoints, such as the CometBFT P2P endpoint, or the [Prometheus endpoint](https://docs.cometbft.com/v0.37/core/metrics), which are not directly related to the Cosmos SDK. Please refer to the [CometBFT documentation](https://docs.cometbft.com/v0.37/core/configuration) for more information about these endpoints.
 :::
 
 ## gRPC Server
@@ -76,11 +76,11 @@ Enabling the `/swagger` endpoint is configurable inside `~/.simapp/config/app.to
 For application developers, you may want to generate your own Swagger definitions based on your custom modules.
 The Cosmos SDK's [Swagger generation script](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/scripts/protoc-swagger-gen.sh) is a good place to start.
 
-## Tendermint RPC
+## CometBFT RPC
 
-Independently from the Cosmos SDK, Tendermint also exposes a RPC server. This RPC server can be configured by tuning parameters under the `rpc` table in the `~/.simapp/config/config.toml`, the default listening address is `tcp://localhost:26657`. An OpenAPI specification of all Tendermint RPC endpoints is available [here](https://docs.tendermint.com/master/rpc/).
+Independently from the Cosmos SDK, CometBFT also exposes a RPC server. This RPC server can be configured by tuning parameters under the `rpc` table in the `~/.simapp/config/config.toml`, the default listening address is `tcp://localhost:26657`. An OpenAPI specification of all CometBFT RPC endpoints is available [here](https://docs.cometbft.com/master/rpc/).
 
-Some Tendermint RPC endpoints are directly related to the Cosmos SDK:
+Some CometBFT RPC endpoints are directly related to the Cosmos SDK:
 
 * `/abci_query`: this endpoint will query the application for state. As the `path` parameter, you can send the following strings:
     * any Protobuf fully-qualified service method, such as `/cosmos.bank.v1beta1.Query/AllBalances`. The `data` field should then include the method's request parameter(s) encoded as bytes using Protobuf.
@@ -89,7 +89,7 @@ Some Tendermint RPC endpoints are directly related to the Cosmos SDK:
     * `/store/{path}`: this will query the store directly.
     * `/p2p/filter/addr/{port}`: this will return a filtered list of the node's P2P peers by address port.
     * `/p2p/filter/id/{id}`: this will return a filtered list of the node's P2P peers by ID.
-* `/broadcast_tx_{aync,async,commit}`: these 3 endpoint will broadcast a transaction to other peers. CLI, gRPC and REST expose [a way to broadcast transations](./01-transactions.md#broadcasting-the-transaction), but they all use these 3 Tendermint RPCs under the hood.
+* `/broadcast_tx_{aync,async,commit}`: these 3 endpoint will broadcast a transaction to other peers. CLI, gRPC and REST expose [a way to broadcast transations](./01-transactions.md#broadcasting-the-transaction), but they all use these 3 CometBFT RPCs under the hood.
 
 ## Comparison Table
 
@@ -97,4 +97,4 @@ Some Tendermint RPC endpoints are directly related to the Cosmos SDK:
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | gRPC           | - can use code-generated stubs in various languages <br /> - supports streaming and bidirectional communication (HTTP2) <br /> - small wire binary sizes, faster transmission | - based on HTTP2, not available in browsers <br /> - learning curve (mostly due to Protobuf)                      |
 | REST           | - ubiquitous <br/> - client libraries in all languages, faster implementation <br />                                                                                        | - only supports unary request-response communication (HTTP1.1) <br/> - bigger over-the-wire message sizes (JSON) |
-| Tendermint RPC | - easy to use                                                                                                                                                         | - bigger over-the-wire message sizes (JSON)                                                                   |
+| CometBFT RPC | - easy to use                                                                                                                                                         | - bigger over-the-wire message sizes (JSON)                                                                   |

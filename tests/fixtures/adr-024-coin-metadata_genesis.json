@@ -85,10 +85,6 @@
     "genutil": {
       "gentxs": []
     },
-    "capability": {
-      "index": "1",
-      "owners": []
-    },
     "mint": {
       "minter": {
         "inflation": "0.130000000000000000",

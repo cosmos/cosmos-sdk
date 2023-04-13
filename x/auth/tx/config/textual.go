@@ -3,12 +3,13 @@ package tx
 import (
 	"context"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -21,17 +22,25 @@ import (
 //
 //	clientCtx := client.GetClientContextFromCmd(cmd)
 //	txt := tx.NewTextualWithGRPCConn(clientCtxx)
-func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) *textual.SignModeHandler {
-	return textual.NewSignModeHandler(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
-		bankQueryClient := bankv1beta1.NewQueryClient(grpcConn)
-		res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
-			Denom: denom,
-		})
-		if err != nil {
-			return nil, metadataExists(err)
-		}
+func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (*textual.SignModeHandler, error) {
+	protoFiles, err := gogoproto.MergedRegistry()
+	if err != nil {
+		return nil, err
+	}
 
-		return res.Metadata, nil
+	return textual.NewSignModeHandler(textual.SignModeOptions{
+		CoinMetadataQuerier: func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+			bankQueryClient := bankv1beta1.NewQueryClient(grpcConn)
+			res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
+				Denom: denom,
+			})
+			if err != nil {
+				return nil, metadataExists(err)
+			}
+
+			return res.Metadata, nil
+		},
+		FileResolver: protoFiles,
 	})
 }
 
@@ -41,37 +50,43 @@ func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) *textual.SignMode
 // Note: Once we switch to ADR-033, and keepers become ADR-033 clients to each
 // other, this function could probably be deprecated in favor of
 // `NewTextualWithGRPCConn`.
-func NewTextualWithBankKeeper(bk BankKeeper) *textual.SignModeHandler {
-	textual := textual.NewSignModeHandler(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
-		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
-		if err != nil {
-			return nil, metadataExists(err)
-		}
+func NewTextualWithBankKeeper(bk BankKeeper) (*textual.SignModeHandler, error) {
+	protoFiles, err := gogoproto.MergedRegistry()
+	if err != nil {
+		return nil, err
+	}
 
-		m := &bankv1beta1.Metadata{
-			Base:    res.Metadata.Base,
-			Display: res.Metadata.Display,
-			// fields below are not strictly needed by Textual
-			// but added here for completeness.
-			Description: res.Metadata.Description,
-			Name:        res.Metadata.Name,
-			Symbol:      res.Metadata.Symbol,
-			Uri:         res.Metadata.URI,
-			UriHash:     res.Metadata.URIHash,
-		}
-		m.DenomUnits = make([]*bankv1beta1.DenomUnit, len(res.Metadata.DenomUnits))
-		for i, d := range res.Metadata.DenomUnits {
-			m.DenomUnits[i] = &bankv1beta1.DenomUnit{
-				Denom:    d.Denom,
-				Exponent: d.Exponent,
-				Aliases:  d.Aliases,
+	return textual.NewSignModeHandler(textual.SignModeOptions{
+		CoinMetadataQuerier: func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+			res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
+			if err != nil {
+				return nil, metadataExists(err)
 			}
-		}
 
-		return m, nil
+			m := &bankv1beta1.Metadata{
+				Base:    res.Metadata.Base,
+				Display: res.Metadata.Display,
+				// fields below are not strictly needed by Textual
+				// but added here for completeness.
+				Description: res.Metadata.Description,
+				Name:        res.Metadata.Name,
+				Symbol:      res.Metadata.Symbol,
+				Uri:         res.Metadata.URI,
+				UriHash:     res.Metadata.URIHash,
+			}
+			m.DenomUnits = make([]*bankv1beta1.DenomUnit, len(res.Metadata.DenomUnits))
+			for i, d := range res.Metadata.DenomUnits {
+				m.DenomUnits[i] = &bankv1beta1.DenomUnit{
+					Denom:    d.Denom,
+					Exponent: d.Exponent,
+					Aliases:  d.Aliases,
+				}
+			}
+
+			return m, nil
+		},
+		FileResolver: protoFiles,
 	})
-
-	return textual
 }
 
 // metadataExists parses the error, and only propagates the error if it's

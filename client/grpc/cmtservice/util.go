@@ -21,18 +21,18 @@ func convertHeader(h cmtprototypes.Header) Header {
 		EvidenceHash:       h.EvidenceHash,
 		LastResultsHash:    h.LastResultsHash,
 		LastCommitHash:     h.LastCommitHash,
-		ProposerAddress:    sdk.ValAddress(h.ProposerAddress).String(),
+		ProposerAddress:    sdk.ConsAddress(h.ProposerAddress).String(),
 	}
 }
 
 // convertBlock converts CometBFT block to sdk block
-func convertBlock(tmblock *cmtprototypes.Block) *Block {
+func convertBlock(cmtblock *cmtprototypes.Block) *Block {
 	b := new(Block)
 
-	b.Header = convertHeader(tmblock.Header)
-	b.LastCommit = tmblock.LastCommit
-	b.Data = tmblock.Data
-	b.Evidence = tmblock.Evidence
+	b.Header = convertHeader(cmtblock.Header)
+	b.LastCommit = cmtblock.LastCommit
+	b.Data = cmtblock.Data
+	b.Evidence = cmtblock.Evidence
 
 	return b
 }

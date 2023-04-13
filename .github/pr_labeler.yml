@@ -4,8 +4,6 @@
   - x/authz/**/*
 "C:x/bank":
   - x/bank/**/*
-"C:x/capability":
-  - x/capability/**/*
 "C:x/crisis":
   - x/crisis/**/*
 "C:x/distribution":

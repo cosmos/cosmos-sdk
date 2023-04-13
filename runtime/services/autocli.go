@@ -4,8 +4,14 @@ import (
 	"context"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/core/appmodule"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
+	protobuf "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -35,31 +41,47 @@ func ExtractAutoCLIOptions(appModules map[string]interface{}) map[string]*autocl
 			AutoCLIOptions() *autocliv1.ModuleOptions
 		}); ok {
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
-		} else if mod, ok := mod.(module.HasServices); ok {
-			// try to auto-discover options based on the last msg and query
-			// services registered for the module
-			cfg := &autocliConfigurator{}
+			continue
+		}
+
+		cfg := &autocliConfigurator{}
+
+		// try to auto-discover options based on the last msg and query
+		// services registered for the module
+		if mod, ok := mod.(module.HasServices); ok {
 			mod.RegisterServices(cfg)
-			modOptions := &autocliv1.ModuleOptions{}
-			haveServices := false
+		}
 
-			if cfg.msgServer.serviceName != "" {
-				haveServices = true
-				modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
-					Service: cfg.msgServer.serviceName,
-				}
+		if mod, ok := mod.(appmodule.HasServices); ok {
+			err := mod.RegisterServices(cfg)
+			if err != nil {
+				panic(err)
 			}
+		}
 
-			if cfg.queryServer.serviceName != "" {
-				haveServices = true
-				modOptions.Query = &autocliv1.ServiceCommandDescriptor{
-					Service: cfg.queryServer.serviceName,
-				}
-			}
+		// check for errors in the configurator
+		if cfg.Error() != nil {
+			panic(cfg.Error())
+		}
 
-			if haveServices {
-				moduleOptions[modName] = modOptions
+		haveServices := false
+		modOptions := &autocliv1.ModuleOptions{}
+		if cfg.msgServer.serviceName != "" {
+			haveServices = true
+			modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
+				Service: cfg.msgServer.serviceName,
 			}
+		}
+
+		if cfg.queryServer.serviceName != "" {
+			haveServices = true
+			modOptions.Query = &autocliv1.ServiceCommandDescriptor{
+				Service: cfg.queryServer.serviceName,
+			}
+		}
+
+		if haveServices {
+			moduleOptions[modName] = modOptions
 		}
 	}
 	return moduleOptions
@@ -73,9 +95,13 @@ func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRe
 
 // autocliConfigurator allows us to call RegisterServices and introspect the services
 type autocliConfigurator struct {
-	msgServer   autocliServiceRegistrar
-	queryServer autocliServiceRegistrar
+	msgServer     autocliServiceRegistrar
+	queryServer   autocliServiceRegistrar
+	registryCache *protoregistry.Files
+	err           error
 }
+
+var _ module.Configurator = &autocliConfigurator{}
 
 func (a *autocliConfigurator) MsgServer() gogogrpc.Server { return &a.msgServer }
 
@@ -84,6 +110,25 @@ func (a *autocliConfigurator) QueryServer() gogogrpc.Server { return &a.querySer
 func (a *autocliConfigurator) RegisterMigration(string, uint64, module.MigrationHandler) error {
 	return nil
 }
+
+func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
+	if a.registryCache == nil {
+		a.registryCache, a.err = proto.MergedRegistry()
+	}
+
+	desc, err := a.registryCache.FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
+	if err != nil {
+		a.err = err
+		return
+	}
+
+	if protobuf.HasExtension(desc.Options(), cosmosmsg.E_Service) {
+		a.msgServer.RegisterService(sd, ss)
+	} else {
+		a.queryServer.RegisterService(sd, ss)
+	}
+}
+func (a *autocliConfigurator) Error() error { return nil }
 
 // autocliServiceRegistrar is used to capture the service name for registered services
 type autocliServiceRegistrar struct {

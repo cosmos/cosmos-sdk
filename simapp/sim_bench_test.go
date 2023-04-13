@@ -5,7 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/spf13/viper"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	flag "github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -15,6 +18,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
+
+var FlagEnableBenchStreamingValue bool
+
+// Get flags every time the simulator is run
+func init() {
+	flag.BoolVar(&FlagEnableBenchStreamingValue, "EnableStreaming", false, "Enable streaming service")
+}
 
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ cosmossdk.io/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
@@ -38,9 +48,18 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		require.NoError(b, os.RemoveAll(dir))
 	}()
 
-	appOptions := make(simtestutil.AppOptionsMap, 0)
-	appOptions[flags.FlagHome] = DefaultNodeHome
-	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions := viper.New()
+	if FlagEnableStreamingValue {
+		m := make(map[string]interface{})
+		m["streaming.abci.keys"] = []string{"*"}
+		m["streaming.abci.plugin"] = "abci_v1"
+		m["streaming.abci.stop-node-on-err"] = true
+		for key, value := range m {
+			appOptions.SetDefault(key, value)
+		}
+	}
+	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
+	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
 
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt())
 

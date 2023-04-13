@@ -53,7 +53,6 @@ staking token of the chain.
     * [EndBlocker](#endblocker)
     * [Handlers](#handlers)
 * [Parameters](#parameters)
-    * [SubKeys](#subkeys)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -230,35 +229,17 @@ At present, validators are not punished for failing to vote.
 
 #### Governance address
 
-Later, we may add permissioned keys that could only sign txs from certain modules. For the MVP, the `Governance address` will be the main validator address generated at account creation. This address corresponds to a different PrivKey than the Tendermint PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive Tendermint PrivKey.
+Later, we may add permissioned keys that could only sign txs from certain modules. For the MVP, the `Governance address` will be the main validator address generated at account creation. This address corresponds to a different PrivKey than the CometBFT PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive CometBFT PrivKey.
 
-### Software Upgrade
+#### Burnable Params
 
-If proposals are of type `SoftwareUpgradeProposal`, then nodes need to upgrade
-their software to the new version that was voted. This process is divided into
-two steps:
+There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors. 
 
-#### Signal
+* `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed. 
+* `BurnVoteQuorum` burns the proposal deposit if the proposal deposit if the vote does not reach quorum.
+* `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase. 
 
-After a `SoftwareUpgradeProposal` is accepted, validators are expected to
-download and install the new version of the software while continuing to run
-the previous version. Once a validator has downloaded and installed the
-upgrade, it will start signaling to the network that it is ready to switch by
-including the proposal's `proposalID` in its *precommits*. (*Note: Confirmation that we want it in the precommit?*)
-
-Note: There is only one signal slot per *precommit*. If several
-`SoftwareUpgradeProposals` are accepted in a short timeframe, a pipeline will
-form and they will be implemented one after the other in the order that they
-were accepted.
-
-#### Switch
-
-Once a block contains more than 2/3rd *precommits* where a common
-`SoftwareUpgradeProposal` is signaled, all the nodes (including validator
-nodes, non-validating full nodes and light-nodes) are expected to switch to the
-new version of the software.
-
-Validators and full nodes can use an automation tool, such as [Cosmovisor](https://docs.cosmos.network/main/tooling/cosmovisor), for automatically switching version of the chain.
+> Note: These parameters are modifiable via governance. 
 
 ## State
 
@@ -274,12 +255,12 @@ Validators and full nodes can use an automation tool, such as [Cosmovisor](https
 Since this is more of a social feature than a technical feature, we'll now get into some items that may have been useful to have in a genesis constitution:
 
 * What limitations on governance exist, if any?
-  * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
-  * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
-  * In the event of an economic emergency, what should validators do?
-    * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
+    * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
+    * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
+    * In the event of an economic emergency, what should validators do?
+        * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
 * What is the purpose of the chain, specifically?
-  * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
+    * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
 
 This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating thier nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
@@ -716,7 +697,7 @@ The governance module emits the following events:
 ### EndBlocker
 
 | Type              | Attribute Key   | Attribute Value  |
-| ----------------- | --------------- | ---------------- |
+|-------------------|-----------------|------------------|
 | inactive_proposal | proposal_id     | {proposalID}     |
 | inactive_proposal | proposal_result | {proposalResult} |
 | active_proposal   | proposal_id     | {proposalID}     |
@@ -727,7 +708,7 @@ The governance module emits the following events:
 #### MsgSubmitProposal
 
 | Type                | Attribute Key       | Attribute Value |
-| ------------------- | ------------------- | --------------- |
+|---------------------|---------------------|-----------------|
 | submit_proposal     | proposal_id         | {proposalID}    |
 | submit_proposal [0] | voting_period_start | {proposalID}    |
 | proposal_deposit    | amount              | {depositAmount} |
@@ -741,7 +722,7 @@ The governance module emits the following events:
 #### MsgVote
 
 | Type          | Attribute Key | Attribute Value |
-| ------------- | ------------- | --------------- |
+|---------------|---------------|-----------------|
 | proposal_vote | option        | {voteOption}    |
 | proposal_vote | proposal_id   | {proposalID}    |
 | message       | module        | governance      |
@@ -751,7 +732,7 @@ The governance module emits the following events:
 #### MsgVoteWeighted
 
 | Type          | Attribute Key | Attribute Value       |
-| ------------- | ------------- | --------------------- |
+|---------------|---------------|-----------------------|
 | proposal_vote | option        | {weightedVoteOptions} |
 | proposal_vote | proposal_id   | {proposalID}          |
 | message       | module        | governance            |
@@ -761,7 +742,7 @@ The governance module emits the following events:
 #### MsgDeposit
 
 | Type                 | Attribute Key       | Attribute Value |
-| -------------------- | ------------------- | --------------- |
+|----------------------|---------------------|-----------------|
 | proposal_deposit     | amount              | {depositAmount} |
 | proposal_deposit     | proposal_id         | {proposalID}    |
 | proposal_deposit [0] | voting_period_start | {proposalID}    |
@@ -775,17 +756,20 @@ The governance module emits the following events:
 
 The governance module contains the following parameters:
 
-| Key                     | Type             | Example                                 |
-| ----------------------- | ---------------- | --------------------------------------- |
-| min_deposit             | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
-| max_deposit_period      | string (time ns) | "172800000000000" (17280s)              |
-| voting_period           | string (time ns) | "172800000000000" (17280s)              |
-| quorum                  | string (dec)     | "0.334000000000000000"                  |
-| threshold               | string (dec)     | "0.500000000000000000"                  |
-| veto                    | string (dec)     | "0.334000000000000000"                  |
-| expedited_threshold     | string (time ns) | "0.667000000000000000"                  |
-| expedited_voting_period | string (time ns) | "86400000000000" (8600s)                |
-| expedited_min_deposit   | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
+| Key                           | Type             | Example                                 |
+|-------------------------------|------------------|-----------------------------------------|
+| min_deposit                   | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
+| max_deposit_period            | string (time ns) | "172800000000000" (17280s)              |
+| voting_period                 | string (time ns) | "172800000000000" (17280s)              |
+| quorum                        | string (dec)     | "0.334000000000000000"                  |
+| threshold                     | string (dec)     | "0.500000000000000000"                  |
+| veto                          | string (dec)     | "0.334000000000000000"                  |
+| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
+| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
+| expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
+| burn_proposal_deposit_prevote | bool             | false                                    |
+| burn_vote_quorum              | bool             | false                                   |
+| burn_vote_veto                | bool             | true                                    |
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

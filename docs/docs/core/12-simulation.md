@@ -97,5 +97,5 @@ Here are some suggestions when encountering a simulation failure:
 Learn how you can integrate the simulation into your Cosmos SDK-based application:
 
 * Application Simulation Manager
-* [Building modules: Simulator](../building-modules/13-simulator.md)
+* [Building modules: Simulator](../building-modules/14-simulator.md)
 * Simulator tests

@@ -105,11 +105,12 @@ func TestCompactUInt32(t *testing.T) {
 		by := ormfield.EncodeCompactUint32(y)
 
 		cmp := bytes.Compare(bx, by)
-		if x < y {
+		switch {
+		case x < y:
 			assert.Equal(t, -1, cmp)
-		} else if x == y {
+		case x == y:
 			assert.Equal(t, 0, cmp)
-		} else {
+		default:
 			assert.Equal(t, 1, cmp)
 		}
 
@@ -153,11 +154,12 @@ func TestCompactUInt64(t *testing.T) {
 		by := ormfield.EncodeCompactUint64(y)
 
 		cmp := bytes.Compare(bx, by)
-		if x < y {
+		switch {
+		case x < y:
 			assert.Equal(t, -1, cmp)
-		} else if x == y {
+		case x == y:
 			assert.Equal(t, 0, cmp)
-		} else {
+		default:
 			assert.Equal(t, 1, cmp)
 		}
 

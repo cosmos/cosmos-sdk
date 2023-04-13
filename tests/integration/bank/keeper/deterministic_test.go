@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
+	simstestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -61,7 +61,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 
 	var interfaceRegistry codectypes.InterfaceRegistry
 
-	app, err := sims.Setup(
+	app, err := simstestutil.Setup(
 		configurator.NewAppConfig(
 			configurator.AuthModule(),
 			configurator.TxModule(),
@@ -155,12 +155,13 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
-		numCoins := rapid.IntRange(1, 10).Draw(rt, "num-count")
-		coins := make(sdk.Coins, 0, numCoins)
 
-		for i := 0; i < numCoins; i++ {
+		// Denoms must be unique, otherwise sdk.NewCoins will panic.
+		denoms := rapid.SliceOfNDistinct(rapid.StringMatching(denomRegex), 1, 10, rapid.ID[string]).Draw(rt, "denoms")
+		coins := make(sdk.Coins, 0, len(denoms))
+		for _, denom := range denoms {
 			coin := sdk.NewCoin(
-				rapid.StringMatching(denomRegex).Draw(rt, "denom"),
+				denom,
 				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
@@ -171,7 +172,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 		err := banktestutil.FundAccount(f.bankKeeper, f.ctx, addr, coins)
 		assert.NilError(t, err)
 
-		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"))
+		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(len(denoms))).Draw(rt, "pagination"))
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SpendableBalances, 0, true)
 	})
 
@@ -477,5 +478,5 @@ func TestGRPCDenomOwners(t *testing.T) {
 	req := &banktypes.QueryDenomOwnersRequest{
 		Denom: coin1.GetDenom(),
 	}
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomOwners, 2525, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomOwners, 2516, false)
 }

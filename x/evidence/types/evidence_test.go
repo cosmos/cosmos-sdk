@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"encoding/hex"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,7 +30,7 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, e.GetConsensusAddress().String(), e.ConsensusAddress)
 	require.Equal(t, e.GetHeight(), e.Height)
 	require.Equal(t, e.Route(), types.RouteEquivocation)
-	require.Equal(t, e.Hash().String(), "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76")
+	require.Equal(t, strings.ToUpper(hex.EncodeToString(e.Hash())), "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76")
 	require.Equal(t, "height:100 time:<seconds:1136214245 > power:1000000 consensus_address:\"cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\" ", e.String())
 	require.NoError(t, e.ValidateBasic())
 
@@ -38,7 +40,7 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, e.ConsensusAddress, e.GetConsensusAddress().String())
 	require.Equal(t, e.Height, e.GetHeight())
 	require.Equal(t, types.RouteEquivocation, e.Route())
-	require.Equal(t, "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76", e.Hash().String())
+	require.Equal(t, "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76", strings.ToUpper(hex.EncodeToString(e.Hash())))
 	require.Equal(t, "height:100 time:<seconds:1136214245 > power:1000000 consensus_address:\"cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\" ", e.String())
 	require.NoError(t, e.ValidateBasic())
 }
@@ -80,7 +82,7 @@ func TestEvidenceAddressConversion(t *testing.T) {
 		Time:             time.Now(),
 		TotalVotingPower: 100,
 	}
-	evidence := types.FromABCIEvidence(tmEvidence).(*types.Equivocation)
+	evidence := types.FromABCIEvidence(tmEvidence)
 	consAddr := evidence.GetConsensusAddress()
 	// Check the address is the same after conversion
 	require.Equal(t, tmEvidence.Validator.Address, consAddr.Bytes())

@@ -8,17 +8,12 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // Interface implementation checks
 var (
-	_ sdk.Tx                             = (*StdTx)(nil)
-	_ sdk.TxWithMemo                     = (*StdTx)(nil)
-	_ sdk.FeeTx                          = (*StdTx)(nil)
-	_ tx.TipTx                           = (*StdTx)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*StdTx)(nil)
 
 	_ codectypes.UnpackInterfacesMessage = (*StdSignature)(nil)
@@ -107,64 +102,11 @@ func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdT
 // GetMsgs returns the all the transaction's messages.
 func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 
-// ValidateBasic does a simple and lightweight validation check that doesn't
-// require access to any other information.
-//
-//nolint:revive // we need to change the receiver name here, because otherwise we conflict with tx.MaxGasWanted.
-func (stdTx StdTx) ValidateBasic() error {
-	stdSigs := stdTx.GetSignatures()
-
-	if stdTx.Fee.Gas > tx.MaxGasWanted {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", stdTx.Fee.Gas, tx.MaxGasWanted,
-		)
-	}
-	if stdTx.Fee.Amount.IsAnyNegative() {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInsufficientFee,
-			"invalid fee provided: %s", stdTx.Fee.Amount,
-		)
-	}
-	if len(stdSigs) == 0 {
-		return sdkerrors.ErrNoSignatures
-	}
-	if len(stdSigs) != len(stdTx.GetSigners()) {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", len(stdTx.GetSigners()), len(stdSigs),
-		)
-	}
-
-	return nil
-}
-
 // Deprecated: AsAny implements intoAny. It doesn't work for protobuf serialization,
 // so it can't be saved into protobuf configured storage. We are using it only for API
 // compatibility.
 func (tx *StdTx) AsAny() *codectypes.Any {
 	return codectypes.UnsafePackAny(tx)
-}
-
-// GetSigners returns the addresses that must sign the transaction.
-// Addresses are returned in a deterministic order.
-// They are accumulated from the GetSigners method for each Msg
-// in the order they appear in tx.GetMsgs().
-// Duplicate addresses will be omitted.
-func (tx StdTx) GetSigners() []sdk.AccAddress {
-	var signers []sdk.AccAddress
-	seen := map[string]bool{}
-
-	for _, msg := range tx.GetMsgs() {
-		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
-			}
-		}
-	}
-
-	return signers
 }
 
 // GetMemo returns the memo
@@ -222,16 +164,6 @@ func (tx StdTx) GetGas() uint64 { return tx.Fee.Gas }
 
 // GetFee returns the FeeAmount in StdFee
 func (tx StdTx) GetFee() sdk.Coins { return tx.Fee.Amount }
-
-// FeePayer returns the address that is responsible for paying fee
-// StdTx returns the first signer as the fee payer
-// If no signers for tx, return empty address
-func (tx StdTx) FeePayer() sdk.AccAddress {
-	if tx.GetSigners() != nil {
-		return tx.GetSigners()[0]
-	}
-	return sdk.AccAddress{}
-}
 
 // FeeGranter always returns nil for StdTx
 func (tx StdTx) FeeGranter() sdk.AccAddress {

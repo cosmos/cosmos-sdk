@@ -7,7 +7,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,7 +44,7 @@ func (ctx Context) QueryWithData(path string, data []byte) ([]byte, int64, error
 // QueryStore performs a query to a CometBFT node with the provided key and
 // store name. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx Context) QueryStore(key cmtbytes.HexBytes, storeName string) ([]byte, int64, error) {
+func (ctx Context) QueryStore(key []byte, storeName string) ([]byte, int64, error) {
 	return ctx.queryStore(key, storeName, "key")
 }
 
@@ -129,7 +128,7 @@ func sdkErrorToGRPCError(resp abci.ResponseQuery) error {
 // query performs a query to a CometBFT node with the provided store name
 // and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx Context) query(path string, key cmtbytes.HexBytes) ([]byte, int64, error) {
+func (ctx Context) query(path string, key []byte) ([]byte, int64, error) {
 	resp, err := ctx.queryABCI(abci.RequestQuery{
 		Path:   path,
 		Data:   key,
@@ -145,7 +144,7 @@ func (ctx Context) query(path string, key cmtbytes.HexBytes) ([]byte, int64, err
 // queryStore performs a query to a CometBFT node with the provided a store
 // name and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx Context) queryStore(key cmtbytes.HexBytes, storeName, endPath string) ([]byte, int64, error) {
+func (ctx Context) queryStore(key []byte, storeName, endPath string) ([]byte, int64, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
 }

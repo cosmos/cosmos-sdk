@@ -5,9 +5,9 @@
 * 11/23/2020: Initial draft
 * 10/06/2022: Introduce plugin system based on hashicorp/go-plugin
 * 10/14/2022:
-  * Add `ListenCommit`, flatten the state writes in a block to a single batch.
-  * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
-  * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propogate errors.
+    * Add `ListenCommit`, flatten the state writes in a block to a single batch.
+    * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
+    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propogate errors.
 
 
 ## Status
@@ -248,6 +248,7 @@ func (app *BaseApp) SetStreamingService(s ABCIListener) {
 ```
 
 We will add two new fields to the `BaseApp` struct:
+
 ```go
 type BaseApp struct {
 
@@ -494,6 +495,7 @@ service ABCIListenerService {
 ```
 
 Implementing the service above:
+
 ```go
 // streaming/plugins/abci/{plugin_version}/grpc.go
 

@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	logger := log.NewZeroLogger(log.ModuleKey, "cosmovisor")
+	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
 	ctx := context.WithValue(context.Background(), log.ContextKey, logger)
 
-	if err := rootCmd.ExecuteContext(ctx); err != nil {
+	if err := NewRootCmd().ExecuteContext(ctx); err != nil {
 		cverrors.LogErrors(logger, "", err)
 		os.Exit(1)
 	}

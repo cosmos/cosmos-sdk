@@ -57,9 +57,9 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 
 ## Addition to Mempool
 
-Each full-node (running Tendermint) that receives a `Tx` sends an [ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#messages),
+Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v0.37/spec/p2p/messages/),
 `CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
-[**Mempool**](https://docs.tendermint.com/master/tendermint-core/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+[**Mempool**](https://docs.cometbft.com/v0.37/spec/p2p/messages/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
 
@@ -84,26 +84,31 @@ through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../core/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
+When `Tx` is received by the application from the underlying consensus engine (e.g. CometBFT ), it is still in its [encoded](../core/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../core/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
 
-### ValidateBasic
+### ValidateBasic (deprecated)
 
 Messages ([`sdk.Msg`](../core/01-transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction. 
 To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../core/00-baseapp.md#checktx) and [`DeliverTx`](../core/00-baseapp.md#delivertx) transactions.
 `ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state). 
 
+:::warning
+The `ValidateBasic` method on messages has been deprecated in favor of validating messages directly in their respective [`Msg` services](../building-modules/03-msg-services.md#Validation).
+
+Read [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) for more details.
+:::
+
+:::note
+`BaseApp` still calls `ValidateBasic` on messages that implements that method for backwards compatibility.
+:::
+
 #### Guideline
 
-Gas is not charged when `ValidateBasic` is executed, so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the `CheckTx` phase.
-Other validation operations must be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
-
-For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
-
-See also [Msg Service Validation](../building-modules/03-msg-services.md#Validation).
+`ValidateBasic` should not be used anymore. Message validation should be performed in the `Msg` service when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
 
 ### AnteHandler
 
-After the `ValidateBasic` checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction, and other core operations related to blockchain transactions.
+`AnteHandler`s even though optional, are in practice very often used to perform signature verification, gas calculation, fee deduction, and other core operations related to blockchain transactions.
 
 A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the `AnteHandler` to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
@@ -142,7 +147,7 @@ Consensus, the process through which validator nodes come to agreement on which 
 accept, happens in **rounds**. Each round begins with a proposer creating a block of the most
 recent transactions and ends with **validators**, special full-nodes with voting power responsible
 for consensus, agreeing to accept the block or go with a `nil` block instead. Validator nodes
-execute the consensus algorithm, such as [Tendermint BFT](https://docs.tendermint.com/master/spec/consensus/consensus.html#terms),
+execute the consensus algorithm, such as [CometBFT](https://docs.cometbft.com/v0.37/spec/consensus/),
 confirming the transactions using ABCI requests to the application, in order to come to this agreement.
 
 The first step of consensus is the **block proposal**. One proposer amongst the validators is chosen

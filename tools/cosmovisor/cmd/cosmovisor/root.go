@@ -4,8 +4,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "cosmovisor",
-	Short: "A process manager for Cosmos SDK application binaries.",
-	Long:  GetHelpText(),
+func NewRootCmd() *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "cosmovisor",
+		Short: "A process manager for Cosmos SDK application binaries.",
+		Long:  GetHelpText(),
+	}
+
+	rootCmd.AddCommand(
+		initCmd,
+		runCmd,
+		configCmd,
+		NewVersionCmd(),
+	)
+
+	return rootCmd
 }

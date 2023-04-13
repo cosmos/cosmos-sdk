@@ -3,12 +3,12 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	assert "github.com/cosmos/rosetta-sdk-go/asserter"
 	"github.com/cosmos/rosetta-sdk-go/server"
-	"github.com/rs/zerolog"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/rosetta/lib/internal/service"
@@ -40,12 +40,12 @@ type Settings struct {
 type Server struct {
 	h      http.Handler
 	addr   string
-	logger *zerolog.Logger
+	logger log.Logger
 }
 
 func (h Server) Start() error {
-	h.logger.Info().Msg(fmt.Sprintf("Rosetta server listening on add %s", h.addr))
-	return http.ListenAndServe(h.addr, h.h) //nolint:gosec
+	h.logger.Info(fmt.Sprintf("Rosetta server listening on add %s", h.addr))
+	return http.ListenAndServe(h.addr, h.h) //nolint:gosec // users are recommended to operate a proxy in front of this server
 }
 
 func NewServer(settings Settings) (Server, error) {
@@ -61,7 +61,7 @@ func NewServer(settings Settings) (Server, error) {
 		return Server{}, fmt.Errorf("cannot build asserter: %w", err)
 	}
 
-	logger := log.NewZeroLogger(log.ModuleKey, "rosetta")
+	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "rosetta")
 
 	var adapter crgtypes.API
 	switch settings.Offline {
@@ -95,7 +95,7 @@ func newOfflineAdapter(settings Settings) (crgtypes.API, error) {
 	return service.NewOffline(settings.Network, settings.Client)
 }
 
-func newOnlineAdapter(settings Settings, logger *zerolog.Logger) (crgtypes.API, error) {
+func newOnlineAdapter(settings Settings, logger log.Logger) (crgtypes.API, error) {
 	if settings.Client == nil {
 		return nil, fmt.Errorf("client is nil")
 	}
@@ -115,7 +115,7 @@ func newOnlineAdapter(settings Settings, logger *zerolog.Logger) (crgtypes.API, 
 	for i := 0; i < settings.Retries; i++ {
 		err = settings.Client.Ready()
 		if err != nil {
-			logger.Err(err).Msg("[Rosetta]- Client is not ready. Retrying ...")
+			logger.Error("[Rosetta]- Client is not ready. Retrying ...", "error", err)
 			time.Sleep(settings.RetryWait)
 			continue
 		}

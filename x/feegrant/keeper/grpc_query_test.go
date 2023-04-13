@@ -1,11 +1,21 @@
 package keeper_test
 
 import (
+	"errors"
+
 	"cosmossdk.io/x/feegrant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	invalidGrantee = "invalid-grantee"
+	invalidGranter = "invalid-granter"
+)
+
 func (suite *KeeperTestSuite) TestFeeAllowance() {
+	suite.accountKeeper.EXPECT().StringToBytes(invalidGranter).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
+	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
+
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowanceRequest
@@ -23,7 +33,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 		{
 			"fail: invalid granter",
 			&feegrant.QueryAllowanceRequest{
-				Granter: "invalid_granter",
+				Granter: invalidGranter,
 				Grantee: suite.addrs[0].String(),
 			},
 			true,
@@ -34,7 +44,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			"fail: invalid grantee",
 			&feegrant.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
-				Grantee: "invalid_grantee",
+				Grantee: invalidGrantee,
 			},
 			true,
 			func() {},
@@ -82,6 +92,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestFeeAllowances() {
+	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowancesRequest
@@ -99,7 +110,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 		{
 			"fail: invalid grantee",
 			&feegrant.QueryAllowancesRequest{
-				Grantee: "invalid_grantee",
+				Grantee: invalidGrantee,
 			},
 			true,
 			func() {},
@@ -148,6 +159,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 }
 
 func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
+	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowancesByGranterRequest
@@ -165,7 +177,7 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 		{
 			"fail: invalid grantee",
 			&feegrant.QueryAllowancesByGranterRequest{
-				Granter: "invalid_grantee",
+				Granter: invalidGrantee,
 			},
 			true,
 			func() {},

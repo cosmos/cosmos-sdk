@@ -246,8 +246,6 @@ module_versions:
   version: "1"
 - name: bank
   version: "2"
-- name: capability
-  version: "1"
 - name: crisis
   version: "1"
 - name: distribution
@@ -413,10 +411,6 @@ Example Output:
       "version": "2"
     },
     {
-      "name": "capability",
-      "version": "1"
-    },
-    {
       "name": "crisis",
       "version": "1"
     },
@@ -557,10 +551,6 @@ Example Output:
     {
       "name": "bank",
       "version": "2"
-    },
-    {
-      "name": "capability",
-      "version": "1"
     },
     {
       "name": "crisis",

@@ -26,6 +26,9 @@ func MigrateJSON(oldState *v1.GenesisState) (*v1.GenesisState, error) {
 		defaultParams.MinInitialDepositRatio,
 		defaultParams.ProposalCancelRatio,
 		defaultParams.ProposalCancelDest,
+		defaultParams.BurnProposalDepositPrevote,
+		defaultParams.BurnVoteQuorum,
+		defaultParams.BurnVoteVeto,
 	)
 
 	return &v1.GenesisState{

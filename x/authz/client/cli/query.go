@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd() *cobra.Command {
+func GetQueryCmd(ac address.Codec) *cobra.Command {
 	authorizationQueryCmd := &cobra.Command{
 		Use:                        authz.ModuleName,
 		Short:                      "Querying commands for the authz module",
@@ -26,16 +26,16 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	authorizationQueryCmd.AddCommand(
-		GetCmdQueryGrants(),
-		GetQueryGranterGrants(),
-		GetQueryGranteeGrants(),
+		GetCmdQueryGrants(ac),
+		GetQueryGranterGrants(ac),
+		GetQueryGranteeGrants(ac),
 	)
 
 	return authorizationQueryCmd
 }
 
 // GetCmdQueryGrants implements the query authorization command.
-func GetCmdQueryGrants() *cobra.Command {
+func GetCmdQueryGrants(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants [granter-addr] [grantee-addr] [msg-type-url]?",
 		Args:  cobra.RangeArgs(2, 3),
@@ -57,11 +57,11 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 			}
 			queryClient := authz.NewQueryClient(clientCtx)
 
-			granter, err := sdk.AccAddressFromBech32(args[0])
+			_, err = ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
-			grantee, err := sdk.AccAddressFromBech32(args[1])
+			_, err = ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
@@ -77,8 +77,8 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 			res, err := queryClient.Grants(
 				cmd.Context(),
 				&authz.QueryGrantsRequest{
-					Granter:    granter.String(),
-					Grantee:    grantee.String(),
+					Granter:    args[0],
+					Grantee:    args[1],
 					MsgTypeUrl: msgAuthorized,
 					Pagination: pageReq,
 				},
@@ -96,7 +96,7 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 }
 
 // GetQueryGranterGrants returns cmd to query for all grants for a granter.
-func GetQueryGranterGrants() *cobra.Command {
+func GetQueryGranterGrants(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants-by-granter [granter-addr]",
 		Args:  cobra.ExactArgs(1),
@@ -114,7 +114,7 @@ $ %s q %s grants-by-granter cosmos1skj..
 				return err
 			}
 
-			granter, err := sdk.AccAddressFromBech32(args[0])
+			_, err = ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -128,7 +128,7 @@ $ %s q %s grants-by-granter cosmos1skj..
 			res, err := queryClient.GranterGrants(
 				cmd.Context(),
 				&authz.QueryGranterGrantsRequest{
-					Granter:    granter.String(),
+					Granter:    args[0],
 					Pagination: pageReq,
 				},
 			)
@@ -145,7 +145,7 @@ $ %s q %s grants-by-granter cosmos1skj..
 }
 
 // GetQueryGranteeGrants returns cmd to query for all grants for a grantee.
-func GetQueryGranteeGrants() *cobra.Command {
+func GetQueryGranteeGrants(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants-by-grantee [grantee-addr]",
 		Args:  cobra.ExactArgs(1),
@@ -163,7 +163,7 @@ $ %s q %s grants-by-grantee cosmos1skj..
 				return err
 			}
 
-			grantee, err := sdk.AccAddressFromBech32(args[0])
+			_, err = ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -177,7 +177,7 @@ $ %s q %s grants-by-grantee cosmos1skj..
 			res, err := queryClient.GranteeGrants(
 				cmd.Context(),
 				&authz.QueryGranteeGrantsRequest{
-					Grantee:    grantee.String(),
+					Grantee:    args[0],
 					Pagination: pageReq,
 				},
 			)

@@ -187,27 +187,30 @@ snapshot-interval = 0
 snapshot-keep-recent = 2
 
 ###############################################################################
-###                         Store / State Streaming                         ###
+###                              State Streaming                            ###
 ###############################################################################
 
-[store]
-streamers = []
+# Streaming allows nodes to stream state to external systems.
+[streaming]
 
-[streamers]
-[streamers.file]
-keys = ["*", ]
-write_dir = ""
-prefix = ""
+# streaming.abci specifies the configuration for the ABCI Listener streaming service.
+[streaming.abci]
 
-# output-metadata specifies if output the metadata file which includes the abci request/responses 
-# during processing the block.
-output-metadata = "true"
+# List of kv store keys to stream out via gRPC.
+# The store key names MUST match the module's StoreKey name.
+#
+# Example:
+# ["acc", "bank", "gov", "staking", "mint"[,...]]
+# ["*"] to expose all keys.
+keys = []
 
-# stop-node-on-error specifies if propagate the file streamer errors to consensus state machine.
-stop-node-on-error = "true"
+# The plugin name used for streaming via gRPC.
+# Streaming is only enabled if this is set.
+# Supported plugins: abci
+plugin = ""
 
-# fsync specifies if call fsync after writing the files.
-fsync = "false"
+# stop-node-on-err specifies whether to stop the node on message delivery error.
+stop-node-on-err = true
 
 ###############################################################################
 ###                         Mempool                                         ###

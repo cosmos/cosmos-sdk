@@ -1978,7 +1978,7 @@ func TestChangeBcrypt(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func requireEqualRenamedKey(t *testing.T, key *Record, mnemonic *Record, nameMatch bool) {
+func requireEqualRenamedKey(t *testing.T, key, mnemonic *Record, nameMatch bool) {
 	if nameMatch {
 		require.Equal(t, key.Name, mnemonic.Name)
 	}

@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -171,8 +170,8 @@ func (*TestEvidence) Route() string {
 func (*TestEvidence) ProtoMessage() {}
 func (*TestEvidence) Reset()        {}
 
-func (*TestEvidence) Hash() cmtbytes.HexBytes {
-	return cmtbytes.HexBytes([]byte("test-hash"))
+func (*TestEvidence) Hash() []byte {
+	return []byte("test-hash")
 }
 
 func (*TestEvidence) ValidateBasic() error {

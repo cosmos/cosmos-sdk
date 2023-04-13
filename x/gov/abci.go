@@ -20,7 +20,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.Id)
-		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+
+		params := keeper.GetParams(ctx)
+		if !params.BurnProposalDepositPrevote {
+			keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+		} else {
+			keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
+		}
 
 		// called when proposal become inactive
 		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
@@ -38,7 +44,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			"proposal", proposal.Id,
 			"expedited", proposal.Expedited,
 			"title", proposal.Title,
-			"min_deposit", sdk.NewCoins(proposal.GetMinDepositFromParams(keeper.GetParams(ctx))...).String(),
+			"min_deposit", sdk.NewCoins(proposal.GetMinDepositFromParams(params)...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 
@@ -53,7 +59,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		// If an expedited proposal fails, we do not want to update
 		// the deposit at this point since the proposal is converted to regular.
-		// As a result, the deposits are either deleted or refunded in all casses
+		// As a result, the deposits are either deleted or refunded in all cases
 		// EXCEPT when an expedited proposal fails.
 		if !(proposal.Expedited && !passes) {
 			if burnDeposits {
@@ -79,18 +85,25 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			// message is logged.
 			cacheCtx, writeCache := ctx.CacheContext()
 			messages, err := proposal.GetMsgs()
-			if err == nil {
-				for idx, msg = range messages {
-					handler := keeper.Router().Handler(msg)
+			if err != nil {
+				proposal.Status = v1.StatusFailed
+				tagValue = types.AttributeValueProposalFailed
+				logMsg = fmt.Sprintf("passed proposal (%v) failed to execute; msgs: %s", proposal, err)
 
-					var res *sdk.Result
-					res, err = handler(cacheCtx, msg)
-					if err != nil {
-						break
-					}
+				break
+			}
 
-					events = append(events, res.GetEvents()...)
+			// execute all messages
+			for idx, msg = range messages {
+				handler := keeper.Router().Handler(msg)
+
+				var res *sdk.Result
+				res, err = handler(cacheCtx, msg)
+				if err != nil {
+					break
 				}
+
+				events = append(events, res.GetEvents()...)
 			}
 
 			// `err == nil` when all handlers passed.
@@ -140,6 +153,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		logger.Info(
 			"proposal tallied",
 			"proposal", proposal.Id,
+			"status", proposal.Status.String(),
 			"expedited", proposal.Expedited,
 			"title", proposal.Title,
 			"results", logMsg,
@@ -150,8 +164,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				types.EventTypeActiveProposal,
 				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
+				sdk.NewAttribute(types.AttributeKeyProposalLog, logMsg),
 			),
 		)
+
 		return false
 	})
 }

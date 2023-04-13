@@ -27,7 +27,7 @@ func NewStore() *Store {
 	return NewStoreWithDB(dbm.NewMemDB())
 }
 
-func NewStoreWithDB(db *dbm.MemDB) *Store { //nolint: interfacer
+func NewStoreWithDB(db *dbm.MemDB) *Store { //nolint: interfacer // Concrete return type is fine here.
 	return &Store{Store: dbadapter.Store{DB: db}}
 }
 

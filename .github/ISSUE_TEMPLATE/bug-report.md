@@ -1,7 +1,8 @@
 ---
 name: Bug Report 
 about: Create a report to help us squash bugs!
-
+title: "[Bug]: "
+labels: "T:Bug"
 ---
 
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺ 

@@ -8,18 +8,20 @@ import (
 	"testing"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var errFoo = errors.New("dummy")
@@ -155,7 +157,7 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 
 	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
-	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule3 := MockCoreAppModule{}
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	// TODO: This is not working for Core API modules yet
@@ -164,14 +166,17 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	require.Equal(t, 3, len(mm.Modules))
 
 	msgRouter := mock.NewMockServer(mockCtrl)
+	msgRouter.EXPECT().RegisterService(gomock.Any(), gomock.Any()).Times(1)
 	queryRouter := mock.NewMockServer(mockCtrl)
+	queryRouter.EXPECT().RegisterService(gomock.Any(), gomock.Any()).Times(1)
+
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	cfg := module.NewConfigurator(cdc, msgRouter, queryRouter)
 	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 
-	mm.RegisterServices(cfg)
+	require.NotPanics(t, func() { mm.RegisterServices(cfg) })
 }
 
 func TestManager_InitGenesis(t *testing.T) {
@@ -484,6 +489,14 @@ func TestCoreAPIManager_EndBlock(t *testing.T) {
 // MockCoreAppModule allows us to test functions like DefaultGenesis
 type MockCoreAppModule struct{}
 
+// RegisterServices implements appmodule.HasServices
+func (MockCoreAppModule) RegisterServices(reg grpc.ServiceRegistrar) error {
+	// Use Auth's service definitions as a placeholder
+	authtypes.RegisterQueryServer(reg, &authtypes.UnimplementedQueryServer{})
+	authtypes.RegisterMsgServer(reg, &authtypes.UnimplementedMsgServer{})
+	return nil
+}
+
 func (MockCoreAppModule) IsOnePerModuleType() {}
 func (MockCoreAppModule) IsAppModule()        {}
 func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
@@ -523,6 +536,7 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 }
 
 var (
-	_ appmodule.AppModule  = MockCoreAppModule{}
-	_ appmodule.HasGenesis = MockCoreAppModule{}
+	_ appmodule.AppModule   = MockCoreAppModule{}
+	_ appmodule.HasGenesis  = MockCoreAppModule{}
+	_ appmodule.HasServices = MockCoreAppModule{}
 )

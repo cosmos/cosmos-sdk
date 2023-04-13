@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -23,7 +24,7 @@ func (s *E2ETestSuite) TestCmdParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			`{"voting_params":{"voting_period":"172800s"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s","voting_period":"172800s","quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","min_initial_deposit_ratio":"0.000000000000000000","proposal_cancel_ratio":"0.500000000000000000","proposal_cancel_dest":"","expedited_voting_period":"86400s","expedited_threshold":"0.667000000000000000","expedited_min_deposit":[{"denom":"stake","amount":"50000000"}]}}`,
+			`{"voting_params":{"voting_period":"172800s"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s","voting_period":"172800s","quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","min_initial_deposit_ratio":"0.000000000000000000","proposal_cancel_ratio":"0.500000000000000000","proposal_cancel_dest":"","expedited_voting_period":"86400s","expedited_threshold":"0.667000000000000000","expedited_min_deposit":[{"denom":"stake","amount":"50000000"}],"burn_vote_quorum":false,"burn_proposal_deposit_prevote":false,"burn_vote_veto":true}}`,
 		},
 		{
 			"text output",
@@ -35,6 +36,9 @@ deposit_params:
   - amount: "10000000"
     denom: stake
 params:
+  burn_proposal_deposit_prevote: false
+  burn_vote_quorum: false
+  burn_vote_veto: true
   expedited_min_deposit:
   - amount: "50000000"
     denom: stake
@@ -302,7 +306,7 @@ func (s *E2ETestSuite) TestCmdGetProposals() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryProposals()
+			cmd := cli.GetCmdQueryProposals(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -529,7 +533,7 @@ func (s *E2ETestSuite) TestCmdQueryVote() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryVote()
+			cmd := cli.GetCmdQueryVote(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

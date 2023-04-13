@@ -82,6 +82,17 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		expErrMsg string
 	}{
 		{
+			Name:      "entry not found at height",
+			ExceptErr: true,
+			req: types.MsgCancelUnbondingDelegation{
+				DelegatorAddress: resUnbond.DelegatorAddress,
+				ValidatorAddress: resUnbond.ValidatorAddress,
+				Amount:           sdk.NewCoin(stakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
+				CreationHeight:   11,
+			},
+			expErrMsg: "unbonding delegation entry is not found at block height",
+		},
+		{
 			Name:      "invalid height",
 			ExceptErr: true,
 			req: types.MsgCancelUnbondingDelegation{
@@ -90,7 +101,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				Amount:           sdk.NewCoin(stakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
 				CreationHeight:   0,
 			},
-			expErrMsg: "unbonding delegation entry is not found at block height",
+			expErrMsg: "invalid height",
 		},
 		{
 			Name:      "invalid coin",
@@ -110,7 +121,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: sdk.ValAddress(sdk.AccAddress("asdsad")).String(),
 				Amount:           unbondingAmount,
-				CreationHeight:   0,
+				CreationHeight:   10,
 			},
 			expErrMsg: "validator does not exist",
 		},

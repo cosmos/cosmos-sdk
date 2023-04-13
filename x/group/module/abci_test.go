@@ -2,9 +2,10 @@ package module_test
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"

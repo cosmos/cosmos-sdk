@@ -56,33 +56,6 @@ func TestMsgDecode(t *testing.T) {
 	require.True(t, msg.Pubkey.Equal(msg2.Pubkey))
 }
 
-// test ValidateBasic for MsgDelegate
-func TestMsgDelegate(t *testing.T) {
-	tests := []struct {
-		name          string
-		delegatorAddr sdk.AccAddress
-		validatorAddr sdk.ValAddress
-		bond          sdk.Coin
-		expectPass    bool
-	}{
-		{"basic good", sdk.AccAddress(valAddr1), valAddr2, coinPos, true},
-		{"self bond", sdk.AccAddress(valAddr1), valAddr1, coinPos, true},
-		{"empty delegator", sdk.AccAddress(emptyAddr), valAddr1, coinPos, false},
-		{"empty validator", sdk.AccAddress(valAddr1), emptyAddr, coinPos, false},
-		{"empty bond", sdk.AccAddress(valAddr1), valAddr2, coinZero, false},
-		{"nil bold", sdk.AccAddress(valAddr1), valAddr2, sdk.Coin{}, false},
-	}
-
-	for _, tc := range tests {
-		msg := types.NewMsgDelegate(tc.delegatorAddr, tc.validatorAddr, tc.bond)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-}
-
 // test ValidateBasic for MsgUnbond
 func TestMsgBeginRedelegate(t *testing.T) {
 	tests := []struct {

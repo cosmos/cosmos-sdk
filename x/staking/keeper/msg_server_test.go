@@ -423,6 +423,107 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	}
 }
 
+func (s *KeeperTestSuite) TestMsgDelegate() {
+	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
+	require := s.Require()
+
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	valAddr := sdk.ValAddress(authority)
+
+	pk := ed25519.GenPrivKey().PubKey()
+	require.NotNil(pk)
+
+	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), authority, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
+
+	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	require.NoError(err)
+
+	res, err := msgServer.CreateValidator(ctx, msg)
+	require.NoError(err)
+	require.NotNil(res)
+
+	testCases := []struct {
+		name      string
+		input     *stakingtypes.MsgDelegate
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid validator",
+			input: &stakingtypes.MsgDelegate{
+				DelegatorAddress: keeper.GetAuthority(),
+				ValidatorAddress: sdk.AccAddress([]byte("invalid")).String(),
+				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
+			},
+			expErr:    true,
+			expErrMsg: "invalid validator address",
+		},
+		{
+			name: "validator does not exist",
+			input: &stakingtypes.MsgDelegate{
+				DelegatorAddress: keeper.GetAuthority(),
+				ValidatorAddress: sdk.ValAddress([]byte("val")).String(),
+				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
+			},
+			expErr:    true,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name: "zero amount",
+			input: &stakingtypes.MsgDelegate{
+				DelegatorAddress: keeper.GetAuthority(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(0))},
+			},
+			expErr:    true,
+			expErrMsg: "invalid delegation amount",
+		},
+		{
+			name: "negative amount",
+			input: &stakingtypes.MsgDelegate{
+				DelegatorAddress: keeper.GetAuthority(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(-1))},
+			},
+			expErr:    true,
+			expErrMsg: "invalid delegation amount",
+		},
+		{
+			name: "invalid BondDenom",
+			input: &stakingtypes.MsgDelegate{
+				DelegatorAddress: keeper.GetAuthority(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.Coin{Denom: "test", Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
+			},
+			expErr:    true,
+			expErrMsg: "invalid coin denomination",
+		},
+		{
+			name: "valid msg",
+			input: &stakingtypes.MsgDelegate{
+				DelegatorAddress: keeper.GetAuthority(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
+			},
+			expErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := msgServer.Delegate(ctx, tc.input)
+			if tc.expErr {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expErrMsg)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
 	require := s.Require()

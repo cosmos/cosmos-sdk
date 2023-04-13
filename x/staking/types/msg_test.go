@@ -5,9 +5,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -51,39 +48,4 @@ func TestMsgDecode(t *testing.T) {
 	require.True(t, ok)
 	require.True(t, msg.Value.IsEqual(msg2.Value))
 	require.True(t, msg.Pubkey.Equal(msg2.Pubkey))
-}
-
-// test ValidateBasic for MsgUnbond
-func TestMsgUndelegate(t *testing.T) {
-	tests := []struct {
-		name          string
-		delegatorAddr sdk.AccAddress
-		validatorAddr sdk.ValAddress
-		amount        sdk.Coin
-		expectPass    bool
-	}{
-		{"regular", sdk.AccAddress(valAddr1), valAddr2, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), true},
-		{"zero amount", sdk.AccAddress(valAddr1), valAddr2, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0), false},
-		{"nil amount", sdk.AccAddress(valAddr1), valAddr2, sdk.Coin{}, false},
-		{"empty delegator", sdk.AccAddress(emptyAddr), valAddr1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
-		{"empty validator", sdk.AccAddress(valAddr1), emptyAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
-	}
-
-	for _, tc := range tests {
-		msg := types.NewMsgUndelegate(tc.delegatorAddr, tc.validatorAddr, tc.amount)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-}
-
-func TestMsgUpdateParams(t *testing.T) {
-	msg := types.MsgUpdateParams{
-		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		Params:    types.DefaultParams(),
-	}
-
-	require.Equal(t, []sdk.AccAddress{authtypes.NewModuleAddress(govtypes.ModuleName)}, msg.GetSigners())
 }

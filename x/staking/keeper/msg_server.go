@@ -379,7 +379,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 
 	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
@@ -396,6 +396,13 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	if msg.Amount.Denom != bondDenom {
 		return nil, errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
+		)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
 		)
 	}
 
@@ -439,7 +446,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
 	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
@@ -451,6 +458,20 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	if msg.Amount.Denom != bondDenom {
 		return nil, errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
+		)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid amount",
+		)
+	}
+
+	if msg.CreationHeight <= 0 {
+		return nil, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid height",
 		)
 	}
 

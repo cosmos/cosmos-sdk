@@ -679,6 +679,261 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	}
 }
 
+func (s *KeeperTestSuite) TestMsgUndelegate() {
+	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
+	require := s.Require()
+
+	addr := sdk.AccAddress(PKS[0].Address())
+	valAddr := sdk.ValAddress(addr)
+	pk := ed25519.GenPrivKey().PubKey()
+	require.NotNil(pk)
+
+	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
+
+	s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+	s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+
+	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
+
+	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	require.NoError(err)
+	res, err := msgServer.CreateValidator(ctx, msg)
+	require.NoError(err)
+	require.NotNil(res)
+
+	shares := math.LegacyNewDec(100)
+	del := stakingtypes.NewDelegation(addr, valAddr, shares)
+	keeper.SetDelegation(ctx, del)
+	_, found := keeper.GetDelegation(ctx, addr, valAddr)
+	require.True(found)
+
+	testCases := []struct {
+		name      string
+		input     *stakingtypes.MsgUndelegate
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid validator",
+			input: &stakingtypes.MsgUndelegate{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: sdk.AccAddress([]byte("invalid")).String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+			},
+			expErr:    true,
+			expErrMsg: "invalid validator address",
+		},
+		{
+			name: "validator does not exist",
+			input: &stakingtypes.MsgUndelegate{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: sdk.ValAddress([]byte("invalid")).String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+			},
+			expErr:    true,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name: "amount greater than delegated shares amount",
+			input: &stakingtypes.MsgUndelegate{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(101)),
+			},
+			expErr:    true,
+			expErrMsg: "invalid shares amount",
+		},
+		{
+			name: "zero amount",
+			input: &stakingtypes.MsgUndelegate{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
+			},
+			expErr:    true,
+			expErrMsg: "invalid shares amount",
+		},
+		{
+			name: "invalid coin denom",
+			input: &stakingtypes.MsgUndelegate{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin("test", shares.RoundInt()),
+			},
+			expErr:    true,
+			expErrMsg: "invalid coin denomination",
+		},
+		{
+			name: "valid msg",
+			input: &stakingtypes.MsgUndelegate{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+			},
+			expErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := msgServer.Undelegate(ctx, tc.input)
+			if tc.expErr {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expErrMsg)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
+	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
+	require := s.Require()
+
+	addr := sdk.AccAddress(PKS[0].Address())
+	valAddr := sdk.ValAddress(addr)
+	pk := ed25519.GenPrivKey().PubKey()
+	require.NotNil(pk)
+
+	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
+
+	s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+	s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+
+	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
+
+	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	require.NoError(err)
+	res, err := msgServer.CreateValidator(ctx, msg)
+	require.NoError(err)
+	require.NotNil(res)
+
+	shares := math.LegacyNewDec(100)
+	del := stakingtypes.NewDelegation(addr, valAddr, shares)
+	keeper.SetDelegation(ctx, del)
+	resDel, found := keeper.GetDelegation(ctx, addr, valAddr)
+	require.True(found)
+	require.Equal(del, resDel)
+
+	ubd := stakingtypes.NewUnbondingDelegation(addr, valAddr, 10, ctx.BlockTime().Add(time.Minute*10), shares.RoundInt(), 0)
+	keeper.SetUnbondingDelegation(ctx, ubd)
+	resUnbond, found := keeper.GetUnbondingDelegation(ctx, addr, valAddr)
+	require.True(found)
+	require.Equal(ubd, resUnbond)
+
+	testCases := []struct {
+		name      string
+		input     *stakingtypes.MsgCancelUnbondingDelegation
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid validator",
+			input: &stakingtypes.MsgCancelUnbondingDelegation{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: sdk.AccAddress([]byte("invalid")).String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+				CreationHeight:   10,
+			},
+			expErr:    true,
+			expErrMsg: "invalid validator address",
+		},
+		{
+			name: "entry not found at height",
+			input: &stakingtypes.MsgCancelUnbondingDelegation{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+				CreationHeight:   11,
+			},
+			expErr:    true,
+			expErrMsg: "unbonding delegation entry is not found at block height",
+		},
+		{
+			name: "invalid height",
+			input: &stakingtypes.MsgCancelUnbondingDelegation{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+				CreationHeight:   -1,
+			},
+			expErr:    true,
+			expErrMsg: "invalid height",
+		},
+		{
+			name: "invalid coin",
+			input: &stakingtypes.MsgCancelUnbondingDelegation{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin("test", shares.RoundInt()),
+				CreationHeight:   10,
+			},
+			expErr:    true,
+			expErrMsg: "invalid coin denomination",
+		},
+		{
+			name: "validator does not exist",
+			input: &stakingtypes.MsgCancelUnbondingDelegation{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: sdk.ValAddress([]byte("invalid")).String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+				CreationHeight:   10,
+			},
+			expErr:    true,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name: "amount is greater than balance",
+			input: &stakingtypes.MsgCancelUnbondingDelegation{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(101)),
+				CreationHeight:   10,
+			},
+			expErr:    true,
+			expErrMsg: "amount is greater than the unbonding delegation entry balance",
+		},
+		{
+			name: "zero amount",
+			input: &stakingtypes.MsgCancelUnbondingDelegation{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+				CreationHeight:   10,
+			},
+			expErr:    true,
+			expErrMsg: "invalid amount",
+		},
+		{
+			name: "valid msg",
+			input: &stakingtypes.MsgCancelUnbondingDelegation{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+				CreationHeight:   10,
+			},
+			expErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := msgServer.CancelUnbondingDelegation(ctx, tc.input)
+			if tc.expErr {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expErrMsg)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
 	require := s.Require()

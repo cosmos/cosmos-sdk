@@ -1,13 +1,11 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -165,25 +163,6 @@ func (msg MsgUndelegate) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgUndelegate) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
-	}
-	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
-	}
-
-	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"invalid shares amount",
-		)
-	}
-
-	return nil
-}
-
 // NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
 func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
 	return &MsgCancelUnbondingDelegation{
@@ -203,32 +182,6 @@ func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgCancelUnbondingDelegation) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
-	}
-	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
-	}
-
-	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"invalid amount",
-		)
-	}
-
-	if msg.CreationHeight <= 0 {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"invalid height",
-		)
-	}
-
-	return nil
 }
 
 // GetSignBytes returns the raw bytes for a MsgUpdateParams message that

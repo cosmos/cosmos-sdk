@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log v1.0.0
 	cosmossdk.io/math v1.0.0
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
-	cosmossdk.io/x/tx v0.5.1-0.20230407182919-057d2e09bd63
+	cosmossdk.io/x/tx v0.5.1
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816

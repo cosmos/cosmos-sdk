@@ -308,7 +308,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid source validator address: %s", err)
 	}
 	delegatorAddress, err := k.authKeeper.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
@@ -330,7 +330,14 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 
 	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid destination validator address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
 	}
 
 	completionTime, err := k.BeginRedelegation(

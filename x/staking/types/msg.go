@@ -144,28 +144,6 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgBeginRedelegate) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
-	}
-	if _, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid source validator address: %s", err)
-	}
-	if _, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid destination validator address: %s", err)
-	}
-
-	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"invalid shares amount",
-		)
-	}
-
-	return nil
-}
-
 // NewMsgUndelegate creates a new MsgUndelegate instance.
 func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{

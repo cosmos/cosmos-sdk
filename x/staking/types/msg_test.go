@@ -57,34 +57,6 @@ func TestMsgDecode(t *testing.T) {
 }
 
 // test ValidateBasic for MsgUnbond
-func TestMsgBeginRedelegate(t *testing.T) {
-	tests := []struct {
-		name             string
-		delegatorAddr    sdk.AccAddress
-		validatorSrcAddr sdk.ValAddress
-		validatorDstAddr sdk.ValAddress
-		amount           sdk.Coin
-		expectPass       bool
-	}{
-		{"regular", sdk.AccAddress(valAddr1), valAddr2, valAddr3, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), true},
-		{"zero amount", sdk.AccAddress(valAddr1), valAddr2, valAddr3, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0), false},
-		{"nil amount", sdk.AccAddress(valAddr1), valAddr2, valAddr3, sdk.Coin{}, false},
-		{"empty delegator", sdk.AccAddress(emptyAddr), valAddr1, valAddr3, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
-		{"empty source validator", sdk.AccAddress(valAddr1), emptyAddr, valAddr3, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
-		{"empty destination validator", sdk.AccAddress(valAddr1), valAddr2, emptyAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
-	}
-
-	for _, tc := range tests {
-		msg := types.NewMsgBeginRedelegate(tc.delegatorAddr, tc.validatorSrcAddr, tc.validatorDstAddr, tc.amount)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-}
-
-// test ValidateBasic for MsgUnbond
 func TestMsgUndelegate(t *testing.T) {
 	tests := []struct {
 		name          string

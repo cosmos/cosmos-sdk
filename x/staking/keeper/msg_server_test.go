@@ -524,6 +524,161 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 	}
 }
 
+func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
+	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
+	require := s.Require()
+
+	addr := sdk.AccAddress(PKS[0].Address())
+	srcValAddr := sdk.ValAddress(addr)
+	addr2 := sdk.AccAddress(PKS[1].Address())
+	dstValAddr := sdk.ValAddress(addr2)
+
+	pk := ed25519.GenPrivKey().PubKey()
+	require.NotNil(pk)
+	dstPk := ed25519.GenPrivKey().PubKey()
+	require.NotNil(dstPk)
+
+	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
+
+	s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+	s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+
+	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
+
+	msg, err := stakingtypes.NewMsgCreateValidator(srcValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	require.NoError(err)
+	res, err := msgServer.CreateValidator(ctx, msg)
+	require.NoError(err)
+	require.NotNil(res)
+
+	s.accountKeeper.EXPECT().StringToBytes(addr2.String()).Return(addr2, nil).AnyTimes()
+	s.accountKeeper.EXPECT().BytesToString(addr2).Return(addr2.String(), nil).AnyTimes()
+
+	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr2, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
+
+	msg, err = stakingtypes.NewMsgCreateValidator(dstValAddr, dstPk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	require.NoError(err)
+
+	res, err = msgServer.CreateValidator(ctx, msg)
+	require.NoError(err)
+	require.NotNil(res)
+
+	shares := math.LegacyNewDec(100)
+	del := stakingtypes.NewDelegation(addr, srcValAddr, shares)
+	keeper.SetDelegation(ctx, del)
+	_, found := keeper.GetDelegation(ctx, addr, srcValAddr)
+	require.True(found)
+
+	testCases := []struct {
+		name      string
+		input     *stakingtypes.MsgBeginRedelegate
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid source validator",
+			input: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    addr.String(),
+				ValidatorSrcAddress: sdk.AccAddress([]byte("invalid")).String(),
+				ValidatorDstAddress: dstValAddr.String(),
+				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+			},
+			expErr:    true,
+			expErrMsg: "invalid source validator address",
+		},
+		{
+			name: "invalid destination validator",
+			input: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    addr.String(),
+				ValidatorSrcAddress: srcValAddr.String(),
+				ValidatorDstAddress: sdk.AccAddress([]byte("invalid")).String(),
+				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+			},
+			expErr:    true,
+			expErrMsg: "invalid destination validator address",
+		},
+		{
+			name: "validator does not exist",
+			input: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    addr.String(),
+				ValidatorSrcAddress: sdk.ValAddress([]byte("invalid")).String(),
+				ValidatorDstAddress: dstValAddr.String(),
+				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+			},
+			expErr:    true,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name: "self redelegation",
+			input: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    addr.String(),
+				ValidatorSrcAddress: srcValAddr.String(),
+				ValidatorDstAddress: srcValAddr.String(),
+				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+			},
+			expErr:    true,
+			expErrMsg: "cannot redelegate to the same validator",
+		},
+		{
+			name: "amount greater than delegated shares amount",
+			input: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    addr.String(),
+				ValidatorSrcAddress: srcValAddr.String(),
+				ValidatorDstAddress: dstValAddr.String(),
+				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(101)),
+			},
+			expErr:    true,
+			expErrMsg: "invalid shares amount",
+		},
+		{
+			name: "zero amount",
+			input: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    addr.String(),
+				ValidatorSrcAddress: srcValAddr.String(),
+				ValidatorDstAddress: dstValAddr.String(),
+				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
+			},
+			expErr:    true,
+			expErrMsg: "invalid shares amount",
+		},
+		{
+			name: "invalid coin denom",
+			input: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    addr.String(),
+				ValidatorSrcAddress: srcValAddr.String(),
+				ValidatorDstAddress: dstValAddr.String(),
+				Amount:              sdk.NewCoin("test", shares.RoundInt()),
+			},
+			expErr:    true,
+			expErrMsg: "invalid coin denomination",
+		},
+		{
+			name: "valid msg",
+			input: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    addr.String(),
+				ValidatorSrcAddress: srcValAddr.String(),
+				ValidatorDstAddress: dstValAddr.String(),
+				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
+			},
+			expErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := msgServer.BeginRedelegate(ctx, tc.input)
+			if tc.expErr {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expErrMsg)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
 	require := s.Require()

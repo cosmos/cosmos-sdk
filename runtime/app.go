@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -51,8 +50,6 @@ type App struct {
 	// initChainer is the init chainer function defined by the app config.
 	// this is only required if the chain wants to add special InitChainer logic.
 	initChainer sdk.InitChainer
-
-	ValSetUpdate []abci.ValidatorUpdate
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -124,12 +121,6 @@ func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.Re
 // EndBlocker application updates every end block
 func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
 	return a.ModuleManager.EndBlock(ctx, req)
-}
-
-// SetValidatorUpdates sets the validator updates for the next block.
-// CONTRACT: this must be called for modules that are updating the validator set
-func (a *App) SetValidatorUpdates(ctx context.Context, updates []abci.ValidatorUpdate) {
-	a.BaseApp.SetValidatorUpdates(ctx, updates)
 }
 
 // InitChainer initializes the chain.

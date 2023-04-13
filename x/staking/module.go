@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -38,7 +37,7 @@ const (
 var (
 	_ appmodule.AppModule        = AppModule{}
 	_ appmodule.HasBeginBlocker  = AppModule{}
-	_ appmodule.HasEndBlocker    = AppModule{}
+	_ module.HasABCIEndblock     = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -198,9 +197,8 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 
 // EndBlock returns the end blocker for the staking module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx context.Context) error {
-	am.keeper.EndBlocker(ctx)
-	return nil // handle error in the future
+func (am AppModule) EndBlock(ctx context.Context) []abci.ValidatorUpdate {
+	return am.keeper.EndBlocker(ctx)
 }
 
 func init() {
@@ -219,8 +217,6 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	Cdc           codec.Codec
 	Key           *store.KVStoreKey
-
-	Vs baseapp.ValidatorUpdateService
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -247,7 +243,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		authority.String(),
-		in.Vs,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	return ModuleOutputs{StakingKeeper: k, Module: m}

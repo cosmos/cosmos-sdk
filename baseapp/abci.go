@@ -252,9 +252,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		}
 	}
 
-	// set the validator set for the next block
-	res.ValidatorUpdates = app.updatedValidators
-
 	return res
 }
 

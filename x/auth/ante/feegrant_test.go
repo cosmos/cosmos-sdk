@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"context"
 	"errors"
 	"math/rand"
 	"testing"
@@ -200,7 +201,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode := signing.SignMode_SIGN_MODE_DIRECT
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -235,7 +236,10 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		signBytes, err := authsign.AdaptSigningArgs(
+			context.Background(), gen.TxEncoder(), gen.SignModeHandler(), signMode, signerData, p.PubKey(),
+			tx.GetTx())
+
 		if err != nil {
 			panic(err)
 		}

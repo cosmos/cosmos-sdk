@@ -1,5 +1,12 @@
 package types
 
+import (
+	"sync"
+
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
+)
+
 // CustomProtobufType defines the interface custom gogo proto types must implement
 // in order to be used as a "customtype" extension.
 //
@@ -12,4 +19,26 @@ type CustomProtobufType interface {
 
 	MarshalJSON() ([]byte, error)
 	UnmarshalJSON(data []byte) error
+}
+
+var (
+	mu             sync.Mutex
+	mergedRegistry *protoregistry.Files
+)
+
+func MergedProtoRegistry() *protoregistry.Files {
+	if mergedRegistry != nil {
+		return mergedRegistry
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	var err error
+	mergedRegistry, err = proto.MergedRegistry()
+	if err != nil {
+		panic(err)
+	}
+
+	return mergedRegistry
 }

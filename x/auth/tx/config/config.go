@@ -21,6 +21,7 @@ import (
 func init() {
 	appmodule.Register(&txconfigv1.Config{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Provide(ProvideSignModeOptions),
 	)
 }
 
@@ -34,7 +35,7 @@ type ModuleInputs struct {
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper authtypes.BankKeeper `optional:"true"`
 	// TxBankKeeper is the expected bank keeper to be passed to Textual
-	TxBankKeeper   BankKeeper
+	tx.SignModeOptions
 	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
 
 	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
@@ -47,16 +48,24 @@ type ModuleOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	textual, err := NewTextualWithBankKeeper(in.TxBankKeeper)
+// ProvideSignModeOptions provides the default x/tx SignModeOptions for the SDK.
+// TODO
+// probably move to x/tx. I would do this now but I'm blocked; latest x/tx does not compile or interop with latest sdk
+func ProvideSignModeOptions(bk BankKeeper) tx.SignModeOptions {
+	opts, err := NewTextualWithBankKeeper(bk)
 	if err != nil {
 		panic(err)
 	}
+	return opts
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var txConfig client.TxConfig
 	if in.CustomSignModeHandlers == nil {
-		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, in.SignModeOptions)
 	} else {
-		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual, in.CustomSignModeHandlers()...)
+		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, in.SignModeOptions,
+			in.CustomSignModeHandlers()...)
 	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {

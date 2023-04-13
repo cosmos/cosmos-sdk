@@ -3,14 +3,18 @@ package tx
 import (
 	"context"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
-
+	types2 "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -22,26 +26,46 @@ import (
 //
 //	clientCtx := client.GetClientContextFromCmd(cmd)
 //	txt := tx.NewTextualWithGRPCConn(clientCtxx)
-func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (*textual.SignModeHandler, error) {
-	protoFiles, err := gogoproto.MergedRegistry()
+//
+// TODO: rename
+func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (tx.SignModeOptions, error) {
+	protoFiles := types2.MergedProtoRegistry()
+	typeResolver := protoregistry.GlobalTypes
+	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
 	if err != nil {
-		return nil, err
+		return tx.SignModeOptions{}, err
 	}
 
-	return textual.NewSignModeHandler(textual.SignModeOptions{
-		CoinMetadataQuerier: func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
-			bankQueryClient := bankv1beta1.NewQueryClient(grpcConn)
-			res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
-				Denom: denom,
-			})
-			if err != nil {
-				return nil, metadataExists(err)
-			}
-
-			return res.Metadata, nil
+	aminoJsonEncoder := aminojson.NewAminoJSON()
+	signModeOptions := tx.SignModeOptions{
+		DirectAux: &directaux.SignModeHandlerOptions{
+			FileResolver:   protoFiles,
+			TypeResolver:   typeResolver,
+			SignersContext: signersContext,
 		},
-		FileResolver: protoFiles,
-	})
+		AminoJSON: &aminojson.SignModeHandlerOptions{
+			FileResolver: protoFiles,
+			TypeResolver: typeResolver,
+			Encoder:      &aminoJsonEncoder,
+		},
+		Textual: &textual.SignModeOptions{
+			CoinMetadataQuerier: func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+				bankQueryClient := bankv1beta1.NewQueryClient(grpcConn)
+				res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
+					Denom: denom,
+				})
+				if err != nil {
+					return nil, metadataExists(err)
+				}
+
+				return res.Metadata, nil
+			},
+			FileResolver: protoFiles,
+			TypeResolver: typeResolver,
+		},
+	}
+
+	return signModeOptions, nil
 }
 
 // NewTextualWithBankKeeper creates a new Textual struct using the given
@@ -50,13 +74,16 @@ func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (*textual.SignMod
 // Note: Once we switch to ADR-033, and keepers become ADR-033 clients to each
 // other, this function could probably be deprecated in favor of
 // `NewTextualWithGRPCConn`.
-func NewTextualWithBankKeeper(bk BankKeeper) (*textual.SignModeHandler, error) {
-	protoFiles, err := gogoproto.MergedRegistry()
+// TODO: rename
+func NewTextualWithBankKeeper(bk BankKeeper) (tx.SignModeOptions, error) {
+	protoFiles := types2.MergedProtoRegistry()
+	typeResolver := protoregistry.GlobalTypes
+	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
 	if err != nil {
-		return nil, err
+		return tx.SignModeOptions{}, err
 	}
 
-	return textual.NewSignModeHandler(textual.SignModeOptions{
+	txtOpts := textual.SignModeOptions{
 		CoinMetadataQuerier: func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 			res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
 			if err != nil {
@@ -86,7 +113,22 @@ func NewTextualWithBankKeeper(bk BankKeeper) (*textual.SignModeHandler, error) {
 			return m, nil
 		},
 		FileResolver: protoFiles,
-	})
+	}
+
+	aminoJsonEncoder := aminojson.NewAminoJSON()
+	return tx.SignModeOptions{
+		Textual: &txtOpts,
+		DirectAux: &directaux.SignModeHandlerOptions{
+			FileResolver:   protoFiles,
+			TypeResolver:   typeResolver,
+			SignersContext: signersContext,
+		},
+		AminoJSON: &aminojson.SignModeHandlerOptions{
+			FileResolver: protoFiles,
+			TypeResolver: typeResolver,
+			Encoder:      &aminoJsonEncoder,
+		},
+	}, nil
 }
 
 // metadataExists parses the error, and only propagates the error if it's

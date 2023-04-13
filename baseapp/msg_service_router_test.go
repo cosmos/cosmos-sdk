@@ -79,6 +79,9 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 
 func TestMsgService(t *testing.T) {
 	priv, _, _ := testdata.KeyTestPubAddr()
+	// TODO
+	// default mode?
+	defaultSignMode := signing.SignMode_SIGN_MODE_DIRECT
 
 	var (
 		appBuilder        *runtime.AppBuilder
@@ -114,7 +117,7 @@ func TestMsgService(t *testing.T) {
 	sigV2 := signing.SignatureV2{
 		PubKey: priv.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  txConfig.SignModeHandler().DefaultMode(),
+			SignMode:  defaultSignMode,
 			Signature: nil,
 		},
 		Sequence: 0,
@@ -130,7 +133,7 @@ func TestMsgService(t *testing.T) {
 		Sequence:      0,
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		nil, txConfig.SignModeHandler().DefaultMode(), signerData, //nolint:staticcheck // SA1019: txConfig.SignModeHandler().DefaultMode() is deprecated: use txConfig.SignModeHandler().DefaultMode() instead.
+		nil, defaultSignMode, signerData, //nolint:staticcheck // SA1019: txConfig.SignModeHandler().DefaultMode() is deprecated: use txConfig.SignModeHandler().DefaultMode() instead.
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)

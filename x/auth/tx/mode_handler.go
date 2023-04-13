@@ -2,11 +2,21 @@ package tx
 
 import (
 	txsigning "cosmossdk.io/x/tx/signing"
-	stdsigning "cosmossdk.io/x/tx/signing/std"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/direct"
+	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
-
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
+
+type SignModeOptions struct {
+	// Textual are options for SIGN_MODE_TEXTUAL
+	Textual *textual.SignModeOptions
+	// DirectAux are options for SIGN_MODE_DIRECT_AUX
+	DirectAux *directaux.SignModeHandlerOptions
+	// AminoJSON are options for SIGN_MODE_LEGACY_AMINO_JSON
+	AminoJSON *aminojson.SignModeHandlerOptions
+}
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
 var DefaultSignModes = []signingtypes.SignMode{
@@ -25,7 +35,7 @@ var DefaultSignModes = []signingtypes.SignMode{
 // SIGN_MODE_DIRECT, SIGN_MODE_DIRECT_AUX and SIGN_MODE_LEGACY_AMINO_JSON.
 func makeSignModeHandler(
 	modes []signingtypes.SignMode,
-	txt *textual.SignModeHandler,
+	opts SignModeOptions,
 	customSignModes ...txsigning.SignModeHandler,
 ) *txsigning.HandlerMap {
 	// TODO parity
@@ -60,10 +70,25 @@ func makeSignModeHandler(
 	//	modes[0],
 	//	handlers,
 	//)
-	opts := stdsigning.SignModeOptions{}
-	hmap, err := opts.HandlerMap()
-	if err != nil {
-		panic(err)
+
+	handlers := []txsigning.SignModeHandler{direct.SignModeHandler{}}
+	if opts.Textual != nil {
+		h, err := textual.NewSignModeHandler(*opts.Textual)
+		if err != nil {
+			panic(err)
+		}
+		handlers = append(handlers, h)
 	}
-	return hmap
+	if opts.DirectAux != nil {
+		h, err := directaux.NewSignModeHandler(*opts.DirectAux)
+		if err != nil {
+			panic(err)
+		}
+		handlers = append(handlers, h)
+	}
+	if opts.AminoJSON != nil {
+		handlers = append(handlers, aminojson.NewSignModeHandler(*opts.AminoJSON))
+	}
+	handlers = append(handlers, customSignModes...)
+	return txsigning.NewHandlerMap(handlers...)
 }

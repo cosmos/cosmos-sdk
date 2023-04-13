@@ -3,9 +3,11 @@ package tx
 import (
 	"fmt"
 
-	txsigning "cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/tx/signing/textual"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/directaux"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,6 +29,7 @@ type config struct {
 // NOTE: Use NewTxConfigWithHandler to provide a custom signing handler in case the sign mode
 // is not supported by default (eg: SignMode_SIGN_MODE_EIP_191). Use NewTxConfigWithTextual
 // to enable SIGN_MODE_TEXTUAL (for testing purposes for now).
+// TODO: collapse enabledSignModes and customSignModes
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
 	customSignModes ...txsigning.SignModeHandler) client.TxConfig {
 	for _, m := range enabledSignModes {
@@ -35,16 +38,37 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 		}
 	}
 
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, &textual.SignModeHandler{},
-		customSignModes...))
+	// prefer depinject usage but permit this; it is primary used in tests.
+	protoFiles := sdk.MergedProtoRegistry()
+	typeResolver := protoregistry.GlobalTypes
+	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
+	if err != nil {
+		panic(err)
+	}
+
+	aminoJsonEncoder := aminojson.NewAminoJSON()
+	signModeOptions := SignModeOptions{
+		DirectAux: &directaux.SignModeHandlerOptions{
+			FileResolver:   protoFiles,
+			TypeResolver:   typeResolver,
+			SignersContext: signersContext,
+		},
+		AminoJSON: &aminojson.SignModeHandlerOptions{
+			FileResolver: protoFiles,
+			TypeResolver: typeResolver,
+			Encoder:      &aminoJsonEncoder,
+		},
+	}
+
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, signModeOptions, customSignModes...))
 }
 
 // NewTxConfigWithTextual is like NewTxConfig with the ability to add
 // a SIGN_MODE_TEXTUAL renderer. It is currently still EXPERIMENTAL, for should
 // be used for TESTING purposes only, until Textual is fully released.
 func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
-	textual *textual.SignModeHandler, customSignModes ...txsigning.SignModeHandler) client.TxConfig {
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual, customSignModes...))
+	signModeOptions SignModeOptions, customSignModes ...txsigning.SignModeHandler) client.TxConfig {
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, signModeOptions, customSignModes...))
 }
 
 // NewTxConfigWithHandler returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.

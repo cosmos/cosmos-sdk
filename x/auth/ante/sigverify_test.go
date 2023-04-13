@@ -211,7 +211,8 @@ func TestSigVerification(t *testing.T) {
 					txSigs[0] = signing.SignatureV2{
 						PubKey: tc.privs[0].PubKey(),
 						Data: &signing.SingleSignatureData{
-							SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+							// TODO: default sign mode
+							SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 							Signature: badSig,
 						},
 						Sequence: tc.accSeqs[0],

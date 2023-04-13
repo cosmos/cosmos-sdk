@@ -154,7 +154,7 @@ func AdaptSigningArgs(
 	if err != nil {
 		return nil, err
 	}
-	decodeCtx, err := decode.NewDecoder(decode.Options{})
+	decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: sdk.MergedProtoRegistry()})
 	if err != nil {
 		return nil, err
 	}

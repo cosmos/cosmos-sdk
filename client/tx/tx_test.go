@@ -6,9 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -27,6 +28,10 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
+
+// TODO
+// default mode?
+var defaultSignMode = signingtypes.SignMode_SIGN_MODE_DIRECT
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig()
@@ -81,7 +86,7 @@ func TestCalculateGas(t *testing.T) {
 
 		txf := tx.Factory{}.
 			WithChainID("test-chain").
-			WithTxConfig(txCfg).WithSignMode(txCfg.SignModeHandler().DefaultMode())
+			WithTxConfig(txCfg).WithSignMode(defaultSignMode)
 
 		t.Run(stc.name, func(t *testing.T) {
 			mockClientCtx := mockContext{
@@ -119,7 +124,7 @@ func TestBuildSimTx(t *testing.T) {
 		WithFees("50stake").
 		WithMemo("memo").
 		WithChainID("test-chain").
-		WithSignMode(txCfg.SignModeHandler().DefaultMode()).
+		WithSignMode(defaultSignMode).
 		WithKeybase(kb)
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)

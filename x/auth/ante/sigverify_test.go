@@ -126,7 +126,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 
 func TestSigVerification(t *testing.T) {
 	suite := SetupTestSuite(t, true)
-	suite.txBankKeeper.EXPECT().DenomMetadata(suite.ctx, gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
+	suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
 
 	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_TEXTUAL, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
@@ -221,7 +221,10 @@ func TestSigVerification(t *testing.T) {
 					tx = suite.txBuilder.GetTx()
 				}
 
-				_, err = antehandler(suite.ctx, tx, false)
+				txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+				require.NoError(t, err)
+				byteCtx := suite.ctx.WithTxBytes(txBytes)
+				_, err = antehandler(byteCtx, tx, false)
 				if tc.shouldErr {
 					require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
 				} else {
@@ -288,6 +291,10 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	svgc := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
+
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	suite.ctx = suite.ctx.WithTxBytes(txBytes)
 
 	// Determine gas consumption of antehandler with default params
 	before := suite.ctx.GasMeter().GasConsumed()

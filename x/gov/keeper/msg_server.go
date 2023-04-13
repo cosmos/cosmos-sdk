@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -54,7 +53,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 	// Check that either metadata or Msgs length is non nil.
 	if len(msg.Messages) == 0 && len(msg.Metadata) == 0 {
-		return nil, errors.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+		return nil, errors.Wrap(govtypes.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
 	}
 
 	msgs, err := msg.GetMsgs()
@@ -69,7 +68,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		}
 
 		if err := m.ValidateBasic(); err != nil {
-			return nil, errors.Wrap(types.ErrInvalidProposalMsg,
+			return nil, errors.Wrap(govtypes.ErrInvalidProposalMsg,
 				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
 		}
 	}
@@ -193,7 +192,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 	}
 
 	if !v1.ValidVoteOption(msg.Option) {
-		return nil, errors.Wrap(types.ErrInvalidVote, msg.Option.String())
+		return nil, errors.Wrap(govtypes.ErrInvalidVote, msg.Option.String())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -230,25 +229,25 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 	usedOptions := make(map[v1.VoteOption]bool)
 	for _, option := range msg.Options {
 		if !option.IsValid() {
-			return nil, errors.Wrap(types.ErrInvalidVote, option.String())
+			return nil, errors.Wrap(govtypes.ErrInvalidVote, option.String())
 		}
 		weight, err := sdk.NewDecFromStr(option.Weight)
 		if err != nil {
-			return nil, errors.Wrapf(types.ErrInvalidVote, "invalid weight: %s", err)
+			return nil, errors.Wrapf(govtypes.ErrInvalidVote, "invalid weight: %s", err)
 		}
 		totalWeight = totalWeight.Add(weight)
 		if usedOptions[option.Option] {
-			return nil, errors.Wrap(types.ErrInvalidVote, "duplicated vote option")
+			return nil, errors.Wrap(govtypes.ErrInvalidVote, "duplicated vote option")
 		}
 		usedOptions[option.Option] = true
 	}
 
 	if totalWeight.GT(math.LegacyNewDec(1)) {
-		return nil, errors.Wrap(types.ErrInvalidVote, "total weight overflow 1.00")
+		return nil, errors.Wrap(govtypes.ErrInvalidVote, "total weight overflow 1.00")
 	}
 
 	if totalWeight.LT(math.LegacyNewDec(1)) {
-		return nil, errors.Wrap(types.ErrInvalidVote, "total weight lower than 1.00")
+		return nil, errors.Wrap(govtypes.ErrInvalidVote, "total weight lower than 1.00")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -351,10 +350,10 @@ var _ v1beta1.MsgServer = legacyMsgServer{}
 func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgSubmitProposal) (*v1beta1.MsgSubmitProposalResponse, error) {
 	content := msg.GetContent()
 	if content == nil {
-		return nil, errors.Wrap(types.ErrInvalidProposalContent, "missing content")
+		return nil, errors.Wrap(govtypes.ErrInvalidProposalContent, "missing content")
 	}
 	if !v1beta1.IsValidProposalType(content.ProposalType()) {
-		return nil, errors.Wrap(types.ErrInvalidProposalType, content.ProposalType())
+		return nil, errors.Wrap(govtypes.ErrInvalidProposalType, content.ProposalType())
 	}
 	if err := content.ValidateBasic(); err != nil {
 		return nil, err

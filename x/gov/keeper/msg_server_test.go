@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -496,7 +495,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDec(1)),
 			},
 			voter:     sdk.AccAddress{},
 			metadata:  "",
@@ -508,8 +507,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(1)),
-				v1.NewWeightedVoteOption(v1.OptionAbstain, math.LegacyNewDec(1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDec(1)),
+				v1.NewWeightedVoteOption(v1.OptionAbstain, sdkmath.LegacyNewDec(1)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -534,7 +533,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(0)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDec(0)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -546,7 +545,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(-1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDec(-1)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -1066,7 +1065,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: math.LegacyNewDec(1),
+					Weight: sdkmath.LegacyNewDec(1),
 				},
 			},
 			voter:     sdk.AccAddress{},
@@ -1081,11 +1080,11 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: math.LegacyNewDec(1),
+					Weight: sdkmath.LegacyNewDec(1),
 				},
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionAbstain,
-					Weight: math.LegacyNewDec(1),
+					Weight: sdkmath.LegacyNewDec(1),
 				},
 			},
 			voter:     proposer,
@@ -1119,7 +1118,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: math.LegacyNewDec(0),
+					Weight: sdkmath.LegacyNewDec(0),
 				},
 			},
 			voter:     proposer,
@@ -1134,7 +1133,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: math.LegacyNewDec(-1),
+					Weight: sdkmath.LegacyNewDec(-1),
 				},
 			},
 			voter:     proposer,
@@ -1203,7 +1202,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: math.LegacyNewDec(1),
+					Weight: sdkmath.LegacyNewDec(1),
 				},
 			},
 			voter:     proposer,
@@ -1218,7 +1217,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: math.LegacyNewDec(1),
+					Weight: sdkmath.LegacyNewDec(1),
 				},
 			},
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
@@ -1247,7 +1246,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: math.LegacyNewDec(1),
+					Weight: sdkmath.LegacyNewDec(1),
 				},
 			},
 			voter:    proposer,

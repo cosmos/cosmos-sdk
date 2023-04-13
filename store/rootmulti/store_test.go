@@ -128,12 +128,16 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 	store1 := ms.GetStoreByName("store1").(types.KVStore)
 	store1.Set(k, v)
 
+	workingHash := ms.WorkingHash()
 	cID := ms.Commit()
 	require.Equal(t, int64(1), cID.Version)
 	hash := cID.Hash
+	require.Equal(t, workingHash, hash)
 
 	// make an empty commit, it should update version, but not affect hash
+	workingHash = ms.WorkingHash()
 	cID = ms.Commit()
+	require.Equal(t, workingHash, cID.Hash)
 	require.Equal(t, int64(2), cID.Version)
 	require.Equal(t, hash, cID.Hash)
 }
@@ -159,7 +163,9 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	// Make a few commits and check them.
 	nCommits := int64(3)
 	for i := int64(0); i < nCommits; i++ {
+		workingHash := store.WorkingHash()
 		commitID = store.Commit()
+		require.Equal(t, workingHash, commitID.Hash)
 		expectedCommitID := getExpectedCommitID(store, i+1)
 		checkStore(t, store, expectedCommitID, commitID)
 	}
@@ -172,7 +178,9 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 
 	// Commit and check version.
+	workingHash := store.WorkingHash()
 	commitID = store.Commit()
+	require.Equal(t, workingHash, commitID.Hash)
 	expectedCommitID := getExpectedCommitID(store, nCommits+1)
 	checkStore(t, store, expectedCommitID, commitID)
 
@@ -211,7 +219,9 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Nil(t, s4)
 
 	// do one commit
+	workingHash := store.WorkingHash()
 	commitID := store.Commit()
+	require.Equal(t, workingHash, commitID.Hash)
 	expectedCommitID := getExpectedCommitID(store, 1)
 	checkStore(t, store, expectedCommitID, commitID)
 

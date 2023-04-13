@@ -13,6 +13,7 @@ import (
 )
 
 func TestTimestamp(t *testing.T) {
+	t.Parallel()
 	cdc := ormfield.TimestampCodec{}
 
 	t.Run("nil value", func(t *testing.T) {

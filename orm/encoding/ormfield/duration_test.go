@@ -43,6 +43,7 @@ func TestDuration(t *testing.T) {
 	})
 
 	t.Run("nanos", func(t *testing.T) {
+		t.Parallel()
 		dur, err := time.ParseDuration("3879468295ns")
 		assert.NilError(t, err)
 		durPb := durationpb.New(dur)

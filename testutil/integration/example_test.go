@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/google/go-cmp/cmp"
@@ -33,7 +34,7 @@ func Example() {
 	authority := authtypes.NewModuleAddress("gov").String()
 
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
-	logger := log.NewLogger(io.Discard, log.OutputJSONOption())
+	logger := log.NewNopLogger()
 
 	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)

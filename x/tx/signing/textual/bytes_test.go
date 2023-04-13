@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-func TestBytesJsonTestCases(t *testing.T) {
+func TestBytesJSONTestCases(t *testing.T) {
 	var testcases []bytesTest
 	// Bytes.json contains bytes that are represented in base64 format, and
 	// their expected results in hex.

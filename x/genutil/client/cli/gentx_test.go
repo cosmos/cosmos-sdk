@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
@@ -63,7 +64,7 @@ func (s *CLITestSuite) SetupSuite() {
 }
 
 func (s *CLITestSuite) TestGenTxCmd() {
-	amount := sdk.NewCoin("stake", sdk.NewInt(12))
+	amount := sdk.NewCoin("stake", sdkmath.NewInt(12))
 
 	tests := []struct {
 		name         string

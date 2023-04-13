@@ -6,12 +6,15 @@ import (
 	"strconv"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	cmttypes "github.com/cometbft/cometbft/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -23,6 +26,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -117,8 +121,35 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 
 	msg.DelegatorAddress = sdk.AccAddress(valAddr).String()
 
-	if err := msg.ValidateBasic(); err != nil {
+	if msg.Pubkey == nil {
+		panic(types.ErrEmptyValidatorPubKey)
+	}
+
+	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
+		panic(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount"))
+	}
+
+	if msg.Description == (types.Description{}) {
+		panic(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description"))
+	}
+
+	if msg.Commission == (types.CommissionRates{}) {
+		panic(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission"))
+	}
+
+	if err := msg.Commission.Validate(); err != nil {
 		panic(err)
+	}
+
+	if !msg.MinSelfDelegation.IsPositive() {
+		panic(errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"minimum self delegation must be a positive integer",
+		))
+	}
+
+	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
+		panic(types.ErrSelfDelegationBelowMinimum)
 	}
 
 	txConf := authtx.NewTxConfig(b.codec, tx.DefaultSignModes)

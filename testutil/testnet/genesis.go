@@ -26,7 +26,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -120,18 +119,18 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 	}
 
 	if msg.Pubkey == nil {
-		panic(types.ErrEmptyValidatorPubKey)
+		panic(stakingtypes.ErrEmptyValidatorPubKey)
 	}
 
 	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
 		panic(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount"))
 	}
 
-	if msg.Description == (types.Description{}) {
+	if msg.Description == (stakingtypes.Description{}) {
 		panic(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description"))
 	}
 
-	if msg.Commission == (types.CommissionRates{}) {
+	if msg.Commission == (stakingtypes.CommissionRates{}) {
 		panic(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission"))
 	}
 
@@ -147,7 +146,7 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 	}
 
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		panic(types.ErrSelfDelegationBelowMinimum)
+		panic(stakingtypes.ErrSelfDelegationBelowMinimum)
 	}
 
 	txConf := authtx.NewTxConfig(b.codec, authtx.DefaultSignModes)

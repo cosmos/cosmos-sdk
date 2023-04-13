@@ -56,34 +56,6 @@ func TestMsgDecode(t *testing.T) {
 	require.True(t, msg.Pubkey.Equal(msg2.Pubkey))
 }
 
-// test ValidateBasic for MsgEditValidator
-func TestMsgEditValidator(t *testing.T) {
-	tests := []struct {
-		name, moniker, identity, website, securityContact, details string
-		validatorAddr                                              sdk.ValAddress
-		expectPass                                                 bool
-		minSelfDelegation                                          math.Int
-	}{
-		{"basic good", "a", "b", "c", "d", "e", valAddr1, true, math.OneInt()},
-		{"partial description", "", "", "c", "", "", valAddr1, true, math.OneInt()},
-		{"empty description", "", "", "", "", "", valAddr1, false, math.OneInt()},
-		{"empty address", "a", "b", "c", "d", "e", emptyAddr, false, math.OneInt()},
-		{"nil int", "a", "b", "c", "d", "e", emptyAddr, false, math.Int{}},
-	}
-
-	for _, tc := range tests {
-		description := types.NewDescription(tc.moniker, tc.identity, tc.website, tc.securityContact, tc.details)
-		newRate := math.LegacyZeroDec()
-
-		msg := types.NewMsgEditValidator(tc.validatorAddr, description, &newRate, &tc.minSelfDelegation)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-}
-
 // test ValidateBasic for MsgDelegate
 func TestMsgDelegate(t *testing.T) {
 	tests := []struct {

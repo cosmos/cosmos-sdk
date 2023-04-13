@@ -209,7 +209,11 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 			name: "valid msg",
 			input: &stakingtypes.MsgCreateValidator{
 				Description: stakingtypes.Description{
-					Moniker: "NewValidator",
+					Moniker:         "NewValidator",
+					Identity:        "xyz",
+					Website:         "xyz.com",
+					SecurityContact: "xyz@gmail.com",
+					Details:         "details",
 				},
 				Commission: stakingtypes.CommissionRates{
 					Rate:          sdk.NewDecWithPrec(5, 1),
@@ -229,6 +233,186 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.CreateValidator(ctx, tc.input)
+			if tc.expErr {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expErrMsg)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgEditValidator() {
+	ctx, msgServer := s.ctx, s.msgServer
+	require := s.Require()
+
+	// create new context with updated block time
+	newCtx := ctx.WithBlockTime(ctx.BlockTime().AddDate(0, 0, 1))
+
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	valAddr := sdk.ValAddress(authority)
+
+	pk := ed25519.GenPrivKey().PubKey()
+	require.NotNil(pk)
+
+	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), authority, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
+
+	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	require.NoError(err)
+
+	res, err := msgServer.CreateValidator(ctx, msg)
+	require.NoError(err)
+	require.NotNil(res)
+
+	newRate := math.LegacyZeroDec()
+	invalidRate := sdk.NewDec(2)
+
+	lowSelfDel := math.OneInt()
+	highSelfDel := math.NewInt(100)
+	negSelfDel := math.NewInt(-1)
+	newSelfDel := math.NewInt(3)
+
+	testCases := []struct {
+		name      string
+		ctx       sdk.Context
+		input     *stakingtypes.MsgEditValidator
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid validator",
+			ctx:  newCtx,
+			input: &stakingtypes.MsgEditValidator{
+				Description: stakingtypes.Description{
+					Moniker: "TestValidator",
+				},
+				ValidatorAddress:  sdk.AccAddress([]byte("invalid")).String(),
+				CommissionRate:    &newRate,
+				MinSelfDelegation: &newSelfDel,
+			},
+			expErr:    true,
+			expErrMsg: "invalid validator address",
+		},
+		{
+			name: "empty description",
+			ctx:  newCtx,
+			input: &stakingtypes.MsgEditValidator{
+				Description:       stakingtypes.Description{},
+				ValidatorAddress:  valAddr.String(),
+				CommissionRate:    &newRate,
+				MinSelfDelegation: &newSelfDel,
+			},
+			expErr:    true,
+			expErrMsg: "empty description",
+		},
+		{
+			name: "negative self delegation",
+			ctx:  newCtx,
+			input: &stakingtypes.MsgEditValidator{
+				Description: stakingtypes.Description{
+					Moniker: "TestValidator",
+				},
+				ValidatorAddress:  valAddr.String(),
+				CommissionRate:    &newRate,
+				MinSelfDelegation: &negSelfDel,
+			},
+			expErr:    true,
+			expErrMsg: "minimum self delegation must be a positive integer",
+		},
+		{
+			name: "invalid commission rate",
+			ctx:  newCtx,
+			input: &stakingtypes.MsgEditValidator{
+				Description: stakingtypes.Description{
+					Moniker: "TestValidator",
+				},
+				ValidatorAddress:  valAddr.String(),
+				CommissionRate:    &invalidRate,
+				MinSelfDelegation: &newSelfDel,
+			},
+			expErr:    true,
+			expErrMsg: "commission rate must be between 0 and 1 (inclusive)",
+		},
+		{
+			name: "validator does not exist",
+			ctx:  newCtx,
+			input: &stakingtypes.MsgEditValidator{
+				Description: stakingtypes.Description{
+					Moniker: "TestValidator",
+				},
+				ValidatorAddress:  sdk.ValAddress([]byte("val")).String(),
+				CommissionRate:    &newRate,
+				MinSelfDelegation: &newSelfDel,
+			},
+			expErr:    true,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name: "change commmission rate in <24hrs",
+			ctx:  ctx,
+			input: &stakingtypes.MsgEditValidator{
+				Description: stakingtypes.Description{
+					Moniker: "TestValidator",
+				},
+				ValidatorAddress:  valAddr.String(),
+				CommissionRate:    &newRate,
+				MinSelfDelegation: &newSelfDel,
+			},
+			expErr:    true,
+			expErrMsg: "commission cannot be changed more than once in 24h",
+		},
+		{
+			name: "minimum self delegation cannot decrease",
+			ctx:  newCtx,
+			input: &stakingtypes.MsgEditValidator{
+				Description: stakingtypes.Description{
+					Moniker: "TestValidator",
+				},
+				ValidatorAddress:  valAddr.String(),
+				CommissionRate:    &newRate,
+				MinSelfDelegation: &lowSelfDel,
+			},
+			expErr:    true,
+			expErrMsg: "minimum self delegation cannot be decrease",
+		},
+		{
+			name: "validator self-delegation must be greater than min self delegation",
+			ctx:  newCtx,
+			input: &stakingtypes.MsgEditValidator{
+				Description: stakingtypes.Description{
+					Moniker: "TestValidator",
+				},
+				ValidatorAddress:  valAddr.String(),
+				CommissionRate:    &newRate,
+				MinSelfDelegation: &highSelfDel,
+			},
+			expErr:    true,
+			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
+		},
+		{
+			name: "valid msg",
+			ctx:  newCtx,
+			input: &stakingtypes.MsgEditValidator{
+				Description: stakingtypes.Description{
+					Moniker:         "TestValidator",
+					Identity:        "abc",
+					Website:         "abc.com",
+					SecurityContact: "abc@gmail.com",
+					Details:         "newDetails",
+				},
+				ValidatorAddress:  valAddr.String(),
+				CommissionRate:    &newRate,
+				MinSelfDelegation: &newSelfDel,
+			},
+			expErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := msgServer.EditValidator(tc.ctx, tc.input)
 			if tc.expErr {
 				require.Error(err)
 				require.Contains(err.Error(), tc.expErrMsg)

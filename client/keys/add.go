@@ -229,8 +229,8 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	// Get bip39 mnemonic
 	var mnemonic, bip39Passphrase string
 
-	recover, _ := cmd.Flags().GetBool(flagRecover)
-	if recover {
+	recoverFlag, _ := cmd.Flags().GetBool(flagRecover)
+	if recoverFlag {
 		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
 		if err != nil {
 			return err
@@ -291,7 +291,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	}
 
 	// Recover key from seed passphrase
-	if recover {
+	if recoverFlag {
 		// Hide mnemonic from output
 		showMnemonic = false
 		mnemonic = ""

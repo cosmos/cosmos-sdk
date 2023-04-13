@@ -76,7 +76,7 @@ func TestTimestamp(t *testing.T) {
 	})
 }
 
-func TestTimestmapOutOfRange(t *testing.T) {
+func TestTimestampOutOfRange(t *testing.T) {
 	t.Parallel()
 	cdc := ormfield.TimestampCodec{}
 

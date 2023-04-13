@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
+	sdkmath "cosmossdk.io/math"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
@@ -58,6 +59,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 
 	s.ctx = ctx
+
 	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))
 
 	s.addressCodec = codecaddress.NewBech32Codec("cosmos")

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
@@ -26,18 +27,20 @@ type Keeper struct {
 	router         types.Router
 	stakingKeeper  types.StakingKeeper
 	slashingKeeper types.SlashingKeeper
+	addressCodec   address.Codec
 }
 
 // NewKeeper creates a new Keeper object.
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper,
+	slashingKeeper types.SlashingKeeper, ac address.Codec,
 ) *Keeper {
 	return &Keeper{
 		cdc:            cdc,
 		storeKey:       storeKey,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
+		addressCodec:   ac,
 	}
 }
 

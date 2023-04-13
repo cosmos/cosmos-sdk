@@ -105,3 +105,7 @@ func (it *immutableTree) WorkingHash() ([]byte, error) {
 func (it *immutableTree) SaveChangeSet(changeSet *iavl.ChangeSet) (int64, error) {
 	panic("cannot call 'SaveChangeSet' on an immutable IAVL tree")
 }
+
+func (it *immutableTree) WorkingHash() ([]byte, error) {
+	panic("cannot call 'WorkingHash' on an immutable IAVL tree")
+}

@@ -137,7 +137,7 @@ func printAndValidateSigs(
 				cmd.PrintErrf("failed to encode transaction: %v", err)
 				return false
 			}
-			decodeCtx, err := decode.NewDecoder(decode.Options{})
+			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: sdk.MergedProtoRegistry()})
 			if err != nil {
 				cmd.PrintErrf("failed to create decoder: %v", err)
 				return false

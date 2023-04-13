@@ -16,8 +16,6 @@ var (
 	valAddr1 = sdk.ValAddress(pk1.Address())
 	valAddr2 = sdk.ValAddress(pk2.Address())
 	valAddr3 = sdk.ValAddress(pk3.Address())
-
-	emptyAddr sdk.ValAddress
 )
 
 func init() {

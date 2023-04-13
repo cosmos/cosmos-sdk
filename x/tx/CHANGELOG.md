@@ -31,21 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### API Breaking
-
-* [#15709](https://github.com/cosmos/cosmos-sdk/pull/15709):
-  * `GetSignersContext` has been renamed to `signing.Context`
-  * `GetSigners` now returns `[][]byte` instead of `[]string`
-  * `GetSignersOptions` has been renamed to `signing.Options` and requires `address.Codec`s for account and validator addresses
-  * `GetSignersOptions.ProtoFiles` has been renamed to `signing.Options.FileResolver`
-
-## v0.5.1
-
 ### Features
 
 * [#15414](https://github.com/cosmos/cosmos-sdk/pull/15414) Add basic transaction decoding support.
-
-## v0.5.0
 
 ### API Breaking
 

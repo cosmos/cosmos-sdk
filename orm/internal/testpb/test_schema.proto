@@ -114,9 +114,9 @@ message ExampleDuration {
     index: {id: 1 fields: "dur"}
   };
 
-  uint64                    id   = 1;
-  string                    name = 2;
-  google.protobuf.Duration dur   = 3;
+  uint64                   id   = 1;
+  string                   name = 2;
+  google.protobuf.Duration dur  = 3;
 }
 
 message SimpleExample {

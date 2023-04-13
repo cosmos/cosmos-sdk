@@ -103,7 +103,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/slashing) [#15580](https://github.com/cosmos/cosmos-sdk/pull/15580) The validator slashing window now stores "chunked" bitmap entries for each validator's signing window instead of a single boolean entry per signing window index.
 * (x/feegrant) [#14294](https://github.com/cosmos/cosmos-sdk/pull/14294) Moved the logic of rejecting duplicate grant from `msg_server` to `keeper` method.
 * (x/staking) [#14590](https://github.com/cosmos/cosmos-sdk/pull/14590) `MsgUndelegateResponse` now includes undelegated amount. `x/staking` module's `keeper.Undelegate` now returns 3 values (completionTime,undelegateAmount,error)  instead of 2.
-* (x/staking) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `MsgCreateValidator.validator_address` must now be encoded as a bech32 account address instead of a bech32 `valoper` address.
 
 ### API Breaking Changes
 

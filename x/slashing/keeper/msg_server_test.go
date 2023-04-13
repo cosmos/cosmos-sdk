@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(nil)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: addr.String(),
+					ValidatorAddr: sdk.ValAddress(addr).String(),
 				}
 			},
 			expErr:    true,

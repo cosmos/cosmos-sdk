@@ -2438,8 +2438,6 @@ func (s *TestSuite) TestExecProposal() {
 	}
 	proposers := []string{addr2.String()}
 
-	fmt.Println(s.groupPolicyAddr.String())
-
 	specs := map[string]struct {
 		srcBlockTime      time.Time
 		setupProposal     func(ctx context.Context) uint64

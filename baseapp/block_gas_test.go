@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -81,14 +82,18 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			err               error
 		)
 
-		err = depinject.Inject(configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.TxModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
-		),
+		err = depinject.Inject(
+			depinject.Configs(
+				configurator.NewAppConfig(
+					configurator.AuthModule(),
+					configurator.TxModule(),
+					configurator.ParamsModule(),
+					configurator.ConsensusModule(),
+					configurator.BankModule(),
+					configurator.StakingModule(),
+				),
+				depinject.Supply(log.NewNopLogger()),
+			),
 			&bankKeeper,
 			&accountKeeper,
 			&interfaceRegistry,

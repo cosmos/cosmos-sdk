@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,9 +27,13 @@ func TestRegisterMsgService(t *testing.T) {
 		appBuilder *runtime.AppBuilder
 		registry   codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewTestLogger(t)),
+		), &appBuilder, &registry)
 	require.NoError(t, err)
-	app := appBuilder.Build(log.NewTestLogger(t), dbm.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB(), nil)
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -54,10 +59,14 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 		appBuilder *runtime.AppBuilder
 		registry   codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewTestLogger(t)),
+		), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.NewTestLogger(t), db, nil)
+	app := appBuilder.Build(db, nil)
 	testdata.RegisterInterfaces(registry)
 
 	// First time registering service shouldn't panic.
@@ -85,9 +94,13 @@ func TestMsgService(t *testing.T) {
 		cdc               codec.ProtoCodecMarshaler
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc, &interfaceRegistry)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewNopLogger()),
+		), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)
-	app := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB(), nil)
 
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)

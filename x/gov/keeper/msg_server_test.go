@@ -270,7 +270,21 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 		},
 		"all good": {
 			preRun: func() uint64 {
-				return proposalID
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					coins,
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					false,
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
 			},
 			depositor: proposer,
 			expErr:    false,
@@ -763,9 +777,7 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 
 // legacy msg server tests
 func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
-	addrs := suite.addrs
-	proposer := addrs[0]
-
+	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	initialDeposit := coins
 	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit

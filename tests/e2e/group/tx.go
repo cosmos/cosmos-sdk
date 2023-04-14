@@ -1609,7 +1609,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 				s.commonFlags...,
 			),
 			false,
-			"group policy: not found",
+			"not found",
 			&sdk.TxResponse{},
 			sdkerrors.ErrNotFound.ABCICode(),
 		},

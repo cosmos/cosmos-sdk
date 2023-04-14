@@ -167,6 +167,9 @@ func (ms multiStore) RollbackToVersion(version int64) error {
 func (ms multiStore) LatestVersion() int64 {
 	panic("not implemented")
 }
+func (ms multiStore) WorkingHash() []byte {
+	panic("not implemented")
+}
 
 var _ storetypes.KVStore = kvStore{}
 

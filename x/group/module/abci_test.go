@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
-	sdkmath "cosmossdk.io/math"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"

@@ -393,7 +393,7 @@ func (s *E2ETestSuite) TestQueryGroupPolicyInfo() {
 			"group policy not found",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
-			"group policy: not found",
+			"not found",
 			0,
 		},
 		{

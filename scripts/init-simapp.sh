@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SIMD_BIN=${VARIABLE:=$(which simd 2>/dev/null)}
+SIMD_BIN=${SIMD_BIN:=$(which simd 2>/dev/null)}
 
 if [ -z "$SIMD_BIN" ]; then echo "SIMD_BIN is not set. Make sure to run make install before"; exit 1; fi
 echo "using $SIMD_BIN"

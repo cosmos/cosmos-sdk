@@ -13,7 +13,6 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-SIMD_BIN ?= $(shell which simd 2> /dev/null)
 
 # process build tags
 build_tags = netgo

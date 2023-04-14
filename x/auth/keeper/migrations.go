@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	v6 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v6"
+	v6 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v5"
 	"github.com/cosmos/gogoproto/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,10 +60,10 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.Migrate(ctx, m.keeper.storeService, m.legacySubspace, m.keeper.cdc)
 }
 
-// Migrate5to6 migrates the x/auth module state from the consensus version 5 to 6.
+// Migrate4To5 migrates the x/auth module state from the consensus version 5 to 6.
 // It migrates the GlobalAccountNumber from being a protobuf defined value to a
 // big-endian encoded uint64, it also migrates it to use a more canonical prefix.
-func (m Migrator) Migrate5to6(ctx sdk.Context) error {
+func (m Migrator) Migrate4To5(ctx sdk.Context) error {
 	return v6.Migrate(ctx, m.keeper.storeService, m.keeper.AccountNumber)
 }
 

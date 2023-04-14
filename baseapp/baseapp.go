@@ -800,8 +800,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		//
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
-		// append message index to all events
 		for j, event := range msgEvents {
+			// append message index to all events
 			msgEvents[j] = event.AppendAttributes(sdk.NewAttribute("msg_index", strconv.Itoa(i)))
 		}
 

@@ -800,16 +800,14 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		//
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
-		events = events.AppendEvents(msgEvents)
+		var me = make(sdk.Events, len(msgEvents))
 
-		// add message index to all events to identify which events are from which message
-		for _, event := range events {
-			event.Attributes = append(event.Attributes, abci.EventAttribute{
-				Key:   "msg_index",
-				Value: strconv.Itoa(i),
-			},
-			)
+		// append message index to all events
+		for j, event := range msgEvents {
+			me[j] = event.AppendAttributes(sdk.NewAttribute("msg_index", strconv.Itoa(i)))
 		}
+
+		events = events.AppendEvents(me)
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
 		// (which should represent 99% of the Msgs now, since everyone should
@@ -833,7 +831,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 
 	return &sdk.Result{
 		Data:         data,
-		Log:          "",
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil

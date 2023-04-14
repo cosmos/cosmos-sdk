@@ -110,7 +110,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           sdk.NewCoin("dump_coin", sdk.NewInt(4)),
-				CreationHeight:   0,
+				CreationHeight:   10,
 			},
 			expErrMsg: "invalid coin denomination",
 		},

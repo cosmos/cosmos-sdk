@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -774,7 +773,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
-	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 
@@ -798,7 +796,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// create message events
 		msgEvents := createEvents(msgResult.GetEvents(), msg)
 
-		// append message events, data and logs
+		// append message events and data
 		//
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
@@ -807,7 +805,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// add message index to all events to identify which events are from which message
 		for _, event := range events {
 			event.Attributes = append(event.Attributes, abci.EventAttribute{
-				Key:   "message_index",
+				Key:   "msg_index",
 				Value: strconv.Itoa(i),
 			},
 			)
@@ -835,7 +833,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 
 	return &sdk.Result{
 		Data:         data,
-		Log:          strings.TrimSpace(msgLogs.String()),
+		Log:          "",
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil

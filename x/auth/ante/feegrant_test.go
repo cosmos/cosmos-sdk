@@ -243,7 +243,6 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 		signBytes, err := authsign.AdaptSigningArgs(
 			context.Background(), gen.TxEncoder(), gen.SignModeHandler(), signMode, signerData, p.PubKey(),
 			tx.GetTx())
-
 		if err != nil {
 			panic(err)
 		}

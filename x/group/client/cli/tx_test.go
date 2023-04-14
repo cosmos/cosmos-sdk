@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	// TODO: should amino json encoder receive a different registry to prevent the need for this?
 	_ "cosmossdk.io/api/cosmos/group/v1"
 	sdkmath "cosmossdk.io/math"
 

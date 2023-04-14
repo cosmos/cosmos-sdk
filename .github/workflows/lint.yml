@@ -5,6 +5,7 @@ on:
       - main
       - release/**
   pull_request:
+  merge_group:
 permissions:
   contents: read
   # Optional: allow read access to pull request. Use with `only-new-issues` option.

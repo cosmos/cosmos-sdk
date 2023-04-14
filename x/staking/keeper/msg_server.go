@@ -36,40 +36,14 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// note that unmarshaling from bech32 ensures both non-empty and valid
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	if msg.Pubkey == nil {
-		return nil, types.ErrEmptyValidatorPubKey
-	}
-
-	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
-	}
-
-	if msg.Description == (types.Description{}) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
-	}
-
-	if msg.Commission == (types.CommissionRates{}) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
-	}
-
-	if err := msg.Commission.Validate(); err != nil {
+	if err := msg.Validate(); err != nil {
 		return nil, err
-	}
-
-	if !msg.MinSelfDelegation.IsPositive() {
-		return nil, errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
-	}
-
-	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		return nil, types.ErrSelfDelegationBelowMinimum
 	}
 
 	if msg.Commission.Rate.LT(k.MinCommissionRate(ctx)) {

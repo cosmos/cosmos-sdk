@@ -1,11 +1,13 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -67,6 +69,48 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 func (msg MsgCreateValidator) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgCreateValidator) Validate() error {
+	// note that unmarshaling from bech32 ensures both non-empty and valid
+	_, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	if msg.Pubkey == nil {
+		return ErrEmptyValidatorPubKey
+	}
+
+	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
+	}
+
+	if msg.Description == (Description{}) {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+	}
+
+	if msg.Commission == (CommissionRates{}) {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
+	}
+
+	if err := msg.Commission.Validate(); err != nil {
+		return err
+	}
+
+	if !msg.MinSelfDelegation.IsPositive() {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"minimum self delegation must be a positive integer",
+		)
+	}
+
+	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
+		return ErrSelfDelegationBelowMinimum
+	}
+
+	return nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

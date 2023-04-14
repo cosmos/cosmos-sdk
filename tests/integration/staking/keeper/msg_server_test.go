@@ -76,14 +76,14 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	assert.DeepEqual(t, ubd, resUnbond)
 
 	testCases := []struct {
-		Name      string
-		ExceptErr bool
+		name      string
+		exceptErr bool
 		req       types.MsgCancelUnbondingDelegation
 		expErrMsg string
 	}{
 		{
-			Name:      "entry not found at height",
-			ExceptErr: true,
+			name:      "entry not found at height",
+			exceptErr: true,
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
@@ -93,8 +93,8 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			expErrMsg: "unbonding delegation entry is not found at block height",
 		},
 		{
-			Name:      "invalid height",
-			ExceptErr: true,
+			name:      "invalid height",
+			exceptErr: true,
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
@@ -104,8 +104,8 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			expErrMsg: "invalid height",
 		},
 		{
-			Name:      "invalid coin",
-			ExceptErr: true,
+			name:      "invalid coin",
+			exceptErr: true,
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
@@ -115,8 +115,8 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			expErrMsg: "invalid coin denomination",
 		},
 		{
-			Name:      "validator not exists",
-			ExceptErr: true,
+			name:      "validator not exists",
+			exceptErr: true,
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: sdk.ValAddress(sdk.AccAddress("asdsad")).String(),
@@ -126,8 +126,8 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			expErrMsg: "validator does not exist",
 		},
 		{
-			Name:      "invalid delegator address",
-			ExceptErr: true,
+			name:      "invalid delegator address",
+			exceptErr: true,
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: "invalid_delegator_addrtess",
 				ValidatorAddress: resUnbond.ValidatorAddress,
@@ -137,8 +137,8 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			expErrMsg: "decoding bech32 failed",
 		},
 		{
-			Name:      "invalid amount",
-			ExceptErr: true,
+			name:      "invalid amount",
+			exceptErr: true,
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
@@ -148,8 +148,8 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			expErrMsg: "amount is greater than the unbonding delegation entry balance",
 		},
 		{
-			Name:      "success",
-			ExceptErr: false,
+			name:      "success",
+			exceptErr: false,
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
@@ -158,8 +158,8 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			},
 		},
 		{
-			Name:      "success",
-			ExceptErr: false,
+			name:      "success",
+			exceptErr: false,
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
@@ -170,9 +170,9 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			_, err := msgServer.CancelUnbondingDelegation(ctx, &testCase.req)
-			if testCase.ExceptErr {
+			if testCase.exceptErr {
 				assert.ErrorContains(t, err, testCase.expErrMsg)
 			} else {
 				assert.NilError(t, err)

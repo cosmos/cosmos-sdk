@@ -28,4 +28,5 @@ jobs:
             **/go.sum
       - name: run linting
         if: env.GIT_DIFF
-        run: make lint
+        run: |
+          make lint

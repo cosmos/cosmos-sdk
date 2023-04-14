@@ -195,19 +195,3 @@ message LegacyResponseBeginBlock {
   //
   // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 }
-
-// LegacyRequestEndBlock defines a wrapper around the now deprecated
-// RequestEndBlock type.
-message LegacyRequestEndBlock {
-  // TODO: Add legacy fields.
-  //
-  // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-}
-
-// LegacyResponseEndBlock defines a wrapper around the now deprecated
-// ResponseEndBlock type.
-message LegacyResponseEndBlock {
-  // TODO: Add legacy fields.
-  //
-  // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-}

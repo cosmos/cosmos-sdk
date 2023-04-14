@@ -365,42 +365,6 @@ func (app *BaseApp) legacyBeginBlock(req *abci.RequestFinalizeBlock) sdk.LegacyR
 	return resp
 }
 
-func (app *BaseApp) legacyEndBlock(req *abci.RequestFinalizeBlock) sdk.LegacyResponseEndBlock {
-	var (
-		valset []abci.ValidatorUpdate
-		events []abci.Event
-		err    error
-	)
-
-	if app.endBlocker != nil {
-		valset, events, err = app.endBlocker(app.finalizeBlockState.ctx)
-		if err != nil {
-			panic(err)
-		}
-
-		events = sdk.MarkEventsToIndex(events, app.indexEvents)
-	}
-
-	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
-	resp.Response.ConsensusParamUpdates = &cp
-
-	// call the streaming service hook with the EndBlock messages
-	for _, abciListener := range app.streamingManager.ABCIListeners {
-		ctx := app.finalizeBlockState.ctx
-		blockHeight := ctx.BlockHeight()
-
-		// TODO: Figure out what to do with ListenEndBlock and the types necessary
-		// as we cannot have the store sub-module depend on the root SDK module.
-		//
-		// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-		if err := abciListener.ListenEndBlock(ctx, req, res); err != nil {
-			app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-		}
-	}
-
-	return resp
-}
-
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
 // CheckTx mode, messages are not executed. This means messages are only validated
 // and only the AnteHandler is executed. State is persisted to the BaseApp's

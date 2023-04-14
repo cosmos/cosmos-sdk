@@ -115,7 +115,6 @@ func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sd
 		txDecode:        cfg.TxDecoder(),
 		txEncode:        cfg.TxEncoder(),
 		bytesToSign: func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error) {
-
 			bytesToSign, err := authsigning.AdaptSigningArgs(
 				context.Background(), cfg.TxEncoder(), cfg.SignModeHandler(),
 				signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, signerData.PubKey, tx)

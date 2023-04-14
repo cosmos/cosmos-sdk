@@ -66,8 +66,8 @@ func VerifySignature(
 	signerData txsigning.SignerData,
 	signatureData signing.SignatureData,
 	handler *txsigning.HandlerMap,
-	txData txsigning.TxData) error {
-
+	txData txsigning.TxData,
+) error {
 	switch data := signatureData.(type) {
 	case *signing.SingleSignatureData:
 		signMode, err := InternalSignModeToAPI(data.SignMode)

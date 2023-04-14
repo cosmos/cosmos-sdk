@@ -31,7 +31,8 @@ type config struct {
 // to enable SIGN_MODE_TEXTUAL (for testing purposes for now).
 // TODO: collapse enabledSignModes and customSignModes
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
-	customSignModes ...txsigning.SignModeHandler) client.TxConfig {
+	customSignModes ...txsigning.SignModeHandler,
+) client.TxConfig {
 	for _, m := range enabledSignModes {
 		if m == signingtypes.SignMode_SIGN_MODE_TEXTUAL {
 			panic("cannot use NewTxConfig with SIGN_MODE_TEXTUAL enabled; please use NewTxConfigWithTextual")
@@ -67,7 +68,8 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 // a SIGN_MODE_TEXTUAL renderer. It is currently still EXPERIMENTAL, for should
 // be used for TESTING purposes only, until Textual is fully released.
 func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
-	signModeOptions SignModeOptions, customSignModes ...txsigning.SignModeHandler) client.TxConfig {
+	signModeOptions SignModeOptions, customSignModes ...txsigning.SignModeHandler,
+) client.TxConfig {
 	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, signModeOptions, customSignModes...))
 }
 

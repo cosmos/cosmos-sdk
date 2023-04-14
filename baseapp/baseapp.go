@@ -800,14 +800,12 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		//
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
-		var me = make(sdk.Events, len(msgEvents))
-
 		// append message index to all events
 		for j, event := range msgEvents {
-			me[j] = event.AppendAttributes(sdk.NewAttribute("msg_index", strconv.Itoa(i)))
+			msgEvents[j] = event.AppendAttributes(sdk.NewAttribute("msg_index", strconv.Itoa(i)))
 		}
 
-		events = events.AppendEvents(me)
+		events = events.AppendEvents(msgEvents)
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
 		// (which should represent 99% of the Msgs now, since everyone should

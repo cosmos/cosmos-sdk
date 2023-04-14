@@ -71,7 +71,7 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// ValidateBasic implements the sdk.Msg interface.
+// Validate validates the MsgCreateValidator sdk msg.
 func (msg MsgCreateValidator) Validate() error {
 	// note that unmarshaling from bech32 ensures both non-empty and valid
 	_, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)

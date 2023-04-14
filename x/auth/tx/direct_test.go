@@ -68,7 +68,7 @@ func TestDirectModeHandler(t *testing.T) {
 	defaultSignMode := signingtypes.SignMode_SIGN_MODE_DIRECT
 	require.Equal(t, defaultSignMode, signingtypes.SignMode_SIGN_MODE_DIRECT)
 	// TODO, once API is cleaned up, this should be 1
-	//require.Len(t, modeHandler.Modes(), 1)
+	// require.Len(t, modeHandler.Modes(), 1)
 
 	signingData := signing.SignerData{
 		Address:       addr.String(),

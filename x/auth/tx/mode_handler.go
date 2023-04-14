@@ -34,43 +34,10 @@ var DefaultSignModes = []signingtypes.SignMode{
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
 // SIGN_MODE_DIRECT, SIGN_MODE_DIRECT_AUX and SIGN_MODE_LEGACY_AMINO_JSON.
 func makeSignModeHandler(
-	modes []signingtypes.SignMode,
+	_ []signingtypes.SignMode,
 	opts SignModeOptions,
 	customSignModes ...txsigning.SignModeHandler,
 ) *txsigning.HandlerMap {
-	// TODO parity
-	//if len(modes) < 1 {
-	//	panic(fmt.Errorf("no sign modes enabled"))
-	//}
-	//
-	//handlers := make([]signing.SignModeHandler, len(modes)+len(customSignModes))
-	//
-	//// handle cosmos-sdk defined sign modes
-	//for i, mode := range modes {
-	//	switch mode {
-	//	case signingtypes.SignMode_SIGN_MODE_DIRECT:
-	//		handlers[i] = signModeDirectHandler{}
-	//	case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-	//		handlers[i] = signModeLegacyAminoJSONHandler{}
-	//	case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
-	//		handlers[i] = signModeTextualHandler{t: *txt}
-	//	case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
-	//		handlers[i] = signModeDirectAuxHandler{}
-	//	default:
-	//		panic(fmt.Errorf("unsupported sign mode %+v", mode))
-	//	}
-	//}
-	//
-	//// add custom sign modes
-	//for i, handler := range customSignModes {
-	//	handlers[i+len(modes)] = handler
-	//}
-	//
-	//return signing.NewSignModeHandlerMap(
-	//	modes[0],
-	//	handlers,
-	//)
-
 	handlers := []txsigning.SignModeHandler{direct.SignModeHandler{}}
 	if opts.Textual != nil {
 		h, err := textual.NewSignModeHandler(*opts.Textual)

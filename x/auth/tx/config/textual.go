@@ -36,7 +36,7 @@ func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (tx.SignModeOptio
 		return tx.SignModeOptions{}, err
 	}
 
-	aminoJsonEncoder := aminojson.NewAminoJSON()
+	aminoJSONEncoder := aminojson.NewAminoJSON()
 	signModeOptions := tx.SignModeOptions{
 		DirectAux: &directaux.SignModeHandlerOptions{
 			FileResolver:   protoFiles,
@@ -46,7 +46,7 @@ func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) (tx.SignModeOptio
 		AminoJSON: &aminojson.SignModeHandlerOptions{
 			FileResolver: protoFiles,
 			TypeResolver: typeResolver,
-			Encoder:      &aminoJsonEncoder,
+			Encoder:      &aminoJSONEncoder,
 		},
 		Textual: &textual.SignModeOptions{
 			CoinMetadataQuerier: func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
@@ -115,7 +115,7 @@ func NewTextualWithBankKeeper(bk BankKeeper) (tx.SignModeOptions, error) {
 		FileResolver: protoFiles,
 	}
 
-	aminoJsonEncoder := aminojson.NewAminoJSON()
+	aminoJSONEncoder := aminojson.NewAminoJSON()
 	return tx.SignModeOptions{
 		Textual: &txtOpts,
 		DirectAux: &directaux.SignModeHandlerOptions{
@@ -126,7 +126,7 @@ func NewTextualWithBankKeeper(bk BankKeeper) (tx.SignModeOptions, error) {
 		AminoJSON: &aminojson.SignModeHandlerOptions{
 			FileResolver: protoFiles,
 			TypeResolver: typeResolver,
-			Encoder:      &aminoJsonEncoder,
+			Encoder:      &aminoJSONEncoder,
 		},
 	}, nil
 }

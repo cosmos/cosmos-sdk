@@ -168,6 +168,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 
 			var defaultGenTxGas uint64 = 10000000
 			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, defaultGenTxGas, suite.ctx.ChainID(), accNums, seqs, feeAcc, privs...)
+			require.NoError(t, err)
 			txBytes, err := protoTxCfg.TxEncoder()(tx)
 			require.NoError(t, err)
 			bytesCtx := suite.ctx.WithTxBytes(txBytes)

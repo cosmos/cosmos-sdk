@@ -28,7 +28,7 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 
 	// TODO
 	// support default mode?
-	//signMode := txConfig.SignModeHandler().DefaultMode()
+	// signMode := txConfig.SignModeHandler().DefaultMode()
 	signMode := signing.SignMode_SIGN_MODE_DIRECT
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct

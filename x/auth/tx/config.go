@@ -46,7 +46,7 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 		panic(err)
 	}
 
-	aminoJsonEncoder := aminojson.NewAminoJSON()
+	aminoJSONEncoder := aminojson.NewAminoJSON()
 	signModeOptions := SignModeOptions{
 		DirectAux: &directaux.SignModeHandlerOptions{
 			FileResolver:   protoFiles,
@@ -56,7 +56,7 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 		AminoJSON: &aminojson.SignModeHandlerOptions{
 			FileResolver: protoFiles,
 			TypeResolver: typeResolver,
-			Encoder:      &aminoJsonEncoder,
+			Encoder:      &aminoJSONEncoder,
 		},
 	}
 

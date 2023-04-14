@@ -1,8 +1,6 @@
 package runtime
 
 import (
-	"context"
-
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -26,13 +24,8 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 }
 
 // ======================================================
-// ValidatorUpdateService & BlockInfoService
+//  BlockInfoService
 // ======================================================
-
-// ValidatorUpdateService is the service that runtime will provide to the module that sets validator updates.
-type ValidatorUpdateService interface {
-	SetValidatorUpdates(context.Context, []abci.ValidatorUpdate)
-}
 
 // BlockInfoService is the service that runtime will provide to modules which need Comet block information.
 type BlockInfoService interface {

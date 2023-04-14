@@ -112,12 +112,8 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 	if err != nil {
 		panic(err)
 	}
-	_, err = sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
-		panic(err)
-	}
 
-	if err := msg.ValidateBasic(); err != nil {
+	if err := msg.Validate(); err != nil {
 		panic(err)
 	}
 

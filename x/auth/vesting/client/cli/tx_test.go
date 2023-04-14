@@ -152,7 +152,7 @@ func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 	testCases := []struct {
 		name      string
 		ctxGen    func() client.Context
-		from, to  sdk.AccAddress
+		to        sdk.AccAddress
 		amount    sdk.Coins
 		extraArgs []string
 		expectErr bool
@@ -162,7 +162,6 @@ func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].Address,
 			accounts[0].Address,
 			sdk.NewCoins(
 				sdk.NewCoin("stake", sdkmath.NewInt(10)),
@@ -176,7 +175,6 @@ func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].Address,
 			sdk.AccAddress{},
 			sdk.NewCoins(
 				sdk.NewCoin("stake", sdkmath.NewInt(10)),
@@ -190,7 +188,6 @@ func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].Address,
 			accounts[0].Address,
 			nil,
 			extraArgs,
@@ -231,14 +228,10 @@ func (s *CLITestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address),
 	}
 
-	t := time.Date(2033, time.April, 1, 12, 34, 56, 789, time.UTC).Unix()
-
 	testCases := []struct {
 		name      string
 		ctxGen    func() client.Context
-		from, to  sdk.AccAddress
-		amount    sdk.Coins
-		endTime   int64
+		to        sdk.AccAddress
 		extraArgs []string
 		expectErr bool
 	}{
@@ -248,12 +241,6 @@ func (s *CLITestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 				return s.baseCtx
 			},
 			accounts[0].Address,
-			accounts[0].Address,
-			sdk.NewCoins(
-				sdk.NewCoin("stake", sdkmath.NewInt(10)),
-				sdk.NewCoin("photon", sdkmath.NewInt(40)),
-			),
-			t,
 			extraArgs,
 			false,
 		},
@@ -262,25 +249,7 @@ func (s *CLITestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].Address,
 			sdk.AccAddress{},
-			sdk.NewCoins(
-				sdk.NewCoin("stake", sdkmath.NewInt(10)),
-				sdk.NewCoin("photon", sdkmath.NewInt(40)),
-			),
-			t,
-			extraArgs,
-			true,
-		},
-		{
-			"invalid coins",
-			func() client.Context {
-				return s.baseCtx
-			},
-			accounts[0].Address,
-			accounts[0].Address,
-			nil,
-			t,
 			extraArgs,
 			true,
 		},
@@ -292,8 +261,7 @@ func (s *CLITestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd.SetContext(ctx)
-			fmt.Println(tc.amount.String())
-			cmd.SetArgs(append([]string{tc.to.String(), tc.amount.String(), fmt.Sprint(tc.endTime)}, tc.extraArgs...))
+			cmd.SetArgs(append([]string{tc.to.String(), "./test.json"}, tc.extraArgs...))
 
 			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
 

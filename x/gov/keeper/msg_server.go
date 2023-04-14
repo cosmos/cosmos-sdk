@@ -56,21 +56,8 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, errors.Wrap(govtypes.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
 	}
 
-	msgs, err := msg.GetMsgs()
-	if err != nil {
+	if err := validateMsgs(msg); err != nil {
 		return nil, err
-	}
-
-	for idx, msg := range msgs {
-		m, ok := msg.(sdk.HasValidateBasic)
-		if !ok {
-			continue
-		}
-
-		if err := m.ValidateBasic(); err != nil {
-			return nil, errors.Wrap(govtypes.ErrInvalidProposalMsg,
-				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
-		}
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -277,13 +264,8 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
 
-	amount := sdk.NewCoins(msg.Amount...)
-	if !amount.IsValid() {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
-	}
-
-	if amount.IsAnyNegative() {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
+	if err := validateAmount(msg.Amount); err != nil {
+		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -427,4 +409,37 @@ func (k legacyMsgServer) Deposit(goCtx context.Context, msg *v1beta1.MsgDeposit)
 		return nil, err
 	}
 	return &v1beta1.MsgDepositResponse{}, nil
+}
+
+func validateAmount(amount sdk.Coins) error {
+	if !amount.IsValid() {
+		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
+	}
+
+	if !amount.IsAllPositive() {
+		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
+	}
+
+	return nil
+}
+
+func validateMsgs(msg *v1.MsgSubmitProposal) error {
+	msgs, err := msg.GetMsgs()
+	if err != nil {
+		return err
+	}
+
+	for idx, msg := range msgs {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
+			return errors.Wrap(govtypes.ErrInvalidProposalMsg,
+				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
+		}
+	}
+
+	return nil
 }

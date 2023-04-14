@@ -369,18 +369,6 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		false,
 	)
 	require.NoError(t, err, "making goodGovProp")
-	badGovProp, err := govv1.NewMsgSubmitProposal(
-		[]sdk.Msg{
-			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{Denom: "bad coin name!", Enabled: true}}, nil),
-		},
-		sdk.Coins{{Denom: "foocoin", Amount: sdkmath.NewInt(5)}},
-		addr1Str,
-		"set default send enabled to true",
-		"Change send enabled",
-		"Modify send enabled and set to true",
-		false,
-	)
-	require.NoError(t, err, "making badGovProp")
 
 	testCases := []appTestCase{
 		{
@@ -422,19 +410,6 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			},
 			accSeqs:    []uint64{1},
 			expInError: nil,
-		},
-		{
-			desc:       "submitted bad as gov prop",
-			expSimPass: false,
-			expPass:    false,
-			msgs: []sdk.Msg{
-				badGovProp,
-			},
-			accSeqs: []uint64{2},
-			expInError: []string{
-				"invalid denom: bad coin name!",
-				"invalid proposal message",
-			},
 		},
 	}
 

@@ -13,7 +13,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-SIMD_BIN ?= $(shell which simd)
+SIMD_BIN ?= $(shell which simd 2> /dev/null)
 
 # process build tags
 build_tags = netgo
@@ -61,7 +61,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 		-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
-
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -190,22 +189,12 @@ build-docs:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
-# make run initializes a single local node network
+# make init-simapp initializes a single local node network
 # it is useful for testing and development
-# Usage: make build && make run && simd start
-# Attention: make run will remove all data in simapp home directory
-run:
-	@echo "using $(SIMD_BIN)"
-	if [ -d "$(shell $(SIMD_BIN) config home)" ]; then rm -r $(shell $(SIMD_BIN) config home); fi
-	$(SIMD_BIN) config set client chain-id demo
-	$(SIMD_BIN) config set client keyring-backend test
-	$(SIMD_BIN) keys add alice
-	$(SIMD_BIN) keys add bob
-	$(SIMD_BIN) init test --chain-id demo
-	$(SIMD_BIN) genesis add-genesis-account alice 5000000000stake --keyring-backend test
-	$(SIMD_BIN) genesis add-genesis-account bob 5000000000stake --keyring-backend test
-	$(SIMD_BIN) genesis gentx alice 1000000stake --chain-id demo
-	$(SIMD_BIN) genesis collect-gentxs
+# Usage: make init-simapp && make init-simapp && simd start
+# Attention: make init-simapp will remove all data in simapp home directory
+init-simapp:
+	./scripts/init-simapp.sh
 
 test: test-unit
 test-e2e:

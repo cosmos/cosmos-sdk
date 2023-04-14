@@ -17,6 +17,7 @@ const (
 var (
 	DelegationKey           = []byte{0x31} // key for a delegation
 	DelegationByValIndexKey = []byte{0x37} // key for delegations by a validator
+	HistoricalInfoKey       = []byte{0x50} // prefix for the historical info
 )
 
 // ParseDelegationKey parses given key and returns delagator, validator address bytes
@@ -52,8 +53,6 @@ func ParseDelegationKey(bz []byte) (sdk.AccAddress, sdk.ValAddress, error) {
 
 	return del, val, nil
 }
-
-var HistoricalInfoKey = []byte{0x50} // prefix for the historical info
 
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKey(height int64) []byte {

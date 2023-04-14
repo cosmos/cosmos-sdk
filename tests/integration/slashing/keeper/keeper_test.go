@@ -87,6 +87,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 50)
 	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
+	msg.Description = stakingtypes.Description{Moniker: "TestValidator"}
 	res, err := tstaking.CreateValidatorWithMsg(f.ctx, msg)
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)

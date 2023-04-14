@@ -55,6 +55,10 @@ func (s *GenesisTestSuite) SetupTest() {
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), memberAddr).Return(authtypes.NewBaseAccountWithAddress(memberAddr)).AnyTimes()
+	accountKeeper.EXPECT().BytesToString(accAddr).Return(accAddr.String(), nil).AnyTimes()
+	accountKeeper.EXPECT().StringToBytes(accAddr.String()).Return(accAddr, nil).AnyTimes()
+	accountKeeper.EXPECT().BytesToString(memberAddr).Return(memberAddr.String(), nil).AnyTimes()
+	accountKeeper.EXPECT().StringToBytes(memberAddr.String()).Return(memberAddr, nil).AnyTimes()
 
 	bApp := baseapp.NewBaseApp(
 		"group",

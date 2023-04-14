@@ -11,7 +11,7 @@ import (
 // StakingKeeper defines the expected staking keeper
 type StakingKeeper interface {
 	StakingTokenSupply(ctx sdk.Context) math.Int
-	BondedRatio(ctx sdk.Context) sdk.Dec
+	BondedRatio(ctx sdk.Context) math.LegacyDec
 }
 
 // AccountKeeper defines the contract required for account APIs.

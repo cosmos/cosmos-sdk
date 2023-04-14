@@ -56,7 +56,7 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 	if req.InitialHeight > 1 {
 		initHeader.Height = req.InitialHeight
 		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 

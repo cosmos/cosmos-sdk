@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"github.com/spf13/cobra"
 
@@ -34,7 +35,7 @@ const (
 )
 
 // GetQueryCmd returns the transaction commands for this module
-func GetQueryCmd() *cobra.Command {
+func GetQueryCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the auth module",
@@ -44,7 +45,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetAccountCmd(),
+		GetAccountCmd(ac),
 		GetAccountAddressByIDCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
@@ -88,7 +89,7 @@ $ <appd> query auth params
 
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
-func GetAccountCmd() *cobra.Command {
+func GetAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account [address]",
 		Short: "Query for account by address",
@@ -98,13 +99,13 @@ func GetAccountCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			key, err := sdk.AccAddressFromBech32(args[0])
+			_, err = ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Account(cmd.Context(), &types.QueryAccountRequest{Address: key.String()})
+			res, err := queryClient.Account(cmd.Context(), &types.QueryAccountRequest{Address: args[0]})
 			if err != nil {
 				node, err2 := clientCtx.GetNode()
 				if err2 != nil {

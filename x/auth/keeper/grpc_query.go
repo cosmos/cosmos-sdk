@@ -78,7 +78,7 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	addr, err := ak.addressCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccou
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	addr, err := ak.addressCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccou
 
 	return &types.QueryAccountInfoResponse{
 		Info: &types.BaseAccount{
-			Address:       addr.String(),
+			Address:       req.Address,
 			PubKey:        pkAny,
 			AccountNumber: account.GetAccountNumber(),
 			Sequence:      account.GetSequence(),

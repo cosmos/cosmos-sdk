@@ -60,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#15151](https://github.com/cosmos/cosmos-sdk/pull/15151) Add `burn_vote_quorum`, `burn_proposal_deposit_prevote` and `burn_vote_veto` params to allow applications to decide if they would like to burn deposits
 * (runtime) [#15547](https://github.com/cosmos/cosmos-sdk/pull/15547) Allow runtime to pass event core api service to modules
 * (telemetry) [#15657](https://github.com/cosmos/cosmos-sdk/pull/15657) Emit more data (go version, sdk version, upgrade height) in prom metrics
+* (modulemanager) [#15829](https://github.com/cosmos/cosmos-sdk/pull/15829) add new endblocker interface to handle valset updates
 
 ### Improvements
 

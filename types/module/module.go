@@ -215,7 +215,7 @@ type EndBlockAppModule interface {
 
 type HasABCIEndblock interface {
 	AppModule
-	EndBlock(context.Context) ([]sdk.ValidatorUpdate, error)
+	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality

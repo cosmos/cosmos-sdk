@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -803,6 +804,15 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
+		// add message index to all events to identify which events are from which message
+		for _, event := range events {
+			event.Attributes = append(event.Attributes, abci.EventAttribute{
+				Key:   "message_index",
+				Value: strconv.Itoa(i),
+			},
+			)
+		}
+
 		// Each individual sdk.Result that went through the MsgServiceRouter
 		// (which should represent 99% of the Msgs now, since everyone should
 		// be using protobuf Msgs) has exactly one Msg response, set inside
@@ -816,7 +826,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			msgResponses = append(msgResponses, msgResponse)
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
 	data, err := makeABCIData(msgResponses)

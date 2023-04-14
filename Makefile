@@ -191,8 +191,8 @@ build-docs:
 
 # make init-simapp initializes a single local node network
 # it is useful for testing and development
-# Usage: make init-simapp && make init-simapp && simd start
-# Attention: make init-simapp will remove all data in simapp home directory
+# Usage: make install && make init-simapp && simd start
+# Warning: make init-simapp will remove all data in simapp home directory
 init-simapp:
 	./scripts/init-simapp.sh
 

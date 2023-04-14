@@ -61,7 +61,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 		-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
 
-
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
@@ -188,6 +187,13 @@ build-docs:
 ###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
+
+# make init-simapp initializes a single local node network
+# it is useful for testing and development
+# Usage: make install && make init-simapp && simd start
+# Warning: make init-simapp will remove all data in simapp home directory
+init-simapp:
+	./scripts/init-simapp.sh
 
 test: test-unit
 test-e2e:

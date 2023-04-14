@@ -145,6 +145,7 @@ func AdaptSigningArgs(
 	handlerMap *txsigning.HandlerMap,
 	mode signing.SignMode,
 	signerData SignerData,
+	// TODO refactor, this out and use the pubkey in the SignerData, I don't think this is needed.
 	key cryptotypes.PubKey,
 	tx sdk.Tx,
 ) ([]byte, error) {

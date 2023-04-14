@@ -115,16 +115,10 @@ func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sd
 		txDecode:        cfg.TxDecoder(),
 		txEncode:        cfg.TxEncoder(),
 		bytesToSign: func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error) {
-			// TODO
-			// which pubkey?
-			pubkeys, err := tx.GetPubKeys()
-			if err != nil {
-				return nil, err
-			}
 
 			bytesToSign, err := authsigning.AdaptSigningArgs(
 				context.Background(), cfg.TxEncoder(), cfg.SignModeHandler(),
-				signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, pubkeys[0], tx)
+				signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, signerData.PubKey, tx)
 			if err != nil {
 				return nil, err
 			}

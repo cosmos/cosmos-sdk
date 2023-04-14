@@ -27,12 +27,12 @@ var (
 )
 
 func MergedProtoRegistry() *protoregistry.Files {
+	mu.Lock()
+
+	defer mu.Unlock()
 	if mergedRegistry != nil {
 		return mergedRegistry
 	}
-
-	mu.Lock()
-	defer mu.Unlock()
 
 	var err error
 	mergedRegistry, err = proto.MergedRegistry()

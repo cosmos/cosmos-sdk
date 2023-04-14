@@ -12,6 +12,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	storetypes "cosmossdk.io/store/types"
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -242,15 +242,15 @@ func TestSupply_SendCoins(t *testing.T) {
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
 	authKeeper.SetAccount(ctx, baseAcc)
 
-	testutil.AssertPanics(t, func() {
+	require.Panics(t, func() {
 		_ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) //nolint:errcheck // no error check is needed because we are testing for a panic
 	})
 
-	testutil.AssertPanics(t, func() {
+	require.Panics(t, func() {
 		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) //nolint:errcheck // no error check is needed because we are testing for a panic
 	})
 
-	testutil.AssertPanics(t, func() {
+	require.Panics(t, func() {
 		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) //nolint:errcheck // no error check is needed because we are testing for a panic
 	})
 
@@ -294,14 +294,14 @@ func TestSupply_MintCoins(t *testing.T) {
 	assert.NilError(t, err)
 
 	// no module account
-	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, "", initCoins) }) //nolint:errcheck // we're testing for a panic
+	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) }) //nolint:errcheck // we're testing for a panic
 	// invalid permission
-	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) //nolint:errcheck // we're testing for a panic
+	require.Panics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) //nolint:errcheck // we're testing for a panic
 
 	err = keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
 	assert.Error(t, err, fmt.Sprintf("%sdenom: invalid coins", sdk.NewInt(-10)))
 
-	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) //nolint:errcheck // we're testing for a panic
+	require.Panics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) //nolint:errcheck // we're testing for a panic
 
 	err = keeper.MintCoins(ctx, authtypes.Minter, initCoins)
 	assert.NilError(t, err)
@@ -323,7 +323,7 @@ func TestSupply_MintCoins(t *testing.T) {
 	assert.NilError(t, err)
 	assert.DeepEqual(t, initCoins, getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
 	assert.DeepEqual(t, initialSupply.Add(initCoins...), totalSupply)
-	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) //nolint:errcheck // we're testing for a panic
+	require.Panics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) //nolint:errcheck // we're testing for a panic
 }
 
 func TestSupply_BurnCoins(t *testing.T) {
@@ -344,11 +344,11 @@ func TestSupply_BurnCoins(t *testing.T) {
 	supplyAfterInflation, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	assert.NilError(t, err)
 	// no module account
-	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }) //nolint:errcheck // we're testing for a panic
+	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }) //nolint:errcheck // we're testing for a panic
 	// invalid permission
-	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }) //nolint:errcheck // we're testing for a panic
+	require.Panics(t, func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }) //nolint:errcheck // we're testing for a panic
 	// random permission
-	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }) //nolint:errcheck // we're testing for a panic
+	require.Panics(t, func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }) //nolint:errcheck // we're testing for a panic
 	err = keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation)
 	assert.Error(t, err, fmt.Sprintf("spendable balance %s is smaller than %s: insufficient funds", initCoins, supplyAfterInflation))
 

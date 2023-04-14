@@ -3,7 +3,7 @@ module cosmossdk.io/core
 go 1.20
 
 require (
-	cosmossdk.io/api v0.3.1
+	cosmossdk.io/api v0.4.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
@@ -38,7 +38,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.14.0 // indirect
+	github.com/prometheus/client_golang v1.15.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect

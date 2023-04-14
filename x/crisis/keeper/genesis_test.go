@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -47,13 +48,13 @@ func (s *GenesisTestSuite) SetupTest() {
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {
 	// default params
-	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))
+	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 	err := s.keeper.SetConstantFee(s.sdkCtx, constantFee)
 	s.Require().NoError(err)
 	genesis := s.keeper.ExportGenesis(s.sdkCtx)
 
 	// set constant fee to zero
-	constantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))
+	constantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(0))
 	err = s.keeper.SetConstantFee(s.sdkCtx, constantFee)
 	s.Require().NoError(err)
 
@@ -64,7 +65,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 
 func (s *GenesisTestSuite) TestInitGenesis() {
 	genesisState := types.DefaultGenesisState()
-	genesisState.ConstantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))
+	genesisState.ConstantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 	s.keeper.InitGenesis(s.sdkCtx, genesisState)
 
 	constantFee := s.keeper.GetConstantFee(s.sdkCtx)

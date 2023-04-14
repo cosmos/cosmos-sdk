@@ -67,7 +67,7 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 
 			// match voter address (if supplied)
 			if len(req.Voter) > 0 {
-				voter, err := sdk.AccAddressFromBech32(req.Voter)
+				voter, err := q.authKeeper.StringToBytes(req.Voter)
 				if err != nil {
 					return nil, err
 				}
@@ -77,7 +77,7 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 
 			// match depositor (if supplied)
 			if len(req.Depositor) > 0 {
-				depositor, err := sdk.AccAddressFromBech32(req.Depositor)
+				depositor, err := q.authKeeper.StringToBytes(req.Depositor)
 				if err != nil {
 					return nil, err
 				}
@@ -115,7 +115,7 @@ func (q Keeper) Vote(c context.Context, req *v1.QueryVoteRequest) (*v1.QueryVote
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	voter, err := sdk.AccAddressFromBech32(req.Voter)
+	voter, err := q.authKeeper.StringToBytes(req.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (q Keeper) Deposit(c context.Context, req *v1.QueryDepositRequest) (*v1.Que
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	depositor, err := sdk.AccAddressFromBech32(req.Depositor)
+	depositor, err := q.authKeeper.StringToBytes(req.Depositor)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -263,7 +264,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 	}
 	policyAddr := groupPolicyRes.Address
 
-	groupPolicyAddr, err = sdk.AccAddressFromBech32(policyAddr)
+	groupPolicyAddr, err = k.accKeeper.StringToBytes(policyAddr)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "group policy address")
 	}
@@ -296,7 +297,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	admin, err := sdk.AccAddressFromBech32(req.GetAdmin())
+	admin, err := k.accKeeper.StringToBytes(req.GetAdmin())
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "request admin")
 	}
@@ -315,12 +316,12 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	if err != nil {
 		return nil, err
 	}
-	groupAdmin, err := sdk.AccAddressFromBech32(g.Admin)
+	groupAdmin, err := k.accKeeper.StringToBytes(g.Admin)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "group admin")
 	}
 	// Only current group admin is authorized to create a group policy for this
-	if !groupAdmin.Equals(admin) {
+	if !bytes.Equal(groupAdmin, admin) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "not group admin")
 	}
 
@@ -461,7 +462,7 @@ func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, req *group.MsgU
 
 func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	groupPolicyAddr, err := sdk.AccAddressFromBech32(req.GroupPolicyAddress)
+	groupPolicyAddr, err := k.accKeeper.StringToBytes(req.GroupPolicyAddress)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "request account address of group policy")
 	}
@@ -486,7 +487,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 
 	policyAcc, err := k.getGroupPolicyInfo(ctx, req.GroupPolicyAddress)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "load group policy")
+		return nil, errorsmod.Wrapf(err, "load group policy: %s", req.GroupPolicyAddress)
 	}
 
 	g, err := k.getGroupInfo(ctx, policyAcc.GroupId)
@@ -761,7 +762,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		// Caching context so that we don't update the store in case of failure.
 		cacheCtx, flush := ctx.CacheContext()
 
-		addr, err := sdk.AccAddressFromBech32(policyInfo.Address)
+		addr, err := k.accKeeper.StringToBytes(policyInfo.Address)
 		if err != nil {
 			return nil, err
 		}
@@ -812,7 +813,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 // LeaveGroup implements the MsgServer/LeaveGroup method.
 func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, err := sdk.AccAddressFromBech32(req.Address)
+	_, err := k.accKeeper.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -903,18 +904,18 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy, admin string, 
 		return errorsmod.Wrap(err, "load group policy")
 	}
 
-	groupPolicyAddr, err := sdk.AccAddressFromBech32(groupPolicy)
+	groupPolicyAddr, err := k.accKeeper.StringToBytes(groupPolicy)
 	if err != nil {
 		return errorsmod.Wrap(err, "group policy address")
 	}
 
-	groupPolicyAdmin, err := sdk.AccAddressFromBech32(admin)
+	_, err = k.accKeeper.StringToBytes(admin)
 	if err != nil {
 		return errorsmod.Wrap(err, "group policy admin")
 	}
 
 	// Only current group policy admin is authorized to update a group policy.
-	if groupPolicyAdmin.String() != groupPolicyInfo.Admin {
+	if admin != groupPolicyInfo.Admin {
 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "not group policy admin")
 	}
 
@@ -956,15 +957,15 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 	if err != nil {
 		return err
 	}
-	admin, err := sdk.AccAddressFromBech32(group.Admin)
+	admin, err := k.accKeeper.StringToBytes(group.Admin)
 	if err != nil {
 		return errorsmod.Wrap(err, "group admin")
 	}
-	reqAdmin, err := sdk.AccAddressFromBech32(req.GetAdmin())
+	reqAdmin, err := k.accKeeper.StringToBytes(req.GetAdmin())
 	if err != nil {
 		return errorsmod.Wrap(err, "request admin")
 	}
-	if !admin.Equals(reqAdmin) {
+	if !bytes.Equal(admin, reqAdmin) {
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "not group admin; got %s, expected %s", req.GetAdmin(), group.Admin)
 	}
 	if err := action(&group); err != nil {

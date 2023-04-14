@@ -106,7 +106,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// withdraw commission
-	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(1)), sdk.NewCoin("stake", sdk.NewInt(1)))
+	coins := sdk.NewCoins(sdk.NewCoin("mytoken", math.NewInt(1)), sdk.NewCoin("stake", math.NewInt(1)))
 	// if SendCoinsFromModuleToAccount is called, we know that the withdraw was successful
 	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), "distribution", addrs[0], coins).Return(nil)
 

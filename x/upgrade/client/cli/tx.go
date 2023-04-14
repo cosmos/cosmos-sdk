@@ -5,17 +5,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-
-	"cosmossdk.io/x/upgrade/plan"
-	"cosmossdk.io/x/upgrade/types"
-
+	addresscodec "cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/spf13/cobra"
+
+	"cosmossdk.io/x/upgrade/plan"
+	"cosmossdk.io/x/upgrade/types"
 )
 
 const (
@@ -27,22 +27,22 @@ const (
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd() *cobra.Command {
+func GetTxCmd(ac addresscodec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   types.ModuleName,
 		Short: "Upgrade transaction subcommands",
 	}
 
 	cmd.AddCommand(
-		NewCmdSubmitUpgradeProposal(),
-		NewCmdSubmitCancelUpgradeProposal(),
+		NewCmdSubmitUpgradeProposal(ac),
+		NewCmdSubmitCancelUpgradeProposal(ac),
 	)
 
 	return cmd
 }
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-func NewCmdSubmitUpgradeProposal() *cobra.Command {
+func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
@@ -89,7 +89,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 
 			authority, _ := cmd.Flags().GetString(FlagAuthority)
 			if authority != "" {
-				if _, err = sdk.AccAddressFromBech32(authority); err != nil {
+				if _, err = ac.StringToBytes(authority); err != nil {
 					return fmt.Errorf("invalid authority address: %w", err)
 				}
 			} else {
@@ -124,7 +124,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 }
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
+func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
@@ -143,7 +143,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 
 			authority, _ := cmd.Flags().GetString(FlagAuthority)
 			if authority != "" {
-				if _, err = sdk.AccAddressFromBech32(authority); err != nil {
+				if _, err = ac.StringToBytes(authority); err != nil {
 					return fmt.Errorf("invalid authority address: %w", err)
 				}
 			} else {

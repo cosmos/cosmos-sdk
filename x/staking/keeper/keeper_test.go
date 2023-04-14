@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -50,6 +51,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.BondedPoolName).Return(bondedAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
+	accountKeeper.EXPECT().StringToBytes(authtypes.NewModuleAddress(govtypes.ModuleName).String()).Return(authtypes.NewModuleAddress(govtypes.ModuleName), nil).AnyTimes()
+	accountKeeper.EXPECT().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName)).Return(authtypes.NewModuleAddress(govtypes.ModuleName).String(), nil).AnyTimes()
+	accountKeeper.EXPECT().StringToBytes("").Return(nil, errors.New("empty address string is not allowed")).AnyTimes()
+	accountKeeper.EXPECT().StringToBytes("invalid").Return(nil, errors.New("invalid bech32 string")).AnyTimes()
+
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
 	keeper := stakingkeeper.NewKeeper(

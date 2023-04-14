@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -65,6 +66,13 @@ func (s *TestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
+	for _, addr := range s.addrs {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
+	s.accountKeeper.EXPECT().StringToBytes("").Return(nil, errors.New("empty address string is not allowed")).AnyTimes()
+	s.accountKeeper.EXPECT().StringToBytes("invalid").Return(nil, errors.New("invalid bech32 string")).AnyTimes()
+
 	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
 	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)

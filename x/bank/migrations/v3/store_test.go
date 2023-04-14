@@ -28,8 +28,8 @@ func TestMigrateStore(t *testing.T) {
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
 	balances := sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(10000)),
-		sdk.NewCoin("bar", sdk.NewInt(20000)),
+		sdk.NewCoin("foo", math.NewInt(10000)),
+		sdk.NewCoin("bar", math.NewInt(20000)),
 	)
 
 	for _, b := range balances {
@@ -42,7 +42,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	for _, b := range balances {
-		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+		addrPrefixStore := prefix.NewStore(store, v3.CreateAccountBalancesPrefix(addr))
 		bz := addrPrefixStore.Get([]byte(b.Denom))
 		var expected math.Int
 		require.NoError(t, expected.Unmarshal(bz))

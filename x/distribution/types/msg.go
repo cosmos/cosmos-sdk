@@ -1,12 +1,7 @@
 package types
 
 import (
-	"errors"
-
-	errorsmod "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -46,18 +41,6 @@ func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// quick validity check
-func (msg MsgSetWithdrawAddress) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.WithdrawAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid withdraw address: %s", err)
-	}
-
-	return nil
-}
-
 func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgWithdrawDelegatorReward {
 	return &MsgWithdrawDelegatorReward{
 		DelegatorAddress: delAddr.String(),
@@ -77,17 +60,6 @@ func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// quick validity check
-func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
-	}
-	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
-	}
-	return nil
-}
-
 func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValidatorCommission {
 	return &MsgWithdrawValidatorCommission{
 		ValidatorAddress: valAddr.String(),
@@ -104,14 +76,6 @@ func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
 func (msg MsgWithdrawValidatorCommission) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
-}
-
-// quick validity check
-func (msg MsgWithdrawValidatorCommission) ValidateBasic() error {
-	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
-	}
-	return nil
 }
 
 // NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
@@ -137,17 +101,6 @@ func (msg MsgFundCommunityPool) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// ValidateBasic performs basic MsgFundCommunityPool message validation.
-func (msg MsgFundCommunityPool) ValidateBasic() error {
-	if !msg.Amount.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
-	}
-	return nil
-}
-
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
 func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
@@ -160,20 +113,6 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateParams) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
-}
-
-// ValidateBasic performs basic MsgUpdateParams message validation.
-func (msg MsgUpdateParams) ValidateBasic() error {
-	if (!msg.Params.BaseProposerReward.IsNil() && !msg.Params.BaseProposerReward.IsZero()) ||
-		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) {
-		return errors.New("base and bonus proposer reward are deprecated fields and should not be used")
-	}
-
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
-	return msg.Params.ValidateBasic()
 }
 
 // GetSigners returns the signer addresses that are expected to sign the result
@@ -190,30 +129,21 @@ func (msg MsgCommunityPoolSpend) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// ValidateBasic performs basic MsgCommunityPoolSpend message validation.
-func (msg MsgCommunityPoolSpend) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
-	return msg.Amount.Validate()
-}
-
 // NewMsgDepositValidatorRewardsPool returns a new MsgDepositValidatorRewardsPool
-// with a sender and a funding amount.
+// with a depositor and a funding amount.
 func NewMsgDepositValidatorRewardsPool(depositor sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coins) *MsgDepositValidatorRewardsPool {
 	return &MsgDepositValidatorRewardsPool{
 		Amount:           amount,
-		Authority:        depositor.String(),
+		Depositor:        depositor.String(),
 		ValidatorAddress: valAddr.String(),
 	}
 }
 
 // GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes, which is the authority.
+// of GetSignBytes, which is the depositor.
 func (msg MsgDepositValidatorRewardsPool) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{authority}
+	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
+	return []sdk.AccAddress{depositor}
 }
 
 // GetSignBytes returns the raw bytes for a MsgDepositValidatorRewardsPool message
@@ -221,13 +151,4 @@ func (msg MsgDepositValidatorRewardsPool) GetSigners() []sdk.AccAddress {
 func (msg MsgDepositValidatorRewardsPool) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
-}
-
-// ValidateBasic performs basic MsgDepositValidatorRewardsPool message validation.
-func (msg MsgDepositValidatorRewardsPool) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
-	return msg.Amount.Validate()
 }

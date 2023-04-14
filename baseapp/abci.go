@@ -573,10 +573,7 @@ func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
 }
 
 func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	var (
-		valsetupdate []abci.ValidatorUpdate
-		events       []abci.Event
-	)
+	var events []abci.Event
 
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
@@ -637,15 +634,12 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
-	if app.endBlocker != nil {
-		valset, endEvents, err := app.Endblock(app.finalizeBlockState.ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		valsetupdate = valset
-		events = endEvents
+	valsetupdate, endEvents, err := app.Endblock(app.finalizeBlockState.ctx)
+	if err != nil {
+		return nil, err
 	}
+
+	events = append(events, endEvents...)
 
 	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
 

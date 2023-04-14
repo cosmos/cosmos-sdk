@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -46,6 +48,8 @@ type CLITestSuite struct {
 	clientCtx client.Context
 	val       sdk.AccAddress
 	val1      sdk.AccAddress
+
+	ac address.Codec
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -99,6 +103,8 @@ func (s *CLITestSuite) SetupSuite() {
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
+
+	s.ac = addresscodec.NewBech32Codec("cosmos")
 }
 
 func (s *CLITestSuite) TestCLIValidateSignatures() {
@@ -606,7 +612,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 
 	// Create an address that is not in the keyring, will be used to simulate `--multisig`
 	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
-	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+	_, err = s.ac.StringToBytes(multisig)
 	s.Require().NoError(err)
 
 	// Generate a transaction for testing --multisig with an address not in the keyring.
@@ -632,7 +638,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 	// even though the tx signer is NOT the multisig address. This is fine though,
 	// as the main point of this test is to test the `--multisig` flag with an address
 	// that is not in the keyring.
-	_, err = authtestutil.TxSignExec(s.clientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
+	_, err = authtestutil.TxSignExec(s.clientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisig)
 	s.Require().Contains(err.Error(), "error getting account from keybase")
 }
 
@@ -788,9 +794,9 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()
 	builder.SetGasLimit(200000)
-	from, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
+	from, err := s.ac.StringToBytes("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
 	s.Require().NoError(err)
-	to, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
+	to, err := s.ac.StringToBytes("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
 	s.Require().NoError(err)
 	err = builder.SetMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
 	s.Require().NoError(err)

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -53,7 +55,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 
 	s.ctx = ctx
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))
+	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdkmath.NewInt(30000000))
 }
 
 func (s *IntegrationTestSuite) TestEndBlockerPruning() {

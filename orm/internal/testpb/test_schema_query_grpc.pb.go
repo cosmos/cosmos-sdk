@@ -40,6 +40,10 @@ type TestSchemaQueryServiceClient interface {
 	GetExampleTimestamp(ctx context.Context, in *GetExampleTimestampRequest, opts ...grpc.CallOption) (*GetExampleTimestampResponse, error)
 	// ListExampleTimestamp queries the ExampleTimestamp table using prefix and range queries against defined indexes.
 	ListExampleTimestamp(ctx context.Context, in *ListExampleTimestampRequest, opts ...grpc.CallOption) (*ListExampleTimestampResponse, error)
+	// Get queries the ExampleDuration table by its primary key.
+	GetExampleDuration(ctx context.Context, in *GetExampleDurationRequest, opts ...grpc.CallOption) (*GetExampleDurationResponse, error)
+	// ListExampleDuration queries the ExampleDuration table using prefix and range queries against defined indexes.
+	ListExampleDuration(ctx context.Context, in *ListExampleDurationRequest, opts ...grpc.CallOption) (*ListExampleDurationResponse, error)
 	// Get queries the SimpleExample table by its primary key.
 	GetSimpleExample(ctx context.Context, in *GetSimpleExampleRequest, opts ...grpc.CallOption) (*GetSimpleExampleResponse, error)
 	// GetSimpleExampleByUnique queries the SimpleExample table by its Unique index
@@ -141,6 +145,24 @@ func (c *testSchemaQueryServiceClient) ListExampleTimestamp(ctx context.Context,
 	return out, nil
 }
 
+func (c *testSchemaQueryServiceClient) GetExampleDuration(ctx context.Context, in *GetExampleDurationRequest, opts ...grpc.CallOption) (*GetExampleDurationResponse, error) {
+	out := new(GetExampleDurationResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetExampleDuration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testSchemaQueryServiceClient) ListExampleDuration(ctx context.Context, in *ListExampleDurationRequest, opts ...grpc.CallOption) (*ListExampleDurationResponse, error) {
+	out := new(ListExampleDurationResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ListExampleDuration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *testSchemaQueryServiceClient) GetSimpleExample(ctx context.Context, in *GetSimpleExampleRequest, opts ...grpc.CallOption) (*GetSimpleExampleResponse, error) {
 	out := new(GetSimpleExampleResponse)
 	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetSimpleExample", in, out, opts...)
@@ -208,6 +230,10 @@ type TestSchemaQueryServiceServer interface {
 	GetExampleTimestamp(context.Context, *GetExampleTimestampRequest) (*GetExampleTimestampResponse, error)
 	// ListExampleTimestamp queries the ExampleTimestamp table using prefix and range queries against defined indexes.
 	ListExampleTimestamp(context.Context, *ListExampleTimestampRequest) (*ListExampleTimestampResponse, error)
+	// Get queries the ExampleDuration table by its primary key.
+	GetExampleDuration(context.Context, *GetExampleDurationRequest) (*GetExampleDurationResponse, error)
+	// ListExampleDuration queries the ExampleDuration table using prefix and range queries against defined indexes.
+	ListExampleDuration(context.Context, *ListExampleDurationRequest) (*ListExampleDurationResponse, error)
 	// Get queries the SimpleExample table by its primary key.
 	GetSimpleExample(context.Context, *GetSimpleExampleRequest) (*GetSimpleExampleResponse, error)
 	// GetSimpleExampleByUnique queries the SimpleExample table by its Unique index
@@ -251,6 +277,12 @@ func (UnimplementedTestSchemaQueryServiceServer) GetExampleTimestamp(context.Con
 }
 func (UnimplementedTestSchemaQueryServiceServer) ListExampleTimestamp(context.Context, *ListExampleTimestampRequest) (*ListExampleTimestampResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListExampleTimestamp not implemented")
+}
+func (UnimplementedTestSchemaQueryServiceServer) GetExampleDuration(context.Context, *GetExampleDurationRequest) (*GetExampleDurationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExampleDuration not implemented")
+}
+func (UnimplementedTestSchemaQueryServiceServer) ListExampleDuration(context.Context, *ListExampleDurationRequest) (*ListExampleDurationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListExampleDuration not implemented")
 }
 func (UnimplementedTestSchemaQueryServiceServer) GetSimpleExample(context.Context, *GetSimpleExampleRequest) (*GetSimpleExampleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSimpleExample not implemented")
@@ -443,6 +475,42 @@ func _TestSchemaQueryService_ListExampleTimestamp_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TestSchemaQueryService_GetExampleDuration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetExampleDurationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSchemaQueryServiceServer).GetExampleDuration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.TestSchemaQueryService/GetExampleDuration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSchemaQueryServiceServer).GetExampleDuration(ctx, req.(*GetExampleDurationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TestSchemaQueryService_ListExampleDuration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListExampleDurationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSchemaQueryServiceServer).ListExampleDuration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.TestSchemaQueryService/ListExampleDuration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSchemaQueryServiceServer).ListExampleDuration(ctx, req.(*ListExampleDurationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TestSchemaQueryService_GetSimpleExample_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetSimpleExampleRequest)
 	if err := dec(in); err != nil {
@@ -575,6 +643,14 @@ var TestSchemaQueryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListExampleTimestamp",
 			Handler:    _TestSchemaQueryService_ListExampleTimestamp_Handler,
+		},
+		{
+			MethodName: "GetExampleDuration",
+			Handler:    _TestSchemaQueryService_GetExampleDuration_Handler,
+		},
+		{
+			MethodName: "ListExampleDuration",
+			Handler:    _TestSchemaQueryService_ListExampleDuration_Handler,
 		},
 		{
 			MethodName: "GetSimpleExample",

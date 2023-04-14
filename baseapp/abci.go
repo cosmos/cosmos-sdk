@@ -638,19 +638,13 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 	}
 
 	if app.endBlocker != nil {
-		valset, endblockEvents, err := app.endBlocker(app.finalizeBlockState.ctx)
+		valset, endEvents, err := app.Endblock(app.finalizeBlockState.ctx)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		endblockEvents = sdk.MarkEventsToIndex(endblockEvents, app.indexEvents)
-
-		//TODO add endblock attribute to events
-
-		// append the endblocker events to the finalizeblock events
-		events = append(events, endblockEvents...)
-
 		valsetupdate = valset
+		events = endEvents
 	}
 
 	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)

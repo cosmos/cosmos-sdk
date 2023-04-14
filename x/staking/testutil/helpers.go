@@ -10,7 +10,6 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -127,7 +126,7 @@ func (sh *Helper) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, f
 // TurnBlock calls EndBlocker and updates the block time
 func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 	sh.Ctx = sh.Ctx.WithBlockTime(newTime)
-	staking.EndBlocker(sh.Ctx, sh.k)
+	sh.k.EndBlocker(sh.Ctx)
 	return sh.Ctx
 }
 
@@ -135,7 +134,7 @@ func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 // duration to the current block time
 func (sh *Helper) TurnBlockTimeDiff(diff time.Duration) sdk.Context {
 	sh.Ctx = sh.Ctx.WithBlockTime(sh.Ctx.BlockHeader().Time.Add(diff))
-	staking.EndBlocker(sh.Ctx, sh.k)
+	sh.k.EndBlocker(sh.Ctx)
 	return sh.Ctx
 }
 

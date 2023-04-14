@@ -6,7 +6,6 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -22,58 +21,58 @@ const (
 
 // GenInflation randomized Inflation
 func GenInflation(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
+	return math.LegacyNewDecWithPrec(int64(r.Intn(99)), 2)
 }
 
 // GenInflationRateChange randomized InflationRateChange
 func GenInflationRateChange(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
+	return math.LegacyNewDecWithPrec(int64(r.Intn(99)), 2)
 }
 
 // GenInflationMax randomized InflationMax
 func GenInflationMax(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(20, 2)
+	return math.LegacyNewDecWithPrec(20, 2)
 }
 
 // GenInflationMin randomized InflationMin
 func GenInflationMin(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(7, 2)
+	return math.LegacyNewDecWithPrec(7, 2)
 }
 
 // GenGoalBonded randomized GoalBonded
 func GenGoalBonded(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(67, 2)
+	return math.LegacyNewDecWithPrec(67, 2)
 }
 
 // RandomizedGenState generates a random GenesisState for mint
 func RandomizedGenState(simState *module.SimulationState) {
 	// minter
-	var inflation sdk.Dec
+	var inflation math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, Inflation, &inflation, simState.Rand,
 		func(r *rand.Rand) { inflation = GenInflation(r) },
 	)
 
 	// params
-	var inflationRateChange sdk.Dec
+	var inflationRateChange math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, InflationRateChange, &inflationRateChange, simState.Rand,
 		func(r *rand.Rand) { inflationRateChange = GenInflationRateChange(r) },
 	)
 
-	var inflationMax sdk.Dec
+	var inflationMax math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, InflationMax, &inflationMax, simState.Rand,
 		func(r *rand.Rand) { inflationMax = GenInflationMax(r) },
 	)
 
-	var inflationMin sdk.Dec
+	var inflationMin math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, InflationMin, &inflationMin, simState.Rand,
 		func(r *rand.Rand) { inflationMin = GenInflationMin(r) },
 	)
 
-	var goalBonded sdk.Dec
+	var goalBonded math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, GoalBonded, &goalBonded, simState.Rand,
 		func(r *rand.Rand) { goalBonded = GenGoalBonded(r) },

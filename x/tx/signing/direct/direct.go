@@ -23,7 +23,7 @@ func (SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Signer
 	return proto.Marshal(&txv1beta1.SignDoc{
 		BodyBytes:     txData.BodyBytes,
 		AuthInfoBytes: txData.AuthInfoBytes,
-		ChainId:       signerData.ChainId,
+		ChainId:       signerData.ChainID,
 		AccountNumber: signerData.AccountNumber,
 	})
 }

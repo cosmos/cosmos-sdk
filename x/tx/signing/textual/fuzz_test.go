@@ -62,7 +62,7 @@ func FuzzTimestampJSONParseToParseRoundTrip(f *testing.F) {
 	f.Add(seed)
 
 	f.Fuzz(func(t *testing.T, input []byte) {
-		var testCases []timestampJsonTest
+		var testCases []timestampJSONTest
 		if err := json.Unmarshal(input, &testCases); err != nil {
 			return
 		}

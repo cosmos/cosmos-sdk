@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
@@ -1185,7 +1186,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	invalidNegativePercentageDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"-0.5", "windows":{"voting_period":"1s"}}`)
 	invalidPercentageDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"2", "windows":{"voting_period":"40000s"}}`)
 
-	cmd := groupcli.MsgUpdateGroupPolicyDecisionPolicyCmd()
+	cmd := groupcli.MsgUpdateGroupPolicyDecisionPolicyCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	testCases := []struct {

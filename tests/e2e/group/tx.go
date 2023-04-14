@@ -13,6 +13,7 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/group/v1"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -1310,7 +1311,7 @@ func (s *E2ETestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.MsgUpdateGroupPolicyDecisionPolicyCmd()
+			cmd := client.MsgUpdateGroupPolicyDecisionPolicyCmd(address.NewBech32Codec("cosmos"))
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -1609,7 +1610,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 				s.commonFlags...,
 			),
 			false,
-			"group policy: not found",
+			"not found",
 			&sdk.TxResponse{},
 			sdkerrors.ErrNotFound.ABCICode(),
 		},

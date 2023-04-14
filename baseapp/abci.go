@@ -367,20 +367,18 @@ func (app *BaseApp) legacyBeginBlock(req *abci.RequestFinalizeBlock) sdk.LegacyR
 
 func (app *BaseApp) legacyEndBlock(req *abci.RequestFinalizeBlock) sdk.LegacyResponseEndBlock {
 	var (
-		resp sdk.LegacyResponseEndBlock
-		err  error
+		valset []abci.ValidatorUpdate
+		events []abci.Event
+		err    error
 	)
 
-	// TODO: Fill out!
-	legacyReq := sdk.LegacyRequestEndBlock{}
-
 	if app.endBlocker != nil {
-		resp, err = app.endBlocker(app.finalizeBlockState.ctx, legacyReq)
+		valset, events, err = app.endBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
 			panic(err)
 		}
 
-		resp.Response.Events = sdk.MarkEventsToIndex(resp.Response.Events, app.indexEvents)
+		events = sdk.MarkEventsToIndex(events, app.indexEvents)
 	}
 
 	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
@@ -611,6 +609,11 @@ func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
 }
 
 func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	var (
+		valsetupdate []abci.ValidatorUpdate
+		events       []abci.Event
+	)
+
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
 	}
@@ -670,16 +673,32 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
-	endBlockResp := app.legacyEndBlock(req)
+	if app.endBlocker != nil {
+		valset, endblockEvents, err := app.endBlocker(app.finalizeBlockState.ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		endblockEvents = sdk.MarkEventsToIndex(endblockEvents, app.indexEvents)
+
+		//TODO add endblock attribute to events
+
+		// append the endblocker events to the finalizeblock events
+		events = append(events, endblockEvents...)
+
+		valsetupdate = valset
+	}
+
+	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
 
 	// TODO: Populate fields.
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 	return &abci.ResponseFinalizeBlock{
-		Events:                nil,
+		Events:                events,
 		TxResults:             txResults,
-		ValidatorUpdates:      nil,
-		ConsensusParamUpdates: nil,
+		ValidatorUpdates:      valsetupdate,
+		ConsensusParamUpdates: &cp,
 		AppHash:               app.flushCommit().Hash,
 	}, nil
 }

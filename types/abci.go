@@ -39,4 +39,4 @@ type LegacyBeginBlocker func(Context, LegacyRequestBeginBlock) (LegacyResponseBe
 // as of CometBFT v0.38.0. This function type alias is provided for backwards
 // compatibility with applications that still use the EndBlock ABCI method
 // and allows for existing EndBlock functionality within applications.
-type LegacyEndBlocker func(Context, LegacyRequestEndBlock) (LegacyResponseEndBlock, error)
+type EndBlocker func(Context) ([]abci.ValidatorUpdate, []abci.Event, error)

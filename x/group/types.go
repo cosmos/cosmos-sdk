@@ -364,7 +364,7 @@ func (g GroupMember) ValidateBasic() error {
 		return errorsmod.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	err := MemberToMemberRequest(g.Member).ValidateBasic()
+	err := MemberToMemberRequest(g.Member).Validate()
 	if err != nil {
 		return errorsmod.Wrap(err, "group member")
 	}

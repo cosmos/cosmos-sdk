@@ -100,7 +100,7 @@ Where members.json contains:
 				Members:  members,
 				Metadata: args[1],
 			}
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -167,7 +167,7 @@ Set a member's weight to "0" to delete it.
 				MemberUpdates: members,
 				GroupId:       groupID,
 			}
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -207,7 +207,7 @@ func MsgUpdateGroupAdminCmd() *cobra.Command {
 				NewAdmin: args[2],
 				GroupId:  groupID,
 			}
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -247,7 +247,7 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 				Metadata: args[2],
 				GroupId:  groupID,
 			}
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -339,7 +339,7 @@ and policy.json contains:
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -412,7 +412,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 			if err != nil {
 				return err
 			}
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -447,7 +447,7 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 				GroupPolicyAddress: args[1],
 				NewAdmin:           args[2],
 			}
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -496,7 +496,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -531,7 +531,7 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 				GroupPolicyAddress: args[1],
 				Metadata:           args[2],
 			}
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -625,7 +625,7 @@ metadata example:
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -677,7 +677,7 @@ Parameters:
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -743,7 +743,7 @@ Parameters:
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -782,7 +782,7 @@ func MsgExecCmd() *cobra.Command {
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 
@@ -824,7 +824,7 @@ Parameters:
 				Address: clientCtx.GetFromAddress().String(),
 				GroupId: groupID,
 			}
-			if err = msg.ValidateBasic(); err != nil {
+			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}
 

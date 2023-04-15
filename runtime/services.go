@@ -33,7 +33,7 @@ type BlockInfoService interface {
 	Misbehavior() []abci.Misbehavior // Misbehavior returns the misbehavior of the block
 	GetHeaderHash() []byte           // GetHeaderHash returns the hash of the block header
 	// GetValidatorsHash returns the hash of the validators
-	// For Comet, it is the hash of the next validators
+	// For Comet, it is the hash of the next validator set
 	GetValidatorsHash() []byte
 	GetProposerAddress() []byte            // GetProposerAddress returns the address of the block proposer
 	GetDecidedLastCommit() abci.CommitInfo // GetDecidedLastCommit returns the last commit info

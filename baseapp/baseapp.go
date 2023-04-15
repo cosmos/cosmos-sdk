@@ -145,6 +145,8 @@ type BaseApp struct {
 	streamingManager storetypes.StreamingManager
 
 	chainID string
+
+	BlockInfo BlockInfoService
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

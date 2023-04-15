@@ -202,6 +202,11 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			WithHeaderHash(req.Hash)
 	}
 
+	// Set blockInfo for module use
+	if app.BlockInfo != nil {
+		app.BlockInfo = NewBlockInfo(req)
+	}
+
 	if app.beginBlocker != nil {
 		var err error
 		res, err = app.beginBlocker(app.deliverState.ctx, req)

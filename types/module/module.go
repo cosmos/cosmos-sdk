@@ -246,7 +246,7 @@ func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
 // EndBlock returns an empty module end-block
-func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (GenesisOnlyAppModule) EndBlock(sdk.Context) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
@@ -345,7 +345,7 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasEndBlock := module.(EndBlockAppModule)
+			_, hasEndBlock := module.(HasABCIEndblock)
 			return !hasEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
@@ -673,7 +673,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.
 // EndBlock performs end block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.
-func (m *Manager) EndBlock(ctx sdk.Context) ([]abci.ValidatorUpdate, []abci.Event, error) {
+func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	validatorUpdates := []abci.ValidatorUpdate{}
 
@@ -681,18 +681,18 @@ func (m *Manager) EndBlock(ctx sdk.Context) ([]abci.ValidatorUpdate, []abci.Even
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
 			err := module.EndBlock(ctx)
 			if err != nil {
-				return nil, nil, err
+				return sdk.EndBlock{}, err
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndblock); ok {
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
-				return nil, nil, err
+				return sdk.EndBlock{}, err
 			}
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return nil, nil, errors.New("validator EndBlock updates already set by a previous module")
+					return sdk.EndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
 				}
 
 				for _, updates := range moduleValUpdates {
@@ -704,7 +704,10 @@ func (m *Manager) EndBlock(ctx sdk.Context) ([]abci.ValidatorUpdate, []abci.Even
 		}
 	}
 
-	return validatorUpdates, ctx.EventManager().ABCIEvents(), nil
+	return sdk.EndBlock{
+		ValidatorUpdates: validatorUpdates,
+		Events:           ctx.EventManager().ABCIEvents(),
+	}, nil
 }
 
 // GetVersionMap gets consensus version from all modules

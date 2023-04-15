@@ -592,9 +592,6 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 // Agreed upon vote extensions are made available to the proposer of the next
 // height and are committed in the subsequent height, i.e. H+2. An error is
 // returned if vote extensions are not enabled or if extendVote fails or panics.
-//
-// Note, an error returned from ExtendVote will not cause the CometBFT to panic,
-// so it is safe to return errors upon failure.
 func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
@@ -634,7 +631,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	resp, err = app.extendVote(app.voteExtensionState.ctx, req)
 	if err != nil {
 		app.logger.Error("failed to extend vote", "height", req.Height, "error", err)
-		return nil, fmt.Errorf("failed to extend vote: %w", err)
+		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
 	}
 
 	return resp, err
@@ -646,9 +643,6 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 // logic in verifying a vote extension from another validator during the pre-commit
 // phase. The response MUST be deterministic. An error is returned if vote
 // extensions are not enabled or if verifyVoteExt fails or panics.
-//
-// Note, an error returned from VerifyVoteExtension will not cause the CometBFT
-// to panic, so it is safe to return errors upon failure.
 func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
@@ -678,7 +672,7 @@ func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVeri
 	resp, err = app.verifyVoteExt(app.voteExtensionState.ctx, req)
 	if err != nil {
 		app.logger.Error("failed to verify vote extension", "height", req.Height, "error", err)
-		return nil, fmt.Errorf("failed to verify vote extension: %w", err)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
 	return resp, err

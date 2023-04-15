@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -64,7 +66,13 @@ func (s *TestSuite) SetupTest() {
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
 	for i := range s.addrs {
 		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[i])).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(s.addrs[i]).Return(s.addrs[i].String(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().StringToBytes(s.addrs[i].String()).Return(s.addrs[i], nil).AnyTimes()
 	}
+
+	// add empty string to the list of expected calls
+	s.accountKeeper.EXPECT().StringToBytes("").Return(nil, errors.New("unable to decode")).AnyTimes()
+
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 
 	bApp := baseapp.NewBaseApp(
@@ -113,10 +121,11 @@ func (s *TestSuite) SetupTest() {
 
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
-	s.policy = policy
-	addr, err := sdk.AccAddressFromBech32(policyRes.Address)
+
+	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(policyRes.Address)
 	s.Require().NoError(err)
-	s.groupPolicyAddr = addr
+	s.policy = policy
+	s.groupPolicyAddr = addrbz
 
 	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
 	s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
@@ -139,9 +148,15 @@ func (s *TestSuite) setNextAccount() {
 	s.Require().NoError(err)
 	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
 
+	addrcdc := address.NewBech32Codec("cosmos")
+	addrst, err := addrcdc.BytesToString(ac.Address())
+	s.Require().NoError(err)
+
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(ac.Address())).Return(nil).AnyTimes()
 	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
 	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), sdk.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
+	s.accountKeeper.EXPECT().StringToBytes(addrst).Return(ac.Address().Bytes(), nil).AnyTimes()
+	s.accountKeeper.EXPECT().BytesToString(ac.Address().Bytes()).Return(addrst, nil).AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -163,6 +178,8 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 			Address: addressPool[i].String(),
 			Weight:  "1",
 		}
+		s.accountKeeper.EXPECT().StringToBytes(addressPool[i].String()).Return(addressPool[i].Bytes(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addressPool[i].Bytes()).Return(addressPool[i].String(), nil).AnyTimes()
 	}
 
 	g, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -308,9 +325,9 @@ func (s *TestSuite) TestCreateGroup() {
 			s.Require().Equal(len(members), len(loadedMembers))
 			// we reorder members by address to be able to compare them
 			sort.Slice(members, func(i, j int) bool {
-				addri, err := sdk.AccAddressFromBech32(members[i].Address)
+				addri, err := s.accountKeeper.StringToBytes(members[i].Address)
 				s.Require().NoError(err)
-				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
+				addrj, err := s.accountKeeper.StringToBytes(members[j].Address)
 				s.Require().NoError(err)
 				return bytes.Compare(addri, addrj) < 0
 			})
@@ -768,9 +785,9 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			s.Require().Equal(len(spec.expMembers), len(loadedMembers))
 			// we reorder group members by address to be able to compare them
 			sort.Slice(spec.expMembers, func(i, j int) bool {
-				addri, err := sdk.AccAddressFromBech32(spec.expMembers[i].Member.Address)
+				addri, err := s.accountKeeper.StringToBytes(spec.expMembers[i].Member.Address)
 				s.Require().NoError(err)
-				addrj, err := sdk.AccAddressFromBech32(spec.expMembers[j].Member.Address)
+				addrj, err := s.accountKeeper.StringToBytes(spec.expMembers[j].Member.Address)
 				s.Require().NoError(err)
 				return bytes.Compare(addri, addrj) < 0
 			})
@@ -962,9 +979,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			s.Require().Equal(len(members), len(loadedMembers))
 			// we reorder members by address to be able to compare them
 			sort.Slice(members, func(i, j int) bool {
-				addri, err := sdk.AccAddressFromBech32(members[i].Address)
+				addri, err := s.accountKeeper.StringToBytes(members[i].Address)
 				s.Require().NoError(err)
-				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
+				addrj, err := s.accountKeeper.StringToBytes(members[j].Address)
 				s.Require().NoError(err)
 				return bytes.Compare(addri, addrj) < 0
 			})
@@ -1594,7 +1611,10 @@ func (s *TestSuite) TestSubmitProposal() {
 	s.setNextAccount()
 	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
-	noMinExecPeriodPolicyAddr := sdk.MustAccAddressFromBech32(res.Address)
+
+	s.accountKeeper.EXPECT().StringToBytes(res.Address).Return(sdk.MustAccAddressFromBech32(res.Address).Bytes(), nil).AnyTimes()
+	noMinExecPeriodPolicyAddr, err := s.accountKeeper.StringToBytes(res.Address)
+	s.Require().NoError(err)
 
 	// Create a new group policy with super high threshold
 	bigThresholdPolicy := group.NewThresholdDecisionPolicy(
@@ -1610,7 +1630,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	bigThresholdAddr := bigThresholdRes.Address
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: noMinExecPeriodPolicyAddr.String(),
+		FromAddress: res.Address,
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
@@ -1732,13 +1752,13 @@ func (s *TestSuite) TestSubmitProposal() {
 				}
 			},
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
+				GroupPolicyAddress: res.Address,
 				Proposers:          []string{addr2.String()},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
+				GroupPolicyAddress: res.Address,
 				Status:             group.PROPOSAL_STATUS_ACCEPTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "2",
@@ -1760,13 +1780,13 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
+				GroupPolicyAddress: res.Address,
 				Proposers:          []string{addr5.String()},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
+				GroupPolicyAddress: res.Address,
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "0", // Since tally doesn't pass Allow(), we consider the proposal not final
@@ -1950,7 +1970,11 @@ func (s *TestSuite) TestVote() {
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	accountAddr := policyRes.Address
-	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
+	// module account will be created and returned
+	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(accountAddr)
+	s.Require().NoError(err)
+	s.accountKeeper.EXPECT().StringToBytes(accountAddr).Return(addrbz, nil).AnyTimes()
+	groupPolicy, err := s.accountKeeper.StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
@@ -2956,6 +2980,11 @@ func (s *TestSuite) TestLeaveGroup() {
 	admin3 := addrs[6]
 	require := s.Require()
 
+	for _, addr := range addrs {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr.Bytes(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
+
 	members := []group.MemberRequest{
 		{
 			Address:  member1.String(),
@@ -3262,7 +3291,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
 	s.Require().NoError(err)
 	accountAddr := groupRes.GetGroupPolicyAddress()
-	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
+	groupPolicy, err := s.accountKeeper.StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 

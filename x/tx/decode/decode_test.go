@@ -1,6 +1,7 @@
 package decode_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -9,8 +10,10 @@ import (
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/internal/testpb"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/stretchr/testify/require"
@@ -35,6 +38,16 @@ func TestDecode(t *testing.T) {
 		},
 		Sequence: accSeq,
 	})
+
+	signingCtx, err := signing.NewContext(signing.Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyAddressCodec{},
+	})
+	require.NoError(t, err)
+	decoder, err := decode.NewDecoder(decode.Options{
+		SigningContext: signingCtx,
+	})
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name  string
@@ -83,9 +96,6 @@ func TestDecode(t *testing.T) {
 			txBytes, err := proto.Marshal(tx)
 			require.NoError(t, err)
 
-			decoder, err := decode.NewDecoder(decode.Options{})
-			require.NoError(t, err)
-
 			decodeTx, err := decoder.Decode(txBytes)
 			if tc.error != "" {
 				require.EqualError(t, err, tc.error)
@@ -98,4 +108,14 @@ func TestDecode(t *testing.T) {
 				decodeTx.Tx.Body.Messages[0].TypeUrl)
 		})
 	}
+}
+
+type dummyAddressCodec struct{}
+
+func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return hex.DecodeString(text)
+}
+
+func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
+	return hex.EncodeToString(bz), nil
 }

@@ -634,12 +634,12 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
-	valsetupdate, endEvents, err := app.Endblock(app.finalizeBlockState.ctx)
+	endBlock, err := app.endBlock(app.finalizeBlockState.ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	events = append(events, endEvents...)
+	events = append(events, endBlock.Events...)
 
 	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
 
@@ -649,7 +649,7 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 	return &abci.ResponseFinalizeBlock{
 		Events:                events,
 		TxResults:             txResults,
-		ValidatorUpdates:      valsetupdate,
+		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
 		AppHash:               app.flushCommit().Hash,
 	}, nil

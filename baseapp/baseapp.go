@@ -606,31 +606,26 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 }
 
 // EndBlock is an application-defined function that is called after transactions have been processed
-func (app *BaseApp) Endblock(ctx context.Context) ([]abci.ValidatorUpdate, []abci.Event, error) {
+func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
+	var endblock sdk.EndBlock
 
-	var (
-		valsetupdate []abci.ValidatorUpdate
-		events       []abci.Event
-	)
 	if app.endBlocker != nil {
-		valset, endblockEvents, err := app.endBlocker(app.finalizeBlockState.ctx)
+		eb, err := app.endBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
 			panic(err)
 		}
 
-		endblockEvents = sdk.MarkEventsToIndex(endblockEvents, app.indexEvents)
+		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
 
 		//TODO add endblock attribute to events
-
 		// append the endblocker events to the finalizeblock events
-		events = append(events, endblockEvents...)
 
-		valsetupdate = valset
+		endblock = eb
 	}
 
 	// TODO: Prefix with "end_blocker"
 
-	return valsetupdate, events, nil
+	return endblock, nil
 }
 
 // runTx processes a transaction within a given execution mode, encoded transaction

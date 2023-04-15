@@ -1,4 +1,4 @@
-package baseapp
+package types
 
 import abci "github.com/cometbft/cometbft/abci/types"
 

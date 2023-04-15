@@ -146,7 +146,7 @@ type BaseApp struct {
 
 	chainID string
 
-	BlockInfo BlockInfoService
+	BlockInfo sdk.BlockInfoService
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

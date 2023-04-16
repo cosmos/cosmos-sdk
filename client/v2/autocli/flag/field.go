@@ -2,7 +2,6 @@ package flag
 
 import (
 	"context"
-
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/pflag"
@@ -62,8 +61,13 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 	var val HasValue
 	if field.IsList() {
 		val = bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
+	} else if field.IsMap() {
+		keyKind := field.MapKey().Kind()
+		valKind := field.MapValue().Kind()
+		val = bindSimpleMapFlag(flagSet, keyKind, valKind, name, shorthand, usage)
 	} else {
 		val = bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage)
+
 	}
 
 	// This is a bit of hacking around the pflag API, but the
@@ -81,7 +85,12 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 		if typ != nil {
 			return compositeListType{simpleType: typ}
 		}
+		return nil
+	}
+	if field.IsMap() {
+		if typ != nil {
 
+		}
 		return nil
 	}
 
@@ -107,7 +116,6 @@ func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type 
 		if flagType, ok := b.messageFlagTypes[field.Message().FullName()]; ok {
 			return flagType
 		}
-
 		return jsonMessageFlagType{
 			messageDesc: field.Message(),
 		}

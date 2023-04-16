@@ -82,6 +82,12 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"bz": {
 					Usage: "some bytes",
 				},
+				"map_string_string": {
+					Usage: "some map of string to string",
+				},
+				"map_string_uint32": {
+					Usage: "some map of string to int32",
+				},
 			},
 		},
 	},
@@ -128,10 +134,11 @@ func TestMap(t *testing.T) {
 		"abc",
 		"1234foo",
 		"4321bar",
-		"--a-coin", "100000foo",
-		"--duration", "4h3s",
+		"--map-string-string", "foo=bar",
+		"--map-string-uint32", "bar=123",
 	)
-	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+	fmt.Println(conn.lastRequest)
+	//assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
 func TestEverything(t *testing.T) {

@@ -9,26 +9,37 @@ import (
 	"strings"
 )
 
-func bindSimpleMapFlag(flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, name, shorthand, usage string) HasValue {
-	if !field.IsMap() {
-		return nil
-	}
-	keyType := field.MapKey().Kind()
-	if keyType != protoreflect.StringKind {
-		return nil
-	}
-	valueType := field.MapValue().Kind()
-
-	switch valueType {
+func bindSimpleMapFlag(flagSet *pflag.FlagSet, keyKind protoreflect.Kind, valueKind protoreflect.Kind, name, shorthand, usage string) HasValue {
+	switch keyKind {
 	case protoreflect.StringKind:
-		val := flagSet.StringToStringP(name, shorthand, nil, usage)
-		return newMapValue(val, protoreflect.ValueOfString)
-	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-		val := flagSet.StringToInt64P(name, shorthand, nil, usage)
-		return newMapValue(val, protoreflect.ValueOfInt64)
-	default:
-		return nil
+		switch valueKind {
+		case protoreflect.StringKind:
+			val := flagSet.StringToStringP(name, shorthand, nil, usage)
+			return newMapValue(val, protoreflect.ValueOfString)
+
+		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
+			val := StringToInt32P(flagSet, name, shorthand, nil, usage)
+			return newMapValue(val, protoreflect.ValueOfInt32)
+
+		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+			val := flagSet.StringToInt64P(name, shorthand, nil, usage)
+			return newMapValue(val, protoreflect.ValueOfInt64)
+
+		case protoreflect.Uint32Kind:
+			val := StringToUint32P(flagSet, name, shorthand, nil, usage)
+			return newMapValue(val, protoreflect.ValueOfUint32)
+
+		case protoreflect.Uint64Kind:
+			val := StringToUint64P(flagSet, name, shorthand, nil, usage)
+			return newMapValue(val, protoreflect.ValueOfUint64)
+
+		case protoreflect.BoolKind:
+			val := StringToBoolP(flagSet, name, shorthand, nil, usage)
+			return newMapValue(val, protoreflect.ValueOfBool)
+		}
+
 	}
+	return nil
 }
 
 type mapValue[K comparable, V any] struct {

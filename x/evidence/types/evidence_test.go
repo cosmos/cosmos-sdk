@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/blockinfo"
 	"cosmossdk.io/x/evidence/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,9 +72,9 @@ func TestEquivocationValidateBasic(t *testing.T) {
 
 func TestEvidenceAddressConversion(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
-	tmEvidence := abci.Misbehavior{
-		Type: abci.MisbehaviorType_DUPLICATE_VOTE,
-		Validator: abci.Validator{
+	tmEvidence := blockinfo.Misbehavior{
+		Type: blockinfo.DuplicateVote,
+		Validator: blockinfo.Validator{
 			Address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			Power:   100,
 		},

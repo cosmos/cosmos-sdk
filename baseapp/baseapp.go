@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"cosmossdk.io/core/blockinfo"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -146,7 +147,7 @@ type BaseApp struct {
 
 	chainID string
 
-	BlockInfo sdk.BlockInfoService
+	BlockInfo blockinfo.Service
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 	time "time"
 
+	blockinfo "cosmossdk.io/core/blockinfo"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
@@ -305,4 +306,111 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types0.Context, sender
 func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
+}
+
+// MockBlockinfo is a mock of Blockinfo interface.
+type MockBlockinfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockBlockinfoMockRecorder
+}
+
+// MockBlockinfoMockRecorder is the mock recorder for MockBlockinfo.
+type MockBlockinfoMockRecorder struct {
+	mock *MockBlockinfo
+}
+
+// NewMockBlockinfo creates a new mock instance.
+func NewMockBlockinfo(ctrl *gomock.Controller) *MockBlockinfo {
+	mock := &MockBlockinfo{ctrl: ctrl}
+	mock.recorder = &MockBlockinfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBlockinfo) EXPECT() *MockBlockinfoMockRecorder {
+	return m.recorder
+}
+
+// GetDecidedLastCommit mocks base method.
+func (m *MockBlockinfo) GetDecidedLastCommit() blockinfo.CommitInfo {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDecidedLastCommit")
+	ret0, _ := ret[0].(blockinfo.CommitInfo)
+	return ret0
+}
+
+// GetDecidedLastCommit indicates an expected call of GetDecidedLastCommit.
+func (mr *MockBlockinfoMockRecorder) GetDecidedLastCommit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDecidedLastCommit", reflect.TypeOf((*MockBlockinfo)(nil).GetDecidedLastCommit))
+}
+
+// GetHeaderHash mocks base method.
+func (m *MockBlockinfo) GetHeaderHash() []byte {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHeaderHash")
+	ret0, _ := ret[0].([]byte)
+	return ret0
+}
+
+// GetHeaderHash indicates an expected call of GetHeaderHash.
+func (mr *MockBlockinfoMockRecorder) GetHeaderHash() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeaderHash", reflect.TypeOf((*MockBlockinfo)(nil).GetHeaderHash))
+}
+
+// GetHeight mocks base method.
+func (m *MockBlockinfo) GetHeight() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHeight")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetHeight indicates an expected call of GetHeight.
+func (mr *MockBlockinfoMockRecorder) GetHeight() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeight", reflect.TypeOf((*MockBlockinfo)(nil).GetHeight))
+}
+
+// GetProposerAddress mocks base method.
+func (m *MockBlockinfo) GetProposerAddress() []byte {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProposerAddress")
+	ret0, _ := ret[0].([]byte)
+	return ret0
+}
+
+// GetProposerAddress indicates an expected call of GetProposerAddress.
+func (mr *MockBlockinfoMockRecorder) GetProposerAddress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProposerAddress", reflect.TypeOf((*MockBlockinfo)(nil).GetProposerAddress))
+}
+
+// GetValidatorsHash mocks base method.
+func (m *MockBlockinfo) GetValidatorsHash() []byte {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetValidatorsHash")
+	ret0, _ := ret[0].([]byte)
+	return ret0
+}
+
+// GetValidatorsHash indicates an expected call of GetValidatorsHash.
+func (mr *MockBlockinfoMockRecorder) GetValidatorsHash() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidatorsHash", reflect.TypeOf((*MockBlockinfo)(nil).GetValidatorsHash))
+}
+
+// Misbehavior mocks base method.
+func (m *MockBlockinfo) Misbehavior() []blockinfo.Misbehavior {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Misbehavior")
+	ret0, _ := ret[0].([]blockinfo.Misbehavior)
+	return ret0
+}
+
+// Misbehavior indicates an expected call of Misbehavior.
+func (mr *MockBlockinfoMockRecorder) Misbehavior() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Misbehavior", reflect.TypeOf((*MockBlockinfo)(nil).Misbehavior))
 }

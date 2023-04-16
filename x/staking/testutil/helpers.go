@@ -61,7 +61,7 @@ func (sh *Helper) CreateValidatorWithMsg(ctx context.Context, msg *stakingtypes.
 }
 
 func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{Moniker: "TestValidator"}, sh.Commission, math.OneInt())
 	require.NoError(sh.t, err)
 	res, err := sh.msgSrvr.CreateValidator(sh.Ctx, msg)
 	if ok {

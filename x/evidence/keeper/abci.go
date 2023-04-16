@@ -14,10 +14,10 @@ import (
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
-func (k Keeper) BeginBlocker(goctx context.Context) {
+func (k Keeper) BeginBlocker(goCtx context.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	ctx := sdk.UnwrapSDKContext(goctx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	for _, tmEvidence := range k.blockInfo.Misbehavior() {
 		switch tmEvidence.Type {
 		// It's still ongoing discussion how should we treat and slash attacks with

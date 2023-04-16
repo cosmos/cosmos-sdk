@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
 
 	storetypes "cosmossdk.io/store/types"
@@ -27,13 +28,16 @@ type Keeper struct {
 	supplyKeeper types.SupplyKeeper
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
+
+	addressCodec address.Codec
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, invCheckPeriod uint,
-	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string,
+	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,
 ) *Keeper {
+
 	return &Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
@@ -42,6 +46,7 @@ func NewKeeper(
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
+		addressCodec:     ac,
 	}
 }
 

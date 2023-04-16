@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -21,9 +22,9 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx        sdk.Context
-	authKeeper *crisistestutil.MockSupplyKeeper
-	keeper     *keeper.Keeper
+	ctx          sdk.Context
+	supplyKeeper *crisistestutil.MockSupplyKeeper
+	keeper       *keeper.Keeper
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -34,11 +35,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
-	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", sdk.AccAddress([]byte("addr1_______________")).String())
+	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", sdk.AccAddress([]byte("addr1_______________")).String(), addresscodec.NewBech32Codec("cosmos"))
 
 	s.ctx = testCtx.Ctx
 	s.keeper = keeper
-	s.authKeeper = supplyKeeper
+	s.supplyKeeper = supplyKeeper
 }
 
 func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
@@ -49,7 +50,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 
 	sender := sdk.AccAddress([]byte("addr1_______________"))
 
-	s.authKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
+	s.supplyKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 	s.keeper.RegisterRoute("bank", "total-supply", func(sdk.Context) (string, bool) { return "", false })
 
 	testCases := []struct {

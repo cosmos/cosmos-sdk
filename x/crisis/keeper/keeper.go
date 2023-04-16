@@ -37,7 +37,6 @@ func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, invCheckPeriod uint,
 	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,
 ) *Keeper {
-
 	return &Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,

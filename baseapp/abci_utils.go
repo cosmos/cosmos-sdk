@@ -80,6 +80,9 @@ func ValidateVoteExtensions(
 		if err != nil {
 			return fmt.Errorf("failed to get validator %X: %w", valConsAddr, err)
 		}
+		if validator == nil {
+			return fmt.Errorf("validator %X not found", valConsAddr)
+		}
 
 		cmtPubKeyProto, err := validator.CmtConsPublicKey()
 		if err != nil {

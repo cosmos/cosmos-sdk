@@ -58,6 +58,7 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 
 	// use the built-in pflag StringP, Int32P, etc. functions
 	var val HasValue
+
 	if field.IsList() {
 		val = bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
 	} else if field.IsMap() {
@@ -131,9 +132,7 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 				ct.keyType = "uint64"
 			case protoreflect.BoolKind:
 				ct := new(compositeMapType[bool])
-				ct.keyValueResolver = func(s string) (bool, error) {
-					return strconv.ParseBool(s)
-				}
+				ct.keyValueResolver = strconv.ParseBool
 				ct.valueType = valType
 				ct.keyType = "bool"
 

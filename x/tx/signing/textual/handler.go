@@ -138,7 +138,8 @@ func (r *SignModeHandler) GetFieldValueRenderer(fd protoreflect.FieldDescriptor)
 			return nil, fmt.Errorf("value renderers cannot format value of type map")
 		}
 		return NewMessageValueRenderer(r, md), nil
-
+	case fd.Kind() == protoreflect.BoolKind:
+		return NewBoolValueRenderer(), nil
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value of type %s", fd.Kind())
 	}

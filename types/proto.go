@@ -4,7 +4,10 @@ import (
 	"sync"
 
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	txsigning "cosmossdk.io/x/tx/signing"
 )
 
 // CustomProtobufType defines the interface custom gogo proto types must implement
@@ -24,21 +27,55 @@ type CustomProtobufType interface {
 var (
 	mu             sync.Mutex
 	mergedRegistry *protoregistry.Files
+	_              txsigning.ProtoFileResolver = lazyProtoRegistry{}
 )
 
-func MergedProtoRegistry() *protoregistry.Files {
-	mu.Lock()
+type lazyProtoRegistry struct{}
 
+func (l lazyProtoRegistry) init() error {
+	mu.Lock()
 	defer mu.Unlock()
+
 	if mergedRegistry != nil {
-		return mergedRegistry
+		return nil
 	}
 
 	var err error
 	mergedRegistry, err = proto.MergedRegistry()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	return mergedRegistry
+	return nil
+}
+
+func (l lazyProtoRegistry) FindFileByPath(s string) (protoreflect.FileDescriptor, error) {
+	if mergedRegistry == nil {
+		if err := l.init(); err != nil {
+			return nil, err
+		}
+	}
+	return mergedRegistry.FindFileByPath(s)
+}
+
+func (l lazyProtoRegistry) FindDescriptorByName(name protoreflect.FullName) (protoreflect.Descriptor, error) {
+	if mergedRegistry == nil {
+		if err := l.init(); err != nil {
+			return nil, err
+		}
+	}
+	return mergedRegistry.FindDescriptorByName(name)
+}
+
+func (l lazyProtoRegistry) RangeFiles(f func(protoreflect.FileDescriptor) bool) {
+	if mergedRegistry == nil {
+		if err := l.init(); err != nil {
+			panic(err)
+		}
+	}
+	mergedRegistry.RangeFiles(f)
+}
+
+func MergedProtoRegistry() txsigning.ProtoFileResolver {
+	return lazyProtoRegistry{}
 }

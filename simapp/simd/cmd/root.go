@@ -87,7 +87,7 @@ func NewRootCmd() *cobra.Command {
 			// TODO Currently, the TxConfig below doesn't include Textual, so
 			// an error will arise when using the --textual flag.
 			// ref: https://github.com/cosmos/cosmos-sdk/issues/11970
-			txt, err := txmodule.NewTextualWithGRPCConn(initClientCtx)
+			opts, err := txmodule.NewSignModeOptionsWithMetadataQueryFn(txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx))
 			if err != nil {
 				return err
 			}
@@ -95,10 +95,10 @@ func NewRootCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			txConfigWithTextual := tx.NewTxConfigWithTextual(
+			txConfigWithTextual := tx.NewTxConfigWithOptions(
 				codec.NewProtoCodec(encodingConfig.InterfaceRegistry),
 				signModes,
-				txt,
+				opts,
 			)
 			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
 

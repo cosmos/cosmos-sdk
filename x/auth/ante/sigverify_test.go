@@ -131,12 +131,11 @@ func TestSigVerification(t *testing.T) {
 	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_TEXTUAL, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
 	// here which includes it.
-	txt, err := txmodule.NewTextualWithGRPCConn(suite.clientCtx)
-	require.NoError(t, err)
-	suite.clientCtx.TxConfig = authtx.NewTxConfigWithTextual(
+	opts, err := txmodule.NewSignModeOptionsWithMetadataQueryFn(txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx))
+	suite.clientCtx.TxConfig = authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		enabledSignModes,
-		txt,
+		opts,
 	)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -163,12 +162,12 @@ func TestSigVerification(t *testing.T) {
 	gasLimit := testdata.NewTestGasLimit()
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-	txt, err = txmodule.NewTextualWithBankKeeper(suite.txBankKeeper)
+	opts, err = txmodule.NewSignModeOptionsWithMetadataQueryFn(txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper))
 	require.NoError(t, err)
-	anteTxConfig := authtx.NewTxConfigWithTextual(
+	anteTxConfig := authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		enabledSignModes,
-		txt,
+		opts,
 	)
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)

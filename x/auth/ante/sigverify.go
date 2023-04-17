@@ -299,6 +299,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 					Value:   anyPk.Value,
 				},
 			}
+			// TODO supply protoRegistry.Files or decoder further up
 			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: sdk.MergedProtoRegistry()})
 			if err != nil {
 				return ctx, err

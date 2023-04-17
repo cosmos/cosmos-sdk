@@ -38,7 +38,8 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.Proposer); err != nil {
+	proposer, err := k.authKeeper.StringToBytes(msg.GetProposer())
+	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 
@@ -51,25 +52,19 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, errors.Wrap(govtypes.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
 	}
 
-	if err := validateMsgs(msg); err != nil {
+	proposalMsgs, err := msg.GetMsgs()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := validateMsgs(proposalMsgs); err != nil {
 		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	initialDeposit := msg.GetInitialDeposit()
 
 	if err := k.validateInitialDeposit(ctx, initialDeposit, msg.Expedited); err != nil {
-		return nil, err
-	}
-
-	proposer, err := k.authKeeper.StringToBytes(msg.GetProposer())
-	if err != nil {
-		return nil, err
-	}
-
-	proposalMsgs, err := msg.GetMsgs()
-	if err != nil {
 		return nil, err
 	}
 
@@ -111,16 +106,12 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 // CancelProposals implements the MsgServer.CancelProposal method.
 func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
-	if _, err := sdk.AccAddressFromBech32(msg.Proposer); err != nil {
+	_, err := k.authKeeper.StringToBytes(msg.Proposer)
+	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, err := k.authKeeper.StringToBytes(msg.Proposer)
-	if err != nil {
-		return nil, err
-	}
-
 	if err := k.Keeper.CancelProposal(ctx, msg.ProposalId, msg.Proposer); err != nil {
 		return nil, err
 	}
@@ -169,7 +160,8 @@ func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegac
 
 // Vote implements the MsgServer.Vote method.
 func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse, error) {
-	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
+	accAddr, err := k.authKeeper.StringToBytes(msg.Voter)
+	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 
@@ -178,10 +170,6 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	accAddr, err := k.authKeeper.StringToBytes(msg.Voter)
-	if err != nil {
-		return nil, err
-	}
 	err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata)
 	if err != nil {
 		return nil, err
@@ -200,9 +188,11 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 
 // VoteWeighted implements the MsgServer.VoteWeighted method.
 func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) (*v1.MsgVoteWeightedResponse, error) {
-	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
+	accAddr, accErr := k.authKeeper.StringToBytes(msg.Voter)
+	if accErr != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", accErr)
 	}
+
 	if len(msg.Options) == 0 {
 		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, v1.WeightedVoteOptions(msg.Options).String())
 	}
@@ -233,10 +223,6 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	accAddr, accErr := k.authKeeper.StringToBytes(msg.Voter)
-	if accErr != nil {
-		return nil, accErr
-	}
 	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.Options, msg.Metadata)
 	if err != nil {
 		return nil, err
@@ -255,7 +241,8 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 
 // Deposit implements the MsgServer.Deposit method.
 func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDepositResponse, error) {
-	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
+	accAddr, err := k.authKeeper.StringToBytes(msg.Depositor)
+	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
 
@@ -264,10 +251,6 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	accAddr, err := k.authKeeper.StringToBytes(msg.Depositor)
-	if err != nil {
-		return nil, err
-	}
 	votingStarted, err := k.Keeper.AddDeposit(ctx, msg.ProposalId, accAddr, msg.Amount)
 	if err != nil {
 		return nil, err
@@ -418,12 +401,7 @@ func validateAmount(amount sdk.Coins) error {
 	return nil
 }
 
-func validateMsgs(msg *v1.MsgSubmitProposal) error {
-	msgs, err := msg.GetMsgs()
-	if err != nil {
-		return err
-	}
-
+func validateMsgs(msgs []sdk.Msg) error {
 	for idx, msg := range msgs {
 		m, ok := msg.(sdk.HasValidateBasic)
 		if !ok {

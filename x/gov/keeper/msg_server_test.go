@@ -20,8 +20,9 @@ const (
 )
 
 var (
-	longAddress      = "cosmos1v9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpg0s5ed"
-	longAddressError = "address max length is 255"
+	longAddress       = "cosmos1v9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpg0s5ed"
+	longAddressError  = "address max length is 255"
+	emptyAddressError = "empty address string is not allowed"
 )
 
 func (suite *KeeperTestSuite) TestSubmitProposalReq() {
@@ -38,6 +39,8 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 		ToAddress:   proposer.String(),
 		Amount:      coins,
 	}
+
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() (*v1.MsgSubmitProposal, error)
@@ -236,6 +239,8 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
+
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
@@ -261,6 +266,7 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 		},
 		"empty proposer": {
 			preRun: func() uint64 {
+
 				return proposalID
 			},
 			depositor: sdk.AccAddress{},
@@ -331,6 +337,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	suite.Require().NoError(err)
 
 	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -480,6 +487,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	proposalID := res.ProposalId
 
 	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -723,6 +731,8 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 	suite.Require().NotNil(res.ProposalId)
 	pID := res.ProposalId
 
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
+
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
@@ -780,6 +790,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	initialDeposit := coins
 	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() (*v1beta1.MsgSubmitProposal, error)
@@ -914,6 +926,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	proposalID := res.ProposalId
 
 	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -1048,6 +1061,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	proposalID := res.ProposalId
 
 	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -1298,6 +1312,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	pID := res.ProposalId
+
+	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun     func() uint64

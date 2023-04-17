@@ -3,6 +3,10 @@ package blockinfo
 import "time"
 
 type Service interface {
+	GetBlockInfo() BlockInfo
+}
+
+type BlockInfo interface {
 	GetHeight() int64              // GetHeight returns the height of the block
 	GetMisbehavior() []Misbehavior // Misbehavior returns the misbehavior of the block
 	GetHeaderHash() []byte         // GetHeaderHash returns the hash of the block header

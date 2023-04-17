@@ -331,86 +331,16 @@ func (m *MockBlockinfo) EXPECT() *MockBlockinfoMockRecorder {
 	return m.recorder
 }
 
-// GetDecidedLastCommit mocks base method.
-func (m *MockBlockinfo) GetDecidedLastCommit() blockinfo.CommitInfo {
+// GetBlockInfo mocks base method.
+func (m *MockBlockinfo) GetBlockInfo() blockinfo.BlockInfo {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDecidedLastCommit")
-	ret0, _ := ret[0].(blockinfo.CommitInfo)
+	ret := m.ctrl.Call(m, "GetBlockInfo")
+	ret0, _ := ret[0].(blockinfo.BlockInfo)
 	return ret0
 }
 
-// GetDecidedLastCommit indicates an expected call of GetDecidedLastCommit.
-func (mr *MockBlockinfoMockRecorder) GetDecidedLastCommit() *gomock.Call {
+// GetBlockInfo indicates an expected call of GetBlockInfo.
+func (mr *MockBlockinfoMockRecorder) GetBlockInfo() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDecidedLastCommit", reflect.TypeOf((*MockBlockinfo)(nil).GetDecidedLastCommit))
-}
-
-// GetHeaderHash mocks base method.
-func (m *MockBlockinfo) GetHeaderHash() []byte {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHeaderHash")
-	ret0, _ := ret[0].([]byte)
-	return ret0
-}
-
-// GetHeaderHash indicates an expected call of GetHeaderHash.
-func (mr *MockBlockinfoMockRecorder) GetHeaderHash() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeaderHash", reflect.TypeOf((*MockBlockinfo)(nil).GetHeaderHash))
-}
-
-// GetHeight mocks base method.
-func (m *MockBlockinfo) GetHeight() int64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHeight")
-	ret0, _ := ret[0].(int64)
-	return ret0
-}
-
-// GetHeight indicates an expected call of GetHeight.
-func (mr *MockBlockinfoMockRecorder) GetHeight() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeight", reflect.TypeOf((*MockBlockinfo)(nil).GetHeight))
-}
-
-// GetMisbehavior mocks base method.
-func (m *MockBlockinfo) GetMisbehavior() []blockinfo.Misbehavior {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMisbehavior")
-	ret0, _ := ret[0].([]blockinfo.Misbehavior)
-	return ret0
-}
-
-// GetMisbehavior indicates an expected call of GetMisbehavior.
-func (mr *MockBlockinfoMockRecorder) GetMisbehavior() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMisbehavior", reflect.TypeOf((*MockBlockinfo)(nil).GetMisbehavior))
-}
-
-// GetProposerAddress mocks base method.
-func (m *MockBlockinfo) GetProposerAddress() []byte {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProposerAddress")
-	ret0, _ := ret[0].([]byte)
-	return ret0
-}
-
-// GetProposerAddress indicates an expected call of GetProposerAddress.
-func (mr *MockBlockinfoMockRecorder) GetProposerAddress() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProposerAddress", reflect.TypeOf((*MockBlockinfo)(nil).GetProposerAddress))
-}
-
-// GetValidatorsHash mocks base method.
-func (m *MockBlockinfo) GetValidatorsHash() []byte {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetValidatorsHash")
-	ret0, _ := ret[0].([]byte)
-	return ret0
-}
-
-// GetValidatorsHash indicates an expected call of GetValidatorsHash.
-func (mr *MockBlockinfoMockRecorder) GetValidatorsHash() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidatorsHash", reflect.TypeOf((*MockBlockinfo)(nil).GetValidatorsHash))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlockInfo", reflect.TypeOf((*MockBlockinfo)(nil).GetBlockInfo))
 }

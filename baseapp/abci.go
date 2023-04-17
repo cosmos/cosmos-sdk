@@ -203,7 +203,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// Set blockInfo for module use
-	app.BlockInfo = sdk.NewBlockInfo(req)
+	app.BlockInfo = app.BlockInfo.GetBlockInfo()
 
 	if app.beginBlocker != nil {
 		var err error

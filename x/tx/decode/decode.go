@@ -23,14 +23,14 @@ type DecodedTx struct {
 type Decoder struct {
 	getSignersCtx *signing.GetSignersContext
 	typeResolver  protoregistry.MessageTypeResolver
-	protoFiles    *protoregistry.Files
+	protoFiles    signing.ProtoFileResolver
 }
 
 // Options are options for creating a Decoder.
 type Options struct {
 	// ProtoFiles are the protobuf files to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.
-	ProtoFiles     *protoregistry.Files
+	ProtoFiles     signing.ProtoFileResolver
 	TypeResolver   protoregistry.MessageTypeResolver
 	SigningContext *signing.GetSignersContext
 }

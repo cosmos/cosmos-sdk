@@ -519,6 +519,96 @@ func (x *_EchoRequest_34_map) IsValid() bool {
 	return x.m != nil
 }
 
+var _ protoreflect.Map = (*_EchoRequest_35_map)(nil)
+
+type _EchoRequest_35_map struct {
+	m *map[string]*v1beta1.Coin
+}
+
+func (x *_EchoRequest_35_map) Len() int {
+	if x.m == nil {
+		return 0
+	}
+	return len(*x.m)
+}
+
+func (x *_EchoRequest_35_map) Range(f func(protoreflect.MapKey, protoreflect.Value) bool) {
+	if x.m == nil {
+		return
+	}
+	for k, v := range *x.m {
+		mapKey := (protoreflect.MapKey)(protoreflect.ValueOfString(k))
+		mapValue := protoreflect.ValueOfMessage(v.ProtoReflect())
+		if !f(mapKey, mapValue) {
+			break
+		}
+	}
+}
+
+func (x *_EchoRequest_35_map) Has(key protoreflect.MapKey) bool {
+	if x.m == nil {
+		return false
+	}
+	keyUnwrapped := key.String()
+	concreteValue := keyUnwrapped
+	_, ok := (*x.m)[concreteValue]
+	return ok
+}
+
+func (x *_EchoRequest_35_map) Clear(key protoreflect.MapKey) {
+	if x.m == nil {
+		return
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	delete(*x.m, concreteKey)
+}
+
+func (x *_EchoRequest_35_map) Get(key protoreflect.MapKey) protoreflect.Value {
+	if x.m == nil {
+		return protoreflect.Value{}
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	v, ok := (*x.m)[concreteKey]
+	if !ok {
+		return protoreflect.Value{}
+	}
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_EchoRequest_35_map) Set(key protoreflect.MapKey, value protoreflect.Value) {
+	if !key.IsValid() || !value.IsValid() {
+		panic("invalid key or value provided")
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.m)[concreteKey] = concreteValue
+}
+
+func (x *_EchoRequest_35_map) Mutable(key protoreflect.MapKey) protoreflect.Value {
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	v, ok := (*x.m)[concreteKey]
+	if ok {
+		return protoreflect.ValueOfMessage(v.ProtoReflect())
+	}
+	newValue := new(v1beta1.Coin)
+	(*x.m)[concreteKey] = newValue
+	return protoreflect.ValueOfMessage(newValue.ProtoReflect())
+}
+
+func (x *_EchoRequest_35_map) NewValue() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_EchoRequest_35_map) IsValid() bool {
+	return x.m != nil
+}
+
 var (
 	md_EchoRequest                            protoreflect.MessageDescriptor
 	fd_EchoRequest_u32                        protoreflect.FieldDescriptor
@@ -549,6 +639,7 @@ var (
 	fd_EchoRequest_hidden_bool                protoreflect.FieldDescriptor
 	fd_EchoRequest_map_string_string          protoreflect.FieldDescriptor
 	fd_EchoRequest_map_string_uint32          protoreflect.FieldDescriptor
+	fd_EchoRequest_map_string_coin            protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -582,6 +673,7 @@ func init() {
 	fd_EchoRequest_hidden_bool = md_EchoRequest.Fields().ByName("hidden_bool")
 	fd_EchoRequest_map_string_string = md_EchoRequest.Fields().ByName("map_string_string")
 	fd_EchoRequest_map_string_uint32 = md_EchoRequest.Fields().ByName("map_string_uint32")
+	fd_EchoRequest_map_string_coin = md_EchoRequest.Fields().ByName("map_string_coin")
 }
 
 var _ protoreflect.Message = (*fastReflection_EchoRequest)(nil)
@@ -817,6 +909,12 @@ func (x *fastReflection_EchoRequest) Range(f func(protoreflect.FieldDescriptor, 
 			return
 		}
 	}
+	if len(x.MapStringCoin) != 0 {
+		value := protoreflect.ValueOfMap(&_EchoRequest_35_map{m: &x.MapStringCoin})
+		if !f(fd_EchoRequest_map_string_coin, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -888,6 +986,8 @@ func (x *fastReflection_EchoRequest) Has(fd protoreflect.FieldDescriptor) bool {
 		return len(x.MapStringString) != 0
 	case "testpb.EchoRequest.map_string_uint32":
 		return len(x.MapStringUint32) != 0
+	case "testpb.EchoRequest.map_string_coin":
+		return len(x.MapStringCoin) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -960,6 +1060,8 @@ func (x *fastReflection_EchoRequest) Clear(fd protoreflect.FieldDescriptor) {
 		x.MapStringString = nil
 	case "testpb.EchoRequest.map_string_uint32":
 		x.MapStringUint32 = nil
+	case "testpb.EchoRequest.map_string_coin":
+		x.MapStringCoin = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -1087,6 +1189,12 @@ func (x *fastReflection_EchoRequest) Get(descriptor protoreflect.FieldDescriptor
 		}
 		mapValue := &_EchoRequest_34_map{m: &x.MapStringUint32}
 		return protoreflect.ValueOfMap(mapValue)
+	case "testpb.EchoRequest.map_string_coin":
+		if len(x.MapStringCoin) == 0 {
+			return protoreflect.ValueOfMap(&_EchoRequest_35_map{})
+		}
+		mapValue := &_EchoRequest_35_map{m: &x.MapStringCoin}
+		return protoreflect.ValueOfMap(mapValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -1181,6 +1289,10 @@ func (x *fastReflection_EchoRequest) Set(fd protoreflect.FieldDescriptor, value 
 		mv := value.Map()
 		cmv := mv.(*_EchoRequest_34_map)
 		x.MapStringUint32 = *cmv.m
+	case "testpb.EchoRequest.map_string_coin":
+		mv := value.Map()
+		cmv := mv.(*_EchoRequest_35_map)
+		x.MapStringCoin = *cmv.m
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -1279,6 +1391,12 @@ func (x *fastReflection_EchoRequest) Mutable(fd protoreflect.FieldDescriptor) pr
 			x.MapStringUint32 = make(map[string]uint32)
 		}
 		value := &_EchoRequest_34_map{m: &x.MapStringUint32}
+		return protoreflect.ValueOfMap(value)
+	case "testpb.EchoRequest.map_string_coin":
+		if x.MapStringCoin == nil {
+			x.MapStringCoin = make(map[string]*v1beta1.Coin)
+		}
+		value := &_EchoRequest_35_map{m: &x.MapStringCoin}
 		return protoreflect.ValueOfMap(value)
 	case "testpb.EchoRequest.u32":
 		panic(fmt.Errorf("field u32 of message testpb.EchoRequest is not mutable"))
@@ -1391,6 +1509,9 @@ func (x *fastReflection_EchoRequest) NewField(fd protoreflect.FieldDescriptor) p
 	case "testpb.EchoRequest.map_string_uint32":
 		m := make(map[string]uint32)
 		return protoreflect.ValueOfMap(&_EchoRequest_34_map{m: &m})
+	case "testpb.EchoRequest.map_string_coin":
+		m := make(map[string]*v1beta1.Coin)
+		return protoreflect.ValueOfMap(&_EchoRequest_35_map{m: &m})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -1611,6 +1732,32 @@ func (x *fastReflection_EchoRequest) ProtoMethods() *protoiface.Methods {
 				}
 			}
 		}
+		if len(x.MapStringCoin) > 0 {
+			SiZeMaP := func(k string, v *v1beta1.Coin) {
+				l := 0
+				if v != nil {
+					l = options.Size(v)
+				}
+				l += 1 + runtime.Sov(uint64(l))
+				mapEntrySize := 1 + len(k) + runtime.Sov(uint64(len(k))) + l
+				n += mapEntrySize + 2 + runtime.Sov(uint64(mapEntrySize))
+			}
+			if options.Deterministic {
+				sortme := make([]string, 0, len(x.MapStringCoin))
+				for k := range x.MapStringCoin {
+					sortme = append(sortme, k)
+				}
+				sort.Strings(sortme)
+				for _, k := range sortme {
+					v := x.MapStringCoin[k]
+					SiZeMaP(k, v)
+				}
+			} else {
+				for k, v := range x.MapStringCoin {
+					SiZeMaP(k, v)
+				}
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1639,6 +1786,58 @@ func (x *fastReflection_EchoRequest) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.MapStringCoin) > 0 {
+			MaRsHaLmAp := func(k string, v *v1beta1.Coin) (protoiface.MarshalOutput, error) {
+				baseI := i
+				encoded, err := options.Marshal(v)
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
+				i -= len(k)
+				copy(dAtA[i:], k)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(k)))
+				i--
+				dAtA[i] = 0xa
+				i = runtime.EncodeVarint(dAtA, i, uint64(baseI-i))
+				i--
+				dAtA[i] = 0x2
+				i--
+				dAtA[i] = 0x9a
+				return protoiface.MarshalOutput{}, nil
+			}
+			if options.Deterministic {
+				keysForMapStringCoin := make([]string, 0, len(x.MapStringCoin))
+				for k := range x.MapStringCoin {
+					keysForMapStringCoin = append(keysForMapStringCoin, string(k))
+				}
+				sort.Slice(keysForMapStringCoin, func(i, j int) bool {
+					return keysForMapStringCoin[i] < keysForMapStringCoin[j]
+				})
+				for iNdEx := len(keysForMapStringCoin) - 1; iNdEx >= 0; iNdEx-- {
+					v := x.MapStringCoin[string(keysForMapStringCoin[iNdEx])]
+					out, err := MaRsHaLmAp(keysForMapStringCoin[iNdEx], v)
+					if err != nil {
+						return out, err
+					}
+				}
+			} else {
+				for k := range x.MapStringCoin {
+					v := x.MapStringCoin[k]
+					out, err := MaRsHaLmAp(k, v)
+					if err != nil {
+						return out, err
+					}
+				}
+			}
 		}
 		if len(x.MapStringUint32) > 0 {
 			MaRsHaLmAp := func(k string, v uint32) (protoiface.MarshalOutput, error) {
@@ -3201,6 +3400,135 @@ func (x *fastReflection_EchoRequest) ProtoMethods() *protoiface.Methods {
 				}
 				x.MapStringUint32[mapkey] = mapvalue
 				iNdEx = postIndex
+			case 35:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MapStringCoin", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.MapStringCoin == nil {
+					x.MapStringCoin = make(map[string]*v1beta1.Coin)
+				}
+				var mapkey string
+				var mapvalue *v1beta1.Coin
+				for iNdEx < postIndex {
+					entryPreIndex := iNdEx
+					var wire uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						wire |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					fieldNum := int32(wire >> 3)
+					if fieldNum == 1 {
+						var stringLenmapkey uint64
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							stringLenmapkey |= uint64(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						intStringLenmapkey := int(stringLenmapkey)
+						if intStringLenmapkey < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						postStringIndexmapkey := iNdEx + intStringLenmapkey
+						if postStringIndexmapkey < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						if postStringIndexmapkey > l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+						iNdEx = postStringIndexmapkey
+					} else if fieldNum == 2 {
+						var mapmsglen int
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							mapmsglen |= int(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						if mapmsglen < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						postmsgIndex := iNdEx + mapmsglen
+						if postmsgIndex < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						if postmsgIndex > l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						mapvalue = &v1beta1.Coin{}
+						if err := options.Unmarshal(dAtA[iNdEx:postmsgIndex], mapvalue); err != nil {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+						}
+						iNdEx = postmsgIndex
+					} else {
+						iNdEx = entryPreIndex
+						skippy, err := runtime.Skip(dAtA[iNdEx:])
+						if err != nil {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+						}
+						if (skippy < 0) || (iNdEx+skippy) < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						if (iNdEx + skippy) > postIndex {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						iNdEx += skippy
+					}
+				}
+				x.MapStringCoin[mapkey] = mapvalue
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -4213,34 +4541,35 @@ type EchoRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// u32 is an uint32
-	U32                      uint32                 `protobuf:"varint,1,opt,name=u32,proto3" json:"u32,omitempty"`
-	U64                      uint64                 `protobuf:"varint,2,opt,name=u64,proto3" json:"u64,omitempty"`
-	Str                      string                 `protobuf:"bytes,3,opt,name=str,proto3" json:"str,omitempty"`
-	Bz                       []byte                 `protobuf:"bytes,4,opt,name=bz,proto3" json:"bz,omitempty"`
-	Timestamp                *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Duration                 *durationpb.Duration   `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
-	I32                      int32                  `protobuf:"varint,7,opt,name=i32,proto3" json:"i32,omitempty"`
-	I64                      int64                  `protobuf:"varint,10,opt,name=i64,proto3" json:"i64,omitempty"`
-	ABool                    bool                   `protobuf:"varint,15,opt,name=a_bool,json=aBool,proto3" json:"a_bool,omitempty"`
-	AnEnum                   Enum                   `protobuf:"varint,16,opt,name=an_enum,json=anEnum,proto3,enum=testpb.Enum" json:"an_enum,omitempty"`
-	AMessage                 *AMessage              `protobuf:"bytes,17,opt,name=a_message,json=aMessage,proto3" json:"a_message,omitempty"`
-	ACoin                    *v1beta1.Coin          `protobuf:"bytes,18,opt,name=a_coin,json=aCoin,proto3" json:"a_coin,omitempty"`
-	AnAddress                string                 `protobuf:"bytes,19,opt,name=an_address,json=anAddress,proto3" json:"an_address,omitempty"`
-	Page                     *v1beta11.PageRequest  `protobuf:"bytes,20,opt,name=page,proto3" json:"page,omitempty"`
-	Bools                    []bool                 `protobuf:"varint,21,rep,packed,name=bools,proto3" json:"bools,omitempty"`
-	Uints                    []uint32               `protobuf:"varint,22,rep,packed,name=uints,proto3" json:"uints,omitempty"`
-	Strings                  []string               `protobuf:"bytes,23,rep,name=strings,proto3" json:"strings,omitempty"`
-	Enums                    []Enum                 `protobuf:"varint,24,rep,packed,name=enums,proto3,enum=testpb.Enum" json:"enums,omitempty"`
-	Durations                []*durationpb.Duration `protobuf:"bytes,25,rep,name=durations,proto3" json:"durations,omitempty"`
-	SomeMessages             []*AMessage            `protobuf:"bytes,26,rep,name=some_messages,json=someMessages,proto3" json:"some_messages,omitempty"`
-	Positional1              int32                  `protobuf:"varint,27,opt,name=positional1,proto3" json:"positional1,omitempty"`
-	Positional2              string                 `protobuf:"bytes,28,opt,name=positional2,proto3" json:"positional2,omitempty"`
-	Positional3Varargs       []*v1beta1.Coin        `protobuf:"bytes,29,rep,name=positional3_varargs,json=positional3Varargs,proto3" json:"positional3_varargs,omitempty"`
-	DeprecatedField          string                 `protobuf:"bytes,30,opt,name=deprecated_field,json=deprecatedField,proto3" json:"deprecated_field,omitempty"`
-	ShorthandDeprecatedField string                 `protobuf:"bytes,31,opt,name=shorthand_deprecated_field,json=shorthandDeprecatedField,proto3" json:"shorthand_deprecated_field,omitempty"`
-	HiddenBool               bool                   `protobuf:"varint,32,opt,name=hidden_bool,json=hiddenBool,proto3" json:"hidden_bool,omitempty"`
-	MapStringString          map[string]string      `protobuf:"bytes,33,rep,name=map_string_string,json=mapStringString,proto3" json:"map_string_string,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	MapStringUint32          map[string]uint32      `protobuf:"bytes,34,rep,name=map_string_uint32,json=mapStringUint32,proto3" json:"map_string_uint32,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	U32                      uint32                   `protobuf:"varint,1,opt,name=u32,proto3" json:"u32,omitempty"`
+	U64                      uint64                   `protobuf:"varint,2,opt,name=u64,proto3" json:"u64,omitempty"`
+	Str                      string                   `protobuf:"bytes,3,opt,name=str,proto3" json:"str,omitempty"`
+	Bz                       []byte                   `protobuf:"bytes,4,opt,name=bz,proto3" json:"bz,omitempty"`
+	Timestamp                *timestamppb.Timestamp   `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Duration                 *durationpb.Duration     `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
+	I32                      int32                    `protobuf:"varint,7,opt,name=i32,proto3" json:"i32,omitempty"`
+	I64                      int64                    `protobuf:"varint,10,opt,name=i64,proto3" json:"i64,omitempty"`
+	ABool                    bool                     `protobuf:"varint,15,opt,name=a_bool,json=aBool,proto3" json:"a_bool,omitempty"`
+	AnEnum                   Enum                     `protobuf:"varint,16,opt,name=an_enum,json=anEnum,proto3,enum=testpb.Enum" json:"an_enum,omitempty"`
+	AMessage                 *AMessage                `protobuf:"bytes,17,opt,name=a_message,json=aMessage,proto3" json:"a_message,omitempty"`
+	ACoin                    *v1beta1.Coin            `protobuf:"bytes,18,opt,name=a_coin,json=aCoin,proto3" json:"a_coin,omitempty"`
+	AnAddress                string                   `protobuf:"bytes,19,opt,name=an_address,json=anAddress,proto3" json:"an_address,omitempty"`
+	Page                     *v1beta11.PageRequest    `protobuf:"bytes,20,opt,name=page,proto3" json:"page,omitempty"`
+	Bools                    []bool                   `protobuf:"varint,21,rep,packed,name=bools,proto3" json:"bools,omitempty"`
+	Uints                    []uint32                 `protobuf:"varint,22,rep,packed,name=uints,proto3" json:"uints,omitempty"`
+	Strings                  []string                 `protobuf:"bytes,23,rep,name=strings,proto3" json:"strings,omitempty"`
+	Enums                    []Enum                   `protobuf:"varint,24,rep,packed,name=enums,proto3,enum=testpb.Enum" json:"enums,omitempty"`
+	Durations                []*durationpb.Duration   `protobuf:"bytes,25,rep,name=durations,proto3" json:"durations,omitempty"`
+	SomeMessages             []*AMessage              `protobuf:"bytes,26,rep,name=some_messages,json=someMessages,proto3" json:"some_messages,omitempty"`
+	Positional1              int32                    `protobuf:"varint,27,opt,name=positional1,proto3" json:"positional1,omitempty"`
+	Positional2              string                   `protobuf:"bytes,28,opt,name=positional2,proto3" json:"positional2,omitempty"`
+	Positional3Varargs       []*v1beta1.Coin          `protobuf:"bytes,29,rep,name=positional3_varargs,json=positional3Varargs,proto3" json:"positional3_varargs,omitempty"`
+	DeprecatedField          string                   `protobuf:"bytes,30,opt,name=deprecated_field,json=deprecatedField,proto3" json:"deprecated_field,omitempty"`
+	ShorthandDeprecatedField string                   `protobuf:"bytes,31,opt,name=shorthand_deprecated_field,json=shorthandDeprecatedField,proto3" json:"shorthand_deprecated_field,omitempty"`
+	HiddenBool               bool                     `protobuf:"varint,32,opt,name=hidden_bool,json=hiddenBool,proto3" json:"hidden_bool,omitempty"`
+	MapStringString          map[string]string        `protobuf:"bytes,33,rep,name=map_string_string,json=mapStringString,proto3" json:"map_string_string,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	MapStringUint32          map[string]uint32        `protobuf:"bytes,34,rep,name=map_string_uint32,json=mapStringUint32,proto3" json:"map_string_uint32,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	MapStringCoin            map[string]*v1beta1.Coin `protobuf:"bytes,35,rep,name=map_string_coin,json=mapStringCoin,proto3" json:"map_string_coin,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (x *EchoRequest) Reset() {
@@ -4459,6 +4788,13 @@ func (x *EchoRequest) GetMapStringUint32() map[string]uint32 {
 	return nil
 }
 
+func (x *EchoRequest) GetMapStringCoin() map[string]*v1beta1.Coin {
+	if x != nil {
+		return x.MapStringCoin
+	}
+	return nil
+}
+
 type AMessage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -4552,7 +4888,7 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73,
 	0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa4, 0x0a, 0x0a, 0x0b, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd1, 0x0b, 0x0a, 0x0b, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0d, 0x52, 0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x04, 0x52, 0x03, 0x75, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18,
@@ -4626,7 +4962,12 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x62, 0x2e, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x4d, 0x61,
 	0x70, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x55, 0x69, 0x6e, 0x74, 0x33, 0x32, 0x45, 0x6e, 0x74,
 	0x72, 0x79, 0x52, 0x0f, 0x6d, 0x61, 0x70, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x55, 0x69, 0x6e,
-	0x74, 0x33, 0x32, 0x1a, 0x42, 0x0a, 0x14, 0x4d, 0x61, 0x70, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x74, 0x33, 0x32, 0x12, 0x4e, 0x0a, 0x0f, 0x6d, 0x61, 0x70, 0x5f, 0x73, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x18, 0x23, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x74,
+	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x2e, 0x4d, 0x61, 0x70, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x43, 0x6f, 0x69, 0x6e, 0x45,
+	0x6e, 0x74, 0x72, 0x79, 0x52, 0x0d, 0x6d, 0x61, 0x70, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x43,
+	0x6f, 0x69, 0x6e, 0x1a, 0x42, 0x0a, 0x14, 0x4d, 0x61, 0x70, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
 	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b,
 	0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a,
 	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61,
@@ -4634,33 +4975,39 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x72, 0x69, 0x6e, 0x67, 0x55, 0x69, 0x6e, 0x74, 0x33, 0x32, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12,
 	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65,
 	0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d,
-	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x2e, 0x0a, 0x08, 0x41,
-	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x62, 0x61, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x7a,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x62, 0x61, 0x7a, 0x22, 0x3d, 0x0a, 0x0c, 0x45,
-	0x63, 0x68, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a, 0x07, 0x72,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x52, 0x07, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2a, 0x64, 0x0a, 0x04, 0x45, 0x6e,
-	0x75, 0x6d, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45,
-	0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d,
-	0x5f, 0x4f, 0x4e, 0x45, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x54,
-	0x57, 0x4f, 0x10, 0x02, 0x12, 0x0d, 0x0a, 0x09, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x46, 0x49, 0x56,
-	0x45, 0x10, 0x05, 0x12, 0x1b, 0x0a, 0x0e, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4e, 0x45, 0x47, 0x5f,
-	0x54, 0x48, 0x52, 0x45, 0x45, 0x10, 0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01,
-	0x32, 0x3a, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x31, 0x0a, 0x04, 0x45, 0x63, 0x68,
-	0x6f, 0x12, 0x13, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x63, 0x68, 0x6f, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x88, 0x01, 0x0a,
-	0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x0a, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x2f, 0x76,
-	0x32, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
-	0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x1a, 0x5b, 0x0a, 0x12, 0x4d,
+	0x61, 0x70, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x43, 0x6f, 0x69, 0x6e, 0x45, 0x6e, 0x74, 0x72,
+	0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
+	0x6b, 0x65, 0x79, 0x12, 0x2f, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x05, 0x76,
+	0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x2e, 0x0a, 0x08, 0x41, 0x4d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x62, 0x61, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x7a, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x05, 0x52, 0x03, 0x62, 0x61, 0x7a, 0x22, 0x3d, 0x0a, 0x0c, 0x45, 0x63, 0x68, 0x6f,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a, 0x07, 0x72, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x74, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0x2e, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x07,
+	0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2a, 0x64, 0x0a, 0x04, 0x45, 0x6e, 0x75, 0x6d, 0x12,
+	0x14, 0x0a, 0x10, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46,
+	0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4f, 0x4e,
+	0x45, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x54, 0x57, 0x4f, 0x10,
+	0x02, 0x12, 0x0d, 0x0a, 0x09, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x46, 0x49, 0x56, 0x45, 0x10, 0x05,
+	0x12, 0x1b, 0x0a, 0x0e, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4e, 0x45, 0x47, 0x5f, 0x54, 0x48, 0x52,
+	0x45, 0x45, 0x10, 0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x32, 0x3a, 0x0a,
+	0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x31, 0x0a, 0x04, 0x45, 0x63, 0x68, 0x6f, 0x12, 0x13,
+	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x63, 0x68,
+	0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x88, 0x01, 0x0a, 0x0a, 0x63, 0x6f,
+	0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x2f, 0x76, 0x32, 0x2f, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02,
+	0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06,
+	0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65,
+	0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4676,7 +5023,7 @@ func file_testpb_query_proto_rawDescGZIP() []byte {
 }
 
 var file_testpb_query_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_testpb_query_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_testpb_query_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_testpb_query_proto_goTypes = []interface{}{
 	(Enum)(0),                     // 0: testpb.Enum
 	(*EchoRequest)(nil),           // 1: testpb.EchoRequest
@@ -4684,32 +5031,35 @@ var file_testpb_query_proto_goTypes = []interface{}{
 	(*EchoResponse)(nil),          // 3: testpb.EchoResponse
 	nil,                           // 4: testpb.EchoRequest.MapStringStringEntry
 	nil,                           // 5: testpb.EchoRequest.MapStringUint32Entry
-	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),   // 7: google.protobuf.Duration
-	(*v1beta1.Coin)(nil),          // 8: cosmos.base.v1beta1.Coin
-	(*v1beta11.PageRequest)(nil),  // 9: cosmos.base.query.v1beta1.PageRequest
+	nil,                           // 6: testpb.EchoRequest.MapStringCoinEntry
+	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),   // 8: google.protobuf.Duration
+	(*v1beta1.Coin)(nil),          // 9: cosmos.base.v1beta1.Coin
+	(*v1beta11.PageRequest)(nil),  // 10: cosmos.base.query.v1beta1.PageRequest
 }
 var file_testpb_query_proto_depIdxs = []int32{
-	6,  // 0: testpb.EchoRequest.timestamp:type_name -> google.protobuf.Timestamp
-	7,  // 1: testpb.EchoRequest.duration:type_name -> google.protobuf.Duration
+	7,  // 0: testpb.EchoRequest.timestamp:type_name -> google.protobuf.Timestamp
+	8,  // 1: testpb.EchoRequest.duration:type_name -> google.protobuf.Duration
 	0,  // 2: testpb.EchoRequest.an_enum:type_name -> testpb.Enum
 	2,  // 3: testpb.EchoRequest.a_message:type_name -> testpb.AMessage
-	8,  // 4: testpb.EchoRequest.a_coin:type_name -> cosmos.base.v1beta1.Coin
-	9,  // 5: testpb.EchoRequest.page:type_name -> cosmos.base.query.v1beta1.PageRequest
+	9,  // 4: testpb.EchoRequest.a_coin:type_name -> cosmos.base.v1beta1.Coin
+	10, // 5: testpb.EchoRequest.page:type_name -> cosmos.base.query.v1beta1.PageRequest
 	0,  // 6: testpb.EchoRequest.enums:type_name -> testpb.Enum
-	7,  // 7: testpb.EchoRequest.durations:type_name -> google.protobuf.Duration
+	8,  // 7: testpb.EchoRequest.durations:type_name -> google.protobuf.Duration
 	2,  // 8: testpb.EchoRequest.some_messages:type_name -> testpb.AMessage
-	8,  // 9: testpb.EchoRequest.positional3_varargs:type_name -> cosmos.base.v1beta1.Coin
+	9,  // 9: testpb.EchoRequest.positional3_varargs:type_name -> cosmos.base.v1beta1.Coin
 	4,  // 10: testpb.EchoRequest.map_string_string:type_name -> testpb.EchoRequest.MapStringStringEntry
 	5,  // 11: testpb.EchoRequest.map_string_uint32:type_name -> testpb.EchoRequest.MapStringUint32Entry
-	1,  // 12: testpb.EchoResponse.request:type_name -> testpb.EchoRequest
-	1,  // 13: testpb.Query.Echo:input_type -> testpb.EchoRequest
-	3,  // 14: testpb.Query.Echo:output_type -> testpb.EchoResponse
-	14, // [14:15] is the sub-list for method output_type
-	13, // [13:14] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	6,  // 12: testpb.EchoRequest.map_string_coin:type_name -> testpb.EchoRequest.MapStringCoinEntry
+	1,  // 13: testpb.EchoResponse.request:type_name -> testpb.EchoRequest
+	9,  // 14: testpb.EchoRequest.MapStringCoinEntry.value:type_name -> cosmos.base.v1beta1.Coin
+	1,  // 15: testpb.Query.Echo:input_type -> testpb.EchoRequest
+	3,  // 16: testpb.Query.Echo:output_type -> testpb.EchoResponse
+	16, // [16:17] is the sub-list for method output_type
+	15, // [15:16] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_testpb_query_proto_init() }
@@ -4761,7 +5111,7 @@ func file_testpb_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_testpb_query_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

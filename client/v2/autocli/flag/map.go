@@ -1,8 +1,12 @@
 package flag
 
 import (
+	"context"
+	"fmt"
+	"github.com/cockroachdb/errors"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"strings"
 )
 
 func bindSimpleMapFlag(flagSet *pflag.FlagSet, keyKind protoreflect.Kind, valueKind protoreflect.Kind, name, shorthand, usage string) HasValue {
@@ -155,4 +159,87 @@ func (v mapValue[K, V]) Get(mutable protoreflect.Value) (protoreflect.Value, err
 		protoMap.Set(protoreflect.MapKey(protoreflect.ValueOf(k)), v.toProtoreflectValue(val))
 	}
 	return mutable, nil
+}
+
+type keyValueResolver[T comparable] func(string) (T, error)
+
+type compositeMapType[T comparable] struct {
+	keyValueResolver keyValueResolver[T]
+	keyType          string
+	valueType        Type
+}
+
+type compositeMapValue[T comparable] struct {
+	keyValueResolver keyValueResolver[T]
+	keyType          string
+	valueType        Type
+	values           map[T]protoreflect.Value
+	ctx              context.Context
+	opts             *Builder
+}
+
+func (m compositeMapType[T]) DefaultValue() string {
+	return ""
+}
+
+func (m compositeMapType[T]) NewValue(ctx context.Context, opts *Builder) Value {
+	return &compositeMapValue[T]{
+		keyValueResolver: m.keyValueResolver,
+		valueType:        m.valueType,
+		keyType:          m.keyType,
+		ctx:              ctx,
+		opts:             opts,
+		values:           nil,
+	}
+}
+
+func (m *compositeMapValue[T]) Set(s string) error {
+	parts := strings.SplitN(s, "=", 2)
+	if len(parts) != 2 {
+		return errors.New("invalid format, expected key=value")
+	}
+	key, val := parts[0], parts[1]
+
+	keyValue, err := m.keyValueResolver(key)
+	if err != nil {
+		return err
+	}
+	fmt.Println(keyValue)
+
+	simpleVal := m.valueType.NewValue(m.ctx, m.opts)
+	err = simpleVal.Set(val)
+	if err != nil {
+		return err
+	}
+	protoValue, err := simpleVal.Get(protoreflect.Value{})
+	if err != nil {
+		return err
+	}
+	if m.values == nil {
+		m.values = make(map[T]protoreflect.Value)
+	}
+
+	m.values[keyValue] = protoValue
+	return nil
+}
+
+func (m *compositeMapValue[T]) Get(mutable protoreflect.Value) (protoreflect.Value, error) {
+	protoMap := mutable.Map()
+	for key, value := range m.values {
+		keyVal := protoreflect.ValueOf(key)
+		protoMap.Set(keyVal.MapKey(), value)
+	}
+	return protoreflect.ValueOfMap(protoMap), nil
+}
+
+func (m *compositeMapValue[T]) String() string {
+	if m.values == nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%+v", m.values)
+}
+
+func (m *compositeMapValue[T]) Type() string {
+	return fmt.Sprintf("map[%s]%s", m.keyType, m.valueType.NewValue(m.ctx, m.opts).Type())
 }

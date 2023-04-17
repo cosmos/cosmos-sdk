@@ -2,9 +2,11 @@ package directaux_test
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -15,6 +17,7 @@ import (
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/directaux"
 )
@@ -66,7 +69,7 @@ func TestDirectAuxHandler(t *testing.T) {
 	}
 
 	signingData := signing.SignerData{
-		ChainId:       chainID,
+		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      accSeq,
 		Address:       "",
@@ -83,12 +86,19 @@ func TestDirectAuxHandler(t *testing.T) {
 		AuthInfoBytes: authInfoBz,
 		BodyBytes:     bodyBz,
 	}
-	modeHandler, err := directaux.NewSignModeHandler(directaux.SignModeHandlerOptions{})
+	signersCtx, err := signing.NewContext(signing.Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyAddressCodec{},
+	})
+	require.NoError(t, err)
+	modeHandler, err := directaux.NewSignModeHandler(directaux.SignModeHandlerOptions{
+		SignersContext: signersCtx,
+	})
 	require.NoError(t, err)
 
 	t.Log("verify fee payer cannot use SIGN_MODE_DIRECT_AUX")
 	feePayerSigningData := signing.SignerData{
-		ChainId:       chainID,
+		ChainID:       chainID,
 		AccountNumber: accNum,
 		Address:       feePayerAddr,
 		PubKey:        anyPk,
@@ -143,3 +153,15 @@ func TestDirectAuxHandler(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, expectedSignBytes, signBytes)
 }
+
+type dummyAddressCodec struct{}
+
+func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return hex.DecodeString(text)
+}
+
+func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
+	return hex.EncodeToString(bz), nil
+}
+
+var _ address.Codec = dummyAddressCodec{}

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -51,26 +52,17 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	balances := sdk.NewCoins()
-	accountStore := k.getAccountStore(sdkCtx, addr)
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		denom := string(key)
-
-		// IBC denom metadata will be registered in ibc-go after first mint
-		//
-		// Since: ibc-go v7
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], value math.Int) (include bool, err error) {
+		denom := key.K2()
 		if req.ResolveDenom {
 			if metadata, ok := k.GetDenomMetaData(sdkCtx, denom); ok {
 				denom = metadata.Display
 			}
 		}
-		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
-		if err != nil {
-			return err
-		}
-		balances = append(balances, balance)
-		return nil
-	})
+		balances = append(balances, sdk.NewCoin(denom, value))
+		return false, nil // we don't include results because we're appending them here.
+	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -93,13 +85,12 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	balances := sdk.NewCoins()
-	accountStore := k.getAccountStore(sdkCtx, addr)
 	zeroAmt := math.ZeroInt()
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, _ []byte) error {
-		balances = append(balances, sdk.NewCoin(string(key), zeroAmt))
-		return nil
-	})
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (include bool, err error) {
+		balances = append(balances, sdk.NewCoin(key.K2(), zeroAmt))
+		return false, nil // not including results as they're appended here
+	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -237,34 +228,24 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, req.Denom)
-
 	var denomOwners []*types.DenomOwner
-	pageRes, err := query.FilteredPaginate(
-		denomPrefixStore,
-		req.Pagination,
-		func(key, _ []byte, accumulate bool) (bool, error) {
-			if accumulate {
-				address, _, err := types.AddressAndDenomFromBalancesStore(key)
-				if err != nil {
-					return false, err
-				}
 
-				denomOwners = append(
-					denomOwners,
-					&types.DenomOwner{
-						Address: address.String(),
-						Balance: k.GetBalance(ctx, address, req.Denom),
-					},
-				)
+	_, pageRes, err := query.CollectionFilteredPaginate(goCtx, k.Balances.Indexes.Denom, req.Pagination,
+		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (include bool, err error) {
+			amt, err := k.Balances.Get(goCtx, collections.Join(key.K2(), req.Denom))
+			if err != nil {
+				return false, err
 			}
-
-			return true, nil
+			denomOwners = append(denomOwners, &types.DenomOwner{
+				Address: key.K2().String(),
+				Balance: sdk.NewCoin(req.Denom, amt),
+			})
+			return false, nil
 		},
+		query.WithCollectionPaginationPairPrefix[string, sdk.AccAddress](req.Denom),
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil

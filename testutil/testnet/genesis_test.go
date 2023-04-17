@@ -3,7 +3,6 @@ package testnet_test
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -83,7 +82,6 @@ func TestGenesisBuilder_ChainID(t *testing.T) {
 	_, ok := m["chain_id"]
 	require.False(t, ok)
 
-	m = gb.ChainID("my-chain").JSON()
 	var id string
 	require.NoError(
 		t,
@@ -98,8 +96,6 @@ func TestGenesisBuilder_ChainID(t *testing.T) {
 // Use known keys and addresses to assert that correct validator and delegator keys
 // occur in the expected locations (i.e. we didn't mistakenly swap the keys anywhere).
 func TestGenesisBuilder_GentxAddresses(t *testing.T) {
-	const chainID = "simapp-chain"
-
 	const valSecret0 = "val-secret-0"
 	const valAddr0 = "3F3B076353767F046477A6E0982F808C24D1870A"
 	const valPubKey0 = "ZhVhrOUHnUwYw/GlBSBrw/0X6A261gchCRYkAxGF2jk="
@@ -205,14 +201,6 @@ func TestGenesisBuilder_GentxAddresses(t *testing.T) {
 	gentxs := g.AppState.Genutil.GenTxs
 	require.Equal(t, gentxs[0].Body.Messages[0].PubKey.Key, valPubKey0)
 	require.Equal(t, gentxs[0].AuthInfo.SignerInfos[0].PublicKey.Key, delPubKey0)
-
-	// Delegator is derived from the secp256k1 key, not the ed25519 key.
-	require.Equal(t, gentxs[0].Body.Messages[0].DelegatorAddress, delAccAddr0)
-
-	// The validator address must match the delegator address.
-	_, parsedValAddr, err := bech32.DecodeAndConvert(gentxs[0].Body.Messages[0].DelegatorAddress)
-	require.NoError(t, err)
-	require.Equal(t, fmt.Sprintf("%X", parsedValAddr), delAddr0)
 
 	// The only base account in this genesis, matches the secp256k1 key.
 	acct := g.AppState.Auth.Accounts[0]

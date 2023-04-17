@@ -70,7 +70,7 @@ func bench(b *testing.B, newBackend func(testing.TB) ormtable.Backend) {
 	})
 }
 
-func benchInsert(b *testing.B, ctx context.Context) {
+func benchInsert(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Insert(ctx, &testpb.Balance{
@@ -81,7 +81,7 @@ func benchInsert(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchUpdate(b *testing.B, ctx context.Context) {
+func benchUpdate(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Update(ctx, &testpb.Balance{
@@ -92,7 +92,7 @@ func benchUpdate(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchGet(b *testing.B, ctx context.Context) {
+func benchGet(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		balance, err := balanceTable.Get(ctx, fmt.Sprintf("acct%d", i), "bar")
@@ -101,7 +101,7 @@ func benchGet(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchDelete(b *testing.B, ctx context.Context) {
+func benchDelete(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Delete(ctx, &testpb.Balance{

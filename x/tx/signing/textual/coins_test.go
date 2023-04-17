@@ -15,8 +15,8 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-func TestCoinsJsonTestcases(t *testing.T) {
-	var testcases []coinsJsonTest
+func TestCoinsJSONTestcases(t *testing.T) {
+	var testcases []coinsJSONTest
 	raw, err := os.ReadFile("./internal/testdata/coins.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
@@ -93,12 +93,12 @@ func checkCoinEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
 	require.True(t, v.Equal(v1))
 }
 
-// coinsJsonTest is the type of test cases in the testdata file.
+// coinsJSONTest is the type of test cases in the testdata file.
 // If the test case has a Proto, try to Format() it. If Error is set, expect
 // an error, otherwise match Text, then Parse() the text and expect it to
 // match (via proto.Equals()) the original Proto. If the test case has no
 // Proto, try to Parse() the Text and expect an error if Error is set.
-type coinsJsonTest struct {
+type coinsJSONTest struct {
 	Proto    []*basev1beta1.Coin
 	Metadata map[string]*bankv1beta1.Metadata
 	Text     string

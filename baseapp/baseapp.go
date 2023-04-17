@@ -622,8 +622,6 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 
 		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
 
-		//TODO add endblock attribute to events
-		// append the endblocker events to the finalizeblock events
 
 		endblock = eb
 	}

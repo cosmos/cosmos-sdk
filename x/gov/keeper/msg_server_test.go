@@ -266,7 +266,6 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 		},
 		"empty proposer": {
 			preRun: func() uint64 {
-
 				return proposalID
 			},
 			depositor: sdk.AccAddress{},

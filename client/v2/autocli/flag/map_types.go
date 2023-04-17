@@ -58,6 +58,6 @@ func (gm *genericMapValue[K, V]) Type() string {
 	return gm.Options.genericType
 }
 
-func (_ *genericMapValue[K, V]) String() string {
+func (gm *genericMapValue[K, V]) String() string {
 	return ""
 }

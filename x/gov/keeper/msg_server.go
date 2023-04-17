@@ -43,7 +43,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 
-	if err := validateAmount(sdk.NewCoins(msg.InitialDeposit...)); err != nil {
+	if err := validateDeposit(sdk.NewCoins(msg.InitialDeposit...)); err != nil {
 		return nil, err
 	}
 
@@ -396,6 +396,18 @@ func validateAmount(amount sdk.Coins) error {
 
 	if !amount.IsAllPositive() {
 		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
+	}
+
+	return nil
+}
+
+func validateDeposit(deposit sdk.Coins) error {
+	if !deposit.IsValid() {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+	}
+
+	if deposit.IsAnyNegative() {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
 
 	return nil

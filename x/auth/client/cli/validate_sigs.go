@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -90,7 +91,7 @@ func printAndValidateSigs(
 			sigSanity      = "OK"
 		)
 
-		if i >= len(signers) || sigAddr.String() != signers[i] {
+		if i >= len(signers) || !bytes.Equal(sigAddr, signers[i]) {
 			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
 		}

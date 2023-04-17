@@ -54,7 +54,7 @@ type testTx struct {
 	strAddress string
 }
 
-func (tx testTx) GetSigners() []string { panic("not implemented") }
+func (tx testTx) GetSigners() [][]byte { panic("not implemented") }
 
 func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
@@ -96,7 +96,7 @@ func (sigErrTx) GetMsgsV2() []protov2.Message { return nil }
 
 func (sigErrTx) ValidateBasic() error { return nil }
 
-func (sigErrTx) GetSigners() []string { return nil }
+func (sigErrTx) GetSigners() [][]byte { return nil }
 
 func (sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
 

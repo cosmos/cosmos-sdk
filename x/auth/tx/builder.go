@@ -230,7 +230,7 @@ func (w *wrapper) GetFee() sdk.Coins {
 func (w *wrapper) FeePayer() []byte {
 	feePayer := w.tx.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		feePayerAddr, err := w.cdc.SigningContext().AddressCodec().StringToBytes(feePayer)
+		feePayerAddr, err := w.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feePayer)
 		if err != nil {
 			panic(err)
 		}
@@ -549,7 +549,7 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	// Get the aux signer's index in GetSigners.
 	signerIndex := -1
 	for i, signer := range w.GetSigners() {
-		addrBz, err := w.cdc.SigningContext().AddressCodec().StringToBytes(data.Address)
+		addrBz, err := w.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(data.Address)
 		if err != nil {
 			return err
 		}

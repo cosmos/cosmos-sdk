@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"bytes"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -86,19 +87,24 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 	// if feegranter set deduct fee from feegranter account.
 	// this works with only when feegrant enabled.
 	if feeGranter != "" {
+		feeGranterAddr, err := sdk.AccAddressFromBech32(feeGranter)
+		if err != nil {
+			return err
+		}
+
 		if dfd.feegrantKeeper == nil {
 			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		} else if feeGranter != feePayer {
-			err := dfd.feegrantKeeper.UseGrantedFees(ctx, sdk.MustAccAddressFromBech32(feeGranter), sdk.MustAccAddressFromBech32(feePayer), fee, sdkTx.GetMsgs())
+		} else if !bytes.Equal(feeGranterAddr, feePayer) {
+			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranterAddr, feePayer, fee, sdkTx.GetMsgs())
 			if err != nil {
 				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 			}
 		}
 
-		deductFeesFrom = feeGranter
+		deductFeesFrom = feeGranterAddr
 	}
 
-	deductFeesFromAcc := dfd.accountKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(deductFeesFrom))
+	deductFeesFromAcc := dfd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 	if deductFeesFromAcc == nil {
 		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
@@ -115,7 +121,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		sdk.NewEvent(
 			sdk.EventTypeTx,
 			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(deductFeesFrom).String()),
 		),
 	}
 	ctx.EventManager().EmitEvents(events)

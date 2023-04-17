@@ -34,7 +34,7 @@ var (
 	_ ProtoCodecMarshaler = &ProtoCodec{}
 )
 
-// Deprecated: NewProtoCodec returns a reference to a new ProtoCodec
+// NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 	return &ProtoCodec{
 		interfaceRegistry: interfaceRegistry,

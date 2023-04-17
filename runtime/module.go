@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -96,7 +97,14 @@ func ProvideApp() (
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	interfaceRegistry := codectypes.NewInterfaceRegistryWithProtoFiles(protoFiles)
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.Options{
+		ProtoFiles:            protoFiles,
+		AddressCodec:          globalAccAddressCodec{},
+		ValidatorAddressCodec: globalValAddressCodec{},
+	})
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+	}
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
@@ -208,4 +216,24 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
+}
+
+type globalAccAddressCodec struct{}
+
+func (g globalAccAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return sdk.AccAddressFromBech32(text)
+}
+
+func (g globalAccAddressCodec) BytesToString(bz []byte) (string, error) {
+	return sdk.AccAddress(bz).String(), nil
+}
+
+type globalValAddressCodec struct{}
+
+func (g globalValAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return sdk.ValAddressFromBech32(text)
+}
+
+func (g globalValAddressCodec) BytesToString(bz []byte) (string, error) {
+	return sdk.ValAddress(bz).String(), nil
 }

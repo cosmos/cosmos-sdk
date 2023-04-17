@@ -54,5 +54,5 @@ func (d tipDecorator) transferTip(ctx sdk.Context, sdkTx sdk.Tx) error {
 		return fmt.Errorf("cannot tip these coins: %w", err)
 	}
 
-	return d.bankKeeper.SendCoins(ctx, tipper, sdk.MustAccAddressFromBech32(tipTx.FeePayer()), coins)
+	return d.bankKeeper.SendCoins(ctx, tipper, tipTx.FeePayer(), coins)
 }

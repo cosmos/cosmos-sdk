@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"time"
@@ -57,8 +58,8 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		}
 
 		// assert that the governance module account is the only signer of the messages
-		if signers[0] != keeper.GetGovernanceAccount(ctx).GetAddress().String() {
-			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, signers[0])
+		if !bytes.Equal(signers[0], keeper.GetGovernanceAccount(ctx).GetAddress()) {
+			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, sdk.AccAddress(signers[0]).String())
 		}
 
 		// use the msg service router to see that there is a valid route for that message.

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"time"
@@ -98,14 +99,11 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			return nil, authz.ErrAuthorizationNumOfSigners
 		}
 
-		granter, err := sdk.AccAddressFromBech32(signers[0])
-		if err != nil {
-			return nil, err
-		}
+		granter := signers[0]
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
-		if !granter.Equals(grantee) {
+		if !bytes.Equal(granter, grantee) {
 			skey := grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg))
 
 			grant, found := k.getGrant(ctx, skey)

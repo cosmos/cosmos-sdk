@@ -2645,15 +2645,16 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	return groupPolicyAddress
 }
 
-func (s *E2ETestSuite) newValidMembers(weights, membersAddress []string) group.MemberRequests {
+func (s *E2ETestSuite) newValidMembers(weights, membersAddress []string) []group.MemberRequest {
 	s.Require().Equal(len(weights), len(membersAddress))
-	membersValid := group.MemberRequests{}
+	membersValid := []group.MemberRequest{}
 	for i, address := range membersAddress {
-		membersValid.Members = append(membersValid.Members, group.MemberRequest{
+		membersValid = append(membersValid, group.MemberRequest{
 			Address:  address,
 			Weight:   weights[i],
 			Metadata: validMetadata,
 		})
 	}
+
 	return membersValid
 }

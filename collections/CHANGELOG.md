@@ -33,4 +33,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.1.0)
 
-Collections `v0.1.0` is released! Check out the docs to know how to use the APIs. 
+Collections `v0.1.0` is released! Check out the [docs](https://docs.cosmos.network/main/packages/collections) to know how to use the APIs. 

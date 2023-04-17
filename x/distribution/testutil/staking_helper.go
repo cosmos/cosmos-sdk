@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -12,7 +13,7 @@ import (
 
 func CreateValidator(pk cryptotypes.PubKey, stake math.Int) (stakingtypes.Validator, error) {
 	valConsAddr := sdk.GetConsAddress(pk)
-	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr), pk, stakingtypes.Description{})
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr), pk, stakingtypes.Description{Moniker: "TestValidator"})
 	val.Tokens = stake
 	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	return val, err

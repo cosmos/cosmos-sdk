@@ -24,7 +24,7 @@ var _ types.MsgServer = msgServer{}
 
 // SubmitEvidence implements the MsgServer.SubmitEvidence method.
 func (ms msgServer) SubmitEvidence(goCtx context.Context, msg *types.MsgSubmitEvidence) (*types.MsgSubmitEvidenceResponse, error) {
-	if _, err := sdk.AccAddressFromBech32(msg.Submitter); err != nil {
+	if _, err := ms.addressCodec.StringToBytes(msg.Submitter); err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid submitter address: %s", err)
 	}
 

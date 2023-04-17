@@ -1,6 +1,7 @@
 name: Tests / Code Coverage
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
@@ -64,6 +65,8 @@ jobs:
             go.sum
             **/go.mod
             **/go.sum
+            **/Makefile
+            Makefile
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"

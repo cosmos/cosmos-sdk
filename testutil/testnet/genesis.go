@@ -7,6 +7,7 @@ import (
 	"time"
 
 	cmttypes "github.com/cometbft/cometbft/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -14,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -110,18 +111,12 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 	if err != nil {
 		panic(err)
 	}
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
+
+	if err := msg.Validate(); err != nil {
 		panic(err)
 	}
 
-	msg.DelegatorAddress = sdk.AccAddress(valAddr).String()
-
-	if err := msg.ValidateBasic(); err != nil {
-		panic(err)
-	}
-
-	txConf := authtx.NewTxConfig(b.codec, tx.DefaultSignModes)
+	txConf := authtx.NewTxConfig(b.codec, authtx.DefaultSignModes)
 
 	txb := txConf.NewTxBuilder()
 	if err := txb.SetMsgs(msg); err != nil {
@@ -456,13 +451,13 @@ func (b *GenesisBuilder) DefaultDistribution() *GenesisBuilder {
 // JSON returns the map of the genesis after applying some final transformations.
 func (b *GenesisBuilder) JSON() map[string]json.RawMessage {
 	gentxGenesisState := genutiltypes.NewGenesisStateFromTx(
-		authtx.NewTxConfig(b.codec, tx.DefaultSignModes).TxJSONEncoder(),
+		authtx.NewTxConfig(b.codec, authtx.DefaultSignModes).TxJSONEncoder(),
 		b.gentxs,
 	)
 
 	if err := genutiltypes.ValidateGenesis(
 		gentxGenesisState,
-		authtx.NewTxConfig(b.codec, tx.DefaultSignModes).TxJSONDecoder(),
+		authtx.NewTxConfig(b.codec, authtx.DefaultSignModes).TxJSONDecoder(),
 		genutiltypes.DefaultMessageValidator,
 	); err != nil {
 		panic(err)

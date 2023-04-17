@@ -615,6 +615,11 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 			panic(err)
 		}
 
+		// append endblocker attribute to all events in the endblocker response
+		for i, event := range eb.Events {
+			eb.Events[i].Attributes = append(event.Attributes, abci.EventAttribute{Key: "mode", Value: "endBlock"})
+		}
+
 		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
 
 		//TODO add endblock attribute to events
@@ -622,8 +627,6 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 
 		endblock = eb
 	}
-
-	// TODO: Prefix with "end_blocker"
 
 	return endblock, nil
 }

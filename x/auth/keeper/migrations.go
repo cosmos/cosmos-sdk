@@ -60,7 +60,7 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.Migrate(ctx, m.keeper.storeService, m.legacySubspace, m.keeper.cdc)
 }
 
-// Migrate4To5 migrates the x/auth module state from the consensus version 5 to 6.
+// Migrate4To5 migrates the x/auth module state from the consensus version 4 to 5.
 // It migrates the GlobalAccountNumber from being a protobuf defined value to a
 // big-endian encoded uint64, it also migrates it to use a more canonical prefix.
 func (m Migrator) Migrate4To5(ctx sdk.Context) error {

@@ -144,7 +144,7 @@ func (r *SignModeHandler) GetFieldValueRenderer(fd protoreflect.FieldDescriptor)
 	}
 }
 
-// GetMessageValueRenderer is a specialization of GetValueRenderer for messages.
+// GetMessageValueRenderer returns a value renderer for a message.
 // It is useful when the message type is discovered outside the context of a field,
 // e.g. when handling a google.protobuf.Any.
 func (r *SignModeHandler) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {

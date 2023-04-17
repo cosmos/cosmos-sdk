@@ -25,61 +25,43 @@ type CustomProtobufType interface {
 }
 
 var (
-	mu             sync.RWMutex
+	once           sync.Once
 	mergedRegistry *protoregistry.Files
 	_              txsigning.ProtoFileResolver = lazyProtoRegistry{}
 )
 
 type lazyProtoRegistry struct{}
 
-func (l lazyProtoRegistry) init() error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if mergedRegistry != nil {
-		return nil
-	}
-
+func (l lazyProtoRegistry) getRegistry() (*protoregistry.Files, error) {
 	var err error
-	mergedRegistry, err = proto.MergedRegistry()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	once.Do(func() {
+		mergedRegistry, err = proto.MergedRegistry()
+	})
+	return mergedRegistry, err
 }
 
 func (l lazyProtoRegistry) FindFileByPath(s string) (protoreflect.FileDescriptor, error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	if mergedRegistry == nil {
-		if err := l.init(); err != nil {
-			return nil, err
-		}
+	reg, err := l.getRegistry()
+	if err != nil {
+		return nil, err
 	}
-	return mergedRegistry.FindFileByPath(s)
+	return reg.FindFileByPath(s)
 }
 
 func (l lazyProtoRegistry) FindDescriptorByName(name protoreflect.FullName) (protoreflect.Descriptor, error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	if mergedRegistry == nil {
-		if err := l.init(); err != nil {
-			return nil, err
-		}
+	reg, err := l.getRegistry()
+	if err != nil {
+		return nil, err
 	}
-	return mergedRegistry.FindDescriptorByName(name)
+	return reg.FindDescriptorByName(name)
 }
 
 func (l lazyProtoRegistry) RangeFiles(f func(protoreflect.FileDescriptor) bool) {
-	mu.RLock()
-	defer mu.RUnlock()
-	if mergedRegistry == nil {
-		if err := l.init(); err != nil {
-			panic(err)
-		}
+	reg, err := l.getRegistry()
+	if err != nil {
+		panic(err)
 	}
-	mergedRegistry.RangeFiles(f)
+	reg.RangeFiles(f)
 }
 
 func MergedProtoRegistry() txsigning.ProtoFileResolver {

@@ -111,16 +111,16 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// double sign less than max age
 	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
-	evidence := abci.RequestBeginBlock{
+	f.app.BaseApp.BlockInfo = sdk.NewBlockInfo(abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      time.Unix(0, 0),
 			Height:    0,
 		}},
-	}
+	})
 
-	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+	f.evidenceKeeper.BeginBlocker(ctx)
 
 	// should be jailed and tombstoned
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed())
@@ -131,7 +131,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+	f.evidenceKeeper.BeginBlocker(ctx)
 
 	// tokens should be the same (capped slash)
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
@@ -178,14 +178,14 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
-	evidence := abci.RequestBeginBlock{
+	f.app.BaseApp.BlockInfo = sdk.NewBlockInfo(abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      ctx.BlockTime(),
 			Height:    0,
 		}},
-	}
+	})
 
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
 
@@ -193,7 +193,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
 
-	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+	f.evidenceKeeper.BeginBlocker(ctx)
 
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed() == false)
 	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.Address())) == false)

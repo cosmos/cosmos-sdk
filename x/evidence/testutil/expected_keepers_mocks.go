@@ -373,6 +373,20 @@ func (mr *MockBlockinfoMockRecorder) GetHeight() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeight", reflect.TypeOf((*MockBlockinfo)(nil).GetHeight))
 }
 
+// GetMisbehavior mocks base method.
+func (m *MockBlockinfo) GetMisbehavior() []blockinfo.Misbehavior {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMisbehavior")
+	ret0, _ := ret[0].([]blockinfo.Misbehavior)
+	return ret0
+}
+
+// GetMisbehavior indicates an expected call of GetMisbehavior.
+func (mr *MockBlockinfoMockRecorder) GetMisbehavior() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMisbehavior", reflect.TypeOf((*MockBlockinfo)(nil).GetMisbehavior))
+}
+
 // GetProposerAddress mocks base method.
 func (m *MockBlockinfo) GetProposerAddress() []byte {
 	m.ctrl.T.Helper()
@@ -399,18 +413,4 @@ func (m *MockBlockinfo) GetValidatorsHash() []byte {
 func (mr *MockBlockinfoMockRecorder) GetValidatorsHash() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidatorsHash", reflect.TypeOf((*MockBlockinfo)(nil).GetValidatorsHash))
-}
-
-// Misbehavior mocks base method.
-func (m *MockBlockinfo) Misbehavior() []blockinfo.Misbehavior {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Misbehavior")
-	ret0, _ := ret[0].([]blockinfo.Misbehavior)
-	return ret0
-}
-
-// Misbehavior indicates an expected call of Misbehavior.
-func (mr *MockBlockinfoMockRecorder) Misbehavior() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Misbehavior", reflect.TypeOf((*MockBlockinfo)(nil).Misbehavior))
 }

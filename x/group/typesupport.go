@@ -3,7 +3,6 @@ package group
 import (
 	errorsmod "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
@@ -25,23 +24,6 @@ func (ms MemberRequests) ValidateBasic() error {
 		addr := member.Address
 		if _, exists := index[addr]; exists {
 			return errorsmod.Wrapf(errors.ErrDuplicate, "address: %s", addr)
-		}
-		index[addr] = struct{}{}
-	}
-	return nil
-}
-
-type accAddresses []sdk.AccAddress
-
-// ValidateBasic verifies that there's no duplicate address.
-// Individual account address validation has to be done separately.
-func (a accAddresses) ValidateBasic() error {
-	index := make(map[string]struct{}, len(a))
-	for i := range a {
-		accAddr := a[i]
-		addr := string(accAddr)
-		if _, exists := index[addr]; exists {
-			return errorsmod.Wrapf(errors.ErrDuplicate, "address: %s", accAddr.String())
 		}
 		index[addr] = struct{}{}
 	}

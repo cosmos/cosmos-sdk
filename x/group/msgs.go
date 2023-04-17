@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/group/codec"
-	errors "github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
@@ -113,26 +112,6 @@ func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{admin}
 }
 
-// Validate does a sanity check on the provided data
-func (m MsgUpdateGroupMembers) Validate() error {
-	if m.GroupId == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "group id")
-	}
-	_, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-
-	if len(m.MemberUpdates) == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "member updates")
-	}
-	members := MemberRequests{Members: m.MemberUpdates}
-	if err := members.ValidateBasic(); err != nil {
-		return errorsmod.Wrap(err, "members")
-	}
-	return nil
-}
-
 // GetGroupID gets the group id of the MsgUpdateGroupMembers.
 func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 	return m.GroupId
@@ -197,23 +176,6 @@ func (m MsgCreateGroupWithPolicy) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{admin}
 }
 
-// ValidateBasic does a sanity check on the provided data
-func (m MsgCreateGroupWithPolicy) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-	policy, err := m.GetDecisionPolicy()
-	if err != nil {
-		return errorsmod.Wrap(err, "decision policy")
-	}
-	if err := policy.ValidateBasic(); err != nil {
-		return errorsmod.Wrap(err, "decision policy")
-	}
-
-	return StrictValidateMembers(m.Members)
-}
-
 var (
 	_ sdk.Msg            = &MsgCreateGroupPolicy{}
 	_ legacytx.LegacyMsg = &MsgCreateGroupPolicy{}
@@ -228,27 +190,6 @@ func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
 func (m MsgCreateGroupPolicy) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{admin}
-}
-
-// ValidateBasic does a sanity check on the provided data
-func (m MsgCreateGroupPolicy) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-	if m.GroupId == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "group id")
-	}
-
-	policy, err := m.GetDecisionPolicy()
-	if err != nil {
-		return errorsmod.Wrap(err, "decision policy")
-	}
-
-	if err := policy.ValidateBasic(); err != nil {
-		return errorsmod.Wrap(err, "decision policy")
-	}
-	return nil
 }
 
 var (
@@ -266,29 +207,6 @@ func (m MsgUpdateGroupPolicyAdmin) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
 
 	return []sdk.AccAddress{admin}
-}
-
-// ValidateBasic does a sanity check on the provided data
-func (m MsgUpdateGroupPolicyAdmin) Validate() error {
-	admin, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-
-	newAdmin, err := sdk.AccAddressFromBech32(m.NewAdmin)
-	if err != nil {
-		return errorsmod.Wrap(err, "new admin")
-	}
-
-	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
-	if err != nil {
-		return errorsmod.Wrap(err, "group policy")
-	}
-
-	if admin.Equals(newAdmin) {
-		return errorsmod.Wrap(errors.ErrInvalid, "new and old admin are same")
-	}
-	return nil
 }
 
 var (
@@ -335,30 +253,6 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
 
 	return []sdk.AccAddress{admin}
-}
-
-// ValidateBasic does a sanity check on the provided data
-func (m MsgUpdateGroupPolicyDecisionPolicy) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-
-	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
-	if err != nil {
-		return errorsmod.Wrap(err, "group policy")
-	}
-
-	policy, err := m.GetDecisionPolicy()
-	if err != nil {
-		return errorsmod.Wrap(err, "decision policy")
-	}
-
-	if err := policy.ValidateBasic(); err != nil {
-		return errorsmod.Wrap(err, "decision policy")
-	}
-
-	return nil
 }
 
 // GetDecisionPolicy gets the decision policy of MsgUpdateGroupPolicyDecisionPolicy.
@@ -492,54 +386,6 @@ func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	return addrs
 }
 
-// ValidateBasic does a sanity check on the provided proposal, such as
-// verifying proposer addresses, and performing ValidateBasic on each
-// individual `sdk.Msg`.
-func (m MsgSubmitProposal) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.GroupPolicyAddress)
-	if err != nil {
-		return errorsmod.Wrap(err, "group policy")
-	}
-
-	if m.Title == "" {
-		return errorsmod.Wrap(errors.ErrEmpty, "title")
-	}
-
-	if m.Summary == "" {
-		return errorsmod.Wrap(errors.ErrEmpty, "summary")
-	}
-
-	if len(m.Proposers) == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "proposers")
-	}
-
-	addrs, err := m.getProposerAccAddresses()
-	if err != nil {
-		return errorsmod.Wrap(err, "group proposers")
-	}
-
-	if err := accAddresses(addrs).ValidateBasic(); err != nil {
-		return errorsmod.Wrap(err, "proposers")
-	}
-
-	msgs, err := m.GetMsgs()
-	if err != nil {
-		return err
-	}
-
-	for i, msg := range msgs {
-		m, ok := msg.(sdk.HasValidateBasic)
-		if !ok {
-			continue
-		}
-
-		if err := m.ValidateBasic(); err != nil {
-			return errorsmod.Wrapf(err, "msg %d", i)
-		}
-	}
-	return nil
-}
-
 // getProposerAccAddresses returns the proposers as `[]sdk.AccAddress`.
 func (m *MsgSubmitProposal) getProposerAccAddresses() ([]sdk.AccAddress, error) {
 	addrs := make([]sdk.AccAddress, len(m.Proposers))
@@ -623,18 +469,6 @@ func (m MsgExec) GetSigners() []sdk.AccAddress {
 	signer := sdk.MustAccAddressFromBech32(m.Executor)
 
 	return []sdk.AccAddress{signer}
-}
-
-// ValidateBasic does a sanity check on the provided data
-func (m MsgExec) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Executor)
-	if err != nil {
-		return errorsmod.Wrap(err, "signer")
-	}
-	if m.ProposalId == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "proposal id")
-	}
-	return nil
 }
 
 var (

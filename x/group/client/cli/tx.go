@@ -164,13 +164,14 @@ Set a member's weight to "0" to delete it.
 				return err
 			}
 
+			if groupID == 0 {
+				return errors.New("group id cannot be 0")
+			}
+
 			msg := &group.MsgUpdateGroupMembers{
 				Admin:         clientCtx.GetFromAddress().String(),
 				MemberUpdates: members,
 				GroupId:       groupID,
-			}
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -208,7 +209,7 @@ func MsgUpdateGroupAdminCmd() *cobra.Command {
 			}
 
 			if strings.EqualFold(args[0], args[2]) {
-				return fmt.Errorf("new and old admin are the same")
+				return errors.New("new admin cannot be the same as the current admin")
 			}
 
 			msg := &group.MsgUpdateGroupAdmin{
@@ -334,6 +335,10 @@ and policy.json contains:
 				return err
 			}
 
+			if err := policy.ValidateBasic(); err != nil {
+				return err
+			}
+
 			msg, err := group.NewMsgCreateGroupWithPolicy(
 				clientCtx.GetFromAddress().String(),
 				members,
@@ -344,10 +349,6 @@ and policy.json contains:
 			)
 			if err != nil {
 				return err
-			}
-
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -405,8 +406,16 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 				return err
 			}
 
+			if groupID == 0 {
+				return errors.New("group id cannot be 0")
+			}
+
 			policy, err := parseDecisionPolicy(clientCtx.Codec, args[3])
 			if err != nil {
+				return err
+			}
+
+			if err := policy.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -418,9 +427,6 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 			)
 			if err != nil {
 				return err
-			}
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -439,9 +445,12 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 		Short: "Update a group policy admin",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := cmd.Flags().Set(flags.FlagFrom, args[0])
-			if err != nil {
+			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
 				return err
+			}
+
+			if strings.EqualFold(args[0], args[2]) {
+				return errors.New("new admin cannot be the same as the current admin")
 			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -453,9 +462,6 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 				Admin:              clientCtx.GetFromAddress().String(),
 				GroupPolicyAddress: args[1],
 				NewAdmin:           args[2],
-			}
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -501,10 +507,6 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd(ac address.Codec) *cobra.Command {
 			)
 			if err != nil {
 				return err
-			}
-
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -614,7 +616,6 @@ metadata example:
 			}
 
 			execStr, _ := cmd.Flags().GetString(FlagExec)
-
 			msg, err := group.NewMsgSubmitProposal(
 				prop.GroupPolicyAddress,
 				prop.Proposers,
@@ -624,9 +625,8 @@ metadata example:
 				prop.Title,
 				prop.Summary,
 			)
-
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
+			if err != nil {
+				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -765,10 +765,6 @@ func MsgExecCmd() *cobra.Command {
 			msg := &group.MsgExec{
 				ProposalId: proposalID,
 				Executor:   clientCtx.GetFromAddress().String(),
-			}
-
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

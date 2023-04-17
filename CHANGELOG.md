@@ -160,6 +160,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `InterfaceRegistry` is now a private interface and implements `protodesc.Resolver` plus the `RangeFiles` method
      All implementations of `InterfaceRegistry` by other users must now embed the official implementation.
     * `AminoCodec` is marked as deprecated.
+* (x/crisis) [#15852](https://github.com/cosmos/cosmos-sdk/pull/15852) Crisis keeper now takes a instance of the address codec to be able to decode user addresses
 
 ### Client Breaking Changes
 

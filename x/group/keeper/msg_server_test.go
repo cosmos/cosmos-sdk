@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,6 +34,8 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 			Address: addressPool[i].String(),
 			Weight:  "1",
 		}
+		s.accountKeeper.EXPECT().StringToBytes(addressPool[i].String()).Return(addressPool[i].Bytes(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addressPool[i].Bytes()).Return(addressPool[i].String(), nil).AnyTimes()
 	}
 
 	g, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -1472,7 +1475,10 @@ func (s *TestSuite) TestSubmitProposal() {
 	s.setNextAccount()
 	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
-	noMinExecPeriodPolicyAddr := sdk.MustAccAddressFromBech32(res.Address)
+
+	s.accountKeeper.EXPECT().StringToBytes(res.Address).Return(sdk.MustAccAddressFromBech32(res.Address).Bytes(), nil).AnyTimes()
+	noMinExecPeriodPolicyAddr, err := s.accountKeeper.StringToBytes(res.Address)
+	s.Require().NoError(err)
 
 	// Create a new group policy with super high threshold
 	bigThresholdPolicy := group.NewThresholdDecisionPolicy(
@@ -1488,7 +1494,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	bigThresholdAddr := bigThresholdRes.Address
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: noMinExecPeriodPolicyAddr.String(),
+		FromAddress: res.Address,
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
@@ -1610,13 +1616,13 @@ func (s *TestSuite) TestSubmitProposal() {
 				}
 			},
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
+				GroupPolicyAddress: res.Address,
 				Proposers:          []string{addr2.String()},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
+				GroupPolicyAddress: res.Address,
 				Status:             group.PROPOSAL_STATUS_ACCEPTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "2",
@@ -1638,13 +1644,13 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
+				GroupPolicyAddress: res.Address,
 				Proposers:          []string{addr5.String()},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
+				GroupPolicyAddress: res.Address,
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "0", // Since tally doesn't pass Allow(), we consider the proposal not final
@@ -1828,7 +1834,11 @@ func (s *TestSuite) TestVote() {
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	accountAddr := policyRes.Address
-	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
+	// module account will be created and returned
+	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(accountAddr)
+	s.Require().NoError(err)
+	s.accountKeeper.EXPECT().StringToBytes(accountAddr).Return(addrbz, nil).AnyTimes()
+	groupPolicy, err := s.accountKeeper.StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
@@ -2211,7 +2221,6 @@ func (s *TestSuite) TestVote() {
 	}
 
 	s.T().Log("test tally result should not take into account the member who left the group")
-	require := s.Require()
 	members = []group.MemberRequest{
 		{Address: addr2.String(), Weight: "3"},
 		{Address: addr3.String(), Weight: "2"},
@@ -2228,12 +2237,12 @@ func (s *TestSuite) TestVote() {
 		time.Duration(10),
 		0,
 	)
-	require.NoError(reqCreate.SetDecisionPolicy(policy))
+	s.Require().NoError(reqCreate.SetDecisionPolicy(policy))
 	s.setNextAccount()
 
 	result, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, reqCreate)
-	require.NoError(err)
-	require.NotNil(result)
+	s.Require().NoError(err)
+	s.Require().NotNil(result)
 
 	policyAddr := result.GroupPolicyAddress
 	groupID := result.GroupId
@@ -2241,38 +2250,38 @@ func (s *TestSuite) TestVote() {
 		GroupPolicyAddress: policyAddr,
 		Proposers:          []string{addr4.String()},
 	}
-	require.NoError(reqProposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
+	s.Require().NoError(reqProposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: policyAddr,
 		ToAddress:   addr5.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}}))
 
 	resSubmitProposal, err := s.groupKeeper.SubmitProposal(s.ctx, reqProposal)
-	require.NoError(err)
-	require.NotNil(resSubmitProposal)
+	s.Require().NoError(err)
+	s.Require().NotNil(resSubmitProposal)
 	proposalID := resSubmitProposal.ProposalId
 
 	for _, voter := range []string{addr4.String(), addr3.String(), addr2.String()} {
 		_, err := s.groupKeeper.Vote(s.ctx,
 			&group.MsgVote{ProposalId: proposalID, Voter: voter, Option: group.VOTE_OPTION_YES},
 		)
-		require.NoError(err)
+		s.Require().NoError(err)
 	}
 
 	qProposals, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{
 		ProposalId: proposalID,
 	})
-	require.NoError(err)
+	s.Require().NoError(err)
 
 	tallyResult, err := s.groupKeeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
-	require.NoError(err)
+	s.Require().NoError(err)
 
 	_, err = s.groupKeeper.LeaveGroup(s.ctx, &group.MsgLeaveGroup{Address: addr4.String(), GroupId: groupID})
-	require.NoError(err)
+	s.Require().NoError(err)
 
 	tallyResult1, err := s.groupKeeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
-	require.NoError(err)
-	require.NotEqual(tallyResult.String(), tallyResult1.String())
+	s.Require().NoError(err)
+	s.Require().NotEqual(tallyResult.String(), tallyResult1.String())
 }
 
 func (s *TestSuite) TestExecProposal() {
@@ -2694,7 +2703,11 @@ func (s *TestSuite) TestLeaveGroup() {
 	member4 := addrs[4]
 	admin2 := addrs[5]
 	admin3 := addrs[6]
-	require := s.Require()
+
+	for _, addr := range addrs {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr.Bytes(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
 
 	members := []group.MemberRequest{
 		{
@@ -2833,32 +2846,32 @@ func (s *TestSuite) TestLeaveGroup() {
 			var groupWeight1 math.Dec
 			if !tc.expErr {
 				groupRes, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
-				require.NoError(err)
+				s.Require().NoError(err)
 				groupWeight1, err = math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
-				require.NoError(err)
+				s.Require().NoError(err)
 			}
 
 			res, err := s.groupKeeper.LeaveGroup(s.ctx, tc.req)
 			if tc.expErr {
-				require.Error(err)
-				require.Contains(err.Error(), tc.errMsg)
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
-				require.NoError(err)
-				require.NotNil(res)
+				s.Require().NoError(err)
+				s.Require().NotNil(res)
 				res, err := s.groupKeeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{
 					GroupId: tc.req.GroupId,
 				})
-				require.NoError(err)
-				require.Len(res.Members, tc.expMembersSize)
+				s.Require().NoError(err)
+				s.Require().Len(res.Members, tc.expMembersSize)
 
 				groupRes, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
-				require.NoError(err)
+				s.Require().NoError(err)
 				groupWeight2, err := math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
-				require.NoError(err)
+				s.Require().NoError(err)
 
 				rWeight, err := groupWeight1.Sub(tc.memberWeight)
-				require.NoError(err)
-				require.Equal(rWeight.Cmp(groupWeight2), 0)
+				s.Require().NoError(err)
+				s.Require().Equal(rWeight.Cmp(groupWeight2), 0)
 			}
 		})
 	}

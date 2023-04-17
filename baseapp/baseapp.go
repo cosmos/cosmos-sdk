@@ -464,8 +464,10 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 // state. This Context can be used to write data derived from processing vote
 // extensions to application state during ProcessProposal.
 //
-// NOTE: Do no use or write to state using this Context unless you intend for
+// NOTE:
+// - Do NOT use or write to state using this Context unless you intend for
 // that state to be committed.
+// - Do NOT use or write to state using this Context on the first block.
 func (app *BaseApp) GetFinalizeBlockStateCtx() sdk.Context {
 	return app.finalizeBlockState.ctx
 }

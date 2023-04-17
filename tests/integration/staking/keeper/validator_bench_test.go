@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/simapp"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -78,6 +80,7 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 	}
 
 	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+
 	for _, validator := range vals {
 		app.StakingKeeper.SetValidator(ctx, validator)
 	}
@@ -97,6 +100,25 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		app.StakingKeeper.UpdateValidatorDelegationsLegacy(ctx, valAddrs[0], sdk.ValAddress("val"))
+		updateValidatorDelegationsLegacy(ctx, app, valAddrs[0], sdk.ValAddress("val"))
+	}
+}
+
+func updateValidatorDelegationsLegacy(ctx sdk.Context, app *simapp.SimApp, existingValAddr, newValAddr sdk.ValAddress) {
+	storeKey := app.GetKey(types.StoreKey)
+	cdc, k := app.AppCodec(), app.StakingKeeper
+
+	store := ctx.KVStore(storeKey)
+
+	iterator := storetypes.KVStorePrefixIterator(store, types.DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(cdc, iterator.Value())
+		if delegation.GetValidatorAddr().Equals(existingValAddr) {
+			k.RemoveDelegation(ctx, delegation)
+			delegation.ValidatorAddress = newValAddr.String()
+			k.SetDelegation(ctx, delegation)
+		}
 	}
 }

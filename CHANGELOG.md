@@ -161,7 +161,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `InterfaceRegistry` is now a private interface and implements `protodesc.Resolver` plus the `RangeFiles` method
      All implementations of `InterfaceRegistry` by other users must now embed the official implementation.
     * `AminoCodec` is marked as deprecated.
-* (x/bank) [#14224](https://github.com/cosmos/cosmos-sdk/pull/14224) `InputOutputCoins` now only allows for a single `Input`.
 
 ### Client Breaking Changes
 

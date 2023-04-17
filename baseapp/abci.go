@@ -55,7 +55,6 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 	// if req.InitialHeight is > 1, then we set the initial version on all stores
 	if req.InitialHeight > 1 {
 		app.initialHeight = req.InitialHeight
-
 		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
 			return nil, err
 		}

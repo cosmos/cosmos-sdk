@@ -132,6 +132,7 @@ func TestSigVerification(t *testing.T) {
 	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
 	// here which includes it.
 	opts, err := txmodule.NewSignModeOptionsWithMetadataQueryFn(txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx))
+	require.NoError(t, err)
 	suite.clientCtx.TxConfig = authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		enabledSignModes,

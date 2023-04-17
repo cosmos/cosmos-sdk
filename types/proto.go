@@ -25,7 +25,7 @@ type CustomProtobufType interface {
 }
 
 var (
-	mu             sync.Mutex
+	mu             sync.RWMutex
 	mergedRegistry *protoregistry.Files
 	_              txsigning.ProtoFileResolver = lazyProtoRegistry{}
 )
@@ -50,6 +50,8 @@ func (l lazyProtoRegistry) init() error {
 }
 
 func (l lazyProtoRegistry) FindFileByPath(s string) (protoreflect.FileDescriptor, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	if mergedRegistry == nil {
 		if err := l.init(); err != nil {
 			return nil, err
@@ -59,6 +61,8 @@ func (l lazyProtoRegistry) FindFileByPath(s string) (protoreflect.FileDescriptor
 }
 
 func (l lazyProtoRegistry) FindDescriptorByName(name protoreflect.FullName) (protoreflect.Descriptor, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	if mergedRegistry == nil {
 		if err := l.init(); err != nil {
 			return nil, err
@@ -68,6 +72,8 @@ func (l lazyProtoRegistry) FindDescriptorByName(name protoreflect.FullName) (pro
 }
 
 func (l lazyProtoRegistry) RangeFiles(f func(protoreflect.FileDescriptor) bool) {
+	mu.RLock()
+	defer mu.RUnlock()
 	if mergedRegistry == nil {
 		if err := l.init(); err != nil {
 			panic(err)

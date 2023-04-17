@@ -61,7 +61,8 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 
 	if field.IsList() {
 		val = bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
-	} else if field.IsMap() {
+	}
+	if field.IsMap() {
 		keyKind := field.MapKey().Kind()
 		valKind := field.MapValue().Kind()
 		val = bindSimpleMapFlag(flagSet, keyKind, valKind, name, shorthand, usage)

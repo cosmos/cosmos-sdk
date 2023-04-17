@@ -605,7 +605,8 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-// EndBlock is an application-defined function that is called after transactions have been processed
+// endBlock is an application-defined function that is called after transactions
+// have been processed in FinalizeBlock.
 func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
 
@@ -615,14 +616,15 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 			panic(err)
 		}
 
-		// append endblocker attribute to all events in the endblocker response
+		// append EndBlock attributes to all events in the EndBlock response
 		for i, event := range eb.Events {
-			eb.Events[i].Attributes = append(event.Attributes, abci.EventAttribute{Key: "mode", Value: "EndBlock"})
+			eb.Events[i].Attributes = append(
+				event.Attributes,
+				abci.EventAttribute{Key: "mode", Value: "EndBlock"},
+			)
 		}
 
 		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
-
-
 		endblock = eb
 	}
 

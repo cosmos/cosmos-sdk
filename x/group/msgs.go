@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/group/codec"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
 var (
@@ -29,24 +28,6 @@ func (m MsgCreateGroup) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
 
 	return []sdk.AccAddress{admin}
-}
-
-// Validate performs stateless validation on a group member, such as
-// making sure the address is well-formed, and the weight is non-negative.
-// Note: in state, a member's weight MUST be positive. However, in some Msgs,
-// it's possible to set a zero member weight, for example in
-// MsgUpdateGroupMembers to denote that we're removing a member.
-func (m MemberRequest) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Address)
-	if err != nil {
-		return errorsmod.Wrap(err, "address")
-	}
-
-	if _, err := math.NewNonNegativeDecFromString(m.Weight); err != nil {
-		return errorsmod.Wrap(err, "weight")
-	}
-
-	return nil
 }
 
 var (
@@ -486,22 +467,4 @@ func (m MsgLeaveGroup) GetSigners() []sdk.AccAddress {
 	signer := sdk.MustAccAddressFromBech32(m.Address)
 
 	return []sdk.AccAddress{signer}
-}
-
-// StrictValidateMembers performs ValidateBasic on Members, but also checks
-// that all members weights are positive (whereas `Members{members}.ValidateBasic()`
-// only checks that they are non-negative.
-func StrictValidateMembers(members []MemberRequest) error {
-	err := MemberRequests{members}.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
-	for _, m := range members {
-		if _, err := math.NewPositiveDecFromString(m.Weight); err != nil {
-			return errorsmod.Wrap(err, "weight")
-		}
-	}
-
-	return nil
 }

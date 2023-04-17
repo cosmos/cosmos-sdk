@@ -144,12 +144,6 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 	  }]}`, accounts[0].Address.String(), validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 
-	invalidMembersAddress := `{"members": [{
-		  "address": "",
-		  "weight": "1"
-	  }]}`
-	invalidMembersAddressFile := testutil.WriteToNewTempFile(s.T(), invalidMembersAddress)
-
 	invalidMembersWeight := fmt.Sprintf(`{"members": [{
 			"address": "%s",
 			  "weight": "0"
@@ -211,28 +205,6 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 			"",
 		},
 		{
-			"invalid members address",
-			func() client.Context {
-				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
-					Value: bz,
-				})
-				return s.baseCtx.WithClient(c)
-			},
-			append(
-				[]string{
-					accounts[0].Address.String(),
-					"null",
-					invalidMembersAddressFile.Name(),
-				},
-				s.commonFlags...,
-			),
-			&sdk.TxResponse{},
-			fmt.Sprintf("%s %s %s", accounts[0].Address.String(), "null", invalidMembersAddressFile.Name()),
-			true,
-			"message validation failed: address: empty address string is not allowed",
-		},
-		{
 			"invalid members weight",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
@@ -252,7 +224,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 			&sdk.TxResponse{},
 			fmt.Sprintf("%s %s %s", accounts[0].Address.String(), "null", invalidMembersWeightFile.Name()),
 			true,
-			"expected a positive decimal, got 0: invalid decimal string",
+			"weight must be positive",
 		},
 	}
 
@@ -676,12 +648,6 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 	}]}`, accounts[0].Address.String(), validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 
-	invalidMembersAddress := `{"members": [{
-	  "address": "",
-	  "weight": "1"
-	}]}`
-	invalidMembersAddressFile := testutil.WriteToNewTempFile(s.T(), invalidMembersAddress)
-
 	invalidMembersWeight := fmt.Sprintf(`{"members": [{
 		"address": "%s",
 		  "weight": "0"
@@ -776,31 +742,6 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 			fmt.Sprintf("%s %s %s %s %s --%s=%v --%s=%s", accounts[0].Address.String(), validMetadata, validMetadata, validMembersFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false, flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 		},
 		{
-			"invalid members address",
-			func() client.Context {
-				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
-					Value: bz,
-				})
-				return s.baseCtx.WithClient(c)
-			},
-			append(
-				[]string{
-					accounts[0].Address.String(),
-					validMetadata,
-					validMetadata,
-					invalidMembersAddressFile.Name(),
-					thresholdDecisionPolicyFile.Name(),
-					fmt.Sprintf("--%s=%v", groupcli.FlagGroupPolicyAsAdmin, false),
-				},
-				s.commonFlags...,
-			),
-			true,
-			"message validation failed: address: empty address string is not allowed",
-			nil,
-			fmt.Sprintf("%s %s %s %s %s --%s=%v", accounts[0].Address.String(), validMetadata, validMetadata, invalidMembersAddressFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false),
-		},
-		{
 			"invalid members weight",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
@@ -821,7 +762,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 				s.commonFlags...,
 			),
 			true,
-			"expected a positive decimal, got 0: invalid decimal string",
+			"weight must be positive",
 			nil,
 			fmt.Sprintf("%s %s %s %s %s --%s=%v", accounts[0].Address.String(), validMetadata, validMetadata, invalidMembersWeightFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false),
 		},

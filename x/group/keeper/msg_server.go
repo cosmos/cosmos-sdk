@@ -29,9 +29,8 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid admin address: %s", msg.Admin)
 	}
 
-	members := group.MemberRequests{Members: msg.Members}
-	if err := members.ValidateBasic(); err != nil {
-		return nil, err
+	if err := k.validateMembers(msg.Members); err != nil {
+		return nil, errorsmod.Wrap(err, "members")
 	}
 
 	if err := k.assertMetadataLength(msg.Metadata, "group metadata"); err != nil {
@@ -39,12 +38,14 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 	}
 
 	totalWeight := math.NewDecFromInt64(0)
-	for _, m := range members.Members {
+	for _, m := range msg.Members {
 		if err := k.assertMetadataLength(m.Metadata, "member metadata"); err != nil {
 			return nil, err
 		}
 
 		// Members of a group must have a positive weight.
+		// NOTE: group member with zero weight are only allowed when updating group members.
+		// If the member has a zero weight, it will be removed from the group.
 		weight, err := math.NewPositiveDecFromString(m.Weight)
 		if err != nil {
 			return nil, err
@@ -73,7 +74,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 	}
 
 	// Create new group members in the groupMemberTable.
-	for i, m := range members.Members {
+	for i, m := range msg.Members {
 		err := k.groupMemberTable.Create(ctx.KVStore(k.key), &group.GroupMember{
 			GroupId: groupID,
 			Member: &group.Member{
@@ -105,8 +106,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "member updates")
 	}
 
-	members := group.MemberRequests{Members: msg.MemberUpdates}
-	if err := members.ValidateBasic(); err != nil {
+	if err := k.validateMembers(msg.MemberUpdates); err != nil {
 		return nil, errorsmod.Wrap(err, "members")
 	}
 
@@ -1075,6 +1075,35 @@ func (k Keeper) validateProposers(proposers []string) error {
 		}
 
 		index[proposer] = struct{}{}
+	}
+
+	return nil
+}
+
+// validateMembers checks that all members addresses are valid.
+// additionally it verifies that there is no duplicate address
+// and the member weight is non-negative.
+// Note: in state, a member's weight MUST be positive. However, in some Msgs,
+// it's possible to set a zero member weight, for example in
+// MsgUpdateGroupMembers to denote that we're removing a member.
+// It returns an error if any of the above conditions is not met.
+func (k Keeper) validateMembers(members []group.MemberRequest) error {
+	index := make(map[string]struct{}, len(members))
+	for _, member := range members {
+		if _, exists := index[member.Address]; exists {
+			return errorsmod.Wrapf(errors.ErrDuplicate, "address: %s", member.Address)
+		}
+
+		_, err := k.accKeeper.StringToBytes(member.Address)
+		if err != nil {
+			return errorsmod.Wrapf(err, "member address %s", member.Address)
+		}
+
+		if _, err := math.NewNonNegativeDecFromString(member.Weight); err != nil {
+			return errorsmod.Wrap(err, "weight must be non negative")
+		}
+
+		index[member.Address] = struct{}{}
 	}
 
 	return nil

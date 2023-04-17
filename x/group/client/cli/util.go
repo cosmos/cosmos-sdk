@@ -31,10 +31,9 @@ func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.Deci
 
 // parseMembers reads and parses the members.
 func parseMembers(membersFile string) ([]group.MemberRequest, error) {
-	members := group.MemberRequests{}
-
+	members := make([]group.MemberRequest, 0)
 	if membersFile == "" {
-		return members.Members, nil
+		return members, nil
 	}
 
 	contents, err := os.ReadFile(membersFile)
@@ -47,7 +46,7 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 		return nil, err
 	}
 
-	return members.Members, nil
+	return members, nil
 }
 
 func execFromString(execStr string) group.Exec {

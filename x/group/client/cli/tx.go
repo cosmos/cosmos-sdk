@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
 const (
@@ -96,8 +97,10 @@ Where members.json contains:
 				return err
 			}
 
-			if err := group.StrictValidateMembers(members); err != nil {
-				return fmt.Errorf("invalid members: %w", err)
+			for _, member := range members {
+				if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
+					return fmt.Errorf("invalid weight %s for %s: weight must be positive", member.Weight, member.Address)
+				}
 			}
 
 			msg := &group.MsgCreateGroup{
@@ -328,6 +331,12 @@ and policy.json contains:
 			members, err := parseMembers(args[3])
 			if err != nil {
 				return err
+			}
+
+			for _, member := range members {
+				if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
+					return fmt.Errorf("invalid weight %s for %s: weight must be positive", member.Weight, member.Address)
+				}
 			}
 
 			policy, err := parseDecisionPolicy(clientCtx.Codec, args[4])

@@ -364,10 +364,12 @@ func (g GroupMember) ValidateBasic() error {
 		return errorsmod.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	err := MemberToMemberRequest(g.Member).Validate()
-	if err != nil {
-		return errorsmod.Wrap(err, "group member")
+	// TODO(@julienrbrt) temporary duplicating the verifying logic as MemberRequest.ValidateBasic
+	// has been deleted. This will be removed in https://github.com/cosmos/cosmos-sdk/pull/15304
+	if _, err := math.NewNonNegativeDecFromString(g.Member.Weight); err != nil {
+		return errorsmod.Wrap(err, "weight must be non negative")
 	}
+
 	return nil
 }
 

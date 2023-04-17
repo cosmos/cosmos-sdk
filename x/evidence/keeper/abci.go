@@ -18,7 +18,7 @@ func (k Keeper) BeginBlocker(goCtx context.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	for _, tmEvidence := range k.blockInfo.Misbehavior() {
+	for _, tmEvidence := range k.blockInfo.GetMisbehavior() {
 		switch tmEvidence.Type {
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.

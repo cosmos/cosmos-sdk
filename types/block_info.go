@@ -31,7 +31,7 @@ func (bis *BlockInfo) GetHeight() int64 {
 	return bis.Height
 }
 
-func (bis *BlockInfo) Misbehavior() []blockinfo.Misbehavior {
+func (bis *BlockInfo) GetMisbehavior() []blockinfo.Misbehavior {
 	return bis.Evidence
 }
 

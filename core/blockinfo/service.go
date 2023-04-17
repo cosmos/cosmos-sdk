@@ -3,9 +3,9 @@ package blockinfo
 import "time"
 
 type Service interface {
-	GetHeight() int64           // GetHeight returns the height of the block
-	Misbehavior() []Misbehavior // Misbehavior returns the misbehavior of the block
-	GetHeaderHash() []byte      // GetHeaderHash returns the hash of the block header
+	GetHeight() int64              // GetHeight returns the height of the block
+	GetMisbehavior() []Misbehavior // Misbehavior returns the misbehavior of the block
+	GetHeaderHash() []byte         // GetHeaderHash returns the hash of the block header
 	// GetValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
 	GetValidatorsHash() []byte

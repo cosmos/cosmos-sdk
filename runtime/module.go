@@ -4,20 +4,18 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/store"
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoregistry"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/blockinfo"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -208,4 +206,8 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
+}
+
+func ProvideBlockInfoService(app *AppBuilder) blockinfo.Service {
+	return app.app.BlockInfo
 }

@@ -17,7 +17,6 @@ type namingOptions struct {
 	Prefix string
 }
 
-// addFieldFlag adds a flag for the provided field to the flag set.
 func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options namingOptions) (name string, hasValue HasValue, err error) {
 	if opts == nil {
 		opts = &autocliv1.FlagOptions{}
@@ -84,12 +83,6 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 	if field.IsList() {
 		if typ != nil {
 			return compositeListType{simpleType: typ}
-		}
-		return nil
-	}
-	if field.IsMap() {
-		if typ != nil {
-
 		}
 		return nil
 	}

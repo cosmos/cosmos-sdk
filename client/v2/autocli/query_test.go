@@ -137,8 +137,7 @@ func TestMap(t *testing.T) {
 		"--map-string-string", "foo=bar",
 		"--map-string-uint32", "bar=123",
 	)
-	fmt.Println(conn.lastRequest)
-	//assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
 func TestEverything(t *testing.T) {

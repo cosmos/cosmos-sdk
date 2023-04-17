@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	v5 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v5"
 	"github.com/cosmos/gogoproto/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +8,7 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v3"
 	v4 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v4"
+	v5 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v5"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 

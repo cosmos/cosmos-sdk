@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -61,6 +62,10 @@ timestamp.`,
 				return err
 			}
 
+			if args[1] == "" {
+				return errors.New("amount is empty")
+			}
+
 			amount, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
 				return err
@@ -102,6 +107,10 @@ tokens.`,
 			toAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
+			}
+
+			if args[1] == "" {
+				return errors.New("amount is empty")
 			}
 
 			amount, err := sdk.ParseCoinsNormalized(args[1])

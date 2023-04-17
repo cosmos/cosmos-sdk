@@ -37,10 +37,10 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // BondedRatio mocks base method.
-func (m *MockStakingKeeper) BondedRatio(ctx types.Context) types.Dec {
+func (m *MockStakingKeeper) BondedRatio(ctx types.Context) math.LegacyDec {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BondedRatio", ctx)
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(math.LegacyDec)
 	return ret0
 }
 

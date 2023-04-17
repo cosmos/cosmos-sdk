@@ -1,11 +1,12 @@
 package baseapp
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
 
-	"cosmossdk.io/core/blockinfo"
+	coreinfo "cosmossdk.io/core/info"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -47,6 +48,8 @@ const (
 )
 
 var _ abci.Application = (*BaseApp)(nil)
+var _ coreinfo.BlockService = (*BaseApp)(nil)
+var _ coreinfo.CometService = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
@@ -147,7 +150,11 @@ type BaseApp struct {
 
 	chainID string
 
-	BlockInfo blockinfo.Service
+	coreinfo.BlockService
+	coreinfo.CometService
+
+	// cometInfo stores information about the current block to be used later on
+	cometInfo coreinfo.CometInfo
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -607,6 +614,21 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	}
 
 	return ctx.WithMultiStore(msCache), msCache
+}
+
+func (app *BaseApp) SetCometInfo(ci coreinfo.CometInfo) {
+	app.cometInfo = ci
+
+}
+
+func (app *BaseApp) GetBlockInfo(ctx context.Context) coreinfo.BlockInfo {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return NewBlockInfo(sdkCtx.BlockHeight(), sdkCtx.HeaderHash(), sdkCtx.BlockTime(), sdkCtx.BlockHeader().ChainID)
+}
+
+func (app *BaseApp) GetCometInfo(ctx context.Context) coreinfo.CometInfo {
+	return app.cometInfo
 }
 
 // runTx processes a transaction within a given execution mode, encoded transaction

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/core/blockinfo"
+	"cosmossdk.io/core/info"
 	sdkmath "cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -46,7 +46,7 @@ type (
 		GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	}
 
-	Blockinfo interface {
-		blockinfo.Service
+	Cometinfo interface {
+		info.CometService
 	}
 )

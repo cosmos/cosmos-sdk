@@ -13,7 +13,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/blockinfo"
+	"cosmossdk.io/core/info"
 	"cosmossdk.io/depinject"
 
 	store "cosmossdk.io/store/types"
@@ -213,7 +213,7 @@ type ModuleInputs struct {
 	SlashingKeeper types.SlashingKeeper
 	AddressCodec   address.Codec
 
-	BlockInfoService blockinfo.Service
+	BlockInfoService info.CometService
 }
 
 type ModuleOutputs struct {

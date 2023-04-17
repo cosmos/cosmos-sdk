@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	blockinfo "cosmossdk.io/core/blockinfo"
+	info "cosmossdk.io/core/info"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
@@ -308,39 +308,39 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
 
-// MockBlockinfo is a mock of Blockinfo interface.
-type MockBlockinfo struct {
+// MockCometinfo is a mock of Cometinfo interface.
+type MockCometinfo struct {
 	ctrl     *gomock.Controller
-	recorder *MockBlockinfoMockRecorder
+	recorder *MockCometinfoMockRecorder
 }
 
-// MockBlockinfoMockRecorder is the mock recorder for MockBlockinfo.
-type MockBlockinfoMockRecorder struct {
-	mock *MockBlockinfo
+// MockCometinfoMockRecorder is the mock recorder for MockCometinfo.
+type MockCometinfoMockRecorder struct {
+	mock *MockCometinfo
 }
 
-// NewMockBlockinfo creates a new mock instance.
-func NewMockBlockinfo(ctrl *gomock.Controller) *MockBlockinfo {
-	mock := &MockBlockinfo{ctrl: ctrl}
-	mock.recorder = &MockBlockinfoMockRecorder{mock}
+// NewMockCometinfo creates a new mock instance.
+func NewMockCometinfo(ctrl *gomock.Controller) *MockCometinfo {
+	mock := &MockCometinfo{ctrl: ctrl}
+	mock.recorder = &MockCometinfoMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockBlockinfo) EXPECT() *MockBlockinfoMockRecorder {
+func (m *MockCometinfo) EXPECT() *MockCometinfoMockRecorder {
 	return m.recorder
 }
 
-// GetBlockInfo mocks base method.
-func (m *MockBlockinfo) GetBlockInfo() blockinfo.BlockInfo {
+// GetCometInfo mocks base method.
+func (m *MockCometinfo) GetCometInfo(arg0 context.Context) info.CometInfo {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBlockInfo")
-	ret0, _ := ret[0].(blockinfo.BlockInfo)
+	ret := m.ctrl.Call(m, "GetCometInfo", arg0)
+	ret0, _ := ret[0].(info.CometInfo)
 	return ret0
 }
 
-// GetBlockInfo indicates an expected call of GetBlockInfo.
-func (mr *MockBlockinfoMockRecorder) GetBlockInfo() *gomock.Call {
+// GetCometInfo indicates an expected call of GetCometInfo.
+func (mr *MockCometinfoMockRecorder) GetCometInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlockInfo", reflect.TypeOf((*MockBlockinfo)(nil).GetBlockInfo))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometInfo", reflect.TypeOf((*MockCometinfo)(nil).GetCometInfo), arg0)
 }

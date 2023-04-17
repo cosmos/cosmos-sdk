@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/info"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
@@ -14,6 +16,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -111,7 +114,8 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// double sign less than max age
 	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
-	f.app.BaseApp.BlockInfo = sdk.NewBlockInfo(abci.RequestBeginBlock{
+
+	nci := NewCometInfo(abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
@@ -119,6 +123,8 @@ func TestHandleDoubleSign(t *testing.T) {
 			Height:    0,
 		}},
 	})
+
+	f.app.BaseApp.SetCometInfo(nci)
 
 	f.evidenceKeeper.BeginBlocker(ctx)
 
@@ -178,7 +184,9 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
-	f.app.BaseApp.BlockInfo = sdk.NewBlockInfo(abci.RequestBeginBlock{
+	// f.app.BaseApp.CometInfoService =
+
+	nci := NewCometInfo(abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
@@ -186,6 +194,8 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 			Height:    0,
 		}},
 	})
+
+	f.app.BaseApp.SetCometInfo(nci)
 
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
 
@@ -237,4 +247,42 @@ func testEquivocationHandler(_ interface{}) types.Handler {
 
 		return nil
 	}
+}
+
+// CometService
+
+type CometService struct {
+	ci CometInfo
+}
+
+func (cs CometService) GetCometInfo(_ context.Context) info.CometInfo {
+	return cs.ci
+}
+
+// CometInfo implements the CometInfo interface
+// This is specific to the comet consensus engine
+type CometInfo struct {
+	Evidence []info.Misbehavior
+}
+
+func NewCometInfo(bg abci.RequestBeginBlock) CometInfo {
+	return CometInfo{
+		Evidence: baseapp.FromABCIEvidence(bg.ByzantineValidators),
+	}
+}
+
+func (cis CometInfo) GetMisbehavior() []info.Misbehavior {
+	return cis.Evidence
+}
+
+func (cis CometInfo) GetValidatorsHash() []byte {
+	return []byte{}
+}
+
+func (cis CometInfo) GetProposerAddress() []byte {
+	return []byte{}
+}
+
+func (cis CometInfo) GetDecidedLastCommit() info.CommitInfo {
+	return info.CommitInfo{}
 }

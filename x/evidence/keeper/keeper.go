@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
 
-	"cosmossdk.io/core/blockinfo"
+	"cosmossdk.io/core/info"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -30,13 +30,13 @@ type Keeper struct {
 	slashingKeeper types.SlashingKeeper
 	addressCodec   address.Codec
 
-	blockInfo blockinfo.Service
+	cometInfo info.CometService
 }
 
 // NewKeeper creates a new Keeper object.
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper, ac address.Codec, bi blockinfo.Service,
+	slashingKeeper types.SlashingKeeper, ac address.Codec, bi info.CometService,
 ) *Keeper {
 	return &Keeper{
 		cdc:            cdc,
@@ -44,7 +44,7 @@ func NewKeeper(
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 		addressCodec:   ac,
-		blockInfo:      bi,
+		cometInfo:      bi,
 	}
 }
 

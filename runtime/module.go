@@ -7,8 +7,8 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/blockinfo"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/info"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	storetypes "cosmossdk.io/store/types"
@@ -63,6 +63,8 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
+			ProvideBlockInfoService,
+			ProvideCometInfoService,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -208,6 +210,10 @@ func ProvideEventService() event.Service {
 	return EventService{}
 }
 
-func ProvideBlockInfoService(app *AppBuilder) blockinfo.Service {
-	return app.app.BlockInfo
+func ProvideCometInfoService(app *AppBuilder) info.CometService {
+	return app.app
+}
+
+func ProvideBlockInfoService(app *AppBuilder) info.BlockService {
+	return app.app
 }

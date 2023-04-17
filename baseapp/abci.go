@@ -202,9 +202,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			WithHeaderHash(req.Hash)
 	}
 
-	// Set blockInfo for module use
-	app.BlockInfo = app.BlockInfo.GetBlockInfo()
-
 	if app.beginBlocker != nil {
 		var err error
 		res, err = app.beginBlocker(app.deliverState.ctx, req)
@@ -215,6 +212,9 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
+
+	ci := NewCometInfo(req)
+	app.SetCometInfo(ci)
 
 	// call the streaming service hook with the BeginBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {

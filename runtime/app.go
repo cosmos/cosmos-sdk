@@ -119,8 +119,8 @@ func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.Re
 }
 
 // EndBlocker application updates every end block
-func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
-	return a.ModuleManager.EndBlock(ctx, req)
+func (a *App) EndBlocker(ctx sdk.Context) ([]abci.ValidatorUpdate, []abci.Event, error) {
+	return a.ModuleManager.EndBlock(ctx)
 }
 
 // InitChainer initializes the chain.

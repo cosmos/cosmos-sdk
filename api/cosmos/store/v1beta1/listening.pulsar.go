@@ -621,17 +621,17 @@ func (x *fastReflection_StoreKVPair) ProtoMethods() *protoiface.Methods {
 
 var (
 	md_BlockMetadata                         protoreflect.MessageDescriptor
+	fd_BlockMetadata_response_commit         protoreflect.FieldDescriptor
 	fd_BlockMetadata_request_finalize_block  protoreflect.FieldDescriptor
 	fd_BlockMetadata_response_finalize_block protoreflect.FieldDescriptor
-	fd_BlockMetadata_response_commit         protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_store_v1beta1_listening_proto_init()
 	md_BlockMetadata = File_cosmos_store_v1beta1_listening_proto.Messages().ByName("BlockMetadata")
+	fd_BlockMetadata_response_commit = md_BlockMetadata.Fields().ByName("response_commit")
 	fd_BlockMetadata_request_finalize_block = md_BlockMetadata.Fields().ByName("request_finalize_block")
 	fd_BlockMetadata_response_finalize_block = md_BlockMetadata.Fields().ByName("response_finalize_block")
-	fd_BlockMetadata_response_commit = md_BlockMetadata.Fields().ByName("response_commit")
 }
 
 var _ protoreflect.Message = (*fastReflection_BlockMetadata)(nil)
@@ -699,6 +699,12 @@ func (x *fastReflection_BlockMetadata) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_BlockMetadata) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ResponseCommit != nil {
+		value := protoreflect.ValueOfMessage(x.ResponseCommit.ProtoReflect())
+		if !f(fd_BlockMetadata_response_commit, value) {
+			return
+		}
+	}
 	if x.RequestFinalizeBlock != nil {
 		value := protoreflect.ValueOfMessage(x.RequestFinalizeBlock.ProtoReflect())
 		if !f(fd_BlockMetadata_request_finalize_block, value) {
@@ -708,12 +714,6 @@ func (x *fastReflection_BlockMetadata) Range(f func(protoreflect.FieldDescriptor
 	if x.ResponseFinalizeBlock != nil {
 		value := protoreflect.ValueOfMessage(x.ResponseFinalizeBlock.ProtoReflect())
 		if !f(fd_BlockMetadata_response_finalize_block, value) {
-			return
-		}
-	}
-	if x.ResponseCommit != nil {
-		value := protoreflect.ValueOfMessage(x.ResponseCommit.ProtoReflect())
-		if !f(fd_BlockMetadata_response_commit, value) {
 			return
 		}
 	}
@@ -732,12 +732,12 @@ func (x *fastReflection_BlockMetadata) Range(f func(protoreflect.FieldDescriptor
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_BlockMetadata) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
+		return x.ResponseCommit != nil
 	case "cosmos.store.v1beta1.BlockMetadata.request_finalize_block":
 		return x.RequestFinalizeBlock != nil
 	case "cosmos.store.v1beta1.BlockMetadata.response_finalize_block":
 		return x.ResponseFinalizeBlock != nil
-	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
-		return x.ResponseCommit != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
@@ -754,12 +754,12 @@ func (x *fastReflection_BlockMetadata) Has(fd protoreflect.FieldDescriptor) bool
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
+		x.ResponseCommit = nil
 	case "cosmos.store.v1beta1.BlockMetadata.request_finalize_block":
 		x.RequestFinalizeBlock = nil
 	case "cosmos.store.v1beta1.BlockMetadata.response_finalize_block":
 		x.ResponseFinalizeBlock = nil
-	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
-		x.ResponseCommit = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
@@ -776,14 +776,14 @@ func (x *fastReflection_BlockMetadata) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_BlockMetadata) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
+		value := x.ResponseCommit
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.store.v1beta1.BlockMetadata.request_finalize_block":
 		value := x.RequestFinalizeBlock
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.store.v1beta1.BlockMetadata.response_finalize_block":
 		value := x.ResponseFinalizeBlock
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
-		value := x.ResponseCommit
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
@@ -805,12 +805,12 @@ func (x *fastReflection_BlockMetadata) Get(descriptor protoreflect.FieldDescript
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
+		x.ResponseCommit = value.Message().Interface().(*abci.ResponseCommit)
 	case "cosmos.store.v1beta1.BlockMetadata.request_finalize_block":
 		x.RequestFinalizeBlock = value.Message().Interface().(*abci.RequestFinalizeBlock)
 	case "cosmos.store.v1beta1.BlockMetadata.response_finalize_block":
 		x.ResponseFinalizeBlock = value.Message().Interface().(*abci.ResponseFinalizeBlock)
-	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
-		x.ResponseCommit = value.Message().Interface().(*abci.ResponseCommit)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
@@ -831,6 +831,11 @@ func (x *fastReflection_BlockMetadata) Set(fd protoreflect.FieldDescriptor, valu
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
+		if x.ResponseCommit == nil {
+			x.ResponseCommit = new(abci.ResponseCommit)
+		}
+		return protoreflect.ValueOfMessage(x.ResponseCommit.ProtoReflect())
 	case "cosmos.store.v1beta1.BlockMetadata.request_finalize_block":
 		if x.RequestFinalizeBlock == nil {
 			x.RequestFinalizeBlock = new(abci.RequestFinalizeBlock)
@@ -841,11 +846,6 @@ func (x *fastReflection_BlockMetadata) Mutable(fd protoreflect.FieldDescriptor) 
 			x.ResponseFinalizeBlock = new(abci.ResponseFinalizeBlock)
 		}
 		return protoreflect.ValueOfMessage(x.ResponseFinalizeBlock.ProtoReflect())
-	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
-		if x.ResponseCommit == nil {
-			x.ResponseCommit = new(abci.ResponseCommit)
-		}
-		return protoreflect.ValueOfMessage(x.ResponseCommit.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
@@ -859,14 +859,14 @@ func (x *fastReflection_BlockMetadata) Mutable(fd protoreflect.FieldDescriptor) 
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_BlockMetadata) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
+		m := new(abci.ResponseCommit)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.store.v1beta1.BlockMetadata.request_finalize_block":
 		m := new(abci.RequestFinalizeBlock)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.store.v1beta1.BlockMetadata.response_finalize_block":
 		m := new(abci.ResponseFinalizeBlock)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
-		m := new(abci.ResponseCommit)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -937,16 +937,16 @@ func (x *fastReflection_BlockMetadata) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		if x.ResponseCommit != nil {
+			l = options.Size(x.ResponseCommit)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.RequestFinalizeBlock != nil {
 			l = options.Size(x.RequestFinalizeBlock)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.ResponseFinalizeBlock != nil {
 			l = options.Size(x.ResponseFinalizeBlock)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.ResponseCommit != nil {
-			l = options.Size(x.ResponseCommit)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -978,20 +978,6 @@ func (x *fastReflection_BlockMetadata) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.ResponseCommit != nil {
-			encoded, err := options.Marshal(x.ResponseCommit)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x32
-		}
 		if x.ResponseFinalizeBlock != nil {
 			encoded, err := options.Marshal(x.ResponseFinalizeBlock)
 			if err != nil {
@@ -1004,7 +990,7 @@ func (x *fastReflection_BlockMetadata) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x42
 		}
 		if x.RequestFinalizeBlock != nil {
 			encoded, err := options.Marshal(x.RequestFinalizeBlock)
@@ -1018,7 +1004,21 @@ func (x *fastReflection_BlockMetadata) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x3a
+		}
+		if x.ResponseCommit != nil {
+			encoded, err := options.Marshal(x.ResponseCommit)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x32
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1069,7 +1069,43 @@ func (x *fastReflection_BlockMetadata) ProtoMethods() *protoiface.Methods {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BlockMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
-			case 1:
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ResponseCommit", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.ResponseCommit == nil {
+					x.ResponseCommit = &abci.ResponseCommit{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ResponseCommit); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 7:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RequestFinalizeBlock", wireType)
 				}
@@ -1105,7 +1141,7 @@ func (x *fastReflection_BlockMetadata) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 2:
+			case 8:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ResponseFinalizeBlock", wireType)
 				}
@@ -1138,42 +1174,6 @@ func (x *fastReflection_BlockMetadata) ProtoMethods() *protoiface.Methods {
 					x.ResponseFinalizeBlock = &abci.ResponseFinalizeBlock{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ResponseFinalizeBlock); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 6:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ResponseCommit", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.ResponseCommit == nil {
-					x.ResponseCommit = &abci.ResponseCommit{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ResponseCommit); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1296,9 +1296,9 @@ type BlockMetadata struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RequestFinalizeBlock  *abci.RequestFinalizeBlock  `protobuf:"bytes,1,opt,name=request_finalize_block,json=requestFinalizeBlock,proto3" json:"request_finalize_block,omitempty"`
-	ResponseFinalizeBlock *abci.ResponseFinalizeBlock `protobuf:"bytes,2,opt,name=response_finalize_block,json=responseFinalizeBlock,proto3" json:"response_finalize_block,omitempty"`
 	ResponseCommit        *abci.ResponseCommit        `protobuf:"bytes,6,opt,name=response_commit,json=responseCommit,proto3" json:"response_commit,omitempty"`
+	RequestFinalizeBlock  *abci.RequestFinalizeBlock  `protobuf:"bytes,7,opt,name=request_finalize_block,json=requestFinalizeBlock,proto3" json:"request_finalize_block,omitempty"`
+	ResponseFinalizeBlock *abci.ResponseFinalizeBlock `protobuf:"bytes,8,opt,name=response_finalize_block,json=responseFinalizeBlock,proto3" json:"response_finalize_block,omitempty"` // TODO: should we renumber this?
 }
 
 func (x *BlockMetadata) Reset() {
@@ -1321,6 +1321,13 @@ func (*BlockMetadata) Descriptor() ([]byte, []int) {
 	return file_cosmos_store_v1beta1_listening_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *BlockMetadata) GetResponseCommit() *abci.ResponseCommit {
+	if x != nil {
+		return x.ResponseCommit
+	}
+	return nil
+}
+
 func (x *BlockMetadata) GetRequestFinalizeBlock() *abci.RequestFinalizeBlock {
 	if x != nil {
 		return x.RequestFinalizeBlock
@@ -1331,13 +1338,6 @@ func (x *BlockMetadata) GetRequestFinalizeBlock() *abci.RequestFinalizeBlock {
 func (x *BlockMetadata) GetResponseFinalizeBlock() *abci.ResponseFinalizeBlock {
 	if x != nil {
 		return x.ResponseFinalizeBlock
-	}
-	return nil
-}
-
-func (x *BlockMetadata) GetResponseCommit() *abci.ResponseCommit {
-	if x != nil {
-		return x.ResponseCommit
 	}
 	return nil
 }
@@ -1357,38 +1357,40 @@ var file_cosmos_store_v1beta1_listening_proto_rawDesc = []byte{
 	0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x10, 0x0a,
 	0x03, 0x6b, 0x65, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12,
 	0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x96, 0x02, 0x0a, 0x0d, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x5b, 0x0a, 0x16, 0x72, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x5f, 0x66, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x5f, 0x62, 0x6c, 0x6f, 0x63,
-	0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72,
-	0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x14,
-	0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42,
-	0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x5e, 0x0a, 0x17, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x5f, 0x66, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69,
-	0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x15, 0x72,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42,
-	0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x48, 0x0a, 0x0f, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x5f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e,
-	0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x0e,
-	0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x42, 0xd0,
-	0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
-	0x6f, 0x72, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0e, 0x4c, 0x69, 0x73,
-	0x74, 0x65, 0x6e, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2f, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0xa2, 0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02,
-	0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x56, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53,
-	0x74, 0x6f, 0x72, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x3a, 0x3a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xb4, 0x02, 0x0a, 0x0d, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x48, 0x0a, 0x0f, 0x72, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x5f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1f, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62,
+	0x63, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x52, 0x0e, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x12, 0x5b, 0x0a, 0x16, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x66, 0x69, 0x6e,
+	0x61, 0x6c, 0x69, 0x7a, 0x65, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x07, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x25, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61,
+	0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x46, 0x69, 0x6e, 0x61, 0x6c,
+	0x69, 0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x14, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x5e,
+	0x0a, 0x17, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x5f, 0x66, 0x69, 0x6e, 0x61, 0x6c,
+	0x69, 0x7a, 0x65, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x26, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63,
+	0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69,
+	0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x15, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4a, 0x04,
+	0x08, 0x01, 0x10, 0x02, 0x4a, 0x04, 0x08, 0x02, 0x10, 0x03, 0x4a, 0x04, 0x08, 0x03, 0x10, 0x04,
+	0x4a, 0x04, 0x08, 0x04, 0x10, 0x05, 0x4a, 0x04, 0x08, 0x05, 0x10, 0x06, 0x42, 0xd0, 0x01, 0x0a,
+	0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x6f, 0x72,
+	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0e, 0x4c, 0x69, 0x73, 0x74, 0x65,
+	0x6e, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x3b, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2,
+	0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53,
+	0x74, 0x6f, 0x72, 0x65, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x14, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x6f,
+	0x72, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a,
+	0x3a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1407,14 +1409,14 @@ var file_cosmos_store_v1beta1_listening_proto_msgTypes = make([]protoimpl.Messag
 var file_cosmos_store_v1beta1_listening_proto_goTypes = []interface{}{
 	(*StoreKVPair)(nil),                // 0: cosmos.store.v1beta1.StoreKVPair
 	(*BlockMetadata)(nil),              // 1: cosmos.store.v1beta1.BlockMetadata
-	(*abci.RequestFinalizeBlock)(nil),  // 2: tendermint.abci.RequestFinalizeBlock
-	(*abci.ResponseFinalizeBlock)(nil), // 3: tendermint.abci.ResponseFinalizeBlock
-	(*abci.ResponseCommit)(nil),        // 4: tendermint.abci.ResponseCommit
+	(*abci.ResponseCommit)(nil),        // 2: tendermint.abci.ResponseCommit
+	(*abci.RequestFinalizeBlock)(nil),  // 3: tendermint.abci.RequestFinalizeBlock
+	(*abci.ResponseFinalizeBlock)(nil), // 4: tendermint.abci.ResponseFinalizeBlock
 }
 var file_cosmos_store_v1beta1_listening_proto_depIdxs = []int32{
-	2, // 0: cosmos.store.v1beta1.BlockMetadata.request_finalize_block:type_name -> tendermint.abci.RequestFinalizeBlock
-	3, // 1: cosmos.store.v1beta1.BlockMetadata.response_finalize_block:type_name -> tendermint.abci.ResponseFinalizeBlock
-	4, // 2: cosmos.store.v1beta1.BlockMetadata.response_commit:type_name -> tendermint.abci.ResponseCommit
+	2, // 0: cosmos.store.v1beta1.BlockMetadata.response_commit:type_name -> tendermint.abci.ResponseCommit
+	3, // 1: cosmos.store.v1beta1.BlockMetadata.request_finalize_block:type_name -> tendermint.abci.RequestFinalizeBlock
+	4, // 2: cosmos.store.v1beta1.BlockMetadata.response_finalize_block:type_name -> tendermint.abci.ResponseFinalizeBlock
 	3, // [3:3] is the sub-list for method output_type
 	3, // [3:3] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name

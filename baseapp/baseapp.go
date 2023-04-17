@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -69,7 +70,7 @@ type BaseApp struct {
 	beginBlocker    sdk.LegacyBeginBlocker     // logic to run before any txs
 	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
 	prepareProposal sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
-	endBlocker      sdk.LegacyEndBlocker       // logic to run after all txs, and to determine valset changes
+	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
 	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
 	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
 	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
@@ -602,6 +603,30 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	}
 
 	return ctx.WithMultiStore(msCache), msCache
+}
+
+// EndBlock is an application-defined function that is called after transactions have been processed
+func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
+	var endblock sdk.EndBlock
+
+	if app.endBlocker != nil {
+		eb, err := app.endBlocker(app.finalizeBlockState.ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		// append endblocker attribute to all events in the endblocker response
+		for i, event := range eb.Events {
+			eb.Events[i].Attributes = append(event.Attributes, abci.EventAttribute{Key: "mode", Value: "EndBlock"})
+		}
+
+		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
+
+
+		endblock = eb
+	}
+
+	return endblock, nil
 }
 
 // runTx processes a transaction within a given execution mode, encoded transaction

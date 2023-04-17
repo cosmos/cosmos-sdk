@@ -185,7 +185,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	if err := depinject.Inject(
 		depinject.Configs(
 			appConfig,
-			// depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		&appBuilder,
 		&txConfig,

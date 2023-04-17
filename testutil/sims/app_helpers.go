@@ -13,8 +13,6 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -122,7 +120,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	if err := depinject.Inject(
 		depinject.Configs(
 			appConfig,
-			depinject.Supply(log.NewNopLogger()),
+			// depinject.Supply(log.NewNopLogger()),
 		),
 		append(extraOutputs, &appBuilder, &codec)...,
 	); err != nil {

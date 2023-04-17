@@ -8,6 +8,7 @@ import (
 	"time"
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -165,7 +166,7 @@ func initKeepersWithmAccPerms(f *fixture, blockedAddrs map[string]bool) (authkee
 		maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	bankKeeper := keeper.NewBaseKeeper(
-		appCodec, f.fetchStoreKey(types.StoreKey), authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, f.fetchStoreKey(types.StoreKey), authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(), log.NewNopLogger(),
 	)
 
 	return authKeeper, bankKeeper
@@ -1205,6 +1206,7 @@ func TestBalanceTrackingEvents(t *testing.T) {
 
 	f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, f.fetchStoreKey(types.StoreKey),
 		f.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		log.NewNopLogger(),
 	)
 
 	// set account with multiple permissions
@@ -1372,6 +1374,7 @@ func TestMintCoinRestrictions(t *testing.T) {
 	for _, test := range tests {
 		f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, f.fetchStoreKey(types.StoreKey),
 			f.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			log.NewNopLogger(),
 		).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {

@@ -2,6 +2,7 @@ name: Build SimApp
 #  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main

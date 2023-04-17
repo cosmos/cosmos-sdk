@@ -183,7 +183,7 @@ func validatorsOutput(ctx context.Context, cctx client.Context, height *int64, p
 }
 
 // GetNodeInfo implements ServiceServer.GetNodeInfo
-func (s queryServer) GetNodeInfo(ctx context.Context, req *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
+func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
 	status, err := getNodeStatus(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
@@ -218,7 +218,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, req *GetNodeInfoRequest) (
 	return &resp, nil
 }
 
-func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABCIQueryResponse, error) {
+func (s queryServer) ABCIQuery(_ context.Context, req *ABCIQueryRequest) (*ABCIQueryResponse, error) {
 	if s.queryFn == nil {
 		return nil, status.Error(codes.Internal, "ABCI Query handler undefined")
 	}

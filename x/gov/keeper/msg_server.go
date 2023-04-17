@@ -42,13 +42,8 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 
-	deposit := sdk.NewCoins(msg.InitialDeposit...)
-	if !deposit.IsValid() {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
-	}
-
-	if deposit.IsAnyNegative() {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+	if err := validateAmount(sdk.NewCoins(msg.InitialDeposit...)); err != nil {
+		return nil, err
 	}
 
 	// Check that either metadata or Msgs length is non nil.
@@ -264,7 +259,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
 
-	if err := validateAmount(msg.Amount); err != nil {
+	if err := validateAmount(sdk.NewCoins(msg.Amount...)); err != nil {
 		return nil, err
 	}
 

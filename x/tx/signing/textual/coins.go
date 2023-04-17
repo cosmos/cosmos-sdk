@@ -63,7 +63,6 @@ func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.
 
 	protoCoins := v.List()
 	coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
-	var err error
 	for i := 0; i < protoCoins.Len(); i++ {
 		coin := &basev1beta1.Coin{}
 		err := coerceToMessage(protoCoins.Get(i).Interface().(protoreflect.Message).Interface(), coin)

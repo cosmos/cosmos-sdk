@@ -379,7 +379,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	if err != nil {
 		return txf, nil, err
 	}
-	if err := msg.ValidateBasic(); err != nil {
+	if err := msg.Validate(); err != nil {
 		return txf, nil, err
 	}
 

@@ -43,3 +43,5 @@ and an example implementation of `EndBlocker` from the `staking` module:
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/abci.go#L22-L27
 ```
+
+<!-- TODO: leaving this here to update docs with core api changes  -->

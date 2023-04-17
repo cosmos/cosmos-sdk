@@ -32,16 +32,6 @@ func (m MsgCreateGroup) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{admin}
 }
 
-// Validate does a sanity check on the provided data
-func (m MsgCreateGroup) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-
-	return strictValidateMembers(m.Members)
-}
-
 // Validate performs stateless validation on a group member, such as
 // making sure the address is well-formed, and the weight is non-negative.
 // Note: in state, a member's weight MUST be positive. However, in some Msgs,
@@ -77,28 +67,6 @@ func (m MsgUpdateGroupAdmin) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{admin}
 }
 
-// Validate does a sanity check on the provided data.
-func (m MsgUpdateGroupAdmin) Validate() error {
-	if m.GroupId == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "group id")
-	}
-
-	admin, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-
-	newAdmin, err := sdk.AccAddressFromBech32(m.NewAdmin)
-	if err != nil {
-		return errorsmod.Wrap(err, "new admin")
-	}
-
-	if admin.Equals(newAdmin) {
-		return errorsmod.Wrap(errors.ErrInvalid, "new and old admin are the same")
-	}
-	return nil
-}
-
 // GetGroupID gets the group id of the MsgUpdateGroupAdmin.
 func (m *MsgUpdateGroupAdmin) GetGroupID() uint64 {
 	return m.GroupId
@@ -119,19 +87,6 @@ func (m MsgUpdateGroupMetadata) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
 
 	return []sdk.AccAddress{admin}
-}
-
-// Validate does a sanity check on the provided data
-func (m MsgUpdateGroupMetadata) Validate() error {
-	if m.GroupId == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "group id")
-	}
-	_, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-
-	return nil
 }
 
 // GetGroupID gets the group id of the MsgUpdateGroupMetadata.
@@ -256,7 +211,7 @@ func (m MsgCreateGroupWithPolicy) Validate() error {
 		return errorsmod.Wrap(err, "decision policy")
 	}
 
-	return strictValidateMembers(m.Members)
+	return StrictValidateMembers(m.Members)
 }
 
 var (
@@ -437,21 +392,6 @@ func (m MsgUpdateGroupPolicyMetadata) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
 
 	return []sdk.AccAddress{admin}
-}
-
-// ValidateBasic does a sanity check on the provided data
-func (m MsgUpdateGroupPolicyMetadata) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-
-	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
-	if err != nil {
-		return errorsmod.Wrap(err, "group policy")
-	}
-
-	return nil
 }
 
 var (
@@ -651,20 +591,6 @@ func (m MsgWithdrawProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{admin}
 }
 
-// ValidateBasic does a sanity check on the provided data
-func (m MsgWithdrawProposal) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Address)
-	if err != nil {
-		return errorsmod.Wrap(err, "admin")
-	}
-
-	if m.ProposalId == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "proposal id")
-	}
-
-	return nil
-}
-
 var (
 	_ sdk.Msg            = &MsgVote{}
 	_ legacytx.LegacyMsg = &MsgVote{}
@@ -680,24 +606,6 @@ func (m MsgVote) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Voter)
 
 	return []sdk.AccAddress{addr}
-}
-
-// ValidateBasic does a sanity check on the provided data
-func (m MsgVote) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Voter)
-	if err != nil {
-		return errorsmod.Wrap(err, "voter")
-	}
-	if m.ProposalId == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "proposal id")
-	}
-	if m.Option == VOTE_OPTION_UNSPECIFIED {
-		return errorsmod.Wrap(errors.ErrEmpty, "vote option")
-	}
-	if _, ok := VoteOption_name[int32(m.Option)]; !ok {
-		return errorsmod.Wrap(errors.ErrInvalid, "vote option")
-	}
-	return nil
 }
 
 var (
@@ -746,23 +654,10 @@ func (m MsgLeaveGroup) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
-// ValidateBasic does a sanity check on the provided data
-func (m MsgLeaveGroup) Validate() error {
-	_, err := sdk.AccAddressFromBech32(m.Address)
-	if err != nil {
-		return errorsmod.Wrap(err, "group member")
-	}
-
-	if m.GroupId == 0 {
-		return errorsmod.Wrap(errors.ErrEmpty, "group-id")
-	}
-	return nil
-}
-
-// strictValidateMembers performs ValidateBasic on Members, but also checks
+// StrictValidateMembers performs ValidateBasic on Members, but also checks
 // that all members weights are positive (whereas `Members{members}.ValidateBasic()`
 // only checks that they are non-negative.
-func strictValidateMembers(members []MemberRequest) error {
+func StrictValidateMembers(members []MemberRequest) error {
 	err := MemberRequests{members}.ValidateBasic()
 	if err != nil {
 		return err

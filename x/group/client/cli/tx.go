@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
@@ -95,13 +96,14 @@ Where members.json contains:
 				return err
 			}
 
+			if err := group.StrictValidateMembers(members); err != nil {
+				return fmt.Errorf("invalid members: %w", err)
+			}
+
 			msg := &group.MsgCreateGroup{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Members:  members,
 				Metadata: args[1],
-			}
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -187,8 +189,7 @@ func MsgUpdateGroupAdminCmd() *cobra.Command {
 		Short: "Update a group's admin",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := cmd.Flags().Set(flags.FlagFrom, args[0])
-			if err != nil {
+			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
 				return err
 			}
 
@@ -202,13 +203,18 @@ func MsgUpdateGroupAdminCmd() *cobra.Command {
 				return err
 			}
 
+			if groupID == 0 {
+				return errors.New("group id cannot be 0")
+			}
+
+			if strings.EqualFold(args[0], args[2]) {
+				return fmt.Errorf("new and old admin are the same")
+			}
+
 			msg := &group.MsgUpdateGroupAdmin{
 				Admin:    clientCtx.GetFromAddress().String(),
 				NewAdmin: args[2],
 				GroupId:  groupID,
-			}
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -242,13 +248,14 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 				return err
 			}
 
+			if groupID == 0 {
+				return errors.New("group id cannot be 0")
+			}
+
 			msg := &group.MsgUpdateGroupMetadata{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Metadata: args[2],
 				GroupId:  groupID,
-			}
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -516,8 +523,7 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 		Short: "Update a group policy metadata",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := cmd.Flags().Set(flags.FlagFrom, args[0])
-			if err != nil {
+			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
 				return err
 			}
 
@@ -530,9 +536,6 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 				Admin:              clientCtx.GetFromAddress().String(),
 				GroupPolicyAddress: args[1],
 				Metadata:           args[2],
-			}
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -621,9 +624,6 @@ metadata example:
 				prop.Title,
 				prop.Summary,
 			)
-			if err != nil {
-				return err
-			}
 
 			if err = msg.Validate(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
@@ -653,8 +653,7 @@ Parameters:
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := cmd.Flags().Set(flags.FlagFrom, args[1])
-			if err != nil {
+			if err := cmd.Flags().Set(flags.FlagFrom, args[1]); err != nil {
 				return err
 			}
 
@@ -668,17 +667,13 @@ Parameters:
 				return err
 			}
 
+			if proposalID == 0 {
+				return fmt.Errorf("invalid proposal id: %d", proposalID)
+			}
+
 			msg := &group.MsgWithdrawProposal{
 				ProposalId: proposalID,
 				Address:    clientCtx.GetFromAddress().String(),
-			}
-
-			if err != nil {
-				return err
-			}
-
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -739,13 +734,6 @@ Parameters:
 				Metadata:   args[3],
 				Exec:       execFromString(execStr),
 			}
-			if err != nil {
-				return err
-			}
-
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -777,9 +765,6 @@ func MsgExecCmd() *cobra.Command {
 			msg := &group.MsgExec{
 				ProposalId: proposalID,
 				Executor:   clientCtx.GetFromAddress().String(),
-			}
-			if err != nil {
-				return err
 			}
 
 			if err = msg.Validate(); err != nil {
@@ -820,12 +805,13 @@ Parameters:
 				return err
 			}
 
+			if groupID == 0 {
+				return errors.New("group id cannot be 0")
+			}
+
 			msg := &group.MsgLeaveGroup{
 				Address: clientCtx.GetFromAddress().String(),
 				GroupId: groupID,
-			}
-			if err = msg.Validate(); err != nil {
-				return fmt.Errorf("message validation failed: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -23,23 +24,22 @@ var _ group.MsgServer = Keeper{}
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(20)
 
-func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	metadata := req.Metadata
-	members := group.MemberRequests{Members: req.Members}
-	admin := req.Admin
+func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
+	if _, err := k.accKeeper.StringToBytes(msg.Admin); err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid admin address: %s", msg.Admin)
+	}
 
+	members := group.MemberRequests{Members: msg.Members}
 	if err := members.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	if err := k.assertMetadataLength(metadata, "group metadata"); err != nil {
+	if err := k.assertMetadataLength(msg.Metadata, "group metadata"); err != nil {
 		return nil, err
 	}
 
 	totalWeight := math.NewDecFromInt64(0)
-	for i := range members.Members {
-		m := members.Members[i]
+	for _, m := range members.Members {
 		if err := k.assertMetadataLength(m.Metadata, "member metadata"); err != nil {
 			return nil, err
 		}
@@ -58,10 +58,11 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 	}
 
 	// Create a new group in the groupTable.
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupInfo := &group.GroupInfo{
 		Id:          k.groupTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
-		Admin:       admin,
-		Metadata:    metadata,
+		Admin:       msg.Admin,
+		Metadata:    msg.Metadata,
 		Version:     1,
 		TotalWeight: totalWeight.String(),
 		CreatedAt:   ctx.BlockTime(),
@@ -72,8 +73,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 	}
 
 	// Create new group members in the groupMemberTable.
-	for i := range members.Members {
-		m := members.Members[i]
+	for i, m := range members.Members {
 		err := k.groupMemberTable.Create(ctx.KVStore(k.key), &group.GroupMember{
 			GroupId: groupID,
 			Member: &group.Member{
@@ -103,6 +103,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 		if err != nil {
 			return errorsmod.Wrap(err, "group total weight")
 		}
+
 		for i := range req.MemberUpdates {
 			if err := k.assertMetadataLength(req.MemberUpdates[i].Metadata, "group member metadata"); err != nil {
 				return err
@@ -196,45 +197,66 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
-	err := k.doUpdateGroup(ctx, req, action, "members updated")
-	if err != nil {
+	if err := k.doUpdateGroup(ctx, req.GetGroupID(), req.GetAdmin(), action, "members updated"); err != nil {
 		return nil, err
 	}
 
 	return &group.MsgUpdateGroupMembersResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupAdmin(goCtx context.Context, req *group.MsgUpdateGroupAdmin) (*group.MsgUpdateGroupAdminResponse, error) {
+func (k Keeper) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGroupAdmin) (*group.MsgUpdateGroupAdminResponse, error) {
+	if msg.GroupId == 0 {
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
+	}
+
+	if strings.EqualFold(msg.Admin, msg.NewAdmin) {
+		return nil, errorsmod.Wrap(errors.ErrInvalid, "new and old admin are the same")
+	}
+
+	if _, err := k.accKeeper.StringToBytes(msg.Admin); err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "admin address")
+	}
+
+	if _, err := k.accKeeper.StringToBytes(msg.NewAdmin); err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "new admin address")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(g *group.GroupInfo) error {
-		g.Admin = req.NewAdmin
+		g.Admin = msg.NewAdmin
 		g.Version++
 
 		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
-	err := k.doUpdateGroup(ctx, req, action, "admin updated")
-	if err != nil {
+	if err := k.doUpdateGroup(ctx, msg.GetGroupID(), msg.GetAdmin(), action, "admin updated"); err != nil {
 		return nil, err
 	}
 
 	return &group.MsgUpdateGroupAdminResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateGroupMetadata) (*group.MsgUpdateGroupMetadataResponse, error) {
+func (k Keeper) UpdateGroupMetadata(goCtx context.Context, msg *group.MsgUpdateGroupMetadata) (*group.MsgUpdateGroupMetadataResponse, error) {
+	if msg.GroupId == 0 {
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
+	}
+
+	if err := k.assertMetadataLength(msg.Metadata, "group metadata"); err != nil {
+		return nil, err
+	}
+
+	if _, err := k.accKeeper.StringToBytes(msg.Admin); err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "admin address")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(g *group.GroupInfo) error {
-		g.Metadata = req.Metadata
+		g.Metadata = msg.Metadata
 		g.Version++
 		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
-	if err := k.assertMetadataLength(req.Metadata, "group metadata"); err != nil {
-		return nil, err
-	}
-
-	err := k.doUpdateGroup(ctx, req, action, "metadata updated")
-	if err != nil {
+	if err := k.doUpdateGroup(ctx, msg.GetGroupID(), msg.GetAdmin(), action, "metadata updated"); err != nil {
 		return nil, err
 	}
 
@@ -387,16 +409,15 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	return &group.MsgCreateGroupPolicyResponse{Address: accountAddr.String()}, nil
 }
 
-func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, req *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {
+func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
-		groupPolicy.Admin = req.NewAdmin
+		groupPolicy.Admin = msg.NewAdmin
 		groupPolicy.Version++
 		return k.groupPolicyTable.Update(ctx.KVStore(k.key), groupPolicy)
 	}
 
-	err := k.doUpdateGroupPolicy(ctx, req.GroupPolicyAddress, req.Admin, action, "group policy admin updated")
-	if err != nil {
+	if err := k.doUpdateGroupPolicy(ctx, msg.GroupPolicyAddress, msg.Admin, action, "group policy admin updated"); err != nil {
 		return nil, err
 	}
 
@@ -430,17 +451,16 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, req *grou
 		return k.groupPolicyTable.Update(ctx.KVStore(k.key), groupPolicy)
 	}
 
-	err = k.doUpdateGroupPolicy(ctx, req.GroupPolicyAddress, req.Admin, action, "group policy's decision policy updated")
-	if err != nil {
+	if err = k.doUpdateGroupPolicy(ctx, req.GroupPolicyAddress, req.Admin, action, "group policy's decision policy updated"); err != nil {
 		return nil, err
 	}
 
 	return &group.MsgUpdateGroupPolicyDecisionPolicyResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, req *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {
+func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, msg *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	metadata := req.GetMetadata()
+	metadata := msg.GetMetadata()
 
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupPolicy.Metadata = metadata
@@ -452,7 +472,7 @@ func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, req *group.MsgU
 		return nil, err
 	}
 
-	err := k.doUpdateGroupPolicy(ctx, req.GroupPolicyAddress, req.Admin, action, "group policy metadata updated")
+	err := k.doUpdateGroupPolicy(ctx, msg.GroupPolicyAddress, msg.Admin, action, "group policy metadata updated")
 	if err != nil {
 		return nil, err
 	}
@@ -578,12 +598,17 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	return &group.MsgSubmitProposalResponse{ProposalId: id}, nil
 }
 
-func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	id := req.ProposalId
-	address := req.Address
+func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
+	if msg.ProposalId == 0 {
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
+	}
 
-	proposal, err := k.getProposal(ctx, id)
+	if _, err := k.accKeeper.StringToBytes(msg.Address); err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid group policy admin / proposer address: %s", msg.Address)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	proposal, err := k.getProposal(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err
 	}
@@ -599,41 +624,55 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 	}
 
 	// check address is the group policy admin he is in proposers list..
-	if address != policyInfo.Admin && !isProposer(proposal, address) {
-		return nil, errorsmod.Wrapf(errors.ErrUnauthorized, "given address is neither group policy admin nor in proposers: %s", address)
+	if msg.Address != policyInfo.Admin && !isProposer(proposal, msg.Address) {
+		return nil, errorsmod.Wrapf(errors.ErrUnauthorized, "given address is neither group policy admin nor in proposers: %s", msg.Address)
 	}
 
 	proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
-	if err := k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
+	if err := k.proposalTable.Update(ctx.KVStore(k.key), msg.ProposalId, &proposal); err != nil {
 		return nil, err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventWithdrawProposal{ProposalId: id})
-	if err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(&group.EventWithdrawProposal{ProposalId: msg.ProposalId}); err != nil {
 		return nil, err
 	}
 
 	return &group.MsgWithdrawProposalResponse{}, nil
 }
 
-func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	id := req.ProposalId
-	voteOption := req.Option
-	metadata := req.Metadata
+func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteResponse, error) {
+	if msg.ProposalId == 0 {
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
+	}
 
-	if err := k.assertMetadataLength(metadata, "metadata"); err != nil {
+	// verify vote options
+	if msg.Option == group.VOTE_OPTION_UNSPECIFIED {
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "vote option")
+	}
+
+	if _, ok := group.VoteOption_name[int32(msg.Option)]; !ok {
+		return nil, errorsmod.Wrap(errors.ErrInvalid, "vote option")
+	}
+
+	if err := k.assertMetadataLength(msg.Metadata, "metadata"); err != nil {
 		return nil, err
 	}
 
-	proposal, err := k.getProposal(ctx, id)
+	if _, err := k.accKeeper.StringToBytes(msg.Voter); err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid voter address: %s", msg.Voter)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	proposal, err := k.getProposal(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err
 	}
+
 	// Ensure that we can still accept votes for this proposal.
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, errorsmod.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
+
 	if ctx.BlockTime().After(proposal.VotingPeriodEnd) {
 		return nil, errorsmod.Wrap(errors.ErrExpired, "voting period has ended already")
 	}
@@ -643,22 +682,21 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, errorsmod.Wrap(err, "load group policy")
 	}
 
-	electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
+	groupInfo, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 	if err != nil {
 		return nil, err
 	}
 
 	// Count and store votes.
-	voterAddr := req.Voter
-	voter := group.GroupMember{GroupId: electorate.Id, Member: &group.Member{Address: voterAddr}}
+	voter := group.GroupMember{GroupId: groupInfo.Id, Member: &group.Member{Address: msg.Voter}}
 	if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voter), &voter); err != nil {
-		return nil, errorsmod.Wrapf(err, "voter address: %s", voterAddr)
+		return nil, errorsmod.Wrapf(err, "voter address: %s", msg.Voter)
 	}
 	newVote := group.Vote{
-		ProposalId: id,
-		Voter:      voterAddr,
-		Option:     voteOption,
-		Metadata:   metadata,
+		ProposalId: msg.ProposalId,
+		Voter:      msg.Voter,
+		Option:     msg.Option,
+		Metadata:   msg.Metadata,
 		SubmitTime: ctx.BlockTime(),
 	}
 
@@ -668,17 +706,13 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, errorsmod.Wrap(err, "store vote")
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventVote{ProposalId: id})
-	if err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(&group.EventVote{ProposalId: msg.ProposalId}); err != nil {
 		return nil, err
 	}
 
 	// Try to execute proposal immediately
-	if req.Exec == group.Exec_EXEC_TRY {
-		_, err = k.Exec(ctx, &group.MsgExec{
-			ProposalId: id,
-			Executor:   voterAddr,
-		})
+	if msg.Exec == group.Exec_EXEC_TRY {
+		_, err = k.Exec(ctx, &group.MsgExec{ProposalId: msg.ProposalId, Executor: msg.Voter})
 		if err != nil {
 			return nil, err
 		}
@@ -811,14 +845,18 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 }
 
 // LeaveGroup implements the MsgServer/LeaveGroup method.
-func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, err := k.accKeeper.StringToBytes(req.Address)
-	if err != nil {
-		return nil, err
+func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
+	if msg.GroupId == 0 {
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "group-id")
 	}
 
-	groupInfo, err := k.getGroupInfo(ctx, req.GroupId)
+	_, err := k.accKeeper.StringToBytes(msg.Address)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "group member")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	groupInfo, err := k.getGroupInfo(ctx, msg.GroupId)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "group")
 	}
@@ -829,8 +867,8 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	}
 
 	gm, err := k.getGroupMember(ctx, &group.GroupMember{
-		GroupId: req.GroupId,
-		Member:  &group.Member{Address: req.Address},
+		GroupId: msg.GroupId,
+		Member:  &group.Member{Address: msg.Address},
 	})
 	if err != nil {
 		return nil, err
@@ -864,8 +902,8 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	}
 
 	ctx.EventManager().EmitTypedEvent(&group.EventLeaveGroup{
-		GroupId: req.GroupId,
-		Address: req.Address,
+		GroupId: msg.GroupId,
+		Address: msg.Address,
 	})
 
 	return &group.MsgLeaveGroupResponse{}, nil
@@ -884,11 +922,6 @@ func (k Keeper) getGroupMember(ctx sdk.Context, member *group.GroupMember) (*gro
 	}
 
 	return &groupMember, nil
-}
-
-type authNGroupReq interface {
-	GetGroupID() uint64
-	GetAdmin() string
 }
 
 type (
@@ -936,41 +969,24 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy, admin string, 
 
 // doUpdateGroup first makes sure that the group admin initiated the group update,
 // before performing the group update and emitting an event.
-func (k Keeper) doUpdateGroup(ctx sdk.Context, req authNGroupReq, action actionFn, note string) error {
-	err := k.doAuthenticated(ctx, req, action, note)
+func (k Keeper) doUpdateGroup(ctx sdk.Context, groupID uint64, reqGroupAdmin string, action actionFn, errNote string) error {
+	groupInfo, err := k.getGroupInfo(ctx, groupID)
 	if err != nil {
 		return err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroup{GroupId: req.GetGroupID()})
-	if err != nil {
-		return err
+	if !strings.EqualFold(groupInfo.Admin, reqGroupAdmin) {
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "not group admin; got %s, expected %s", reqGroupAdmin, groupInfo.Admin)
 	}
 
-	return nil
-}
-
-// doAuthenticated makes sure that the group admin initiated the request,
-// and perform the provided action on the group.
-func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actionFn, errNote string) error {
-	group, err := k.getGroupInfo(ctx, req.GetGroupID())
-	if err != nil {
-		return err
-	}
-	admin, err := k.accKeeper.StringToBytes(group.Admin)
-	if err != nil {
-		return errorsmod.Wrap(err, "group admin")
-	}
-	reqAdmin, err := k.accKeeper.StringToBytes(req.GetAdmin())
-	if err != nil {
-		return errorsmod.Wrap(err, "request admin")
-	}
-	if !bytes.Equal(admin, reqAdmin) {
-		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "not group admin; got %s, expected %s", req.GetAdmin(), group.Admin)
-	}
-	if err := action(&group); err != nil {
+	if err := action(&groupInfo); err != nil {
 		return errorsmod.Wrap(err, errNote)
 	}
+
+	if err := ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroup{GroupId: groupID}); err != nil {
+		return err
+	}
+
 	return nil
 }
 

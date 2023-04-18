@@ -88,6 +88,7 @@ func (s *TestSuite) TestCreateGroup() {
 	specs := map[string]struct {
 		req       *group.MsgCreateGroup
 		expErr    bool
+		expErrMsg string
 		expGroups []*group.GroupInfo
 	}{
 		"all good": {
@@ -103,7 +104,19 @@ func (s *TestSuite) TestCreateGroup() {
 				Members:  members,
 				Metadata: strings.Repeat("a", 256),
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "group metadata: limit exceeded",
+		},
+		"invalid member address": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: "invalid",
+					Weight:  "1",
+				}},
+			},
+			expErr:    true,
+			expErrMsg: "member address invalid",
 		},
 		"member metadata too long": {
 			req: &group.MsgCreateGroup{
@@ -114,7 +127,8 @@ func (s *TestSuite) TestCreateGroup() {
 					Metadata: strings.Repeat("a", 256),
 				}},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "metadata: limit exceeded",
 		},
 		"zero member weight": {
 			req: &group.MsgCreateGroup{
@@ -124,7 +138,8 @@ func (s *TestSuite) TestCreateGroup() {
 					Weight:  "0",
 				}},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "expected a positive decimal",
 		},
 		"invalid member weight - Inf": {
 			req: &group.MsgCreateGroup{
@@ -134,7 +149,8 @@ func (s *TestSuite) TestCreateGroup() {
 					Weight:  "inf",
 				}},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "expected a finite decimal",
 		},
 		"invalid member weight - NaN": {
 			req: &group.MsgCreateGroup{
@@ -144,7 +160,8 @@ func (s *TestSuite) TestCreateGroup() {
 					Weight:  "NaN",
 				}},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "expected a finite decimal",
 		},
 	}
 
@@ -156,10 +173,12 @@ func (s *TestSuite) TestCreateGroup() {
 			res, err := s.groupKeeper.CreateGroup(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				_, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
 				s.Require().Error(err)
 				return
 			}
+
 			s.Require().NoError(err)
 			id := res.GroupId
 
@@ -237,6 +256,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 	specs := map[string]struct {
 		req        *group.MsgUpdateGroupMembers
 		expErr     bool
+		expErrMsg  string
 		expGroup   *group.GroupInfo
 		expMembers []*group.GroupMember
 	}{
@@ -249,7 +269,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Weight:  "2",
 				}},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "value is empty",
 		},
 		"no new members": {
 			req: &group.MsgUpdateGroupMembers{
@@ -257,9 +278,10 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Admin:         myAdmin,
 				MemberUpdates: []group.MemberRequest{},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "value is empty",
 		},
-		"invalid memember": {
+		"invalid member": {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
 				Admin:   myAdmin,
@@ -267,7 +289,23 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					{},
 				},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "unable to decode",
+		},
+		"invalid member metadata too long": {
+			req: &group.MsgUpdateGroupMembers{
+				GroupId: groupID,
+				Admin:   myAdmin,
+				MemberUpdates: []group.MemberRequest{
+					{
+						Address:  member2,
+						Weight:   "2",
+						Metadata: strings.Repeat("a", 256),
+					},
+				},
+			},
+			expErr:    true,
+			expErrMsg: "group member metadata: limit exceeded",
 		},
 		"add new member": {
 			req: &group.MsgUpdateGroupMembers{
@@ -441,7 +479,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Weight:  "2",
 				}},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "not group admin",
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
@@ -466,7 +505,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Weight:  "2",
 				}},
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "not found",
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
@@ -490,6 +530,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			_, err := s.groupKeeper.UpdateGroupMembers(sdkCtx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -549,6 +590,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 		req       *group.MsgUpdateGroupAdmin
 		expStored *group.GroupInfo
 		expErr    bool
+		expErrMsg string
 	}{
 		"with no groupID": {
 			req: &group.MsgUpdateGroupAdmin{
@@ -556,7 +598,8 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				Admin:    oldAdmin,
 				NewAdmin: newAdmin,
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "value is empty",
 		},
 		"with identical admin and new admin": {
 			req: &group.MsgUpdateGroupAdmin{
@@ -564,7 +607,8 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				Admin:    oldAdmin,
 				NewAdmin: oldAdmin,
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "new and old admin are the same",
 		},
 		"with correct admin": {
 			req: &group.MsgUpdateGroupAdmin{
@@ -586,7 +630,8 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				Admin:    addr4.String(),
 				NewAdmin: newAdmin,
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "not group admin",
 			expStored: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       oldAdmin,
@@ -601,7 +646,8 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				Admin:    oldAdmin,
 				NewAdmin: newAdmin,
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "not found",
 			expStored: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       oldAdmin,
@@ -617,6 +663,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 			_, err := s.groupKeeper.UpdateGroupAdmin(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -773,7 +820,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "limit exceeded",
+			expErrMsg: "group metadata: limit exceeded",
 		},
 		"group policy metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -788,7 +835,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "limit exceeded",
+			expErrMsg: "group policy metadata: limit exceeded",
 		},
 		"member metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -806,7 +853,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "limit exceeded",
+			expErrMsg: "member metadata: limit exceeded",
 		},
 		"zero member weight": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -824,6 +871,23 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			),
 			expErr:    true,
 			expErrMsg: "expected a positive decimal",
+		},
+		"invalid member address": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: "invalid",
+					Weight:  "1",
+				}},
+				GroupPolicyAsAdmin: false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+				0,
+			),
+			expErr:    true,
+			expErrMsg: "unable to decode",
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -1094,6 +1158,7 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 		req            *group.MsgUpdateGroupPolicyAdmin
 		expGroupPolicy *group.GroupPolicyInfo
 		expErr         bool
+		expErrMsg      string
 	}{
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupPolicyAdmin{
@@ -1109,7 +1174,8 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				DecisionPolicy: nil,
 				CreatedAt:      s.blockTime,
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "not group policy admin: unauthorized",
 		},
 		"with wrong group policy": {
 			req: &group.MsgUpdateGroupPolicyAdmin{
@@ -1125,7 +1191,8 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				DecisionPolicy: nil,
 				CreatedAt:      s.blockTime,
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "load group policy: not found",
 		},
 		"correct data": {
 			req: &group.MsgUpdateGroupPolicyAdmin{
@@ -1153,6 +1220,7 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 			_, err := s.groupKeeper.UpdateGroupPolicyAdmin(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -1186,6 +1254,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		policy         group.DecisionPolicy
 		expGroupPolicy *group.GroupPolicyInfo
 		expErr         bool
+		expErrMsg      string
 	}{
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
@@ -1195,6 +1264,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			policy:         policy,
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
+			expErrMsg:      "not group policy admin: unauthorized",
 		},
 		"with wrong group policy": {
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
@@ -1204,6 +1274,49 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			policy:         policy,
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
+			expErrMsg:      "load group policy: not found",
+		},
+		"invalid percentage decision policy with negative value": {
+			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
+				Admin:              admin.String(),
+				GroupPolicyAddress: groupPolicyAddr,
+			},
+			policy: group.NewPercentageDecisionPolicy(
+				"-0.5",
+				time.Duration(1)*time.Second,
+				0,
+			),
+			expGroupPolicy: &group.GroupPolicyInfo{
+				Admin:          admin.String(),
+				Address:        groupPolicyAddr,
+				GroupId:        myGroupID,
+				Version:        2,
+				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
+			},
+			expErr:    true,
+			expErrMsg: "expected a positive decimal",
+		},
+		"invalid percentage decision policy with value greater than 1": {
+			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
+				Admin:              admin.String(),
+				GroupPolicyAddress: groupPolicyAddr,
+			},
+			policy: group.NewPercentageDecisionPolicy(
+				"2",
+				time.Duration(1)*time.Second,
+				0,
+			),
+			expGroupPolicy: &group.GroupPolicyInfo{
+				Admin:          admin.String(),
+				Address:        groupPolicyAddr,
+				GroupId:        myGroupID,
+				Version:        2,
+				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
+			},
+			expErr:    true,
+			expErrMsg: "percentage must be > 0 and <= 1",
 		},
 		"correct data": {
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
@@ -1272,6 +1385,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			_, err := s.groupKeeper.UpdateGroupPolicyDecisionPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -1303,6 +1417,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 		req            *group.MsgUpdateGroupPolicyMetadata
 		expGroupPolicy *group.GroupPolicyInfo
 		expErr         bool
+		expErrMsg      string
 	}{
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
@@ -1311,6 +1426,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
+			expErrMsg:      "not group policy admin: unauthorized",
 		},
 		"with wrong group policy": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
@@ -1319,14 +1435,17 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
+			expErrMsg:      "load group policy: not found",
 		},
-		"with comment too long": {
+		"with metadata too long": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
 				Admin:              admin.String(),
-				GroupPolicyAddress: addr5.String(),
+				GroupPolicyAddress: groupPolicyAddr,
+				Metadata:           strings.Repeat("a", 1001),
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
+			expErrMsg:      "group policy metadata: limit exceeded",
 		},
 		"correct data": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
@@ -1353,6 +1472,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 			_, err := s.groupKeeper.UpdateGroupPolicyMetadata(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -1551,6 +1671,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		msgs        []sdk.Msg
 		expProposal group.Proposal
 		expErr      bool
+		expErrMsg   string
 		postRun     func(sdkCtx sdk.Context)
 		preRun      func(msg []sdk.Msg)
 	}{
@@ -1581,23 +1702,26 @@ func (s *TestSuite) TestSubmitProposal() {
 				Proposers:          []string{addr2.String()},
 				Metadata:           strings.Repeat("a", 256),
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"group policy required": {
 			req: &group.MsgSubmitProposal{
 				Proposers: []string{addr2.String()},
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "unable to decode",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"existing group policy required": {
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: addr1.String(),
 				Proposers:          []string{addr2.String()},
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "not found",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgSubmitProposal{
@@ -1618,33 +1742,37 @@ func (s *TestSuite) TestSubmitProposal() {
 				GroupPolicyAddress: accountAddr.String(),
 				Proposers:          []string{addr4.String()},
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "not in group",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"all proposers must be in group": {
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: accountAddr.String(),
 				Proposers:          []string{addr2.String(), addr4.String()},
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "not in group",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"admin that is not a group member can not create proposal": {
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: accountAddr.String(),
 				Proposers:          []string{addr1.String()},
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "not in group",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"reject msgs that are not authz by group policy": {
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: accountAddr.String(),
 				Proposers:          []string{addr2.String()},
 			},
-			msgs:    []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			msgs:      []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
+			expErr:    true,
+			expErrMsg: "msg does not have group policy authorization",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"with try exec": {
 			preRun: func(msgs []sdk.Msg) {
@@ -1713,6 +1841,7 @@ func (s *TestSuite) TestSubmitProposal() {
 			res, err := s.groupKeeper.SubmitProposal(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -1776,7 +1905,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			admin:     addr5.String(),
 			expErrMsg: "unauthorized",
 		},
-		"wrong proposalId": {
+		"wrong proposal id": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return 1111
 			},
@@ -1925,6 +2054,7 @@ func (s *TestSuite) TestVote() {
 		expProposalStatus group.ProposalStatus         // expected after tallying
 		expExecutorResult group.ProposalExecutorResult // expected after tallying
 		expErr            bool
+		expErrMsg         string
 	}{
 		"vote yes": {
 			req: &group.MsgVote{
@@ -2067,8 +2197,9 @@ func (s *TestSuite) TestVote() {
 				})
 				s.Require().NoError(err)
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "proposal not open for voting",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"metadata too long": {
 			req: &group.MsgVote{
@@ -2077,8 +2208,9 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_NO,
 				Metadata:   strings.Repeat("a", 256),
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "metadata: limit exceeded",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"existing proposal required": {
 			req: &group.MsgVote{
@@ -2086,16 +2218,18 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO,
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "load proposal: not found",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"empty vote option": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "vote option: value is empty",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"invalid vote option": {
 			req: &group.MsgVote{
@@ -2103,8 +2237,9 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     5,
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "ote option: invalid value",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"voter must be in group": {
 			req: &group.MsgVote{
@@ -2112,8 +2247,9 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr2.String(),
 				Option:     group.VOTE_OPTION_NO,
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "not found",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"admin that is not a group member can not vote": {
 			req: &group.MsgVote{
@@ -2121,8 +2257,9 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr1.String(),
 				Option:     group.VOTE_OPTION_NO,
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "not found",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"on voting period end": {
 			req: &group.MsgVote{
@@ -2130,11 +2267,12 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO,
 			},
-			srcCtx:  s.sdkCtx.WithBlockTime(s.blockTime.Add(time.Second)),
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			srcCtx:    s.sdkCtx.WithBlockTime(s.blockTime.Add(time.Second)),
+			expErr:    true,
+			expErrMsg: "voting period has ended already: expired",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
-		"closed already": {
+		"vote closed already": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
@@ -2151,8 +2289,9 @@ func (s *TestSuite) TestVote() {
 				})
 				s.Require().NoError(err)
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "load proposal: not found",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"voted already": {
 			req: &group.MsgVote{
@@ -2168,8 +2307,9 @@ func (s *TestSuite) TestVote() {
 				})
 				s.Require().NoError(err)
 			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
+			expErr:    true,
+			expErrMsg: "store vote: unique constraint violation",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 	}
 	for msg, spec := range specs {
@@ -2186,6 +2326,7 @@ func (s *TestSuite) TestVote() {
 			_, err := s.groupKeeper.Vote(sdkCtx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -2342,6 +2483,7 @@ func (s *TestSuite) TestExecProposal() {
 		srcBlockTime      time.Time
 		setupProposal     func(ctx context.Context) uint64
 		expErr            bool
+		expErrMsg         string
 		expProposalStatus group.ProposalStatus
 		expExecutorResult group.ProposalExecutorResult
 		expBalance        bool
@@ -2391,11 +2533,19 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
+		"invalid proposal id": {
+			setupProposal: func(ctx context.Context) uint64 {
+				return 0
+			},
+			expErr:    true,
+			expErrMsg: "proposal id: value is empty",
+		},
 		"existing proposal required": {
 			setupProposal: func(ctx context.Context) uint64 {
 				return 9999
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "load proposal: not found",
 		},
 		"Decision policy also applied on exactly voting period end": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2448,6 +2598,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expErr:            true,                                // since proposal is pruned after a successful MsgExec
+			expErrMsg:         "load proposal: not found",
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
@@ -2501,6 +2652,7 @@ func (s *TestSuite) TestExecProposal() {
 			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -2806,12 +2958,12 @@ func (s *TestSuite) TestLeaveGroup() {
 		name           string
 		req            *group.MsgLeaveGroup
 		expErr         bool
-		errMsg         string
+		expErrMsg      string
 		expMembersSize int
 		memberWeight   math.Dec
 	}{
 		{
-			"expect error: group not found",
+			"group not found",
 			&group.MsgLeaveGroup{
 				GroupId: 100000,
 				Address: member1.String(),
@@ -2822,7 +2974,18 @@ func (s *TestSuite) TestLeaveGroup() {
 			math.NewDecFromInt64(0),
 		},
 		{
-			"expect error: member not part of group",
+			"member address invalid",
+			&group.MsgLeaveGroup{
+				GroupId: groupID1,
+				Address: "invalid",
+			},
+			true,
+			"unable to decode",
+			0,
+			math.NewDecFromInt64(0),
+		},
+		{
+			"member not part of group",
 			&group.MsgLeaveGroup{
 				GroupId: groupID1,
 				Address: member4.String(),
@@ -2891,7 +3054,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			res, err := s.groupKeeper.LeaveGroup(s.ctx, tc.req)
 			if tc.expErr {
 				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.errMsg)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotNil(res)

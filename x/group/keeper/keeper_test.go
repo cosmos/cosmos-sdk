@@ -66,6 +66,7 @@ func (s *TestSuite) SetupTest() {
 
 	// add empty string to the list of expected calls
 	s.accountKeeper.EXPECT().StringToBytes("").Return(nil, errors.New("unable to decode")).AnyTimes()
+	s.accountKeeper.EXPECT().StringToBytes("invalid").Return(nil, errors.New("unable to decode")).AnyTimes()
 
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 

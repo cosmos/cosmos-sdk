@@ -23,6 +23,8 @@ const (
 	FlagGroupPolicyAsAdmin = "group-policy-as-admin"
 )
 
+var errZeroGroupID = errors.New("group id cannot be 0")
+
 // TxCmd returns a root CLI command handler for all x/group transaction commands.
 func TxCmd(name string, ac address.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
@@ -162,13 +164,19 @@ Set a member's weight to "0" to delete it.
 				return err
 			}
 
+			for _, member := range members {
+				if _, err := math.NewNonNegativeDecFromString(member.Weight); err != nil {
+					return fmt.Errorf("invalid weight %s for %s: weight must not be negative", member.Weight, member.Address)
+				}
+			}
+
 			groupID, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			if groupID == 0 {
-				return errors.New("group id cannot be 0")
+				return errZeroGroupID
 			}
 
 			msg := &group.MsgUpdateGroupMembers{
@@ -208,7 +216,7 @@ func MsgUpdateGroupAdminCmd() *cobra.Command {
 			}
 
 			if groupID == 0 {
-				return errors.New("group id cannot be 0")
+				return errZeroGroupID
 			}
 
 			if strings.EqualFold(args[0], args[2]) {
@@ -253,7 +261,7 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 			}
 
 			if groupID == 0 {
-				return errors.New("group id cannot be 0")
+				return errZeroGroupID
 			}
 
 			msg := &group.MsgUpdateGroupMetadata{
@@ -416,7 +424,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 			}
 
 			if groupID == 0 {
-				return errors.New("group id cannot be 0")
+				return errZeroGroupID
 			}
 
 			policy, err := parseDecisionPolicy(clientCtx.Codec, args[3])
@@ -811,7 +819,7 @@ Parameters:
 			}
 
 			if groupID == 0 {
-				return errors.New("group id cannot be 0")
+				return errZeroGroupID
 			}
 
 			msg := &group.MsgLeaveGroup{

@@ -222,6 +222,7 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
+			PubKey:        priv.PubKey(),
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			context.TODO(), defaultSignMode, signerData,

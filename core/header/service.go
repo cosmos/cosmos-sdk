@@ -5,10 +5,12 @@ import (
 	"time"
 )
 
+// Service defines the a interface in which you can get header information
 type Service interface {
 	GetHeaderInfo(context.Context) Info
 }
 
+// Info defines a struct that contains information about the header
 type Info struct {
 	Height  int64     // Height returns the height of the block
 	Hash    []byte    // Hash returns the hash of the block header

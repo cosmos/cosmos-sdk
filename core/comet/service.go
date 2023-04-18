@@ -5,10 +5,12 @@ import (
 	"time"
 )
 
+// Service is an interface that can be used to get information specific to Comet
 type Service interface {
 	GetCometInfo(context.Context) Info
 }
 
+// Info is the information comet provides apps in ABCI
 type Info struct {
 	Evidence []Misbehavior // Evidence misbehavior of the block
 	// ValidatorsHash returns the hash of the validators

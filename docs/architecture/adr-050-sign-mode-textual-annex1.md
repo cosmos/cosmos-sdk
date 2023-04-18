@@ -322,7 +322,7 @@ TestData object
 
 ### bool
 
-Boolean values are rendered as `YES` or `NO`.
+Boolean values are rendered as `True` or `False`.
 
 ### [ABANDONED] Custom `msg_title` instead of Msg `type_url`
 

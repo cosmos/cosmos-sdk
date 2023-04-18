@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
@@ -65,7 +67,12 @@ func (s *CLITestSuite) SetupSuite() {
 	}
 	s.clientCtx = ctxGen().WithOutput(&outBuf)
 
-	cfg, err := network.DefaultConfigWithAppConfig(distrtestutil.AppConfig)
+	cfg, err := network.DefaultConfigWithAppConfig(
+		depinject.Configs(
+			distrtestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
+	)
 	s.Require().NoError(err)
 
 	genesisState := cfg.GenesisState

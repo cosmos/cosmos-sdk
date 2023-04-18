@@ -2,11 +2,12 @@ package gov_test
 
 import (
 	"bytes"
+	"log"
 	"sort"
 	"testing"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
@@ -124,7 +125,7 @@ func createTestSuite(t *testing.T) suite {
 				configurator.ConsensusModule(),
 				configurator.DistributionModule(),
 			),
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(sdklog.NewNopLogger()),
 		),
 		simtestutil.DefaultStartUpConfig(),
 		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.DistributionKeeper, &res.StakingKeeper,

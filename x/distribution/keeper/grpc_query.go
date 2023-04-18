@@ -6,9 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/store/prefix"
-
 	"cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -93,6 +92,11 @@ func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.Query
 	if err != nil {
 		return nil, err
 	}
+
+	validator := k.stakingKeeper.Validator(ctx, valAdr)
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
+	}
 	rewards := k.GetValidatorOutstandingRewards(ctx, valAdr)
 
 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: rewards}, nil
@@ -113,6 +117,11 @@ func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidato
 	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
+	}
+
+	validator := k.stakingKeeper.Validator(ctx, valAdr)
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
 	}
 	commission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
 
@@ -188,7 +197,7 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
-	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +227,7 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 	total := sdk.DecCoins{}
 	var delRewards []types.DelegationDelegatorReward
 
-	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +260,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +286,7 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
-	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}

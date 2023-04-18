@@ -14,8 +14,8 @@ func TestImmutableTreePanics(t *testing.T) {
 	it := &immutableTree{immTree}
 	require.Panics(t, func() { it.Set([]byte{}, []byte{}) })
 	require.Panics(t, func() { it.Remove([]byte{}) })
-	require.Panics(t, func() { it.SaveVersion() })           //nolint:errcheck
-	require.Panics(t, func() { it.DeleteVersion(int64(1)) }) //nolint:errcheck
+	require.Panics(t, func() { _, _, _ = it.SaveVersion() })
+	require.Panics(t, func() { _ = it.DeleteVersion(int64(1)) })
 
 	imm, err := it.GetImmutable(1)
 	require.Error(t, err)

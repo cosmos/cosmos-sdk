@@ -17,6 +17,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -101,6 +102,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		key,
 		stakingKeeper,
 		slashingKeeper,
+		address.NewBech32Codec("cosmos"),
 	)
 
 	suite.stakingKeeper = stakingKeeper

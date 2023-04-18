@@ -29,6 +29,7 @@ needlessly defining many placeholder functions
 package module
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -223,6 +224,11 @@ type PrepareCheckStateAppModule interface {
 type PrecommitAppModule interface {
 	AppModule
 	Precommit(sdk.Context)
+}
+
+type HasABCIEndblock interface {
+	AppModule
+	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
@@ -735,6 +741,22 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 			err := module.EndBlock(ctx)
 			if err != nil {
 				return abci.ResponseEndBlock{}, err
+			}
+		} else if module, ok := m.Modules[moduleName].(HasABCIEndblock); ok {
+			moduleValUpdates, err := module.EndBlock(ctx)
+			if err != nil {
+				return abci.ResponseEndBlock{}, err
+			}
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
+					return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
+				}
+
+				for _, updates := range moduleValUpdates {
+					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
+				}
 			}
 		} else {
 			continue

@@ -1,25 +1,24 @@
 # Inter-block Cache
 
-- [Inter-block cache](#inter-block-cache)
-  - [Synopsis](#synopsis)
-  - [Overview and basic concepts](#overview-and-basic-concepts)
-    - [Motivation](#motivation)
-    - [Definitions](#definitions)
-  - [System model and properties](#system-model-and-properties)
-    - [Assumptions](#assumptions)
-    - [Properties](#properties)
-      - [Thread safety](#thread-safety)
-      - [Crash recovery](#crash-recovery)
-      - [Iteration](#iteration)
-  - [Technical specification](#technical-specification)
-    - [General design](#general-design)
-    - [API](#api)
-      - [CommitKVCacheManager](#commitkvcachemanager)
-      - [CommitKVStoreCache](#commitkvstorecache)
-    - [Implementation details](#implementation-details)
-  - [History](#history)
-  - [Copyright](#copyright)
-
+* [Inter-block Cache](#inter-block-cache)
+    * [Synopsis](#synopsis)
+    * [Overview and basic concepts](#overview-and-basic-concepts)
+        * [Motivation](#motivation)
+        * [Definitions](#definitions)
+    * [System model and properties](#system-model-and-properties)
+        * [Assumptions](#assumptions)
+        * [Properties](#properties)
+            * [Thread safety](#thread-safety)
+            * [Crash recovery](#crash-recovery)
+            * [Iteration](#iteration)
+    * [Technical specification](#technical-specification)
+        * [General design](#general-design)
+        * [API](#api)
+            * [CommitKVCacheManager](#commitkvcachemanager)
+            * [CommitKVStoreCache](#commitkvstorecache)
+        * [Implementation details](#implementation-details)
+    * [History](#history)
+    * [Copyright](#copyright)
 
 ## Synopsis
 
@@ -33,9 +32,9 @@ The goal of the inter-block cache is to allow SDK modules to have fast access to
 
 ### Definitions
 
-- `Store key` uniquely identifies a store.
-- `KVCache` is a `CommitKVStore` wrapped with a cache.
-- `Cache manager` is a key component of the inter-block cache responsible for maintaining a map from `store keys` to `KVCaches`.
+* `Store key` uniquely identifies a store.
+* `KVCache` is a `CommitKVStore` wrapped with a cache.
+* `Cache manager` is a key component of the inter-block cache responsible for maintaining a map from `store keys` to `KVCaches`.
 
 ## System model and properties
 

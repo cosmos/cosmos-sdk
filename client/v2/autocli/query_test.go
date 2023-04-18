@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -77,6 +78,9 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				},
 				"duration": {
 					Usage: "some random duration",
+				},
+				"bz": {
+					Usage: "some bytes",
 				},
 			},
 		},
@@ -194,6 +198,74 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set
 	assert.Equal(t, int32(3), lastReq.I32)   // default value got set
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
+}
+
+func TestBinaryFlag(t *testing.T) {
+	// Create a temporary file with some content
+	tempFile, err := os.Open("testdata/file.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := []byte("this is just a test file")
+	if err := tempFile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test cases
+	tests := []struct {
+		name     string
+		input    string
+		expected []byte
+		hasError bool
+		err      string
+	}{
+		{
+			name:     "Valid file path with extension",
+			input:    tempFile.Name(),
+			expected: content,
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Valid hex-encoded string",
+			input:    "68656c6c6f20776f726c64",
+			expected: []byte("hello world"),
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Valid base64-encoded string",
+			input:    "SGVsbG8gV29ybGQ=",
+			expected: []byte("Hello World"),
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Invalid input (not a file path or encoded string)",
+			input:    "not a file or encoded string",
+			expected: nil,
+			hasError: true,
+			err:      "input string is neither a valid file path, hex, or base64 encoded",
+		},
+	}
+
+	// Run test cases
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			conn := testExecCommon(t, buildModuleQueryCommand,
+				"echo",
+				"1", "abc", `{"denom":"foo","amount":"1"}`,
+				"--bz", tc.input,
+			)
+			errorOut := conn.errorOut.String()
+			if errorOut == "" {
+				lastReq := conn.lastRequest.(*testpb.EchoRequest)
+				assert.DeepEqual(t, tc.expected, lastReq.Bz)
+			} else {
+				assert.Assert(t, strings.Contains(conn.errorOut.String(), tc.err))
+			}
+		})
+	}
 }
 
 func TestAddressValidation(t *testing.T) {

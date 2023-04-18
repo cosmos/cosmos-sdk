@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -214,7 +215,7 @@ func (s *CLITestSuite) TestCmdGetProposals() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryProposals()
+			cmd := cli.GetCmdQueryProposals(address.NewBech32Codec("cosmos"))
 			cmd.SetArgs(tc.args)
 			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
@@ -374,7 +375,7 @@ func (s *CLITestSuite) TestCmdQueryVote() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryVote()
+			cmd := cli.GetCmdQueryVote(address.NewBech32Codec("cosmos"))
 			cmd.SetArgs(tc.args)
 
 			if len(tc.args) != 0 {

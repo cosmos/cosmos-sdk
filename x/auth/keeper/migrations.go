@@ -8,6 +8,7 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v3"
 	v4 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v4"
+	v5 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v5"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -59,11 +60,18 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.Migrate(ctx, m.keeper.storeService, m.legacySubspace, m.keeper.cdc)
 }
 
+// Migrate4To5 migrates the x/auth module state from the consensus version 4 to 5.
+// It migrates the GlobalAccountNumber from being a protobuf defined value to a
+// big-endian encoded uint64, it also migrates it to use a more canonical prefix.
+func (m Migrator) Migrate4To5(ctx sdk.Context) error {
+	return v5.Migrate(ctx, m.keeper.storeService, m.keeper.AccountNumber)
+}
+
 // V45_SetAccount implements V45_SetAccount
 // set the account without map to accAddr to accNumber.
 //
 // NOTE: This is used for testing purposes only.
-func (m Migrator) V45_SetAccount(ctx sdk.Context, acc sdk.AccountI) error { //nolint:revive
+func (m Migrator) V45SetAccount(ctx sdk.Context, acc sdk.AccountI) error {
 	addr := acc.GetAddress()
 	store := m.keeper.storeService.OpenKVStore(ctx)
 

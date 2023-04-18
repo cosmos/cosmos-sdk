@@ -95,6 +95,7 @@ func TestMsgService(t *testing.T) {
 	app.SetTxDecoder(txConfig.TxDecoder())
 
 	defaultSignMode, err := authsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
 
 	testdata.RegisterInterfaces(interfaceRegistry)
 	testdata.RegisterMsgServer(

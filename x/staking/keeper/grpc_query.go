@@ -115,7 +115,6 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 		dels = append(dels, delegation)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

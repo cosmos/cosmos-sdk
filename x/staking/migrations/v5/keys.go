@@ -2,9 +2,8 @@ package v5
 
 import (
 	"bytes"
-	"fmt"
-
 	"encoding/binary"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

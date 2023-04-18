@@ -29,8 +29,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// TODO
-// default mode?
+// TODO default mode?
 var defaultSignMode = signingtypes.SignMode_SIGN_MODE_DIRECT
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {

@@ -100,8 +100,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	signModeHandler := s.TxConfig.SignModeHandler()
 	s.Require().Contains(signModeHandler.SupportedModes(), signingv1beta1.SignMode_SIGN_MODE_DIRECT)
 
-	// TODO
-	// default sign mode in handler?
+	// TODO: default sign mode in handler?
 	defaultSignMode := signingtypes.SignMode_SIGN_MODE_DIRECT
 
 	// set SignatureV2 without actual signature bytes

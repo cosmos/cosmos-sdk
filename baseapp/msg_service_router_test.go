@@ -79,8 +79,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 
 func TestMsgService(t *testing.T) {
 	priv, _, _ := testdata.KeyTestPubAddr()
-	// TODO
-	// default mode?
+	// TODO: default mode?
 	defaultSignMode := signing.SignMode_SIGN_MODE_DIRECT
 
 	var (

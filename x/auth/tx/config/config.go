@@ -60,8 +60,6 @@ type ModuleOutputs struct {
 }
 
 // ProvideSignModeOptions provides the default x/tx SignModeOptions for the SDK.
-// TODO
-// probably move to x/tx. I would do this now but I'm blocked; latest x/tx does not compile or interop with latest sdk
 func ProvideSignModeOptions(bk BankKeeper) tx.SignModeOptions {
 	opts, err := NewSignModeOptionsWithMetadataQueryFn(NewBankKeeperCoinMetadataQueryFn(bk))
 	if err != nil {

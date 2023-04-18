@@ -30,6 +30,7 @@ var (
 	_              txsigning.ProtoFileResolver = lazyProtoRegistry{}
 )
 
+// lazyProtoRegistry is a lazy loading wrapper around the global protobuf registry.
 type lazyProtoRegistry struct{}
 
 func (l lazyProtoRegistry) getRegistry() (*protoregistry.Files, error) {
@@ -64,6 +65,8 @@ func (l lazyProtoRegistry) RangeFiles(f func(protoreflect.FileDescriptor) bool) 
 	reg.RangeFiles(f)
 }
 
+// MergedProtoRegistry returns a lazy loading wrapper around the global protobuf registry, a merged registry
+// containing both gogo proto and pulsar types.
 func MergedProtoRegistry() txsigning.ProtoFileResolver {
 	return lazyProtoRegistry{}
 }

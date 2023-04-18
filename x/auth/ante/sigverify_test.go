@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -172,6 +173,8 @@ func TestSigVerification(t *testing.T) {
 	)
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
+	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
 
 	type testCase struct {
 		name        string
@@ -211,8 +214,7 @@ func TestSigVerification(t *testing.T) {
 					txSigs[0] = signing.SignatureV2{
 						PubKey: tc.privs[0].PubKey(),
 						Data: &signing.SingleSignatureData{
-							// TODO: default sign mode
-							SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+							SignMode:  defaultSignMode,
 							Signature: badSig,
 						},
 						Sequence: tc.accSeqs[0],

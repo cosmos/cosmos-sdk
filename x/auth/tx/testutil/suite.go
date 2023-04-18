@@ -99,9 +99,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	signModeHandler := s.TxConfig.SignModeHandler()
 	s.Require().Contains(signModeHandler.SupportedModes(), signingv1beta1.SignMode_SIGN_MODE_DIRECT)
-
-	// TODO: default sign mode in handler?
-	defaultSignMode := signingtypes.SignMode_SIGN_MODE_DIRECT
+	defaultSignMode, err := signing.APISignModeToInternal(s.TxConfig.SignModeHandler().DefaultMode())
+	s.Require().NoError(err)
 
 	// set SignatureV2 without actual signature bytes
 	seq1 := uint64(2) // Arbitrary account sequence

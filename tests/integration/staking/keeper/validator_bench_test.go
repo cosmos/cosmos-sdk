@@ -38,8 +38,9 @@ func BenchmarkGetValidator(b *testing.B) {
 }
 
 func BenchmarkGetValidatorDelegations(b *testing.B) {
-	powersNumber := 10
 	var totalPower int64
+	powersNumber := 10
+
 	powers := make([]int64, powersNumber)
 	for i := range powers {
 		powers[i] = int64(i)
@@ -71,8 +72,9 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 }
 
 func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
-	powersNumber := 10
 	var totalPower int64
+	powersNumber := 10
+
 	powers := make([]int64, powersNumber)
 	for i := range powers {
 		powers[i] = int64(i)

@@ -103,8 +103,8 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	delStore := prefix.NewStore(store, types.GetDelegationsByValPrefixKey(valAddr))
 
 	var dels types.Delegations
-	pageRes, err := query.Paginate(delStore, req.Pagination, func(del, value []byte) error {
-		bz := store.Get(types.GetDelegationKey(del, valAddr))
+	pageRes, err := query.Paginate(delStore, req.Pagination, func(delAddr, value []byte) error {
+		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 
 		var delegation types.Delegation
 		k.cdc.Unmarshal(bz, &delegation)

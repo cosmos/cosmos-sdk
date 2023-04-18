@@ -240,6 +240,35 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 		expGroup   *group.GroupInfo
 		expMembers []*group.GroupMember
 	}{
+		"empty group id": {
+			req: &group.MsgUpdateGroupMembers{
+				GroupId: 0,
+				Admin:   myAdmin,
+				MemberUpdates: []group.MemberRequest{{
+					Address: member2,
+					Weight:  "2",
+				}},
+			},
+			expErr: true,
+		},
+		"no new members": {
+			req: &group.MsgUpdateGroupMembers{
+				GroupId:       groupID,
+				Admin:         myAdmin,
+				MemberUpdates: []group.MemberRequest{},
+			},
+			expErr: true,
+		},
+		"invalid memember": {
+			req: &group.MsgUpdateGroupMembers{
+				GroupId: groupID,
+				Admin:   myAdmin,
+				MemberUpdates: []group.MemberRequest{
+					{},
+				},
+			},
+			expErr: true,
+		},
 		"add new member": {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
@@ -526,6 +555,14 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				GroupId:  0,
 				Admin:    oldAdmin,
 				NewAdmin: newAdmin,
+			},
+			expErr: true,
+		},
+		"with identical admin and new admin": {
+			req: &group.MsgUpdateGroupAdmin{
+				GroupId:  groupID,
+				Admin:    oldAdmin,
+				NewAdmin: oldAdmin,
 			},
 			expErr: true,
 		},

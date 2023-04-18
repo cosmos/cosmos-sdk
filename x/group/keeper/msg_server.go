@@ -89,8 +89,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 		}
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventCreateGroup{GroupId: groupID})
-	if err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(&group.EventCreateGroup{GroupId: groupID}); err != nil {
 		return nil, err
 	}
 
@@ -595,8 +594,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		return nil, errorsmod.Wrap(err, "create proposal")
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventSubmitProposal{ProposalId: id})
-	if err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(&group.EventSubmitProposal{ProposalId: id}); err != nil {
 		return nil, err
 	}
 
@@ -934,10 +932,12 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
-	ctx.EventManager().EmitTypedEvent(&group.EventLeaveGroup{
+	if err := ctx.EventManager().EmitTypedEvent(&group.EventLeaveGroup{
 		GroupId: msg.GroupId,
 		Address: msg.Address,
-	})
+	}); err != nil {
+		return nil, err
+	}
 
 	return &group.MsgLeaveGroupResponse{}, nil
 }

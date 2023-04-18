@@ -1,3 +1,4 @@
+//nolint:unused // ignore unused code linting
 package codegen
 
 import (
@@ -10,8 +11,8 @@ import (
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"cosmossdk.io/orm/internal/fieldnames"
+	"cosmossdk.io/orm/model/ormtable"
 )
 
 type tableGen struct {

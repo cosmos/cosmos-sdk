@@ -138,13 +138,15 @@ func (r *SignModeHandler) GetFieldValueRenderer(fd protoreflect.FieldDescriptor)
 			return nil, fmt.Errorf("value renderers cannot format value of type map")
 		}
 		return NewMessageValueRenderer(r, md), nil
+	case fd.Kind() == protoreflect.BoolKind:
+		return NewBoolValueRenderer(), nil
 
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value of type %s", fd.Kind())
 	}
 }
 
-// GetMessageValueRenderer is a specialization of GetValueRenderer for messages.
+// GetMessageValueRenderer returns a value renderer for a message.
 // It is useful when the message type is discovered outside the context of a field,
 // e.g. when handling a google.protobuf.Any.
 func (r *SignModeHandler) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {
@@ -163,7 +165,7 @@ func (r *SignModeHandler) GetMessageValueRenderer(md protoreflect.MessageDescrip
 func (r *SignModeHandler) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRendererCreator{}
-		r.scalars["cosmos.Int"] = func(fd protoreflect.FieldDescriptor) ValueRenderer { return NewIntValueRenderer(fd) }
+		r.scalars["cosmos.Int"] = NewIntValueRenderer
 		r.scalars["cosmos.Dec"] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewDecValueRenderer() }
 	}
 	if r.messages == nil {
@@ -195,7 +197,7 @@ func (r *SignModeHandler) GetSignBytes(ctx context.Context, signerData signing.S
 		AuthInfoBytes: txData.AuthInfoBytes,
 		SignerData: &textualpb.SignerData{
 			Address:       signerData.Address,
-			ChainId:       signerData.ChainId,
+			ChainId:       signerData.ChainID,
 			AccountNumber: signerData.AccountNumber,
 			Sequence:      signerData.Sequence,
 			PubKey:        signerData.PubKey,

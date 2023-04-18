@@ -4,10 +4,16 @@ sidebar_position: 0
 
 # Tools
 
-This section provides documentation on various tooling used in development of a Cosmos SDK chain, operating a node and testing. 
+This section provides documentation on various tooling maintained by the SDK team.
+This includes tools for development, operating a node, and ease of use of a Cosmos SDK chain.
+
+## CLI Tools
+
+* [Cosmovisor](./01-cosmovisor.md)
+* [Confix](./02-confix.md)
+* [Hubl](./03-hubl.md)
+* [Rosetta](https://docs.cosmos.network/main/run-node/rosetta)
+
+## Other Tools
 
 * [Protocol Buffers](./00-protobuf.md)
-* [Cosmovisor](./01-cosmovisor.md)
-* [Depinject](./02-depinject.md)
-* [Confix](./03-confix.md)
-* [Hubl](./04-hubl.md)

@@ -2,14 +2,15 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"cosmossdk.io/log"
-	gogotypes "github.com/cosmos/gogoproto/types"
+	"cosmossdk.io/collections"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -68,6 +69,11 @@ type AccountKeeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+
+	// State
+
+	ParamsState   collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
+	AccountNumber collections.Sequence
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -89,13 +95,17 @@ func NewAccountKeeper(
 
 	bech32Codec := NewBech32Codec(bech32Prefix)
 
+	sb := collections.NewSchemaBuilder(storeService)
+
 	return AccountKeeper{
-		storeService: storeService,
-		proto:        proto,
-		cdc:          cdc,
-		permAddrs:    permAddrs,
-		addressCdc:   bech32Codec,
-		authority:    authority,
+		storeService:  storeService,
+		proto:         proto,
+		cdc:           cdc,
+		permAddrs:     permAddrs,
+		addressCdc:    bech32Codec,
+		authority:     authority,
+		ParamsState:   collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 	}
 }
 
@@ -138,32 +148,11 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
 func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	var accNumber uint64
-	store := ak.storeService.OpenKVStore(ctx)
-
-	bz, err := store.Get(types.GlobalAccountNumberKey)
+	n, err := ak.AccountNumber.Next(ctx)
 	if err != nil {
-		// panics only on nil key, which should not be possible
 		panic(err)
 	}
-	if bz == nil {
-		// initialize the account numbers
-		accNumber = 0
-	} else {
-		val := gogotypes.UInt64Value{}
-
-		err := ak.cdc.Unmarshal(bz, &val)
-		if err != nil {
-			panic(err)
-		}
-
-		accNumber = val.GetValue()
-	}
-
-	bz = ak.cdc.MustMarshal(&gogotypes.UInt64Value{Value: accNumber + 1})
-	store.Set(types.GlobalAccountNumberKey, bz)
-
-	return accNumber
+	return n
 }
 
 // GetModulePermissions fetches per-module account permissions.
@@ -273,4 +262,19 @@ func (ak AccountKeeper) getBech32Prefix() (string, error) {
 	}
 
 	return bech32Codec.bech32Prefix, nil
+}
+
+// SetParams sets the auth module's parameters.
+// CONTRACT: This method performs no validation of the parameters.
+func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
+	return ak.ParamsState.Set(ctx, params)
+}
+
+// GetParams gets the auth module's parameters.
+func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
+	params, err := ak.ParamsState.Get(ctx)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		panic(err)
+	}
+	return params
 }

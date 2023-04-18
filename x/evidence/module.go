@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -199,8 +200,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type EvidenceInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Key *store.KVStoreKey
@@ -208,19 +208,19 @@ type EvidenceInputs struct {
 
 	StakingKeeper  types.StakingKeeper
 	SlashingKeeper types.SlashingKeeper
+	AddressCodec   address.Codec
 }
 
-//nolint:revive
-type EvidenceOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper
 	Module         appmodule.AppModule
 }
 
-func ProvideModule(in EvidenceInputs) EvidenceOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper)
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec)
 	m := NewAppModule(*k)
 
-	return EvidenceOutputs{EvidenceKeeper: *k, Module: m}
+	return ModuleOutputs{EvidenceKeeper: *k, Module: m}
 }

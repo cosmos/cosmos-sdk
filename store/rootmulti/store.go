@@ -497,6 +497,37 @@ func (rs *Store) Commit() types.CommitID {
 	}
 }
 
+// WorkingHash returns the current hash of the store.
+// it will be used to get the current app hash before commit.
+func (rs *Store) WorkingHash() []byte {
+	storeInfos := make([]types.StoreInfo, 0, len(rs.stores))
+	storeKeys := keysFromStoreKeyMap(rs.stores)
+
+	for _, key := range storeKeys {
+		store := rs.stores[key]
+
+		if store.GetStoreType() != types.StoreTypeIAVL {
+			continue
+		}
+
+		if !rs.removalMap[key] {
+			si := types.StoreInfo{
+				Name: key.Name(),
+				CommitId: types.CommitID{
+					Hash: store.WorkingHash(),
+				},
+			}
+			storeInfos = append(storeInfos, si)
+		}
+	}
+
+	sort.SliceStable(storeInfos, func(i, j int) bool {
+		return storeInfos[i].Name < storeInfos[j].Name
+	})
+
+	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
+}
+
 // CacheWrap implements CacheWrapper/Store/CommitStore.
 func (rs *Store) CacheWrap() types.CacheWrap {
 	return rs.CacheMultiStore().(types.CacheWrap)
@@ -529,6 +560,8 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // iterating at past heights.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
+	var commitInfo *types.CommitInfo
+	storeInfos := map[string]bool{}
 	for key, store := range rs.stores {
 		var cacheStore types.KVStore
 		switch store.GetStoreType() {
@@ -541,9 +574,30 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			// version does not exist or is pruned, an error should be returned.
 			var err error
 			cacheStore, err = store.(*iavl.Store).GetImmutable(version)
+			// if we got error from loading a module store
+			// we fetch commit info of this version
+			// we use commit info to check if the store existed at this version or not
 			if err != nil {
-				return nil, err
+				if commitInfo == nil {
+					var errCommitInfo error
+					commitInfo, errCommitInfo = rs.GetCommitInfo(version)
+
+					if errCommitInfo != nil {
+						return nil, errCommitInfo
+					}
+
+					for _, storeInfo := range commitInfo.StoreInfos {
+						storeInfos[storeInfo.Name] = true
+					}
+				}
+
+				// If the store existed at this version, it means there's actually an error
+				// getting the root store at this version.
+				if storeInfos[key.Name()] {
+					return nil, err
+				}
 			}
+
 		default:
 			cacheStore = store
 		}
@@ -827,7 +881,6 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 				node, err := exporter.Next()
 				if err == iavltree.ErrorExportDone {
 					rs.logger.Debug("snapshot Done", "store", store.name, "nodeCount", nodeCount)
-					nodeCount = 0
 					break
 				} else if err != nil {
 					return err

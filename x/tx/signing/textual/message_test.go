@@ -23,20 +23,22 @@ func EmptyCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.M
 	return nil, nil
 }
 
-type messageJsonTest struct {
+type messageJSONTest struct {
 	Proto   *testpb.Foo
 	Screens []textual.Screen
 }
 
-func TestMessageJsonTestcases(t *testing.T) {
+func TestMessageJSONTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/message.json")
 	require.NoError(t, err)
 
-	var testcases []messageJsonTest
+	var testcases []messageJSONTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
 	tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: EmptyCoinMetadataQuerier})
+	require.NoError(t, err)
+
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			rend := textual.NewMessageValueRenderer(tr, (&testpb.Foo{}).ProtoReflect().Descriptor())

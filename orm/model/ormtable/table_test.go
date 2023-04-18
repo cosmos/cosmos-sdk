@@ -7,9 +7,6 @@ import (
 	"sort"
 	"strings"
 	"testing"
-	"time"
-
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -20,18 +17,17 @@ import (
 	"gotest.tools/v3/golden"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
-
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	sdkerrors "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/testkv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/internal/testutil"
+	"cosmossdk.io/orm/model/ormlist"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/kv"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 func TestScenario(t *testing.T) {
@@ -99,98 +95,6 @@ func TestPaginationLimitCountTotal(t *testing.T) {
 	pr := it.PageResponse()
 	assert.Check(t, pr != nil)
 	assert.Equal(t, uint64(3), pr.Total)
-}
-
-func TestTimestampIndex(t *testing.T) {
-	table, err := ormtable.Build(ormtable.Options{
-		MessageType: (&testpb.ExampleTimestamp{}).ProtoReflect().Type(),
-	})
-	assert.NilError(t, err)
-	backend := testkv.NewDebugBackend(testkv.NewSplitMemBackend(), &testkv.EntryCodecDebugger{
-		EntryCodec: table,
-		Print: func(s string) {
-			t.Log(s)
-		},
-	})
-	ctx := ormtable.WrapContextDefault(backend)
-	store, err := testpb.NewExampleTimestampTable(table)
-	assert.NilError(t, err)
-
-	past, err := time.Parse("2006-01-02", "2000-01-01")
-	assert.NilError(t, err)
-	middle, err := time.Parse("2006-01-02", "2020-01-01")
-	assert.NilError(t, err)
-	future, err := time.Parse("2006-01-02", "2049-01-01")
-	assert.NilError(t, err)
-
-	pastPb, middlePb, futurePb := timestamppb.New(past), timestamppb.New(middle), timestamppb.New(future)
-	timeOrder := []*timestamppb.Timestamp{pastPb, middlePb, futurePb}
-
-	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTimestamp{
-		Name: "foo",
-		Ts:   pastPb,
-	}))
-	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTimestamp{
-		Name: "bar",
-		Ts:   middlePb,
-	}))
-	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTimestamp{
-		Name: "baz",
-		Ts:   futurePb,
-	}))
-
-	from, to := testpb.ExampleTimestampTsIndexKey{}.WithTs(timestamppb.New(past)), testpb.ExampleTimestampTsIndexKey{}.WithTs(timestamppb.New(future))
-	it, err := store.ListRange(ctx, from, to)
-	assert.NilError(t, err)
-
-	i := 0
-	for it.Next() {
-		v, err := it.Value()
-		assert.NilError(t, err)
-		assert.Equal(t, timeOrder[i].String(), v.Ts.String())
-		i++
-	}
-
-	// insert a nil entry
-	id, err := store.InsertReturningId(ctx, &testpb.ExampleTimestamp{
-		Name: "nil",
-		Ts:   nil,
-	})
-	assert.NilError(t, err)
-
-	res, err := store.Get(ctx, id)
-	assert.NilError(t, err)
-	assert.Assert(t, res.Ts == nil)
-
-	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{})
-	assert.NilError(t, err)
-
-	// make sure nils are ordered last
-	timeOrder = append(timeOrder, nil)
-	i = 0
-	for it.Next() {
-		v, err := it.Value()
-		assert.NilError(t, err)
-		assert.Assert(t, v != nil)
-		x := timeOrder[i]
-		if x == nil {
-			assert.Assert(t, v.Ts == nil)
-		} else {
-			assert.Equal(t, x.String(), v.Ts.String())
-		}
-		i++
-	}
-	it.Close()
-
-	// try iterating over just nil timestamps
-	it, err = store.List(ctx, testpb.ExampleTimestampTsIndexKey{}.WithTs(nil))
-	assert.NilError(t, err)
-	assert.Assert(t, it.Next())
-	res, err = it.Value()
-	assert.NilError(t, err)
-	assert.Assert(t, res.Ts == nil)
-	assert.Assert(t, !it.Next())
-	it.Close()
 }
 
 // check that the ormkv.Entry's decode and encode to the same bytes
@@ -473,7 +377,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// now let's update some things
 	for i := 0; i < 5; i++ {
-		data[i].U64 = data[i].U64 * 2
+		data[i].U64 *= 2
 		data[i].Bz = []byte(data[i].Str)
 		err = store.Update(ctx, data[i])
 		assert.NilError(t, err)
@@ -763,9 +667,7 @@ func (m *IndexModel) Less(i, j int) bool {
 }
 
 func (m *IndexModel) Swap(i, j int) {
-	x := m.data[i]
-	m.data[i] = m.data[j]
-	m.data[j] = x
+	m.data[i], m.data[j] = m.data[j], m.data[i]
 }
 
 var _ sort.Interface = &IndexModel{}
@@ -799,7 +701,7 @@ func TestJSONExportImport(t *testing.T) {
 	assertTablesEqual(t, table, store, store2)
 }
 
-func assertTablesEqual(t assert.TestingT, table ormtable.Table, ctx, ctx2 context.Context) {
+func assertTablesEqual(t assert.TestingT, table ormtable.Table, ctx, ctx2 context.Context) { //nolint:revive // ignore long function name
 	it, err := table.List(ctx, nil)
 	assert.NilError(t, err)
 	it2, err := table.List(ctx2, nil)

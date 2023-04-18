@@ -16,6 +16,9 @@ var _ types.MsgServer = &Keeper{}
 // VerifyInvariant implements MsgServer.VerifyInvariant method.
 // It defines a method to verify a particular invariant.
 func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvariant) (*types.MsgVerifyInvariantResponse, error) {
+	if msg.Sender == "" {
+		return nil, sdkerrors.ErrInvalidAddress.Wrap("empty address string is not allowed")
+	}
 	sender, err := k.addressCodec.StringToBytes(msg.Sender)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)

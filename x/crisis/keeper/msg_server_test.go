@@ -10,7 +10,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -48,7 +50,11 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 	err := s.keeper.SetConstantFee(s.ctx, constantFee)
 	s.Require().NoError(err)
 
-	sender := sdk.AccAddress([]byte("addr1_______________"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	kr := keyring.NewInMemory(encCfg.Codec)
+	sdktestutil.CreateKeyringAccounts(s.T(), kr, 1)
+
+	sender := sdktestutil.CreateKeyringAccounts(s.T(), kr, 1)[0]
 
 	s.supplyKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 	s.keeper.RegisterRoute("bank", "total-supply", func(sdk.Context) (string, bool) { return "", false })
@@ -82,7 +88,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 		{
 			name: "unregistered invariant route",
 			input: &types.MsgVerifyInvariant{
-				Sender:              sender.String(),
+				Sender:              sender.Address.String(),
 				InvariantModuleName: "module",
 				InvariantRoute:      "invalidroute",
 			},
@@ -92,7 +98,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 		{
 			name: "valid invariant",
 			input: &types.MsgVerifyInvariant{
-				Sender:              sender.String(),
+				Sender:              sender.Address.String(),
 				InvariantModuleName: "bank",
 				InvariantRoute:      "total-supply",
 			},

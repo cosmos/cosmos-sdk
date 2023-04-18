@@ -12,7 +12,6 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -52,9 +51,9 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
-	sdktestutil.CreateKeyringAccounts(s.T(), kr, 1)
+	testutil.CreateKeyringAccounts(s.T(), kr, 1)
 
-	sender := sdktestutil.CreateKeyringAccounts(s.T(), kr, 1)[0]
+	sender := testutil.CreateKeyringAccounts(s.T(), kr, 1)[0]
 
 	s.supplyKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 	s.keeper.RegisterRoute("bank", "total-supply", func(sdk.Context) (string, bool) { return "", false })

@@ -7,6 +7,7 @@ import (
 
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -38,12 +39,6 @@ type config struct {
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	for _, m := range enabledSignModes {
-		if m == signingtypes.SignMode_SIGN_MODE_TEXTUAL {
-			panic("cannot use NewTxConfig with SIGN_MODE_TEXTUAL enabled; please use NewTxConfigWithTextual")
-		}
-	}
-
 	// protoFiles should perhaps be a parameter to this function, but the choice was made here to not break the
 	// NewTxConfig API.
 	protoFiles := registry.MergedProtoRegistry()
@@ -53,27 +48,36 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 		panic(err)
 	}
 
-	aminoJSONEncoder := aminojson.NewAminoJSON()
-	signModeOptions := SignModeOptions{
-		DirectAux: &directaux.SignModeHandlerOptions{
-			FileResolver:   protoFiles,
-			TypeResolver:   typeResolver,
-			SignersContext: signersContext,
-		},
-		AminoJSON: &aminojson.SignModeHandlerOptions{
-			FileResolver: protoFiles,
-			TypeResolver: typeResolver,
-			Encoder:      &aminoJSONEncoder,
-		},
+	signModeOptions := &SignModeOptions{}
+	for _, m := range enabledSignModes {
+		switch m {
+		case signingtypes.SignMode_SIGN_MODE_DIRECT:
+			signModeOptions.Direct = &direct.SignModeHandler{}
+		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
+			signModeOptions.DirectAux = &directaux.SignModeHandlerOptions{
+				FileResolver:   protoFiles,
+				TypeResolver:   typeResolver,
+				SignersContext: signersContext,
+			}
+		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+			aminoJSONEncoder := aminojson.NewAminoJSON()
+			signModeOptions.AminoJSON = &aminojson.SignModeHandlerOptions{
+				FileResolver: protoFiles,
+				TypeResolver: typeResolver,
+				Encoder:      &aminoJSONEncoder,
+			}
+		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
+			panic("cannot use NewTxConfig with SIGN_MODE_TEXTUAL enabled; please use NewTxConfigWithTextual")
+		}
 	}
 
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, signModeOptions, customSignModes...))
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(*signModeOptions, customSignModes...))
 }
 
-func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
-	signModeOptions SignModeOptions, customSignModes ...txsigning.SignModeHandler,
+func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, signModeOptions SignModeOptions,
+	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, signModeOptions, customSignModes...))
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(signModeOptions, customSignModes...))
 }
 
 // NewTxConfigWithTextual is like NewTxConfig with the ability to add
@@ -81,10 +85,10 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, enabledSignMod
 // be used for TESTING purposes only, until Textual is fully released.
 //
 // Deprecated: use NewTxConfigWithOptions instead.
-func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
+func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, _ []signingtypes.SignMode,
 	signModeOptions SignModeOptions, customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	return NewTxConfigWithOptions(protoCodec, enabledSignModes, signModeOptions, customSignModes...)
+	return NewTxConfigWithOptions(protoCodec, signModeOptions, customSignModes...)
 }
 
 // NewTxConfigWithHandler returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.

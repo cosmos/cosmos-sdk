@@ -16,6 +16,8 @@ type SignModeOptions struct {
 	DirectAux *directaux.SignModeHandlerOptions
 	// AminoJSON are options for SIGN_MODE_LEGACY_AMINO_JSON
 	AminoJSON *aminojson.SignModeHandlerOptions
+	// Direct is the SignModeHandler for SIGN_MODE_DIRECT since it takes options
+	Direct *direct.SignModeHandler
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
@@ -34,11 +36,13 @@ var DefaultSignModes = []signingtypes.SignMode{
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
 // SIGN_MODE_DIRECT, SIGN_MODE_DIRECT_AUX and SIGN_MODE_LEGACY_AMINO_JSON.
 func makeSignModeHandler(
-	_ []signingtypes.SignMode,
 	opts SignModeOptions,
 	customSignModes ...txsigning.SignModeHandler,
 ) *txsigning.HandlerMap {
-	handlers := []txsigning.SignModeHandler{direct.SignModeHandler{}}
+	var handlers []txsigning.SignModeHandler
+	if opts.Direct != nil {
+		handlers = append(handlers, opts.Direct)
+	}
 	if opts.Textual != nil {
 		h, err := textual.NewSignModeHandler(*opts.Textual)
 		if err != nil {

@@ -320,6 +320,10 @@ TestData object
 > Signer: cosmos1abc
 ```
 
+### bool
+
+Boolean values are rendered as `True` or `False`.
+
 ### [ABANDONED] Custom `msg_title` instead of Msg `type_url`
 
 _This paragraph is in the Annex for informational purposes only, and will be removed in a next update of the ADR._

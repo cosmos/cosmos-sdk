@@ -139,7 +139,7 @@ func TestBuilderWithAux(t *testing.T) {
 		PubKey:        feepayerPk,
 	}
 
-	signBz, err = authsigning.AdaptSigningArgs(
+	signBz, err = authsigning.GetSignBytesAdapter(
 		context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
 		signerData, feepayerPk, w.GetTx())
 

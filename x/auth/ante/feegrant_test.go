@@ -240,7 +240,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := authsign.AdaptSigningArgs(
+		signBytes, err := authsign.GetSignBytesAdapter(
 			context.Background(), gen.TxEncoder(), gen.SignModeHandler(), signMode, signerData, p.PubKey(),
 			tx.GetTx())
 		if err != nil {

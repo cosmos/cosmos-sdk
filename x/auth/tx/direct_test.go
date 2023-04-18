@@ -77,7 +77,7 @@ func TestDirectModeHandler(t *testing.T) {
 		PubKey:        pubkey,
 	}
 
-	signBytes, err := signing.AdaptSigningArgs(
+	signBytes, err := signing.GetSignBytesAdapter(
 		context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), defaultSignMode, signingData, pubkey,
 		txBuilder.GetTx())
 	require.NoError(t, err)
@@ -123,7 +123,7 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
-	signBytes, err = signing.AdaptSigningArgs(
+	signBytes, err = signing.GetSignBytesAdapter(
 		context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), defaultSignMode, signingData, pubkey,
 		txBuilder.GetTx())
 	require.NoError(t, err)

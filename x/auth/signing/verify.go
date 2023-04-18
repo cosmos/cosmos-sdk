@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+// APISignModesToInternal converts a protobuf SignMode array to a signing.SignMode array.
 func APISignModesToInternal(modes []signingv1beta1.SignMode) ([]signing.SignMode, error) {
 	internalModes := make([]signing.SignMode, len(modes))
 	for i, mode := range modes {
@@ -28,6 +29,7 @@ func APISignModesToInternal(modes []signingv1beta1.SignMode) ([]signing.SignMode
 	return internalModes, nil
 }
 
+// APISignModeToInternal converts a protobuf SignMode to a signing.SignMode.
 func APISignModeToInternal(mode signingv1beta1.SignMode) (signing.SignMode, error) {
 	switch mode {
 	case signingv1beta1.SignMode_SIGN_MODE_DIRECT:
@@ -43,6 +45,7 @@ func APISignModeToInternal(mode signingv1beta1.SignMode) (signing.SignMode, erro
 	}
 }
 
+// InternalSignModeToAPI converts a signing.SignMode to a protobuf SignMode.
 func InternalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, error) {
 	switch mode {
 	case signing.SignMode_SIGN_MODE_DIRECT:
@@ -104,7 +107,10 @@ func VerifySignature(
 	}
 }
 
-func AdaptSigningArgs(
+// GetSignBytesAdapter returns the sign bytes for a given transaction and sign mode.  It accepts the arguments expected
+// for signing in x/auth/tx and converts them to the arguments expected by the txsigning.HandlerMap, then applies
+// HandlerMap.GetSignBytes to get the sign bytes.
+func GetSignBytesAdapter(
 	ctx context.Context,
 	encoder sdk.TxEncoder,
 	handlerMap *txsigning.HandlerMap,

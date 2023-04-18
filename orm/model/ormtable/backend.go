@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"cosmossdk.io/orm/types/kv"
 )
 
 // ReadBackend defines the type used for read-only ORM operations.

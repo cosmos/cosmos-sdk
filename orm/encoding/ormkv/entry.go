@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/orm/internal/stablejson"
 )
 
 // Entry defines a logical representation of a kv-store entry for ORM instances.

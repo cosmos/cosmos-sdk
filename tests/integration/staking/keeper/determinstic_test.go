@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	validator1        = "cosmosva§per1qqqryrs09ggeuqszqygqyqd2tgqmsqzewacjj7"
+	validator1        = "cosmosvaloper1qqqryrs09ggeuqszqygqyqd2tgqmsqzewacjj7"
 	validatorAddr1, _ = sdk.ValAddressFromBech32(validator1)
 	validator2        = "cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj"
 	validatorAddr2, _ = sdk.ValAddressFromBech32(validator2)

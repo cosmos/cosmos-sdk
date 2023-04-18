@@ -6,17 +6,14 @@ import (
 	"errors"
 	"math"
 
-	"google.golang.org/protobuf/reflect/protoregistry"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"cosmossdk.io/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 type fileDescriptorDBOptions struct {

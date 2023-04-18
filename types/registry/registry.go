@@ -11,20 +11,20 @@ import (
 )
 
 var (
-	once           sync.Once
-	mergedRegistry *protoregistry.Files
-	_              signing.ProtoFileResolver = lazyProtoRegistry{}
+	mergedRegistryOnce sync.Once
+	mergedRegistry     *protoregistry.Files
+	mergedRegistryErr  error
+	_                  signing.ProtoFileResolver = lazyProtoRegistry{}
 )
 
 // lazyProtoRegistry is a lazy loading wrapper around the global protobuf registry.
 type lazyProtoRegistry struct{}
 
 func (l lazyProtoRegistry) getRegistry() (*protoregistry.Files, error) {
-	var err error
-	once.Do(func() {
-		mergedRegistry, err = proto.MergedRegistry()
+	mergedRegistryOnce.Do(func() {
+		mergedRegistry, mergedRegistryErr = proto.MergedRegistry()
 	})
-	return mergedRegistry, err
+	return mergedRegistry, mergedRegistryErr
 }
 
 func (l lazyProtoRegistry) FindFileByPath(s string) (protoreflect.FileDescriptor, error) {

@@ -5,12 +5,13 @@ import (
 	"reflect"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	"cosmossdk.io/x/tx/signing"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -112,12 +113,8 @@ type interfaceMap = map[string]reflect.Type
 
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
-	protoFiles, err := proto.MergedRegistry()
-	if err != nil {
-		panic(err)
-	}
 	registry, err := NewInterfaceRegistryWithOptions(Options{
-		ProtoFiles:            protoFiles,
+		ProtoFiles:            protoregistry.GlobalFiles,
 		AddressCodec:          failingAddressCodec{},
 		ValidatorAddressCodec: failingAddressCodec{},
 	})

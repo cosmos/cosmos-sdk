@@ -78,7 +78,7 @@ func NewContext(options Options) (*Context, error) {
 		getSignersFuncs:       map[protoreflect.FullName]getSignersFunc{},
 	}
 
-	return c, c.init()
+	return c, nil
 }
 
 type getSignersFunc func(proto.Message) ([][]byte, error)
@@ -92,12 +92,12 @@ func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, 
 	return signersFields, nil
 }
 
-// init performs a dry run of getting all msg's signers. This has 2 benefits:
+// Validate performs a dry run of getting all msg's signers. This has 2 benefits:
 // - it will error if any Msg has forgotten the "cosmos.msg.v1.signer"
 // annotation
 // - it will pre-populate the context's internal cache for getSignersFuncs
 // so that calling it in antehandlers will be faster.
-func (c *Context) init() error {
+func (c *Context) Validate() error {
 	var errs []error
 	c.fileResolver.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		for i := 0; i < fd.Services().Len(); i++ {

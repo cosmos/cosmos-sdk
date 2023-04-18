@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/registry"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -137,7 +138,7 @@ func printAndValidateSigs(
 				cmd.PrintErrf("failed to encode transaction: %v", err)
 				return false
 			}
-			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: sdk.MergedProtoRegistry()})
+			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
 			if err != nil {
 				cmd.PrintErrf("failed to create decoder: %v", err)
 				return false

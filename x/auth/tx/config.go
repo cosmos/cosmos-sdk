@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/registry"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -45,7 +46,7 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 
 	// protoFiles should perhaps be a parameter to this function, but the choice was made here to not break the
 	// NewTxConfig API.
-	protoFiles := sdk.MergedProtoRegistry()
+	protoFiles := registry.MergedProtoRegistry()
 	typeResolver := protoregistry.GlobalTypes
 	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
 	if err != nil {

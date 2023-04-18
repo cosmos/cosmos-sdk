@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/registry"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -201,7 +202,7 @@ func NewGRPCCoinMetadataQueryFn(grpcConn grpc.ClientConnInterface) textual.CoinM
 
 // NewSignModeOptionsWithMetadataQueryFn creates a new SignModeOptions instance
 func NewSignModeOptionsWithMetadataQueryFn(fn textual.CoinMetadataQueryFn) (tx.SignModeOptions, error) {
-	protoFiles := sdk.MergedProtoRegistry()
+	protoFiles := registry.MergedProtoRegistry()
 	typeResolver := protoregistry.GlobalTypes
 	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
 	if err != nil {

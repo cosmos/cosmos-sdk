@@ -13,6 +13,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/registry"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -124,7 +125,7 @@ func GetSignBytesAdapter(
 	if err != nil {
 		return nil, err
 	}
-	decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: sdk.MergedProtoRegistry()})
+	decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
 	if err != nil {
 		return nil, err
 	}

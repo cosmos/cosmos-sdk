@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types/registry"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -299,8 +300,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 					Value:   anyPk.Value,
 				},
 			}
-			// TODO supply protoRegistry.Files or decoder further up
-			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: sdk.MergedProtoRegistry()})
+			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
 			if err != nil {
 				return ctx, err
 			}

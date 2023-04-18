@@ -12,6 +12,10 @@ import (
 type VestingAccount interface {
 	types.AccountI
 
+	// AddOriginalVesting increases the original vesting spreading the amount according to the
+	// vesting account strategy.
+	AddOriginalVesting(amount sdk.Coins)
+
 	// LockedCoins returns the set of coins that are not spendable (i.e. locked),
 	// defined as the vesting coins that are not delegated.
 	//

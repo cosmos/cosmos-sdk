@@ -61,6 +61,10 @@ rewards = rewards + (R(B) - R(PN)) * stake
 The historical rewards are calculated retroactively by playing back all the slashes and then attenuating the delegator's stake at each step.
 The final calculated stake is equivalent to the actual staked coins in the delegation with a margin of error due to rounding errors.
 
+For the vesting account, with the coins still locked in vesting, the reward amount will be equally spread in the vesting
+based on the vesting account type strategy: for all types, the OriginalVesting amount will be increased by the reward amount. For the PeriodicVestingAccount
+the amount will be additionally spread among the periods based on the amount in each period.
+
 Response:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L42-L50

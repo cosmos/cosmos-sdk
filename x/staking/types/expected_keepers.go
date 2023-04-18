@@ -5,12 +5,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// DistributionKeeper expected distribution keeper (noalias)
-type DistributionKeeper interface {
-	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
-	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
-}
-
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(authtypes.AccountI) (stop bool))
@@ -102,3 +96,6 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress)
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec)
 }
+
+// The SlashingProtestedModules is a type used for the slashing protected modules names.
+type SlashingProtestedModules func() map[string]struct{}

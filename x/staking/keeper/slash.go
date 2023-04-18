@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Slash a validator for an infraction committed at a known height
@@ -28,11 +28,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
 	}
 
-	// Amount of slashing = slash slashFactor * power at time of infraction
-	amount := k.TokensFromConsensusPower(ctx, power)
-	slashAmountDec := amount.ToDec().Mul(slashFactor)
-	slashAmount := slashAmountDec.TruncateInt()
-
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
 
 	validator, found := k.GetValidatorByConsAddr(ctx, consAddr)
@@ -54,6 +49,21 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	operatorAddress := validator.GetOperator()
+	unbondedAmount, err := k.UnbondSlashingProtectedModules(ctx, operatorAddress)
+	if err != nil {
+		panic(fmt.Errorf("attempted to unbond slashing protected modules: %v: %w ", k.spm(), err))
+	}
+	// reload the validator since it's stake might have been changed
+	validator, _ = k.GetValidatorByConsAddr(ctx, consAddr)
+
+	// amount of slashing = slash slashFactor * power at time of infraction
+	amount := k.TokensFromConsensusPower(ctx, power)
+	// since the unbond is performed just before the slashing we should decrease the total slash amount by the unbond amount.
+	amount = amount.Sub(unbondedAmount)
+	amount = sdk.MaxInt(amount, sdk.ZeroInt()) // defensive.
+
+	slashAmountDec := amount.ToDec().Mul(slashFactor)
+	slashAmount := slashAmountDec.TruncateInt()
 
 	// call the before-modification hook
 	k.BeforeValidatorModified(ctx, operatorAddress)
@@ -296,4 +306,27 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 	}
 
 	return totalSlashAmount
+}
+
+// UnbondSlashingProtectedModules - unbonds all slashing protected modules and returns the total unbond amount.
+func (k Keeper) UnbondSlashingProtectedModules(ctx sdk.Context, valAddr sdk.ValAddress) (sdk.Int, error) {
+	unbondedAmount := sdk.ZeroInt()
+	if k.spm == nil {
+		return unbondedAmount, nil
+	}
+	for module := range k.spm() {
+		moduleAddress := k.authKeeper.GetModuleAddress(module)
+		delegation, found := k.GetDelegation(ctx, moduleAddress, valAddr)
+		if !found {
+			continue
+		}
+		unbondedDelegation, err := k.UnbondAndUndelegateCoins(ctx, moduleAddress, valAddr, delegation.Shares)
+		if err != nil {
+			return unbondedAmount, err
+		}
+		k.Logger(ctx).Info(fmt.Sprintf("module %s delegation protected from slashing", module), "validator", valAddr.String())
+		unbondedAmount = unbondedAmount.Add(unbondedDelegation)
+	}
+
+	return unbondedAmount, nil
 }

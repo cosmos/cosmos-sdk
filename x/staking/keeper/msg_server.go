@@ -89,6 +89,15 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
+	minGlobalSelfDelegation := k.MinGlobalSelfDelegation(ctx)
+	if msg.MinSelfDelegation.LT(minGlobalSelfDelegation) {
+		return nil, sdkerrors.Wrapf(
+			types.ErrSelfDelegationBelowMinimum,
+			"min_global_self_delegation %q must be less or equal min_self_delegation %q and ",
+			minGlobalSelfDelegation, msg.MinSelfDelegation,
+		)
+	}
+
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)

@@ -141,7 +141,7 @@ func TestBuilderWithAux(t *testing.T) {
 
 	signBz, err = authsigning.GetSignBytesAdapter(
 		context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
-		signerData, feepayerPk, w.GetTx())
+		signerData, w.GetTx())
 
 	require.NoError(t, err)
 	feepayerSig, err := feepayerPriv.Sign(signBz)

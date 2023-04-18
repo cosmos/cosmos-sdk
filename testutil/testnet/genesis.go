@@ -153,7 +153,6 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 
 			// No account or sequence number for gentx.
 		},
-		pubKey,
 		txb.GetTx(),
 	)
 	if err != nil {

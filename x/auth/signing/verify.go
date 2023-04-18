@@ -116,8 +116,6 @@ func GetSignBytesAdapter(
 	handlerMap *txsigning.HandlerMap,
 	mode signing.SignMode,
 	signerData SignerData,
-	// TODO refactor, this out and use the pubkey in the SignerData, I don't think this is needed.
-	key cryptotypes.PubKey,
 	tx sdk.Tx,
 ) ([]byte, error) {
 	// round trip performance hit.
@@ -145,7 +143,7 @@ func GetSignBytesAdapter(
 		return nil, err
 	}
 
-	anyPk, err := codectypes.NewAnyWithValue(key)
+	anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
 	if err != nil {
 		return nil, err
 	}

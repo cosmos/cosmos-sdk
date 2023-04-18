@@ -140,7 +140,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 		PubKey:        pubkey,
 	}
 	signBytes, err := signing.GetSignBytesAdapter(context.Background(), s.TxConfig.TxEncoder(),
-		s.TxConfig.SignModeHandler(), defaultSignMode, signerData, pubkey, sigTx)
+		s.TxConfig.SignModeHandler(), defaultSignMode, signerData, sigTx)
 	s.Require().NoError(err)
 	sigBz, err := privKey.Sign(signBytes)
 	s.Require().NoError(err)
@@ -153,7 +153,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 		PubKey:        multisigPk,
 	}
 	mSignBytes, err := signing.GetSignBytesAdapter(context.Background(), s.TxConfig.TxEncoder(),
-		s.TxConfig.SignModeHandler(), defaultSignMode, signerData, multisigPk, sigTx)
+		s.TxConfig.SignModeHandler(), defaultSignMode, signerData, sigTx)
 	s.Require().NoError(err)
 	mSigBz1, err := privKey.Sign(mSignBytes)
 	s.Require().NoError(err)

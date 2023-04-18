@@ -97,8 +97,11 @@ func NewBaseKeeper(
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
+	// add the module name to the logger
+	logger = logger.With("module", "x/"+types.ModuleName)
+
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority),
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority, logger),
 		ak:                     ak,
 		cdc:                    cdc,
 		storeKey:               storeKey,

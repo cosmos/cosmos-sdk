@@ -250,16 +250,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	// add the module name to the logger
-	logger := in.Logger.With("module", "x/"+types.ModuleName)
-
 	bankKeeper := keeper.NewBaseKeeper(
 		in.Cdc,
 		in.Key,
 		in.AccountKeeper,
 		blockedAddresses,
 		authority.String(),
-		logger,
+		in.Logger,
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 

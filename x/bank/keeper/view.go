@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/indexes"
+	"cosmossdk.io/log"
 
 	"github.com/cockroachdb/errors"
 
@@ -63,6 +64,7 @@ type BaseViewKeeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 	ak       types.AccountKeeper
+	logger   log.Logger
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -73,12 +75,13 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper, logger log.Logger) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)))
 	k := BaseViewKeeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		ak:            ak,
+		logger:        logger,
 		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
 		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
 		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
@@ -97,6 +100,10 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak t
 // HasBalance returns whether or not an account has at least amt balance.
 func (k BaseViewKeeper) HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool {
 	return k.GetBalance(ctx, addr, amt.Denom).IsGTE(amt)
+}
+
+func (k BaseViewKeeper) Logger() log.Logger {
+	return k.logger
 }
 
 // GetAllBalances returns all the account balances for the given account address.

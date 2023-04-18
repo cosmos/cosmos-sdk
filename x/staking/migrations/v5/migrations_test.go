@@ -16,8 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	v5 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v5"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	stackingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -72,8 +71,8 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	}
 }
 
-func createHistoricalInfo(height int64, chainID string) *stackingtypes.HistoricalInfo {
-	return &stackingtypes.HistoricalInfo{Header: cmtproto.Header{ChainID: chainID, Height: height}}
+func createHistoricalInfo(height int64, chainID string) *stakingtypes.HistoricalInfo {
+	return &stakingtypes.HistoricalInfo{Header: cmtproto.Header{ChainID: chainID, Height: height}}
 }
 
 func TestDelegationsByValidatorMigrations(t *testing.T) {
@@ -85,11 +84,11 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 
 	accAddrs := sims.CreateIncrementalAccounts(11)
 	valAddrs := sims.ConvertAddrsToValAddrs(accAddrs[0:1])
-	var addedDels []types.Delegation
+	var addedDels []stakingtypes.Delegation
 
 	for i := 1; i < 11; i++ {
-		del1 := types.NewDelegation(accAddrs[i], valAddrs[0], sdk.NewDec(100))
-		store.Set(types.GetDelegationKey(accAddrs[i], valAddrs[0]), types.MustMarshalDelegation(cdc, del1))
+		del1 := stakingtypes.NewDelegation(accAddrs[i], valAddrs[0], sdk.NewDec(100))
+		store.Set(stakingtypes.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
 		addedDels = append(addedDels, del1)
 	}
 
@@ -106,19 +105,19 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	assert.Equal(t, addedDels, dels)
 }
 
-func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeKey storetypes.StoreKey, valAddr sdk.ValAddress) []types.Delegation {
-	var delegations []types.Delegation
+func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeKey storetypes.StoreKey, valAddr sdk.ValAddress) []stakingtypes.Delegation {
+	var delegations []stakingtypes.Delegation
 
 	store := ctx.KVStore(storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.GetDelegationsByValPrefixKey(valAddr))
+	iterator := storetypes.KVStorePrefixIterator(store, stakingtypes.GetDelegationsByValPrefixKey(valAddr))
 	for ; iterator.Valid(); iterator.Next() {
-		var delegation types.Delegation
-		valAddr, delAddr, err := types.ParseDelegationsByValKey(iterator.Key())
+		var delegation stakingtypes.Delegation
+		valAddr, delAddr, err := stakingtypes.ParseDelegationsByValKey(iterator.Key())
 		if err != nil {
 			panic(err)
 		}
 
-		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
+		bz := store.Get(stakingtypes.GetDelegationKey(delAddr, valAddr))
 
 		cdc.MustUnmarshal(bz, &delegation)
 

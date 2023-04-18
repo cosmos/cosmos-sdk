@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/info"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
@@ -255,14 +255,14 @@ type CometService struct {
 	ci CometInfo
 }
 
-func (cs CometService) GetCometInfo(_ context.Context) info.CometInfo {
+func (cs CometService) GetCometInfo(_ context.Context) comet.Info {
 	return cs.ci
 }
 
 // CometInfo implements the CometInfo interface
 // This is specific to the comet consensus engine
 type CometInfo struct {
-	Evidence []info.Misbehavior
+	Evidence []comet.Misbehavior
 }
 
 func NewCometInfo(bg abci.RequestBeginBlock) CometInfo {
@@ -271,7 +271,7 @@ func NewCometInfo(bg abci.RequestBeginBlock) CometInfo {
 	}
 }
 
-func (cis CometInfo) GetMisbehavior() []info.Misbehavior {
+func (cis CometInfo) GetMisbehavior() []comet.Misbehavior {
 	return cis.Evidence
 }
 
@@ -283,6 +283,6 @@ func (cis CometInfo) GetProposerAddress() []byte {
 	return []byte{}
 }
 
-func (cis CometInfo) GetDecidedLastCommit() info.CommitInfo {
-	return info.CommitInfo{}
+func (cis CometInfo) GetDecidedLastCommit() comet.CommitInfo {
+	return comet.CommitInfo{}
 }

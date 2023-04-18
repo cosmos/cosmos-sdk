@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/depinject"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -68,10 +69,9 @@ func ProvideSignModeOptions(bk BankKeeper) tx.SignModeOptions {
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var txConfig client.TxConfig
 	if in.CustomSignModeHandlers == nil {
-		txConfig = tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, tx.DefaultSignModes, in.SignModeOptions)
+		txConfig = tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, in.SignModeOptions)
 	} else {
-		txConfig = tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, tx.DefaultSignModes, in.SignModeOptions,
-			in.CustomSignModeHandlers()...)
+		txConfig = tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, in.SignModeOptions, in.CustomSignModeHandlers()...)
 	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {
@@ -207,6 +207,7 @@ func NewSignModeOptionsWithMetadataQueryFn(fn textual.CoinMetadataQueryFn) (tx.S
 
 	aminoJSONEncoder := aminojson.NewAminoJSON()
 	signModeOptions := tx.SignModeOptions{
+		Direct: &direct.SignModeHandler{},
 		DirectAux: &directaux.SignModeHandlerOptions{
 			FileResolver:   protoFiles,
 			TypeResolver:   typeResolver,

@@ -136,7 +136,6 @@ func TestSigVerification(t *testing.T) {
 	require.NoError(t, err)
 	suite.clientCtx.TxConfig = authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
-		enabledSignModes,
 		opts,
 	)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
@@ -168,7 +167,6 @@ func TestSigVerification(t *testing.T) {
 	require.NoError(t, err)
 	anteTxConfig := authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
-		enabledSignModes,
 		opts,
 	)
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())

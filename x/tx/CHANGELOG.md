@@ -29,7 +29,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Unreleased
+## v0.6.0
 
 ### API Breaking
 

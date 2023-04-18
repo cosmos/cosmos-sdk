@@ -1,6 +1,8 @@
 package bank_test
 
 import (
+	"context"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -31,8 +33,9 @@ func genSequenceOfTxs(txGen client.TxConfig,
 	numToGenerate int,
 	priv ...cryptotypes.PrivKey,
 ) ([]sdk.Tx, error) {
-	txs := make([]sdk.Tx, numToGenerate)
 	var err error
+
+	txs := make([]sdk.Tx, numToGenerate)
 	for i := 0; i < numToGenerate; i++ {
 		txs[i], err = simtestutil.GenSignedMockTx(
 			rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -59,9 +62,8 @@ func genSequenceOfTxs(txGen client.TxConfig,
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
-
 	b.ReportAllocs()
-	// Add an account at genesis
+
 	acc := authtypes.BaseAccount{
 		Address: addr1.String(),
 	}
@@ -72,13 +74,13 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	// some value conceivably higher than the benchmarks would ever go
 	require.NoError(b, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
+	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
-	baseApp.Commit()
 	txGen := moduletestutil.MakeTestTxConfig()
+	txEncoder := txGen.TxEncoder()
 
-	// Precompute all txs
+	// pre-compute all txs
 	txs, err := genSequenceOfTxs(txGen, []sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
 	require.NoError(b, err)
 	b.ResetTimer()
@@ -88,42 +90,49 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
-		baseApp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height}})
-		_, _, err := baseApp.SimCheck(txGen.TxEncoder(), txs[i])
+		_, _, err := baseApp.SimCheck(txEncoder, txs[i])
 		if err != nil {
-			panic("something is broken in checking transaction")
+			panic(fmt.Errorf("failed to simulate tx: %w", err))
 		}
 
-		_, _, err = baseApp.SimDeliver(txGen.TxEncoder(), txs[i])
+		bz, err := txEncoder(txs[i])
 		require.NoError(b, err)
-		baseApp.EndBlock(abci.RequestEndBlock{Height: height})
-		baseApp.Commit()
+
+		baseApp.FinalizeBlock(
+			context.TODO(),
+			&abci.RequestFinalizeBlock{
+				Height: height,
+				Txs:    [][]byte{bz},
+			},
+		)
+
+		baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+
 		height++
 	}
 }
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
-
 	b.ReportAllocs()
-	// Add an account at genesis
+
 	acc := authtypes.BaseAccount{
 		Address: addr1.String(),
 	}
 
-	// Construct genesis state
+	// construct genesis state
 	genAccs := []authtypes.GenesisAccount{&acc}
 	s := createTestSuite(&testing.T{}, genAccs)
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	// some value conceivably higher than the benchmarks would ever go
 	require.NoError(b, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
+	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
-	baseApp.Commit()
 	txGen := moduletestutil.MakeTestTxConfig()
+	txEncoder := txGen.TxEncoder()
 
-	// Precompute all txs
+	// pre-compute all txs
 	txs, err := genSequenceOfTxs(txGen, []sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
 	require.NoError(b, err)
 	b.ResetTimer()
@@ -133,16 +142,24 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
-		baseApp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height}})
-		_, _, err := baseApp.SimCheck(txGen.TxEncoder(), txs[i])
+		_, _, err := baseApp.SimCheck(txEncoder, txs[i])
 		if err != nil {
-			panic("something is broken in checking transaction")
+			panic(fmt.Errorf("failed to simulate tx: %w", err))
 		}
 
-		_, _, err = baseApp.SimDeliver(txGen.TxEncoder(), txs[i])
+		bz, err := txEncoder(txs[i])
 		require.NoError(b, err)
-		baseApp.EndBlock(abci.RequestEndBlock{Height: height})
-		baseApp.Commit()
+
+		baseApp.FinalizeBlock(
+			context.TODO(),
+			&abci.RequestFinalizeBlock{
+				Height: height,
+				Txs:    [][]byte{bz},
+			},
+		)
+
+		baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+
 		height++
 	}
 }

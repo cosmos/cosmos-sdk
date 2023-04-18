@@ -1,9 +1,11 @@
 package bank_test
 
 import (
+	"context"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -145,7 +147,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
-	baseApp.Commit()
+	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
 	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)

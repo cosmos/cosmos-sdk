@@ -36,6 +36,10 @@ simd config migrate v0.48
 
 More information about [confix](https://docs.cosmos.network/main/tooling/confix).
 
+#### Events
+
+The log section of abci.TxResult is not populated in the case of successful msg(s) execution. Instead a new attribute is added to all messages indicating the `msg_index` which identifies which events and attributes relate the same transaction
+
 #### gRPC-Web
 
 gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).

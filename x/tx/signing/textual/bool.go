@@ -16,9 +16,9 @@ func NewBoolValueRenderer() ValueRenderer {
 }
 
 func (sr boolValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
-	str := "NO"
+	str := "False"
 	if v.Bool() {
-		str = "YES"
+		str = "True"
 	}
 	return []Screen{{Content: str}}, nil
 }
@@ -29,7 +29,7 @@ func (sr boolValueRenderer) Parse(_ context.Context, screens []Screen) (protoref
 	}
 
 	res := false
-	if screens[0].Content == "YES" {
+	if screens[0].Content == "True" {
 		res = true
 	}
 

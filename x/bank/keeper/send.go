@@ -77,7 +77,7 @@ func NewBaseSendKeeper(
 	}
 
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
+		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak, logger),
 		cdc:            cdc,
 		ak:             ak,
 		storeKey:       storeKey,

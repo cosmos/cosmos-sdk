@@ -28,9 +28,7 @@ import (
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 )
 
-var (
-	validMetadata = "metadata"
-)
+var validMetadata = "metadata"
 
 type CLITestSuite struct {
 	suite.Suite
@@ -1106,7 +1104,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyAdmin() {
 			"key not found",
 		},
 		{
-			"indentical admin and new admin",
+			"identical admin and new admin",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{

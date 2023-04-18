@@ -8,15 +8,15 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/encodeutil"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/types/ormerrors"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"cosmossdk.io/orm/model/ormtable"
 )
 
 type fileDescriptorDBOptions struct {

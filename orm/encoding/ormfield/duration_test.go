@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+	"cosmossdk.io/orm/encoding/ormfield"
 )
 
 func TestDuration(t *testing.T) {

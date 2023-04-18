@@ -15,15 +15,15 @@ import (
 
 	"google.golang.org/protobuf/reflect/protodesc"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/encodeutil"
 
 	"google.golang.org/protobuf/proto"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // ModuleDB defines the ORM database type to be used by modules.

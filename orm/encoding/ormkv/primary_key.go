@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/types/ormerrors"
 
 	"google.golang.org/protobuf/proto"
 

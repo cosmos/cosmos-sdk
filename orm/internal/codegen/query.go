@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+	"cosmossdk.io/orm/internal/fieldnames"
 )
 
 type queryProtoGen struct {

@@ -7,15 +7,15 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
+	"cosmossdk.io/orm/internal/testkv"
+	"cosmossdk.io/orm/testing/ormtest"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/kv"
 )
 
 func initBalanceTable(t testing.TB) testpb.BalanceTable {

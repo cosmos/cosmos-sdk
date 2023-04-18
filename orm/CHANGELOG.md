@@ -42,7 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* [#14822](https://github.com/cosmos/cosmos-sdk/pull/14822) Migrate to cosmossdk.io/core genesis API
+* [#](https://github.com/cosmos/cosmos-sdk/pull) Rename the orm package to `cosmossdk.io/orm`.
+* [#14822](https://github.com/cosmos/cosmos-sdk/pull/14822) Migrate to cosmossdk.io/core genesis API.
 
 ### State-machine Breaking Changes
 

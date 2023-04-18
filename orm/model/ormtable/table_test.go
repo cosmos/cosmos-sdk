@@ -17,18 +17,17 @@ import (
 	"gotest.tools/v3/golden"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
-
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	sdkerrors "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/testkv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/internal/testutil"
+	"cosmossdk.io/orm/model/ormlist"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/kv"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 func TestScenario(t *testing.T) {

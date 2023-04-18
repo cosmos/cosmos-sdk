@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/core/info"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -24,7 +24,7 @@ func (k Keeper) BeginBlocker(goCtx context.Context) {
 		switch tmEvidence.Type {
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.
-		case info.LightClientAttack, info.DuplicateVote:
+		case comet.LightClientAttack, comet.DuplicateVote:
 			evidence := types.FromABCIEvidence(tmEvidence)
 			k.handleEquivocationEvidence(ctx, evidence)
 

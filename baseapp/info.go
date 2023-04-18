@@ -3,22 +3,24 @@ package baseapp
 import (
 	"time"
 
-	coreinfo "cosmossdk.io/core/info"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 )
 
-var _ coreinfo.BlockInfo = (*BlockInfo)(nil)
+var _ header.Info = (*HeaderInfo)(nil)
 
 // BlockInfo implements the BlockInfo interface for that all consensus engines need to provide
-type BlockInfo struct {
+type HeaderInfo struct {
 	Height     int64
 	HeaderHash []byte
 	Time       time.Time
 	ChainID    string
 }
 
-func NewBlockInfo(height int64, hash []byte, t time.Time, chainID string) *BlockInfo {
-	return &BlockInfo{
+func NewHeaderInfo(height int64, hash []byte, t time.Time, chainID string) *HeaderInfo {
+	return &HeaderInfo{
 		Height:     height,
 		HeaderHash: hash,
 		Time:       t,
@@ -26,34 +28,34 @@ func NewBlockInfo(height int64, hash []byte, t time.Time, chainID string) *Block
 	}
 }
 
-func (bis *BlockInfo) GetHeight() int64 {
+func (bis *HeaderInfo) GetHeight() int64 {
 	return bis.Height
 }
 
-func (bis *BlockInfo) GetTime() time.Time {
+func (bis *HeaderInfo) GetTime() time.Time {
 	return bis.Time
 }
 
-func (bis *BlockInfo) GetChainID() string {
+func (bis *HeaderInfo) GetChainID() string {
 	return bis.ChainID
 }
 
-func (bis *BlockInfo) GetHeaderHash() []byte {
+func (bis *HeaderInfo) GetHeaderHash() []byte {
 	return bis.HeaderHash
 }
 
-var _ coreinfo.CometInfo = (*CometInfo)(nil)
+var _ comet.Info = (*CometInfo)(nil)
 
 // CometInfo implements the CometInfo interface
 // This is specific to the comet consensus engine
 type CometInfo struct {
-	Evidence          []coreinfo.Misbehavior
+	Evidence          []comet.Misbehavior
 	ValidatorsHash    []byte
 	ProposerAddress   []byte
-	DecidedLastCommit coreinfo.CommitInfo
+	DecidedLastCommit comet.CommitInfo
 }
 
-func NewCometInfo(bg abci.RequestBeginBlock) coreinfo.CometInfo {
+func NewCometInfo(bg abci.RequestBeginBlock) comet.Info {
 	return &CometInfo{
 		Evidence:          FromABCIEvidence(bg.ByzantineValidators),
 		ValidatorsHash:    bg.Hash,
@@ -62,7 +64,7 @@ func NewCometInfo(bg abci.RequestBeginBlock) coreinfo.CometInfo {
 	}
 }
 
-func (cis *CometInfo) GetMisbehavior() []coreinfo.Misbehavior {
+func (cis *CometInfo) GetMisbehavior() []comet.Misbehavior {
 	return cis.Evidence
 }
 
@@ -74,7 +76,7 @@ func (cis *CometInfo) GetProposerAddress() []byte {
 	return cis.ProposerAddress
 }
 
-func (cis *CometInfo) GetDecidedLastCommit() coreinfo.CommitInfo {
+func (cis *CometInfo) GetDecidedLastCommit() comet.CommitInfo {
 	return cis.DecidedLastCommit
 }
 
@@ -82,14 +84,14 @@ func (cis *CometInfo) GetDecidedLastCommit() coreinfo.CommitInfo {
 
 // FromABCIEvidence converts a CometBFT concrete Evidence type to
 // SDK Evidence.
-func FromABCIEvidence(e []abci.Misbehavior) []coreinfo.Misbehavior {
-	misbehavior := make([]coreinfo.Misbehavior, len(e))
+func FromABCIEvidence(e []abci.Misbehavior) []comet.Misbehavior {
+	misbehavior := make([]comet.Misbehavior, len(e))
 
 	for i, ev := range e {
-		misbehavior[i] = coreinfo.Misbehavior{
-			Type:   coreinfo.MisbehaviorType(ev.Type),
+		misbehavior[i] = comet.Misbehavior{
+			Type:   comet.MisbehaviorType(ev.Type),
 			Height: ev.Height,
-			Validator: coreinfo.Validator{
+			Validator: comet.Validator{
 				Address: ev.Validator.Address,
 				Power:   ev.Validator.Power,
 			},
@@ -101,11 +103,11 @@ func FromABCIEvidence(e []abci.Misbehavior) []coreinfo.Misbehavior {
 	return misbehavior
 }
 
-func FromABCICommitInfo(ci abci.CommitInfo) coreinfo.CommitInfo {
-	votes := make([]*coreinfo.VoteInfo, len(ci.Votes))
+func FromABCICommitInfo(ci abci.CommitInfo) comet.CommitInfo {
+	votes := make([]*comet.VoteInfo, len(ci.Votes))
 	for i, v := range ci.Votes {
-		votes[i] = &coreinfo.VoteInfo{
-			Validator: coreinfo.Validator{
+		votes[i] = &comet.VoteInfo{
+			Validator: comet.Validator{
 				Address: v.Validator.Address,
 				Power:   v.Validator.Power,
 			},
@@ -113,7 +115,7 @@ func FromABCICommitInfo(ci abci.CommitInfo) coreinfo.CommitInfo {
 		}
 	}
 
-	return coreinfo.CommitInfo{
+	return comet.CommitInfo{
 		Round: ci.Round,
 		Votes: votes,
 	}

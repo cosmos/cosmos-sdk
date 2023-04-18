@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/core/info"
+	"cosmossdk.io/core/comet"
 	sdkmath "cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -47,6 +47,6 @@ type (
 	}
 
 	Cometinfo interface {
-		info.CometService
+		comet.Service
 	}
 )

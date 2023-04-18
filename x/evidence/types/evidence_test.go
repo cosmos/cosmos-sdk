@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/info"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/types"
 	"github.com/stretchr/testify/require"
 
@@ -72,9 +72,9 @@ func TestEquivocationValidateBasic(t *testing.T) {
 
 func TestEvidenceAddressConversion(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
-	tmEvidence := info.Misbehavior{
-		Type: info.DuplicateVote,
-		Validator: info.Validator{
+	tmEvidence := comet.Misbehavior{
+		Type: comet.DuplicateVote,
+		Validator: comet.Validator{
 			Address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			Power:   100,
 		},

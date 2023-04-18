@@ -6,7 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	coreinfo "cosmossdk.io/core/info"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -48,8 +50,8 @@ const (
 )
 
 var _ abci.Application = (*BaseApp)(nil)
-var _ coreinfo.BlockService = (*BaseApp)(nil)
-var _ coreinfo.CometService = (*BaseApp)(nil)
+var _ header.Service = (*BaseApp)(nil)
+var _ comet.Service = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
@@ -150,11 +152,8 @@ type BaseApp struct {
 
 	chainID string
 
-	coreinfo.BlockService
-	coreinfo.CometService
-
 	// cometInfo stores information about the current block to be used later on
-	cometInfo coreinfo.CometInfo
+	cometInfo comet.Info
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -616,18 +615,18 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) SetCometInfo(ci coreinfo.CometInfo) {
+func (app *BaseApp) SetCometInfo(ci comet.Info) {
 	app.cometInfo = ci
 
 }
 
-func (app *BaseApp) GetBlockInfo(ctx context.Context) coreinfo.BlockInfo {
+func (app *BaseApp) GetHeaderInfo(ctx context.Context) header.Info {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	return NewBlockInfo(sdkCtx.BlockHeight(), sdkCtx.HeaderHash(), sdkCtx.BlockTime(), sdkCtx.BlockHeader().ChainID)
+	return NewHeaderInfo(sdkCtx.BlockHeight(), sdkCtx.HeaderHash(), sdkCtx.BlockTime(), sdkCtx.BlockHeader().ChainID)
 }
 
-func (app *BaseApp) GetCometInfo(ctx context.Context) coreinfo.CometInfo {
+func (app *BaseApp) GetCometInfo(ctx context.Context) comet.Info {
 	return app.cometInfo
 }
 

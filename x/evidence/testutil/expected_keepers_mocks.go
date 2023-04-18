@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	info "cosmossdk.io/core/info"
+	comet "cosmossdk.io/core/comet"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
@@ -332,10 +332,10 @@ func (m *MockCometinfo) EXPECT() *MockCometinfoMockRecorder {
 }
 
 // GetCometInfo mocks base method.
-func (m *MockCometinfo) GetCometInfo(arg0 context.Context) info.CometInfo {
+func (m *MockCometinfo) GetCometInfo(arg0 context.Context) comet.Info {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCometInfo", arg0)
-	ret0, _ := ret[0].(info.CometInfo)
+	ret0, _ := ret[0].(comet.Info)
 	return ret0
 }
 

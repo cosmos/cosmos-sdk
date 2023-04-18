@@ -1,26 +1,15 @@
-package info
+package comet
 
 import (
 	"context"
 	"time"
 )
 
-type BlockService interface {
-	GetBlockInfo(context.Context) BlockInfo
+type Service interface {
+	GetCometInfo(context.Context) Info
 }
 
-type BlockInfo interface {
-	GetHeight() int64      // GetHeight returns the height of the block
-	GetHeaderHash() []byte // GetHeaderHash returns the hash of the block header
-	GetTime() time.Time    // GetTime returns the time of the block
-	GetChainID() string    // GetChainId returns the chain ID of the block
-}
-
-type CometService interface {
-	GetCometInfo(context.Context) CometInfo
-}
-
-type CometInfo interface {
+type Info interface {
 	GetMisbehavior() []Misbehavior // Misbehavior returns the misbehavior of the block
 	// GetValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set

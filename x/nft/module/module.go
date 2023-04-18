@@ -20,6 +20,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
@@ -168,9 +169,10 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the nft module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	txCfg := moduletestutil.MakeTestTxConfig() // TODO(mr): get foom simState after bumping sdk reference.
 	return simulation.WeightedOperations(
 		am.registry,
-		simState.AppParams, simState.Cdc,
+		simState.AppParams, simState.Cdc, txCfg,
 		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

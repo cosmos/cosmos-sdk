@@ -294,11 +294,11 @@ type Service interface {
 	GetHeaderInfo(context.Context) Info
 }
 
-type Info interface {
-	GetHeight() int64      // GetHeight returns the height of the block
-	GetHeaderHash() []byte // GetHeaderHash returns the hash of the block header
-	GetTime() time.Time    // GetTime returns the time of the block
-	GetChainID() string    // GetChainId returns the chain ID of the block
+type Info struct {
+	Height int64      // Height returns the height of the block
+	Hash []byte       // Hash returns the hash of the block header
+	Time time.Time    // Time returns the time of the block
+	ChainID string    // ChainId returns the chain ID of the block
 }
 ```
 
@@ -309,13 +309,13 @@ type Service interface {
 	GetCometInfo(context.Context) Info
 }
 
-type CometInfo interface {
-	Misbehavior() []abci.Misbehavior // Misbehavior returns the misbehavior of the block
-	// GetValidatorsHash returns the hash of the validators
+type CometInfo struct {
+  Evidence []abci.Misbehavior // Misbehavior returns the misbehavior of the block
+	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validators
-	GetValidatorsHash() []byte
-	GetProposerAddress() []byte            // GetProposerAddress returns the address of the block proposer
-	GetDecidedLastCommit() abci.CommitInfo // GetDecidedLastCommit returns the last commit info
+	ValidatorsHash []byte
+	ProposerAddress []byte            // ProposerAddress returns the address of the block proposer
+	DecidedLastCommit abci.CommitInfo // DecidedLastCommit returns the last commit info
 }
 ```
 

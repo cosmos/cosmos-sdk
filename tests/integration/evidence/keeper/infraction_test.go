@@ -252,37 +252,15 @@ func testEquivocationHandler(_ interface{}) types.Handler {
 // CometService
 
 type CometService struct {
-	ci CometInfo
+	ci comet.Info
 }
 
 func (cs CometService) GetCometInfo(_ context.Context) comet.Info {
 	return cs.ci
 }
 
-// CometInfo implements the CometInfo interface
-// This is specific to the comet consensus engine
-type CometInfo struct {
-	Evidence []comet.Misbehavior
-}
-
-func NewCometInfo(bg abci.RequestBeginBlock) CometInfo {
-	return CometInfo{
+func NewCometInfo(bg abci.RequestBeginBlock) comet.Info {
+	return comet.Info{
 		Evidence: baseapp.FromABCIEvidence(bg.ByzantineValidators),
 	}
-}
-
-func (cis CometInfo) GetMisbehavior() []comet.Misbehavior {
-	return cis.Evidence
-}
-
-func (cis CometInfo) GetValidatorsHash() []byte {
-	return []byte{}
-}
-
-func (cis CometInfo) GetProposerAddress() []byte {
-	return []byte{}
-}
-
-func (cis CometInfo) GetDecidedLastCommit() comet.CommitInfo {
-	return comet.CommitInfo{}
 }

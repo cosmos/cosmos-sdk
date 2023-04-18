@@ -65,10 +65,10 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("verify modes and default-mode")
-	defaultSignMode := signingtypes.SignMode_SIGN_MODE_DIRECT
+	defaultSignMode, err := signing.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
 	require.Equal(t, defaultSignMode, signingtypes.SignMode_SIGN_MODE_DIRECT)
-	// TODO, once API is cleaned up, this should be 1
-	// require.Len(t, modeHandler.Modes(), 1)
+	require.Len(t, txConfig.SignModeHandler().SupportedModes(), 1)
 
 	signingData := signing.SignerData{
 		Address:       addr.String(),

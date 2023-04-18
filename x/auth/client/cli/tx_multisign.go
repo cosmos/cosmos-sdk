@@ -128,7 +128,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			}
 
 			for _, sig := range sigs {
-				// TODO abstract, clean up
 				anyPk, err := codectypes.NewAnyWithValue(sig.PubKey)
 				if err != nil {
 					return err
@@ -342,7 +341,6 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				PubKey:        pubKey,
 			}
 
-			// TODO abstract, clean up
 			anyPk, err := codectypes.NewAnyWithValue(multisigPub)
 			if err != nil {
 				return err

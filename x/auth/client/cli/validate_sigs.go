@@ -116,7 +116,6 @@ func printAndValidateSigs(
 				Sequence:      accSeq,
 				PubKey:        pubKey,
 			}
-			// TODO abstract, clean up
 			anyPk, err := codectypes.NewAnyWithValue(pubKey)
 			if err != nil {
 				cmd.PrintErrf("failed to pack public key: %v", err)

@@ -26,8 +26,10 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 	// create a random length memo
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	// TODO support default mode?
-	signMode := signing.SignMode_SIGN_MODE_DIRECT
+	signMode, err := authsign.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -42,7 +44,7 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 	}
 
 	tx := txConfig.NewTxBuilder()
-	err := tx.SetMsgs(msgs...)
+	err = tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}

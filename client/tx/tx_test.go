@@ -30,7 +30,6 @@ import (
 )
 
 // TODO default mode?
-var defaultSignMode = signingtypes.SignMode_SIGN_MODE_DIRECT
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig()
@@ -82,6 +81,8 @@ func TestCalculateGas(t *testing.T) {
 	for _, tc := range testCases {
 		stc := tc
 		txCfg, _ := newTestTxConfig()
+		defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
+		require.NoError(t, err)
 
 		txf := tx.Factory{}.
 			WithChainID("test-chain").
@@ -108,6 +109,8 @@ func TestCalculateGas(t *testing.T) {
 
 func TestBuildSimTx(t *testing.T) {
 	txCfg, cdc := newTestTxConfig()
+	defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
 
 	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)

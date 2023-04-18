@@ -39,17 +39,13 @@ func init() {
 
 type ModuleInputs struct {
 	depinject.In
-
 	Config              *txconfigv1.Config
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
-
-	AccountKeeper ante.AccountKeeper `optional:"true"`
+	SignModeOptions     tx.SignModeOptions
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
-	BankKeeper authtypes.BankKeeper `optional:"true"`
-	// TxBankKeeper is the expected bank keeper to be passed to Textual
-	tx.SignModeOptions
-	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
-
+	BankKeeper             authtypes.BankKeeper               `optional:"true"`
+	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
+	FeeGrantKeeper         ante.FeegrantKeeper                `optional:"true"`
 	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
 }
 

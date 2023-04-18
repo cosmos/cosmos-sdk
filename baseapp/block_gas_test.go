@@ -192,8 +192,10 @@ func TestBaseApp_BlockGas(t *testing.T) {
 }
 
 func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []cryptotypes.PrivKey, accNums, accSeqs []uint64, chainID string) (xauthsigning.Tx, []byte, error) {
-	// TODO: default mode in handler?
-	defaultSignMode := signing.SignMode_SIGN_MODE_DIRECT
+	defaultSignMode, err := xauthsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, nil, err
+	}
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -209,7 +211,7 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	err := txBuilder.SetSignatures(sigsV2...)
+	err = txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, nil, err
 	}

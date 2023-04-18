@@ -79,8 +79,6 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 
 func TestMsgService(t *testing.T) {
 	priv, _, _ := testdata.KeyTestPubAddr()
-	// TODO: default mode?
-	defaultSignMode := signing.SignMode_SIGN_MODE_DIRECT
 
 	var (
 		appBuilder        *runtime.AppBuilder
@@ -95,6 +93,8 @@ func TestMsgService(t *testing.T) {
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
+
+	defaultSignMode, err := authsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
 
 	testdata.RegisterInterfaces(interfaceRegistry)
 	testdata.RegisterMsgServer(

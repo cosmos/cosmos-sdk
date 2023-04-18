@@ -59,5 +59,4 @@ func (s *coinTestSuite) TestMapCoinsAdd() {
 		s.Require().True(res.IsValid())
 		require.Equal(s.T(), expected, res, tc.msg)
 	}
-
 }

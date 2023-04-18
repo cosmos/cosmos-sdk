@@ -7129,8 +7129,7 @@ type MsgCreateValidator struct {
 	// only in bech32 notation).
 	//
 	// Deprecated: Do not use.
-	DelegatorAddress string `protobuf:"bytes,4,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
-	// validator_address is the address of the validator encoded as a bech32 account address.
+	DelegatorAddress string        `protobuf:"bytes,4,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
 	ValidatorAddress string        `protobuf:"bytes,5,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 	Pubkey           *anypb.Any    `protobuf:"bytes,6,opt,name=pubkey,proto3" json:"pubkey,omitempty"`
 	Value            *v1beta1.Coin `protobuf:"bytes,7,opt,name=value,proto3" json:"value,omitempty"`

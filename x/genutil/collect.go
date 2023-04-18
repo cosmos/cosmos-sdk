@@ -132,14 +132,14 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		msg := msgs[0].(*stakingtypes.MsgCreateValidator)
 
 		// validate validator addresses and funds against the accounts in the state
-		valAccAddr, err := sdk.AccAddressFromBech32(msg.ValidatorAddress)
+		valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 		if err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 
-		valAddr := sdk.ValAddress(valAccAddr)
+		valAccAddr := sdk.AccAddress(valAddr).String()
 
-		delBal, delOk := balancesMap[msg.ValidatorAddress]
+		delBal, delOk := balancesMap[valAccAddr]
 		if !delOk {
 			_, file, no, ok := runtime.Caller(1)
 			if ok {

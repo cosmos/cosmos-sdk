@@ -187,7 +187,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(nil)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: addr.String(),
+					ValidatorAddr: valAddr.String(),
 				}
 			},
 			expErr:    true,
@@ -217,7 +217,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: addr.String(),
+					ValidatorAddr: sdk.ValAddress(addr).String(),
 				}
 			},
 			expErr:    true,
@@ -247,7 +247,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: addr.String(),
+					ValidatorAddr: sdk.ValAddress(addr).String(),
 				}
 			},
 			expErr:    true,
@@ -277,7 +277,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: addr.String(),
+					ValidatorAddr: sdk.ValAddress(addr).String(),
 				}
 			},
 			expErr:    true,
@@ -308,7 +308,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				s.stakingKeeper.EXPECT().Unjail(s.ctx, sdk.ConsAddress(addr)).Return()
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: addr.String(),
+					ValidatorAddr: sdk.ValAddress(addr).String(),
 				}
 			},
 			expErr: false,

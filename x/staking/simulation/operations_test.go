@@ -13,7 +13,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
-
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -170,10 +169,10 @@ func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 
 	require.True(operationMsg.OK)
 	require.Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(&msg))
-	valaddr, err := sdk.AccAddressFromBech32(msg.ValidatorAddress)
+	valaddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	require.NoError(err)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.ValidatorAddress)
-	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", sdk.ValAddress(valaddr).String())
+	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", sdk.AccAddress(valaddr).String())
+	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
 

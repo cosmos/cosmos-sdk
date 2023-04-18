@@ -20,8 +20,8 @@ import (
 type SendKeeper interface {
 	ViewKeeper
 
-	AppendSendRestriction(restriction SendRestrictionFn)
-	PrependSendRestriction(restriction SendRestrictionFn)
+	AppendSendRestriction(restriction types.SendRestrictionFn)
+	PrependSendRestriction(restriction types.SendRestrictionFn)
 
 	InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
@@ -64,7 +64,7 @@ type BaseSendKeeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	sendRestriction *SendRestriction
+	sendRestriction *types.SendRestriction
 }
 
 func NewBaseSendKeeper(
@@ -85,17 +85,17 @@ func NewBaseSendKeeper(
 		storeKey:        storeKey,
 		blockedAddrs:    blockedAddrs,
 		authority:       authority,
-		sendRestriction: NewSendRestriction(),
+		sendRestriction: types.NewSendRestriction(),
 	}
 }
 
 // AppendSendRestriction adds the provided SendRestrictionFn to run after previously provided restrictions.
-func (k BaseSendKeeper) AppendSendRestriction(restriction SendRestrictionFn) {
+func (k BaseSendKeeper) AppendSendRestriction(restriction types.SendRestrictionFn) {
 	k.sendRestriction.Append(restriction)
 }
 
 // PrependSendRestriction adds the provided SendRestrictionFn to run before previously provided restrictions.
-func (k BaseSendKeeper) PrependSendRestriction(restriction SendRestrictionFn) {
+func (k BaseSendKeeper) PrependSendRestriction(restriction types.SendRestrictionFn) {
 	k.sendRestriction.Prepend(restriction)
 }
 

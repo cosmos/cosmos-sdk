@@ -175,7 +175,7 @@ func (mr *MockBankKeeperMockRecorder) AllBalances(arg0, arg1 interface{}) *gomoc
 }
 
 // AppendSendRestriction mocks base method.
-func (m *MockBankKeeper) AppendSendRestriction(restriction keeper.SendRestrictionFn) {
+func (m *MockBankKeeper) AppendSendRestriction(restriction types0.SendRestrictionFn) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "AppendSendRestriction", restriction)
 }
@@ -724,7 +724,7 @@ func (mr *MockBankKeeperMockRecorder) Params(arg0, arg1 interface{}) *gomock.Cal
 }
 
 // PrependSendRestriction mocks base method.
-func (m *MockBankKeeper) PrependSendRestriction(restriction keeper.SendRestrictionFn) {
+func (m *MockBankKeeper) PrependSendRestriction(restriction types0.SendRestrictionFn) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "PrependSendRestriction", restriction)
 }
@@ -987,7 +987,7 @@ func (mr *MockBankKeeperMockRecorder) ValidateBalance(ctx, addr interface{}) *go
 }
 
 // WithMintCoinsRestriction mocks base method.
-func (m *MockBankKeeper) WithMintCoinsRestriction(arg0 keeper.MintingRestrictionFn) keeper.BaseKeeper {
+func (m *MockBankKeeper) WithMintCoinsRestriction(arg0 types0.MintingRestrictionFn) keeper.BaseKeeper {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WithMintCoinsRestriction", arg0)
 	ret0, _ := ret[0].(keeper.BaseKeeper)

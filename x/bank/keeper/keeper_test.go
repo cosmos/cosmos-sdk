@@ -9,12 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/math"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -235,7 +236,7 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc, mAcc sdk
 
 func (suite *KeeperTestSuite) TestAppendSendRestriction() {
 	var calls []int
-	testRestriction := func(index int) keeper.SendRestrictionFn {
+	testRestriction := func(index int) banktypes.SendRestrictionFn {
 		return func(_ sdk.Context, _, _ sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
 			calls = append(calls, index)
 			return nil, nil
@@ -264,7 +265,7 @@ func (suite *KeeperTestSuite) TestAppendSendRestriction() {
 
 func (suite *KeeperTestSuite) TestPrependSendRestriction() {
 	var calls []int
-	testRestriction := func(index int) keeper.SendRestrictionFn {
+	testRestriction := func(index int) banktypes.SendRestrictionFn {
 		return func(_ sdk.Context, _, _ sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
 			calls = append(calls, index)
 			return nil, nil
@@ -632,7 +633,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 		amt      sdk.Coins
 	}
 	var actualRestrictionArgs []*restrictionArgs
-	restrictionError := func(messages ...string) keeper.SendRestrictionFn {
+	restrictionError := func(messages ...string) banktypes.SendRestrictionFn {
 		i := -1
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 			actualRestrictionArgs = append(actualRestrictionArgs, &restrictionArgs{
@@ -650,7 +651,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			return toAddr, nil
 		}
 	}
-	restrictionPassthrough := func() keeper.SendRestrictionFn {
+	restrictionPassthrough := func() banktypes.SendRestrictionFn {
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 			actualRestrictionArgs = append(actualRestrictionArgs, &restrictionArgs{
 				ctx:      ctx,
@@ -661,7 +662,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			return toAddr, nil
 		}
 	}
-	restrictionNewTo := func(newToAddrs ...sdk.AccAddress) keeper.SendRestrictionFn {
+	restrictionNewTo := func(newToAddrs ...sdk.AccAddress) banktypes.SendRestrictionFn {
 		i := -1
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 			actualRestrictionArgs = append(actualRestrictionArgs, &restrictionArgs{
@@ -698,7 +699,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 
 	tests := []struct {
 		name        string
-		fn          keeper.SendRestrictionFn
+		fn          banktypes.SendRestrictionFn
 		inputCoins  sdk.Coins
 		outputs     []banktypes.Output
 		outputAddrs []sdk.AccAddress
@@ -957,7 +958,7 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 		amt      sdk.Coins
 	}
 	var actualRestrictionArgs *restrictionArgs
-	restrictionError := func(message string) keeper.SendRestrictionFn {
+	restrictionError := func(message string) banktypes.SendRestrictionFn {
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 			actualRestrictionArgs = &restrictionArgs{
 				ctx:      ctx,
@@ -968,7 +969,7 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 			return nil, errors.New(message)
 		}
 	}
-	restrictionPassthrough := func() keeper.SendRestrictionFn {
+	restrictionPassthrough := func() banktypes.SendRestrictionFn {
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 			actualRestrictionArgs = &restrictionArgs{
 				ctx:      ctx,
@@ -979,7 +980,7 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 			return toAddr, nil
 		}
 	}
-	restrictionNewTo := func(newToAddr sdk.AccAddress) keeper.SendRestrictionFn {
+	restrictionNewTo := func(newToAddr sdk.AccAddress) banktypes.SendRestrictionFn {
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 			actualRestrictionArgs = &restrictionArgs{
 				ctx:      ctx,
@@ -1008,7 +1009,7 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 
 	tests := []struct {
 		name      string
-		fn        keeper.SendRestrictionFn
+		fn        banktypes.SendRestrictionFn
 		toAddr    sdk.AccAddress
 		finalAddr sdk.AccAddress
 		amt       sdk.Coins
@@ -1866,7 +1867,7 @@ func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 	}
 
 	for _, test := range tests {
-		keeper := suite.bankKeeper.WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
+		keeper := suite.bankKeeper.WithMintCoinsRestriction(banktypes.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {
 				suite.mockMintCoins(multiPermAcc)

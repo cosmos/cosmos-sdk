@@ -1,4 +1,4 @@
-package keeper_test
+package types_test
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // MintingRestrictionArgs are the args provided to a MintingRestrictionFn function.
@@ -45,7 +45,7 @@ func (s *MintingRestrictionTestHelper) NewArgs(name string, coins sdk.Coins) *Mi
 }
 
 // NamedRestriction creates a new MintingRestrictionFn function that records the arguments it's called with and returns nil.
-func (s *MintingRestrictionTestHelper) NamedRestriction(name string) keeper.MintingRestrictionFn {
+func (s *MintingRestrictionTestHelper) NamedRestriction(name string) types.MintingRestrictionFn {
 	return func(_ sdk.Context, coins sdk.Coins) error {
 		s.RecordCall(name, coins)
 		return nil
@@ -53,7 +53,7 @@ func (s *MintingRestrictionTestHelper) NamedRestriction(name string) keeper.Mint
 }
 
 // ErrorRestriction creates a new MintingRestrictionFn function that returns an error.
-func (s *MintingRestrictionTestHelper) ErrorRestriction(message string) keeper.MintingRestrictionFn {
+func (s *MintingRestrictionTestHelper) ErrorRestriction(message string) types.MintingRestrictionFn {
 	return func(_ sdk.Context, coins sdk.Coins) error {
 		s.RecordCall(message, coins)
 		return errors.New(message)
@@ -74,7 +74,7 @@ type MintingRestrictionTestParams struct {
 }
 
 // TestActual tests the provided MintingRestrictionFn using the provided test parameters.
-func (s *MintingRestrictionTestHelper) TestActual(t *testing.T, tp *MintingRestrictionTestParams, actual keeper.MintingRestrictionFn) {
+func (s *MintingRestrictionTestHelper) TestActual(t *testing.T, tp *MintingRestrictionTestParams, actual types.MintingRestrictionFn) {
 	t.Helper()
 	if tp.ExpNil {
 		require.Nil(t, actual, "resulting MintingRestrictionFn")
@@ -98,8 +98,8 @@ func TestMintingRestriction_Then(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		base   keeper.MintingRestrictionFn
-		second keeper.MintingRestrictionFn
+		base   types.MintingRestrictionFn
+		second types.MintingRestrictionFn
 		exp    *MintingRestrictionTestParams
 	}{
 		{
@@ -169,8 +169,8 @@ func TestMintingRestriction_Then(t *testing.T) {
 		},
 		{
 			name:   "double chain",
-			base:   keeper.ComposeMintingRestrictions(h.NamedRestriction("r1"), h.NamedRestriction("r2")),
-			second: keeper.ComposeMintingRestrictions(h.NamedRestriction("r3"), h.NamedRestriction("r4")),
+			base:   types.ComposeMintingRestrictions(h.NamedRestriction("r1"), h.NamedRestriction("r2")),
+			second: types.ComposeMintingRestrictions(h.NamedRestriction("r3"), h.NamedRestriction("r4")),
 			exp: &MintingRestrictionTestParams{
 				Coins: coins,
 				ExpCalls: h.NewCalls(
@@ -185,7 +185,7 @@ func TestMintingRestriction_Then(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual keeper.MintingRestrictionFn
+			var actual types.MintingRestrictionFn
 			testFunc := func() {
 				actual = tc.base.Then(tc.second)
 			}
@@ -196,7 +196,7 @@ func TestMintingRestriction_Then(t *testing.T) {
 }
 
 func TestComposeMintingRestrictions(t *testing.T) {
-	rz := func(rs ...keeper.MintingRestrictionFn) []keeper.MintingRestrictionFn {
+	rz := func(rs ...types.MintingRestrictionFn) []types.MintingRestrictionFn {
 		return rs
 	}
 	coins := sdk.NewCoins(sdk.NewInt64Coin("ccoin", 8), sdk.NewInt64Coin("dcoin", 16))
@@ -205,7 +205,7 @@ func TestComposeMintingRestrictions(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		input []keeper.MintingRestrictionFn
+		input []types.MintingRestrictionFn
 		exp   *MintingRestrictionTestParams
 	}{
 		{
@@ -374,9 +374,9 @@ func TestComposeMintingRestrictions(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual keeper.MintingRestrictionFn
+			var actual types.MintingRestrictionFn
 			testFunc := func() {
-				actual = keeper.ComposeMintingRestrictions(tc.input...)
+				actual = types.ComposeMintingRestrictions(tc.input...)
 			}
 			require.NotPanics(t, testFunc, "ComposeMintingRestrictions")
 			h.TestActual(t, tc.exp, actual)
@@ -387,7 +387,7 @@ func TestComposeMintingRestrictions(t *testing.T) {
 func TestNoOpMintingRestrictionFn(t *testing.T) {
 	var err error
 	testFunc := func() {
-		err = keeper.NoOpMintingRestrictionFn(sdk.Context{}, sdk.Coins{})
+		err = types.NoOpMintingRestrictionFn(sdk.Context{}, sdk.Coins{})
 	}
 	require.NotPanics(t, testFunc, "NoOpMintingRestrictionFn")
 	assert.NoError(t, err, "NoOpSendRestrictionFn error")
@@ -431,7 +431,7 @@ func (s *SendRestrictionTestHelper) NewArgs(name string, fromAddr, toAddr sdk.Ac
 }
 
 // NamedRestriction creates a new SendRestrictionFn function that records the arguments it's called with and returns the provided toAddr.
-func (s *SendRestrictionTestHelper) NamedRestriction(name string) keeper.SendRestrictionFn {
+func (s *SendRestrictionTestHelper) NamedRestriction(name string) types.SendRestrictionFn {
 	return func(_ sdk.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
 		s.RecordCall(name, fromAddr, toAddr, coins)
 		return toAddr, nil
@@ -439,7 +439,7 @@ func (s *SendRestrictionTestHelper) NamedRestriction(name string) keeper.SendRes
 }
 
 // NewToRestriction creates a new SendRestrictionFn function that returns a different toAddr than provided.
-func (s *SendRestrictionTestHelper) NewToRestriction(name string, addr sdk.AccAddress) keeper.SendRestrictionFn {
+func (s *SendRestrictionTestHelper) NewToRestriction(name string, addr sdk.AccAddress) types.SendRestrictionFn {
 	return func(_ sdk.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
 		s.RecordCall(name, fromAddr, toAddr, coins)
 		return addr, nil
@@ -447,7 +447,7 @@ func (s *SendRestrictionTestHelper) NewToRestriction(name string, addr sdk.AccAd
 }
 
 // ErrorRestriction creates a new SendRestrictionFn function that returns a nil toAddr and an error.
-func (s *SendRestrictionTestHelper) ErrorRestriction(message string) keeper.SendRestrictionFn {
+func (s *SendRestrictionTestHelper) ErrorRestriction(message string) types.SendRestrictionFn {
 	return func(_ sdk.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
 		s.RecordCall(message, fromAddr, toAddr, coins)
 		return nil, errors.New(message)
@@ -474,7 +474,7 @@ type SendRestrictionTestParams struct {
 }
 
 // TestActual tests the provided SendRestrictionFn using the provided test parameters.
-func (s *SendRestrictionTestHelper) TestActual(t *testing.T, tp *SendRestrictionTestParams, actual keeper.SendRestrictionFn) {
+func (s *SendRestrictionTestHelper) TestActual(t *testing.T, tp *SendRestrictionTestParams, actual types.SendRestrictionFn) {
 	t.Helper()
 	if tp.ExpNil {
 		require.Nil(t, actual, "resulting SendRestrictionFn")
@@ -505,8 +505,8 @@ func TestSendRestriction_Then(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		base   keeper.SendRestrictionFn
-		second keeper.SendRestrictionFn
+		base   types.SendRestrictionFn
+		second types.SendRestrictionFn
 		exp    *SendRestrictionTestParams
 	}{
 		{
@@ -615,8 +615,8 @@ func TestSendRestriction_Then(t *testing.T) {
 		},
 		{
 			name:   "double chain",
-			base:   keeper.ComposeSendRestrictions(h.NewToRestriction("r1", addr1), h.NewToRestriction("r2", addr2)),
-			second: keeper.ComposeSendRestrictions(h.NewToRestriction("r3", addr3), h.NewToRestriction("r4", addr4)),
+			base:   types.ComposeSendRestrictions(h.NewToRestriction("r1", addr1), h.NewToRestriction("r2", addr2)),
+			second: types.ComposeSendRestrictions(h.NewToRestriction("r3", addr3), h.NewToRestriction("r4", addr4)),
 			exp: &SendRestrictionTestParams{
 				FromAddr: fromAddr,
 				ToAddr:   addr0,
@@ -634,7 +634,7 @@ func TestSendRestriction_Then(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual keeper.SendRestrictionFn
+			var actual types.SendRestrictionFn
 			testFunc := func() {
 				actual = tc.base.Then(tc.second)
 			}
@@ -645,7 +645,7 @@ func TestSendRestriction_Then(t *testing.T) {
 }
 
 func TestComposeSendRestrictions(t *testing.T) {
-	rz := func(rs ...keeper.SendRestrictionFn) []keeper.SendRestrictionFn {
+	rz := func(rs ...types.SendRestrictionFn) []types.SendRestrictionFn {
 		return rs
 	}
 	fromAddr := sdk.AccAddress("fromaddr____________")
@@ -660,7 +660,7 @@ func TestComposeSendRestrictions(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		input []keeper.SendRestrictionFn
+		input []types.SendRestrictionFn
 		exp   *SendRestrictionTestParams
 	}{
 		{
@@ -895,9 +895,9 @@ func TestComposeSendRestrictions(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual keeper.SendRestrictionFn
+			var actual types.SendRestrictionFn
 			testFunc := func() {
-				actual = keeper.ComposeSendRestrictions(tc.input...)
+				actual = types.ComposeSendRestrictions(tc.input...)
 			}
 			require.NotPanics(t, testFunc, "ComposeSendRestrictions")
 			h.TestActual(t, tc.exp, actual)
@@ -910,7 +910,7 @@ func TestNoOpSendRestrictionFn(t *testing.T) {
 	var addr sdk.AccAddress
 	var err error
 	testFunc := func() {
-		addr, err = keeper.NoOpSendRestrictionFn(sdk.Context{}, sdk.AccAddress("first_addr"), expAddr, sdk.Coins{})
+		addr, err = types.NoOpSendRestrictionFn(sdk.Context{}, sdk.AccAddress("first_addr"), expAddr, sdk.Coins{})
 	}
 	require.NotPanics(t, testFunc, "NoOpSendRestrictionFn")
 	assert.NoError(t, err, "NoOpSendRestrictionFn error")

@@ -24,7 +24,7 @@ const govModuleName = "gov"
 // between accounts.
 type Keeper interface {
 	SendKeeper
-	WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
+	WithMintCoinsRestriction(types.MintingRestrictionFn) BaseKeeper
 
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
@@ -60,7 +60,7 @@ type BaseKeeper struct {
 	cdc                    codec.BinaryCodec
 	storeKey               storetypes.StoreKey
 	paramSpace             paramtypes.Subspace
-	mintCoinsRestrictionFn MintingRestrictionFn
+	mintCoinsRestrictionFn types.MintingRestrictionFn
 }
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
@@ -115,7 +115,7 @@ func NewBaseKeeper(
 		cdc:                    cdc,
 		storeKey:               storeKey,
 		paramSpace:             paramSpace,
-		mintCoinsRestrictionFn: NoOpMintingRestrictionFn,
+		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
 	}
 }
 
@@ -124,7 +124,7 @@ func NewBaseKeeper(
 // Previous restriction functions can be nested as such:
 //
 //	bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
-func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKeeper {
+func (k BaseKeeper) WithMintCoinsRestriction(check types.MintingRestrictionFn) BaseKeeper {
 	k.mintCoinsRestrictionFn = check.Then(k.mintCoinsRestrictionFn)
 	return k
 }

@@ -3,18 +3,14 @@ package ormtable
 import (
 	"context"
 
-	"cosmossdk.io/orm/types/ormerrors"
-
-	"cosmossdk.io/orm/internal/fieldnames"
-
-	"cosmossdk.io/orm/model/ormlist"
-
-	"cosmossdk.io/orm/encoding/encodeutil"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/orm/encoding/encodeutil"
 	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/fieldnames"
+	"cosmossdk.io/orm/model/ormlist"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // primaryKeyIndex defines an UniqueIndex for the primary key.

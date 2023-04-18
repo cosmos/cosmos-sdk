@@ -5,10 +5,9 @@ import (
 
 	"cosmossdk.io/orm/types/ormerrors"
 
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // Codec defines an interface for decoding and encoding values in ORM index keys.

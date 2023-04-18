@@ -7,14 +7,13 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"cosmossdk.io/orm/internal/testkv"
-	"cosmossdk.io/orm/testing/ormtest"
-
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/orm/internal/testkv"
 	"cosmossdk.io/orm/internal/testpb"
 	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/testing/ormtest"
 	"cosmossdk.io/orm/types/kv"
 )
 

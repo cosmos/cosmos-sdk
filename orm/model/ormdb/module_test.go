@@ -15,14 +15,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/depinject"
-
 	"github.com/golang/mock/gomock"
-
-	"cosmossdk.io/orm/testing/ormmocks"
-
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
@@ -31,6 +27,7 @@ import (
 	"cosmossdk.io/orm/internal/testpb"
 	"cosmossdk.io/orm/model/ormdb"
 	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/testing/ormmocks"
 	"cosmossdk.io/orm/testing/ormtest"
 	"cosmossdk.io/orm/types/ormerrors"
 )

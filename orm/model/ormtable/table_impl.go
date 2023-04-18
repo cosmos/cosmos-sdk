@@ -8,13 +8,12 @@ import (
 	"io"
 	"math"
 
-	"cosmossdk.io/orm/internal/fieldnames"
-
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/orm/encoding/encodeutil"
 	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/fieldnames"
 	"cosmossdk.io/orm/types/ormerrors"
 )
 

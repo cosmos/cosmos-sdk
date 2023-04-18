@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"io"
 
-	"cosmossdk.io/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/orm/encoding/encodeutil"
 	"cosmossdk.io/orm/encoding/ormfield"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 type KeyCodec struct {

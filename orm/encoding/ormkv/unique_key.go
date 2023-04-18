@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io"
 
-	"cosmossdk.io/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // UniqueKeyCodec is the codec for unique indexes.

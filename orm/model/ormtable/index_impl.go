@@ -3,18 +3,14 @@ package ormtable
 import (
 	"context"
 
-	"cosmossdk.io/orm/types/kv"
-
-	"cosmossdk.io/orm/internal/fieldnames"
-
-	"cosmossdk.io/orm/model/ormlist"
-
-	"cosmossdk.io/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/fieldnames"
+	"cosmossdk.io/orm/model/ormlist"
+	"cosmossdk.io/orm/types/kv"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // indexKeyIndex implements Index for a regular IndexKey.

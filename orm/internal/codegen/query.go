@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
 	"github.com/iancoleman/strcase"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
 
 	"cosmossdk.io/orm/internal/fieldnames"
 )

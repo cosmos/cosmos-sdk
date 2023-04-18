@@ -17,8 +17,6 @@ import (
 	"gotest.tools/v3/golden"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/orm/types/kv"
-
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	sdkerrors "cosmossdk.io/errors"
 
@@ -28,6 +26,7 @@ import (
 	"cosmossdk.io/orm/internal/testutil"
 	"cosmossdk.io/orm/model/ormlist"
 	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/kv"
 	"cosmossdk.io/orm/types/ormerrors"
 )
 

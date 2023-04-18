@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"testing"
 
-	"cosmossdk.io/orm/encoding/ormkv"
-
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/orm/encoding/ormkv"
 	"cosmossdk.io/orm/internal/testpb"
 )
 

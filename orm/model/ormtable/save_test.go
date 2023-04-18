@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/orm/model/ormtable"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -14,6 +13,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/model/ormtable"
 	"cosmossdk.io/orm/testing/ormtest"
 )
 

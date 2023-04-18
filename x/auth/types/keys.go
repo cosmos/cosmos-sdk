@@ -23,8 +23,9 @@ var (
 	// AddressStoreKeyPrefix prefix for account-by-address store
 	AddressStoreKeyPrefix = []byte{0x01}
 
-	// param key for global account number
-	GlobalAccountNumberKey = []byte("globalAccountNumber")
+	// GlobalAccountNumberKey identifies the prefix where the monotonically increasing
+	// account number is stored.
+	GlobalAccountNumberKey = collections.NewPrefix(2)
 
 	// AccountNumberStoreKeyPrefix prefix for account-by-id store
 	AccountNumberStoreKeyPrefix = []byte("accountNumber")

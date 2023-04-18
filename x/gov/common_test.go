@@ -2,7 +2,7 @@ package gov_test
 
 import (
 	"bytes"
-=	"sort"
+	"sort"
 	"testing"
 
 	"cosmossdk.io/depinject"

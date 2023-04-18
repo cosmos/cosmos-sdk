@@ -160,9 +160,7 @@ require (
 )
 
 // temporary replaces
-replace (
-	cosmossdk.io/x/tx => ./x/tx
-)
+replace cosmossdk.io/x/tx => ./x/tx
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

@@ -66,7 +66,7 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		app.StakingKeeper.UpdateValidatorDelegations(ctx, valAddrs[0], sdk.ValAddress("val"))
+		updateValidatorDelegations(ctx, app, valAddrs[0], sdk.ValAddress("val"))
 	}
 }
 
@@ -120,5 +120,35 @@ func updateValidatorDelegationsLegacy(ctx sdk.Context, app *simapp.SimApp, exist
 			delegation.ValidatorAddress = newValAddr.String()
 			k.SetDelegation(ctx, delegation)
 		}
+	}
+}
+
+func updateValidatorDelegations(ctx sdk.Context, app *simapp.SimApp, existingValAddr, newValAddr sdk.ValAddress) {
+	storeKey := app.GetKey(types.StoreKey)
+	cdc, k := app.AppCodec(), app.StakingKeeper
+
+	store := ctx.KVStore(storeKey)
+
+	itr := storetypes.KVStorePrefixIterator(store, types.GetDelegationsByValPrefixKey(existingValAddr))
+	defer itr.Close()
+
+	for ; itr.Valid(); itr.Next() {
+		key := itr.Key()
+		valAddr, delAddr, err := types.ParseDelegationsByValKey(key)
+		if err != nil {
+			panic(err)
+		}
+
+		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
+		delegation := types.MustUnmarshalDelegation(cdc, bz)
+
+		// remove old operator addr from delegation
+		if err := k.RemoveDelegation(ctx, delegation); err != nil {
+			panic(err)
+		}
+
+		delegation.ValidatorAddress = newValAddr.String()
+		// add with new operator addr
+		k.SetDelegation(ctx, delegation)
 	}
 }

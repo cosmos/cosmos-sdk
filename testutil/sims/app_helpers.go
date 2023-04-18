@@ -117,13 +117,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		codec      codec.Codec
 	)
 
-	if err := depinject.Inject(
-		depinject.Configs(
-			appConfig,
-			// depinject.Supply(log.NewNopLogger()),
-		),
-		append(extraOutputs, &appBuilder, &codec)...,
-	); err != nil {
+	if err := depinject.Inject(appConfig, append(extraOutputs, &appBuilder, &codec)...); err != nil {
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 

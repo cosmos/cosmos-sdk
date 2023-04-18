@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
@@ -25,7 +27,7 @@ import (
 )
 
 var (
-	validator1        = "cosmosvaloper1qqqryrs09ggeuqszqygqyqd2tgqmsqzewacjj7"
+	validator1        = "cosmosva§per1qqqryrs09ggeuqszqygqyqd2tgqmsqzewacjj7"
 	validatorAddr1, _ = sdk.ValAddressFromBech32(validator1)
 	validator2        = "cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj"
 	validatorAddr2, _ = sdk.ValAddressFromBech32(validator2)
@@ -51,7 +53,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := simtestutil.Setup(
-		stakingtestutil.AppConfig,
+		depinject.Configs(
+			stakingtestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&f.bankKeeper,
 		&f.accountKeeper,
 		&f.stakingKeeper,

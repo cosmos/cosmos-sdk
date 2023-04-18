@@ -107,7 +107,7 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 
 		var delegation types.Delegation
-		k.cdc.Unmarshal(bz, &delegation)
+		err = k.cdc.Unmarshal(bz, &delegation)
 		if err != nil {
 			return err
 		}

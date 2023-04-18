@@ -22,7 +22,7 @@ service TestSchemaQueryService {
   // ListExampleAutoIncrementTable queries the ExampleAutoIncrementTable table using prefix and range queries against defined indexes.
   rpc ListExampleAutoIncrementTable(ListExampleAutoIncrementTableRequest) returns (ListExampleAutoIncrementTableResponse) {}
   // GetExampleSingleton queries the ExampleSingleton singleton.
-  rpc GetExampleSingleton (GetExampleSingletonRequest) returns (GetExampleSingletonResponse) {}
+  rpc GetExampleSingleton(GetExampleSingletonRequest) returns (GetExampleSingletonResponse) {}
   // Get queries the ExampleTimestamp table by its primary key.
   rpc GetExampleTimestamp(GetExampleTimestampRequest) returns (GetExampleTimestampResponse) {}
   // ListExampleTimestamp queries the ExampleTimestamp table using prefix and range queries against defined indexes.

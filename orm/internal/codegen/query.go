@@ -232,7 +232,7 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 func (g queryProtoGen) genSingletonRPCMethods(msg *protogen.Message) error {
 	name := msg.Desc.Name()
 	g.svc.F("// Get%s queries the %s singleton.", name, name)
-	g.svc.F("rpc Get%s (Get%sRequest) returns (Get%sResponse) {}", name, name, name) // TODO grpc gateway
+	g.svc.F("rpc Get%s(Get%sRequest) returns (Get%sResponse) {}", name, name, name) // TODO grpc gateway
 	g.startRequestType("Get%sRequest", name)
 	g.msgs.F("}")
 	g.msgs.F("")

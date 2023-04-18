@@ -216,6 +216,9 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	ci := NewCometInfo(req)
 	app.SetCometInfo(ci)
 
+	hi := NewHeaderInfo(req.Header.Height, req.Hash, req.Header.Time, req.Header.ChainID)
+	app.SetHeaderInfo(hi)
+
 	// call the streaming service hook with the BeginBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
 		ctx := app.deliverState.ctx

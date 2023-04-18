@@ -153,7 +153,8 @@ type BaseApp struct {
 	chainID string
 
 	// cometInfo stores information about the current block to be used later on
-	cometInfo comet.Info
+	cometInfo  comet.Info
+	headerInfo header.Info
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -617,13 +618,14 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 
 func (app *BaseApp) SetCometInfo(ci comet.Info) {
 	app.cometInfo = ci
+}
 
+func (app *BaseApp) SetHeaderInfo(hi header.Info) {
+	app.headerInfo = hi
 }
 
 func (app *BaseApp) GetHeaderInfo(ctx context.Context) header.Info {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	return NewHeaderInfo(sdkCtx.BlockHeight(), sdkCtx.HeaderHash(), sdkCtx.BlockTime(), sdkCtx.BlockHeader().ChainID)
+	return app.headerInfo
 }
 
 func (app *BaseApp) GetCometInfo(ctx context.Context) comet.Info {

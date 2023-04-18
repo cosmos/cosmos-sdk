@@ -9,13 +9,13 @@ type Service interface {
 	GetCometInfo(context.Context) Info
 }
 
-type Info interface {
-	GetMisbehavior() []Misbehavior // Misbehavior returns the misbehavior of the block
-	// GetValidatorsHash returns the hash of the validators
+type Info struct {
+	Evidence []Misbehavior // Evidence misbehavior of the block
+	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
-	GetValidatorsHash() []byte
-	GetProposerAddress() []byte       // GetProposerAddress returns the address of the block proposer
-	GetDecidedLastCommit() CommitInfo // GetDecidedLastCommit returns the last commit info
+	ValidatorsHash    []byte
+	ProposerAddress   []byte     // ProposerAddress returns the address of the block proposer
+	DecidedLastCommit CommitInfo // DecidedLastCommit returns the last commit info
 }
 
 // MisbehaviorType is the type of misbehavior for a validator

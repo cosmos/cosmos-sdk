@@ -164,8 +164,10 @@ func initKeepersWithmAccPerms(f *fixture, blockedAddrs map[string]bool) (authkee
 		appCodec, storeService, authtypes.ProtoBaseAccount,
 		maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+
+	bankStoreService := runtime.NewKVStoreService(f.fetchStoreKey(types.StoreKey).(*storetypes.KVStoreKey))
 	bankKeeper := keeper.NewBaseKeeper(
-		appCodec, f.fetchStoreKey(types.StoreKey), authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, bankStoreService, authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	return authKeeper, bankKeeper
@@ -1203,7 +1205,8 @@ func TestBalanceTrackingEvents(t *testing.T) {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, f.fetchStoreKey(types.StoreKey),
+	bankStoreService := runtime.NewKVStoreService(f.fetchStoreKey(types.StoreKey).(*storetypes.KVStoreKey))
+	f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, bankStoreService,
 		f.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -1370,7 +1373,8 @@ func TestMintCoinRestrictions(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, f.fetchStoreKey(types.StoreKey),
+		bankStoreService := runtime.NewKVStoreService(f.fetchStoreKey(types.StoreKey).(*storetypes.KVStoreKey))
+		f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, bankStoreService,
 			f.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {

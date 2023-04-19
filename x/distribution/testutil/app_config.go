@@ -1,9 +1,6 @@
 package testutil
 
 import (
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
@@ -17,17 +14,14 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 )
 
-var AppConfig = depinject.Configs(
-	configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.BankModule(),
-		configurator.StakingModule(),
-		configurator.TxModule(),
-		configurator.ConsensusModule(),
-		configurator.ParamsModule(),
-		configurator.GenutilModule(),
-		configurator.DistributionModule(),
-		configurator.MintModule(),
-	),
-	depinject.Supply(log.NewNopLogger()),
+var AppConfig = configurator.NewAppConfig(
+	configurator.AuthModule(),
+	configurator.BankModule(),
+	configurator.StakingModule(),
+	configurator.TxModule(),
+	configurator.ConsensusModule(),
+	configurator.ParamsModule(),
+	configurator.GenutilModule(),
+	configurator.DistributionModule(),
+	configurator.MintModule(),
 )

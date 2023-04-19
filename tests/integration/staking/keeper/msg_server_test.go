@@ -25,13 +25,16 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		accountKeeper authkeeper.AccountKeeper
 	)
 	app, err := simtestutil.SetupWithConfiguration(
-		configurator.NewAppConfig(
-			configurator.BankModule(),
-			configurator.TxModule(),
-			configurator.StakingModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.AuthModule(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.BankModule(),
+				configurator.TxModule(),
+				configurator.StakingModule(),
+				configurator.ParamsModule(),
+				configurator.ConsensusModule(),
+				configurator.AuthModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		simtestutil.DefaultStartUpConfig(),
 		&stakingKeeper, &bankKeeper, &accountKeeper)

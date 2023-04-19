@@ -3,6 +3,8 @@ package gov_test
 import (
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
@@ -18,14 +20,17 @@ import (
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
 	app, err := simtestutil.SetupAtGenesis(
-		configurator.NewAppConfig(
-			configurator.ParamsModule(),
-			configurator.AuthModule(),
-			configurator.StakingModule(),
-			configurator.BankModule(),
-			configurator.GovModule(),
-			configurator.DistributionModule(),
-			configurator.ConsensusModule(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.ParamsModule(),
+				configurator.AuthModule(),
+				configurator.StakingModule(),
+				configurator.BankModule(),
+				configurator.GovModule(),
+				configurator.DistributionModule(),
+				configurator.ConsensusModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		&accountKeeper,
 	)

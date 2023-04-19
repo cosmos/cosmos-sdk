@@ -22,9 +22,10 @@ type SendKeeper interface {
 
 	AppendSendRestriction(restriction types.SendRestrictionFn)
 	PrependSendRestriction(restriction types.SendRestrictionFn)
+	ClearSendRestriction()
 
 	InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
@@ -64,7 +65,7 @@ type BaseSendKeeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	sendRestriction *types.SendRestriction
+	sendRestriction *sendRestriction
 }
 
 func NewBaseSendKeeper(
@@ -87,18 +88,23 @@ func NewBaseSendKeeper(
 		paramSpace:      paramSpace,
 		blockedAddrs:    blockedAddrs,
 		authority:       authority,
-		sendRestriction: types.NewSendRestriction(),
+		sendRestriction: newSendRestriction(),
 	}
 }
 
 // AppendSendRestriction adds the provided SendRestrictionFn to run after previously provided restrictions.
 func (k BaseSendKeeper) AppendSendRestriction(restriction types.SendRestrictionFn) {
-	k.sendRestriction.Append(restriction)
+	k.sendRestriction.append(restriction)
 }
 
 // PrependSendRestriction adds the provided SendRestrictionFn to run before previously provided restrictions.
 func (k BaseSendKeeper) PrependSendRestriction(restriction types.SendRestrictionFn) {
-	k.sendRestriction.Prepend(restriction)
+	k.sendRestriction.prepend(restriction)
+}
+
+// ClearSendRestriction removes the send restriction (if there is one).
+func (k BaseSendKeeper) ClearSendRestriction() {
+	k.sendRestriction.clear()
 }
 
 func (k BaseSendKeeper) GetAuthority() string {
@@ -153,11 +159,9 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 			return err
 		}
 
-		if k.sendRestriction.Fn != nil {
-			outAddress, err = k.sendRestriction.Fn(ctx, inAddress, outAddress, out.Coins)
-			if err != nil {
-				return err
-			}
+		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
+		if err != nil {
+			return err
 		}
 
 		if err = k.addCoins(ctx, outAddress, out.Coins); err != nil {
@@ -192,15 +196,13 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 // Otherwise, the coins will be transferred from the fromAddr to the toAddr.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	if k.sendRestriction.Fn != nil {
-		var err error
-		toAddr, err = k.sendRestriction.Fn(ctx, fromAddr, toAddr, amt)
-		if err != nil {
-			return err
-		}
+	var err error
+	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
+	if err != nil {
+		return err
 	}
 
-	err := k.subUnlockedCoins(ctx, fromAddr, amt)
+	err = k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -519,4 +521,42 @@ func (k BaseSendKeeper) getSendEnabledOrDefault(store sdk.KVStore, denom string,
 		return sendEnabled
 	}
 	return getDefault()
+}
+
+// sendRestriction is a struct that houses a SendRestrictionFn.
+// It exists so that the SendRestrictionFn can be updated in the SendKeeper without needing to have a pointer receiver.
+type sendRestriction struct {
+	fn types.SendRestrictionFn
+}
+
+// newSendRestriction creates a new sendRestriction with nil send restriction.
+func newSendRestriction() *sendRestriction {
+	return &sendRestriction{
+		fn: nil,
+	}
+}
+
+// append adds the provided restriction to this, to be run after the existing function.
+func (r *sendRestriction) append(restriction types.SendRestrictionFn) {
+	r.fn = r.fn.Then(restriction)
+}
+
+// prepend adds the provided restriction to this, to be run before the existing function.
+func (r *sendRestriction) prepend(restriction types.SendRestrictionFn) {
+	r.fn = restriction.Then(r.fn)
+}
+
+// clear removes the send restriction (sets it to nil).
+func (r *sendRestriction) clear() {
+	r.fn = nil
+}
+
+var _ types.SendRestrictionFn = sendRestriction{}.apply
+
+// apply applies the send restriction if there is one. If not, it's a no-op.
+func (r sendRestriction) apply(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+	if r.fn == nil {
+		return toAddr, nil
+	}
+	return r.fn(ctx, fromAddr, toAddr, amt)
 }

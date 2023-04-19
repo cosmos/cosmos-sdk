@@ -93,26 +93,3 @@ func ComposeSendRestrictions(restrictions ...SendRestrictionFn) SendRestrictionF
 		return toAddr, err
 	}
 }
-
-// SendRestriction is a struct that houses a SendRestrictionFn.
-// It exists so that the SendRestrictionFn can be updated in the SendKeeper without needing to have a pointer receiver.
-type SendRestriction struct {
-	Fn SendRestrictionFn
-}
-
-// NewSendRestriction creates a new SendRestriction with nil send restriction.
-func NewSendRestriction() *SendRestriction {
-	return &SendRestriction{
-		Fn: nil,
-	}
-}
-
-// Append adds the provided restriction to this, to be run after the existing function.
-func (r *SendRestriction) Append(restriction SendRestrictionFn) {
-	r.Fn = r.Fn.Then(restriction)
-}
-
-// Prepend adds the provided restriction to this, to be run before the existing function.
-func (r *SendRestriction) Prepend(restriction SendRestrictionFn) {
-	r.Fn = restriction.Then(r.Fn)
-}

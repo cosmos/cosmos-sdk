@@ -101,8 +101,12 @@ accounts. The send keeper does not alter the total supply (mint or burn coins).
 type SendKeeper interface {
     ViewKeeper
 
-    InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
-    SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+    AppendSendRestriction(restriction types.SendRestrictionFn)
+    PrependSendRestriction(restriction types.SendRestrictionFn)
+    ClearSendRestriction()
+
+    InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
+    SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 
     GetParams(ctx sdk.Context) types.Params
     SetParams(ctx sdk.Context, params types.Params)

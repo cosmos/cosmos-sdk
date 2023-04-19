@@ -6,9 +6,9 @@ import "github.com/cosmos/cosmos-sdk/x/bank/types"
 // for the purpose of testing in the keeper_test package.
 
 func (k BaseSendKeeper) SetSendRestriction(restriction types.SendRestrictionFn) {
-	k.sendRestriction.Fn = restriction
+	k.sendRestriction.fn = restriction
 }
 
 func (k BaseSendKeeper) GetSendRestrictionFn() types.SendRestrictionFn {
-	return k.sendRestriction.Fn
+	return k.sendRestriction.fn
 }

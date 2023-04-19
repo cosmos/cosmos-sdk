@@ -229,6 +229,18 @@ func (mr *MockBankKeeperMockRecorder) BurnCoins(ctx, moduleName, amt interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BurnCoins", reflect.TypeOf((*MockBankKeeper)(nil).BurnCoins), ctx, moduleName, amt)
 }
 
+// ClearSendRestriction mocks base method.
+func (m *MockBankKeeper) ClearSendRestriction() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ClearSendRestriction")
+}
+
+// ClearSendRestriction indicates an expected call of ClearSendRestriction.
+func (mr *MockBankKeeperMockRecorder) ClearSendRestriction() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSendRestriction", reflect.TypeOf((*MockBankKeeper)(nil).ClearSendRestriction))
+}
+
 // DelegateCoins mocks base method.
 func (m *MockBankKeeper) DelegateCoins(ctx types.Context, delegatorAddr, moduleAccAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()

@@ -271,21 +271,9 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 	cmd := groupcli.MsgUpdateGroupAdminCmd()
 	cmd.SetOutput(io.Discard)
 
-	var outBuf bytes.Buffer
-
-	ctxGen := func() client.Context {
-		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
-			Value: bz,
-		})
-		return s.baseCtx.WithClient(c)
-	}
-	clientCtx := ctxGen().WithOutput(&outBuf)
 	ctx := svrcmd.CreateExecuteContext(context.Background())
-
 	cmd.SetContext(ctx)
-
-	s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
 
 	groupIDs := make([]string, 2)
 	for i := 0; i < 2; i++ {
@@ -295,7 +283,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 		"metadata": "%s"
 	}]}`, accounts[0].Address.String(), validMetadata)
 		validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-		out, err := clitestutil.ExecTestCLICmd(clientCtx, groupcli.MsgCreateGroupCmd(),
+		out, err := clitestutil.ExecTestCLICmd(s.baseCtx, groupcli.MsgCreateGroupCmd(),
 			append(
 				[]string{
 					accounts[0].Address.String(),
@@ -314,7 +302,6 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 		ctxGen       func() client.Context
 		args         []string
 		expCmdOutput string
-		expectErr    bool
 		expectErrMsg string
 	}{
 		{
@@ -335,7 +322,6 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 				s.commonFlags...,
 			),
 			fmt.Sprintf("%s %s %s", accounts[0].Address.String(), groupIDs[0], accounts[1].Address.String()),
-			false,
 			"",
 		},
 		{
@@ -357,7 +343,6 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 				s.commonFlags...,
 			),
 			fmt.Sprintf("%s %s %s --%s=%s", accounts[0].Address.String(), groupIDs[1], accounts[1].Address.String(), flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-			false,
 			"",
 		},
 		{
@@ -378,7 +363,6 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 				s.commonFlags...,
 			),
 			fmt.Sprintf("%s %s %s", accounts[0].Address.String(), "", accounts[1].Address.String()),
-			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
 		},
 	}
@@ -387,28 +371,25 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			var outBuf bytes.Buffer
-
-			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 
-			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
 
 			if len(tc.args) != 0 {
 				s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			out, err := clitestutil.ExecTestCLICmd(s.baseCtx, cmd, tc.args)
+			if tc.expectErrMsg != "" {
 				s.Require().Error(err)
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err)
 				msg := &sdk.TxResponse{}
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
+				s.Require().NoError(s.baseCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
 			}
 		})
 	}
@@ -661,7 +642,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			var outBuf bytes.Buffer
+			var outBuf bytes.Buffer // TODO delete as duplicate
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())

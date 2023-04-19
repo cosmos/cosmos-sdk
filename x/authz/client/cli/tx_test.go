@@ -152,7 +152,6 @@ func (s *CLITestSuite) SetupSuite() {
 		},
 	)
 	s.Require().NoError(err)
-
 	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 }
 

@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +15,7 @@ import (
 
 // Keeper of the distribution store
 type Keeper struct {
-	storeKey      storetypes.StoreKey
+	storeService  store.KVStoreService
 	cdc           codec.BinaryCodec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
@@ -29,7 +29,7 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey,
+	cdc codec.BinaryCodec, storeService store.KVStoreService,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
 	feeCollectorName, authority string,
 ) Keeper {
@@ -39,7 +39,7 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:         key,
+		storeService:     storeService,
 		cdc:              cdc,
 		authKeeper:       ak,
 		bankKeeper:       bk,

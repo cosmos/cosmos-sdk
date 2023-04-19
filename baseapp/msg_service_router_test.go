@@ -1,6 +1,7 @@
 package baseapp_test
 
 import (
+	"context"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -134,7 +135,7 @@ func TestMsgService(t *testing.T) {
 		PubKey:        priv.PubKey(),
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		nil, defaultSignMode, signerData,
+		context.TODO(), defaultSignMode, signerData,
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)

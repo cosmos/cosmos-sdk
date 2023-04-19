@@ -19,6 +19,7 @@ func AssertErrorContents(t *testing.T, theError error, contains []string, msgAnd
 		return assert.NoError(t, theError, msgAndArgs)
 	}
 	if !assert.Error(t, theError, msgAndArgs...) {
+		t.Logf("Error was expected to contain:\n\t\t\"%s\"", strings.Join(contains, "\"\n\t\t\""))
 		return false
 	}
 

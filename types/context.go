@@ -11,6 +11,8 @@ import (
 
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/core/comet"
 )
 
 /*
@@ -41,6 +43,7 @@ type Context struct {
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
 	streamingManager     storetypes.StreamingManager
+	cometInfo            comet.BlockInfo
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -65,6 +68,7 @@ func (c Context) Priority() int64                               { return c.prior
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
+func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
 
 // clone the header before returning
 func (c Context) BlockHeader() cmtproto.Header {
@@ -259,6 +263,12 @@ func (c Context) WithPriority(p int64) Context {
 // WithStreamingManager returns a Context with an updated streaming manager
 func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
 	c.streamingManager = sm
+	return c
+}
+
+// WithCometInfo
+func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
+	c.cometInfo = cometInfo
 	return c
 }
 

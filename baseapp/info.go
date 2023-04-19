@@ -9,7 +9,7 @@ import (
 )
 
 type reqBeginBlockInfo struct {
-	*abci.RequestBeginBlock
+	abci.RequestBeginBlock
 }
 
 func (r reqBeginBlockInfo) Evidence() []comet.Misbehavior {
@@ -107,7 +107,7 @@ func (m misbehaviorWrapper) TotalVotingPower() int64 {
 }
 
 type reqPrepareProposalInfo struct {
-	*abci.RequestPrepareProposal
+	abci.RequestPrepareProposal
 }
 
 func (r reqPrepareProposalInfo) Evidence() []comet.Misbehavior {
@@ -163,7 +163,7 @@ func (e extendedVoteInfoWrapper) Validator() comet.Validator {
 }
 
 type reqProcessProposalInfo struct {
-	*abci.RequestProcessProposal
+	abci.RequestProcessProposal
 }
 
 func (r reqProcessProposalInfo) Evidence() []comet.Misbehavior {

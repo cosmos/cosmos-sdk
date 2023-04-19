@@ -6,17 +6,18 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -211,10 +212,10 @@ func ProvideEventService() event.Service {
 	return EventService{}
 }
 
-func ProvideCometInfoService(app *AppBuilder) comet.Service {
-	return app.app
+func ProvideCometInfoService() comet.Service {
+	return cometInfoService{}
 }
 
 func ProvideBlockInfoService(app *AppBuilder) header.Service {
-	return app.app
+	panic("TODO")
 }

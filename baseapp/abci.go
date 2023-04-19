@@ -194,12 +194,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx)).
-		WithVoteInfos(req.LastCommitInfo.GetVotes())
+		WithVoteInfos(req.LastCommitInfo.GetVotes()).
+		WithCometInfo(reqBeginBlockInfo{req})
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
 			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
+			WithHeaderHash(req.Hash).
+			WithCometInfo(reqBeginBlockInfo{req})
 	}
 
 	if app.beginBlocker != nil {
@@ -212,12 +214,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
-
-	ci := NewCometInfo(req)
-	app.SetCometInfo(ci)
-
-	hi := NewHeaderInfo(req.Header.Height, req.Hash, req.Header.Time, req.Header.ChainID)
-	app.SetHeaderInfo(hi)
 
 	// call the streaming service hook with the BeginBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
@@ -293,7 +289,8 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithCometInfo(reqPrepareProposalInfo{req})
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -351,7 +348,8 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithCometInfo(reqProcessProposalInfo{req})
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).

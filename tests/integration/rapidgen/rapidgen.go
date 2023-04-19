@@ -72,7 +72,9 @@ func getSignersFieldNames(msg protoreflect.MessageDescriptor, res map[string]str
 	}
 }
 
-func GenType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.GeneratorOptions) GeneratedType {
+// unused, but if we ever need valid signer adderesses, we'll need to generate them
+func withValidSigners(pulsar proto.Message, opts rapidproto.GeneratorOptions) rapidproto.GeneratorOptions {
+	// if we need valid signers, we need to generate them
 	signerFields := make(map[string]string)
 	getSignersFieldNames(pulsar.ProtoReflect().Descriptor(), signerFields)
 	gen := rapid.StringOfN(rapid.RuneFrom(nil, unicode.ASCII_Hex_Digit), 6, 6, -1)
@@ -84,7 +86,10 @@ func GenType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.Gener
 		return protoreflect.Value{}, false
 	}
 	opts.FieldMaps = append(opts.FieldMaps, mapFn)
+	return opts
+}
 
+func GenType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.GeneratorOptions) GeneratedType {
 	return GeneratedType{
 		Pulsar: pulsar,
 		Gogo:   gogo,

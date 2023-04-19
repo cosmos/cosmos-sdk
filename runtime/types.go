@@ -25,7 +25,7 @@ type AppI interface {
 	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error)
 
 	// Application updates every end block.
-	EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error)
+	EndBlocker(ctx sdk.Context) ([]abci.ValidatorUpdate, []abci.Event, error)
 
 	// Application update at chain (i.e app) initialization.
 	InitChainer(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error)

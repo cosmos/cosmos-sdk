@@ -1,13 +1,13 @@
 package types
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -125,9 +125,9 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
-				origapp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
-				res := origapp.Commit()
-				require.NotNil(t, res.Data)
+				origapp.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: i})
+				_, err := origapp.Commit(context.Background(), &abci.RequestCommit{})
+				require.NoError(t, err)
 			}
 
 			if tc.setLoader != nil {
@@ -141,9 +141,8 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			// "execute" one block
-			app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: upgradeHeight}})
-			res := app.Commit()
-			require.NotNil(t, res.Data)
+			origapp.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: upgradeHeight})
+			_, err = origapp.Commit(context.Background(), &abci.RequestCommit{})
 
 			// check db is properly updated
 			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)

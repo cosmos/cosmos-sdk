@@ -364,44 +364,6 @@ func (app *BaseApp) legacyBeginBlock(req *abci.RequestFinalizeBlock) sdk.LegacyR
 	return resp
 }
 
-func (app *BaseApp) legacyEndBlock(req *abci.RequestFinalizeBlock) sdk.LegacyResponseEndBlock {
-	var (
-		resp sdk.LegacyResponseEndBlock
-		err  error
-	)
-
-	// TODO: Fill out!
-	legacyReq := sdk.LegacyRequestEndBlock{}
-
-	if app.endBlocker != nil {
-		resp, err = app.endBlocker(app.finalizeBlockState.ctx, legacyReq)
-		if err != nil {
-			panic(err)
-		}
-
-		resp.Response.Events = sdk.MarkEventsToIndex(resp.Response.Events, app.indexEvents)
-	}
-
-	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
-	resp.Response.ConsensusParamUpdates = &cp
-
-	// call the streaming service hook with the EndBlock messages
-	for _, abciListener := range app.streamingManager.ABCIListeners {
-		ctx := app.finalizeBlockState.ctx
-		blockHeight := ctx.BlockHeight()
-
-		// TODO: Figure out what to do with ListenEndBlock and the types necessary
-		// as we cannot have the store sub-module depend on the root SDK module.
-		//
-		// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-		if err := abciListener.ListenEndBlock(ctx, req, res); err != nil {
-			app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-		}
-	}
-
-	return resp
-}
-
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
 // CheckTx mode, messages are not executed. This means messages are only validated
 // and only the AnteHandler is executed. State is persisted to the BaseApp's
@@ -731,6 +693,8 @@ func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
 }
 
 func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	var events []abci.Event
+
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
 	}
@@ -790,16 +754,23 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
-	endBlockResp := app.legacyEndBlock(req)
+	endBlock, err := app.endBlock(app.finalizeBlockState.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	events = append(events, endBlock.Events...)
+
+	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
 
 	// TODO: Populate fields.
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 	return &abci.ResponseFinalizeBlock{
-		Events:                nil,
+		Events:                events,
 		TxResults:             txResults,
-		ValidatorUpdates:      nil,
-		ConsensusParamUpdates: nil,
+		ValidatorUpdates:      endBlock.ValidatorUpdates,
+		ConsensusParamUpdates: &cp,
 		AppHash:               app.flushCommit().Hash,
 	}, nil
 }

@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -69,7 +70,7 @@ type BaseApp struct {
 
 	initChainer     sdk.InitChainer                // ABCI InitChain handler
 	beginBlocker    sdk.LegacyBeginBlocker         // (legacy ABCI) BeginBlock handler
-	endBlocker      sdk.LegacyEndBlocker           // (legacy ABCI) EndBlock handler
+	endBlocker      sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
 	processProposal sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
 	prepareProposal sdk.PrepareProposalHandler     // ABCI PrepareProposal
 	extendVote      sdk.ExtendVoteHandler          // ABCI ExtendVote handler
@@ -643,6 +644,32 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	}
 
 	return ctx.WithMultiStore(msCache), msCache
+}
+
+// endBlock is an application-defined function that is called after transactions
+// have been processed in FinalizeBlock.
+func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
+	var endblock sdk.EndBlock
+
+	if app.endBlocker != nil {
+		eb, err := app.endBlocker(app.finalizeBlockState.ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		// append EndBlock attributes to all events in the EndBlock response
+		for i, event := range eb.Events {
+			eb.Events[i].Attributes = append(
+				event.Attributes,
+				abci.EventAttribute{Key: "mode", Value: "EndBlock"},
+			)
+		}
+
+		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
+		endblock = eb
+	}
+
+	return endblock, nil
 }
 
 // runTx processes a transaction within a given execution mode, encoded transaction

@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

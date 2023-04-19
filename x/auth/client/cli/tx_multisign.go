@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types/registry"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -132,29 +133,21 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				if err != nil {
 					return err
 				}
-				signingData := signing.SignerData{
-					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
+				txSignerData := txsigning.SignerData{
 					ChainID:       txFactory.ChainID(),
 					AccountNumber: txFactory.AccountNumber(),
 					Sequence:      txFactory.Sequence(),
-					PubKey:        sig.PubKey,
-				}
-				txSignerData := txsigning.SignerData{
-					ChainID:       signingData.ChainID,
-					AccountNumber: signingData.AccountNumber,
-					Sequence:      signingData.Sequence,
-					Address:       signingData.Address,
+					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
 					PubKey: &anypb.Any{
 						TypeUrl: anyPk.TypeUrl,
 						Value:   anyPk.Value,
 					},
 				}
-
 				txBytes, err := txCfg.TxEncoder()(txBuilder.GetTx())
 				if err != nil {
 					return err
 				}
-				decodeCtx, err := decode.NewDecoder(decode.Options{})
+				decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
 				if err != nil {
 					return err
 				}
@@ -333,23 +326,16 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 			multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-			signingData := signing.SignerData{
-				Address:       sdk.AccAddress(pubKey.Address()).String(),
-				ChainID:       txFactory.ChainID(),
-				AccountNumber: txFactory.AccountNumber(),
-				Sequence:      txFactory.Sequence(),
-				PubKey:        pubKey,
-			}
 
 			anyPk, err := codectypes.NewAnyWithValue(multisigPub)
 			if err != nil {
 				return err
 			}
 			txSignerData := txsigning.SignerData{
-				ChainID:       signingData.ChainID,
-				AccountNumber: signingData.AccountNumber,
-				Sequence:      signingData.Sequence,
-				Address:       signingData.Address,
+				ChainID:       txFactory.ChainID(),
+				AccountNumber: txFactory.AccountNumber(),
+				Sequence:      txFactory.Sequence(),
+				Address:       sdk.AccAddress(pubKey.Address()).String(),
 				PubKey: &anypb.Any{
 					TypeUrl: anyPk.TypeUrl,
 					Value:   anyPk.Value,
@@ -360,7 +346,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			decodeCtx, err := decode.NewDecoder(decode.Options{})
+			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
 			if err != nil {
 				return err
 			}

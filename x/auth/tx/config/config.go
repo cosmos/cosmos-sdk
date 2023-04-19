@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

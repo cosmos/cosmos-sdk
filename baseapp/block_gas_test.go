@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-
 	store "cosmossdk.io/store/types"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"

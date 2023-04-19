@@ -4,18 +4,16 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/indexes"
+	"cosmossdk.io/core/store"
 
 	"github.com/cockroachdb/errors"
 
 	"cosmossdk.io/collections"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,9 +59,9 @@ func (b BalancesIndexes) IndexesList() []collections.Index[collections.Pair[sdk.
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	cdc      codec.BinaryCodec
-	storeKey storetypes.StoreKey
-	ak       types.AccountKeeper
+	cdc          codec.BinaryCodec
+	storeService store.KVStoreService
+	ak           types.AccountKeeper
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -74,11 +72,11 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
-	sb := collections.NewSchemaBuilder(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)))
+func NewBaseViewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper) BaseViewKeeper {
+	sb := collections.NewSchemaBuilder(storeService)
 	k := BaseViewKeeper{
 		cdc:           cdc,
-		storeKey:      storeKey,
+		storeService:  storeService,
 		ak:            ak,
 		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
 		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),

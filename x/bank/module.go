@@ -13,7 +13,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	store "cosmossdk.io/store/types"
+	corestore "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -209,9 +209,9 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Cdc    codec.Codec
-	Key    *store.KVStoreKey
+	Config       *modulev1.Module
+	Cdc          codec.Codec
+	StoreService corestore.KVStoreService
 
 	AccountKeeper types.AccountKeeper
 
@@ -250,7 +250,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	bankKeeper := keeper.NewBaseKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		in.AccountKeeper,
 		blockedAddresses,
 		authority.String(),

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -1310,7 +1311,7 @@ func (suite *KeeperTestSuite) getTestMetadata() []banktypes.Metadata {
 }
 
 func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
-	type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+	type BankMintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
 	require := suite.Require()
 
 	type testCase struct {
@@ -1325,7 +1326,7 @@ func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 	}{
 		{
 			"restriction",
-			func(_ sdk.Context, coins sdk.Coins) error {
+			func(_ context.Context, coins sdk.Coins) error {
 				for _, coin := range coins {
 					if coin.Denom != fooDenom {
 						return fmt.Errorf("Module %s only has perms for minting %s coins, tried minting %s coins", banktypes.ModuleName, fooDenom, coin.Denom)

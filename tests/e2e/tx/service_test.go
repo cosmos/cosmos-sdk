@@ -348,25 +348,25 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 			"without pagination",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, bankMsgSendEventAction),
 			false,
-			"", 3,
+			"", 2,
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 2),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 1, 2),
 			false,
-			"", 1,
+			"", 2,
 		},
 		{
 			"valid request: order by asc",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"", 3,
+			"", 2,
 		},
 		{
 			"valid request: order by desc",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"", 3,
+			"", 2,
 		},
 		{
 			"invalid request: invalid order by",
@@ -378,13 +378,13 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 			"expect pass with multiple-events",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"", 3,
+			"", 2,
 		},
 		{
 			"expect pass with escape event",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
 			false,
-			"", 3,
+			"", 2,
 		},
 	}
 	for _, tc := range testCases {

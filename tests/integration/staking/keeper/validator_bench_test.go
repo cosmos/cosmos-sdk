@@ -14,16 +14,16 @@ func BenchmarkGetValidator(b *testing.B) {
 		totalPower += int64(i)
 	}
 
-	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		app.StakingKeeper.SetValidator(ctx, validator)
+		f.stakingKeeper.SetValidator(f.sdkCtx, validator)
 	}
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		for _, addr := range valAddrs {
-			_, _ = app.StakingKeeper.GetValidator(ctx, addr)
+			_, _ = f.stakingKeeper.GetValidator(f.sdkCtx, addr)
 		}
 	}
 }

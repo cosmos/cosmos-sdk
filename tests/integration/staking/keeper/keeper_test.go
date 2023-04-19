@@ -3,57 +3,108 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/simapp"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// fixture uses simapp (and not a depinjected app) because we manually set a
-// new app.StakingKeeper in `createValidators`.
 type fixture struct {
-	app         *simapp.SimApp
-	ctx         sdk.Context
-	addrs       []sdk.AccAddress
-	vals        []types.Validator
-	queryClient types.QueryClient
-	msgServer   types.MsgServer
+	app *integration.App
+
+	sdkCtx sdk.Context
+	cdc    codec.Codec
+	keys   map[string]*storetypes.KVStoreKey
+
+	accountKeeper authkeeper.AccountKeeper
+	bankKeeper    bankkeeper.Keeper
+	stakingKeeper *stakingkeeper.Keeper
 }
 
-// initFixture uses simapp (and not a depinjected app) because we manually set a
-// new app.StakingKeeper in `createValidators` which is used in most of the
-// staking keeper tests.
-func initFixture(t *testing.T) *fixture {
-	f := &fixture{}
+func initFixture(t testing.TB) *fixture {
+	keys := storetypes.NewKVStoreKeys(
+		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
+	)
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	logger := log.NewTestLogger(t)
+	cms := integration.CreateMultiStore(keys, logger)
 
-	querier := keeper.Querier{Keeper: app.StakingKeeper}
+	newCtx := sdk.NewContext(cms, cmtprototypes.Header{}, true, logger)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
+	authority := authtypes.NewModuleAddress("gov")
 
-	f.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
-
-	addrs, _, validators := createValidators(t, ctx, app, []int64{9, 8, 7})
-	header := cmtproto.Header{
-		ChainID: "HelloChain",
-		Height:  5,
+	maccPerms := map[string][]string{
+		minttypes.ModuleName:           {authtypes.Minter},
+		stakingtypes.ModuleName:        {authtypes.Minter},
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
 
-	// sort a copy of the validators, so that original validators does not
-	// have its order changed
-	sortedVals := make([]types.Validator, len(validators))
-	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction(ctx))
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
+	accountKeeper := authkeeper.NewAccountKeeper(
+		cdc,
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		sdk.Bech32MainPrefix,
+		authority.String(),
+	)
 
-	f.app, f.ctx, f.queryClient, f.addrs, f.vals = app, ctx, queryClient, addrs, validators
+	blockedAddresses := map[string]bool{
+		accountKeeper.GetAuthority(): false,
+	}
+	bankKeeper := bankkeeper.NewBaseKeeper(
+		cdc,
+		keys[banktypes.StoreKey],
+		accountKeeper,
+		blockedAddresses,
+		authority.String(),
+	)
 
-	return f
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
+
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule)
+
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+
+	// Register MsgServer and QueryServer
+	stakingtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))
+	stakingtypes.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
+
+	// set default staking params
+	stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
+
+	f := fixture{
+		app:           integrationApp,
+		sdkCtx:        sdkCtx,
+		cdc:           cdc,
+		keys:          keys,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
+		stakingKeeper: stakingKeeper,
+	}
+
+	return &f
 }

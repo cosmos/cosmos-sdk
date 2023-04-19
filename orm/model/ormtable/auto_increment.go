@@ -14,6 +14,8 @@ import (
 	"cosmossdk.io/orm/types/ormerrors"
 )
 
+// trigger build
+
 // autoIncrementTable is a Table implementation for tables with an
 // auto-incrementing uint64 primary key.
 type autoIncrementTable struct {

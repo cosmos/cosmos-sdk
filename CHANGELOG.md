@@ -97,6 +97,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#15023](https://github.com/cosmos/cosmos-sdk/pull/15023) & [#15213](https://github.com/cosmos/cosmos-sdk/pull/15213) Add `MessageRouter` interface to baseapp and pass it to authz, gov and groups instead of concrete type. 
 * (simtestutil) [#15305](https://github.com/cosmos/cosmos-sdk/pull/15305) Add `AppStateFnWithExtendedCb` with callback function to extend rawState.
 * (x/consensus) [#15553](https://github.com/cosmos/cosmos-sdk/pull/15553) Migrate consensus module to use collections
+* (x/auth) [#15867](https://github.com/cosmos/cosmos-sdk/pull/15867) Support better logging for signature verification failure.
 
 ### State Machine Breaking
 
@@ -160,6 +161,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `InterfaceRegistry` is now a private interface and implements `protodesc.Resolver` plus the `RangeFiles` method
      All implementations of `InterfaceRegistry` by other users must now embed the official implementation.
     * `AminoCodec` is marked as deprecated.
+* (x/crisis) [#15852](https://github.com/cosmos/cosmos-sdk/pull/15852) Crisis keeper now takes a instance of the address codec to be able to decode user addresses
+* (x/slashing) [#15875](https://github.com/cosmos/cosmos-sdk/pull/15875) `x/slashing.NewAppModule` now requires an `InterfaceRegistry` parameter.
 
 ### Client Breaking Changes
 

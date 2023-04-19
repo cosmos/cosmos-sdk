@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,7 +23,7 @@ const (
 )
 
 // GetTxCmd returns vesting module's transaction commands.
-func GetTxCmd() *cobra.Command {
+func GetTxCmd(ac address.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Vesting transaction subcommands",
@@ -32,9 +33,9 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		NewMsgCreateVestingAccountCmd(),
-		NewMsgCreatePermanentLockedAccountCmd(),
-		NewMsgCreatePeriodicVestingAccountCmd(),
+		NewMsgCreateVestingAccountCmd(ac),
+		NewMsgCreatePermanentLockedAccountCmd(ac),
+		NewMsgCreatePeriodicVestingAccountCmd(ac),
 	)
 
 	return txCmd
@@ -42,7 +43,7 @@ func GetTxCmd() *cobra.Command {
 
 // NewMsgCreateVestingAccountCmd returns a CLI command handler for creating a
 // MsgCreateVestingAccount transaction.
-func NewMsgCreateVestingAccountCmd() *cobra.Command {
+func NewMsgCreateVestingAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-vesting-account [to_address] [amount] [end_time]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
@@ -57,7 +58,7 @@ timestamp.`,
 			if err != nil {
 				return err
 			}
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			toAddr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -91,7 +92,7 @@ timestamp.`,
 
 // NewMsgCreatePermanentLockedAccountCmd returns a CLI command handler for creating a
 // MsgCreatePermanentLockedAccount transaction.
-func NewMsgCreatePermanentLockedAccountCmd() *cobra.Command {
+func NewMsgCreatePermanentLockedAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-permanent-locked-account [to_address] [amount]",
 		Short: "Create a new permanently locked account funded with an allocation of tokens.",
@@ -104,7 +105,7 @@ tokens.`,
 			if err != nil {
 				return err
 			}
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			toAddr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -140,7 +141,7 @@ type InputPeriod struct {
 
 // NewMsgCreatePeriodicVestingAccountCmd returns a CLI command handler for creating a
 // MsgCreatePeriodicVestingAccountCmd transaction.
-func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
+func NewMsgCreatePeriodicVestingAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
@@ -168,7 +169,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				return err
 			}
 
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			toAddr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}

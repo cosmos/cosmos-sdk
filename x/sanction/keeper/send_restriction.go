@@ -9,9 +9,9 @@ import (
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
-func (k Keeper) SendRestrictionFn(ctx types.Context, _, toAddr types.AccAddress, _ types.Coins) (types.AccAddress, error) {
-	if !sanction.HasSanctionBypass(ctx) && k.IsSanctionedAddr(ctx, toAddr) {
-		return nil, errors.ErrSanctionedAccount.Wrap(toAddr.String())
+func (k Keeper) SendRestrictionFn(ctx types.Context, fromAddr, toAddr types.AccAddress, _ types.Coins) (types.AccAddress, error) {
+	if !sanction.HasSanctionBypass(ctx) && k.IsSanctionedAddr(ctx, fromAddr) {
+		return nil, errors.ErrSanctionedAccount.Wrap(fromAddr.String())
 	}
 	return toAddr, nil
 }

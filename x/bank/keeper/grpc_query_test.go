@@ -121,8 +121,9 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 }
 
 func (suite *KeeperTestSuite) TestSpendableBalances() {
-	ctx := suite.ctx
 	_, _, addr := testdata.KeyTestPubAddr()
+
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	ctx = ctx.WithBlockTime(time.Now())
 	queryClient := suite.mockQueryClient(ctx)
 
@@ -172,8 +173,9 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 }
 
 func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
-	ctx := suite.ctx
 	_, _, addr := testdata.KeyTestPubAddr()
+
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	ctx = ctx.WithBlockTime(time.Now())
 	queryClient := suite.mockQueryClient(ctx)
 

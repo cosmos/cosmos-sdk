@@ -89,7 +89,7 @@ func getIBCHash(path, baseDenom string) []byte {
 	return hash[:]
 }
 
-func addIBCMetadata(ctx sdk.Context, k keeper.BaseKeeper) {
+func addIBCMetadata(ctx context.Context, k keeper.BaseKeeper) {
 	metadata := banktypes.Metadata{
 		Description: fmt.Sprintf(metaDataDescription, ibcPath),
 		DenomUnits: []*banktypes.DenomUnit{
@@ -109,7 +109,7 @@ func addIBCMetadata(ctx sdk.Context, k keeper.BaseKeeper) {
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx        sdk.Context
+	ctx        context.Context
 	bankKeeper keeper.BaseKeeper
 	authKeeper *banktestutil.MockAccountKeeper
 
@@ -190,7 +190,7 @@ func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.Ba
 	suite.authKeeper.EXPECT().HasAccount(suite.ctx, moduleAcc.GetAddress()).Return(true)
 }
 
-func (suite *KeeperTestSuite) mockSendCoins(ctx sdk.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
 	suite.authKeeper.EXPECT().HasAccount(ctx, receiver).Return(true)
 }
@@ -213,11 +213,11 @@ func (suite *KeeperTestSuite) mockValidateBalance(acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockSpendableCoins(ctx context.Context, acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc, mAcc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockDelegateCoins(ctx context.Context, acc, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
@@ -226,7 +226,7 @@ func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc, mAcc sdk.A
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
-func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc, mAcc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx context.Context, acc, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
@@ -712,7 +712,7 @@ func (suite *KeeperTestSuite) TestHasBalance() {
 }
 
 func (suite *KeeperTestSuite) TestMsgSendEvents() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
@@ -756,7 +756,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 }
 
 func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
@@ -845,7 +845,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 }
 
 func (suite *KeeperTestSuite) TestSpendableCoins() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -878,7 +878,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountSend() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -907,7 +907,7 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 }
 
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	now := cmttime.Now()
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -941,7 +941,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountReceive() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -973,7 +973,7 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 }
 
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	now := cmttime.Now()
 
@@ -1010,7 +1010,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 }
 
 func (suite *KeeperTestSuite) TestDelegateCoins() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -1067,7 +1067,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins_Invalid() {
 }
 
 func (suite *KeeperTestSuite) TestUndelegateCoins() {
-	ctx := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -1232,7 +1232,9 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 
 	balances := make(map[string]sdk.Coins)
 
-	for _, e := range suite.ctx.EventManager().ABCIEvents() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+
+	for _, e := range ctx.EventManager().ABCIEvents() {
 		switch e.Type {
 		case banktypes.EventTypeCoinBurn:
 			burnedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
@@ -1736,7 +1738,8 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 }
 
 func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+	bankKeeper := suite.bankKeeper
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 
 	for _, def := range []bool{true, false} {

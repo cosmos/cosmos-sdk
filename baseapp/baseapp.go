@@ -57,7 +57,7 @@ var _ comet.Service = (*BaseApp)(nil)
 type BaseApp struct {
 	// initialized on creation
 	logger            log.Logger
-	name              string                      // application name from abci.Info
+	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
@@ -153,7 +153,7 @@ type BaseApp struct {
 	chainID string
 
 	// cometInfo stores information about the current block to be used later on
-	cometInfo  comet.Info
+	cometInfo  comet.BlockInfo
 	headerInfo header.Info
 }
 
@@ -616,7 +616,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) SetCometInfo(ci comet.Info) {
+func (app *BaseApp) SetCometInfo(ci comet.BlockInfo) {
 	app.cometInfo = ci
 }
 
@@ -628,7 +628,7 @@ func (app *BaseApp) GetHeaderInfo(ctx context.Context) header.Info {
 	return app.headerInfo
 }
 
-func (app *BaseApp) GetCometInfo(ctx context.Context) comet.Info {
+func (app *BaseApp) GetCometInfo(ctx context.Context) comet.BlockInfo {
 	return app.cometInfo
 }
 

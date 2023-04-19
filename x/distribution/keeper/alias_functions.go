@@ -6,13 +6,23 @@ import (
 )
 
 // get outstanding rewards
-func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins {
-	return k.GetValidatorOutstandingRewards(ctx, val).Rewards
+func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) (sdk.DecCoins, error) {
+	rewards, err := k.GetValidatorOutstandingRewards(ctx, val)
+	if err != nil {
+		return nil, err
+	}
+
+	return rewards.Rewards, nil
 }
 
 // get the community coins
-func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
-	return k.GetFeePool(ctx).CommunityPool
+func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) (sdk.DecCoins, error) {
+	feePool, err := k.GetFeePool(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return feePool.CommunityPool, nil
 }
 
 // GetDistributionAccount returns the distribution ModuleAccount

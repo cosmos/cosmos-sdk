@@ -243,9 +243,15 @@ func (g globalAccAddressCodec) BytesToString(bz []byte) (string, error) {
 type globalValAddressCodec struct{}
 
 func (g globalValAddressCodec) StringToBytes(text string) ([]byte, error) {
+	if text == "" {
+		return nil, nil
+	}
 	return sdk.ValAddressFromBech32(text)
 }
 
 func (g globalValAddressCodec) BytesToString(bz []byte) (string, error) {
+	if bz == nil {
+		return "", nil
+	}
 	return sdk.ValAddress(bz).String(), nil
 }

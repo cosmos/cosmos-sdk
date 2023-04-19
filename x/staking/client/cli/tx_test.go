@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"testing"
@@ -50,7 +49,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -58,7 +56,7 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	s.addrs = make([]sdk.AccAddress, 0)
 	for i := 0; i < 3; i++ {

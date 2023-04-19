@@ -110,12 +110,12 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec,
-	registry cdctypes.InterfaceRegistry,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	ss exported.Subspace,
+	registry cdctypes.InterfaceRegistry,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -257,7 +257,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authority.String())
-	m := NewAppModule(in.Cdc, in.Registry, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace, in.Registry)
 	return ModuleOutputs{
 		Keeper: k,
 		Module: m,

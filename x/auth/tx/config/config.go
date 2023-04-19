@@ -69,11 +69,11 @@ func ProvideSignModeOptions(bk BankKeeper) tx.SignModeOptions {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var txConfig client.TxConfig
-	if in.CustomSignModeHandlers == nil {
-		txConfig = tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, in.SignModeOptions)
-	} else {
-		txConfig = tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, in.SignModeOptions, in.CustomSignModeHandlers()...)
+	var customSignModeHandlers []txsigning.SignModeHandler
+	if in.CustomSignModeHandlers != nil {
+		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
+	txConfig = tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, in.SignModeOptions, customSignModeHandlers...)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers

@@ -13,41 +13,35 @@ import (
 var (
 	mergedRegistryOnce sync.Once
 	mergedRegistry     *protoregistry.Files
-	mergedRegistryErr  error
 	_                  signing.ProtoFileResolver = lazyProtoRegistry{}
 )
 
 // lazyProtoRegistry is a lazy loading wrapper around the global protobuf registry.
 type lazyProtoRegistry struct{}
 
-func (l lazyProtoRegistry) getRegistry() (*protoregistry.Files, error) {
+func getRegistry() *protoregistry.Files {
+	var err error
 	mergedRegistryOnce.Do(func() {
-		mergedRegistry, mergedRegistryErr = proto.MergedRegistry()
+		mergedRegistry, err = proto.MergedRegistry()
+		if err != nil {
+			panic(err)
+		}
 	})
-	return mergedRegistry, mergedRegistryErr
+	return mergedRegistry
 }
 
 func (l lazyProtoRegistry) FindFileByPath(s string) (protoreflect.FileDescriptor, error) {
-	reg, err := l.getRegistry()
-	if err != nil {
-		return nil, err
-	}
+	reg := getRegistry()
 	return reg.FindFileByPath(s)
 }
 
 func (l lazyProtoRegistry) FindDescriptorByName(name protoreflect.FullName) (protoreflect.Descriptor, error) {
-	reg, err := l.getRegistry()
-	if err != nil {
-		return nil, err
-	}
+	reg := getRegistry()
 	return reg.FindDescriptorByName(name)
 }
 
 func (l lazyProtoRegistry) RangeFiles(f func(protoreflect.FileDescriptor) bool) {
-	reg, err := l.getRegistry()
-	if err != nil {
-		panic(err)
-	}
+	reg := getRegistry()
 	reg.RangeFiles(f)
 }
 

@@ -45,8 +45,9 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 	// time.
 	err := reflection.Register(grpcSrv, reflection.Config{
 		SigningModes: func() map[string]int32 {
-			modes := make(map[string]int32, len(clientCtx.TxConfig.SignModeHandler().SupportedModes()))
-			for _, m := range clientCtx.TxConfig.SignModeHandler().SupportedModes() {
+			supportedModes := clientCtx.TxConfig.SignModeHandler().SupportedModes()
+			modes := make(map[string]int32, len(supportedModes))
+			for _, m := range supportedModes {
 				modes[m.String()] = (int32)(m)
 			}
 

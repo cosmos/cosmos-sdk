@@ -180,7 +180,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 				testutil.AssertError(t, err, tc.err, tc.errMsg)
 			}
 
-			_, err = anteHandlerStack(bytesCtx, tx, false) // tests while stack
+			_, err = anteHandlerStack(bytesCtx, tx, false) // tests whole stack
 			if tc.valid {
 				require.NoError(t, err)
 			} else {

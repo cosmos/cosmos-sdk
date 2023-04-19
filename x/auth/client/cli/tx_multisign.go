@@ -117,6 +117,11 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
 
+		decoder, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
+		if err != nil {
+			return err
+		}
+
 		// read each signature and add it to the multisig if valid
 		for i := 2; i < len(args); i++ {
 			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
@@ -147,11 +152,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				if err != nil {
 					return err
 				}
-				decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
-				if err != nil {
-					return err
-				}
-				decodedTx, err := decodeCtx.Decode(txBytes)
+				decodedTx, err := decoder.Decode(txBytes)
 				if err != nil {
 					return err
 				}

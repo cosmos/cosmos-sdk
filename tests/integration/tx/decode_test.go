@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/rapidproto"
@@ -12,6 +13,7 @@ import (
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/decode"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -114,7 +116,12 @@ func TestDecode(t *testing.T) {
 				tx := txBuilder.GetTx()
 				txBytes, err := encCfg.TxConfig.TxEncoder()(tx)
 				require.NoError(t, err)
-				decodeCtx, err := decode.NewDecoder(decode.Options{})
+				signContext, err := txsigning.NewContext(txsigning.Options{
+					AddressCodec:          dummyAddressCodec{},
+					ValidatorAddressCodec: dummyAddressCodec{},
+				})
+				require.NoError(t, err)
+				decodeCtx, err := decode.NewDecoder(decode.Options{SigningContext: signContext})
 				require.NoError(t, err)
 				decodedTx, err := decodeCtx.Decode(txBytes)
 				require.NoError(t, err)
@@ -138,4 +145,14 @@ func TestDecode(t *testing.T) {
 			})
 		})
 	}
+}
+
+type dummyAddressCodec struct{}
+
+func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return hex.DecodeString(text)
+}
+
+func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
+	return hex.EncodeToString(bz), nil
 }

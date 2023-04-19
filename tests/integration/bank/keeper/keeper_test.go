@@ -1372,7 +1372,7 @@ func TestMintCoinRestrictions(t *testing.T) {
 	for _, test := range tests {
 		f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, f.fetchStoreKey(types.StoreKey),
 			f.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
+		).WithMintCoinsRestriction(types.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {
 				assert.NilError(t,

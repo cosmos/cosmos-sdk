@@ -11,8 +11,6 @@ import (
 
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
-
-	"cosmossdk.io/core/comet"
 )
 
 /*
@@ -43,33 +41,6 @@ type Context struct {
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
 	streamingManager     storetypes.StreamingManager
-}
-
-func (c Context) Round() int32 {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c Context) Votes() []comet.VoteInfo {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c Context) Evidence() []comet.Misbehavior {
-	return nil
-}
-
-func (c Context) ValidatorsHash() []byte {
-	return c.header.ValidatorsHash
-}
-
-func (c Context) ProposerAddress() []byte {
-	return c.header.ProposerAddress
-}
-
-func (c Context) DecidedLastCommit() comet.CommitInfo {
-	//TODO implement me
-	panic("implement me")
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -369,8 +340,3 @@ func UnwrapSDKContext(ctx context.Context) Context {
 	}
 	return ctx.Value(SdkContextKey).(Context)
 }
-
-var _ comet.BlockInfo = Context{}
-var _ comet.CommitInfo = Context{}
-
-type voteInfoWrapper abci.VoteInfo

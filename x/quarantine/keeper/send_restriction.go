@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
@@ -9,7 +9,7 @@ import (
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
-func (k Keeper) SendRestrictionFn(ctx types.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) (types.AccAddress, error) {
+func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 	// bypass if the context says to.
 	if quarantine.HasBypass(ctx) {
 		return toAddr, nil

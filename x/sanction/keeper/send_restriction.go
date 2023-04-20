@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/sanction"
 	"github.com/cosmos/cosmos-sdk/x/sanction/errors"
@@ -9,7 +9,7 @@ import (
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
-func (k Keeper) SendRestrictionFn(ctx types.Context, fromAddr, toAddr types.AccAddress, _ types.Coins) (types.AccAddress, error) {
+func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
 	if !sanction.HasBypass(ctx) && k.IsSanctionedAddr(ctx, fromAddr) {
 		return nil, errors.ErrSanctionedAccount.Wrap(fromAddr.String())
 	}

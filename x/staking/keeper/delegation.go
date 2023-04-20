@@ -353,6 +353,23 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	return ubd
 }
 
+func (k Keeper) updateUBDToNewValAddr(ctx sdk.Context, delAddr sdk.AccAddress, newValAddr, oldValAddr sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	oldKey := types.GetUBDKey(delAddr, oldValAddr)
+	bz := store.Get(oldKey)
+
+	var ubd types.UnbondingDelegation
+	k.cdc.MustUnmarshal(bz, &ubd)
+	k.RemoveUnbondingDelegation(ctx, ubd)
+	ubd.ValidatorAddress = newValAddr.String()
+	k.SetUnbondingDelegation(ctx, ubd)
+
+	// over ride the existing ubd entries with unbonding id
+	for _, entry := range ubd.Entries {
+		k.SetUnbondingDelegationByUnbondingID(ctx, ubd, entry.UnbondingId)
+	}
+}
+
 // unbonding delegation queue timeslice operations
 
 // GetUBDQueueTimeSlice gets a specific unbonding queue timeslice. A timeslice
@@ -420,6 +437,29 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (m
 	}
 
 	return matureUnbonds
+}
+
+func (k Keeper) updateAllUBDQueue(ctx sdk.Context, oldValAddr, newValAddr sdk.ValAddress, t time.Time) {
+	store := ctx.KVStore(k.storeKey)
+
+	// gets an iterator for all timeslices from time 0 until the given time
+	unbondingTimesliceIterator := k.UBDQueueIterator(ctx, t)
+	defer unbondingTimesliceIterator.Close()
+
+	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
+		timeslice := types.DVPairs{}
+		value := unbondingTimesliceIterator.Value()
+		k.cdc.MustUnmarshal(value, &timeslice)
+
+		for i := 0; i < len(timeslice.Pairs); i++ {
+			if timeslice.Pairs[i].ValidatorAddress == oldValAddr.String() {
+				timeslice.Pairs[i].ValidatorAddress = newValAddr.String()
+			}
+		}
+
+		bz := k.cdc.MustMarshal(&timeslice)
+		store.Set(unbondingTimesliceIterator.Key(), bz)
+	}
 }
 
 // GetRedelegations returns a given amount of all the delegator redelegations.
@@ -586,6 +626,40 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Delete(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
 }
 
+func (k Keeper) updateRedelegationSrcVal(ctx sdk.Context, delAddr sdk.AccAddress, oldSrcVal, newSrcVal, dstVal sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	oldKey := types.GetREDKey(delAddr, oldSrcVal, dstVal)
+	bz := store.Get(oldKey)
+
+	var red types.Redelegation
+	k.cdc.MustUnmarshal(bz, &red)
+	k.RemoveRedelegation(ctx, red)
+	red.ValidatorSrcAddress = newSrcVal.String()
+	k.SetRedelegation(ctx, red)
+
+	// over ride the existing ubd entries with unbonding id
+	for _, entry := range red.Entries {
+		k.SetRedelegationByUnbondingID(ctx, red, entry.UnbondingId)
+	}
+}
+
+func (k Keeper) updateRedelegationDstVal(ctx sdk.Context, delAddr sdk.AccAddress, srcVal, oldDstVal, newDstVal sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	oldKey := types.GetREDKey(delAddr, srcVal, oldDstVal)
+	bz := store.Get(oldKey)
+
+	var red types.Redelegation
+	k.cdc.MustUnmarshal(bz, &red)
+	k.RemoveRedelegation(ctx, red)
+	red.ValidatorSrcAddress = newDstVal.String()
+	k.SetRedelegation(ctx, red)
+
+	// over ride the existing ubd entries with unbonding id
+	for _, entry := range red.Entries {
+		k.SetRedelegationByUnbondingID(ctx, red, entry.UnbondingId)
+	}
+}
+
 // redelegation queue timeslice operations
 
 // GetRedelegationQueueTimeSlice gets a specific redelegation queue timeslice. A
@@ -658,6 +732,32 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 	}
 
 	return matureRedelegations
+}
+
+func (k Keeper) updateRedelegationQueue(ctx sdk.Context, oldValAddr, newValAddr sdk.ValAddress, t time.Time) {
+	store := ctx.KVStore(k.storeKey)
+
+	// gets an iterator for all timeslices from time 0 until the current Blockheader time
+	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, t)
+	defer redelegationTimesliceIterator.Close()
+
+	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
+		timeslice := types.DVVTriplets{}
+		value := redelegationTimesliceIterator.Value()
+		k.cdc.MustUnmarshal(value, &timeslice)
+
+		for i := 0; i < len(timeslice.Triplets); i++ {
+			if timeslice.Triplets[i].ValidatorSrcAddress == oldValAddr.String() {
+				// redBz := k.GetRedelegation(ctx, timeslice.Triplets[i])
+				timeslice.Triplets[i].ValidatorSrcAddress = newValAddr.String()
+			} else if timeslice.Triplets[i].ValidatorDstAddress == oldValAddr.String() {
+				timeslice.Triplets[i].ValidatorDstAddress = newValAddr.String()
+			}
+		}
+
+		bz := k.cdc.MustMarshal(&timeslice)
+		store.Set(redelegationTimesliceIterator.Key(), bz)
+	}
 }
 
 // Delegate performs a delegation, set/update everything necessary within the store.

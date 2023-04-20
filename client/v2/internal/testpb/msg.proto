@@ -33,9 +33,9 @@ message MsgRequest {
   repeated bool                         bools      = 21;
   repeated uint32                       uints      = 22;
   repeated string                       strings    = 23;
-  repeated testpb.Enum                  enums      = 24;
-  repeated google.protobuf.Duration     durations      = 25;
-  repeated testpb.AMessage              some_messages  = 26;
+  repeated testpb.Enum enums                       = 24;
+  repeated google.protobuf.Duration durations      = 25;
+  repeated testpb.AMessage some_messages           = 26;
 
   int32    positional1                                  = 27;
   string   positional2                                  = 28;
@@ -46,8 +46,6 @@ message MsgRequest {
   bool   hidden_bool                = 32;
 }
 
-
 message MsgResponse {
   MsgRequest request = 1;
 }
-

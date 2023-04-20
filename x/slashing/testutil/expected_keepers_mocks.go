@@ -5,6 +5,7 @@
 package testutil
 
 import (
+	context "context"
 	reflect "reflect"
 
 	math "cosmossdk.io/math"
@@ -38,7 +39,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
@@ -52,7 +53,7 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, process)
 }

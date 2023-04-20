@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/rpc/client/mock"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -67,7 +68,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 	acc1Msgs := []sdk.Msg{
 		v1.NewMsgVote(acc1, 0, v1.OptionYes, ""),
 		v1.NewMsgVote(acc1, 0, v1.OptionYes, ""),
-		v1.NewMsgDeposit(acc1, 0, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10)))), // should be ignored
+		v1.NewMsgDeposit(acc1, 0, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))), // should be ignored
 	}
 	acc2Msgs := []sdk.Msg{
 		v1.NewMsgVote(acc2, 0, v1.OptionYes, ""),
@@ -141,8 +142,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.description, func(t *testing.T) {
-			marshalled := make([]cmttypes.Tx, len(tc.msgs))
-			cli := TxSearchMock{txs: marshalled, txConfig: encCfg.TxConfig}
+			marshaled := make([]cmttypes.Tx, len(tc.msgs))
+			cli := TxSearchMock{txs: marshaled, txConfig: encCfg.TxConfig}
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
 				WithClient(cli).
@@ -155,7 +156,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 
 				tx, err := clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 				require.NoError(t, err)
-				marshalled[i] = tx
+				marshaled[i] = tx
 			}
 
 			params := v1.NewQueryProposalVotesParams(0, tc.page, tc.limit)

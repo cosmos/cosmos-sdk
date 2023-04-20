@@ -243,7 +243,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"valid transaction",
 			[]string{
-				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),                     //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),

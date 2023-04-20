@@ -1,13 +1,13 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"strings"
 	"testing"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -46,6 +47,8 @@ type CLITestSuite struct {
 	clientCtx client.Context
 	val       sdk.AccAddress
 	val1      sdk.AccAddress
+
+	ac address.Codec
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -64,7 +67,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -72,7 +74,7 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	kb := s.clientCtx.Keyring
 	valAcc, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -99,12 +101,14 @@ func (s *CLITestSuite) SetupSuite() {
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
+
+	s.ac = addresscodec.NewBech32Codec("cosmos")
 }
 
 func (s *CLITestSuite) TestCLIValidateSignatures() {
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin("testtoken", sdk.NewInt(10)),
-		sdk.NewCoin("stake", sdk.NewInt(10)))
+		sdk.NewCoin("testtoken", math.NewInt(10)),
+		sdk.NewCoin("stake", math.NewInt(10)))
 
 	res, err := s.createBankMsg(s.clientCtx, s.val, sendTokens,
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
@@ -139,8 +143,8 @@ func (s *CLITestSuite) TestCLIValidateSignatures() {
 
 func (s *CLITestSuite) TestCLISignBatch() {
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin("testtoken", sdk.NewInt(10)),
-		sdk.NewCoin("stake", sdk.NewInt(10)),
+		sdk.NewCoin("testtoken", math.NewInt(10)),
+		sdk.NewCoin("stake", math.NewInt(10)),
 	)
 
 	generatedStd, err := s.createBankMsg(s.clientCtx, s.val,
@@ -294,7 +298,7 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf(
 					"--query=tx.fee='%s'",
-					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String(),
+					sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String(),
 				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
@@ -305,7 +309,7 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf(
 					"--query=tx.fee='%s'",
-					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))).String(),
+					sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(0))).String(),
 				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
@@ -458,7 +462,7 @@ func (s *CLITestSuite) TestCLIMultisignInsufficientCosigners() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -546,7 +550,7 @@ func (s *CLITestSuite) TestCLIMultisignSortSignatures() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -606,7 +610,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 
 	// Create an address that is not in the keyring, will be used to simulate `--multisig`
 	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
-	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+	_, err = s.ac.StringToBytes(multisig)
 	s.Require().NoError(err)
 
 	// Generate a transaction for testing --multisig with an address not in the keyring.
@@ -619,7 +623,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -632,7 +636,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 	// even though the tx signer is NOT the multisig address. This is fine though,
 	// as the main point of this test is to test the `--multisig` flag with an address
 	// that is not in the keyring.
-	_, err = authtestutil.TxSignExec(s.clientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
+	_, err = authtestutil.TxSignExec(s.clientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisig)
 	s.Require().Contains(err.Error(), "error getting account from keybase")
 }
 
@@ -660,7 +664,7 @@ func (s *CLITestSuite) TestCLIMultisign() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -729,11 +733,11 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 		addr,
 		s.val,
 		sdk.NewCoins(
-			sdk.NewCoin("stake", sdk.NewInt(1)),
+			sdk.NewCoin("stake", math.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -788,9 +792,9 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()
 	builder.SetGasLimit(200000)
-	from, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
+	from, err := s.ac.StringToBytes("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
 	s.Require().NoError(err)
-	to, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
+	to, err := s.ac.StringToBytes("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
 	s.Require().NoError(err)
 	err = builder.SetMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
 	s.Require().NoError(err)
@@ -852,11 +856,11 @@ func (s *CLITestSuite) TestTxWithoutPublicKey() {
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
 	msg := banktypes.NewMsgSend(s.val, s.val, sdk.NewCoins(
-		sdk.NewCoin("Stake", sdk.NewInt(10)),
+		sdk.NewCoin("Stake", math.NewInt(10)),
 	))
 	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("Stake", sdk.NewInt(150))))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("Stake", math.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 
 	// Create a file with the unsigned tx.
@@ -898,8 +902,8 @@ func (s *CLITestSuite) TestTxWithoutPublicKey() {
 // transaction to the blockchain.
 func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	val0, val1 := s.val, s.val1
-	val0Coin := sdk.NewCoin("test1token", sdk.NewInt(10))
-	val1Coin := sdk.NewCoin("test2token", sdk.NewInt(10))
+	val0Coin := sdk.NewCoin("test1token", math.NewInt(10))
+	val1Coin := sdk.NewCoin("test2token", math.NewInt(10))
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
@@ -911,7 +915,7 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 		banktypes.NewMsgSend(val0, addr1, sdk.NewCoins(val0Coin)),
 		banktypes.NewMsgSend(val1, addr1, sdk.NewCoins(val1Coin)),
 	)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	s.Require().Equal([]sdk.AccAddress{val0, val1}, txBuilder.GetTx().GetSigners())
 
@@ -957,7 +961,7 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 }
 
 func (s *CLITestSuite) TestAuxSigner() {
-	val0Coin := sdk.NewCoin("testtoken", sdk.NewInt(10))
+	val0Coin := sdk.NewCoin("testtoken", math.NewInt(10))
 
 	testCases := []struct {
 		name      string
@@ -1022,11 +1026,11 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 
 	tipper, err := acc.GetAddress()
 	require.NoError(err)
-	tipperInitialBal := sdk.NewCoin("testtoken", sdk.NewInt(10000))
+	tipperInitialBal := sdk.NewCoin("testtoken", math.NewInt(10000))
 
 	feePayer := s.val
-	fee := sdk.NewCoin("stake", sdk.NewInt(1000))
-	tip := sdk.NewCoin("testtoken", sdk.NewInt(1000))
+	fee := sdk.NewCoin("stake", math.NewInt(1000))
+	tip := sdk.NewCoin("testtoken", math.NewInt(1000))
 
 	_, err = s.createBankMsg(s.clientCtx, tipper, sdk.NewCoins(tipperInitialBal))
 	require.NoError(err)
@@ -1103,7 +1107,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 			name:     "--tip flag unset: no error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: "testtoken", Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: "testtoken", Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
@@ -1174,7 +1178,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 			name:     "wrong denom in tip: error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: "testtoken", Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: "testtoken", Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
@@ -1193,7 +1197,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 			name:     "insufficient fees: error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: "testtoken", Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: "testtoken", Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
@@ -1281,7 +1285,7 @@ func (s *CLITestSuite) createBankMsg(clientCtx client.Context, toAddr sdk.AccAdd
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
-			sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+			sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 	}
 
 	flags = append(flags, extraFlags...)

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -133,8 +132,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 					PubKey:        sig.PubKey,
 				}
 
-				// When Textual is wired up, the context argument should be retrieved from the client context.
-				err = signing.VerifySignature(context.TODO(), sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
+				err = signing.VerifySignature(cmd.Context(), sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
 					addr, _ := sdk.AccAddressFromHexUnsafe(sig.PubKey.Address().String())
 					return fmt.Errorf("couldn't verify signature for address %s", addr)
@@ -306,8 +304,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			for _, sig := range signatureBatch {
-				// When Textual is wired up, the context argument should be retrieved from the client context.
-				err = signing.VerifySignature(context.TODO(), sig[i].PubKey, signingData, sig[i].Data, txCfg.SignModeHandler(), txBldr.GetTx())
+				err = signing.VerifySignature(cmd.Context(), sig[i].PubKey, signingData, sig[i].Data, txCfg.SignModeHandler(), txBldr.GetTx())
 				if err != nil {
 					return fmt.Errorf("couldn't verify signature: %w %v", err, sig)
 				}

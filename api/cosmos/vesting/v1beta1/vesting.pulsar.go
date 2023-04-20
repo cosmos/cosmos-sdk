@@ -3453,7 +3453,8 @@ type BaseVestingAccount struct {
 	OriginalVesting  []*v1beta1.Coin       `protobuf:"bytes,2,rep,name=original_vesting,json=originalVesting,proto3" json:"original_vesting,omitempty"`
 	DelegatedFree    []*v1beta1.Coin       `protobuf:"bytes,3,rep,name=delegated_free,json=delegatedFree,proto3" json:"delegated_free,omitempty"`
 	DelegatedVesting []*v1beta1.Coin       `protobuf:"bytes,4,rep,name=delegated_vesting,json=delegatedVesting,proto3" json:"delegated_vesting,omitempty"`
-	EndTime          int64                 `protobuf:"varint,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	// Vesting end time, as unix timestamp (in seconds).
+	EndTime int64 `protobuf:"varint,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 }
 
 func (x *BaseVestingAccount) Reset() {
@@ -3519,7 +3520,8 @@ type ContinuousVestingAccount struct {
 	unknownFields protoimpl.UnknownFields
 
 	BaseVestingAccount *BaseVestingAccount `protobuf:"bytes,1,opt,name=base_vesting_account,json=baseVestingAccount,proto3" json:"base_vesting_account,omitempty"`
-	StartTime          int64               `protobuf:"varint,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	// Vesting start time, as unix timestamp (in seconds).
+	StartTime int64 `protobuf:"varint,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 }
 
 func (x *ContinuousVestingAccount) Reset() {
@@ -3600,6 +3602,7 @@ type Period struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Period duration in seconds.
 	Length int64           `protobuf:"varint,1,opt,name=length,proto3" json:"length,omitempty"`
 	Amount []*v1beta1.Coin `protobuf:"bytes,2,rep,name=amount,proto3" json:"amount,omitempty"`
 }

@@ -75,7 +75,7 @@ type Ranger[K any] interface {
 	// iteration will yield keys from the smallest to the biggest, if order
 	// is OrderDescending then the iteration will yield keys from the biggest to the smallest.
 	// Ordering is defined by the keys bytes representation, which is dependent on the KeyCodec used.
-	RangeValues() (start *RangeKey[K], end *RangeKey[K], order Order, err error)
+	RangeValues() (start, end *RangeKey[K], order Order, err error)
 }
 
 // Range is a Ranger implementer.
@@ -126,7 +126,7 @@ var (
 	errOrder = errors.New("collections: invalid order")
 )
 
-func (r *Range[K]) RangeValues() (start *RangeKey[K], end *RangeKey[K], order Order, err error) {
+func (r *Range[K]) RangeValues() (start, end *RangeKey[K], order Order, err error) {
 	return r.start, r.end, r.order, nil
 }
 

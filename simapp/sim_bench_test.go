@@ -2,9 +2,10 @@ package simapp
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 	"testing"
+
+	"github.com/spf13/viper"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	flag "github.com/spf13/pflag"

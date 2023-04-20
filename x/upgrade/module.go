@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -41,13 +42,12 @@ func init() {
 // ConsensusVersion defines the current x/upgrade module consensus version.
 const ConsensusVersion uint64 = 2
 
-var (
-	_ module.BeginBlockAppModule = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-)
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	ac address.Codec
+}
 
 // Name returns the ModuleName
 func (AppModuleBasic) Name() string {
@@ -72,12 +72,12 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 }
 
 // GetTxCmd returns the CLI transaction commands for this module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ab.ac)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the upgrade module.
-func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -88,14 +88,17 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper *keeper.Keeper) AppModule {
+func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{ac: ac},
 		keeper:         keeper,
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -154,8 +157,10 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // BeginBlock calls the upgrade module hooks
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(am.keeper, ctx, req)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	BeginBlocker(am.keeper, c)
+	return nil
 }
 
 //
@@ -169,19 +174,18 @@ func init() {
 	)
 }
 
-//nolint:revive
-type UpgradeInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config       *modulev1.Module
+	Key          *store.KVStoreKey
+	Cdc          codec.Codec
+	AddressCodec address.Codec
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
-//nolint:revive
-type UpgradeOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	UpgradeKeeper *keeper.Keeper
@@ -190,7 +194,7 @@ type UpgradeOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in UpgradeInputs) UpgradeOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var (
 		homePath           string
 		skipUpgradeHeights = make(map[int64]bool)
@@ -215,10 +219,10 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	baseappOpt := func(app *baseapp.BaseApp) {
 		k.SetVersionSetter(app)
 	}
-	m := NewAppModule(k)
+	m := NewAppModule(k, in.AddressCodec)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
+	return ModuleOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
 }
 
 func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {

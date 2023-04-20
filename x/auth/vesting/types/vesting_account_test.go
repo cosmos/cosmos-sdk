@@ -12,6 +12,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,6 +40,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
 
@@ -53,7 +55,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 
 	s.accountKeeper = keeper.NewAccountKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		"cosmos",

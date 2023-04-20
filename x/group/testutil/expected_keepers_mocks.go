@@ -36,8 +36,23 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 	return m.recorder
 }
 
+// BytesToString mocks base method.
+func (m *MockAccountKeeper) BytesToString(bz []byte) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BytesToString", bz)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BytesToString indicates an expected call of BytesToString.
+func (mr *MockAccountKeeperMockRecorder) BytesToString(bz interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BytesToString", reflect.TypeOf((*MockAccountKeeper)(nil).BytesToString), bz)
+}
+
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(arg0 types.Context, arg1 types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(arg0 context.Context, arg1 types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", arg0, arg1)
 	ret0, _ := ret[0].(types.AccountI)
@@ -51,7 +66,7 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(arg0, arg1 interface{}) *gom
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types.AccountI) types.AccountI {
+func (m *MockAccountKeeper) NewAccount(arg0 context.Context, arg1 types.AccountI) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
 	ret0, _ := ret[0].(types.AccountI)
@@ -65,7 +80,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 }
 
 // RemoveAccount mocks base method.
-func (m *MockAccountKeeper) RemoveAccount(ctx types.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) RemoveAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RemoveAccount", ctx, acc)
 }
@@ -77,7 +92,7 @@ func (mr *MockAccountKeeperMockRecorder) RemoveAccount(ctx, acc interface{}) *go
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(arg0 context.Context, arg1 types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", arg0, arg1)
 }
@@ -86,6 +101,21 @@ func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types.AccountI) 
 func (mr *MockAccountKeeperMockRecorder) SetAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), arg0, arg1)
+}
+
+// StringToBytes mocks base method.
+func (m *MockAccountKeeper) StringToBytes(text string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StringToBytes", text)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StringToBytes indicates an expected call of StringToBytes.
+func (mr *MockAccountKeeperMockRecorder) StringToBytes(text interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StringToBytes", reflect.TypeOf((*MockAccountKeeper)(nil).StringToBytes), text)
 }
 
 // MockBankKeeper is a mock of BankKeeper interface.

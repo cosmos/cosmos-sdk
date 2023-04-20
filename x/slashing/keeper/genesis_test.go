@@ -42,11 +42,11 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	newInfo1, _ := keeper.GetValidatorSigningInfo(ctx, consAddr1)
 	require.NotEqual(info1, newInfo1)
 
-	// Initialise genesis with genesis state before tombstone
+	// Initialize genesis with genesis state before tombstone
 	s.stakingKeeper.EXPECT().IterateValidators(ctx, gomock.Any()).Return()
 	keeper.InitGenesis(ctx, s.stakingKeeper, genesisState)
 
-	// Validator isTombstoned should return false as GenesisState is initialised
+	// Validator isTombstoned should return false as GenesisState is initialized
 	ok = keeper.IsTombstoned(ctx, consAddr1)
 	require.False(ok)
 

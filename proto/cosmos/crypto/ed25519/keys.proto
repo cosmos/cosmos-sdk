@@ -29,7 +29,7 @@ message PubKey {
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
 }
 
-// Deprecated: PrivKey defines a ed25519 private key.
+// PrivKey defines a ed25519 private key.
 // NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 message PrivKey {
   option (amino.name)             = "tendermint/PrivKeyEd25519";

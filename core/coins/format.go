@@ -2,6 +2,7 @@ package coins
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -11,6 +12,11 @@ import (
 )
 
 const emptyCoins = "zero"
+
+// Amount can be a whole number or a decimal number. Denominations can be 3 ~ 128
+// characters long and support letters, followed by either a letter, a number or
+// a separator ('/', ':', '.', '_' or '-').
+var coinRegex = regexp.MustCompile(`^(\d+(\.\d+)?)([a-zA-Z][a-zA-Z0-9\/\:\._\-]{2,127})$`)
 
 // formatCoin formats a sdk.Coin into a value-rendered string, using the
 // given metadata about the denom. It returns the formatted coin string, the
@@ -93,4 +99,25 @@ func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (s
 	})
 
 	return strings.Join(formatted, ", "), nil
+}
+
+// ParseCoin parses a coin from a string. The string must be in the format
+// <amount><denom>, where <amount> is a number and <denom> is a valid denom.
+func ParseCoin(input string) (*basev1beta1.Coin, error) {
+	input = strings.TrimSpace(input)
+
+	if input == "" {
+		return nil, fmt.Errorf("empty input when parsing coin")
+	}
+
+	matches := coinRegex.FindStringSubmatch(input)
+
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("invalid input format")
+	}
+
+	return &basev1beta1.Coin{
+		Amount: matches[1],
+		Denom:  matches[3],
+	}, nil
 }

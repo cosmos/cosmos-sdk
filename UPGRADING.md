@@ -62,6 +62,26 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
 This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
 
+### Modules Keepers
+
+The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
+
+* `x/auth`
+* `x/consensus`
+* `x/feegrant`
+* `x/nft`
+
+When not using depinject, the `runtime.NewKVStoreService` method can be used to create a `KVStoreService` from a `StoreKey`:
+
+```diff
+app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+  appCodec,
+- keys[consensusparamtypes.StoreKey]
++ runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
+  authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+)
+```
+
 ### Packages
 
 #### Store
@@ -74,6 +94,16 @@ The `store` module is extracted to have a separate go.mod file which allows it b
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
 
 ### Modules
+
+#### `**all**`
+
+[RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
+The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
+It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
+
+#### `x/auth`
+
+Methods in the `AccountKeeper` now use `context.Context` instead of `sdk.Context`. Any module that has an interface for it will need to update and re-generate mocks if needed.
 
 #### `x/capability`
 

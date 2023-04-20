@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/collections/indexes"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,11 +18,11 @@ type companyIndexes struct {
 	// City is an index of the company indexed map. It indexes a company
 	// given its city. The index is multi, meaning that there can be multiple
 	// companies from the same city.
-	City *collections.GenericMultiIndex[string, string, string, company]
+	City *indexes.Multi[string, string, company]
 	// Vat is an index of the company indexed map. It indexes a company
 	// given its VAT number. The index is unique, meaning that there can be
 	// only one VAT number for a company.
-	Vat *collections.GenericUniqueIndex[uint64, string, string, company]
+	Vat *indexes.Unique[uint64, string, company]
 }
 
 func (c companyIndexes) IndexesList() []collections.Index[string, company] {
@@ -31,11 +32,11 @@ func (c companyIndexes) IndexesList() []collections.Index[string, company] {
 func newTestIndexedMap(schema *collections.SchemaBuilder) *collections.IndexedMap[string, company, companyIndexes] {
 	return collections.NewIndexedMap(schema, collections.NewPrefix(0), "companies", collections.StringKey, colltest.MockValueCodec[company](),
 		companyIndexes{
-			City: collections.NewGenericMultiIndex(schema, collections.NewPrefix(1), "companies_by_city", collections.StringKey, collections.StringKey, func(pk string, value company) ([]collections.IndexReference[string, string], error) {
-				return []collections.IndexReference[string, string]{collections.NewIndexReference(value.City, pk)}, nil
+			City: indexes.NewMulti(schema, collections.NewPrefix(1), "companies_by_city", collections.StringKey, collections.StringKey, func(pk string, value company) (string, error) {
+				return value.City, nil
 			}),
-			Vat: collections.NewGenericUniqueIndex(schema, collections.NewPrefix(2), "companies_by_vat", collections.Uint64Key, collections.StringKey, func(pk string, v company) ([]collections.IndexReference[uint64, string], error) {
-				return []collections.IndexReference[uint64, string]{collections.NewIndexReference(v.Vat, pk)}, nil
+			Vat: indexes.NewUnique(schema, collections.NewPrefix(2), "companies_by_vat", collections.Uint64Key, collections.StringKey, func(pk string, value company) (uint64, error) {
+				return value.Vat, nil
 			}),
 		},
 	)
@@ -66,7 +67,7 @@ func TestIndexedMap(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pk, err := im.Indexes.Vat.Get(ctx, 1)
+	pk, err := im.Indexes.Vat.MatchExact(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, "2", pk)
 
@@ -77,17 +78,17 @@ func TestIndexedMap(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pk, err = im.Indexes.Vat.Get(ctx, 2)
+	pk, err = im.Indexes.Vat.MatchExact(ctx, 2)
 	require.NoError(t, err)
 	require.Equal(t, "2", pk)
 
-	_, err = im.Indexes.Vat.Get(ctx, 1)
+	_, err = im.Indexes.Vat.MatchExact(ctx, 1)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	// test removal
 	err = im.Remove(ctx, "2")
 	require.NoError(t, err)
-	_, err = im.Indexes.Vat.Get(ctx, 2)
+	_, err = im.Indexes.Vat.MatchExact(ctx, 2)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	// test iteration

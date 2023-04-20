@@ -40,7 +40,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 	ctx := testutil.DefaultContext(key, tkey)
 	paramsKeeper := keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)
-	paramsKeeper.Subspace("staking").WithKeyTable(stakingtypes.ParamKeyTable())
+	paramsKeeper.Subspace("staking").WithKeyTable(stakingtypes.ParamKeyTable()) //nolint:staticcheck // TODO: depreacte this test case
 	ctrl := gomock.NewController(suite.T())
 	stakingKeeper := paramstestutil.NewMockStakingKeeper(ctrl)
 	stakingKeeper.EXPECT().MaxValidators(ctx).Return(uint32(1))

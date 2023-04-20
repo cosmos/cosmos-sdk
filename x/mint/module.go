@@ -35,7 +35,6 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -130,7 +129,10 @@ func NewAppModule(
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -177,8 +179,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper, am.inflationCalculator)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	return BeginBlocker(c, am.keeper, am.inflationCalculator)
 }
 
 // AppModuleSimulation functions
@@ -213,8 +216,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type MintInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	ModuleKey              depinject.OwnModuleKey
@@ -231,15 +233,14 @@ type MintInputs struct {
 	StakingKeeper types.StakingKeeper
 }
 
-//nolint:revive
-type MintOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	MintKeeper keeper.Keeper
 	Module     appmodule.AppModule
 }
 
-func ProvideModule(in MintInputs) MintOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
@@ -264,5 +265,5 @@ func ProvideModule(in MintInputs) MintOutputs {
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn, in.LegacySubspace)
 
-	return MintOutputs{MintKeeper: k, Module: m}
+	return ModuleOutputs{MintKeeper: k, Module: m}
 }

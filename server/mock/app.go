@@ -47,7 +47,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		Methods: []grpc.MethodDesc{
 			{
 				MethodName: "Test",
-				Handler:    _Msg_Test_Handler,
+				Handler:    MsgTestHandler,
 			},
 		},
 	}
@@ -147,7 +147,7 @@ type MsgServerImpl struct {
 	capKeyMainStore *storetypes.KVStoreKey
 }
 
-func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) { //nolint:revive
+func MsgTestHandler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) { // nolint: revive // refactor this in a followup pr
 	in := new(KVStoreTx)
 	if err := dec(in); err != nil {
 		return nil, err

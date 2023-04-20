@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -53,6 +54,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
+		TxConfig:  moduletestutil.MakeTestTxConfig(),
 		BondDenom: sdk.DefaultBondDenom,
 	}
 
@@ -68,7 +70,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 		}
 	}
 
-	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck
+	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck // used for legacy testing
 	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }
@@ -131,7 +133,7 @@ func GetSimulationLog(storeName string, sdr simtypes.StoreDecoderRegistry, kvAs,
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes.
-func DiffKVStores(a storetypes.KVStore, b storetypes.KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
+func DiffKVStores(a, b storetypes.KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
 	iterA := a.Iterator(nil, nil)
 
 	defer iterA.Close()

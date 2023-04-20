@@ -6,6 +6,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/depinject"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 
 	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -31,7 +33,9 @@ var (
 // AppModuleBasic defines the basic application module used by the sub-vesting
 // module. The module itself contain no special logic or state other than message
 // handling.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	ac address.Codec
+}
 
 // Name returns the module's name.
 func (AppModuleBasic) Name() string {
@@ -61,11 +65,11 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConf
 
 // RegisterGRPCGatewayRoutes registers the module's gRPC Gateway routes. Currently, this
 // is a no-op.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the auth module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ab.ac)
 }
 
 // GetQueryCmd returns the module's root query command. Currently, this is a no-op.
@@ -84,13 +88,16 @@ type AppModule struct {
 
 func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{ac: ak},
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -99,8 +106,9 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	types.RegisterMsgServer(registrar, NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
+	return nil
 }
 
 // InitGenesis performs a no-op.
@@ -126,23 +134,21 @@ func init() {
 	)
 }
 
-//nolint:revive
-type VestingInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	AccountKeeper keeper.AccountKeeper
 	BankKeeper    types.BankKeeper
 }
 
-//nolint:revive
-type VestingOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Module appmodule.AppModule
 }
 
-func ProvideModule(in VestingInputs) VestingOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
 
-	return VestingOutputs{Module: m}
+	return ModuleOutputs{Module: m}
 }

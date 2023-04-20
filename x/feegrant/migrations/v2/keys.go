@@ -36,7 +36,7 @@ func FeeAllowancePrefixQueue(exp *time.Time, granterAddrBz []byte) []byte {
 //
 // Key format:
 // - <0x00><len(grantee_address_bytes)><grantee_address_bytes><len(granter_address_bytes)><granter_address_bytes>
-func FeeAllowanceKey(granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
+func FeeAllowanceKey(granter, grantee sdk.AccAddress) []byte {
 	return append(FeeAllowancePrefixByGrantee(grantee), address.MustLengthPrefix(granter.Bytes())...)
 }
 

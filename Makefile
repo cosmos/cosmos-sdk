@@ -2,7 +2,7 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-export VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
+export VERSION := $(shell echo $(shell git describe --tags --always --match "v*") | sed 's/^v//')
 export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -13,9 +13,6 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-# RocksDB is a native dependency, so we don't assume the library is installed.
-# Instead, it must be explicitly enabled and we warn when it is not.
-ENABLE_ROCKSDB ?= false
 
 # process build tags
 build_tags = netgo
@@ -58,35 +55,27 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 # process linker flags
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=simd \
-		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-			-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
-
-ifeq ($(ENABLE_ROCKSDB),true)
-  BUILD_TAGS += rocksdb_build
-  test_tags += rocksdb_build
-endif
+		-X github.com/cosmos/cosmos-sdk/version.AppName=simd \
+		-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+		-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+		-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
+		-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif
 ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
-  BUILD_TAGS += badgerdb
+  build_tags += badgerdb
 endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
-  ifneq ($(ENABLE_ROCKSDB),true)
-    $(error Cannot use RocksDB backend unless ENABLE_ROCKSDB=true)
-  endif
   CGO_ENABLED=1
-  BUILD_TAGS += rocksdb
+  build_tags += rocksdb
 endif
 # handle boltdb
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
-  BUILD_TAGS += boltdb
+  build_tags += boltdb
 endif
 
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
@@ -187,6 +176,7 @@ go.sum: go.mod
 
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
+	go install golang.org/x/tools/cmd/godoc@latest
 	godoc -http=:6060
 
 build-docs:
@@ -197,6 +187,13 @@ build-docs:
 ###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
+
+# make init-simapp initializes a single local node network
+# it is useful for testing and development
+# Usage: make install && make init-simapp && simd start
+# Warning: make init-simapp will remove all data in simapp home directory
+init-simapp:
+	./scripts/init-simapp.sh
 
 test: test-unit
 test-e2e:
@@ -241,7 +238,7 @@ ifneq (,$(shell which tparse 2>/dev/null))
 	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
-		echo "Running unit tests for module $$module"; \
+		echo "Running unit tests for $$(grep '^module' go.mod)"; \
 		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
@@ -252,7 +249,7 @@ else
 	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
-		echo "Running unit tests for module $$module"; \
+		echo "Running unit tests for $$(grep '^module' go.mod)"; \
 		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
@@ -388,19 +385,14 @@ golangci_version=v1.51.2
 lint:
 	@echo "--> Running linter"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run --timeout=10m
+	@./scripts/go-lint-all.bash --timeout=15m
 
 lint-fix:
 	@echo "--> Running linter"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
+	@./scripts/go-lint-all.bash --fix
 
 .PHONY: lint lint-fix
-
-format:
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	$(golangci_lint_cmd) run --fix
-.PHONY: format
 
 ###############################################################################
 ###                                Protobuf                                 ###

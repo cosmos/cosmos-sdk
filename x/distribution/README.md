@@ -145,7 +145,7 @@ When coins are distributed from the pool they are truncated back to
 type DecCoins []DecCoin
 
 type DecCoin struct {
-    Amount sdk.Dec
+    Amount math.LegacyDec
     Denom  string
 }
 ```
@@ -167,7 +167,7 @@ Validator distribution information for the relevant validator is updated each ti
 ```go
 type ValidatorDistInfo struct {
     OperatorAddress     sdk.AccAddress
-    SelfBondRewards     sdk.DecCoins
+    SelfBondRewards     sdkmath.DecCoins
     ValidatorCommission types.ValidatorAccumulatedCommission
 }
 ```
@@ -516,6 +516,11 @@ The distribution module contains the following parameters:
 
 * [0] `communitytax` must be positive and cannot exceed 1.00.
 * `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.
+
+:::note
+The reserve pool is the pool of collected funds for use by governance taken via the `CommunityTax`.
+Currently with the Cosmos SDK, tokens collected by the CommunityTax are accounted for but unspendable.
+:::
 
 ## Client
 

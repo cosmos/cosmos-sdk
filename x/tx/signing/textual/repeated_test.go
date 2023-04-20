@@ -16,20 +16,20 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-type repeatedJsonTest struct {
+type repeatedJSONTest struct {
 	Proto   *testpb.Qux
 	Screens []textual.Screen
 }
 
-func TestRepeatedJsonTestcases(t *testing.T) {
+func TestRepeatedJSONTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/repeated.json")
 	require.NoError(t, err)
 
-	var testcases []repeatedJsonTest
+	var testcases []repeatedJSONTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	tr := textual.NewSignModeHandler(mockCoinMetadataQuerier)
+	tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: mockCoinMetadataQuerier})
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			// Create a context.Context containing all coins metadata, to simulate

@@ -63,7 +63,7 @@ $(RUNSIM):
 	@go install github.com/cosmos/tools/cmd/runsim@v1.0.0
 
 tools-clean:
-	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
+	rm -f $(GOLANGCI_LINT) $(RUNSIM)
 	rm -f tools-stamp
 
 .PHONY: tools-clean runsim

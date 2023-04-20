@@ -20,15 +20,12 @@ func NewTimestampValueRenderer() ValueRenderer {
 
 // Format implements the ValueRenderer interface.
 func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
-	// Reify the reflected message as a proto Timestamp
-	msg := v.Message().Interface()
-	timestamp, ok := msg.(*tspb.Timestamp)
-	if !ok {
-		return nil, fmt.Errorf("expected Timestamp, got %T", msg)
+	ts := &tspb.Timestamp{}
+	err := coerceToMessage(v.Message().Interface(), ts)
+	if err != nil {
+		return nil, err
 	}
-
-	// Convert proto timestamp to a Go Time.
-	t := timestamp.AsTime()
+	t := ts.AsTime()
 
 	// Format the Go Time as RFC 3339.
 	s := t.Format(time.RFC3339Nano)

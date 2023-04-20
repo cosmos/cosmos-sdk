@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -21,6 +20,7 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -30,7 +30,7 @@ import (
 func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, suite.cdc, suite.accountKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, suite.cdc, suite.txConfig, suite.accountKeeper,
 		suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
 
 	// setup 3 accounts
@@ -49,7 +49,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgFundCommunityPool, types.ModuleName, sdk.MsgTypeURL(&types.MsgFundCommunityPool{})},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		suite.Require().NoError(err)
 
@@ -149,8 +149,8 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	// set module account coins
 	distrAcc := suite.distrKeeper.GetDistributionAccount(suite.ctx)
 	suite.Require().NoError(banktestutil.FundModuleAccount(suite.bankKeeper, suite.ctx, distrAcc.GetName(), sdk.NewCoins(
-		sdk.NewCoin(tokenName, sdk.NewInt(10)),
-		sdk.NewCoin("stake", sdk.NewInt(5)),
+		sdk.NewCoin(tokenName, math.NewInt(10)),
+		sdk.NewCoin("stake", math.NewInt(5)),
 	)))
 	suite.accountKeeper.SetModuleAccount(suite.ctx, distrAcc)
 
@@ -234,15 +234,7 @@ func (suite *SimTestSuite) SetupTest() {
 		appBuilder *runtime.AppBuilder
 		err        error
 	)
-	suite.app, err = simtestutil.Setup(configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.ParamsModule(),
-		configurator.BankModule(),
-		configurator.StakingModule(),
-		configurator.TxModule(),
-		configurator.ConsensusModule(),
-		configurator.DistributionModule(),
-	), &suite.accountKeeper,
+	suite.app, err = simtestutil.Setup(distrtestutil.AppConfig, &suite.accountKeeper,
 		&suite.bankKeeper,
 		&suite.cdc,
 		&appBuilder,
@@ -292,7 +284,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(err)
 	validator.DelegatorShares = math.LegacyNewDec(100)
-	validator.Tokens = sdk.NewInt(1000000)
+	validator.Tokens = math.NewInt(1000000)
 
 	suite.stakingKeeper.SetValidator(suite.ctx, validator)
 

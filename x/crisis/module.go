@@ -1,6 +1,7 @@
 package crisis
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -35,10 +37,7 @@ import (
 // ConsensusVersion defines the current x/crisis module consensus version.
 const ConsensusVersion = 2
 
-var (
-	_ module.EndBlockAppModule = AppModule{}
-	_ module.AppModuleBasic    = AppModuleBasic{}
-)
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 // Module init related flags
 const (
@@ -120,7 +119,10 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -175,9 +177,10 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the crisis module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, *am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	EndBlocker(c, *am.keeper)
+	return nil
 }
 
 // App Wiring Setup
@@ -189,8 +192,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type CrisisInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config  *modulev1.Module
@@ -198,21 +200,21 @@ type CrisisInputs struct {
 	Cdc     codec.Codec
 	AppOpts servertypes.AppOptions `optional:"true"`
 
-	BankKeeper types.SupplyKeeper
+	BankKeeper   types.SupplyKeeper
+	AddressCodec address.Codec
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
 }
 
-//nolint:revive
-type CrisisOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Module       appmodule.AppModule
 	CrisisKeeper *keeper.Keeper
 }
 
-func ProvideModule(in CrisisInputs) CrisisOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var invalidCheckPeriod uint
 	if in.AppOpts != nil {
 		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
@@ -236,6 +238,7 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 		in.BankKeeper,
 		feeCollectorName,
 		authority.String(),
+		in.AddressCodec,
 	)
 
 	var skipGenesisInvariants bool
@@ -245,5 +248,5 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return CrisisOutputs{CrisisKeeper: k, Module: m}
+	return ModuleOutputs{CrisisKeeper: k, Module: m}
 }

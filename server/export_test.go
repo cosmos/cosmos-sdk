@@ -101,7 +101,7 @@ func isZeroExportedApp(a types.ExportedApp) bool {
 	return a.AppState == nil &&
 		len(a.Validators) == 0 &&
 		a.Height == 0 &&
-		a.ConsensusParams == nil
+		a.ConsensusParams == cmtproto.ConsensusParams{}
 }
 
 // mockExporter provides an Export method matching server/types.AppExporter,
@@ -127,7 +127,7 @@ type mockExporter struct {
 // when e.Export is called.
 func (e *mockExporter) SetDefaultExportApp() {
 	e.ExportApp = types.ExportedApp{
-		ConsensusParams: &cmtproto.ConsensusParams{
+		ConsensusParams: cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxBytes: 5 * 1024 * 1024,
 				MaxGas:   -1,

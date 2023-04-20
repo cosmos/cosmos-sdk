@@ -75,13 +75,13 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 }
 
 // Parses an encoded type using FormatTimeKey back into a time.Time
-func ParseTime(T any) (time.Time, error) { //nolint:gocritic
+func ParseTime(t any) (time.Time, error) {
 	var (
 		result time.Time
 		err    error
 	)
 
-	switch t := T.(type) {
+	switch t := t.(type) {
 	case time.Time:
 		result, err = t, nil
 	case []byte:
@@ -127,7 +127,7 @@ func AppendLengthPrefixedBytes(args ...[]byte) []byte {
 }
 
 // ParseLengthPrefixedBytes panics when store key length is not equal to the given length.
-func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]byte, int) {
+func ParseLengthPrefixedBytes(key []byte, startIndex, sliceLength int) ([]byte, int) {
 	neededLength := startIndex + sliceLength
 	endIndex := neededLength - 1
 	kv.AssertKeyAtLeastLength(key, neededLength)

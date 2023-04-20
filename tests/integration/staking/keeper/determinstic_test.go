@@ -88,9 +88,9 @@ func pubKeyGenerator() *rapid.Generator[ed25519.PubKey] {
 }
 
 func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
-	bond_types := []stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded, stakingtypes.Unbonding}
+	bondTypes := []stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded, stakingtypes.Unbonding}
 	return rapid.Custom(func(t *rapid.T) stakingtypes.BondStatus {
-		return bond_types[rapid.IntRange(0, 2).Draw(t, "range")]
+		return bondTypes[rapid.IntRange(0, 2).Draw(t, "range")]
 	})
 }
 
@@ -322,7 +322,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 11985, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14475, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -605,7 +605,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		Height: height,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1930, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1945, false)
 }
 
 func TestGRPCDelegatorValidators(t *testing.T) {

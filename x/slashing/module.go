@@ -5,15 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-
 	store "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,10 +30,9 @@ import (
 )
 
 // ConsensusVersion defines the current x/slashing module consensus version.
-const ConsensusVersion = 3
+const ConsensusVersion = 4
 
 var (
-	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -99,6 +96,8 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
+	registry cdctypes.InterfaceRegistry
+
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
@@ -109,7 +108,15 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, ss exported.Subspace) AppModule {
+func NewAppModule(
+	cdc codec.Codec,
+	keeper keeper.Keeper,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
+	ss exported.Subspace,
+	registry cdctypes.InterfaceRegistry,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -120,7 +127,10 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper,
 	}
 }
 
-var _ appmodule.AppModule = AppModule{}
+var (
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
+)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -146,6 +156,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
 	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the slashing module. It returns
@@ -168,8 +182,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the slashing module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(ctx, req, am.keeper)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	BeginBlocker(c, am.keeper)
+	return nil
 }
 
 // AppModuleSimulation functions
@@ -192,7 +208,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the slashing module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc,
+		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
 	)
 }
@@ -208,14 +224,14 @@ func init() {
 	)
 }
 
-//nolint:revive
-type SlashingInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config      *modulev1.Module
 	Key         *store.KVStoreKey
 	Cdc         codec.Codec
 	LegacyAmino *codec.LegacyAmino
+	Registry    cdctypes.InterfaceRegistry
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -225,8 +241,7 @@ type SlashingInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-//nolint:revive
-type SlashingOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Keeper keeper.Keeper
@@ -234,7 +249,7 @@ type SlashingOutputs struct {
 	Hooks  staking.StakingHooksWrapper
 }
 
-func ProvideModule(in SlashingInputs) SlashingOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
@@ -242,8 +257,8 @@ func ProvideModule(in SlashingInputs) SlashingOutputs {
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authority.String())
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
-	return SlashingOutputs{
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace, in.Registry)
+	return ModuleOutputs{
 		Keeper: k,
 		Module: m,
 		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},

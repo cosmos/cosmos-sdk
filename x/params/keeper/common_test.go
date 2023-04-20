@@ -1,21 +1,19 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/depinject"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 )
 
 func testComponents() (*codec.LegacyAmino, sdk.Context, storetypes.StoreKey, storetypes.StoreKey, paramskeeper.Keeper) {
-	var cdc codec.Codec
-	if err := depinject.Inject(testutil.AppConfig, &cdc); err != nil {
-		panic(err)
-	}
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
+	cdc := encodingConfig.Codec
 
 	legacyAmino := createTestCodec()
 	mkey := storetypes.NewKVStoreKey("test")

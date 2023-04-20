@@ -26,7 +26,6 @@ func marshalLegacy(msg proto.Message) ([]byte, error) {
 }
 
 func TestAminoJSON_EdgeCases(t *testing.T) {
-
 	cdc := amino.NewCodec()
 	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
 	cdc.RegisterConcrete(&testpb.NestedMessage{}, "NestedMessage", nil)

@@ -50,7 +50,7 @@ type (
 		RegisterTendermintService(client.Context)
 
 		// RegisterNodeService registers the node gRPC Query service.
-		RegisterNodeService(client.Context)
+		RegisterNodeService(client.Context, config.Config)
 
 		// CommitMultiStore return the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore
@@ -73,7 +73,7 @@ type (
 		// Height is the app's latest block height.
 		Height int64
 		// ConsensusParams are the exported consensus params for ABCI.
-		ConsensusParams *cmtproto.ConsensusParams
+		ConsensusParams cmtproto.ConsensusParams
 	}
 
 	// AppExporter is a function that dumps all app state to

@@ -3,17 +3,12 @@ package v1beta1
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	"github.com/cosmos/gogoproto/proto"
-
-	errorsmod "cosmossdk.io/errors"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/gov/codec"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Governance message types and routes
@@ -32,8 +27,6 @@ var (
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-//
-//nolint:interfacer
 func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
@@ -88,35 +81,9 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 	return nil
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (m MsgSubmitProposal) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
-	}
-	if !m.InitialDeposit.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
-	}
-	if m.InitialDeposit.IsAnyNegative() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
-	}
-
-	content := m.GetContent()
-	if content == nil {
-		return errorsmod.Wrap(types.ErrInvalidProposalContent, "missing content")
-	}
-	if !IsValidProposalType(content.ProposalType()) {
-		return errorsmod.Wrap(types.ErrInvalidProposalType, content.ProposalType())
-	}
-	if err := content.ValidateBasic(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the message bytes to sign over.
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&m)
+	bz := codec.Amino.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -133,30 +100,13 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
-//
-//nolint:interfacer
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgDeposit) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
-	}
-	if !msg.Amount.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
-	}
-	if msg.Amount.IsAnyNegative() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -167,27 +117,13 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
-//
-//nolint:interfacer
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option}
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgVote) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
-	}
-	if !ValidVoteOption(msg.Option) {
-		return errorsmod.Wrap(types.ErrInvalidVote, msg.Option.String())
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -197,49 +133,14 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{voter}
 }
 
-// NewMsgVoteWeighted creates a message to cast a vote on an active proposal
-//
-//nolint:interfacer
+// NewMsgVoteWeighted creates a message to cast a vote on an active proposal.
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options}
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgVoteWeighted) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
-	}
-	if len(msg.Options) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
-	}
-
-	totalWeight := math.LegacyNewDec(0)
-	usedOptions := make(map[VoteOption]bool)
-	for _, option := range msg.Options {
-		if !ValidWeightedVoteOption(option) {
-			return errorsmod.Wrap(types.ErrInvalidVote, option.String())
-		}
-		totalWeight = totalWeight.Add(option.Weight)
-		if usedOptions[option.Option] {
-			return errorsmod.Wrap(types.ErrInvalidVote, "Duplicated vote option")
-		}
-		usedOptions[option.Option] = true
-	}
-
-	if totalWeight.GT(math.LegacyNewDec(1)) {
-		return errorsmod.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
-	}
-
-	if totalWeight.LT(math.LegacyNewDec(1)) {
-		return errorsmod.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.Amino.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

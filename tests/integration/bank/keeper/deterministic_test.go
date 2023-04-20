@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
+	simstestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -61,7 +61,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 
 	var interfaceRegistry codectypes.InterfaceRegistry
 
-	app, err := sims.Setup(
+	app, err := simstestutil.Setup(
 		configurator.NewAppConfig(
 			configurator.AuthModule(),
 			configurator.TxModule(),
@@ -478,5 +478,5 @@ func TestGRPCDenomOwners(t *testing.T) {
 	req := &banktypes.QueryDenomOwnersRequest{
 		Denom: coin1.GetDenom(),
 	}
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomOwners, 2525, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomOwners, 2516, false)
 }

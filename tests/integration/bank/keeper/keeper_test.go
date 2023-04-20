@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -1326,7 +1327,7 @@ func TestMintCoinRestrictions(t *testing.T) {
 	f := initFixture(t)
 	t.Parallel()
 
-	type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+	type BankMintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
 
 	maccPerms := make(map[string][]string)
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
@@ -1351,7 +1352,7 @@ func TestMintCoinRestrictions(t *testing.T) {
 	}{
 		{
 			"restriction",
-			func(_ sdk.Context, coins sdk.Coins) error {
+			func(_ context.Context, coins sdk.Coins) error {
 				for _, coin := range coins {
 					if coin.Denom != fooDenom {
 						return fmt.Errorf("Module %s only has perms for minting %s coins, tried minting %s coins", types.ModuleName, fooDenom, coin.Denom)

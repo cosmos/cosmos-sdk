@@ -265,9 +265,6 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 	return protoreflect.ValueOfMessage(msg), nil
 }
 
-// <int> <field_kind>
-var headerRegex = regexp.MustCompile(`(\d+) .+`)
-
 func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Screen, l protoreflect.List, vr ValueRenderer) error {
 	res := headerRegex.FindAllStringSubmatch(screens[0].Content, -1)
 	if res == nil {

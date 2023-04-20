@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -31,10 +33,10 @@ func (s *IntegrationTestSuite) TestUpdateParams() {
 				Authority: s.mintKeeper.GetAuthority(),
 				Params: types.Params{
 					MintDenom:           sdk.DefaultBondDenom,
-					InflationRateChange: sdk.NewDecWithPrec(-13, 2),
-					InflationMax:        sdk.NewDecWithPrec(20, 2),
-					InflationMin:        sdk.NewDecWithPrec(7, 2),
-					GoalBonded:          sdk.NewDecWithPrec(67, 2),
+					InflationRateChange: sdkmath.LegacyNewDecWithPrec(-13, 2),
+					InflationMax:        sdkmath.LegacyNewDecWithPrec(20, 2),
+					InflationMin:        sdkmath.LegacyNewDecWithPrec(7, 2),
+					GoalBonded:          sdkmath.LegacyNewDecWithPrec(67, 2),
 					BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
 				},
 			},
@@ -46,10 +48,10 @@ func (s *IntegrationTestSuite) TestUpdateParams() {
 				Authority: s.mintKeeper.GetAuthority(),
 				Params: types.Params{
 					MintDenom:           sdk.DefaultBondDenom,
-					InflationRateChange: sdk.NewDecWithPrec(8, 2),
-					InflationMax:        sdk.NewDecWithPrec(20, 2),
-					InflationMin:        sdk.NewDecWithPrec(2, 2),
-					GoalBonded:          sdk.NewDecWithPrec(37, 2),
+					InflationRateChange: sdkmath.LegacyNewDecWithPrec(8, 2),
+					InflationMax:        sdkmath.LegacyNewDecWithPrec(20, 2),
+					InflationMin:        sdkmath.LegacyNewDecWithPrec(2, 2),
+					GoalBonded:          sdkmath.LegacyNewDecWithPrec(37, 2),
 					BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
 				},
 			},

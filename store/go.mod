@@ -37,7 +37,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230226194802-02d779ffbc46 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
@@ -62,12 +62,12 @@ require (
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.14.0 // indirect
+	github.com/prometheus/client_golang v1.15.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	github.com/rs/zerolog v1.29.0 // indirect
+	github.com/rs/zerolog v1.29.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	golang.org/x/crypto v0.8.0 // indirect

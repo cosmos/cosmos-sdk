@@ -8,9 +8,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/types/registry"
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -98,7 +96,7 @@ type UnpackInterfacesMessage interface {
 }
 
 type interfaceRegistry struct {
-	signing.ProtoFileResolver
+	*protoregistry.Files
 	interfaceNames map[string]reflect.Type
 	interfaceImpls map[reflect.Type]interfaceMap
 	implInterfaces map[reflect.Type]reflect.Type
@@ -109,18 +107,21 @@ type interfaceMap = map[string]reflect.Type
 
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
-	protoFiles := registry.MergedProtoRegistry()
+	protoFiles, err := proto.MergedRegistry()
+	if err != nil {
+		panic(err)
+	}
 	return NewInterfaceRegistryWithProtoFiles(protoFiles)
 }
 
 // NewInterfaceRegistryWithProtoFiles returns a new InterfaceRegistry with the specified *protoregistry.Files instance.
-func NewInterfaceRegistryWithProtoFiles(files signing.ProtoFileResolver) InterfaceRegistry {
+func NewInterfaceRegistryWithProtoFiles(files *protoregistry.Files) InterfaceRegistry {
 	return &interfaceRegistry{
-		interfaceNames:    map[string]reflect.Type{},
-		interfaceImpls:    map[reflect.Type]interfaceMap{},
-		implInterfaces:    map[reflect.Type]reflect.Type{},
-		typeURLMap:        map[string]reflect.Type{},
-		ProtoFileResolver: files,
+		interfaceNames: map[string]reflect.Type{},
+		interfaceImpls: map[reflect.Type]interfaceMap{},
+		implInterfaces: map[reflect.Type]reflect.Type{},
+		typeURLMap:     map[string]reflect.Type{},
+		Files:          files,
 	}
 }
 

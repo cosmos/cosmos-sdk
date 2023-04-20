@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/store"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	"cosmossdk.io/core/store"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -231,10 +232,16 @@ func ProvideEventService() event.Service {
 type globalAccAddressCodec struct{}
 
 func (g globalAccAddressCodec) StringToBytes(text string) ([]byte, error) {
+	if text == "" {
+		return nil, nil
+	}
 	return sdk.AccAddressFromBech32(text)
 }
 
 func (g globalAccAddressCodec) BytesToString(bz []byte) (string, error) {
+	if bz == nil {
+		return "", nil
+	}
 	return sdk.AccAddress(bz).String(), nil
 }
 

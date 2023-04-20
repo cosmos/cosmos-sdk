@@ -98,7 +98,7 @@ func NewBaseKeeper(
 	}
 
 	// add the module name to the logger
-	logger = logger.With("module", "x/"+types.ModuleName)
+	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
 		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority, logger),

@@ -15,24 +15,21 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/depinject"
-
 	"github.com/golang/mock/gomock"
-
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
-
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	_ "github.com/cosmos/cosmos-sdk/orm" // required for ORM module registration
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	_ "cosmossdk.io/orm" // required for ORM module registration
+	"cosmossdk.io/orm/internal/testkv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/model/ormdb"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/testing/ormmocks"
+	"cosmossdk.io/orm/testing/ormtest"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use

@@ -330,8 +330,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.ChainID = SimAppChainID
 
 	numSeeds := 3
-	// numTimesToRunPerSeed := 5 TODO revert once sims are sped up
-	numTimesToRunPerSeed := 2
+	numTimesToRunPerSeed := 3 // This used to be set to 5, but we've temporarily reduced it to 3 for the sake of faster CI.
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	appOptions := viper.New()

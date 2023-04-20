@@ -1,6 +1,7 @@
 package distribution
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -11,13 +12,14 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	distrclitestutil "github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -556,13 +558,22 @@ func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
+			args := append([]string{tc.valAddr.String()}, tc.args...)
+
 			_, _ = s.network.WaitForHeightWithTimeout(10, time.Minute)
-			bz, err := distrclitestutil.MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
+
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+			cmd := cli.NewWithdrawRewardsCmd()
+			cmd.SetContext(ctx)
+			cmd.SetArgs(args)
+			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz, tc.respType), string(bz))
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().NoError(s.network.WaitForNextBlock())
 
 				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)

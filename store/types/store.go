@@ -22,6 +22,9 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
+	// WorkingHash returns the hash of the KVStore's state before commit.
+	WorkingHash() []byte
+
 	SetPruning(pruningtypes.PruningOptions)
 	GetPruning() pruningtypes.PruningOptions
 }

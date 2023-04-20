@@ -1,12 +1,13 @@
 package decode
 
 import (
-	"github.com/cosmos/cosmos-proto/anyutil"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoregistry"
+	"fmt"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-proto/anyutil"
+	"google.golang.org/protobuf/proto"
+
 	"cosmossdk.io/x/tx/signing"
 )
 
@@ -15,51 +16,28 @@ type DecodedTx struct {
 	Messages                     []proto.Message
 	Tx                           *v1beta1.Tx
 	TxRaw                        *v1beta1.TxRaw
-	Signers                      []string
+	Signers                      [][]byte
 	TxBodyHasUnknownNonCriticals bool
 }
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {
-	getSignersCtx *signing.GetSignersContext
-	typeResolver  protoregistry.MessageTypeResolver
-	protoFiles    signing.ProtoFileResolver
+	signingCtx *signing.Context
 }
 
 // Options are options for creating a Decoder.
 type Options struct {
-	// ProtoFiles are the protobuf files to use for resolving message descriptors.
-	// If it is nil, the global protobuf registry will be used.
-	ProtoFiles     signing.ProtoFileResolver
-	TypeResolver   protoregistry.MessageTypeResolver
-	SigningContext *signing.GetSignersContext
+	SigningContext *signing.Context
 }
 
 // NewDecoder creates a new Decoder for decoding transactions.
 func NewDecoder(options Options) (*Decoder, error) {
-	if options.ProtoFiles == nil {
-		options.ProtoFiles = protoregistry.GlobalFiles
-	}
-
-	if options.TypeResolver == nil {
-		options.TypeResolver = protoregistry.GlobalTypes
-	}
-
-	getSignersCtx := options.SigningContext
-	if getSignersCtx == nil {
-		var err error
-		getSignersCtx, err = signing.NewGetSignersContext(signing.GetSignersOptions{
-			ProtoFiles: options.ProtoFiles,
-		})
-		if err != nil {
-			return nil, err
-		}
+	if options.SigningContext == nil {
+		return nil, fmt.Errorf("signing context is required")
 	}
 
 	return &Decoder{
-		getSignersCtx: getSignersCtx,
-		protoFiles:    options.ProtoFiles,
-		typeResolver:  options.TypeResolver,
+		signingCtx: options.SigningContext,
 	}, nil
 }
 
@@ -74,7 +52,8 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	var raw v1beta1.TxRaw
 
 	// reject all unknown proto fields in the root TxRaw
-	err = RejectUnknownFieldsStrict(txBytes, raw.ProtoReflect().Descriptor(), d.protoFiles)
+	fileResolver := d.signingCtx.FileResolver()
+	err = RejectUnknownFieldsStrict(txBytes, raw.ProtoReflect().Descriptor(), fileResolver)
 	if err != nil {
 		return nil, errors.Wrap(ErrTxDecode, err.Error())
 	}
@@ -87,7 +66,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	var body v1beta1.TxBody
 
 	// allow non-critical unknown fields in TxBody
-	txBodyHasUnknownNonCriticals, err := RejectUnknownFields(raw.BodyBytes, body.ProtoReflect().Descriptor(), true, d.protoFiles)
+	txBodyHasUnknownNonCriticals, err := RejectUnknownFields(raw.BodyBytes, body.ProtoReflect().Descriptor(), true, fileResolver)
 	if err != nil {
 		return nil, errors.Wrap(ErrTxDecode, err.Error())
 	}
@@ -100,7 +79,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	var authInfo v1beta1.AuthInfo
 
 	// reject all unknown proto fields in AuthInfo
-	err = RejectUnknownFieldsStrict(raw.AuthInfoBytes, authInfo.ProtoReflect().Descriptor(), d.protoFiles)
+	err = RejectUnknownFieldsStrict(raw.AuthInfoBytes, authInfo.ProtoReflect().Descriptor(), fileResolver)
 	if err != nil {
 		return nil, errors.Wrap(ErrTxDecode, err.Error())
 	}
@@ -116,15 +95,15 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		Signatures: raw.Signatures,
 	}
 
-	var signers []string
+	var signers [][]byte
 	var msgs []proto.Message
 	for _, anyMsg := range body.Messages {
-		msg, signerErr := anyutil.Unpack(anyMsg, d.protoFiles, d.typeResolver)
+		msg, signerErr := anyutil.Unpack(anyMsg, fileResolver, d.signingCtx.TypeResolver())
 		if signerErr != nil {
 			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
 		}
 		msgs = append(msgs, msg)
-		ss, signerErr := d.getSignersCtx.GetSigners(msg)
+		ss, signerErr := d.signingCtx.GetSigners(msg)
 		if signerErr != nil {
 			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
 		}

@@ -1,5 +1,9 @@
 [
   {
+    "proto": null,
+    "text": "zero"
+  },
+  {
     "proto": {"amount": "0", "denom": "ucosm"},
     "metadata": {"display": "COSM", "base":"ucosm", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
     "text": "0 COSM"

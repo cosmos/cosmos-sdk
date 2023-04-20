@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -53,6 +54,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
+		TxConfig:  moduletestutil.MakeTestTxConfig(),
 		BondDenom: sdk.DefaultBondDenom,
 	}
 

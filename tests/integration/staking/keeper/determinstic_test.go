@@ -352,7 +352,7 @@ func TestGRPCValidators(t *testing.T) {
 	getStaticValidator(f, t)
 	getStaticValidator2(f, t)
 
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 3525, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 2862, false)
 }
 
 func TestGRPCValidatorDelegations(t *testing.T) {
@@ -391,7 +391,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 11985, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 11460, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {

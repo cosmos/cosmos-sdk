@@ -53,7 +53,6 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 	}
 
 	delegationsNum := 1000
-	delegators := make([]sdk.AccAddress, delegationsNum)
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
@@ -61,7 +60,6 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
 			NewDel := types.NewDelegation(delegator, val, sdk.NewDec(int64(i)))
 			app.StakingKeeper.SetDelegation(ctx, NewDel)
-			delegators[i] = delegator
 		}
 	}
 
@@ -88,7 +86,6 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 	}
 
 	delegationsNum := 1000
-	delegators := make([]sdk.AccAddress, delegationsNum)
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
@@ -96,7 +93,6 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
 			NewDel := types.NewDelegation(delegator, val, sdk.NewDec(int64(i)))
 			app.StakingKeeper.SetDelegation(ctx, NewDel)
-			delegators[i] = delegator
 		}
 	}
 

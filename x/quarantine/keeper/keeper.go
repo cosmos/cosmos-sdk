@@ -284,7 +284,7 @@ func (k Keeper) AcceptQuarantinedFunds(ctx sdk.Context, toAddr sdk.AccAddress, f
 	for _, record := range k.GetQuarantineRecords(ctx, toAddr, fromAddrs...) {
 		if record.AcceptFrom(fromAddrs) {
 			if record.IsFullyAccepted() {
-				err := k.bankKeeper.SendCoins(quarantine.WithQuarantineBypass(ctx), k.fundsHolder, toAddr, record.Coins)
+				err := k.bankKeeper.SendCoins(quarantine.WithBypass(ctx), k.fundsHolder, toAddr, record.Coins)
 				if err != nil {
 					return nil, err
 				}

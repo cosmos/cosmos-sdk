@@ -2,21 +2,21 @@ package quarantine
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-var quarantineBypassKey = "bypass-quarantine-restriction"
+var bypassKey = "bypass-quarantine-restriction"
 
-// WithQuarantineBypass returns a new context that will cause the quarantine bank send restriction to be skipped.
-func WithQuarantineBypass(ctx sdk.Context) sdk.Context {
-	return ctx.WithValue(quarantineBypassKey, true)
+// WithBypass returns a new context that will cause the quarantine bank send restriction to be skipped.
+func WithBypass(ctx sdk.Context) sdk.Context {
+	return ctx.WithValue(bypassKey, true)
 }
 
-// WithoutQuarantineBypass returns a new context that will cause the quarantine bank send restriction to not be skipped.
-func WithoutQuarantineBypass(ctx sdk.Context) sdk.Context {
-	return ctx.WithValue(quarantineBypassKey, false)
+// WithoutBypass returns a new context that will cause the quarantine bank send restriction to not be skipped.
+func WithoutBypass(ctx sdk.Context) sdk.Context {
+	return ctx.WithValue(bypassKey, false)
 }
 
-// HasQuarantineBypass checks the context to see if the quarantine bank send restriction should be skipped.
-func HasQuarantineBypass(ctx sdk.Context) bool {
-	bypassValue := ctx.Value(quarantineBypassKey)
+// HasBypass checks the context to see if the quarantine bank send restriction should be skipped.
+func HasBypass(ctx sdk.Context) bool {
+	bypassValue := ctx.Value(bypassKey)
 	if bypassValue == nil {
 		return false
 	}

@@ -11,7 +11,7 @@ var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
 func (k Keeper) SendRestrictionFn(ctx types.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) (types.AccAddress, error) {
 	// bypass if the context says to.
-	if quarantine.HasQuarantineBypass(ctx) {
+	if quarantine.HasBypass(ctx) {
 		return toAddr, nil
 	}
 	// bypass if the fromAddr is either the toAddr or the funds holder.

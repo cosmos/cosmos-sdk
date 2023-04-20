@@ -180,13 +180,18 @@ type ModuleInputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-  // add the module name to the logger
-  logger := in.Logger.With("module", "x/"+types.ModuleName)
-
   keeper := keeper.NewKeeper(
-    logger,
+    in.logger,
   )
 }
+
+func NewKeeper(logger log.Logger) Keeper {
+  return Keeper{
+    logger: logger.With(log.ModuleKey, "x/"+types.ModuleName),
+  }
+}
+```
+
 ```
 
 ### Core `AppModule` extension interfaces

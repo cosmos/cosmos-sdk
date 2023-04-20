@@ -102,6 +102,7 @@ func (k BaseViewKeeper) HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk
 	return k.GetBalance(ctx, addr, amt.Denom).IsGTE(amt)
 }
 
+// Logger returns a module-specific logger.
 func (k BaseViewKeeper) Logger() log.Logger {
 	return k.logger
 }

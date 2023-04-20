@@ -82,6 +82,30 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 )
 ```
 
+The following modules `NewKeeper` function now also take a `log.Logger`:
+
+* `x/bank`
+
+
+### depinject
+
+For `depinject` users, now the logger must be supplied through the main `depinject.Inject` function instead of passing it to `appBuilder.Build`.
+
+```diff
+appConfig = depinject.Configs(
+	AppConfig,
+	depinject.Supply(
+		// supply the application options
+		appOpts,
++		logger,
+	...
+```
+
+```diff
+- app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
++ app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+```
+
 ### Packages
 
 #### Store

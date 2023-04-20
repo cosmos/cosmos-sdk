@@ -404,17 +404,14 @@ func (s *E2ETestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			execResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, execResp.TxHash)
 			s.Require().NoError(err)
 
-			eventExec, _ := sdk.TypedEventToEvent(&group.EventExec{})
-
-			// get the event that contains the result
+			// Check the result of EventExec
 			if tc.expectLogErr {
 				for _, e := range execResp.Events {
-					if e.Type == eventExec.Type {
-						for _, a := range e.Attributes {
-							if a.Key == "result" {
-								s.Require().Contains(tc.errMsg, a.Value)
-							}
-						}
+					parsedEv, err := sdk.ParseTypedEvent(e)
+					s.Require().NoError(err)
+
+					if eventExec, ok := parsedEv.(*group.EventExec); ok {
+						s.Require().Equal(tc.errMsg, eventExec.Result)
 					}
 				}
 			}

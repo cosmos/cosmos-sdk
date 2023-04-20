@@ -2,8 +2,9 @@ package codec
 
 import (
 	"fmt"
-	gogotypes "github.com/cosmos/gogoproto/types"
 	"reflect"
+
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"

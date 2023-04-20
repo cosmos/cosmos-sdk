@@ -406,14 +406,17 @@ func (s *E2ETestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			// Check the result of EventExec
 			if tc.expectLogErr {
+				var errChecked bool
 				for _, e := range execResp.Events {
 					parsedEv, err := sdk.ParseTypedEvent(e)
 					s.Require().NoError(err)
 
 					if eventExec, ok := parsedEv.(*group.EventExec); ok {
+						errChecked = true
 						s.Require().Equal(tc.errMsg, eventExec.Result)
 					}
 				}
+				s.Require().Truef(errChecked, "didn't find a result to check against")
 			}
 		})
 	}

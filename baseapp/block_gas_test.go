@@ -169,7 +169,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				}
 				require.Empty(t, okValue)
 			} else {
-				require.Equal(t, uint32(0), rsp.Code)
+				require.Equal(t, uint32(0), rsp.TxResults[0].Code)
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed

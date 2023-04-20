@@ -29,12 +29,12 @@ func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServ
 var _ types.MsgServer = msgServer{}
 
 func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCreateVestingAccount) (*types.MsgCreateVestingAccountResponse, error) {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := s.AccountKeeper.StringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
 	}
 
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	to, err := s.AccountKeeper.StringToBytes(msg.ToAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
@@ -95,12 +95,12 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 }
 
 func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *types.MsgCreatePermanentLockedAccount) (*types.MsgCreatePermanentLockedAccountResponse, error) {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := s.AccountKeeper.StringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
 	}
 
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	to, err := s.AccountKeeper.StringToBytes(msg.ToAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
@@ -150,12 +150,12 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 }
 
 func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreatePeriodicVestingAccountResponse, error) {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := s.AccountKeeper.StringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
 	}
 
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	to, err := s.AccountKeeper.StringToBytes(msg.ToAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}

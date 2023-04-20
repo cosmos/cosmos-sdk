@@ -14,9 +14,9 @@ import (
 
 const (
 	contextPkg  = protogen.GoImportPath("context")
-	ormListPkg  = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormlist")
-	ormErrPkg   = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/types/ormerrors")
-	ormTablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
+	ormListPkg  = protogen.GoImportPath("cosmossdk.io/orm/model/ormlist")
+	ormErrPkg   = protogen.GoImportPath("cosmossdk.io/orm/types/ormerrors")
+	ormTablePkg = protogen.GoImportPath("cosmossdk.io/orm/model/ormtable")
 )
 
 func ORMPluginRunner(p *protogen.Plugin) error {

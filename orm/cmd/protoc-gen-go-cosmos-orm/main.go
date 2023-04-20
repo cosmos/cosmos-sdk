@@ -3,7 +3,7 @@ package main
 import (
 	"google.golang.org/protobuf/compiler/protogen"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/codegen"
+	"cosmossdk.io/orm/internal/codegen"
 )
 
 func main() {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -13,8 +12,9 @@ import (
 	"github.com/regen-network/gocuke"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/testing/ormtest"
 )
 
 func TestSave(t *testing.T) {

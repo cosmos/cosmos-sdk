@@ -53,6 +53,7 @@ cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc h1:9piuA+NYmhe+S
 cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc/go.mod h1:UFF5rmjN7WYVfxo6ArdY/l1+yyWMURBWOmSJypGqFHQ=
 cosmossdk.io/x/tx v0.5.1-0.20230407182919-057d2e09bd63 h1:zHqj2VwZ/MStFmR7SUe/7gErOFhL9v2rkjmWPB/st34=
 cosmossdk.io/x/tx v0.5.1-0.20230407182919-057d2e09bd63/go.mod h1:Oh3Kh+IPOfMEILNxVd2e8SLqRrIjYHpdGBfDg4ghU/k=
+cosmossdk.io/x/tx v0.5.5/go.mod h1:Oh3Kh+IPOfMEILNxVd2e8SLqRrIjYHpdGBfDg4ghU/k=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
@@ -191,6 +192,8 @@ github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230419124727-7b10ada768f4 h1:tZ2v
 github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230419124727-7b10ada768f4/go.mod h1:BPvKPN63ettXrpz67uM1rHEqX/UVVkAfceFCPyp217E=
 github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230419202823-1eda6cc7aa8c h1:Y/yeEkXjzCjq5LiPz/Zh+JfOYW9L0chxQ09womkVyO4=
 github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230419202823-1eda6cc7aa8c/go.mod h1:BPvKPN63ettXrpz67uM1rHEqX/UVVkAfceFCPyp217E=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230420232528-fe676ae1dbed h1:IlNdZcxvwtYlNb5vHg8W8vQBMz0Q5k9mAybz0eGbF4Q=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230420232528-fe676ae1dbed/go.mod h1:HLzBFH2Laxf56NcTMFr8PpFXgujWHs3KFGvIvUKujA4=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=

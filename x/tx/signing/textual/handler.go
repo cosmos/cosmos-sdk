@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -14,9 +13,12 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
+	cosmos_proto "github.com/cosmos/cosmos-proto"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	cosmos_proto "github.com/cosmos/cosmos-proto"
 
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
@@ -41,7 +43,7 @@ type SignModeOptions struct {
 
 	// FileResolver are the protobuf files to use for resolving message
 	// descriptors. If it is nil, the global protobuf registry will be used.
-	FileResolver *protoregistry.Files
+	FileResolver signing.ProtoFileResolver
 
 	// TypeResolver are the protobuf type resolvers to use for resolving message
 	// types. If it is nil, then a dynamicpb will be used on top of FileResolver.
@@ -51,7 +53,7 @@ type SignModeOptions struct {
 // SignModeHandler holds the configuration for dispatching
 // to specific value renderers for SIGN_MODE_TEXTUAL.
 type SignModeHandler struct {
-	fileResolver        *protoregistry.Files
+	fileResolver        signing.ProtoFileResolver
 	typeResolver        protoregistry.MessageTypeResolver
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.

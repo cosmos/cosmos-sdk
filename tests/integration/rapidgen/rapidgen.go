@@ -2,7 +2,6 @@ package rapidgen
 
 import (
 	"fmt"
-	"unicode"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/cosmos/cosmos-proto/rapidproto"
@@ -27,7 +26,6 @@ import (
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
 	groupapi "cosmossdk.io/api/cosmos/group/v1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
@@ -56,37 +54,6 @@ type GeneratedType struct {
 	Pulsar proto.Message
 	Gogo   gogoproto.Message
 	Opts   rapidproto.GeneratorOptions
-}
-
-func getSignersFieldNames(msg protoreflect.MessageDescriptor, res map[string]string) {
-	signersFields := proto.GetExtension(msg.Options(), msgv1.E_Signer).([]string)
-	for _, f := range signersFields {
-		res[f] = f
-	}
-	for i := 0; i < msg.Fields().Len(); i++ {
-		f := msg.Fields().Get(i)
-		if f.Kind() == protoreflect.MessageKind {
-			m := f.Message()
-			getSignersFieldNames(m, res)
-		}
-	}
-}
-
-// unused, but if we ever need valid signer adderesses, we'll need to generate them
-func withValidSigners(pulsar proto.Message, opts rapidproto.GeneratorOptions) rapidproto.GeneratorOptions {
-	// if we need valid signers, we need to generate them
-	signerFields := make(map[string]string)
-	getSignersFieldNames(pulsar.ProtoReflect().Descriptor(), signerFields)
-	gen := rapid.StringOfN(rapid.RuneFrom(nil, unicode.ASCII_Hex_Digit), 6, 6, -1)
-	mapFn := func(t *rapid.T, field protoreflect.FieldDescriptor, name string) (protoreflect.Value, bool) {
-		n := string(field.Name())
-		if _, ok := signerFields[n]; ok {
-			return protoreflect.ValueOfString(gen.Draw(t, name)), true
-		}
-		return protoreflect.Value{}, false
-	}
-	opts.FieldMaps = append(opts.FieldMaps, mapFn)
-	return opts
 }
 
 func GenType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.GeneratorOptions) GeneratedType {

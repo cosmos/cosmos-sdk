@@ -14,7 +14,7 @@ import (
 //
 // TODO: Instead of using the mint module account, which has the
 // permission of minting, create a "faucet" account. (@fdymylja)
-func FundAccount(bankKeeper bankkeeper.Keeper, ctx context.Context, addr sdk.AccAddress, amounts sdk.Coins) error {
+func FundAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, addr sdk.AccAddress, amounts sdk.Coins) error {
 	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func FundAccount(bankKeeper bankkeeper.Keeper, ctx context.Context, addr sdk.Acc
 //
 // TODO: Instead of using the mint module account, which has the
 // permission of minting, create a "faucet" account. (@fdymylja)
-func FundModuleAccount(bankKeeper bankkeeper.Keeper, ctx context.Context, recipientMod string, amounts sdk.Coins) error {
+func FundModuleAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, recipientMod string, amounts sdk.Coins) error {
 	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
 		return err
 	}

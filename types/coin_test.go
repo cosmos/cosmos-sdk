@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -1322,4 +1323,10 @@ func (s *coinTestSuite) TestCoinAminoEncoding() {
 	s.Require().NoError(err)
 	s.Require().Equal(bz1, bz3)
 	s.Require().Equal(bz2[1:], bz3)
+}
+
+func TestCoin_ProtoEqual_Simple(t *testing.T) {
+	a := sdk.NewInt64Coin("mycoin", 100)
+	b := sdk.NewInt64Coin("mycoin", 100)
+	require.True(t, proto.Equal(&a, &b))
 }

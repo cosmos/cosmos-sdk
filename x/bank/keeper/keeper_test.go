@@ -620,7 +620,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
 
 	suite.mockFundAccount(accAddrs[1])
-	suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, accAddrs[1], balances))
+	suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[1], balances))
 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(vacc)
 	suite.Require().Error(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], sendCoins))

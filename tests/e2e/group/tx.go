@@ -402,16 +402,17 @@ func (s *E2ETestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			s.Require().NoError(err)
 
 			if tc.expectLogErr {
-				s.Require().Contains(execResp.RawLog, tc.errMsg)
+				fmt.Println(execResp, tc.errMsg)
+				s.Require().Contains(execResp.Events, tc.errMsg)
 			}
 		})
 	}
 }
 
 func (s *E2ETestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
-	s.Require().Greater(len(txResp.Logs), 0)
-	s.Require().NotNil(txResp.Logs[0].Events)
-	events := txResp.Logs[0].Events
+	s.Require().Greater(len(txResp.Events), 0)
+	s.Require().NotNil(txResp.Events[0])
+	events := txResp.Events
 	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{})
 
 	for _, e := range events {
@@ -424,9 +425,9 @@ func (s *E2ETestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string
 }
 
 func (s *E2ETestSuite) getGroupIDFromTxResponse(txResp sdk.TxResponse) string {
-	s.Require().Greater(len(txResp.Logs), 0)
-	s.Require().NotNil(txResp.Logs[0].Events)
-	events := txResp.Logs[0].Events
+	s.Require().Greater(len(txResp.Events), 0)
+	s.Require().NotNil(txResp.Events[0])
+	events := txResp.Events
 	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventCreateGroup{})
 
 	for _, e := range events {

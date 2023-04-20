@@ -93,7 +93,7 @@ func setAccountBalance(t *testing.T, f *fixture, addr sdk.AccAddress, amount int
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, addr)
 	f.accountKeeper.SetAccount(f.ctx, acc)
 
-	err := testutil.FundAccount(f.bankKeeper, f.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
+	err := testutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
 	assert.NilError(t, err)
 
 	bankGenesisState := f.bankKeeper.ExportGenesis(f.ctx)

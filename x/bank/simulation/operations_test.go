@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -33,6 +34,7 @@ type SimTestSuite struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    keeper.Keeper
 	cdc           codec.Codec
+	txConfig      client.TxConfig
 	app           *runtime.App
 }
 
@@ -48,7 +50,7 @@ func (suite *SimTestSuite) SetupTest() {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
-	), &suite.accountKeeper, &suite.bankKeeper, &suite.cdc, &appBuilder)
+	), &suite.accountKeeper, &suite.bankKeeper, &suite.cdc, &suite.txConfig, &appBuilder)
 
 	suite.NoError(err)
 
@@ -60,7 +62,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	cdc := suite.cdc
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.accountKeeper, suite.bankKeeper)
+	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.txConfig, suite.accountKeeper, suite.bankKeeper)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -101,7 +103,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSend(suite.accountKeeper, suite.bankKeeper)
+	op := simulation.SimulateMsgSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -128,7 +130,7 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgMultiSend(suite.accountKeeper, suite.bankKeeper)
+	op := simulation.SimulateMsgMultiSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	require := suite.Require()
 	require.NoError(err)
@@ -161,7 +163,7 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSendToModuleAccount(suite.accountKeeper, suite.bankKeeper, moduleAccCount)
+	op := simulation.SimulateMsgSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, moduleAccCount)
 
 	s = rand.NewSource(1)
 	r = rand.New(s)
@@ -192,7 +194,7 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.accountKeeper, suite.bankKeeper, mAccCount)
+	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccCount)
 
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)

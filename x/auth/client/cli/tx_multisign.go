@@ -7,8 +7,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/tx/decode"
+	txsigning "cosmossdk.io/x/tx/signing"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types/registry"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -112,6 +117,11 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
 
+		decoder, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
+		if err != nil {
+			return err
+		}
+
 		// read each signature and add it to the multisig if valid
 		for i := 2; i < len(args); i++ {
 			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
@@ -124,15 +134,37 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			}
 
 			for _, sig := range sigs {
-				signingData := signing.SignerData{
-					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
+				anyPk, err := codectypes.NewAnyWithValue(sig.PubKey)
+				if err != nil {
+					return err
+				}
+				txSignerData := txsigning.SignerData{
 					ChainID:       txFactory.ChainID(),
 					AccountNumber: txFactory.AccountNumber(),
 					Sequence:      txFactory.Sequence(),
-					PubKey:        sig.PubKey,
+					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
+					PubKey: &anypb.Any{
+						TypeUrl: anyPk.TypeUrl,
+						Value:   anyPk.Value,
+					},
+				}
+				txBytes, err := txCfg.TxEncoder()(txBuilder.GetTx())
+				if err != nil {
+					return err
+				}
+				decodedTx, err := decoder.Decode(txBytes)
+				if err != nil {
+					return err
+				}
+				txData := txsigning.TxData{
+					Body:          decodedTx.Tx.Body,
+					AuthInfo:      decodedTx.Tx.AuthInfo,
+					AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
+					BodyBytes:     decodedTx.TxRaw.BodyBytes,
 				}
 
-				err = signing.VerifySignature(cmd.Context(), sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
+				err = signing.VerifySignature(cmd.Context(), sig.PubKey, txSignerData, sig.Data,
+					txCfg.SignModeHandler(), txData)
 				if err != nil {
 					addr, _ := sdk.AccAddressFromHexUnsafe(sig.PubKey.Address().String())
 					return fmt.Errorf("couldn't verify signature for address %s", addr)
@@ -295,16 +327,43 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 			multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-			signingData := signing.SignerData{
-				Address:       sdk.AccAddress(pubKey.Address()).String(),
+
+			anyPk, err := codectypes.NewAnyWithValue(multisigPub)
+			if err != nil {
+				return err
+			}
+			txSignerData := txsigning.SignerData{
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),
 				Sequence:      txFactory.Sequence(),
-				PubKey:        pubKey,
+				Address:       sdk.AccAddress(pubKey.Address()).String(),
+				PubKey: &anypb.Any{
+					TypeUrl: anyPk.TypeUrl,
+					Value:   anyPk.Value,
+				},
 			}
 
+			txBytes, err := txCfg.TxEncoder()(txBldr.GetTx())
+			if err != nil {
+				return err
+			}
+			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
+			if err != nil {
+				return err
+			}
+			decodedTx, err := decodeCtx.Decode(txBytes)
+			if err != nil {
+				return err
+			}
+			txData := txsigning.TxData{
+				Body:          decodedTx.Tx.Body,
+				AuthInfo:      decodedTx.Tx.AuthInfo,
+				AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
+				BodyBytes:     decodedTx.TxRaw.BodyBytes,
+			}
 			for _, sig := range signatureBatch {
-				err = signing.VerifySignature(cmd.Context(), sig[i].PubKey, signingData, sig[i].Data, txCfg.SignModeHandler(), txBldr.GetTx())
+				err = signing.VerifySignature(cmd.Context(), sig[i].PubKey, txSignerData, sig[i].Data,
+					txCfg.SignModeHandler(), txData)
 				if err != nil {
 					return fmt.Errorf("couldn't verify signature: %w %v", err, sig)
 				}

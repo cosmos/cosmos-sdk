@@ -7,10 +7,13 @@ import (
 	"io"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
+
+	// without this import amino json encoding will fail when resolving any types
+	_ "cosmossdk.io/api/cosmos/group/v1"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

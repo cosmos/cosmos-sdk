@@ -414,7 +414,7 @@ func getTestingAccounts(
 	for _, account := range accounts {
 		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
 		accountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, testutil.FundAccount(bankKeeper, ctx, account.Address, initCoins))
+		require.NoError(t, testutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
 	}
 
 	return accounts

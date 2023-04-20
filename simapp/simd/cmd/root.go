@@ -5,17 +5,16 @@ import (
 	"io"
 	"os"
 
-	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -82,18 +81,13 @@ func NewRootCmd() *cobra.Command {
 
 			// This needs to go after ReadFromClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
-			//
-			// TODO Currently, the TxConfig below doesn't include Textual, so
-			// an error will arise when using the --textual flag.
-			// ref: https://github.com/cosmos/cosmos-sdk/issues/11970
-			txt, err := txmodule.NewTextualWithGRPCConn(initClientCtx)
+			opts, err := txmodule.NewSignModeOptionsWithMetadataQueryFn(txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx))
 			if err != nil {
 				return err
 			}
-			txConfigWithTextual := tx.NewTxConfigWithTextual(
+			txConfigWithTextual := tx.NewTxConfigWithOptions(
 				codec.NewProtoCodec(encodingConfig.InterfaceRegistry),
-				encodingConfig.TxConfig.SignModeHandler().Modes(),
-				txt,
+				opts,
 			)
 			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
 

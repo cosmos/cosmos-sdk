@@ -68,15 +68,15 @@ func (s *paginationTestSuite) SetupTest() {
 
 	app, err := testutilsims.Setup(
 		depinject.Configs(
-		configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.BankModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.OmitInitGenesis(),
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.BankModule(),
+				configurator.ParamsModule(),
+				configurator.ConsensusModule(),
+				configurator.OmitInitGenesis(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
-		depinject.Supply(log.NewNopLogger()),
-	),
 		&bankKeeper, &accountKeeper, &reg, &cdc)
 
 	s.NoError(err)

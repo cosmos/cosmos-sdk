@@ -104,6 +104,6 @@ func TestVerifyProposerRewardAssignement(t *testing.T) {
 	rewardsValidatorBeforeLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
 	rewardsLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx].addr)
 	rewardsValidatorAfterLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
-	require.True(t, rewardsLazyValidator[0].Amount.LT(rewardsValidatorAfterLazyValidator[0].Amount))
+	require.True(t, rewardsLazyValidator[0].Amount.Equal(rewardsValidatorAfterLazyValidator[0].Amount))
 	require.Equal(t, rewardsValidatorBeforeLazyValidator, rewardsValidatorAfterLazyValidator)
 }

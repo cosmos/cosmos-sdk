@@ -151,7 +151,8 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 					Short:     "Send funds from one account to two or more accounts.",
 					Long: `Send funds from one account to two or more accounts.
 By default, sends the [amount] to each address of the list.
-Using the '--split' flag, the [amount] is split equally between the addresses.
+Using the '--split' flag
+, the [amount] is split equally between the addresses.
 Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
 When using '--dry-run' a key name cannot be used, only a bech32 address.
 `,

@@ -12,6 +12,7 @@ import (
 
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -403,9 +404,19 @@ func (s *E2ETestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			execResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, execResp.TxHash)
 			s.Require().NoError(err)
 
+			eventExec, _ := sdk.TypedEventToEvent(&group.EventExec{})
+
+			// get the event that contains the result
 			if tc.expectLogErr {
-				fmt.Println(execResp, tc.errMsg)
-				s.Require().Contains(execResp.Events, tc.errMsg)
+				for _, e := range execResp.Events {
+					if e.Type == eventExec.Type {
+						for _, a := range e.Attributes {
+							if a.Key == "result" {
+								s.Require().Contains(tc.errMsg, a.Value)
+							}
+						}
+					}
+				}
 			}
 		})
 	}

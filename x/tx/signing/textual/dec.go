@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/math"
 )
 
-// NewDecValueRenderer returns a ValueRenderer for encoding sdk.Dec cosmos
+// NewDecValueRenderer returns a ValueRenderer for encoding math.Dec cosmos
 // scalars.
 func NewDecValueRenderer() ValueRenderer {
 	return decValueRenderer{}
@@ -25,7 +25,7 @@ func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 	decStr := v.String()
 
 	// If the decimal doesn't contain a point, we assume it's a value formatted using the legacy
-	// `sdk.Dec`. So we try to parse it as an integer and then convert it to a
+	// `math.Dec`. So we try to parse it as an integer and then convert it to a
 	// decimal.
 	if !strings.Contains(decStr, ".") {
 		parsedInt, ok := new(big.Int).SetString(decStr, 10)

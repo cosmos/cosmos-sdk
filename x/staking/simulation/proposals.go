@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"math/rand"
 	"time"
 
@@ -40,7 +41,7 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) 
 	params.MaxEntries = uint32(simtypes.RandIntBetween(r, 1, 1000))
 	params.MaxValidators = uint32(simtypes.RandIntBetween(r, 1, 1000))
 	params.UnbondingTime = time.Duration(simtypes.RandTimestamp(r).UnixNano())
-	params.MinCommissionRate = simtypes.RandomDecAmount(r, sdk.NewDec(1))
+	params.MinCommissionRate = simtypes.RandomDecAmount(r, sdkmath.LegacyNewDec(1))
 
 	return &types.MsgUpdateParams{
 		Authority: authority.String(),

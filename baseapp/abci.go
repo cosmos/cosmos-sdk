@@ -327,43 +327,6 @@ func (app *BaseApp) ApplySnapshotChunk(_ context.Context, req *abci.RequestApply
 	}
 }
 
-func (app *BaseApp) legacyBeginBlock(req *abci.RequestFinalizeBlock) sdk.LegacyResponseBeginBlock {
-	var (
-		resp sdk.LegacyResponseBeginBlock
-		err  error
-	)
-
-	// TODO: Fill out fields...
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-	legacyReq := sdk.LegacyRequestBeginBlock{}
-
-	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.ctx, legacyReq)
-		if err != nil {
-			panic(err)
-		}
-
-		resp.Response.Events = sdk.MarkEventsToIndex(resp.Response.Events, app.indexEvents)
-	}
-
-	// call the streaming service hook with the BeginBlock messages
-	for _, abciListener := range app.streamingManager.ABCIListeners {
-		ctx := app.finalizeBlockState.ctx
-		blockHeight := ctx.BlockHeight()
-
-		// TODO: Figure out what to do with ListenBeginBlock and the types necessary
-		// as we cannot have the store sub-module depend on the root SDK module.
-		//
-		// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-		if err := abciListener.ListenBeginBlock(ctx, req, res); err != nil {
-			app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
-		}
-	}
-
-	return resp
-}
-
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
 // CheckTx mode, messages are not executed. This means messages are only validated
 // and only the AnteHandler is executed. State is persisted to the BaseApp's
@@ -640,58 +603,6 @@ func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVeri
 	return resp, err
 }
 
-func (app *BaseApp) legacyDeliverTx(tx []byte) *abci.ExecTxResult {
-	gInfo := sdk.GasInfo{}
-	resultStr := "successful"
-
-	var resp *abci.ExecTxResult
-	defer func() {
-		// call the streaming service hook with the EndBlock messages
-		for _, abciListener := range app.streamingManager.ABCIListeners {
-			ctx := app.finalizeBlockState.ctx
-			blockHeight := ctx.BlockHeight()
-
-			// TODO: Figure out what to do with ListenDeliverTx and the types necessary
-			// as we cannot have the store sub-module depend on the root SDK module.
-			//
-			// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-			if err := abciListener.ListenDeliverTx(ctx, req, resp); err != nil {
-				app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
-			}
-		}
-	}()
-
-	defer func() {
-		telemetry.IncrCounter(1, "tx", "count")
-		telemetry.IncrCounter(1, "tx", resultStr)
-		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
-		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
-	}()
-
-	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx)
-	if err != nil {
-		resultStr = "failed"
-		resp = sdkerrors.ResponseExecTxResultWithEvents(
-			err,
-			gInfo.GasWanted,
-			gInfo.GasUsed,
-			sdk.MarkEventsToIndex(anteEvents, app.indexEvents),
-			app.trace,
-		)
-		return resp
-	}
-
-	resp = &abci.ExecTxResult{
-		GasWanted: int64(gInfo.GasWanted),
-		GasUsed:   int64(gInfo.GasUsed),
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}
-
-	return resp
-}
-
 func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
@@ -743,11 +654,12 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 			WithHeaderHash(req.Hash)
 	}
 
-	beginBlockResp := app.legacyBeginBlock(req)
+	beginBlock := app.beginBlock(req)
+	events = append(events, beginBlock.Events...)
 
 	txResults := make([]*abci.ExecTxResult, len(req.Txs))
 	for i, rawTx := range req.Txs {
-		txResults[i] = app.legacyDeliverTx(rawTx)
+		txResults[i] = app.deliverTx(rawTx) // TODO
 	}
 
 	if app.finalizeBlockState.ms.TracingEnabled() {

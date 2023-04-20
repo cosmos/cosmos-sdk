@@ -78,21 +78,20 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.NoError(err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
+	app.InitChain(context.TODO(),
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: sims.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
 
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
+	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
+		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
-	}})
+	})
 
 	// end of app init
 

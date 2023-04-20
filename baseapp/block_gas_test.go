@@ -154,8 +154,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
-			bapp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
-			rsp := bapp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			rsp, err := bapp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			require.NoError(t, err)
 
 			// check result
 			ctx = bapp.GetContextForDeliverTx(txBytes)
@@ -163,9 +163,9 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			if tc.expErr {
 				if tc.panicTx {
-					require.Equal(t, sdkerrors.ErrPanic.ABCICode(), rsp.Code)
+					require.Equal(t, sdkerrors.ErrPanic.ABCICode(), rsp.TxResults[0].Code)
 				} else {
-					require.Equal(t, sdkerrors.ErrOutOfGas.ABCICode(), rsp.Code)
+					require.Equal(t, sdkerrors.ErrOutOfGas.ABCICode(), rsp.TxResults[0].Code)
 				}
 				require.Empty(t, okValue)
 			} else {

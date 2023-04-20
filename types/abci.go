@@ -30,7 +30,7 @@ type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) 
 // as of CometBFT v0.38.0. This function type alias is provided for backwards
 // compatibility with applications that still use the BeginBlock ABCI method
 // and allows for existing BeginBlock functionality within applications.
-type LegacyBeginBlocker func(Context, LegacyRequestBeginBlock) (LegacyResponseBeginBlock, error)
+type BeginBlocker func(Context) (BeginBlock, error)
 
 // LegacyEndBlocker defines a function type alias for executing application
 // business logic after transactions are executed but before committing.
@@ -45,4 +45,9 @@ type EndBlocker func(Context) (EndBlock, error)
 type EndBlock struct {
 	ValidatorUpdates []abci.ValidatorUpdate
 	Events           []abci.Event
+}
+
+// EndBlocker defines a type which contains endblock events and validator set updates
+type BeginBlock struct {
+	Events []abci.Event
 }

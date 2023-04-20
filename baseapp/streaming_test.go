@@ -126,8 +126,8 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 	nBlocks := 2
 
 	for blockN := 0; blockN < nBlocks; blockN++ {
-		header := tmproto.Header{Height: int64(blockN) + 1}
-		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
 
 		ctx := getDeliverStateCtx(suite.baseApp)
 		sm := ctx.StreamingManager()
@@ -135,7 +135,6 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 		require.Equal(t, listeners, sm.ABCIListeners, fmt.Sprintf("should contain same listeners: %v", listeners))
 		require.Equal(t, true, sm.StopNodeOnErr, "should contain StopNodeOnErr = true")
 
-		suite.baseApp.EndBlock(abci.RequestEndBlock{})
-		suite.baseApp.Commit()
+		suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 	}
 }

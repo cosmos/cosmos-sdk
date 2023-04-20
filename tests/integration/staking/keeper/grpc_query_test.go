@@ -144,6 +144,17 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 			"delegator address cannot be empty",
 		},
 		{
+			"invalid delegator address",
+			func() {
+				req = &types.QueryDelegatorValidatorsRequest{
+					DelegatorAddr: "invalid",
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
+			},
+			false,
+			"invalid bech32",
+		},
+		{
 			"valid request",
 			func() {
 				req = &types.QueryDelegatorValidatorsRequest{
@@ -209,6 +220,28 @@ func TestGRPCQueryDelegatorValidator(t *testing.T) {
 			},
 			false,
 			"no delegation for (address, validator) tuple",
+		},
+		{
+			"empty delegator address",
+			func() {
+				req = &types.QueryDelegatorValidatorRequest{
+					DelegatorAddr: "",
+					ValidatorAddr: addrVal1,
+				}
+			},
+			false,
+			"delegator address cannot be empty",
+		},
+		{
+			"empty validator address",
+			func() {
+				req = &types.QueryDelegatorValidatorRequest{
+					DelegatorAddr: addr.String(),
+					ValidatorAddr: "",
+				}
+			},
+			false,
+			"validator address cannot be empty",
 		},
 		{
 			"valid request",
@@ -422,7 +455,7 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 			"validator address cannot be empty",
 		},
 		{
-			"invalid validator delegator pair",
+			"invalid validator address",
 			func() {
 				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal2.String()}
 			},
@@ -504,12 +537,44 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 			"delegator address cannot be empty",
 		},
 		{
-			"invalid request",
+			"empty validator address",
 			func() {
-				req = &types.QueryUnbondingDelegationRequest{}
+				req = &types.QueryUnbondingDelegationRequest{
+					DelegatorAddr: addrAcc2.String(),
+				}
+			},
+			false,
+			"validator address cannot be empty",
+		},
+		{
+			"empty delegator address",
+			func() {
+				req = &types.QueryUnbondingDelegationRequest{
+					ValidatorAddr: addrVal2,
+				}
 			},
 			false,
 			"delegator address cannot be empty",
+		},
+		{
+			"invalid validator address",
+			func() {
+				req = &types.QueryUnbondingDelegationRequest{
+					DelegatorAddr: addrAcc2.String(), ValidatorAddr: sdk.AccAddress([]byte("invalid")).String(),
+				}
+			},
+			false,
+			"invalid Bech32",
+		},
+		{
+			"delegation not found for validator",
+			func() {
+				req = &types.QueryUnbondingDelegationRequest{
+					DelegatorAddr: addrAcc2.String(), ValidatorAddr: sdk.ValAddress([]byte("invalid")).String(),
+				}
+			},
+			false,
+			fmt.Sprintf("unbonding delegation with delegator %s not found for validator", addrAcc2.String()),
 		},
 		{
 			"valid request",
@@ -870,6 +935,17 @@ func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 			},
 			false,
 			"validator address cannot be empty",
+		},
+		{
+			"invalid validator address",
+			func() {
+				req = &types.QueryValidatorUnbondingDelegationsRequest{
+					ValidatorAddr: "invalid",
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
+			},
+			false,
+			"invalid bech32",
 		},
 		{
 			"valid request",

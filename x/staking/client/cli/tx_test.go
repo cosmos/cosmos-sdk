@@ -500,6 +500,34 @@ func (s *CLITestSuite) TestNewRedelegateCmd() {
 			"invalid decimal coin expression: fooCoin",
 		},
 		{
+			"wrong src validator",
+			[]string{
+				"invalid",                           // wrong src-validator-addr
+				sdk.ValAddress(s.addrs[1]).String(), // dst-validator-addr
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)).String(), // amount
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			"invalid bech32",
+		},
+		{
+			"wrong dst validator",
+			[]string{
+				sdk.ValAddress(s.addrs[0]).String(), // src-validator-addr
+				"invalid",                           // wrong dst-validator-addr
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)).String(), // amount
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			"invalid bech32",
+		},
+		{
 			"valid transaction of delegate",
 			[]string{
 				sdk.ValAddress(s.addrs[0]).String(),                         // src-validator-addr

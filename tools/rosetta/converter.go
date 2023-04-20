@@ -2,19 +2,21 @@ package rosetta
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
 
-	sdkmath "cosmossdk.io/math"
-	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
-	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto"
 	tmcoretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
+
+	sdkmath "cosmossdk.io/math"
+	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
+	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -113,7 +115,9 @@ func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sd
 		txDecode:        cfg.TxDecoder(),
 		txEncode:        cfg.TxEncoder(),
 		bytesToSign: func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error) {
-			bytesToSign, err := cfg.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
+			bytesToSign, err := authsigning.GetSignBytesAdapter(
+				context.Background(), cfg.TxEncoder(), cfg.SignModeHandler(),
+				signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
 			if err != nil {
 				return nil, err
 			}

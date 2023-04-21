@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -35,7 +36,8 @@ func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 
 	reqInfo := abci.RequestInfo{}
-	res := suite.baseApp.Info(reqInfo)
+	res, err := suite.baseApp.Info(context.TODO(), &reqInfo)
+	require.NoError(t, err)
 
 	require.Equal(t, "", res.Version)
 	require.Equal(t, t.Name(), res.GetData())
@@ -74,18 +76,20 @@ func TestABCI_InitChain(t *testing.T) {
 
 	// initChain is nil - nothing happens
 	app.InitChain(abci.RequestInitChain{ChainId: "test-chain-id"})
-	res := app.Query(query)
+	res, err := app.Query(context.TODO(), &query)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(res.Value))
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
 
 	// stores are mounted and private members are set - sealing baseapp
-	err := app.LoadLatestVersion() // needed to make stores non-nil
+	err = app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 	require.Equal(t, int64(0), app.LastBlockHeight())
 
-	initChainRes := app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
+	initChainRes, err := app.InitChain(context.TODO(), &abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
+	require.NoError(t, err)
 
 	// The AppHash returned by a new chain is the sha256 hash of "".
 	// $ echo -n '' | sha256sum
@@ -103,8 +107,9 @@ func TestABCI_InitChain(t *testing.T) {
 	chainID = getCheckStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
-	app.Commit()
-	res = app.Query(query)
+	app.Commit(context.TODO(), &abci.RequestCommit{})
+	res, err = app.Query(context.TODO(), &query)
+	require.NoError(t, err)
 	require.Equal(t, int64(1), app.LastBlockHeight())
 	require.Equal(t, value, res.Value)
 
@@ -117,15 +122,16 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, int64(1), app.LastBlockHeight())
 
 	// ensure we can still query after reloading
-	res = app.Query(query)
+	res, err = app.Query(context.TODO(), &query)
+	require.NoError(t, err)
 	require.Equal(t, value, res.Value)
 
 	// commit and ensure we can still query
-	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	app.Commit()
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
-	res = app.Query(query)
+	res, err = app.Query(context.TODO(), &query)
+	require.NoError(t, err)
 	require.Equal(t, value, res.Value)
 }
 
@@ -135,11 +141,12 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
-		abci.RequestInitChain{
+		context.TODO(),
+		&abci.RequestInitChain{
 			InitialHeight: 3,
 		},
 	)
-	app.Commit()
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
@@ -150,25 +157,18 @@ func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
-		abci.RequestInitChain{
+		context.TODO(),
+		&abci.RequestInitChain{
 			InitialHeight: 3,
 		},
 	)
 
 	require.PanicsWithError(t, "invalid height: 4; expected: 3", func() {
-		app.BeginBlock(abci.RequestBeginBlock{
-			Header: cmtproto.Header{
-				Height: 4,
-			},
-		})
+		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 4})
 	})
 
-	app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height: 3,
-		},
-	})
-	app.Commit()
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 3})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
@@ -183,7 +183,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, grpcQueryOpt)
 
-	suite.baseApp.InitChain(abci.RequestInitChain{
+	suite.baseApp.InitChain(context.TODO(), &abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -191,23 +191,24 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	reqBz, err := req.Marshal()
 	require.NoError(t, err)
 
-	resQuery := suite.baseApp.Query(abci.RequestQuery{
+	resQuery, err := suite.baseApp.Query(context.TODO(), &abci.RequestQuery{
 		Data: reqBz,
 		Path: "/testpb.Query/SayHello",
 	})
+	require.NoError(t, err)
 	require.Equal(t, sdkerrors.ErrInvalidHeight.ABCICode(), resQuery.Code, resQuery)
 	require.Contains(t, resQuery.Log, "TestABCI_GRPCQuery is not ready; please wait for first block")
 
-	header := cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-	suite.baseApp.Commit()
+	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
+	suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
 		Path: "/testpb.Query/SayHello",
 	}
 
-	resQuery = suite.baseApp.Query(reqQuery)
+	resQuery, err = suite.baseApp.Query(context.TODO(), &reqQuery)
+	require.NoError(t, err)
 	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
 
 	var res testdata.SayHelloResponse
@@ -217,16 +218,16 @@ func TestABCI_GRPCQuery(t *testing.T) {
 
 func TestABCI_P2PQuery(t *testing.T) {
 	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
+		bapp.SetAddrPeerFilter(func(addrport string) *abci.ResponseQuery {
 			require.Equal(t, "1.1.1.1:8000", addrport)
-			return abci.ResponseQuery{Code: uint32(3)}
+			return &abci.ResponseQuery{Code: uint32(3)}
 		})
 	}
 
 	idPeerFilterOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetIDPeerFilter(func(id string) abci.ResponseQuery {
+		bapp.SetIDPeerFilter(func(id string) *abci.ResponseQuery {
 			require.Equal(t, "testid", id)
-			return abci.ResponseQuery{Code: uint32(4)}
+			return &abci.ResponseQuery{Code: uint32(4)}
 		})
 	}
 
@@ -235,13 +236,15 @@ func TestABCI_P2PQuery(t *testing.T) {
 	addrQuery := abci.RequestQuery{
 		Path: "/p2p/filter/addr/1.1.1.1:8000",
 	}
-	res := suite.baseApp.Query(addrQuery)
+	res, err := suite.baseApp.Query(context.TODO(), &addrQuery)
+	require.NoError(t, err)
 	require.Equal(t, uint32(3), res.Code)
 
 	idQuery := abci.RequestQuery{
 		Path: "/p2p/filter/id/testid",
 	}
-	res = suite.baseApp.Query(idQuery)
+	res, err = suite.baseApp.Query(context.TODO(), &idQuery)
+	require.NoError(t, err)
 	require.Equal(t, uint32(4), res.Code)
 }
 
@@ -256,7 +259,8 @@ func TestABCI_ListSnapshots(t *testing.T) {
 
 	suite := NewBaseAppSuiteWithSnapshots(t, ssCfg)
 
-	resp := suite.baseApp.ListSnapshots(abci.RequestListSnapshots{})
+	resp, err := suite.baseApp.ListSnapshots(context.TODO(), &abci.RequestListSnapshots{})
+	require.NoError(t, err)
 	for _, s := range resp.Snapshots {
 		require.NotEmpty(t, s.Hash)
 		require.NotEmpty(t, s.Metadata)

@@ -73,7 +73,7 @@ message MsgCreateValidator {
   // The validator address bytes and delegator address bytes refer to the same account while creating validator (defer
   // only in bech32 notation).
   string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
-  string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
@@ -90,7 +90,7 @@ message MsgEditValidator {
   option (gogoproto.goproto_getters) = false;
 
   Description description       = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  string      validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string      validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 
   // We pass a reference to the new commission rate and min self delegation as
   // it's not mandatory to update. If not updated, the deserialized rate will be
@@ -115,7 +115,7 @@ message MsgDelegate {
   option (gogoproto.goproto_getters) = false;
 
   string                   delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -132,8 +132,8 @@ message MsgBeginRedelegate {
   option (gogoproto.goproto_getters) = false;
 
   string                   delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string                   validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   cosmos.base.v1beta1.Coin amount                = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -153,7 +153,7 @@ message MsgUndelegate {
   option (gogoproto.goproto_getters) = false;
 
   string                   delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -178,7 +178,7 @@ message MsgCancelUnbondingDelegation {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // amount is always less than or equal to unbonding delegation entry balance
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // creation_height is the height which the unbonding took place.

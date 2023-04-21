@@ -587,15 +587,14 @@ func (k msgServer) RotateOperatorKey(goCtx context.Context, req *types.MsgRotate
 	// checks if the signing account has enough balance to pay KeyRotationFee
 	// pays KeyRotationFee to community fund
 	rotationFee := k.OperatorKeyRotationFee(ctx)
-	sender := sdk.AccAddress(curValAddr)
+	delAddr := sdk.AccAddress(curValAddr)
 
-	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, sdk.NewCoins(rotationFee))
+	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, delAddr, distrtypes.ModuleName, sdk.NewCoins(rotationFee))
 	if err != nil {
 		return nil, err
 	}
 
-	validator.OperatorAddress = req.NewOperatorKey
-	k.SetValidator(ctx, validator)
+	k.updateValidatorOperatorKey(ctx, validator, delAddr, newValAddr, curValAddr)
 
 	// Add OperatorKeyRotationRecord for tracking rotations
 	if err := k.SetOperatorKeyRotationRecord(ctx, curValAddr, newValAddr, ctx.BlockHeight()); err != nil {

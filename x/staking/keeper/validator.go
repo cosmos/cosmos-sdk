@@ -487,3 +487,13 @@ func (k Keeper) IsValidatorJailed(ctx sdk.Context, addr sdk.ConsAddress) bool {
 
 	return v.Jailed
 }
+
+func (k Keeper) updateValidatorOperatorKey(ctx sdk.Context, validator types.Validator, delAddr sdk.AccAddress, newValAddr, curValAddr sdk.ValAddress) {
+	validator.OperatorAddress = newValAddr.String()
+	k.SetValidator(ctx, validator)
+	k.SetValidatorByConsAddr(ctx, validator)
+	k.SetValidatorByPowerIndex(ctx, validator)
+	k.updateAllUBDQueue(ctx, curValAddr, newValAddr, ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx)))
+	k.updateUBDToNewValAddr(ctx, delAddr, curValAddr, newValAddr)
+	k.updateRedelegationQueue(ctx, curValAddr, newValAddr, ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx)))
+}

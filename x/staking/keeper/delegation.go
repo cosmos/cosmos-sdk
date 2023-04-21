@@ -353,7 +353,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	return ubd
 }
 
-func (k Keeper) updateUBDToNewValAddr(ctx sdk.Context, delAddr sdk.AccAddress, newValAddr, oldValAddr sdk.ValAddress) {
+func (k Keeper) updateUBDToNewValAddr(ctx sdk.Context, delAddr sdk.AccAddress, oldValAddr, newValAddr sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	oldKey := types.GetUBDKey(delAddr, oldValAddr)
 	bz := store.Get(oldKey)
@@ -748,7 +748,6 @@ func (k Keeper) updateRedelegationQueue(ctx sdk.Context, oldValAddr, newValAddr 
 
 		for i := 0; i < len(timeslice.Triplets); i++ {
 			if timeslice.Triplets[i].ValidatorSrcAddress == oldValAddr.String() {
-				// redBz := k.GetRedelegation(ctx, timeslice.Triplets[i])
 				timeslice.Triplets[i].ValidatorSrcAddress = newValAddr.String()
 			} else if timeslice.Triplets[i].ValidatorDstAddress == oldValAddr.String() {
 				timeslice.Triplets[i].ValidatorDstAddress = newValAddr.String()

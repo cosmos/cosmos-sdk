@@ -41,13 +41,13 @@ type BeginBlocker func(Context) (BeginBlock, error)
 // and allows for existing EndBlock functionality within applications.
 type EndBlocker func(Context) (EndBlock, error)
 
-// EndBlocker defines a type which contains endblock events and validator set updates
+// EndBlock defines a type which contains endblock events and validator set updates
 type EndBlock struct {
 	ValidatorUpdates []abci.ValidatorUpdate
 	Events           []abci.Event
 }
 
-// EndBlocker defines a type which contains endblock events and validator set updates
+// BeginBlock defines a type which contains beginBlock events
 type BeginBlock struct {
 	Events []abci.Event
 }

@@ -179,19 +179,3 @@ message SearchBlocksResult {
   // List of blocks in current page
   repeated tendermint.types.Block blocks = 6;
 }
-
-// LegacyRequestBeginBlock defines a wrapper around the now deprecated
-// RequestBeginBlock type.
-message LegacyRequestBeginBlock {
-  // TODO: Add legacy fields.
-  //
-  // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-}
-
-// LegacyResponseBeginBlock defines a wrapper around the now deprecated
-// ResponseBeginBlock type.
-message LegacyResponseBeginBlock {
-  // TODO: Add legacy fields.
-  //
-  // Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-}

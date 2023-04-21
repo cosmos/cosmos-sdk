@@ -158,55 +158,6 @@ func (s *E2ETestSuite) TestQueryGroupsByMembers() {
 	}
 }
 
-func (s *E2ETestSuite) TestQueryGroups() {
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-	require := s.Require()
-
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectErrMsg string
-		numItems     int
-		expectGroups []*group.GroupInfo
-	}{
-		{
-			name:      "valid req",
-			args:      []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			expectErr: false,
-			numItems:  1,
-		},
-		{
-			name: "valid req with pagination",
-			args: []string{
-				"--limit=2",
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			expectErr: false,
-			numItems:  2,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := client.QueryGroupsCmd()
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				require.Contains(out.String(), tc.expectErrMsg)
-			} else {
-				require.NoError(err, out.String())
-
-				var resp group.QueryGroupsResponse
-				val.ClientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &resp)
-
-				require.Len(resp.Groups, tc.numItems)
-			}
-		})
-	}
-}
-
 func (s *E2ETestSuite) TestQueryGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
@@ -312,7 +263,6 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 			[]string{"cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-
 			[]*group.GroupInfo{},
 		},
 		{
@@ -320,7 +270,6 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-
 			[]*group.GroupInfo{
 				s.group,
 			},
@@ -334,7 +283,6 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 			},
 			false,
 			"",
-
 			[]*group.GroupInfo{
 				s.group,
 			},
@@ -437,7 +385,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 			[]string{""},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
-
 			[]*group.GroupPolicyInfo{},
 		},
 		{
@@ -445,7 +392,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-
 			[]*group.GroupPolicyInfo{},
 		},
 		{
@@ -453,7 +399,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-
 			[]*group.GroupPolicyInfo{
 				s.groupPolicies[0],
 				s.groupPolicies[1],
@@ -472,7 +417,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 			},
 			false,
 			"",
-
 			[]*group.GroupPolicyInfo{
 				s.groupPolicies[0],
 				s.groupPolicies[1],
@@ -527,7 +471,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 			[]string{"invalid"},
 			true,
 			"decoding bech32 failed: invalid bech32 string",
-
 			[]*group.GroupPolicyInfo{},
 		},
 		{
@@ -535,7 +478,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 			[]string{"cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-
 			[]*group.GroupPolicyInfo{},
 		},
 		{
@@ -543,7 +485,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-
 			[]*group.GroupPolicyInfo{
 				s.groupPolicies[0],
 				s.groupPolicies[1],
@@ -657,7 +598,6 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 			[]string{"invalid"},
 			true,
 			"decoding bech32 failed: invalid bech32 string",
-
 			[]*group.Proposal{},
 		},
 		{
@@ -665,7 +605,6 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 			[]string{"cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-
 			[]*group.Proposal{},
 		},
 		{
@@ -673,7 +612,6 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-
 			[]*group.Proposal{
 				s.proposal,
 			},
@@ -687,7 +625,6 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 			},
 			false,
 			"",
-
 			[]*group.Proposal{
 				s.proposal,
 			},

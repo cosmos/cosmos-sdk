@@ -103,7 +103,8 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	delStore := prefix.NewStore(store, types.GetDelegationsByValPrefixKey(valAddr))
 
 	var dels types.Delegations
-	pageRes, err := query.Paginate(delStore, req.Pagination, func(delAddr, value []byte) error {
+	var pageRes *query.PageResponse
+	pageRes, err = query.Paginate(delStore, req.Pagination, func(delAddr, value []byte) error {
 		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 
 		var delegation types.Delegation
@@ -116,7 +117,17 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 		return nil
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		delegations, pageResponse, err := k.getValidatorDelegationsLegacy(ctx, req)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		dels = types.Delegations{}
+		for _, d := range delegations {
+			dels = append(dels, *d)
+		}
+
+		pageRes = pageResponse
 	}
 
 	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, dels)
@@ -127,6 +138,26 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	return &types.QueryValidatorDelegationsResponse{
 		DelegationResponses: delResponses, Pagination: pageRes,
 	}, nil
+}
+
+func (k Querier) getValidatorDelegationsLegacy(ctx sdk.Context, req *types.QueryValidatorDelegationsRequest) ([]*types.Delegation, *query.PageResponse, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	valStore := prefix.NewStore(store, types.DelegationKey)
+	return query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
+		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		if !delegation.GetValidatorAddr().Equals(valAddr) {
+			return nil, nil
+		}
+
+		return delegation, nil
+	}, func() *types.Delegation {
+		return &types.Delegation{}
+	})
 }
 
 // ValidatorUnbondingDelegations queries unbonding delegations of a validator

@@ -1,0 +1,11 @@
+# 2023/04/21 13:41:29 TestRandomTableData [rapid] draw i: 0
+# 2023/04/21 13:41:29 TestRandomTableData [rapid] draw j: 2
+# 2023/04/21 13:41:29 TestRandomTableData assertion failed: error is not nil: start must be before end for field testpb.ExampleTable.str: invalid range iteration keys
+# 
+v0.4.8#16769933745078028119
+0x0
+0x0
+0x0
+0x0
+0x0
+0x1

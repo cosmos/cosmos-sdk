@@ -27,19 +27,6 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress()
 
-	if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
-		// Ignore evidence that cannot be handled.
-		//
-		// NOTE: We used to panic with:
-		// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
-		// but this couples the expectations of the app to both CometBFT and
-		// the simulator.  Both are expected to provide the full range of
-		// allowable but none of the disallowed evidence types.  Instead of
-		// getting this coordination right, it is easier to relax the
-		// constraints and ignore evidence that cannot be handled.
-		return
-	}
-
 	// calculate the age of the evidence
 	infractionHeight := evidence.GetHeight()
 	infractionTime := evidence.GetTime()

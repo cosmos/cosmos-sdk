@@ -3079,36 +3079,39 @@ func (s *TestSuite) TestLeaveGroup() {
 }
 
 func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
-
 	proposers := []string{s.addrs[1].String()}
 
 	specs := map[string]struct {
 		votes         []group.VoteOption
 		members       []group.MemberRequest
-		setupProposal func(ctx context.Context, addr string) uint64
-		malleate      func(ctx context.Context, k keeper.Keeper, groupID uint64) error
-		blockTime     time.Time
-		expErr        bool
+		setupProposal func(ctx context.Context, groupPolicyAddr string) uint64
+		malleate      func(ctx context.Context, k keeper.Keeper, groupPolicyAddr string, groupID uint64) error
 		expErrMsg     string
 	}{
-		"member leaves while all others vote yes": {
-			votes: []group.VoteOption{1, 1, 1, 1, 1, 1},
+		"member leaves while all others vote yes: proposal accepted": {
 			members: []group.MemberRequest{
 				{Address: s.addrs[4].String(), Weight: "1"}, {Address: s.addrs[1].String(), Weight: "2"},
 				{Address: s.addrs[3].String(), Weight: "1"}, {Address: s.addrs[5].String(), Weight: "2"},
 				{Address: s.addrs[2].String(), Weight: "2"},
 			},
-			setupProposal: func(ctx context.Context, addr string) uint64 {
+			votes: []group.VoteOption{
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
+				group.VOTE_OPTION_YES,
+			},
+			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: addr,
+					FromAddress: groupPolicyAddr,
 					ToAddress:   s.addrs[1].String(),
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 				}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).AnyTimes()
-				msgs := []sdk.Msg{msgSend1}
 
+				// the proposal will pass and be executed
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(1)
+
+				msgs := []sdk.Msg{msgSend1}
 				proposalReq := &group.MsgSubmitProposal{
-					GroupPolicyAddress: addr,
+					GroupPolicyAddress: groupPolicyAddr,
 					Proposers:          proposers,
 				}
 				err := proposalReq.SetMsgs(msgs)
@@ -3119,18 +3122,53 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 				return proposalRes.ProposalId
 			},
-			malleate: func(ctx context.Context, k keeper.Keeper, groupID uint64) error {
+			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
 				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[5].String()})
 				return err
 			},
-			expErr:    false,
-			blockTime: s.blockTime.Add(minExecutionPeriod),
 		},
-		"member leaves while all others vote yes and no": {
-			votes: []group.VoteOption{3, 1, 1, 1, 1, 3},
+		"member leaves while all others vote yes and no: proposal rejected": {
 			members: []group.MemberRequest{
 				{Address: s.addrs[4].String(), Weight: "2"}, {Address: s.addrs[1].String(), Weight: "2"},
-				{Address: s.addrs[5].String(), Weight: "2"}, {Address: s.addrs[2].String(), Weight: "2"},
+				{Address: s.addrs[3].String(), Weight: "2"}, {Address: s.addrs[2].String(), Weight: "2"},
+			},
+			votes: []group.VoteOption{
+				group.VOTE_OPTION_NO, group.VOTE_OPTION_NO,
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
+			},
+			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
+				msgSend1 := &banktypes.MsgSend{
+					FromAddress: groupPolicyAddr,
+					ToAddress:   s.addrs[1].String(),
+					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+				}
+				msgs := []sdk.Msg{msgSend1, msgSend1}
+
+				proposalReq := &group.MsgSubmitProposal{
+					GroupPolicyAddress: groupPolicyAddr,
+					Proposers:          proposers,
+				}
+				err := proposalReq.SetMsgs(msgs)
+				s.Require().NoError(err)
+
+				proposalRes, err := s.groupKeeper.SubmitProposal(ctx, proposalReq)
+				s.Require().NoError(err)
+
+				return proposalRes.ProposalId
+			},
+			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
+				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[3].String()})
+				return err
+			},
+		},
+		"member that leaves does affect the threshold policy outcome": {
+			members: []group.MemberRequest{
+				{Address: s.addrs[3].String(), Weight: "6"}, {Address: s.addrs[1].String(), Weight: "1"},
+				{Address: s.addrs[5].String(), Weight: "1"}, {Address: s.addrs[2].String(), Weight: "1"},
+			},
+			votes: []group.VoteOption{
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
 			},
 			setupProposal: func(ctx context.Context, addr string) uint64 {
 				msgSend1 := &banktypes.MsgSend{
@@ -3139,7 +3177,6 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 				}
 				msgs := []sdk.Msg{msgSend1, msgSend1}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(2)
 
 				proposalReq := &group.MsgSubmitProposal{
 					GroupPolicyAddress: addr,
@@ -3153,64 +3190,29 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 				return proposalRes.ProposalId
 			},
-			malleate: func(ctx context.Context, k keeper.Keeper, groupID uint64) error {
-				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[5].String()})
+			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
+				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[3].String()})
 				return err
 			},
-			expErr:    false,
-			blockTime: s.blockTime.Add(minExecutionPeriod),
 		},
-		// "member that leaves does affect the threshold policy outcome": {
-		// 	votes: []group.VoteOption{1, 1, 1, 1, 1, 1},
-		// 	members: []group.MemberRequest{
-		// 		{Address: s.addrs[3].String(), Weight: "2"}, {Address: s.addrs[1].String(), Weight: "2"},
-		// 		{Address: s.addrs[5].String(), Weight: "2"}, {Address: s.addrs[2].String(), Weight: "2"},
-		// 	},
-		// 	setupProposal: func(ctx context.Context, addr string) uint64 {
-		// 		msgSend1 := &banktypes.MsgSend{
-		// 			FromAddress: addr,
-		// 			ToAddress:   s.addrs[1].String(),
-		// 			Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
-		// 		}
-		// 		msgs := []sdk.Msg{msgSend1, msgSend1}
-		// 		s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(2)
-
-		// 		proposalReq := &group.MsgSubmitProposal{
-		// 			GroupPolicyAddress: addr,
-		// 			Proposers:          proposers,
-		// 		}
-		// 		err := proposalReq.SetMsgs(msgs)
-		// 		s.Require().NoError(err)
-
-		// 		proposalRes, err := s.groupKeeper.SubmitProposal(ctx, proposalReq)
-		// 		s.Require().NoError(err)
-
-		// 		return proposalRes.ProposalId
-		// 	},
-		// 	malleate: func(ctx context.Context, k keeper.Keeper, groupID uint64) error {
-		// 		_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[3].String()})
-		// 		return err
-		// 	},
-		// 	expErr:    false,
-		// 	blockTime: s.blockTime.Add(minExecutionPeriod),
-		// },
 		"update group policy voids the proposal": {
-			votes: []group.VoteOption{1, 3, 1, 3, 1, 3},
 			members: []group.MemberRequest{
 				{Address: s.addrs[3].String(), Weight: "2"}, {Address: s.addrs[2].String(), Weight: "2"},
 				{Address: s.addrs[1].String(), Weight: "2"}, {Address: s.addrs[4].String(), Weight: "2"},
 			},
-			setupProposal: func(ctx context.Context, addr string) uint64 {
+			votes: []group.VoteOption{
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
+			},
+			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: addr,
+					FromAddress: groupPolicyAddr,
 					ToAddress:   s.addrs[1].String(),
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 				}
 				msgs := []sdk.Msg{msgSend1, msgSend1}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(2)
-
 				proposalReq := &group.MsgSubmitProposal{
-					GroupPolicyAddress: addr,
+					GroupPolicyAddress: groupPolicyAddr,
 					Proposers:          proposers,
 				}
 				err := proposalReq.SetMsgs(msgs)
@@ -3221,19 +3223,17 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 				return proposalRes.ProposalId
 			},
-			malleate: func(ctx context.Context, k keeper.Keeper, groupID uint64) error {
-				_, err := k.UpdateGroupMembers(ctx, &group.MsgUpdateGroupMembers{
-					Admin:   s.addrs[0].String(),
-					GroupId: groupID,
-					MemberUpdates: []group.MemberRequest{
-						{Address: s.addrs[3].String(), Weight: "1", Metadata: "metadata"},
-					},
-				})
+			malleate: func(ctx context.Context, k keeper.Keeper, groupPolicyAddr string, groupID uint64) error {
+				newGroupPolicy := &group.MsgUpdateGroupPolicyDecisionPolicy{
+					Admin:              s.addrs[0].String(),
+					GroupPolicyAddress: groupPolicyAddr,
+				}
+				newGroupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("10", time.Second, minExecutionPeriod))
+
+				_, err := k.UpdateGroupPolicyDecisionPolicy(ctx, newGroupPolicy)
 				return err
 			},
-			expErr:    true,
-			expErrMsg: "PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
-			blockTime: s.blockTime.Add(minExecutionPeriod),
+			expErrMsg: "PROPOSAL_STATUS_ABORTED",
 		},
 	}
 	for msg, spec := range specs {
@@ -3242,7 +3242,6 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 
 			s.setNextAccount()
-
 			groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 				Admin:   s.addrs[0].String(),
 				Members: spec.members,
@@ -3250,12 +3249,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			s.Require().NoError(err)
 			groupID := groupRes.GroupId
 
-			policy := group.NewThresholdDecisionPolicy(
-				"2",
-				time.Second,
-				minExecutionPeriod,
-			)
-
+			policy := group.NewThresholdDecisionPolicy("4", time.Second, minExecutionPeriod)
 			policyReq := &group.MsgCreateGroupPolicy{
 				Admin:   s.addrs[0].String(),
 				GroupId: groupID,
@@ -3266,7 +3260,6 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			s.setNextAccount()
 
 			s.groupKeeper.GetGroupSequence(s.sdkCtx)
-
 			policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 			s.Require().NoError(err)
 
@@ -3275,29 +3268,25 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			// vote on the proposals
 			for i, vote := range spec.votes {
-				memberAddress := s.addrs[i]
-
-				s.groupKeeper.Vote(sdkCtx, &group.MsgVote{
+				_, err := s.groupKeeper.Vote(sdkCtx, &group.MsgVote{
 					ProposalId: proposalID,
-					Voter:      memberAddress.String(),
+					Voter:      spec.members[i].Address,
 					Option:     vote,
 				})
+				s.Require().NoError(err)
 			}
 
-			err = spec.malleate(sdkCtx, s.groupKeeper, groupID)
+			err = spec.malleate(sdkCtx, s.groupKeeper, policyRes.Address, groupID)
 			s.Require().NoError(err)
 
-			if !spec.blockTime.IsZero() {
-				sdkCtx = sdkCtx.WithBlockTime(spec.blockTime)
-			}
-
+			// travel in time
+			sdkCtx = sdkCtx.WithBlockTime(s.blockTime.Add(minExecutionPeriod + 1))
 			_, err = s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrs[1].String(), ProposalId: proposalID})
-			if spec.expErr {
-				s.Require().Contains(sdkCtx.EventManager().Events(), spec.expErrMsg)
+			if spec.expErrMsg != "" {
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
-
 		})
 	}
 }

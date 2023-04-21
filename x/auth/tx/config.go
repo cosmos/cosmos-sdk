@@ -40,11 +40,7 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	typeResolver := protoregistry.GlobalTypes
-	protoFiles := protoCodec.InterfaceRegistry()
-	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
-	if err != nil {
-		panic(err)
-	}
+	signingContext := protoCodec.InterfaceRegistry().SigningContext()
 
 	signModeOptions := &SignModeOptions{}
 	for _, m := range enabledSignModes {
@@ -53,14 +49,13 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 			signModeOptions.Direct = &direct.SignModeHandler{}
 		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
 			signModeOptions.DirectAux = &directaux.SignModeHandlerOptions{
-				FileResolver:   protoFiles,
 				TypeResolver:   typeResolver,
-				SignersContext: signersContext,
+				SignersContext: signingContext,
 			}
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 			aminoJSONEncoder := aminojson.NewAminoJSON()
 			signModeOptions.AminoJSON = &aminojson.SignModeHandlerOptions{
-				FileResolver: protoFiles,
+				FileResolver: protoCodec.InterfaceRegistry(),
 				TypeResolver: typeResolver,
 				Encoder:      &aminoJSONEncoder,
 			}

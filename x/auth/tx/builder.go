@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -466,4 +465,20 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	w.setSignatureAtIndex(signerIndex, data.Sig)
 
 	return nil
+}
+
+func (w *wrapper) GetSignerInfos() []*tx.SignerInfo {
+	return w.tx.AuthInfo.SignerInfos
+}
+
+func (w *wrapper) GetBody() *tx.TxBody {
+	return w.tx.Body
+}
+
+func (w *wrapper) GetBodyBytes() []byte {
+	return w.bodyBz
+}
+
+func (w *wrapper) GetAuthInfoBytes() []byte {
+	return w.authInfoBz
 }

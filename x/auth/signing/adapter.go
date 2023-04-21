@@ -102,17 +102,20 @@ func AdaptableToTxData(adaptableTx V2AdaptableTx) txsigning.TxData {
 		}
 	}
 
+	var txTip *txv1beta1.Tip
 	tip := adaptableTx.GetTip()
-	tipCoins := tip.GetAmount()
-	tipAmount := make([]*basev1beta1.Coin, len(tipCoins))
-	var tipper string
 	if tip != nil {
-		tipper = tip.GetTipper()
-	}
-	for i, coin := range tipCoins {
-		tipAmount[i] = &basev1beta1.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
+		tipCoins := tip.GetAmount()
+		tipAmount := make([]*basev1beta1.Coin, len(tipCoins))
+		for i, coin := range tipCoins {
+			tipAmount[i] = &basev1beta1.Coin{
+				Denom:  coin.Denom,
+				Amount: coin.Amount.String(),
+			}
+		}
+		txTip = &txv1beta1.Tip{
+			Amount: tipAmount,
+			Tipper: tip.Tipper,
 		}
 	}
 
@@ -140,10 +143,7 @@ func AdaptableToTxData(adaptableTx V2AdaptableTx) txsigning.TxData {
 			Payer:    adaptableTx.FeePayer().String(),
 			Granter:  adaptableTx.FeeGranter().String(),
 		},
-		Tip: &txv1beta1.Tip{
-			Amount: tipAmount,
-			Tipper: tipper,
-		},
+		Tip: txTip,
 	}
 
 	txBody := &txv1beta1.TxBody{

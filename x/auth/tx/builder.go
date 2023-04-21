@@ -476,9 +476,9 @@ func (w *wrapper) GetTxBody() *tx.TxBody {
 }
 
 func (w *wrapper) GetBodyBytes() []byte {
-	return w.bodyBz
+	return w.getBodyBytes()
 }
 
 func (w *wrapper) GetAuthInfoBytes() []byte {
-	return w.authInfoBz
+	return w.getAuthInfoBytes()
 }

@@ -177,7 +177,7 @@ enable = {{ .GRPC.Enable }}
 address = "{{ .GRPC.Address }}"
 
 # MaxRecvMsgSize defines the max message size in bytes the server can receive.
-# The default value is 4MB.
+# The default value is 10MB.
 max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 
 # MaxSendMsgSize defines the max message size in bytes the server can send.

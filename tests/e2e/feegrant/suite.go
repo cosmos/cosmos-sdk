@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	// without this import amino json encoding will fail when resolving any types
+	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"

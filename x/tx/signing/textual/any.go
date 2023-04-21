@@ -116,7 +116,6 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 	// messageValueRenderer (the header() method does this for us), and
 	// add a level of indentation.
 	msgValRenderer, isMsgRenderer := vr.(*messageValueRenderer)
-
 	if isMsgRenderer {
 		for i := range subscreens {
 			subscreens[i].Indent++

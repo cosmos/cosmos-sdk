@@ -6,9 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -78,10 +79,12 @@ func TestCalculateGas(t *testing.T) {
 	for _, tc := range testCases {
 		stc := tc
 		txCfg, _ := newTestTxConfig()
+		defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
+		require.NoError(t, err)
 
 		txf := tx.Factory{}.
 			WithChainID("test-chain").
-			WithTxConfig(txCfg).WithSignMode(txCfg.SignModeHandler().DefaultMode())
+			WithTxConfig(txCfg).WithSignMode(defaultSignMode)
 
 		t.Run(stc.name, func(t *testing.T) {
 			mockClientCtx := mockContext{
@@ -104,6 +107,8 @@ func TestCalculateGas(t *testing.T) {
 
 func TestBuildSimTx(t *testing.T) {
 	txCfg, cdc := newTestTxConfig()
+	defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
 
 	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -119,7 +124,7 @@ func TestBuildSimTx(t *testing.T) {
 		WithFees("50stake").
 		WithMemo("memo").
 		WithChainID("test-chain").
-		WithSignMode(txCfg.SignModeHandler().DefaultMode()).
+		WithSignMode(defaultSignMode).
 		WithKeybase(kb)
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)

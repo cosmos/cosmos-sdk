@@ -21,28 +21,24 @@ func (s *E2ETestSuite) TestQueryGroupInfo() {
 		args         []string
 		expectErr    bool
 		expectErrMsg string
-		expectedCode uint32
 	}{
 		{
 			"group not found",
 			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"group: not found",
-			0,
 		},
 		{
 			"group id invalid",
 			[]string{"", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
-			0,
 		},
 		{
 			"group found",
 			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
 		},
 	}
 
@@ -179,7 +175,7 @@ func (s *E2ETestSuite) TestQueryGroups() {
 			name:      "valid req",
 			args:      []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			expectErr: false,
-			numItems:  5,
+			numItems:  1,
 		},
 		{
 			name: "valid req with pagination",
@@ -220,7 +216,6 @@ func (s *E2ETestSuite) TestQueryGroupMembers() {
 		args          []string
 		expectErr     bool
 		expectErrMsg  string
-		expectedCode  uint32
 		expectMembers []*group.GroupMember
 	}{
 		{
@@ -228,7 +223,6 @@ func (s *E2ETestSuite) TestQueryGroupMembers() {
 			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
 			[]*group.GroupMember{},
 		},
 		{
@@ -236,7 +230,6 @@ func (s *E2ETestSuite) TestQueryGroupMembers() {
 			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
 			[]*group.GroupMember{
 				{
 					GroupId: s.group.Id,
@@ -257,7 +250,6 @@ func (s *E2ETestSuite) TestQueryGroupMembers() {
 			},
 			false,
 			"",
-			0,
 			[]*group.GroupMember{
 				{
 					GroupId: s.group.Id,
@@ -306,7 +298,6 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 		args         []string
 		expectErr    bool
 		expectErrMsg string
-		expectedCode uint32
 		expectGroups []*group.GroupInfo
 	}{
 		{
@@ -314,15 +305,14 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 			[]string{"invalid"},
 			true,
 			"decoding bech32 failed: invalid bech32 string",
-			0,
 			[]*group.GroupInfo{},
 		},
 		{
 			"no group",
-			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			[]string{"cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
+
 			[]*group.GroupInfo{},
 		},
 		{
@@ -330,7 +320,7 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
+
 			[]*group.GroupInfo{
 				s.group,
 			},
@@ -344,7 +334,7 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 			},
 			false,
 			"",
-			0,
+
 			[]*group.GroupInfo{
 				s.group,
 			},
@@ -387,21 +377,18 @@ func (s *E2ETestSuite) TestQueryGroupPolicyInfo() {
 		args         []string
 		expectErr    bool
 		expectErrMsg string
-		expectedCode uint32
 	}{
 		{
 			"group policy not found",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"not found",
-			0,
 		},
 		{
 			"group policy found",
 			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
 		},
 	}
 
@@ -443,7 +430,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 		args                []string
 		expectErr           bool
 		expectErrMsg        string
-		expectedCode        uint32
 		expectGroupPolicies []*group.GroupPolicyInfo
 	}{
 		{
@@ -451,7 +437,7 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 			[]string{""},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
-			0,
+
 			[]*group.GroupPolicyInfo{},
 		},
 		{
@@ -459,7 +445,7 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
+
 			[]*group.GroupPolicyInfo{},
 		},
 		{
@@ -467,7 +453,7 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
+
 			[]*group.GroupPolicyInfo{
 				s.groupPolicies[0],
 				s.groupPolicies[1],
@@ -486,7 +472,7 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 			},
 			false,
 			"",
-			0,
+
 			[]*group.GroupPolicyInfo{
 				s.groupPolicies[0],
 				s.groupPolicies[1],
@@ -534,7 +520,6 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 		args                []string
 		expectErr           bool
 		expectErrMsg        string
-		expectedCode        uint32
 		expectGroupPolicies []*group.GroupPolicyInfo
 	}{
 		{
@@ -542,15 +527,15 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 			[]string{"invalid"},
 			true,
 			"decoding bech32 failed: invalid bech32 string",
-			0,
+
 			[]*group.GroupPolicyInfo{},
 		},
 		{
 			"no group policy",
-			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			[]string{"cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
+
 			[]*group.GroupPolicyInfo{},
 		},
 		{
@@ -558,7 +543,7 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
+
 			[]*group.GroupPolicyInfo{
 				s.groupPolicies[0],
 				s.groupPolicies[1],
@@ -577,7 +562,7 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 			},
 			false,
 			"",
-			0,
+
 			[]*group.GroupPolicyInfo{
 				s.groupPolicies[0],
 				s.groupPolicies[1],
@@ -625,21 +610,18 @@ func (s *E2ETestSuite) TestQueryProposal() {
 		args         []string
 		expectErr    bool
 		expectErrMsg string
-		expectedCode uint32
 	}{
 		{
 			"not found",
 			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"not found",
-			0,
 		},
 		{
 			"invalid proposal id",
 			[]string{"", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
-			0,
 		},
 	}
 
@@ -668,7 +650,6 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 		args            []string
 		expectErr       bool
 		expectErrMsg    string
-		expectedCode    uint32
 		expectProposals []*group.Proposal
 	}{
 		{
@@ -676,15 +657,15 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 			[]string{"invalid"},
 			true,
 			"decoding bech32 failed: invalid bech32 string",
-			0,
+
 			[]*group.Proposal{},
 		},
 		{
 			"no group policy",
-			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			[]string{"cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
+
 			[]*group.Proposal{},
 		},
 		{
@@ -692,7 +673,7 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
+
 			[]*group.Proposal{
 				s.proposal,
 			},
@@ -706,7 +687,7 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 			},
 			false,
 			"",
-			0,
+
 			[]*group.Proposal{
 				s.proposal,
 			},
@@ -745,21 +726,18 @@ func (s *E2ETestSuite) TestQueryVoteByProposalVoter() {
 		args         []string
 		expectErr    bool
 		expectErrMsg string
-		expectedCode uint32
 	}{
 		{
 			"invalid voter address",
 			[]string{"1", "invalid", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"decoding bech32 failed: invalid bech32",
-			0,
 		},
 		{
 			"invalid proposal id",
 			[]string{"", val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
-			0,
 		},
 	}
 
@@ -788,7 +766,6 @@ func (s *E2ETestSuite) TestQueryVotesByProposal() {
 		args         []string
 		expectErr    bool
 		expectErrMsg string
-		expectedCode uint32
 		expectVotes  []*group.Vote
 	}{
 		{
@@ -796,7 +773,6 @@ func (s *E2ETestSuite) TestQueryVotesByProposal() {
 			[]string{"", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
-			0,
 			[]*group.Vote{},
 		},
 		{
@@ -804,7 +780,6 @@ func (s *E2ETestSuite) TestQueryVotesByProposal() {
 			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
 			[]*group.Vote{},
 		},
 		{
@@ -812,7 +787,6 @@ func (s *E2ETestSuite) TestQueryVotesByProposal() {
 			[]string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
 			[]*group.Vote{
 				s.vote,
 			},
@@ -826,7 +800,6 @@ func (s *E2ETestSuite) TestQueryVotesByProposal() {
 			},
 			false,
 			"",
-			0,
 			[]*group.Vote{
 				s.vote,
 			},
@@ -865,7 +838,6 @@ func (s *E2ETestSuite) TestQueryVotesByVoter() {
 		args         []string
 		expectErr    bool
 		expectErrMsg string
-		expectedCode uint32
 		expectVotes  []*group.Vote
 	}{
 		{
@@ -873,7 +845,6 @@ func (s *E2ETestSuite) TestQueryVotesByVoter() {
 			[]string{"abcd", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"decoding bech32 failed: invalid bech32",
-			0,
 			[]*group.Vote{},
 		},
 		{
@@ -881,7 +852,6 @@ func (s *E2ETestSuite) TestQueryVotesByVoter() {
 			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"",
-			0,
 			[]*group.Vote{},
 		},
 		{
@@ -889,7 +859,6 @@ func (s *E2ETestSuite) TestQueryVotesByVoter() {
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
-			0,
 			[]*group.Vote{
 				s.vote,
 			},
@@ -903,7 +872,6 @@ func (s *E2ETestSuite) TestQueryVotesByVoter() {
 			},
 			false,
 			"",
-			0,
 			[]*group.Vote{
 				s.vote,
 			},
@@ -939,12 +907,6 @@ func (s *E2ETestSuite) TestTallyResult() {
 
 	member := s.voter
 
-	commonFlags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	// create a proposal
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 		append(
@@ -954,7 +916,7 @@ func (s *E2ETestSuite) TestTallyResult() {
 					s.groupPolicies[0].Address, val.Address.String(),
 					"", "title", "summary"),
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 	s.Require().NoError(err, out.String())
@@ -973,7 +935,6 @@ func (s *E2ETestSuite) TestTallyResult() {
 		expectErr      bool
 		expTallyResult group.TallyResult
 		expectErrMsg   string
-		expectedCode   uint32
 	}{
 		{
 			"not found",
@@ -984,7 +945,6 @@ func (s *E2ETestSuite) TestTallyResult() {
 			true,
 			group.TallyResult{},
 			"not found",
-			0,
 		},
 		{
 			"invalid proposal id",
@@ -995,7 +955,6 @@ func (s *E2ETestSuite) TestTallyResult() {
 			true,
 			group.TallyResult{},
 			"strconv.ParseUint: parsing \"\": invalid syntax",
-			0,
 		},
 		{
 			"valid proposal id with no votes",
@@ -1006,7 +965,6 @@ func (s *E2ETestSuite) TestTallyResult() {
 			false,
 			group.DefaultTallyResult(),
 			"",
-			0,
 		},
 		{
 			"valid proposal id",
@@ -1022,7 +980,6 @@ func (s *E2ETestSuite) TestTallyResult() {
 				NoWithVetoCount: "0",
 			},
 			"",
-			0,
 		},
 	}
 

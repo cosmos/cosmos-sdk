@@ -119,7 +119,6 @@ func (s *E2ETestSuite) SetupSuite() {
 		s.Require().NoError(err, out.String())
 		s.Require().NoError(s.network.WaitForNextBlock())
 	}
-	percentage := 0.5
 	// create group policy with percentage decision policy
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
@@ -127,7 +126,7 @@ func (s *E2ETestSuite) SetupSuite() {
 				val.Address.String(),
 				"1",
 				validMetadata,
-				testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"%f", "windows":{"voting_period":"30000s"}}`, percentage)).Name(),
+				testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"%f", "windows":{"voting_period":"30000s"}}`, 0.5)).Name(),
 			},
 			s.commonFlags...,
 		),

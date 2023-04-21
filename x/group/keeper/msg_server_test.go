@@ -3090,8 +3090,10 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	}{
 		"member leaves while all others vote yes: proposal accepted": {
 			members: []group.MemberRequest{
-				{Address: s.addrs[4].String(), Weight: "1"}, {Address: s.addrs[1].String(), Weight: "2"},
-				{Address: s.addrs[3].String(), Weight: "1"}, {Address: s.addrs[5].String(), Weight: "2"},
+				{Address: s.addrs[4].String(), Weight: "1"},
+				{Address: s.addrs[1].String(), Weight: "2"},
+				{Address: s.addrs[3].String(), Weight: "1"},
+				{Address: s.addrs[5].String(), Weight: "2"},
 				{Address: s.addrs[2].String(), Weight: "2"},
 			},
 			votes: []group.VoteOption{
@@ -3129,8 +3131,10 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		},
 		"member leaves while all others vote yes and no: proposal rejected": {
 			members: []group.MemberRequest{
-				{Address: s.addrs[4].String(), Weight: "2"}, {Address: s.addrs[1].String(), Weight: "2"},
-				{Address: s.addrs[3].String(), Weight: "2"}, {Address: s.addrs[2].String(), Weight: "2"},
+				{Address: s.addrs[4].String(), Weight: "2"},
+				{Address: s.addrs[1].String(), Weight: "2"},
+				{Address: s.addrs[3].String(), Weight: "2"},
+				{Address: s.addrs[2].String(), Weight: "2"},
 			},
 			votes: []group.VoteOption{
 				group.VOTE_OPTION_NO, group.VOTE_OPTION_NO,
@@ -3163,8 +3167,10 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		},
 		"member that leaves does affect the threshold policy outcome": {
 			members: []group.MemberRequest{
-				{Address: s.addrs[3].String(), Weight: "6"}, {Address: s.addrs[1].String(), Weight: "1"},
-				{Address: s.addrs[5].String(), Weight: "1"}, {Address: s.addrs[2].String(), Weight: "1"},
+				{Address: s.addrs[3].String(), Weight: "6"},
+				{Address: s.addrs[1].String(), Weight: "1"},
+				{Address: s.addrs[5].String(), Weight: "1"},
+				{Address: s.addrs[2].String(), Weight: "1"},
 			},
 			votes: []group.VoteOption{
 				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
@@ -3197,8 +3203,10 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		},
 		"update group policy voids the proposal": {
 			members: []group.MemberRequest{
-				{Address: s.addrs[3].String(), Weight: "2"}, {Address: s.addrs[2].String(), Weight: "2"},
-				{Address: s.addrs[1].String(), Weight: "2"}, {Address: s.addrs[4].String(), Weight: "2"},
+				{Address: s.addrs[3].String(), Weight: "2"},
+				{Address: s.addrs[2].String(), Weight: "2"},
+				{Address: s.addrs[1].String(), Weight: "2"},
+				{Address: s.addrs[4].String(), Weight: "2"},
 			},
 			votes: []group.VoteOption{
 				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,

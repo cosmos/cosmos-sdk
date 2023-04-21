@@ -105,6 +105,10 @@ func AdaptableToTxData(adaptableTx V2AdaptableTx) txsigning.TxData {
 	tip := adaptableTx.GetTip()
 	tipCoins := tip.GetAmount()
 	tipAmount := make([]*basev1beta1.Coin, len(tipCoins))
+	var tipper string
+	if tip != nil {
+		tipper = tip.GetTipper()
+	}
 	for i, coin := range tipCoins {
 		tipAmount[i] = &basev1beta1.Coin{
 			Denom:  coin.Denom,
@@ -138,7 +142,7 @@ func AdaptableToTxData(adaptableTx V2AdaptableTx) txsigning.TxData {
 		},
 		Tip: &txv1beta1.Tip{
 			Amount: tipAmount,
-			Tipper: tip.Tipper,
+			Tipper: tipper,
 		},
 	}
 

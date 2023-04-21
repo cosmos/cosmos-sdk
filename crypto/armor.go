@@ -38,10 +38,9 @@ var (
 )
 
 const (
-	Argon2Time    = 1
-	Argon2Memory  = 64 * 1024
-	Argon2Threads = 4
-	Argon2KeyLen  = 32
+	argon2Time    = 1
+	argon2Memory  = 64 * 1024
+	argon2Threads = 4
 )
 
 // BcryptSecurityParameter is security parameter var, and it can be changed within the lcd test.
@@ -159,13 +158,10 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) s
 	return armorStr
 }
 
-// encrypt the given privKey with the passphrase using a randomly
-// generated salt and the xsalsa20 cipher. returns the salt and the
-// encrypted priv key.
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
 
-	key := argon2.IDKey([]byte(passphrase), saltBytes, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
+	key := argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, chacha20poly1305.KeySize)
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 
 	aead, err := chacha20poly1305.New(key)
@@ -173,9 +169,9 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, 
 		panic(errorsmod.Wrap(err, "error generating cypher from key"))
 	}
 
-	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead())
+	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated  at every encryption using a random salt.
 
-	encBytes = aead.Seal(nonce, nonce, privKeyBytes, nil)
+	encBytes = aead.Seal(nil, nonce, privKeyBytes, nil)
 
 	return saltBytes, encBytes
 }
@@ -223,7 +219,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 	// Since the argon2 key derivation and chacha encryption was implemented together, it is not possible to have mixed kdf and encryption algorithms
 	switch kdf {
 	case kdfArgon2:
-		key = argon2.IDKey([]byte(passphrase), saltBytes, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
+		key = argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, chacha20poly1305.KeySize)
 
 		aead, err := chacha20poly1305.New(key)
 		if err != nil {
@@ -231,9 +227,8 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf st
 		} else if len(encBytes) < aead.NonceSize() {
 			return privKey, errorsmod.Wrap(nil, "Encrypted bytes length is smaller than aead nonce size.")
 		}
-
-		nonce, privKeyBytesEncrypted := encBytes[:aead.NonceSize()], encBytes[aead.NonceSize():] // Split nonce and ciphertext.
-		privKeyBytes, err = aead.Open(nil, nonce, privKeyBytesEncrypted, nil)                    // Decrypt the message and check it wasn't tampered with.
+		nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead())
+		privKeyBytes, err = aead.Open(nil, nonce, encBytes, nil) // Decrypt the message and check it wasn't tampered with.
 		if err != nil {
 			return privKey, sdkerrors.ErrWrongPassword
 		}

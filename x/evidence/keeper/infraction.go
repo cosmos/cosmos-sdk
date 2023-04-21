@@ -69,7 +69,7 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 			// allowable but none of the disallowed evidence types.  Instead of
 			// getting this coordination right, it is easier to relax the
 			// constraints and ignore evidence that cannot be handled.
-			logger.Info(fmt.Sprintf("expected pubkey for validator %s but not found", consAddr))
+			logger.Error(fmt.Sprintf("ignore evidence; expected public key for validator %s not found", consAddr))
 			return
 		}
 	}

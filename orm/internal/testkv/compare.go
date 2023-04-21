@@ -5,8 +5,8 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/kv"
 )
 
 func AssertBackendsEqual(t assert.TestingT, b1, b2 ormtable.Backend) {

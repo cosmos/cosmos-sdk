@@ -39,6 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `GetSignersOptions` has been renamed to `signing.Options` and requires `address.Codec`s for account and validator addresses
   * `GetSignersOptions.ProtoFiles` has been renamed to `signing.Options.FileResolver`
 
+### Bug Fixes
+* [#15849](https://github.com/cosmos/cosmos-sdk/pull/15849) Fix int64 usage for 32 bit platforms.
+
 ## v0.5.1
 
 ### Features

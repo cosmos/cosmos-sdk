@@ -5,15 +5,15 @@ import (
 	"math"
 	"testing"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -191,6 +191,10 @@ func TestBaseApp_BlockGas(t *testing.T) {
 }
 
 func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []cryptotypes.PrivKey, accNums, accSeqs []uint64, chainID string) (xauthsigning.Tx, []byte, error) {
+	defaultSignMode, err := xauthsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, nil, err
+	}
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -198,7 +202,7 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  txConfig.SignModeHandler().DefaultMode(),
+				SignMode:  defaultSignMode,
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -206,7 +210,7 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	err := txBuilder.SetSignatures(sigsV2...)
+	err = txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -219,9 +223,10 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
+			PubKey:        priv.PubKey(),
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			context.TODO(), txConfig.SignModeHandler().DefaultMode(), signerData,
+			context.TODO(), defaultSignMode, signerData,
 			txBuilder, priv, txConfig, accSeqs[i])
 		if err != nil {
 			return nil, nil, err

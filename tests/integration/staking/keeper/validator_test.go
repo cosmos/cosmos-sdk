@@ -13,7 +13,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -48,7 +47,7 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 	assert.NilError(t, err)
 
 	// end block to unbond genesis validator
-	staking.EndBlocker(ctx, app.StakingKeeper)
+	app.StakingKeeper.EndBlocker(ctx)
 
 	return app, ctx, addrDels, addrVals
 }

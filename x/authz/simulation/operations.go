@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -44,6 +44,7 @@ func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
 	cdc codec.JSONCodec,
+	txGen client.TxConfig,
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,
 	k keeper.Keeper,
@@ -72,24 +73,32 @@ func WeightedOperations(
 		},
 	)
 
+	pCdc := codec.NewProtoCodec(registry)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgGrant,
-			SimulateMsgGrant(codec.NewProtoCodec(registry), ak, bk, k),
+			SimulateMsgGrant(pCdc, txGen, ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightExec,
-			SimulateMsgExec(codec.NewProtoCodec(registry), ak, bk, k, registry),
+			SimulateMsgExec(pCdc, txGen, ak, bk, k, registry),
 		),
 		simulation.NewWeightedOperation(
 			weightRevoke,
-			SimulateMsgRevoke(codec.NewProtoCodec(registry), ak, bk, k),
+			SimulateMsgRevoke(pCdc, txGen, ak, bk, k),
 		),
 	}
 }
 
 // SimulateMsgGrant generates a MsgGrant with random values.
-func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keeper) simtypes.Operation {
+func SimulateMsgGrant(
+	cdc *codec.ProtoCodec,
+	txCfg client.TxConfig,
+	ak authz.AccountKeeper,
+	bk authz.BankKeeper,
+	_ keeper.Keeper,
+) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -123,7 +132,6 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
-		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txCfg,
@@ -157,7 +165,13 @@ func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Autho
 }
 
 // SimulateMsgRevoke generates a MsgRevoke with random values.
-func SimulateMsgRevoke(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgRevoke(
+	cdc *codec.ProtoCodec,
+	txCfg client.TxConfig,
+	ak authz.AccountKeeper,
+	bk authz.BankKeeper,
+	k keeper.Keeper,
+) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -194,7 +208,6 @@ func SimulateMsgRevoke(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.B
 		}
 
 		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, a.MsgTypeURL())
-		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		account := ak.GetAccount(ctx, granterAddr)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
@@ -221,7 +234,14 @@ func SimulateMsgRevoke(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.B
 }
 
 // SimulateMsgExec generates a MsgExec with random values.
-func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, unpacker cdctypes.AnyUnpacker) simtypes.Operation {
+func SimulateMsgExec(
+	cdc *codec.ProtoCodec,
+	txCfg client.TxConfig,
+	ak authz.AccountKeeper,
+	bk authz.BankKeeper,
+	k keeper.Keeper,
+	unpacker cdctypes.AnyUnpacker,
+) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -288,7 +308,6 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ban
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
 
-		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,

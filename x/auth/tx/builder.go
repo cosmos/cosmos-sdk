@@ -471,7 +471,7 @@ func (w *wrapper) GetSignerInfos() []*tx.SignerInfo {
 	return w.tx.AuthInfo.SignerInfos
 }
 
-func (w *wrapper) GetBody() *tx.TxBody {
+func (w *wrapper) GetTxBody() *tx.TxBody {
 	return w.tx.Body
 }
 

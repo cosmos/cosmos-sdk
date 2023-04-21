@@ -40,7 +40,7 @@ func GetSignBytesAdapter(
 	if !ok {
 		return nil, fmt.Errorf("expected tx to be V2AdaptableTx, got %T", tx)
 	}
-	txData := AdapterToTxData(adaptableTx)
+	txData := AdaptableToTxData(adaptableTx)
 
 	txSignMode, err := internalSignModeToAPI(mode)
 	if err != nil {
@@ -66,7 +66,7 @@ func GetSignBytesAdapter(
 	return handlerMap.GetSignBytes(ctx, txSignMode, txSignerData, txData)
 }
 
-func AdapterToTxData(adaptableTx V2AdaptableTx) txsigning.TxData {
+func AdaptableToTxData(adaptableTx V2AdaptableTx) txsigning.TxData {
 	body := adaptableTx.GetTxBody()
 
 	msgs := make([]*anypb.Any, len(body.Messages))

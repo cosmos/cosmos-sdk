@@ -97,6 +97,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 }
 
 func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
+	fmt.Println("tt123")
 	if msg.GroupId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}

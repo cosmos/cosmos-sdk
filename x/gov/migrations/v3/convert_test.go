@@ -60,10 +60,10 @@ func TestConvertToLegacyProposal(t *testing.T) {
 				require.Equal(t, v1beta1Proposal.VotingEndTime, *proposal.VotingEndTime)
 				require.Equal(t, v1beta1Proposal.SubmitTime, *proposal.SubmitTime)
 				require.Equal(t, v1beta1Proposal.DepositEndTime, *proposal.DepositEndTime)
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.Yes, sdk.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.No, sdk.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.NoWithVeto, sdk.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.Abstain, sdk.NewInt(0))
+				require.Equal(t, v1beta1Proposal.FinalTallyResult.Yes, math.NewInt(0))
+				require.Equal(t, v1beta1Proposal.FinalTallyResult.No, math.NewInt(0))
+				require.Equal(t, v1beta1Proposal.FinalTallyResult.NoWithVeto, math.NewInt(0))
+				require.Equal(t, v1beta1Proposal.FinalTallyResult.Abstain, math.NewInt(0))
 				tp, ok := v1beta1Proposal.Content.GetCachedValue().(*v1beta1.TextProposal)
 				require.Truef(t, ok, "expected *TextProposal, got %T", v1beta1Proposal.Content.GetCachedValue())
 				require.Equal(t, tp.Title, "title")
@@ -203,7 +203,7 @@ func TestConvertToLegacyDeposit(t *testing.T) {
 	deposit := v1.Deposit{
 		ProposalId: 1,
 		Depositor:  "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh",
-		Amount:     sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
+		Amount:     sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))),
 	}
 
 	v1beta1Deposit := v3.ConvertToLegacyDeposit(&deposit)

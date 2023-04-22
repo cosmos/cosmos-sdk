@@ -153,7 +153,10 @@ func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKe
 
 	tx, txErr := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, chainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, txErr)
-	return suite.anteHandler(suite.ctx, tx, simulate)
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	bytesCtx := suite.ctx.WithTxBytes(txBytes)
+	require.NoError(t, err)
+	return suite.anteHandler(bytesCtx, tx, simulate)
 }
 
 func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCaseArgs) {
@@ -165,7 +168,10 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 	// ante handlers, but here we sometimes also test the tx creation
 	// process.
 	tx, txErr := suite.CreateTestTx(suite.ctx, args.privs, args.accNums, args.accSeqs, args.chainID, signing.SignMode_SIGN_MODE_DIRECT)
-	newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	bytesCtx := suite.ctx.WithTxBytes(txBytes)
+	newCtx, anteErr := suite.anteHandler(bytesCtx, tx, tc.simulate)
 
 	if tc.expPass {
 		require.NoError(t, txErr)
@@ -192,7 +198,7 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 // CreateTestTx is a helper function to create a tx given multiple inputs.
 func (suite *AnteTestSuite) CreateTestTx(
 	ctx sdk.Context, privs []cryptotypes.PrivKey,
-	accNums []uint64, accSeqs []uint64,
+	accNums, accSeqs []uint64,
 	chainID string, signMode signing.SignMode,
 ) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty

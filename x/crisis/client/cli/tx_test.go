@@ -6,6 +6,7 @@ import (
 	"io"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
@@ -37,9 +38,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
-		errString    string
-		expectedCode uint32
+		expectErrMsg string
 	}{
 		{
 			"missing module",
@@ -48,9 +47,9 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
-			true, "invalid module name", 0,
+			"invalid module name",
 		},
 		{
 			"missing invariant route",
@@ -59,9 +58,9 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
-			true, "invalid invariant route", 0,
+			"invalid invariant route",
 		},
 		{
 			"valid transaction",
@@ -70,9 +69,9 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
-			false, "", 0,
+			"",
 		},
 	}
 
@@ -80,22 +79,19 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
-
 			cmd := cli.NewMsgVerifyInvariantTxCmd()
-			cmd.SetOut(io.Discard)
-			require.NotNil(t, cmd)
-
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
-
 			require.NoError(t, client.SetCmdClientContextHandler(baseCtx, cmd))
 
-			err := cmd.Execute()
-			if tc.expectErr {
+			out, err := clitestutil.ExecTestCLICmd(baseCtx, cmd, tc.args)
+			if tc.expectErrMsg != "" {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.errString)
+				require.Contains(t, out.String(), tc.expectErrMsg)
 			} else {
 				require.NoError(t, err)
+				msg := &sdk.TxResponse{}
+				require.NoError(t, baseCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
 			}
 		})
 	}

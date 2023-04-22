@@ -14,6 +14,7 @@ import (
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
 	"cosmossdk.io/x/nft/testutil"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -34,6 +35,7 @@ type SimTestSuite struct {
 	app               *runtime.App
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
+	txConfig          client.TxConfig
 	accountKeeper     authkeeper.AccountKeeper
 	bankKeeper        bankkeeper.Keeper
 	stakingKeeper     *stakingkeeper.Keeper
@@ -45,6 +47,7 @@ func (suite *SimTestSuite) SetupTest() {
 		testutil.AppConfig,
 		&suite.codec,
 		&suite.interfaceRegistry,
+		&suite.txConfig,
 		&suite.accountKeeper,
 		&suite.bankKeeper,
 		&suite.stakingKeeper,
@@ -61,6 +64,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		suite.interfaceRegistry,
 		make(simtypes.AppParams),
 		suite.codec,
+		suite.txConfig,
 		suite.accountKeeper,
 		suite.bankKeeper,
 		suite.nftKeeper,
@@ -125,7 +129,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 
 	// execute operation
 	registry := suite.interfaceRegistry
-	op := simulation.SimulateMsgSend(codec.NewProtoCodec(registry), suite.accountKeeper, suite.bankKeeper, suite.nftKeeper)
+	op := simulation.SimulateMsgSend(codec.NewProtoCodec(registry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.nftKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 

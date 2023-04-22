@@ -56,6 +56,10 @@ func (s *KeeperTestSuite) TestUnbondingTypeAccessors() {
 
 func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 	delAddrs, valAddrs := createValAddrs(2)
+	for _, addr := range delAddrs {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
 
 	type exists struct {
 		setUnbondingDelegation              bool
@@ -128,6 +132,11 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 
 func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 	delAddrs, valAddrs := createValAddrs(2)
+
+	for _, addr := range delAddrs {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
 
 	type exists struct {
 		setRedelegation              bool
@@ -257,6 +266,10 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 
 func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 	delAddrs, valAddrs := createValAddrs(3)
+	for _, addr := range delAddrs {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
 	unbondingID := uint64(1)
 
 	// no unbondingID set

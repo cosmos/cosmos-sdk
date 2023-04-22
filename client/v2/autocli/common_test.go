@@ -49,7 +49,8 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 		Builder: flag.Builder{
 			GetClientConn: func() (grpc.ClientConnInterface, error) {
 				return conn, nil
-			}},
+			},
+		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
 		},

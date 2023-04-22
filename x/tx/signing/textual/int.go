@@ -2,6 +2,7 @@ package textual
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -46,7 +47,7 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		if err != nil {
 			return nilValue, err
 		}
-		return protoreflect.ValueOfUint32(uint32(value)), nil //nolint:gosec
+		return protoreflect.ValueOfUint32(uint32(value)), nil
 
 	case protoreflect.Uint64Kind:
 		value, err := strconv.ParseUint(parsedInt, 10, 64)
@@ -60,7 +61,7 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		if err != nil {
 			return nilValue, err
 		}
-		return protoreflect.ValueOfInt32(int32(value)), nil //nolint:gosec
+		return protoreflect.ValueOfInt32(int32(value)), nil
 
 	case protoreflect.Int64Kind:
 		value, err := strconv.ParseInt(parsedInt, 10, 64)
@@ -79,6 +80,10 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 
 // parseInt parses a value-rendered string into an integer
 func parseInt(v string) (string, error) {
+	if len(v) == 0 {
+		return "", errors.New("expecting a non-empty string")
+	}
+
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"

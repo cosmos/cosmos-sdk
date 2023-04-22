@@ -11,7 +11,7 @@ import (
 
 	"cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 type appModuleGenesisWrapper struct {

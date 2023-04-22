@@ -17,6 +17,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
@@ -47,13 +48,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
-	// If req.InitialHeight is > 1, then we set the initial version in the
-	// stores.
+	// Set the initial height, which will be used to determine if we are proposing
+	// or processing the first block or not.
+	app.initialHeight = req.InitialHeight
+
+	// if req.InitialHeight is > 1, then we set the initial version on all stores
 	if req.InitialHeight > 1 {
-		app.initialHeight = req.InitialHeight
-		initHeader = cmtproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
-		err := app.cms.SetInitialVersion(req.InitialHeight)
-		if err != nil {
+		initHeader.Height = req.InitialHeight
+		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
 			panic(err)
 		}
 	}
@@ -66,7 +68,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		err := app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+		err := app.StoreConsensusParams(app.deliverState.ctx, *req.ConsensusParams)
 		if err != nil {
 			panic(err)
 		}
@@ -238,9 +240,8 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
-	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
-		res.ConsensusParamUpdates = cp
-	}
+	cp := app.GetConsensusParams(app.deliverState.ctx)
+	res.ConsensusParamUpdates = &cp
 
 	// call the streaming service hook with the EndBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
@@ -455,6 +456,11 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 func (app *BaseApp) Commit() abci.ResponseCommit {
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
+
+	rms, ok := app.cms.(*rootmulti.Store)
+	if ok {
+		rms.SetCommitHeader(header)
+	}
 
 	// Write the DeliverTx state into branched storage and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
@@ -810,6 +816,16 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height)
 
+	if height != lastBlockHeight {
+		rms, ok := app.cms.(*rootmulti.Store)
+		if ok {
+			cInfo, err := rms.GetCommitInfo(height)
+			if cInfo != nil && err == nil {
+				ctx = ctx.WithBlockTime(cInfo.Timestamp)
+			}
+		}
+	}
+
 	return ctx, nil
 }
 
@@ -864,7 +880,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.
 	cp := app.GetConsensusParams(app.deliverState.ctx)
-	if cp != nil && cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
+	if cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
 
@@ -1002,11 +1018,13 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 // ProcessProposal. We use deliverState on the first block to be able to access
 // any state changes made in InitChain.
 func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
-	if height == 1 {
+	if height == app.initialHeight {
 		ctx, _ = app.deliverState.ctx.CacheContext()
+
 		// clear all context data set during InitChain to avoid inconsistent behavior
 		ctx = ctx.WithBlockHeader(cmtproto.Header{})
 		return ctx
 	}
+
 	return ctx
 }

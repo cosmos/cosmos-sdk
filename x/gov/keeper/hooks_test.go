@@ -47,8 +47,13 @@ func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx sdk.Context, p
 
 func TestHooks(t *testing.T) {
 	minDeposit := v1.DefaultParams().MinDeposit
-	govKeeper, _, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, minDeposit[0].Amount)
+
+	for _, addr := range addrs {
+		authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+		authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+	}
 
 	govHooksReceiver := MockGovHooksReceiver{}
 

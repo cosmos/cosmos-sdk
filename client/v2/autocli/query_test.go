@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -72,6 +73,15 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"hidden_bool": {
 					Hidden: true,
 				},
+				"a_coin": {
+					Usage: "some random coin",
+				},
+				"duration": {
+					Usage: "some random duration",
+				},
+				"bz": {
+					Usage: "some bytes",
+				},
 			},
 		},
 	},
@@ -98,13 +108,26 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
+func TestCoin(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--a-coin", "100000foo",
+		"--duration", "4h3s",
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+}
+
 func TestEverything(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
 		"1",
 		"abc",
-		`{"denom":"foo","amount":"1234"}`,
-		`{"denom":"bar","amount":"4321"}`,
+		"123.123123124foo",
+		"4321bar",
 		"--a-bool",
 		"--an-enum", "one",
 		"--a-message", `{"bar":"abc", "baz":-3}`,
@@ -115,7 +138,7 @@ func TestEverything(t *testing.T) {
 		"--i64", "-234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
-		"--a-coin", `{"denom":"foo","amount":"100000"}`,
+		"--a-coin", "100000foo",
 		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",
@@ -140,13 +163,16 @@ func TestEverything(t *testing.T) {
 		"--uints", "1,2,3",
 		"--uints", "4",
 	)
+	errOut := conn.errorOut.String()
+	res := conn.out.String()
+	fmt.Println(errOut, res)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
 func TestJSONParsing(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--some-messages", `{"bar":"baz"}`,
 		"-u", "27", // shorthand
 	)
@@ -154,18 +180,17 @@ func TestJSONParsing(t *testing.T) {
 
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--some-messages", "testdata/some_message.json",
 		"-u", "27", // shorthand
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
-
 }
 
 func TestOptions(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "123foo",
 		"-u", "27", // shorthand
 		"--u64", "5", // no opt default value
 	)
@@ -175,24 +200,92 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
 }
 
+func TestBinaryFlag(t *testing.T) {
+	// Create a temporary file with some content
+	tempFile, err := os.Open("testdata/file.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := []byte("this is just a test file")
+	if err := tempFile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test cases
+	tests := []struct {
+		name     string
+		input    string
+		expected []byte
+		hasError bool
+		err      string
+	}{
+		{
+			name:     "Valid file path with extension",
+			input:    tempFile.Name(),
+			expected: content,
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Valid hex-encoded string",
+			input:    "68656c6c6f20776f726c64",
+			expected: []byte("hello world"),
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Valid base64-encoded string",
+			input:    "SGVsbG8gV29ybGQ=",
+			expected: []byte("Hello World"),
+			hasError: false,
+			err:      "",
+		},
+		{
+			name:     "Invalid input (not a file path or encoded string)",
+			input:    "not a file or encoded string",
+			expected: nil,
+			hasError: true,
+			err:      "input string is neither a valid file path, hex, or base64 encoded",
+		},
+	}
+
+	// Run test cases
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			conn := testExecCommon(t, buildModuleQueryCommand,
+				"echo",
+				"1", "abc", `{"denom":"foo","amount":"1"}`,
+				"--bz", tc.input,
+			)
+			errorOut := conn.errorOut.String()
+			if errorOut == "" {
+				lastReq := conn.lastRequest.(*testpb.EchoRequest)
+				assert.DeepEqual(t, tc.expected, lastReq.Bz)
+			} else {
+				assert.Assert(t, strings.Contains(conn.errorOut.String(), tc.err))
+			}
+		})
+	}
+}
+
 func TestAddressValidation(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 	)
 	assert.Equal(t, "", conn.errorOut.String())
 
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--an-address", "regen1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
 
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--an-address", "cosmps1BAD_ENCODING",
 	)
 	assert.Assert(t, strings.Contains(conn.errorOut.String(), "Error: invalid argument"))
@@ -201,13 +294,13 @@ func TestAddressValidation(t *testing.T) {
 func TestOutputFormat(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--output", "json",
 	)
 	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
 	conn = testExecCommon(t, buildModuleQueryCommand,
 		"echo",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"1", "abc", "1foo",
 		"--output", "text",
 	)
 	fmt.Println(conn.out.String())
@@ -319,7 +412,7 @@ type testClientConn struct {
 	errorOut     *bytes.Buffer
 }
 
-func (t *testClientConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (t *testClientConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
 	err := t.ClientConn.Invoke(ctx, method, args, reply, opts...)
 	t.lastRequest = args
 	t.lastResponse = reply

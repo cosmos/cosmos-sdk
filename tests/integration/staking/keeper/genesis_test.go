@@ -8,10 +8,10 @@ import (
 	"cosmossdk.io/simapp"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -137,7 +137,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 		BondDenom:     "stake",
 	}
 
-	sdktestutil.AssertPanics(t, func() {
+	require.Panics(t, func() {
 		// setting validator status to bonded so the balance counts towards bonded pool
 		validator.Status = types.Bonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
@@ -148,7 +148,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 	// "should panic because bonded pool balance is different from bonded pool coins",
 	)
 
-	sdktestutil.AssertPanics(t, func() {
+	require.Panics(t, func() {
 		// setting validator status to unbonded so the balance counts towards not bonded pool
 		validator.Status = types.Unbonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{

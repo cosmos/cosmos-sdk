@@ -11,7 +11,7 @@ send 1 abc {}
 
 Flags:
       --a-bool                                                               
-      --a-coin cosmos.base.v1beta1.Coin (json)                               
+      --a-coin cosmos.base.v1beta1.Coin                                      
       --a-message testpb.AMessage (json)                                     
   -a, --account-number uint                                                  The account number of the signing account (offline mode only)
       --an-address bech32 account address key name                           
@@ -19,7 +19,7 @@ Flags:
       --aux                                                                  Generate aux signer data instead of sending a tx
       --bools bools                                                           (default [])
   -b, --broadcast-mode string                                                Transaction broadcasting mode (sync|async) (default "sync")
-      --bz bytesBase64                                                       
+      --bz binary                                                            
       --chain-id string                                                      The network chain ID
       --deprecated-field string                                               (DEPRECATED: don't use this)
       --dry-run                                                              ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
@@ -45,7 +45,7 @@ Flags:
       --offline                                                              Offline mode (does not allow any online functionality)
   -o, --output string                                                        Output format (text|json) (default "json")
       --page-count-total                                                     
-      --page-key bytesBase64                                                 
+      --page-key binary                                                      
       --page-limit uint                                                      
       --page-offset uint                                                     
       --page-reverse                                                         

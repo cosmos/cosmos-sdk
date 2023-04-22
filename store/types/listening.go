@@ -11,7 +11,7 @@ func NewMemoryListener() *MemoryListener {
 }
 
 // OnWrite implements MemoryListener interface
-func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) {
+func (fl *MemoryListener) OnWrite(storeKey StoreKey, key, value []byte, delete bool) {
 	fl.stateCache = append(fl.stateCache, &StoreKVPair{
 		StoreKey: storeKey.Name(),
 		Delete:   delete,

@@ -3,17 +3,21 @@ package tx
 import (
 	"fmt"
 
-	"cosmossdk.io/x/tx/signing/textual"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/direct"
+	"cosmossdk.io/x/tx/signing/directaux"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type config struct {
-	handler     signing.SignModeHandler
+	handler     *txsigning.HandlerMap
 	decoder     sdk.TxDecoder
 	encoder     sdk.TxEncoder
 	jsonDecoder sdk.TxDecoder
@@ -27,25 +31,66 @@ type config struct {
 // NOTE: Use NewTxConfigWithHandler to provide a custom signing handler in case the sign mode
 // is not supported by default (eg: SignMode_SIGN_MODE_EIP_191). Use NewTxConfigWithTextual
 // to enable SIGN_MODE_TEXTUAL (for testing purposes for now).
-func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, customSignModes ...signing.SignModeHandler) client.TxConfig {
+//
+// We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage.  Within the SDK,
+// this constructor is primarily used in tests, but also sees usage in app chains like:
+// https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
+// TODO: collapse enabledSignModes and customSignModes
+func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
+	customSignModes ...txsigning.SignModeHandler,
+) client.TxConfig {
+	typeResolver := protoregistry.GlobalTypes
+	protoFiles := protoCodec.InterfaceRegistry()
+	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
+	if err != nil {
+		panic(err)
+	}
+
+	signModeOptions := &SignModeOptions{}
 	for _, m := range enabledSignModes {
-		if m == signingtypes.SignMode_SIGN_MODE_TEXTUAL {
+		switch m {
+		case signingtypes.SignMode_SIGN_MODE_DIRECT:
+			signModeOptions.Direct = &direct.SignModeHandler{}
+		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
+			signModeOptions.DirectAux = &directaux.SignModeHandlerOptions{
+				FileResolver:   protoFiles,
+				TypeResolver:   typeResolver,
+				SignersContext: signersContext,
+			}
+		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+			aminoJSONEncoder := aminojson.NewAminoJSON()
+			signModeOptions.AminoJSON = &aminojson.SignModeHandlerOptions{
+				FileResolver: protoFiles,
+				TypeResolver: typeResolver,
+				Encoder:      &aminoJSONEncoder,
+			}
+		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
 			panic("cannot use NewTxConfig with SIGN_MODE_TEXTUAL enabled; please use NewTxConfigWithTextual")
 		}
 	}
 
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, &textual.SignModeHandler{}, customSignModes...))
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(*signModeOptions, customSignModes...))
+}
+
+func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, signModeOptions SignModeOptions,
+	customSignModes ...txsigning.SignModeHandler,
+) client.TxConfig {
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(signModeOptions, customSignModes...))
 }
 
 // NewTxConfigWithTextual is like NewTxConfig with the ability to add
 // a SIGN_MODE_TEXTUAL renderer. It is currently still EXPERIMENTAL, for should
 // be used for TESTING purposes only, until Textual is fully released.
-func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, textual *textual.SignModeHandler, customSignModes ...signing.SignModeHandler) client.TxConfig {
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual, customSignModes...))
+//
+// Deprecated: use NewTxConfigWithOptions instead.
+func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, _ []signingtypes.SignMode,
+	signModeOptions SignModeOptions, customSignModes ...txsigning.SignModeHandler,
+) client.TxConfig {
+	return NewTxConfigWithOptions(protoCodec, signModeOptions, customSignModes...)
 }
 
-// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
-func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler signing.SignModeHandler) client.TxConfig {
+// NewTxConfigWithHandler returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
+func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler *txsigning.HandlerMap) client.TxConfig {
 	return &config{
 		handler:     handler,
 		decoder:     DefaultTxDecoder(protoCodec),
@@ -70,7 +115,7 @@ func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	return newBuilder, nil
 }
 
-func (g config) SignModeHandler() signing.SignModeHandler {
+func (g config) SignModeHandler() *txsigning.HandlerMap {
 	return g.handler
 }
 

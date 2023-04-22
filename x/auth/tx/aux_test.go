@@ -1,6 +1,7 @@
 package tx_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -130,17 +131,18 @@ func TestBuilderWithAux(t *testing.T) {
 		PubKey:   feepayerPk,
 		Sequence: 15,
 	})
-	signBz, err = txConfig.SignModeHandler().GetSignBytes(
-		signing.SignMode_SIGN_MODE_DIRECT,
-		authsigning.SignerData{
-			Address:       feepayerAddr.String(),
-			ChainID:       chainID,
-			AccountNumber: 11,
-			Sequence:      15,
-			PubKey:        feepayerPk,
-		},
-		w.GetTx(),
-	)
+	signerData := authsigning.SignerData{
+		Address:       feepayerAddr.String(),
+		ChainID:       chainID,
+		AccountNumber: 11,
+		Sequence:      15,
+		PubKey:        feepayerPk,
+	}
+
+	signBz, err = authsigning.GetSignBytesAdapter(
+		context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
+		signerData, w.GetTx())
+
 	require.NoError(t, err)
 	feepayerSig, err := feepayerPriv.Sign(signBz)
 	require.NoError(t, err)

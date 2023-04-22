@@ -136,14 +136,14 @@ func (s kvStoreAdapter) Has(key []byte) bool {
 	return has
 }
 
-func (s kvStoreAdapter) Set(key []byte, value []byte) {
+func (s kvStoreAdapter) Set(key, value []byte) {
 	err := s.store.Set(key, value)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (s kvStoreAdapter) Iterator(start []byte, end []byte) dbm.Iterator {
+func (s kvStoreAdapter) Iterator(start, end []byte) dbm.Iterator {
 	it, err := s.store.Iterator(start, end)
 	if err != nil {
 		panic(err)
@@ -151,7 +151,7 @@ func (s kvStoreAdapter) Iterator(start []byte, end []byte) dbm.Iterator {
 	return it
 }
 
-func (s kvStoreAdapter) ReverseIterator(start []byte, end []byte) dbm.Iterator {
+func (s kvStoreAdapter) ReverseIterator(start, end []byte) dbm.Iterator {
 	it, err := s.store.ReverseIterator(start, end)
 	if err != nil {
 		panic(err)

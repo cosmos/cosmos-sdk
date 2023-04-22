@@ -7,7 +7,7 @@ func BenchmarkGetValidator(b *testing.B) {
 	// panic: encoding/hex: odd length hex string
 	powersNumber := 900
 
-	var totalPower int64 = 0
+	var totalPower int64
 	powers := make([]int64, powersNumber)
 	for i := range powers {
 		powers[i] = int64(i)

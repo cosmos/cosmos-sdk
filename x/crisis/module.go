@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -191,8 +192,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type CrisisInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config  *modulev1.Module
@@ -200,21 +200,21 @@ type CrisisInputs struct {
 	Cdc     codec.Codec
 	AppOpts servertypes.AppOptions `optional:"true"`
 
-	BankKeeper types.SupplyKeeper
+	BankKeeper   types.SupplyKeeper
+	AddressCodec address.Codec
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
 }
 
-//nolint:revive
-type CrisisOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Module       appmodule.AppModule
 	CrisisKeeper *keeper.Keeper
 }
 
-func ProvideModule(in CrisisInputs) CrisisOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var invalidCheckPeriod uint
 	if in.AppOpts != nil {
 		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
@@ -238,6 +238,7 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 		in.BankKeeper,
 		feeCollectorName,
 		authority.String(),
+		in.AddressCodec,
 	)
 
 	var skipGenesisInvariants bool
@@ -247,5 +248,5 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return CrisisOutputs{CrisisKeeper: k, Module: m}
+	return ModuleOutputs{CrisisKeeper: k, Module: m}
 }

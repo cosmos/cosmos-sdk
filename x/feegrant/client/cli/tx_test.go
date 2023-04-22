@@ -1,13 +1,13 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"
@@ -69,7 +69,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -78,7 +77,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	if testing.Short() {
 		s.T().Skip("skipping test in unit-tests mode.")
@@ -92,7 +91,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.createGrant(granter, grantee)
 
 	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100))),
 	})
 	s.Require().NoError(err)
 
@@ -110,10 +109,10 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100))).String()),
 	}
 
-	fee := sdk.NewCoin("stake", sdk.NewInt(100))
+	fee := sdk.NewCoin("stake", sdkmath.NewInt(100))
 
 	args := append(
 		[]string{
@@ -147,7 +146,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 	}
 
 	testCases := []struct {
@@ -434,7 +433,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 	}
 
 	addressCodec := codecaddress.NewBech32Codec("cosmos")
@@ -533,10 +532,10 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 	}
 
-	fee := sdk.NewCoin("stake", sdk.NewInt(100))
+	fee := sdk.NewCoin("stake", sdkmath.NewInt(100))
 
 	args := append(
 		[]string{
@@ -610,7 +609,7 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 	commonArgs := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 	}
 
 	args := append([]string{
@@ -639,24 +638,20 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	pub, err := k.GetPubKey()
 	s.Require().NoError(err)
 	grantee := sdk.AccAddress(pub.Address())
-
 	clientCtx := s.clientCtx
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 	}
-	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
-
+	spendLimit := sdk.NewCoin("stake", sdkmath.NewInt(1000))
 	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
+		expectErrMsg string
 	}{
 		{
 			"invalid granter address",
@@ -670,7 +665,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			true, &sdk.TxResponse{}, 0,
+			"key not found",
 		},
 		{
 			"invalid grantee address",
@@ -684,7 +679,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			true, &sdk.TxResponse{}, 0,
+			"decoding bech32 failed",
 		},
 		{
 			"valid filter fee grant",
@@ -698,7 +693,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			"",
 		},
 	}
 
@@ -708,22 +703,21 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
-			if tc.expectErr {
+			if tc.expectErrMsg != "" {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				msg := &sdk.TxResponse{}
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
 			}
 		})
 	}
 
 	// exec filtered fee allowance
 	cases := []struct {
-		name         string
-		malleate     func() error
-		respType     proto.Message
-		expectedCode uint32
+		name     string
+		malleate func() error
 	}{
 		{
 			"valid proposal tx",
@@ -731,22 +725,18 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				return s.msgSubmitLegacyProposal(s.baseCtx, grantee.String(),
 					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 				)
 			},
-			&sdk.TxResponse{},
-			0,
 		},
 		{
 			"valid weighted_vote tx",
 			func() error {
 				return s.msgVote(s.baseCtx, grantee.String(), "0", "yes",
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 				)
 			},
-			&sdk.TxResponse{},
-			2,
 		},
 		{
 			"should fail with unauthorized msgs",
@@ -767,8 +757,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 
 				return err
 			},
-			&sdk.TxResponse{},
-			7,
 		},
 	}
 
@@ -787,7 +775,7 @@ func (s *CLITestSuite) msgVote(clientCtx client.Context, from, id, vote string, 
 	commonArgs := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 	}
 	args := append([]string{
 		id,

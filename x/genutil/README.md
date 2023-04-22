@@ -51,6 +51,11 @@ Migrate genesis to a specified target (SDK) version.
 simd genesis migrate [target-version]
 ```
 
+:::tip
+The `migrate` command is extensible and takes a `MigrationMap`. This map is a mapping of target versions to genesis migrations functions.
+When not using the default `MigrationMap`, it is recommended to still call the default `MigrationMap` corresponding the SDK version of the chain and prepend/append your own genesis migrations.
+:::
+
 #### validate-genesis
 
 Validates the genesis file at the default location or at the location passed as an argument.
@@ -58,3 +63,7 @@ Validates the genesis file at the default location or at the location passed as 
 ```shell
 simd genesis validate-genesis
 ```
+
+:::warning
+Validate genesis only validates if the genesis is valid at the **current application binary**. For validating a genesis from a previous version of the application, use the `migrate` command to migrate the genesis to the current version.
+:::

@@ -26,13 +26,13 @@ const (
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
 	homeFilePath := filepath.Join(home, "home.toml")
-	chainId := "test-chain" //nolint:revive
+	chainID := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeFilePath(homeFilePath).
 		WithHomeDir(home).
 		WithViper("").
 		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
-		WithChainID(chainId)
+		WithChainID(chainID)
 
 	require.NoError(t, clientCtx.Viper.BindEnv(nodeEnv))
 	if envVar != "" {
@@ -41,7 +41,7 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	require.NoError(t, err)
-	require.Equal(t, clientCtx.ChainID, chainId)
+	require.Equal(t, clientCtx.ChainID, chainID)
 
 	return clientCtx, func() { _ = os.RemoveAll(home) }
 }

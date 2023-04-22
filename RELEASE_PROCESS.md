@@ -120,7 +120,7 @@ ways in stable releases and `main` branch.
 
 ### Migrations
 
-To smoothen the update to the latest stable release, the SDK includes a set of CLI commands for managing migrations between SDK versions, under the `migrate` subcommand. Only migration scripts between stable releases are included. For the current major release, and later, migrations are supported.
+See the SDK's policy on migrations [here](https://docs.cosmos.network/main/migrations/intro).
 
 ### What qualifies as a Stable Release Update (SRU)
 

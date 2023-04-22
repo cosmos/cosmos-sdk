@@ -126,7 +126,7 @@ func serializeProtoMessages(messages []proto.Message) [][]byte {
 }
 
 func (s *GRPCWebTestSuite) makeRequest(
-	verb string, method string, headers http.Header, body io.Reader, isText bool,
+	verb, method string, headers http.Header, body io.Reader, isText bool,
 ) (*http.Response, error) {
 	val := s.network.Validators[0]
 	contentType := "application/grpc-web"

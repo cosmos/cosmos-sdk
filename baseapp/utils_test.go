@@ -241,7 +241,7 @@ type paramStore struct {
 
 var _ baseapp.ParamStore = (*paramStore)(nil)
 
-func (ps *paramStore) Set(_ context.Context, value *cmtproto.ConsensusParams) error {
+func (ps paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
 	bz, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -250,26 +250,26 @@ func (ps *paramStore) Set(_ context.Context, value *cmtproto.ConsensusParams) er
 	return ps.db.Set(ParamStoreKey, bz)
 }
 
-func (ps *paramStore) Has(_ context.Context) (bool, error) {
+func (ps paramStore) Has(_ context.Context) (bool, error) {
 	return ps.db.Has(ParamStoreKey)
 }
 
-func (ps paramStore) Get(ctx context.Context) (*cmtproto.ConsensusParams, error) {
+func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
 	bz, err := ps.db.Get(ParamStoreKey)
 	if err != nil {
-		return nil, err
+		return cmtproto.ConsensusParams{}, err
 	}
 
 	if len(bz) == 0 {
-		return nil, errors.New("params not found")
+		return cmtproto.ConsensusParams{}, errors.New("params not found")
 	}
 
 	var params cmtproto.ConsensusParams
 	if err := json.Unmarshal(bz, &params); err != nil {
-		return nil, err
+		return cmtproto.ConsensusParams{}, err
 	}
 
-	return &params, nil
+	return params, nil
 }
 
 func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {

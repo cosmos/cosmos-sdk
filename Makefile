@@ -2,7 +2,7 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-export VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
+export VERSION := $(shell echo $(shell git describe --tags --always --match "v*") | sed 's/^v//')
 export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -60,7 +60,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 		-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
-
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -189,6 +188,13 @@ build-docs:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
+# make init-simapp initializes a single local node network
+# it is useful for testing and development
+# Usage: make install && make init-simapp && simd start
+# Warning: make init-simapp will remove all data in simapp home directory
+init-simapp:
+	./scripts/init-simapp.sh
+
 test: test-unit
 test-e2e:
 	$(MAKE) -C tests test-e2e
@@ -232,7 +238,7 @@ ifneq (,$(shell which tparse 2>/dev/null))
 	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
-		echo "Running unit tests for module $$module"; \
+		echo "Running unit tests for $$(grep '^module' go.mod)"; \
 		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
@@ -243,7 +249,7 @@ else
 	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
-		echo "Running unit tests for module $$module"; \
+		echo "Running unit tests for $$(grep '^module' go.mod)"; \
 		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
@@ -379,19 +385,14 @@ golangci_version=v1.51.2
 lint:
 	@echo "--> Running linter"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run --timeout=10m
+	@./scripts/go-lint-all.bash --timeout=15m
 
 lint-fix:
 	@echo "--> Running linter"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
+	@./scripts/go-lint-all.bash --fix
 
 .PHONY: lint lint-fix
-
-format:
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	$(golangci_lint_cmd) run --fix
-.PHONY: format
 
 ###############################################################################
 ###                                Protobuf                                 ###

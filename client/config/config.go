@@ -98,7 +98,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 // CreateClientConfigAtPath sets up a basic configuration structure in the given
 // directory.
-func CreateClientConfigAtPath(configPath string, chainID string) error {
+func CreateClientConfigAtPath(configPath, chainID string) error {
 	configFilePath := filepath.Join(configPath, "client.toml")
 
 	if err := os.MkdirAll(configPath, os.ModePerm); err != nil {

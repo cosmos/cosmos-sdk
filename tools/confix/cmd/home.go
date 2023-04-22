@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+
 	"cosmossdk.io/tools/confix"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
 )
 
 func HomeCommand() *cobra.Command {

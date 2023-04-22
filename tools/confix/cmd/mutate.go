@@ -63,7 +63,7 @@ func SetCommand() *cobra.Command {
 						}
 
 						if key[0] == "home-dir" {
-							newConfigToml := fmt.Sprintf("%s/config/config.toml", inputValue)
+							newConfigToml := fmt.Sprintf("%s/config/%s", inputValue, confix.CMTConfig)
 							if _, err := os.Stat(newConfigToml); os.IsNotExist(err) {
 								newConfigPath := fmt.Sprintf("%s/config", inputValue)
 								return config.CreateNewConfigAtPath(newConfigPath, clientCtx.ChainID)

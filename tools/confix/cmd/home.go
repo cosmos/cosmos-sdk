@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"cosmossdk.io/tools/confix"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ func HomeCommand() *cobra.Command {
 				case 1: // if one argument is given, set the home directory
 					newHome := args[0]
 					newConfigDir := filepath.Join(newHome, "config")
-					newConfigPath := filepath.Join(newConfigDir, "config.toml")
+					newConfigPath := filepath.Join(newConfigDir, confix.CMTConfig)
 					if _, err := os.Stat(newConfigPath); os.IsNotExist(err) {
 						if err := config.CreateNewConfigAtPath(newConfigDir, clientCtx.ChainID); err != nil {
 							return err

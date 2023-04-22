@@ -29,7 +29,11 @@ func SetCommand() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
+				if filename == "home" {
+					filename = clientCtx.HomeFilePath
+				} else {
+					filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
+				}
 			}
 
 			plan := transform.Plan{

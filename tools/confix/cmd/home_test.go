@@ -47,7 +47,6 @@ func TestHomeCommand(t *testing.T) {
 			clientCtx, cleanup := initClientContext(t)
 			defer cleanup()
 
-			t.Logf("clientCtx.HomeFilePath: %q", clientCtx.HomeFilePath)
 			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.HomeCommand(), tc.args)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.errContains, "expected error to contain %s", tc.errContains)

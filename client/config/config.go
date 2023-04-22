@@ -48,12 +48,11 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
-	homeFilePath := filepath.Join(ctx.HomeDir, "config")
+	homeFileDir := filepath.Join(ctx.HomeDir, "config")
+	homeFilePath := filepath.Join(homeFileDir, "home.toml")
 	ctx = ctx.WithHomeFilePath(homeFilePath)
 
-	homeDir, err := ReadHomeDirFromFile(homeFilePath, ctx.Viper)
-	fmt.Println("homeDir", homeDir)
-	fmt.Println("err", err)
+	homeDir, err := ReadHomeDirFromFile(homeFileDir, ctx.Viper)
 	if err == nil {
 		ctx = ctx.WithHomeDir(homeDir)
 	}

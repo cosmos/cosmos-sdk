@@ -25,7 +25,7 @@ const (
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
-	homeFilePath := filepath.Join(home, "home.txt")
+	homeFilePath := filepath.Join(home, "home.toml")
 	chainId := "test-chain" //nolint:revive
 	clientCtx := client.Context{}.
 		WithHomeFilePath(homeFilePath).

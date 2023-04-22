@@ -66,7 +66,7 @@ func SetCommand() *cobra.Command {
 							newConfigToml := fmt.Sprintf("%s/config/%s", inputValue, confix.CMTConfig)
 							if _, err := os.Stat(newConfigToml); os.IsNotExist(err) {
 								newConfigPath := fmt.Sprintf("%s/config", inputValue)
-								return config.CreateNewConfigAtPath(newConfigPath, clientCtx.ChainID)
+								return config.CreateClientConfigAtPath(newConfigPath, clientCtx.ChainID)
 							}
 						}
 

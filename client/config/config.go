@@ -62,8 +62,8 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 	// when config.toml does not exist create and init with default values
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := CreateNewConfigAtPath(configPath, ctx.ChainID); err != nil {
-			return ctx, nil
+		if err := CreateClientConfigAtPath(configPath, ctx.ChainID); err != nil {
+			return ctx, err
 		}
 	}
 
@@ -96,9 +96,9 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	return ctx, nil
 }
 
-// CreateNewConfigAtPath sets up a basic configuration structure in the given
+// CreateClientConfigAtPath sets up a basic configuration structure in the given
 // directory.
-func CreateNewConfigAtPath(configPath string, chainID string) error {
+func CreateClientConfigAtPath(configPath string, chainID string) error {
 	configFilePath := filepath.Join(configPath, "client.toml")
 
 	if err := os.MkdirAll(configPath, os.ModePerm); err != nil {

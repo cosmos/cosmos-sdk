@@ -28,7 +28,7 @@ func HomeCommand() *cobra.Command {
 					newConfigDir := filepath.Join(newHome, "config")
 					newConfigPath := filepath.Join(newConfigDir, confix.CMTConfig)
 					if _, err := os.Stat(newConfigPath); os.IsNotExist(err) {
-						if err := config.CreateNewConfigAtPath(newConfigDir, clientCtx.ChainID); err != nil {
+						if err := config.CreateClientConfigAtPath(newConfigDir, clientCtx.ChainID); err != nil {
 							return err
 						}
 					}

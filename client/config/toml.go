@@ -38,7 +38,7 @@ broadcast-mode = "{{ .BroadcastMode }}"
 ###############################################################################
 
 # The currently configured home directory
-home = "{{ .HomeDir }}"`
+home-dir = "{{ .HomeDir }}"`
 )
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
@@ -54,9 +54,7 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 
 	// Check if config file exists
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		fmt.Println("creating new node configuration at", configFilePath)
-	} else {
-		fmt.Println("updating node configuration at", configFilePath)
+		fmt.Println("creating new node configuration in", filepath.Dir(filepath.Dir(configFilePath)))
 	}
 	if err := configTemplate.Execute(&buffer, config); err != nil {
 		return err
@@ -89,9 +87,9 @@ func WriteHomeDirToFile(filePath, homeDir string) error {
 	return os.WriteFile(filePath, buffer.Bytes(), 0o600)
 }
 
-// ReadHomeDirFromFile tries to return the currently stored home directory from the
+// ReadHomeDir tries to return the currently stored home directory from the
 // given config directory.
-func ReadHomeDirFromFile(configPath string, v *viper.Viper) (string, error) {
+func ReadHomeDir(configPath string, v *viper.Viper) (string, error) {
 	homeDirConfig := HomeDirConfig{}
 	v.AddConfigPath(configPath)
 	v.SetConfigName("home")
@@ -100,7 +98,6 @@ func ReadHomeDirFromFile(configPath string, v *viper.Viper) (string, error) {
 	homeFilePath := filepath.Join(configPath, "home.toml")
 	if _, err := os.Stat(homeFilePath); os.IsNotExist(err) {
 		folder := filepath.Dir(configPath)
-		fmt.Printf("no home directory configuration found, creating new one at %q pointing to %q.\n", homeFilePath, folder)
 		if err := WriteHomeDirToFile(homeFilePath, folder); err != nil {
 			return "", err
 		}

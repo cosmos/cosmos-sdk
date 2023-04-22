@@ -52,7 +52,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	homeFilePath := filepath.Join(homeFileDir, "home.toml")
 	ctx = ctx.WithHomeFilePath(homeFilePath)
 
-	homeDir, err := ReadHomeDirFromFile(homeFileDir, ctx.Viper)
+	homeDir, err := ReadHomeDir(homeFileDir, ctx.Viper)
 	if err == nil {
 		ctx = ctx.WithHomeDir(homeDir)
 	}

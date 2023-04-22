@@ -44,7 +44,7 @@ func TestWriteReadHomeDirToFromFile(t *testing.T) {
 			err := WriteHomeDirToFile(tc.homeFilePath, newHome)
 			if tc.expPass {
 				assert.NilError(t, err, "no error expected when writing home dir to file")
-				homeDir, err := ReadHomeDirFromFile(defaultConfigPath, ctx.Viper)
+				homeDir, err := ReadHomeDir(defaultConfigPath, ctx.Viper)
 				assert.NilError(t, err, "expected no error reading the home dir from the configuration file")
 				assert.Equal(t, homeDir, newHome,
 					"expected home dir read from configuration file to be %q; got: %q", newHome, homeDir,

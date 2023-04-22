@@ -94,6 +94,15 @@ func CheckValid(fileName string, data []byte) error {
 		if cfg.ChainID == "" {
 			return errors.New("client config invalid: chain-id is empty")
 		}
+	case strings.HasSuffix(fileName, HomeConfig):
+		var cfg clientcfg.HomeDirConfig
+		if err := v.Unmarshal(&cfg); err != nil {
+			return fmt.Errorf("failed to unmarshal as home dir config: %w", err)
+		}
+
+		if cfg.HomeDir == "" {
+			return errors.New("home dir config invalid: home-dir is empty")
+		}
 	case strings.HasSuffix(fileName, CMTConfig):
 		return errors.New("cometbft config is not supported")
 

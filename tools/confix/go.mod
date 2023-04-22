@@ -156,7 +156,7 @@ require (
 
 replace (
 	// TODO: remove replacement
-	github.com/cosmos/cosmos-sdk => github.com/MalteHerrmann/cosmos-sdk v0.46.0-beta2.0.20230327214643-f3ff715ae6d0
+	github.com/cosmos/cosmos-sdk => ../../../cosmos-sdk
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	// TODO investigate if we can outright delete this dependency, otherwise go install won't work :(

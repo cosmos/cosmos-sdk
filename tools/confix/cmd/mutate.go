@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"cosmossdk.io/tools/confix"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 	"github.com/creachadair/tomledit/transform"
@@ -58,6 +60,14 @@ func SetCommand() *cobra.Command {
 							Value: value,
 						}, true); !ok {
 							return errors.New("failed to set value")
+						}
+
+						if key[0] == "home-dir" {
+							newConfigToml := fmt.Sprintf("%s/config/config.toml", inputValue)
+							if _, err := os.Stat(newConfigToml); os.IsNotExist(err) {
+								newConfigPath := fmt.Sprintf("%s/config", inputValue)
+								return config.CreateNewConfigAtPath(newConfigPath, clientCtx.ChainID)
+							}
 						}
 
 						return nil

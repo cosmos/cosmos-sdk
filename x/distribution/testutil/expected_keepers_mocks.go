@@ -65,6 +65,20 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
 }
 
+// GetAddressPrefix mocks base method.
+func (m *MockAccountKeeper) GetAddressPrefix() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAddressPrefix")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetAddressPrefix indicates an expected call of GetAddressPrefix.
+func (mr *MockAccountKeeperMockRecorder) GetAddressPrefix() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddressPrefix", reflect.TypeOf((*MockAccountKeeper)(nil).GetAddressPrefix))
+}
+
 // GetModuleAccount mocks base method.
 func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, name string) types.ModuleAccountI {
 	m.ctrl.T.Helper()

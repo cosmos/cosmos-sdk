@@ -71,7 +71,6 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-
 	ParamsState   collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
 	AccountNumber collections.Sequence
 }

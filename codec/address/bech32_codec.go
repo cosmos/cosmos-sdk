@@ -19,6 +19,11 @@ func NewBech32Codec(prefix string) address.Codec {
 	return Bech32Codec{prefix}
 }
 
+// GetBech32Prefix returns the bech32 prefix
+func (bc Bech32Codec) GetBech32Prefix() string {
+	return bc.Bech32Prefix
+}
+
 // StringToBytes encodes text to bytes
 func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 	hrp, bz, err := bech32.DecodeAndConvert(text)

@@ -22,6 +22,11 @@ func NewBech32Codec(prefix string) address.Codec {
 	return bech32Codec{prefix}
 }
 
+// GetBech32Prefix returns the bech32 prefix
+func (bc bech32Codec) GetBech32Prefix() string {
+	return bc.bech32Prefix
+}
+
 // StringToBytes encodes text to bytes
 func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 	if len(strings.TrimSpace(text)) == 0 {

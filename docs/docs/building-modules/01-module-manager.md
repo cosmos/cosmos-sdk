@@ -36,6 +36,8 @@ The above interfaces are mostly embedding smaller interfaces (extension interfac
 * [`HasConsensusVersion`](#hasconsensusversion): The extension interface for declaring a module consensus version.
 * [`BeginBlockAppModule`](#beginblockappmodule): The extension interface that contains information about the `AppModule` and `BeginBlock`.
 * [`EndBlockAppModule`](#endblockappmodule): The extension interface that contains information about the `AppModule` and `EndBlock`.
+* [`PrecommitAppModule`](#precommitappmodule): The extension interface that contains information about the `AppModule` and `Precommit`.
+* [`PrepareCheckStateAppModule`](#preparecheckstateappmodule): The extension interface that contains information about the `AppModule` and `PrepareCheckState`.
 
 The `AppModuleBasic` interface exists to define independent methods of the module, i.e. those that do not depend on other modules in the application. This allows for the construction of the basic application structure early in the application definition, generally in the `init()` function of the [main application file](../basics/00-app-anatomy.md#core-application-file).
 
@@ -167,6 +169,18 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/module/module.go#L20
 
 * `EndBlock(sdk.Context, abci.RequestEndBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the end of each block. This is also where the module can inform the underlying consensus engine of validator set changes (e.g. the `staking` module). Implement empty if no logic needs to be triggered at the end of each block for this module.
 
+### `PrecommitAppModule`
+
+The `PrecommitAppModule` is an extension interface from `AppModule`. All modules that have a `Precommit` method implement this interface.
+
+* `Precommit(sdk.Context)`: This method gives module developers the option to implement logic that is automatically triggered during [`Commit'](../core/00-baseapp.md#commit) of each block using the [`deliverState`](../core/00-baseapp.md#state-updates) of the block to be committed. Implement empty if no logic needs to be triggered during `Commit` of each block for this module.
+
+### `PrepareCheckStateAppModule`
+
+The `PrepareCheckStateAppModule` is an extension interface from `AppModule`. All modules that have a `PrepareCheckState` method implement this interface.
+
+* `PrepareCheckState(sdk.Context)`: This method gives module developers the option to implement logic that is automatically triggered during [`Commit'](../core/00-baseapp.md#commit) of each block using the [`checkState`](../core/00-baseapp.md#state-updates) of the next block. Implement empty if no logic needs to be triggered during `Commit` of each block for this module.
+
 ### Implementing the Application Module Interfaces
 
 Typically, the various application module interfaces are implemented in a file called `module.go`, located in the module's folder (e.g. `./x/module/module.go`).
@@ -228,6 +242,8 @@ The module manager is used throughout the application whenever an action on a co
 * `SetOrderExportGenesis(moduleNames ...string)`: Sets the order in which the [`ExportGenesis`](./08-genesis.md#exportgenesis) function of each module will be called in case of an export. This function is generally called from the application's main [constructor function](../basics/00-app-anatomy.md#constructor-function).
 * `SetOrderBeginBlockers(moduleNames ...string)`: Sets the order in which the `BeginBlock()` function of each module will be called at the beginning of each block. This function is generally called from the application's main [constructor function](../basics/00-app-anatomy.md#constructor-function).
 * `SetOrderEndBlockers(moduleNames ...string)`: Sets the order in which the `EndBlock()` function of each module will be called at the end of each block. This function is generally called from the application's main [constructor function](../basics/00-app-anatomy.md#constructor-function).
+* `SetOrderPrecommiters(moduleNames ...string)`: Sets the order in which the `Precommit()` function of each module will be called during commit of each block. This function is generally called from the application's main [constructor function](../basics/00-app-anatomy.md#constructor-function).
+* `SetOrderPrepareCheckStaters(moduleNames ...string)`: Sets the order in which the `PrepareCheckState()` function of each module will be called during commit of each block. This function is generally called from the application's main [constructor function](../basics/00-app-anatomy.md#constructor-function).
 * `SetOrderMigrations(moduleNames ...string)`: Sets the order of migrations to be run. If not set then migrations will be run with an order defined in `DefaultMigrationsOrder`.
 * `RegisterInvariants(ir sdk.InvariantRegistry)`: Registers the [invariants](./07-invariants.md) of module implementing the `HasInvariants` interface.
 * `RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino)`: Registers legacy [`Msg`](./02-messages-and-queries.md#messages) and [`querier`](./04-query-services.md#legacy-queriers) routes.
@@ -237,6 +253,8 @@ The module manager is used throughout the application whenever an action on a co
 * `ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, modulesToExport []string)`: Behaves the same as `ExportGenesis`, except takes a list of modules to export.
 * `BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock)`: At the beginning of each block, this function is called from [`BaseApp`](../core/00-baseapp.md#beginblock) and, in turn, calls the [`BeginBlock`](./05-beginblock-endblock.md) function of each modules implementing the `BeginBlockAppModule` interface, in the order defined in `OrderBeginBlockers`. It creates a child [context](../core/02-context.md) with an event manager to aggregate [events](../core/08-events.md) emitted from all modules. The function returns an `abci.ResponseBeginBlock` which contains the aforementioned events.
 * `EndBlock(ctx sdk.Context, req abci.RequestEndBlock)`: At the end of each block, this function is called from [`BaseApp`](../core/00-baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./05-beginblock-endblock.md) function of each modules implementing the `EndBlockAppModule` interface, in the order defined in `OrderEndBlockers`. It creates a child [context](../core/02-context.md) with an event manager to aggregate [events](../core/08-events.md) emitted from all modules. The function returns an `abci.ResponseEndBlock` which contains the aforementioned events, as well as validator set updates (if any).
+* `Precommit(ctx sdk.Context)`: During [`Commit`](../core/00-baseapp.md#commit), this function is called from `BaseApp` immediately before the [`deliverState`](../core/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../core/04-store.md#commitmultistore) and, in turn calls the `Precommit` function of each modules implementing the `PrecommitAppModule` interface, in the order defined in `OrderPrecommiters`. It creates a child [context](../core/02-context.md) where the underlying `CacheMultiStore` is that of the newly committed block's [`deliverState`](../core/00-baseapp.md#state-updates).
+* `PrepareCheckState(ctx sdk.Context)`: During [`Commit`](../core/00-baseapp.md#commit), this function is called from `BaseApp` immediately after the [`deliverState`](../core/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../core/04-store.md#commitmultistore) and, in turn calls the `PrepareCheckState` function of each module implementing the `PrepareCheckStateAppModule` interface, in the order defined in `OrderPrepareCheckStaters`. It creates a child [context](../core/02-context.md) where the underlying `CacheMultiStore` is that of the next block's [`checkState`](../core/00-baseapp.md#state-updates). Writes to this state will be present in the [`checkState`](../core/00-baseapp.md#state-updates) of the next block, and therefore this method can be used to prepare the `checkState` for the next block.
 
 Here's an example of a concrete integration within an `simapp`:
 

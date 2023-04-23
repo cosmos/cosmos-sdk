@@ -102,8 +102,10 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	store := ctx.KVStore(k.storeKey)
 	delStore := prefix.NewStore(store, types.GetDelegationsByValPrefixKey(valAddr))
 
-	var dels types.Delegations
-	var pageRes *query.PageResponse
+	var (
+	  dels types.Delegations
+	  pageRes *query.PageResponse
+	 )
 	pageRes, err = query.Paginate(delStore, req.Pagination, func(delAddr, value []byte) error {
 		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 

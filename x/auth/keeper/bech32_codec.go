@@ -22,8 +22,8 @@ func NewBech32Codec(prefix string) address.Codec {
 	return bech32Codec{prefix}
 }
 
-// GetBech32Prefix returns the bech32 prefix
-func (bc bech32Codec) GetBech32Prefix() string {
+// GetAddressPrefix returns the address prefix
+func (bc bech32Codec) GetAddressPrefix() string {
 	return bc.bech32Prefix
 }
 

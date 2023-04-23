@@ -165,12 +165,8 @@ func (ak AccountKeeper) ModuleAccountByName(c context.Context, req *types.QueryM
 
 // Bech32Prefix returns the keeper internally stored bech32 prefix.
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
-	bech32Prefix, err := ak.getBech32Prefix()
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
+	addressPrefix := ak.addressCdc.GetAddressPrefix()
+	return &types.Bech32PrefixResponse{Bech32Prefix: addressPrefix}, nil
 }
 
 // AddressBytesToString converts an address from bytes to string, using the

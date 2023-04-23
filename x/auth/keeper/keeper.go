@@ -254,16 +254,6 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (sdk.AccountI, error) {
 // GetCodec return codec.Codec object used by the keeper
 func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
-// add getter for bech32Prefix
-func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	bech32Codec, ok := ak.addressCdc.(bech32Codec)
-	if !ok {
-		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.addressCdc)
-	}
-
-	return bech32Codec.bech32Prefix, nil
-}
-
 // SetParams sets the auth module's parameters.
 // CONTRACT: This method performs no validation of the parameters.
 func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {

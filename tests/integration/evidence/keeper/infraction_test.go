@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
@@ -63,7 +65,11 @@ func initFixture(t assert.TestingT) *fixture {
 	f := &fixture{}
 	var evidenceKeeper keeper.Keeper
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&evidenceKeeper,
 		&f.interfaceRegistry,
 		&f.accountKeeper,

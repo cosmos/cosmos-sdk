@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -76,7 +78,11 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 func TestArmorUnarmorPubKey(t *testing.T) {
 	// Select the encryption and storage for your cryptostore
 	var cdc codec.Codec
-	err := depinject.Inject(configurator.NewAppConfig(), &cdc)
+
+	err := depinject.Inject(depinject.Configs(
+		configurator.NewAppConfig(),
+		depinject.Supply(log.NewNopLogger()),
+	), &cdc)
 	require.NoError(t, err)
 
 	cstore := keyring.NewInMemory(cdc)

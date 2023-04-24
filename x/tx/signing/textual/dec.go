@@ -19,8 +19,6 @@ func NewDecValueRenderer() ValueRenderer {
 
 type decValueRenderer struct{}
 
-var _ ValueRenderer = decValueRenderer{}
-
 func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	decStr := v.String()
 

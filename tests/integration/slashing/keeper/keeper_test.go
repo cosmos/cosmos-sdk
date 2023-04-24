@@ -4,22 +4,34 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
-
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
-
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -27,42 +39,98 @@ import (
 var InitTokens = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 
 type fixture struct {
-	ctx            sdk.Context
+	app *integration.App
+
+	ctx  sdk.Context
+	cdc  codec.Codec
+	keys map[string]*storetypes.KVStoreKey
+
+	bankKeeper     bankkeeper.Keeper
 	slashingKeeper slashingkeeper.Keeper
 	stakingKeeper  *stakingkeeper.Keeper
-	bankKeeper     bankkeeper.Keeper
-	addrDels       []sdk.AccAddress
+
+	addrDels []sdk.AccAddress
 }
 
-func initFixture(t assert.TestingT) *fixture {
-	f := &fixture{}
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&f.bankKeeper,
-		&f.slashingKeeper,
-		&f.stakingKeeper,
+func initFixture(t testing.TB) *fixture {
+	keys := storetypes.NewKVStoreKeys(
+		authtypes.StoreKey, banktypes.StoreKey, slashingtypes.StoreKey, stakingtypes.StoreKey,
 	)
-	assert.NilError(t, err)
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	logger := log.NewTestLogger(t)
+	cms := integration.CreateMultiStore(keys, logger)
+
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+
+	authority := authtypes.NewModuleAddress("gov")
+
+	maccPerms := map[string][]string{
+		minttypes.ModuleName:           {authtypes.Minter},
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+	}
+
+	accountKeeper := authkeeper.NewAccountKeeper(
+		cdc,
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		sdk.Bech32MainPrefix,
+		authority.String(),
+	)
+
+	blockedAddresses := map[string]bool{
+		accountKeeper.GetAuthority(): false,
+	}
+	bankKeeper := bankkeeper.NewBaseKeeper(
+		cdc,
+		keys[banktypes.StoreKey],
+		accountKeeper,
+		blockedAddresses,
+		authority.String(),
+		log.NewNopLogger(),
+	)
+
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+
+	slashingKeeper := slashingkeeper.NewKeeper(cdc, &codec.LegacyAmino{}, keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
+
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
+	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, nil, cdc.InterfaceRegistry())
+
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, bankModule, stakingModule, slashingModule)
+
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+
+	// Register MsgServer and QueryServer
+	slashingtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), slashingkeeper.NewMsgServerImpl(slashingKeeper))
+	slashingtypes.RegisterQueryServer(integrationApp.QueryHelper(), slashingkeeper.NewQuerier(slashingKeeper))
+
+	// set default staking params
+	stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
 
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	f.slashingKeeper.SetParams(ctx, testutil.TestParams())
-	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 5, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 200))
+	slashingKeeper.SetParams(sdkCtx, testutil.TestParams())
+	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 5, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
 
 	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3), time.Unix(2, 0), false, int64(10))
 	info2 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4), time.Unix(2, 0), false, int64(10))
 
-	f.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), info1)
-	f.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
+	slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[0]), info1)
+	slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[1]), info2)
 
-	f.addrDels = addrDels
-	f.ctx = ctx
-
-	return f
+	return &fixture{
+		app:            integrationApp,
+		ctx:            sdkCtx,
+		cdc:            cdc,
+		keys:           keys,
+		bankKeeper:     bankKeeper,
+		slashingKeeper: slashingKeeper,
+		stakingKeeper:  stakingKeeper,
+		addrDels:       addrDels,
+	}
 }
 
 func TestUnJailNotBonded(t *testing.T) {

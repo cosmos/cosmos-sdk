@@ -365,7 +365,9 @@ func (suite *KeeperTestSuite) TestSupply_SendCoins() {
 	require.Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 
 	suite.mockSendCoinsFromAccountToModule(baseAcc, burnerAcc)
-	require.NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	require.NoError(keeper.SendCoinsFromAccountToModule(sdkCtx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
 	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 	require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
 }

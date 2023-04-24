@@ -34,7 +34,8 @@ type Context struct {
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
-	minGasPrice          DecCoins
+	minGasPrices         DecCoins
+	ignoreMempoolCheckTx bool // ignore CheckTx errors prior to mempool insertion
 	consParams           cmtproto.ConsensusParams
 	eventManager         EventManagerI
 	priority             int64 // The tx priority, only relevant in CheckTx
@@ -59,7 +60,8 @@ func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMe
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
 func (c Context) IsCheckTx() bool                               { return c.checkTx }
 func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
-func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
+func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrices }
+func (c Context) IgnoreMempoolCheckTx() bool                    { return c.ignoreMempoolCheckTx }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
@@ -107,7 +109,7 @@ func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool
 		checkTx:              isCheckTx,
 		logger:               logger,
 		gasMeter:             storetypes.NewInfiniteGasMeter(),
-		minGasPrice:          DecCoins{},
+		minGasPrices:         DecCoins{},
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
@@ -234,7 +236,15 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 
 // WithMinGasPrices returns a Context with an updated minimum gas price value
 func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
-	c.minGasPrice = gasPrices
+	c.minGasPrices = gasPrices
+	return c
+}
+
+// WithIgnoreMempoolCheckTx returns a Context with an updated skipMempoolCheckTx
+// value. If true, the application will insert the transaction into the mempool
+// regardless if CheckTx succeeds or not.
+func (c Context) WithIgnoreMempoolCheckTx(v bool) Context {
+	c.ignoreMempoolCheckTx = v
 	return c
 }
 

@@ -687,8 +687,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
-		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
 
+		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is a store branch, or something else
 			// replaced by the AnteHandler. We want the original multistore.
@@ -701,10 +701,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 		events := ctx.EventManager().Events()
 
-		// GasMeter expected to be set in AnteHandler
+		// the GasMeter is expected to be set in the AnteHandler
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
+			if ctx.IgnoreMempoolCheckTx() {
+				if err = app.mempool.Insert(ctx, tx); err != nil {
+					return gInfo, nil, anteEvents, priority, err
+				}
+			}
+
 			return gInfo, nil, nil, 0, err
 		}
 

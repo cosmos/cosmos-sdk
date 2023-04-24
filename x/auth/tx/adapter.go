@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// GetSigningTxData returns an x/tx/signing.TxData representation of a transaction for use in the signing
+// API defined in x/tx.
 func (w *wrapper) GetSigningTxData() txsigning.TxData {
 	body := w.tx.Body
 	authInfo := w.tx.AuthInfo

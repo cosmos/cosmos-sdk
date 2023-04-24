@@ -253,6 +253,22 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAd
 	}
 }
 
+// IterateDelegatorRedelegations iterates through one delegator's redelegations.
+func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := types.GetREDsKey(delegator)
+
+	iterator := storetypes.KVStorePrefixIterator(store, delegatorPrefixKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		red := types.MustUnmarshalRED(k.cdc, iterator.Value())
+		if cb(red) {
+			break
+		}
+	}
+}
+
 // HasMaxUnbondingDelegationEntries - check if unbonding delegation has maximum number of entries.
 func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) bool {
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)

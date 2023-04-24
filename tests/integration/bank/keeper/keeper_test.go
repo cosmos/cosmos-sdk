@@ -173,7 +173,7 @@ func initKeepersWithmAccPerms(f *fixture, blockedAddrs map[string]bool) (authkee
 
 	bankStoreService := runtime.NewKVStoreService(f.fetchStoreKey(types.StoreKey).(*storetypes.KVStoreKey))
 	bankKeeper := keeper.NewBaseKeeper(
-		appCodec, f.fetchStoreKey(types.StoreKey), authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(), log.NewNopLogger(),
+		appCodec, bankStoreService, authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(), log.NewNopLogger(),
 	)
 
 	return authKeeper, bankKeeper

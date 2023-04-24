@@ -1,6 +1,7 @@
 package baseapp_test
 
 import (
+	"context"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -94,6 +95,9 @@ func TestMsgService(t *testing.T) {
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 
+	defaultSignMode, err := authsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
+
 	testdata.RegisterInterfaces(interfaceRegistry)
 	testdata.RegisterMsgServer(
 		app.MsgServiceRouter(),
@@ -114,7 +118,7 @@ func TestMsgService(t *testing.T) {
 	sigV2 := signing.SignatureV2{
 		PubKey: priv.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  txConfig.SignModeHandler().DefaultMode(),
+			SignMode:  defaultSignMode,
 			Signature: nil,
 		},
 		Sequence: 0,
@@ -128,9 +132,10 @@ func TestMsgService(t *testing.T) {
 		ChainID:       "test",
 		AccountNumber: 0,
 		Sequence:      0,
+		PubKey:        priv.PubKey(),
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		nil, txConfig.SignModeHandler().DefaultMode(), signerData, //nolint:staticcheck // SA1019: txConfig.SignModeHandler().DefaultMode() is deprecated: use txConfig.SignModeHandler().DefaultMode() instead.
+		context.TODO(), defaultSignMode, signerData,
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)

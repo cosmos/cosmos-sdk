@@ -6,6 +6,7 @@ import (
 	"time"
 
 	_ "cosmossdk.io/x/feegrant/module"
+	"github.com/cosmos/cosmos-sdk/client"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
@@ -41,6 +42,7 @@ type SimTestSuite struct {
 	ctx               sdk.Context
 	feegrantKeeper    keeper.Keeper
 	interfaceRegistry codectypes.InterfaceRegistry
+	txConfig          client.TxConfig
 	accountKeeper     authkeeper.AccountKeeper
 	bankKeeper        bankkeeper.Keeper
 	cdc               codec.Codec
@@ -63,6 +65,7 @@ func (suite *SimTestSuite) SetupTest() {
 		&suite.bankKeeper,
 		&suite.accountKeeper,
 		&suite.interfaceRegistry,
+		&suite.txConfig,
 		&suite.cdc,
 		&suite.legacyAmino,
 	)
@@ -94,7 +97,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 
 	weightedOps := simulation.WeightedOperations(
 		suite.interfaceRegistry,
-		appParams, suite.cdc, suite.accountKeeper,
+		appParams, suite.cdc, suite.txConfig, suite.accountKeeper,
 		suite.bankKeeper, suite.feegrantKeeper, codecaddress.NewBech32Codec("cosmos"),
 	)
 
@@ -144,7 +147,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
+	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
@@ -186,7 +189,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper, codecaddress.NewBech32Codec("cosmos"))
+	op := simulation.SimulateMsgRevokeAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper, codecaddress.NewBech32Codec("cosmos"))
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 

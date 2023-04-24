@@ -13,6 +13,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/client"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -42,6 +43,7 @@ type SimTestSuite struct {
 	suite.Suite
 
 	r             *rand.Rand
+	txConfig      client.TxConfig
 	accounts      []simtypes.Account
 	ctx           sdk.Context
 	app           *runtime.App
@@ -86,7 +88,7 @@ func (s *SimTestSuite) SetupTest() {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.SetupWithConfiguration(testutil.AppConfig, startupCfg, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
+	app, err := simtestutil.SetupWithConfiguration(testutil.AppConfig, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
 	require.NoError(s.T(), err)
 
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
@@ -122,7 +124,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	cdc := s.encCfg.Codec
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, s.accountKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, cdc, s.txConfig, s.accountKeeper,
 		s.bankKeeper, s.stakingKeeper,
 	)
 
@@ -139,7 +141,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, sdk.MsgTypeURL(&types.MsgCancelUnbondingDelegation{})},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(s.r, s.app.BaseApp, s.ctx, s.accounts, s.ctx.ChainID())
 		// require.NoError(t, err) // TODO check if it should be NoError
 
@@ -160,7 +162,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgCreateValidator(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgCreateValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, s.ctx, s.accounts[1:], "")
 	require.NoError(err)
 
@@ -205,7 +207,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgCancelUnbondingDelegate(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgCancelUnbondingDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	accounts := []simtypes.Account{delegator}
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
@@ -234,7 +236,7 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgEditValidator(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgEditValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
 	require.NoError(err)
 
@@ -255,7 +257,7 @@ func (s *SimTestSuite) TestSimulateMsgDelegate() {
 	ctx := s.ctx.WithBlockTime(blockTime)
 
 	// execute operation
-	op := simulation.SimulateMsgDelegate(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts[1:], "")
 	require.NoError(err)
 
@@ -294,7 +296,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgUndelegate(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgUndelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
 	require.NoError(err)
 
@@ -337,7 +339,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgBeginRedelegate(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgBeginRedelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
 	s.T().Logf("operation message: %v", operationMsg)
 	require.NoError(err)

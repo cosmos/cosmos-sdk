@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -64,9 +65,10 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("verify modes and default-mode")
-	modeHandler := txConfig.SignModeHandler()
-	require.Equal(t, modeHandler.DefaultMode(), signingtypes.SignMode_SIGN_MODE_DIRECT)
-	require.Len(t, modeHandler.Modes(), 1)
+	defaultSignMode, err := signing.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
+	require.Equal(t, defaultSignMode, signingtypes.SignMode_SIGN_MODE_DIRECT)
+	require.Len(t, txConfig.SignModeHandler().SupportedModes(), 1)
 
 	signingData := signing.SignerData{
 		Address:       addr.String(),
@@ -75,8 +77,9 @@ func TestDirectModeHandler(t *testing.T) {
 		PubKey:        pubkey,
 	}
 
-	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
-
+	signBytes, err := signing.GetSignBytesAdapter(
+		context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), defaultSignMode, signingData,
+		txBuilder.GetTx())
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
 
@@ -120,7 +123,9 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
-	signBytes, err = modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
+	signBytes, err = signing.GetSignBytesAdapter(
+		context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), defaultSignMode, signingData,
+		txBuilder.GetTx())
 	require.NoError(t, err)
 	require.Equal(t, expectedSignBytes, signBytes)
 

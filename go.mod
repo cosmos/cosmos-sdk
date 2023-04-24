@@ -11,11 +11,11 @@ require (
 	cosmossdk.io/log v1.0.0
 	cosmossdk.io/math v1.0.0
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
-	cosmossdk.io/x/tx v0.5.1-0.20230407182919-057d2e09bd63
+	cosmossdk.io/x/tx v0.5.5
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
-	github.com/bits-and-blooms/bitset v1.6.0
+	github.com/bits-and-blooms/bitset v1.7.0
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.9.1
@@ -26,7 +26,7 @@ require (
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
-	github.com/cosmos/gogoproto v1.4.7
+	github.com/cosmos/gogoproto v1.4.8
 	github.com/cosmos/ledger-cosmos-go v0.13.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0
 	github.com/golang/mock v1.6.0
@@ -114,6 +114,7 @@ require (
 	github.com/hashicorp/go-plugin v1.4.9 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
+	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
@@ -161,6 +162,7 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
+	cosmossdk.io/api => ./api
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

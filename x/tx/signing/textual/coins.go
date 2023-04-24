@@ -28,7 +28,7 @@ type coinsValueRenderer struct {
 	coinMetadataQuerier CoinMetadataQueryFn
 }
 
-var _ ValueRenderer = coinsValueRenderer{}
+var _ RepeatedValueRenderer = coinsValueRenderer{}
 
 func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	if vr.coinMetadataQuerier == nil {

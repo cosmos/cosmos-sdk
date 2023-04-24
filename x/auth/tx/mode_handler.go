@@ -1,13 +1,24 @@
 package tx
 
 import (
-	"fmt"
-
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/direct"
+	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
-
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
+
+type SignModeOptions struct {
+	// Textual are options for SIGN_MODE_TEXTUAL
+	Textual *textual.SignModeOptions
+	// DirectAux are options for SIGN_MODE_DIRECT_AUX
+	DirectAux *directaux.SignModeHandlerOptions
+	// AminoJSON are options for SIGN_MODE_LEGACY_AMINO_JSON
+	AminoJSON *aminojson.SignModeHandlerOptions
+	// Direct is the SignModeHandler for SIGN_MODE_DIRECT since it takes options
+	Direct *direct.SignModeHandler
+}
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
 var DefaultSignModes = []signingtypes.SignMode{
@@ -24,36 +35,31 @@ var DefaultSignModes = []signingtypes.SignMode{
 
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
 // SIGN_MODE_DIRECT, SIGN_MODE_DIRECT_AUX and SIGN_MODE_LEGACY_AMINO_JSON.
-func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHandler, customSignModes ...signing.SignModeHandler) signing.SignModeHandler {
-	if len(modes) < 1 {
-		panic(fmt.Errorf("no sign modes enabled"))
+func makeSignModeHandler(
+	opts SignModeOptions,
+	customSignModes ...txsigning.SignModeHandler,
+) *txsigning.HandlerMap {
+	var handlers []txsigning.SignModeHandler
+	if opts.Direct != nil {
+		handlers = append(handlers, opts.Direct)
 	}
-
-	handlers := make([]signing.SignModeHandler, len(modes)+len(customSignModes))
-
-	// handle cosmos-sdk defined sign modes
-	for i, mode := range modes {
-		switch mode {
-		case signingtypes.SignMode_SIGN_MODE_DIRECT:
-			handlers[i] = signModeDirectHandler{}
-		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-			handlers[i] = signModeLegacyAminoJSONHandler{}
-		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
-			handlers[i] = signModeTextualHandler{t: *txt}
-		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
-			handlers[i] = signModeDirectAuxHandler{}
-		default:
-			panic(fmt.Errorf("unsupported sign mode %+v", mode))
+	if opts.Textual != nil {
+		h, err := textual.NewSignModeHandler(*opts.Textual)
+		if err != nil {
+			panic(err)
 		}
+		handlers = append(handlers, h)
 	}
-
-	// add custom sign modes
-	for i, handler := range customSignModes {
-		handlers[i+len(modes)] = handler
+	if opts.DirectAux != nil {
+		h, err := directaux.NewSignModeHandler(*opts.DirectAux)
+		if err != nil {
+			panic(err)
+		}
+		handlers = append(handlers, h)
 	}
-
-	return signing.NewSignModeHandlerMap(
-		modes[0],
-		handlers,
-	)
+	if opts.AminoJSON != nil {
+		handlers = append(handlers, aminojson.NewSignModeHandler(*opts.AminoJSON))
+	}
+	handlers = append(handlers, customSignModes...)
+	return txsigning.NewHandlerMap(handlers...)
 }

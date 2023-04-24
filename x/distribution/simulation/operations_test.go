@@ -30,7 +30,7 @@ import (
 func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, suite.cdc, suite.accountKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, suite.cdc, suite.txConfig, suite.accountKeeper,
 		suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
 
 	// setup 3 accounts
@@ -49,7 +49,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgFundCommunityPool, types.ModuleName, sdk.MsgTypeURL(&types.MsgFundCommunityPool{})},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		suite.Require().NoError(err)
 

@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -94,7 +93,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithChainID("test-chain")
 
 	s.ctx = svrcmd.CreateExecuteContext(context.Background())
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -102,7 +100,7 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	cfg, err := network.DefaultConfigWithAppConfig(nfttestutil.AppConfig)
 	s.Require().NoError(err)

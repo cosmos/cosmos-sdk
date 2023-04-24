@@ -307,6 +307,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the staking module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+		simState.AppParams, simState.Cdc, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

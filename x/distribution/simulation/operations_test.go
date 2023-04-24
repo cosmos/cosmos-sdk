@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -234,7 +236,12 @@ func (suite *SimTestSuite) SetupTest() {
 		appBuilder *runtime.AppBuilder
 		err        error
 	)
-	suite.app, err = simtestutil.Setup(distrtestutil.AppConfig, &suite.accountKeeper,
+	suite.app, err = simtestutil.Setup(
+		depinject.Configs(
+			distrtestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
+		&suite.accountKeeper,
 		&suite.bankKeeper,
 		&suite.cdc,
 		&appBuilder,

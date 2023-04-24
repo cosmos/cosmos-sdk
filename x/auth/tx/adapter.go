@@ -110,6 +110,14 @@ func (w *wrapper) GetSigningTxData() txsigning.TxData {
 }
 
 func adaptModeInfo(legacy *tx.ModeInfo, res *txv1beta1.ModeInfo) {
+	// handle nil modeInfo. this is permissible through the code path:
+	// https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L295
+	// -> https://github.com/cosmos/cosmos-sdk/blob/b7841e3a76a38d069c1b9cb3d48368f7a67e9c26/x/auth/tx/sigs.go#L15-L17
+	// when signature.Data is nil.
+	if legacy == nil {
+		return
+	}
+
 	switch mi := legacy.Sum.(type) {
 	case *tx.ModeInfo_Single_:
 		res.Sum = &txv1beta1.ModeInfo_Single_{

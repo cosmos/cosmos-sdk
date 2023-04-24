@@ -466,19 +466,3 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 
 	return nil
 }
-
-func (w *wrapper) GetSignerInfos() []*tx.SignerInfo {
-	return w.tx.AuthInfo.SignerInfos
-}
-
-func (w *wrapper) GetTxBody() *tx.TxBody {
-	return w.tx.Body
-}
-
-func (w *wrapper) GetBodyBytes() []byte {
-	return w.getBodyBytes()
-}
-
-func (w *wrapper) GetAuthInfoBytes() []byte {
-	return w.getAuthInfoBytes()
-}

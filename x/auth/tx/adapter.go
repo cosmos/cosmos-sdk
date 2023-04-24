@@ -65,9 +65,8 @@ func (w *wrapper) GetSigningTxData() txsigning.TxData {
 		}
 	}
 
-	signerInfos := w.GetSignerInfos()
-	txSignerInfos := make([]*txv1beta1.SignerInfo, len(signerInfos))
-	for i, signerInfo := range signerInfos {
+	txSignerInfos := make([]*txv1beta1.SignerInfo, len(authInfo.SignerInfos))
+	for i, signerInfo := range authInfo.SignerInfos {
 		modeInfo := &txv1beta1.ModeInfo{}
 		adaptModeInfo(signerInfo.ModeInfo, modeInfo)
 		txSignerInfo := &txv1beta1.SignerInfo{
@@ -99,12 +98,13 @@ func (w *wrapper) GetSigningTxData() txsigning.TxData {
 		ExtensionOptions:            extOptions,
 		NonCriticalExtensionOptions: nonCriticalExtOptions,
 	}
-	return txsigning.TxData{
+	txData := txsigning.TxData{
 		AuthInfo:      txAuthInfo,
-		AuthInfoBytes: w.authInfoBz,
+		AuthInfoBytes: w.getAuthInfoBytes(),
 		Body:          txBody,
-		BodyBytes:     w.bodyBz,
+		BodyBytes:     w.getBodyBytes(),
 	}
+	return txData
 }
 
 func adaptModeInfo(legacy *tx.ModeInfo, res *txv1beta1.ModeInfo) {

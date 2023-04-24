@@ -8,8 +8,14 @@ import (
 	"os"
 	"time"
 
+<<<<<<< HEAD:simapp/state.go
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
+=======
+	"github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/math"
+>>>>>>> 4d41a87a3 (feat: add moduleStateCb to allow access moduleState in sim test (#15903)):testutil/sims/state_helpers.go
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,23 +30,48 @@ import (
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
+<<<<<<< HEAD:simapp/state.go
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
 	genesisState := NewDefaultGenesisState(cdc)
+=======
+// It calls AppStateFnWithExtendedCb with nil rawStateCb.
+func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
+>>>>>>> 4d41a87a3 (feat: add moduleStateCb to allow access moduleState in sim test (#15903)):testutil/sims/state_helpers.go
 	return AppStateFnWithExtendedCb(cdc, simManager, genesisState, nil)
 }
 
 // AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
+<<<<<<< HEAD:simapp/state.go
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 // genesisState is the genesis state of the app.
 // cb is the callback function to extend rawState.
+=======
+// It calls AppStateFnWithExtendedCbs with nil moduleStateCb.
+>>>>>>> 4d41a87a3 (feat: add moduleStateCb to allow access moduleState in sim test (#15903)):testutil/sims/state_helpers.go
 func AppStateFnWithExtendedCb(
 	cdc codec.JSONCodec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
-	cb func(rawState map[string]json.RawMessage),
+	rawStateCb func(rawState map[string]json.RawMessage),
+) simtypes.AppStateFn {
+	return AppStateFnWithExtendedCbs(cdc, simManager, genesisState, nil, rawStateCb)
+}
+
+// AppStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
+// It panics if the user provides files for both of them.
+// If a file is not given for the genesis or the sim params, it creates a randomized one.
+// genesisState is the default genesis state of the whole app.
+// moduleStateCb is the callback function to access moduleState.
+// rawStateCb is the callback function to extend rawState.
+func AppStateFnWithExtendedCbs(
+	cdc codec.JSONCodec,
+	simManager *module.SimulationManager,
+	genesisState map[string]json.RawMessage,
+	moduleStateCb func(moduleName string, genesisState interface{}),
+	rawStateCb func(rawState map[string]json.RawMessage),
 ) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
@@ -139,12 +170,19 @@ func AppStateFnWithExtendedCb(
 		}
 
 		// change appState back
-		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
-		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+		for name, state := range map[string]proto.Message{
+			stakingtypes.ModuleName: stakingState,
+			banktypes.ModuleName:    bankState,
+		} {
+			if moduleStateCb != nil {
+				moduleStateCb(name, state)
+			}
+			rawState[name] = cdc.MustMarshalJSON(state)
+		}
 
 		// extend state from callback function
-		if cb != nil {
-			cb(rawState)
+		if rawStateCb != nil {
+			rawStateCb(rawState)
 		}
 
 		// replace appstate

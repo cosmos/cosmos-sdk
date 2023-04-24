@@ -116,9 +116,10 @@ func adaptModeInfo(legacy *tx.ModeInfo, res *txv1beta1.ModeInfo) {
 			},
 		}
 	case *tx.ModeInfo_Multi_:
-		modeInfos := make([]*txv1beta1.ModeInfo, len(legacy.GetMulti().ModeInfos))
-		for i, modeInfo := range legacy.GetMulti().ModeInfos {
-			adaptModeInfo(modeInfo, modeInfos[i])
+		multiModeInfos := legacy.GetMulti().ModeInfos
+		modeInfos := make([]*txv1beta1.ModeInfo, len(multiModeInfos))
+		for _, modeInfo := range multiModeInfos {
+			adaptModeInfo(modeInfo, &txv1beta1.ModeInfo{})
 		}
 		res.Sum = &txv1beta1.ModeInfo_Multi_{
 			Multi: &txv1beta1.ModeInfo_Multi{

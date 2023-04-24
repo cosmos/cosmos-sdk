@@ -255,7 +255,7 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 
 				var hadEvent bool
-				events := txResp.Logs[0].GetEvents()
+				events := txResp.Events
 				for i := 0; i < len(events); i++ {
 					if events[i].GetType() == "create_validator" {
 						attributes := events[i].GetAttributes()

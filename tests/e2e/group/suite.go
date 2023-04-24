@@ -10,6 +10,7 @@ import (
 
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -202,9 +203,9 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 func (s *E2ETestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
-	s.Require().Greater(len(txResp.Logs), 0)
-	s.Require().NotNil(txResp.Logs[0].Events)
-	events := txResp.Logs[0].Events
+	s.Require().Greater(len(txResp.Events), 0)
+	s.Require().NotNil(txResp.Events[0])
+	events := txResp.Events
 	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{})
 
 	for _, e := range events {

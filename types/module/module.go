@@ -212,20 +212,6 @@ type EndBlockAppModule interface {
 	AppModule
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
-
-// PrepareCheckStateAppModule is an extension interface that contains information about the AppModule
-// and PrepareCheckState.
-type PrepareCheckStateAppModule interface {
-	AppModule
-	PrepareCheckState(sdk.Context)
-}
-
-// PreommitAppModule is an extension interface that contains information about the AppModule and Precommit.
-type PrecommitAppModule interface {
-	AppModule
-	Precommit(sdk.Context)
-}
-
 type HasABCIEndblock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
@@ -381,7 +367,7 @@ func (m *Manager) SetOrderPrepareCheckStaters(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderPrepareCheckStaters", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasPrepareCheckState := module.(PrepareCheckStateAppModule)
+			_, hasPrepareCheckState := module.(appmodule.PrepareCheckStateAppModule)
 			return !hasPrepareCheckState
 		})
 	m.OrderPrepareCheckStaters = moduleNames
@@ -392,7 +378,7 @@ func (m *Manager) SetOrderPrecommiters(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderPrecommiters", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasPrecommit := module.(PrecommitAppModule)
+			_, hasPrecommit := module.(appmodule.PrecommitAppModule)
 			return !hasPrecommit
 		})
 	m.OrderPrecommiters = moduleNames
@@ -772,7 +758,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 // Precommit performs precommit functionality for all modules.
 func (m *Manager) Precommit(ctx sdk.Context) {
 	for _, moduleName := range m.OrderPrecommiters {
-		module, ok := m.Modules[moduleName].(PrecommitAppModule)
+		module, ok := m.Modules[moduleName].(appmodule.PrecommitAppModule)
 		if !ok {
 			continue
 		}
@@ -783,7 +769,7 @@ func (m *Manager) Precommit(ctx sdk.Context) {
 // PrepareCheckState performs functionality for preparing the check state for all modules.
 func (m *Manager) PrepareCheckState(ctx sdk.Context) {
 	for _, moduleName := range m.OrderPrepareCheckStaters {
-		module, ok := m.Modules[moduleName].(PrepareCheckStateAppModule)
+		module, ok := m.Modules[moduleName].(appmodule.PrepareCheckStateAppModule)
 		if !ok {
 			continue
 		}

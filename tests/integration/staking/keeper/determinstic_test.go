@@ -119,6 +119,16 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	// set default staking params
 	stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
 
+	// set pools
+	startTokens := stakingKeeper.TokensFromConsensusPower(sdkCtx, 10)
+	bondDenom := stakingKeeper.BondDenom(sdkCtx)
+	notBondedPool := stakingKeeper.GetNotBondedPool(sdkCtx)
+	assert.NilError(t, banktestutil.FundModuleAccount(bankKeeper, sdkCtx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	accountKeeper.SetModuleAccount(sdkCtx, notBondedPool)
+	bondedPool := stakingKeeper.GetBondedPool(sdkCtx)
+	assert.NilError(t, banktestutil.FundModuleAccount(bankKeeper, sdkCtx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	accountKeeper.SetModuleAccount(sdkCtx, bondedPool)
+
 	qr := integrationApp.QueryHelper()
 	queryClient := stakingtypes.NewQueryClient(qr)
 
@@ -723,7 +733,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(f, t)
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6185, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6242, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {

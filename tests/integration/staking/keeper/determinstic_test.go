@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
@@ -51,7 +53,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := simtestutil.Setup(
-		stakingtestutil.AppConfig,
+		depinject.Configs(
+			stakingtestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&f.bankKeeper,
 		&f.accountKeeper,
 		&f.stakingKeeper,
@@ -322,7 +327,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 11985, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14475, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {

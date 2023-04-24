@@ -190,7 +190,8 @@ func (r *SignModeHandler) DefineMessageRenderer(name protoreflect.FullName, vr V
 	r.messages[name] = vr
 }
 
-// GetSignBytes returns the transaction sign bytes.
+// GetSignBytes returns the transaction sign bytes which is the CBOR representation
+// of a list of screens created from the TX data.
 func (r *SignModeHandler) GetSignBytes(ctx context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	data := &textualpb.TextualData{
 		BodyBytes:     txData.BodyBytes,
@@ -204,12 +205,7 @@ func (r *SignModeHandler) GetSignBytes(ctx context.Context, signerData signing.S
 		},
 	}
 
-	vr, err := r.GetMessageValueRenderer(data.ProtoReflect().Descriptor())
-	if err != nil {
-		return nil, err
-	}
-
-	screens, err := vr.Format(ctx, protoreflect.ValueOf(data.ProtoReflect()))
+	screens, err := NewTxValueRenderer(r).Format(ctx, protoreflect.ValueOf(data.ProtoReflect()))
 	if err != nil {
 		return nil, err
 	}

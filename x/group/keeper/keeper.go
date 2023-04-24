@@ -4,204 +4,39 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
+	groupv1 "cosmossdk.io/api/cosmos/group/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
+	"cosmossdk.io/orm/model/ormdb"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
-)
-
-const (
-	// Group Table
-	GroupTablePrefix        byte = 0x0
-	GroupTableSeqPrefix     byte = 0x1
-	GroupByAdminIndexPrefix byte = 0x2
-
-	// Group Member Table
-	GroupMemberTablePrefix         byte = 0x10
-	GroupMemberByGroupIndexPrefix  byte = 0x11
-	GroupMemberByMemberIndexPrefix byte = 0x12
-
-	// Group Policy Table
-	GroupPolicyTablePrefix        byte = 0x20
-	GroupPolicyTableSeqPrefix     byte = 0x21
-	GroupPolicyByGroupIndexPrefix byte = 0x22
-	GroupPolicyByAdminIndexPrefix byte = 0x23
-
-	// Proposal Table
-	ProposalTablePrefix              byte = 0x30
-	ProposalTableSeqPrefix           byte = 0x31
-	ProposalByGroupPolicyIndexPrefix byte = 0x32
-	ProposalsByVotingPeriodEndPrefix byte = 0x33
-
-	// Vote Table
-	VoteTablePrefix           byte = 0x40
-	VoteByProposalIndexPrefix byte = 0x41
-	VoteByVoterIndexPrefix    byte = 0x42
 )
 
 type Keeper struct {
-	key storetypes.StoreKey
-
 	accKeeper group.AccountKeeper
-
-	// Group Table
-	groupTable        orm.AutoUInt64Table
-	groupByAdminIndex orm.Index
-
-	// Group Member Table
-	groupMemberTable         orm.PrimaryKeyTable
-	groupMemberByGroupIndex  orm.Index
-	groupMemberByMemberIndex orm.Index
-
-	// Group Policy Table
-	groupPolicySeq          orm.Sequence
-	groupPolicyTable        orm.PrimaryKeyTable
-	groupPolicyByGroupIndex orm.Index
-	groupPolicyByAdminIndex orm.Index
-
-	// Proposal Table
-	proposalTable              orm.AutoUInt64Table
-	proposalByGroupPolicyIndex orm.Index
-	proposalsByVotingPeriodEnd orm.Index
-
-	// Vote Table
-	voteTable           orm.PrimaryKeyTable
-	voteByProposalIndex orm.Index
-	voteByVoterIndex    orm.Index
-
-	router baseapp.MessageRouter
-
-	config group.Config
+	db        ormdb.ModuleDB
+	state     groupv1.StateStore
+	router    baseapp.MessageRouter
+	config    group.Config
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
-	k := Keeper{
-		key:       storeKey,
-		router:    router,
-		accKeeper: accKeeper,
+func NewKeeper(storeService store.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+	modDb, err := ormdb.NewModuleDB(group.ORMSchema, ormdb.ModuleDBOptions{KVStoreService: storeService})
+	if err != nil {
+		panic(err)
 	}
 
-	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
+	state, err := groupv1.NewStateStore(modDb)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
-	k.groupByAdminIndex, err = orm.NewIndex(groupTable, GroupByAdminIndexPrefix, func(val interface{}) ([]interface{}, error) {
-		addr, err := accKeeper.StringToBytes(val.(*group.GroupInfo).Admin)
-		if err != nil {
-			return nil, err
-		}
-		return []interface{}{addr}, nil
-	}, []byte{})
-	if err != nil {
-		panic(err.Error())
-	}
-	k.groupTable = *groupTable
-
-	// Group Member Table
-	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
-	if err != nil {
-		panic(err.Error())
-	}
-	k.groupMemberByGroupIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByGroupIndexPrefix, func(val interface{}) ([]interface{}, error) {
-		group := val.(*group.GroupMember).GroupId
-		return []interface{}{group}, nil
-	}, group.GroupMember{}.GroupId)
-	if err != nil {
-		panic(err.Error())
-	}
-	k.groupMemberByMemberIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByMemberIndexPrefix, func(val interface{}) ([]interface{}, error) {
-		memberAddr := val.(*group.GroupMember).Member.Address
-		addr, err := accKeeper.StringToBytes(memberAddr)
-		if err != nil {
-			return nil, err
-		}
-		return []interface{}{addr}, nil
-	}, []byte{})
-	if err != nil {
-		panic(err.Error())
-	}
-	k.groupMemberTable = *groupMemberTable
-
-	// Group Policy Table
-	k.groupPolicySeq = orm.NewSequence(GroupPolicyTableSeqPrefix)
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
-	if err != nil {
-		panic(err.Error())
-	}
-	k.groupPolicyByGroupIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByGroupIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		return []interface{}{value.(*group.GroupPolicyInfo).GroupId}, nil
-	}, group.GroupPolicyInfo{}.GroupId)
-	if err != nil {
-		panic(err.Error())
-	}
-	k.groupPolicyByAdminIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByAdminIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		admin := value.(*group.GroupPolicyInfo).Admin
-		addr, err := accKeeper.StringToBytes(admin)
-		if err != nil {
-			return nil, err
-		}
-		return []interface{}{addr}, nil
-	}, []byte{})
-	if err != nil {
-		panic(err.Error())
-	}
-	k.groupPolicyTable = *groupPolicyTable
-
-	// Proposal Table
-	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc)
-	if err != nil {
-		panic(err.Error())
-	}
-	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		account := value.(*group.Proposal).GroupPolicyAddress
-		addr, err := accKeeper.StringToBytes(account)
-		if err != nil {
-			return nil, err
-		}
-		return []interface{}{addr}, nil
-	}, []byte{})
-	if err != nil {
-		panic(err.Error())
-	}
-	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
-		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
-		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
-	}, []byte{})
-	if err != nil {
-		panic(err.Error())
-	}
-	k.proposalTable = *proposalTable
-
-	// Vote Table
-	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc)
-	if err != nil {
-		panic(err.Error())
-	}
-	k.voteByProposalIndex, err = orm.NewIndex(voteTable, VoteByProposalIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		return []interface{}{value.(*group.Vote).ProposalId}, nil
-	}, group.Vote{}.ProposalId)
-	if err != nil {
-		panic(err.Error())
-	}
-	k.voteByVoterIndex, err = orm.NewIndex(voteTable, VoteByVoterIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		addr, err := accKeeper.StringToBytes(value.(*group.Vote).Voter)
-		if err != nil {
-			return nil, err
-		}
-		return []interface{}{addr}, nil
-	}, []byte{})
-	if err != nil {
-		panic(err.Error())
-	}
-	k.voteTable = *voteTable
 
 	if config.MaxMetadataLen == 0 {
 		config.MaxMetadataLen = group.DefaultConfig().MaxMetadataLen
@@ -209,9 +44,14 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	if config.MaxExecutionPeriod == 0 {
 		config.MaxExecutionPeriod = group.DefaultConfig().MaxExecutionPeriod
 	}
-	k.config = config
 
-	return k
+	return Keeper{
+		db:        modDb,
+		router:    router,
+		accKeeper: accKeeper,
+		state:     state,
+		config:    config,
+	}
 }
 
 // Logger returns a module-specific logger.
@@ -219,26 +59,15 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
 
-// GetGroupSequence returns the current value of the group table sequence
-func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
-	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
-}
-
-// GetGroupPolicySeq returns the current value of the group policy table sequence
-func (k Keeper) GetGroupPolicySeq(ctx sdk.Context) uint64 {
-	return k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
-}
-
 // proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.
 func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals []group.Proposal, err error) {
-	timeBytes := sdk.FormatTimeBytes(endTime)
-	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
+	it, err := k.state.ProposalTable().List(ctx, groupv1.ProposalVotingPeriodEndIndexKey{}.WithVotingPeriodEnd(timestamppb.New(endTime)))
 	if err != nil {
 		return proposals, err
 	}
 	defer it.Close()
 
-	for {
+	for it.Next() {
 		// Important: this following line cannot be outside of the for loop.
 		// It seems that when one unmarshals into the same `group.Proposal`
 		// reference, then gogoproto somehow "adds" the new bytes to the old
@@ -248,15 +77,12 @@ func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals 
 		// So we're declaring a local variable that gets GCed.
 		//
 		// Also see `x/group/types/proposal_test.go`, TestGogoUnmarshalProposal().
-		var proposal group.Proposal
-		_, err := it.LoadNext(&proposal)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
+		proposal, err := it.Value()
 		if err != nil {
 			return proposals, err
 		}
-		proposals = append(proposals, proposal)
+
+		proposals = append(proposals, group.ProposalFromPulsar(proposal))
 	}
 
 	return proposals, nil
@@ -264,14 +90,11 @@ func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals 
 
 // pruneProposal deletes a proposal from state.
 func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
-	store := ctx.KVStore(k.key)
-
-	err := k.proposalTable.Delete(store, proposalID)
-	if err != nil {
+	if err := k.state.ProposalTable().Delete(ctx, &groupv1.Proposal{Id: proposalID}); err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
+	k.Logger(ctx).Debug("pruned proposal", "id", proposalID)
 	return nil
 }
 
@@ -286,10 +109,10 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &proposalInfo)"
 	for _, proposalInfo := range proposals {
 		// Mark all proposals still in the voting phase as aborted.
-		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
-			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
+		if proposalInfo.Status == groupv1.ProposalStatus_PROPOSAL_STATUS_SUBMITTED {
+			proposalInfo.Status = groupv1.ProposalStatus_PROPOSAL_STATUS_ABORTED
 
-			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
+			if err := k.state.ProposalTable().Update(ctx, proposalInfo); err != nil {
 				return err
 			}
 		}
@@ -298,20 +121,16 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 }
 
 // proposalsByGroupPolicy returns all proposals for a given group policy.
-func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
-	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
+func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) ([]*groupv1.Proposal, error) {
+	it, err := k.state.ProposalTable().List(ctx, groupv1.ProposalGroupPolicyAddressIndexKey{}.WithGroupPolicyAddress(groupPolicyAddr.String()))
 	if err != nil {
 		return nil, err
 	}
-	defer proposalIt.Close()
+	defer it.Close()
 
-	var proposals []group.Proposal
-	for {
-		var proposalInfo group.Proposal
-		_, err = proposalIt.LoadNext(&proposalInfo)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
+	var proposals []*groupv1.Proposal
+	for it.Next() {
+		proposalInfo, err := it.Value()
 		if err != nil {
 			return proposals, err
 		}
@@ -328,10 +147,13 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 		return err
 	}
 
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &v)"
 	for _, v := range votes {
-		err = k.voteTable.Delete(ctx.KVStore(k.key), &v)
-		if err != nil {
+		v := v
+
+		if err := k.state.VoteTable().Delete(ctx, &groupv1.Vote{
+			ProposalId: proposalID,
+			Voter:      v.Voter,
+		}); err != nil {
 			return err
 		}
 	}
@@ -340,26 +162,29 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 }
 
 // votesByProposal returns all votes for a given proposal.
-func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vote, error) {
-	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), proposalID)
+func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]*groupv1.Vote, error) {
+	it, err := k.state.VoteTable().List(ctx, groupv1.VoteProposalIdVoterIndexKey{}.WithProposalId(proposalID))
 	if err != nil {
 		return nil, err
 	}
 	defer it.Close()
 
-	var votes []group.Vote
-	for {
-		var vote group.Vote
-		_, err = it.LoadNext(&vote)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
+	var votes []*groupv1.Vote
+	for it.Next() {
+		vote, err := it.Value()
 		if err != nil {
 			return votes, err
 		}
+
 		votes = append(votes, vote)
 	}
+
 	return votes, nil
+}
+
+// GetGroupSequence returns the current value of the group table sequence
+func (k Keeper) GetGroupSequence(ctx sdk.Context) (uint64, error) {
+	return k.state.GroupInfoTable().LastInsertedSequence(ctx)
 }
 
 // PruneProposals prunes all proposals that are expired, i.e. whose
@@ -388,8 +213,10 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	if err != nil {
 		return nil
 	}
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointers in the loop)"
+
 	for _, proposal := range proposals {
+		proposal := proposal
+
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
 			return errorsmod.Wrap(err, "group policy")
@@ -413,7 +240,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return errorsmod.Wrap(err, "doTallyAndUpdate")
 			}
 
-			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+			if err := k.state.ProposalTable().Update(ctx, group.ProposalToPulsar(proposal)); err != nil {
 				return errorsmod.Wrap(err, "proposal update")
 			}
 		}

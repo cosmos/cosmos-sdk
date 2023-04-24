@@ -9,7 +9,6 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
-import "google/protobuf/any.proto";
 import "amino/amino.proto";
 
 // Member represents a group member with an account address,
@@ -118,140 +117,6 @@ enum VoteOption {
   VOTE_OPTION_NO_WITH_VETO = 4;
 }
 
-//
-// State
-//
-
-// GroupInfo represents the high-level on-chain information for a group.
-message GroupInfo {
-  // id is the unique ID of the group.
-  uint64 id = 1;
-
-  // admin is the account address of the group's admin.
-  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // metadata is any arbitrary metadata to attached to the group.
-  string metadata = 3;
-
-  // version is used to track changes to a group's membership structure that
-  // would break existing proposals. Whenever any members weight is changed,
-  // or any member is added or removed this version is incremented and will
-  // cause proposals based on older versions of this group to fail
-  uint64 version = 4;
-
-  // total_weight is the sum of the group members' weights.
-  string total_weight = 5;
-
-  // created_at is a timestamp specifying when a group was created.
-  google.protobuf.Timestamp created_at = 6
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-}
-
-// GroupMember represents the relationship between a group and a member.
-message GroupMember {
-  // group_id is the unique ID of the group.
-  uint64 group_id = 1;
-
-  // member is the member data.
-  Member member = 2;
-}
-
-// GroupPolicyInfo represents the high-level on-chain information for a group policy.
-message GroupPolicyInfo {
-  option (gogoproto.equal)           = true;
-  option (gogoproto.goproto_getters) = false;
-
-  // address is the account address of group policy.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // group_id is the unique ID of the group.
-  uint64 group_id = 2;
-
-  // admin is the account address of the group admin.
-  string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // metadata is any arbitrary metadata attached to the group policy.
-  string metadata = 4;
-
-  // version is used to track changes to a group's GroupPolicyInfo structure that
-  // would create a different result on a running proposal.
-  uint64 version = 5;
-
-  // decision_policy specifies the group policy's decision policy.
-  google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "cosmos.group.v1.DecisionPolicy"];
-
-  // created_at is a timestamp specifying when a group policy was created.
-  google.protobuf.Timestamp created_at = 7
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-}
-
-// Proposal defines a group proposal. Any member of a group can submit a proposal
-// for a group policy to decide upon.
-// A proposal consists of a set of `sdk.Msg`s that will be executed if the proposal
-// passes as well as some optional metadata associated with the proposal.
-message Proposal {
-  option (gogoproto.goproto_getters) = false;
-
-  // id is the unique id of the proposal.
-  uint64 id = 1;
-
-  // group_policy_address is the account address of group policy.
-  string group_policy_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // metadata is any arbitrary metadata attached to the proposal.
-  string metadata = 3;
-
-  // proposers are the account addresses of the proposers.
-  repeated string proposers = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // submit_time is a timestamp specifying when a proposal was submitted.
-  google.protobuf.Timestamp submit_time = 5
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-
-  // group_version tracks the version of the group at proposal submission.
-  // This field is here for informational purposes only.
-  uint64 group_version = 6;
-
-  // group_policy_version tracks the version of the group policy at proposal submission.
-  // When a decision policy is changed, existing proposals from previous policy
-  // versions will become invalid with the `ABORTED` status.
-  // This field is here for informational purposes only.
-  uint64 group_policy_version = 7;
-
-  // status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
-  ProposalStatus status = 8;
-
-  // final_tally_result contains the sums of all weighted votes for this
-  // proposal for each vote option. It is empty at submission, and only
-  // populated after tallying, at voting period end or at proposal execution,
-  // whichever happens first.
-  TallyResult final_tally_result = 9 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-
-  // voting_period_end is the timestamp before which voting must be done.
-  // Unless a successful MsgExec is called before (to execute a proposal whose
-  // tally is successful before the voting period ends), tallying will be done
-  // at this point, and the `final_tally_result`and `status` fields will be
-  // accordingly updated.
-  google.protobuf.Timestamp voting_period_end = 10
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-
-  // executor_result is the final result of the proposal execution. Initial value is NotRun.
-  ProposalExecutorResult executor_result = 11;
-
-  // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
-  repeated google.protobuf.Any messages = 12;
-
-  // title is the title of the proposal
-  //
-  // Since: cosmos-sdk 0.47
-  string title = 13;
-
-  // summary is a short summary of the proposal
-  //
-  // Since: cosmos-sdk 0.47
-  string summary = 14;
-}
-
 // ProposalStatus defines proposal statuses.
 enum ProposalStatus {
   option (gogoproto.goproto_enum_prefix) = false;
@@ -311,23 +176,4 @@ message TallyResult {
 
   // no_with_veto_count is the weighted sum of veto.
   string no_with_veto_count = 4;
-}
-
-// Vote represents a vote for a proposal.
-message Vote {
-  // proposal is the unique ID of the proposal.
-  uint64 proposal_id = 1;
-
-  // voter is the account address of the voter.
-  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // option is the voter's choice on the proposal.
-  VoteOption option = 3;
-
-  // metadata is any arbitrary metadata attached to the vote.
-  string metadata = 4;
-
-  // submit_time is the timestamp when the vote was submitted.
-  google.protobuf.Timestamp submit_time = 5
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 }

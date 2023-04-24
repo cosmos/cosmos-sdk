@@ -1,13 +1,12 @@
 package keeper
 
 import (
+	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/orm/types/ormerrors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
 // Tally is a function that tallies a proposal by iterating through its votes,
@@ -22,7 +21,7 @@ func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.
 		return p.FinalTallyResult, nil
 	}
 
-	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), p.Id)
+	it, err := k.state.VoteTable().List(ctx, groupv1.VoteProposalIdVoterIndexKey{}.WithProposalId(p.Id))
 	if err != nil {
 		return group.TallyResult{}, err
 	}
@@ -30,25 +29,16 @@ func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.
 
 	tallyResult := group.DefaultTallyResult()
 
-	for {
-		var vote group.Vote
-		_, err = it.LoadNext(&vote)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
+	for it.Next() {
+		vote, err := it.Value()
 		if err != nil {
 			return group.TallyResult{}, err
 		}
 
-		var member group.GroupMember
-		err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupMember{
-			GroupId: groupID,
-			Member:  &group.Member{Address: vote.Voter},
-		}), &member)
-
+		member, err := k.state.GroupMemberTable().Get(ctx, groupID, vote.Voter)
 		switch {
-		case sdkerrors.ErrNotFound.Is(err):
-			// If the member left the group after voting, then we simply skip the
+		case ormerrors.IsNotFound(err):
+			// If the member left the group aformerrors.IsNotFound(err)ter voting, then we simply skip the
 			// vote.
 			continue
 		case err != nil:
@@ -56,7 +46,7 @@ func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.
 			return group.TallyResult{}, err
 		}
 
-		if err := tallyResult.Add(vote, member.Member.Weight); err != nil {
+		if err := tallyResult.Add(group.VoteFromPulsar(vote), member.Member.Weight); err != nil {
 			return group.TallyResult{}, errorsmod.Wrap(err, "add new vote")
 		}
 	}

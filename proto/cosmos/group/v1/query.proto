@@ -6,6 +6,7 @@ package cosmos.group.v1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/group/v1/types.proto";
+import "cosmos/group/v1/state.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";

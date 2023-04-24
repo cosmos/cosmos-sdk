@@ -12,9 +12,8 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -30,7 +29,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/group module consensus version.
-const ConsensusVersion = 2
+const ConsensusVersion = 3
 
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
@@ -153,6 +152,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(group.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err))
 	}
+
+	if err := cfg.RegisterMigration(group.ModuleName, 2, m.Migrate2to3); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", group.ModuleName, err))
+	}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
@@ -175,7 +178,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // RegisterStoreDecoder registers a decoder for group module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[group.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr["group"] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
@@ -202,7 +205,7 @@ type GroupInputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
-	Key              *store.KVStoreKey
+	KVStoreService   store.KVStoreService
 	Cdc              codec.Codec
 	AccountKeeper    group.AccountKeeper
 	BankKeeper       group.BankKeeper
@@ -224,7 +227,7 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 		in.Config.MaxExecutionPeriod = "1209600s"
 	*/
 
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
+	k := keeper.NewKeeper(in.KVStoreService, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return GroupOutputs{GroupKeeper: k, Module: m}
 }

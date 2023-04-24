@@ -1254,7 +1254,10 @@ func SimulateMsgLeaveGroup(
 func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	ctx sdk.Context, accounts []simtypes.Account,
 ) (groupInfo *group.GroupInfo, acc simtypes.Account, account sdk.AccountI, err error) {
-	groupID := k.GetGroupSequence(ctx)
+	groupID, err := k.GetGroupSequence(ctx)
+	if err != nil {
+		return nil, simtypes.Account{}, nil, fmt.Errorf("error getting group sequence: %w", err)
+	}
 
 	switch {
 	case groupID > initialGroupID:

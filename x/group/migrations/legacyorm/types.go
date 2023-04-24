@@ -27,12 +27,6 @@ func (r RowID) Bytes() []byte {
 	return r
 }
 
-// Validateable is an interface that ProtoMarshaler types can implement and is called on any orm save or update operation.
-type Validateable interface {
-	// ValidateBasic is a sanity check on the data. Any error returned prevents create or updates.
-	ValidateBasic() error
-}
-
 // Index allows efficient prefix scans is stored as key = concat(indexKeyBytes, rowIDUint64) with value empty
 // so that the row PrimaryKey is allows a fixed with 8 byte integer. This allows the MultiKeyIndex key bytes to be
 // variable length and scanned iteratively.

@@ -13,7 +13,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
 // DecisionPolicyResult is the result of whether a proposal passes or not a
@@ -241,8 +240,6 @@ func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string) (D
 	return DecisionPolicyResult{Allow: false, Final: false}, nil
 }
 
-var _ orm.Validateable = GroupPolicyInfo{}
-
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
 func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata string,
 	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time,
@@ -290,10 +287,6 @@ func (g GroupPolicyInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
 }
 
-func (g GroupInfo) PrimaryKeyFields() []interface{} {
-	return []interface{}{g.Id}
-}
-
 // ValidateBasic does basic validation on group info.
 func (g GroupInfo) ValidateBasic() error {
 	if g.Id == 0 {
@@ -312,16 +305,6 @@ func (g GroupInfo) ValidateBasic() error {
 		return errorsmod.Wrap(errors.ErrEmpty, "version")
 	}
 	return nil
-}
-
-func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(g.Address)
-
-	return []interface{}{addr.Bytes()}
-}
-
-func (g Proposal) PrimaryKeyFields() []interface{} {
-	return []interface{}{g.Id}
 }
 
 // ValidateBasic does basic validation on group policy info.
@@ -420,14 +403,6 @@ func (g Proposal) ValidateBasic() error {
 	}
 	return nil
 }
-
-func (v Vote) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(v.Voter)
-
-	return []interface{}{v.ProposalId, addr.Bytes()}
-}
-
-var _ orm.Validateable = Vote{}
 
 // ValidateBasic does basic validation on vote.
 func (v Vote) ValidateBasic() error {

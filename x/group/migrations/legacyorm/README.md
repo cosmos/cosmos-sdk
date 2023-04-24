@@ -1,4 +1,4 @@
-# Group ORM
+# DEPRECATED Legacy Group ORM
 
 The orm package provides a framework for creating relational database tables with primary and secondary keys.
 

@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
@@ -135,7 +136,7 @@ func (a table) Set(store types.KVStore, rowID RowID, newValue proto.Message) err
 }
 
 func assertValid(obj proto.Message) error {
-	if v, ok := obj.(Validateable); ok {
+	if v, ok := obj.(sdk.HasValidateBasic); ok {
 		if err := v.ValidateBasic(); err != nil {
 			return err
 		}

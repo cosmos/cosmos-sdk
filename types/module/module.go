@@ -367,7 +367,7 @@ func (m *Manager) SetOrderPrepareCheckStaters(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderPrepareCheckStaters", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasPrepareCheckState := module.(appmodule.PrepareCheckStateAppModule)
+			_, hasPrepareCheckState := module.(appmodule.HasPrepareCheckStateAppModule)
 			return !hasPrepareCheckState
 		})
 	m.OrderPrepareCheckStaters = moduleNames
@@ -378,7 +378,7 @@ func (m *Manager) SetOrderPrecommiters(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderPrecommiters", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasPrecommit := module.(appmodule.PrecommitAppModule)
+			_, hasPrecommit := module.(appmodule.HasPrecommitAppModule)
 			return !hasPrecommit
 		})
 	m.OrderPrecommiters = moduleNames
@@ -758,7 +758,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 // Precommit performs precommit functionality for all modules.
 func (m *Manager) Precommit(ctx sdk.Context) {
 	for _, moduleName := range m.OrderPrecommiters {
-		module, ok := m.Modules[moduleName].(appmodule.PrecommitAppModule)
+		module, ok := m.Modules[moduleName].(appmodule.HasPrecommitAppModule)
 		if !ok {
 			continue
 		}
@@ -769,7 +769,7 @@ func (m *Manager) Precommit(ctx sdk.Context) {
 // PrepareCheckState performs functionality for preparing the check state for all modules.
 func (m *Manager) PrepareCheckState(ctx sdk.Context) {
 	for _, moduleName := range m.OrderPrepareCheckStaters {
-		module, ok := m.Modules[moduleName].(appmodule.PrepareCheckStateAppModule)
+		module, ok := m.Modules[moduleName].(appmodule.HasPrepareCheckStateAppModule)
 		if !ok {
 			continue
 		}

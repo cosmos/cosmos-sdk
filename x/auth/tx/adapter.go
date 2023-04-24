@@ -1,0 +1,133 @@
+package tx
+
+import (
+	"google.golang.org/protobuf/types/known/anypb"
+
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	multisigv1beta1 "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	txsigning "cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+func (w *wrapper) GetSigningTxData() txsigning.TxData {
+	body := w.tx.Body
+	authInfo := w.tx.AuthInfo
+
+	msgs := make([]*anypb.Any, len(body.Messages))
+	for i, msg := range body.Messages {
+		msgs[i] = &anypb.Any{
+			TypeUrl: msg.TypeUrl,
+			Value:   msg.Value,
+		}
+	}
+
+	extOptions := make([]*anypb.Any, len(body.ExtensionOptions))
+	for i, extOption := range body.ExtensionOptions {
+		extOptions[i] = &anypb.Any{
+			TypeUrl: extOption.TypeUrl,
+			Value:   extOption.Value,
+		}
+	}
+
+	nonCriticalExtOptions := make([]*anypb.Any, len(body.NonCriticalExtensionOptions))
+	for i, extOption := range body.NonCriticalExtensionOptions {
+		nonCriticalExtOptions[i] = &anypb.Any{
+			TypeUrl: extOption.TypeUrl,
+			Value:   extOption.Value,
+		}
+	}
+
+	feeCoins := authInfo.Fee.Amount
+	feeAmount := make([]*basev1beta1.Coin, len(feeCoins))
+	for i, coin := range feeCoins {
+		feeAmount[i] = &basev1beta1.Coin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.String(),
+		}
+	}
+
+	var txTip *txv1beta1.Tip
+	tip := authInfo.Tip
+	if tip != nil {
+		tipCoins := tip.GetAmount()
+		tipAmount := make([]*basev1beta1.Coin, len(tipCoins))
+		for i, coin := range tipCoins {
+			tipAmount[i] = &basev1beta1.Coin{
+				Denom:  coin.Denom,
+				Amount: coin.Amount.String(),
+			}
+		}
+		txTip = &txv1beta1.Tip{
+			Amount: tipAmount,
+			Tipper: tip.Tipper,
+		}
+	}
+
+	signerInfos := w.GetSignerInfos()
+	txSignerInfos := make([]*txv1beta1.SignerInfo, len(signerInfos))
+	for i, signerInfo := range signerInfos {
+		modeInfo := &txv1beta1.ModeInfo{}
+		adaptModeInfo(signerInfo.ModeInfo, modeInfo)
+		txSignerInfo := &txv1beta1.SignerInfo{
+			PublicKey: &anypb.Any{
+				TypeUrl: signerInfo.PublicKey.TypeUrl,
+				Value:   signerInfo.PublicKey.Value,
+			},
+			Sequence: signerInfo.Sequence,
+			ModeInfo: modeInfo,
+		}
+		txSignerInfos[i] = txSignerInfo
+	}
+
+	txAuthInfo := &txv1beta1.AuthInfo{
+		SignerInfos: txSignerInfos,
+		Fee: &txv1beta1.Fee{
+			Amount:   feeAmount,
+			GasLimit: authInfo.Fee.GasLimit,
+			Payer:    authInfo.Fee.Payer,
+			Granter:  authInfo.Fee.Granter,
+		},
+		Tip: txTip,
+	}
+
+	txBody := &txv1beta1.TxBody{
+		Messages:                    msgs,
+		Memo:                        body.Memo,
+		TimeoutHeight:               body.TimeoutHeight,
+		ExtensionOptions:            extOptions,
+		NonCriticalExtensionOptions: nonCriticalExtOptions,
+	}
+	return txsigning.TxData{
+		AuthInfo:      txAuthInfo,
+		AuthInfoBytes: w.authInfoBz,
+		Body:          txBody,
+		BodyBytes:     w.bodyBz,
+	}
+}
+
+func adaptModeInfo(legacy *tx.ModeInfo, res *txv1beta1.ModeInfo) {
+	switch mi := legacy.Sum.(type) {
+	case *tx.ModeInfo_Single_:
+		res.Sum = &txv1beta1.ModeInfo_Single_{
+			Single: &txv1beta1.ModeInfo_Single{
+				Mode: signingv1beta1.SignMode(legacy.GetSingle().Mode),
+			},
+		}
+	case *tx.ModeInfo_Multi_:
+		modeInfos := make([]*txv1beta1.ModeInfo, len(legacy.GetMulti().ModeInfos))
+		for i, modeInfo := range legacy.GetMulti().ModeInfos {
+			adaptModeInfo(modeInfo, modeInfos[i])
+		}
+		res.Sum = &txv1beta1.ModeInfo_Multi_{
+			Multi: &txv1beta1.ModeInfo_Multi{
+				Bitarray: &multisigv1beta1.CompactBitArray{
+					Elems:           mi.Multi.Bitarray.Elems,
+					ExtraBitsStored: mi.Multi.Bitarray.ExtraBitsStored,
+				},
+				ModeInfos: modeInfos,
+			},
+		}
+	}
+}

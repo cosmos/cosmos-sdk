@@ -284,7 +284,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 	}
 
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
-		WithVoteInfos(toLegacyVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
+		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress)
@@ -1037,7 +1037,8 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 	return ctx
 }
 
-func toLegacyVoteInfo(votes []abci.ExtendedVoteInfo) []abci.VoteInfo {
+// toVoteInfo converts the new ExtendedVoteInfo to VoteInfo.
+func toVoteInfo(votes []abci.ExtendedVoteInfo) []abci.VoteInfo {
 	legacyVotes := make([]abci.VoteInfo, len(votes))
 	for i, vote := range votes {
 		legacyVotes[i] = abci.VoteInfo{

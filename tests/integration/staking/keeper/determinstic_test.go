@@ -99,6 +99,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
+		log.NewNopLogger(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())

@@ -36,6 +36,10 @@ simd config migrate v0.48
 
 More information about [confix](https://docs.cosmos.network/main/tooling/confix).
 
+#### Events
+
+The log section of abci.TxResult is not populated in the case of successful msg(s) execution. Instead a new attribute is added to all messages indicating the `msg_index` which identifies which events and attributes relate the same transaction
+
 #### gRPC-Web
 
 gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
@@ -80,6 +84,30 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 + runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 )
+```
+
+The following modules `NewKeeper` function now also take a `log.Logger`:
+
+* `x/bank`
+
+
+### depinject
+
+For `depinject` users, now the logger must be supplied through the main `depinject.Inject` function instead of passing it to `appBuilder.Build`.
+
+```diff
+appConfig = depinject.Configs(
+	AppConfig,
+	depinject.Supply(
+		// supply the application options
+		appOpts,
++		logger,
+	...
+```
+
+```diff
+- app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
++ app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 ```
 
 ### Packages

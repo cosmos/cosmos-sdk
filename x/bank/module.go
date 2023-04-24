@@ -9,6 +9,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -212,6 +213,7 @@ type ModuleInputs struct {
 	Config *modulev1.Module
 	Cdc    codec.Codec
 	Key    *store.KVStoreKey
+	Logger log.Logger
 
 	AccountKeeper types.AccountKeeper
 
@@ -254,6 +256,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		blockedAddresses,
 		authority.String(),
+		in.Logger,
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 

@@ -29,6 +29,7 @@ An Event contains:
 
 * A `type` to categorize the Event at a high-level; for example, the Cosmos SDK uses the `"message"` type to filter Events by `Msg`s.
 * A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
+* A `msg_index` to identify which messages relate to the same transaction
 
 :::tip
 To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.

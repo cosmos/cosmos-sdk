@@ -166,6 +166,10 @@ func (ak AccountKeeper) ModuleAccountByName(c context.Context, req *types.QueryM
 // Bech32Prefix returns the keeper internally stored bech32 prefix.
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
 	addressPrefix := ak.GetAddressPrefix()
+	if addressPrefix == "" {
+		return nil, status.Error(codes.NotFound, "bech32 prefix is not set")
+	}
+
 	return &types.Bech32PrefixResponse{Bech32Prefix: addressPrefix}, nil
 }
 

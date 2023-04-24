@@ -332,10 +332,10 @@ func (m *MockCometinfo) EXPECT() *MockCometinfoMockRecorder {
 }
 
 // GetCometInfo mocks base method.
-func (m *MockCometinfo) GetCometInfo(arg0 context.Context) comet.Info {
+func (m *MockCometinfo) GetCometInfo(arg0 context.Context) comet.BlockInfo {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCometInfo", arg0)
-	ret0, _ := ret[0].(comet.Info)
+	ret0, _ := ret[0].(comet.BlockInfo)
 	return ret0
 }
 

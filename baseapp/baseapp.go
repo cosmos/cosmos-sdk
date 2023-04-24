@@ -1,13 +1,9 @@
 package baseapp
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strings"
-
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/header"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -50,14 +46,12 @@ const (
 )
 
 var _ abci.Application = (*BaseApp)(nil)
-var _ header.Service = (*BaseApp)(nil)
-var _ comet.Service = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
 	logger            log.Logger
-	name              string                      // application name from abci.Info
+	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
@@ -151,10 +145,6 @@ type BaseApp struct {
 	streamingManager storetypes.StreamingManager
 
 	chainID string
-
-	// cometInfo stores information about the current block to be used later on
-	cometInfo  comet.Info
-	headerInfo header.Info
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -614,22 +604,6 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	}
 
 	return ctx.WithMultiStore(msCache), msCache
-}
-
-func (app *BaseApp) SetCometInfo(ci comet.Info) {
-	app.cometInfo = ci
-}
-
-func (app *BaseApp) SetHeaderInfo(hi header.Info) {
-	app.headerInfo = hi
-}
-
-func (app *BaseApp) GetHeaderInfo(ctx context.Context) header.Info {
-	return app.headerInfo
-}
-
-func (app *BaseApp) GetCometInfo(ctx context.Context) comet.Info {
-	return app.cometInfo
 }
 
 // runTx processes a transaction within a given execution mode, encoded transaction

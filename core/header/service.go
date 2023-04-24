@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Service defines the a interface in which you can get header information
+// Service defines the interface in which you can get header information
 type Service interface {
 	GetHeaderInfo(context.Context) Info
 }

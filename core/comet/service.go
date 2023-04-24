@@ -5,19 +5,23 @@ import (
 	"time"
 )
 
-// Service is an interface that can be used to get information specific to Comet
-type Service interface {
-	GetCometInfo(context.Context) Info
+type HasBeginBlocker interface {
+	BeginBlock(context.Context, BlockInfo) error
 }
 
-// Info is the information comet provides apps in ABCI
-type Info struct {
-	Evidence []Misbehavior // Evidence misbehavior of the block
+// Service is an interface that can be used to get information specific to Comet
+type Service interface {
+	GetCometInfo(context.Context) BlockInfo
+}
+
+// BlockInfo is the information comet provides apps in ABCI
+type BlockInfo interface {
+	Evidence() []Misbehavior // Evidence misbehavior of the block
 	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
-	ValidatorsHash    []byte
-	ProposerAddress   []byte     // ProposerAddress returns the address of the block proposer
-	DecidedLastCommit CommitInfo // DecidedLastCommit returns the last commit info
+	ValidatorsHash() []byte
+	ProposerAddress() []byte       // ProposerAddress returns the address of the block proposer
+	DecidedLastCommit() CommitInfo // DecidedLastCommit returns the last commit info
 }
 
 // MisbehaviorType is the type of misbehavior for a validator
@@ -30,28 +34,28 @@ const (
 )
 
 // Validator is the validator information of ABCI
-type Validator struct {
-	Address []byte
-	Power   int64
+type Validator interface {
+	Address() []byte
+	Power() int64
 }
 
 // Misbehavior is the misbehavior information of ABCI
-type Misbehavior struct {
-	Type             MisbehaviorType
-	Validator        Validator
-	Height           int64
-	Time             time.Time
-	TotalVotingPower int64
+type Misbehavior interface {
+	Type() MisbehaviorType
+	Validator() Validator
+	Height() int64
+	Time() time.Time
+	TotalVotingPower() int64
 }
 
 // CommitInfo is the commit information of ABCI
-type CommitInfo struct {
-	Round int32
-	Votes []*VoteInfo
+type CommitInfo interface {
+	Round() int32
+	Votes() []VoteInfo
 }
 
 // VoteInfo is the vote information of ABCI
-type VoteInfo struct {
-	Validator       Validator
-	SignedLastBlock bool
+type VoteInfo interface {
+	Validator() Validator
+	SignedLastBlock() bool
 }

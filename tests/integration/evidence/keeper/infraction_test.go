@@ -7,14 +7,15 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -252,15 +253,15 @@ func testEquivocationHandler(_ interface{}) types.Handler {
 // CometService
 
 type CometService struct {
-	ci comet.Info
+	ci comet.BlockInfo
 }
 
-func (cs CometService) GetCometInfo(_ context.Context) comet.Info {
+func (cs CometService) GetCometInfo(_ context.Context) comet.BlockInfo {
 	return cs.ci
 }
 
-func NewCometInfo(bg abci.RequestBeginBlock) comet.Info {
-	return comet.Info{
+func NewCometInfo(bg abci.RequestBeginBlock) comet.BlockInfo {
+	return comet.BlockInfo{
 		Evidence: baseapp.FromABCIEvidence(bg.ByzantineValidators),
 	}
 }

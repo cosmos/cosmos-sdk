@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.0.0
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230418140744-0dde947d0ab7
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230424095137-b73c17cb9cc8
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0
 	github.com/spf13/cobra v1.7.0

@@ -77,6 +77,7 @@ func initFixture(t testing.TB) *fixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
+		log.NewNopLogger(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())

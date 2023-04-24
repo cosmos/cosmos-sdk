@@ -38,14 +38,14 @@ type HasServices interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
-// HasPrepareCheckStateAppModule is an extension interface that contains information about the AppModule
+// HasPrepareCheckState is an extension interface that contains information about the AppModule
 // and PrepareCheckState.
 type HasPrepareCheckState interface {
 	AppModule
 	PrepareCheckState(context.Context)
 }
 
-// PreommitAppModule is an extension interface that contains information about the AppModule and Precommit.
+// HasPreommit is an extension interface that contains information about the AppModule and Precommit.
 type HasPrecommit interface {
 	AppModule
 	Precommit(context.Context)

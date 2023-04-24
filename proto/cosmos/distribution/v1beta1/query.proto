@@ -84,13 +84,13 @@ message QueryParamsResponse {
 // QueryValidatorDistributionInfoRequest is the request type for the Query/ValidatorDistributionInfo RPC method.
 message QueryValidatorDistributionInfoRequest {
   // validator_address defines the validator address to query for.
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // QueryValidatorDistributionInfoResponse is the response type for the Query/ValidatorDistributionInfo RPC method.
 message QueryValidatorDistributionInfoResponse {
   // operator_address defines the validator operator address.
-  string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // self_bond_rewards defines the self delegations rewards.
   repeated cosmos.base.v1beta1.DecCoin self_bond_rewards = 2 [
     (gogoproto.nullable)     = false,
@@ -106,7 +106,7 @@ message QueryValidatorDistributionInfoResponse {
 // Query/ValidatorOutstandingRewards RPC method.
 message QueryValidatorOutstandingRewardsRequest {
   // validator_address defines the validator address to query for.
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // QueryValidatorOutstandingRewardsResponse is the response type for the
@@ -119,7 +119,7 @@ message QueryValidatorOutstandingRewardsResponse {
 // Query/ValidatorCommission RPC method
 message QueryValidatorCommissionRequest {
   // validator_address defines the validator address to query for.
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // QueryValidatorCommissionResponse is the response type for the
@@ -135,7 +135,7 @@ message QueryValidatorSlashesRequest {
   option (gogoproto.goproto_getters) = false;
 
   // validator_address defines the validator address to query for.
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // starting_height defines the optional starting height to query the slashes.
   uint64 starting_height = 2;
   // starting_height defines the optional ending height to query the slashes.
@@ -163,7 +163,7 @@ message QueryDelegationRewardsRequest {
   // delegator_address defines the delegator address to query for.
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // validator_address defines the validator address to query for.
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // QueryDelegationRewardsResponse is the response type for the

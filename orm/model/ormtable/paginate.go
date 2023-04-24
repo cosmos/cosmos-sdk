@@ -3,7 +3,7 @@ package ormtable
 import (
 	"math"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
+	"cosmossdk.io/orm/internal/listinternal"
 
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 )
@@ -84,12 +84,12 @@ func (it *paginationIterator) Next() bool {
 	if ok {
 		it.i++
 		return true
-	} else {
-		it.pageRes = &queryv1beta1.PageResponse{
-			Total: uint64(it.i),
-		}
-		return false
 	}
+
+	it.pageRes = &queryv1beta1.PageResponse{
+		Total: uint64(it.i),
+	}
+	return false
 }
 
 func (it paginationIterator) PageResponse() *queryv1beta1.PageResponse {

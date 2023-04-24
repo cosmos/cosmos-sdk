@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	"golang.org/x/exp/slices"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"golang.org/x/exp/slices"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -102,6 +100,16 @@ func (a *App) Load(loadLatest bool) error {
 		a.SetEndBlocker(a.EndBlocker)
 	}
 
+	if len(a.config.Precommiters) != 0 {
+		a.ModuleManager.SetOrderPrecommiters(a.config.Precommiters...)
+		a.SetPrecommiter(a.Precommiter)
+	}
+
+	if len(a.config.PrepareCheckStaters) != 0 {
+		a.ModuleManager.SetOrderPrepareCheckStaters(a.config.PrepareCheckStaters...)
+		a.SetPrepareCheckStater(a.PrepareCheckStater)
+	}
+
 	if len(a.config.OrderMigrations) != 0 {
 		a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
 	}
@@ -123,6 +131,16 @@ func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.Re
 // EndBlocker application updates every end block
 func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
 	return a.ModuleManager.EndBlock(ctx, req)
+}
+
+// Precommiter application updates every commit
+func (a *App) Precommiter(ctx sdk.Context) {
+	a.ModuleManager.Precommit(ctx)
+}
+
+// PrepareCheckStater application updates every commit
+func (a *App) PrepareCheckStater(ctx sdk.Context) {
+	a.ModuleManager.PrepareCheckState(ctx)
 }
 
 // InitChainer initializes the chain.
@@ -167,8 +185,8 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // RegisterNodeService registers the node gRPC service on the app gRPC router.
-func (a *App) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter())
+func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter(), cfg)
 }
 
 // Configurator returns the app's configurator.

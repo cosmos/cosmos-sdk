@@ -15,7 +15,7 @@ import "amino/amino.proto";
 message ValidatorSigningInfo {
   option (gogoproto.equal) = true;
 
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
   // Height at which validator was first a candidate OR was un-jailed
   int64 start_height = 2;
   // Index which is incremented every time a validator is bonded in a block and

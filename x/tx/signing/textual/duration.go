@@ -123,50 +123,50 @@ var durRegexp = regexp.MustCompile(`^(-)?(?:([0-9]+) days?)?(?:, )?(?:([0-9]+) h
 // Parse implements the ValueRenderer interface.
 func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
-		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
+		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 
 	parts := durRegexp.FindStringSubmatch(screens[0].Content)
 	if parts == nil {
-		return protoreflect.Value{}, fmt.Errorf("bad duration format: %s", screens[0].Content)
+		return nilValue, fmt.Errorf("bad duration format: %s", screens[0].Content)
 	}
 
-	negative := parts[1] != ""
+	isNegative := parts[1] == "-"
 	var days, hours, minutes, seconds, nanos int64
 	var err error
 
 	if parts[2] != "" {
 		days, err = strconv.ParseInt(parts[2], 10, 64)
 		if err != nil {
-			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[2], err)
+			return nilValue, fmt.Errorf(`bad number "%s": %w`, parts[2], err)
 		}
 	}
 	if parts[3] != "" {
 		hours, err = strconv.ParseInt(parts[3], 10, 64)
 		if err != nil {
-			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[3], err)
+			return nilValue, fmt.Errorf(`bad number "%s": %w`, parts[3], err)
 		}
 	}
 	if parts[4] != "" {
 		minutes, err = strconv.ParseInt(parts[4], 10, 64)
 		if err != nil {
-			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[4], err)
+			return nilValue, fmt.Errorf(`bad number "%s": %w`, parts[4], err)
 		}
 	}
 	if parts[5] != "" {
 		seconds, err = strconv.ParseInt(parts[5], 10, 64)
 		if err != nil {
-			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[5], err)
+			return nilValue, fmt.Errorf(`bad number "%s": %w`, parts[5], err)
 		}
 		if parts[6] != "" {
 			if len(parts[6]) > 9 {
-				return protoreflect.Value{}, fmt.Errorf(`too many nanos "%s"`, parts[6])
+				return nilValue, fmt.Errorf(`too many nanos "%s"`, parts[6])
 			}
 			addZeros := 9 - len(parts[6])
 			text := parts[6] + strings.Repeat("0", addZeros)
 			nanos, err = strconv.ParseInt(text, 10, 32)
 			if err != nil {
-				return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, text, err)
+				return nilValue, fmt.Errorf(`bad number "%s": %w`, text, err)
 			}
 		}
 	}
@@ -177,7 +177,7 @@ func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (prot
 	// Since there are 9 digits or fewer, this conversion is safe.
 	dur.Nanos = int32(nanos)
 
-	if negative {
+	if isNegative {
 		dur.Seconds *= -1
 		dur.Nanos *= -1
 	}

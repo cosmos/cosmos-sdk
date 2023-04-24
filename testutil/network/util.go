@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/core/address"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -119,7 +118,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	return nil
 }
 
-func collectGenFiles(cfg Config, vals []*Validator, outputDir string, ac address.Codec) error {
+func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 	genTime := cmttime.Now()
 
 	for i := 0; i < cfg.NumValidators; i++ {
@@ -140,7 +139,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string, ac address
 		}
 
 		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator, ac)
+			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator)
 		if err != nil {
 			return err
 		}

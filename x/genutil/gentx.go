@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/address"
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -40,7 +39,7 @@ func SetGenTxsInAppGenesisState(
 // balance in the set of genesis accounts.
 func ValidateAccountInGenesis(
 	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
-	addr sdk.Address, coins sdk.Coins, cdc codec.JSONCodec, ac address.Codec,
+	addr sdk.Address, coins sdk.Coins, cdc codec.JSONCodec,
 ) error {
 	var stakingData stakingtypes.GenesisState
 	cdc.MustUnmarshalJSON(appGenesisState[stakingtypes.ModuleName], &stakingData)
@@ -52,7 +51,7 @@ func ValidateAccountInGenesis(
 
 	genBalIterator.IterateGenesisBalances(cdc, appGenesisState,
 		func(bal bankexported.GenesisBalance) (stop bool) {
-			accAddress, err := bal.GetAddress(ac)
+			accAddress, err := bal.GetAddress()
 			if err != nil {
 				return false
 			}

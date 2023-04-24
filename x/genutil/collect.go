@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/core/address"
 	cfg "github.com/cometbft/cometbft/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,11 +23,11 @@ import (
 // GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,
 	config *cfg.Config, initCfg types.InitConfig, genesis *types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
-	validator types.MessageValidator, ac address.Codec,
+	validator types.MessageValidator,
 ) (appState json.RawMessage, err error) {
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
-		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genesis, genBalIterator, validator, ac)
+		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genesis, genBalIterator, validator)
 	if err != nil {
 		return appState, err
 	}
@@ -67,7 +66,7 @@ func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodi
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
 func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	genesis *types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
-	validator types.MessageValidator, ac address.Codec,
+	validator types.MessageValidator,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 	// prepare a map of all balances in genesis state to then validate
 	// against the validators addresses
@@ -87,7 +86,7 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 	genBalIterator.IterateGenesisBalances(
 		cdc, appState,
 		func(balance bankexported.GenesisBalance) (stop bool) {
-			addr, err := balance.GetAddress(ac)
+			addr, err := balance.GetAddress()
 			if err != nil {
 				return true
 			}
@@ -169,7 +168,7 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 
 		if delBal.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
 
-			addr, err := delBal.GetAddress(ac)
+			addr, err := delBal.GetAddress()
 			if err != nil {
 				return appGenTxs, persistentPeers, err
 			}

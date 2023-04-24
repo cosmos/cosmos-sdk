@@ -40,13 +40,13 @@ type HasServices interface {
 
 // HasPrepareCheckStateAppModule is an extension interface that contains information about the AppModule
 // and PrepareCheckState.
-type HasPrepareCheckStateAppModule interface {
+type HasPrepareCheckState interface {
 	AppModule
 	PrepareCheckState(context.Context)
 }
 
 // PreommitAppModule is an extension interface that contains information about the AppModule and Precommit.
-type HasPrecommitAppModule interface {
+type HasPrecommit interface {
 	AppModule
 	Precommit(context.Context)
 }

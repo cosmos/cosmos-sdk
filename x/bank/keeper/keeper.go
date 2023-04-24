@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
@@ -60,6 +61,7 @@ type BaseKeeper struct {
 	cdc                    codec.BinaryCodec
 	storeService           store.KVStoreService
 	mintCoinsRestrictionFn MintingRestrictionFn
+	logger                 log.Logger
 }
 
 type MintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
@@ -90,17 +92,22 @@ func NewBaseKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
+	logger log.Logger,
 ) BaseKeeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
+	// add the module name to the logger
+	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
+
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeService, ak, blockedAddrs, authority),
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority),
 		ak:                     ak,
 		cdc:                    cdc,
 		storeService:           storeService,
 		mintCoinsRestrictionFn: func(ctx context.Context, coins sdk.Coins) error { return nil },
+		logger:                 logger,
 	}
 }
 
@@ -351,7 +358,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
-		c.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
+		ctx.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
 		return err
 	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
@@ -374,8 +381,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		k.setSupply(ctx, supply)
 	}
 
-	logger := k.Logger(ctx)
-	logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
+	k.logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
 	// emit mint event
 	c.EventManager().EmitEvent(
@@ -408,8 +414,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sd
 		k.setSupply(ctx, supply)
 	}
 
-	logger := k.Logger(ctx)
-	logger.Debug("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
+	k.logger.Debug("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
 
 	// emit burn event
 	c := sdk.UnwrapSDKContext(ctx)

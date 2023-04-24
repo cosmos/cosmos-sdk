@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
@@ -61,13 +63,17 @@ func initFixture(t assert.TestingT) *fixture {
 	encCfg := moduletestutil.TestEncodingConfig{}
 
 	app, err := simtestutil.SetupWithConfiguration(
-		configurator.NewAppConfig(
-			configurator.BankModule(),
-			configurator.TxModule(),
-			configurator.StakingModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.AuthModule()),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.BankModule(),
+				configurator.TxModule(),
+				configurator.StakingModule(),
+				configurator.ParamsModule(),
+				configurator.ConsensusModule(),
+				configurator.AuthModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		),
 		simtestutil.DefaultStartUpConfig(),
 		&encCfg.InterfaceRegistry, &encCfg.Codec, &encCfg.TxConfig, &encCfg.Amino,
 		&f.accountKeeper, &f.bankKeeper, &f.stakingKeeper)

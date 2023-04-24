@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -54,6 +55,7 @@ type BaseSendKeeper struct {
 	cdc          codec.BinaryCodec
 	ak           types.AccountKeeper
 	storeService store.KVStoreService
+	logger       log.Logger
 
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
@@ -69,18 +71,20 @@ func NewBaseSendKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
+	logger log.Logger,
 ) BaseSendKeeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(cdc, storeService, ak),
+		BaseViewKeeper: NewBaseViewKeeper(cdc, storeService, ak, logger),
 		cdc:            cdc,
 		ak:             ak,
 		storeService:   storeService,
 		blockedAddrs:   blockedAddrs,
 		authority:      authority,
+		logger:         logger,
 	}
 }
 

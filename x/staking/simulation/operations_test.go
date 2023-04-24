@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -89,7 +91,12 @@ func (s *SimTestSuite) SetupTest() {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.SetupWithConfiguration(testutil.AppConfig, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
+	cfg := depinject.Configs(
+		testutil.AppConfig,
+		depinject.Supply(sdklog.NewNopLogger()),
+	)
+
+	app, err := simtestutil.SetupWithConfiguration(cfg, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
 	require.NoError(s.T(), err)
 
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})

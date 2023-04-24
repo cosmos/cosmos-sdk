@@ -13,6 +13,8 @@ import (
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -41,13 +43,16 @@ func initFixture(t assert.TestingT) *fixture {
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := simtestutil.Setup(
-		configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.TxModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.TxModule(),
+				configurator.ParamsModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+				configurator.StakingModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		&interfaceRegistry,
 	)

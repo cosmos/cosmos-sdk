@@ -284,7 +284,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 	}
 
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
-		WithVoteInfos(app.voteInfos).
+		WithVoteInfos(toLegacyVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress)
@@ -341,7 +341,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 	app.setState(runTxProcessProposal, emptyHeader)
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
-		WithVoteInfos(app.voteInfos).
+		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
@@ -1035,4 +1035,19 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 	}
 
 	return ctx
+}
+
+func toLegacyVoteInfo(votes []abci.ExtendedVoteInfo) []abci.VoteInfo {
+	legacyVotes := make([]abci.VoteInfo, len(votes))
+	for i, vote := range votes {
+		legacyVotes[i] = abci.VoteInfo{
+			Validator: abci.Validator{
+				Address: vote.Validator.Address,
+				Power:   vote.Validator.Power,
+			},
+			SignedLastBlock: vote.SignedLastBlock,
+		}
+	}
+
+	return legacyVotes
 }

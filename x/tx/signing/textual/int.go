@@ -21,8 +21,6 @@ type intValueRenderer struct {
 	fd protoreflect.FieldDescriptor
 }
 
-var _ ValueRenderer = intValueRenderer{}
-
 func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	formatted, err := math.FormatInt(v.String())
 	if err != nil {

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // tests Jail, Unjail
@@ -46,5 +47,5 @@ func (s *KeeperTestSuite) TestSlashAtFutureHeight() {
 	require.NoError(err)
 
 	fraction := sdk.NewDecWithPrec(5, 1)
-	require.Panics(func() { keeper.Slash(ctx, consAddr, 1, 10, fraction) })
+	require.Panics(func() { keeper.Slash(ctx, consAddr, 1, 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED) })
 }

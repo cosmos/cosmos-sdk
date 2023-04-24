@@ -3,7 +3,7 @@ module cosmossdk.io/tools/hubl
 go 1.20
 
 require (
-	cosmossdk.io/api v0.4.0
+	cosmossdk.io/api v0.4.1
 	cosmossdk.io/client/v2 v2.0.0-20230320224637-dca0e7374a1d
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cockroachdb/errors v1.9.1

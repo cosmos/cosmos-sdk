@@ -12,6 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+// V2AdaptableTx is an interface that wraps the GetSigningTxData method.
+// GetSigningTxData returns an x/tx/signing.TxData representation of a transaction for use in signing
+// interoperability with x/tx.
 type V2AdaptableTx interface {
 	GetSigningTxData() txsigning.TxData
 }
@@ -21,7 +24,6 @@ type V2AdaptableTx interface {
 // HandlerMap.GetSignBytes to get the sign bytes.
 func GetSignBytesAdapter(
 	ctx context.Context,
-	encoder sdk.TxEncoder,
 	handlerMap *txsigning.HandlerMap,
 	mode signing.SignMode,
 	signerData SignerData,

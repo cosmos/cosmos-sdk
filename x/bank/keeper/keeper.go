@@ -102,7 +102,7 @@ func NewBaseKeeper(
 	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority),
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeService, ak, blockedAddrs, authority, logger),
 		ak:                     ak,
 		cdc:                    cdc,
 		storeService:           storeService,
@@ -358,7 +358,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
+		k.logger.Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
 		return err
 	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)

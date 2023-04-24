@@ -7,6 +7,8 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -62,13 +64,16 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := simstestutil.Setup(
-		configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.TxModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.TxModule(),
+				configurator.ParamsModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+				configurator.StakingModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		&f.bankKeeper,
 		&interfaceRegistry,

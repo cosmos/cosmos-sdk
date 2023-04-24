@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
@@ -27,7 +29,10 @@ func TestBeginBlocker(t *testing.T) {
 	var slashingKeeper slashingkeeper.Keeper
 
 	app, err := simtestutil.Setup(
-		testutil.AppConfig,
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&interfaceRegistry,
 		&bankKeeper,
 		&stakingKeeper,

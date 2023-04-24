@@ -3,10 +3,9 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/simapp"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
-
-	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -53,7 +52,7 @@ func initFixture(t *testing.T) *fixture {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	v1.RegisterQueryServer(queryHelper, app.GovKeeper)
 	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(&app.GovKeeper))
+	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(app.GovKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)
 	legacyQueryClient := v1beta1.NewQueryClient(legacyQueryHelper)
 
@@ -61,7 +60,7 @@ func initFixture(t *testing.T) *fixture {
 	f.ctx = ctx
 	f.queryClient = queryClient
 	f.legacyQueryClient = legacyQueryClient
-	f.msgSrvr = keeper.NewMsgServerImpl(&f.app.GovKeeper)
+	f.msgSrvr = keeper.NewMsgServerImpl(f.app.GovKeeper)
 
 	govAcct := f.app.GovKeeper.GetGovernanceAccount(f.ctx).GetAddress()
 	f.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), f.msgSrvr)

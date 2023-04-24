@@ -227,7 +227,15 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 		in.Config.MaxExecutionPeriod = "1209600s"
 	*/
 
-	k := keeper.NewKeeper(in.KVStoreService, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
+	k := keeper.NewKeeper(
+		in.KVStoreService,
+		in.Cdc,
+		in.MsgServiceRouter,
+		in.AccountKeeper,
+		group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen},
+	)
+
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
+
 	return GroupOutputs{GroupKeeper: k, Module: m}
 }

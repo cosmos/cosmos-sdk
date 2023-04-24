@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +31,7 @@ func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAdd
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
-	key := storetypes.NewKVStoreKey(group.StoreKey)
+	key := storetypes.NewKVStoreKey(group.ModuleName)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
@@ -52,7 +53,7 @@ func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAdd
 		accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
 	}
 
-	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	groupKeeper = groupkeeper.NewKeeper(runtime.NewKVStoreService(key), encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
 	group.RegisterQueryServer(queryHelper, groupKeeper)

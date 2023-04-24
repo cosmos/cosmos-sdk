@@ -335,12 +335,6 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 	return nil
 }
 
-func (g GroupMember) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(g.Member.Address)
-
-	return []interface{}{g.GroupId, addr.Bytes()}
-}
-
 // ValidateBasic does basic validation on group member.
 func (g GroupMember) ValidateBasic() error {
 	if g.GroupId == 0 {

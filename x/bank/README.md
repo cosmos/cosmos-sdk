@@ -209,7 +209,7 @@ type Keeper interface {
 
     SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
     SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
-    SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+    SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
     DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
     UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
     MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
@@ -271,7 +271,7 @@ type ViewKeeper interface {
     GetAccountsBalances(ctx context.Context) []types.Balance
     GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
     LockedCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-    SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+    SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
     SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
     IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))

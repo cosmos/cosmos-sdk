@@ -34,7 +34,7 @@ type ViewKeeper interface {
 	GetAccountsBalances(ctx context.Context) []types.Balance
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	LockedCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
 	IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
@@ -196,7 +196,7 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 // SpendableCoins returns the total balances of spendable coins for an account
 // by address. If the account has no spendable coins, an empty Coins slice is
 // returned.
-func (k BaseViewKeeper) SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+func (k BaseViewKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
 	spendable, _ := k.spendableCoins(ctx, addr)
 	return spendable
 }

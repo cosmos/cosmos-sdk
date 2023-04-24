@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) mockValidateBalance(acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockSpendableCoins(ctx context.Context, acc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 

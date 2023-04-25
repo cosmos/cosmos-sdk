@@ -740,6 +740,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -752,7 +753,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,

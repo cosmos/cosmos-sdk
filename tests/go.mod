@@ -198,7 +198,7 @@ replace (
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/upgrade => ../x/upgrade
-	cosmosssdk.io/core => ../core
+	cosmossdk.io/core => ../core
 )
 
 // Below are the long-lived replace for tests.

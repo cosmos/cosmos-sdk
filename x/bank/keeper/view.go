@@ -186,8 +186,8 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 	if acc != nil {
 		vacc, ok := acc.(types.VestingAccount)
 		if ok {
-			c := sdk.UnwrapSDKContext(ctx)
-			return vacc.LockedCoins(c.BlockTime())
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			return vacc.LockedCoins(sdkCtx.BlockTime())
 		}
 	}
 

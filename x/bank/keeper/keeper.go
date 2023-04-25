@@ -168,8 +168,8 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return errorsmod.Wrap(err, "failed to track delegation")
 	}
 	// emit coin spent event
-	c := sdk.UnwrapSDKContext(ctx)
-	c.EventManager().EmitEvent(
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
 		types.NewCoinSpentEvent(delegatorAddr, amt),
 	)
 
@@ -354,7 +354,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	c := sdk.UnwrapSDKContext(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
@@ -384,7 +384,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	k.logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
 	// emit mint event
-	c.EventManager().EmitEvent(
+	sdkCtx.EventManager().EmitEvent(
 		types.NewCoinMintEvent(acc.GetAddress(), amounts),
 	)
 
@@ -417,8 +417,8 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sd
 	k.logger.Debug("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
 
 	// emit burn event
-	c := sdk.UnwrapSDKContext(ctx)
-	c.EventManager().EmitEvent(
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
 		types.NewCoinBurnEvent(acc.GetAddress(), amounts),
 	)
 
@@ -445,8 +445,8 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
-		c := sdk.UnwrapSDKContext(ctx)
-		vacc.TrackDelegation(c.BlockHeader().Time, balance, amt)
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		vacc.TrackDelegation(sdkCtx.BlockHeader().Time, balance, amt)
 		k.ak.SetAccount(ctx, acc)
 	}
 

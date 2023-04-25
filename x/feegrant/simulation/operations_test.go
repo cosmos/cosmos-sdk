@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/feegrant/module"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -53,16 +55,20 @@ type SimTestSuite struct {
 
 func (suite *SimTestSuite) SetupTest() {
 	var err error
-	suite.app, err = simtestutil.Setup(configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.BankModule(),
-		configurator.StakingModule(),
-		configurator.TxModule(),
-		configurator.ConsensusModule(),
-		configurator.ParamsModule(),
-		configurator.GenutilModule(),
-		configurator.FeegrantModule(),
-	),
+	suite.app, err = simtestutil.Setup(
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.BankModule(),
+				configurator.StakingModule(),
+				configurator.TxModule(),
+				configurator.ConsensusModule(),
+				configurator.ParamsModule(),
+				configurator.GenutilModule(),
+				configurator.FeegrantModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&suite.feegrantKeeper,
 		&suite.bankKeeper,
 		&suite.accountKeeper,

@@ -4268,9 +4268,9 @@ type ModuleOptions struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// tx describes the tx command for the module.
+	// tx describes the tx commands for the module.
 	Tx *ServiceCommandDescriptor `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
-	// query describes the tx command for the module.
+	// query describes the queries commands for the module.
 	Query *ServiceCommandDescriptor `protobuf:"bytes,2,opt,name=query,proto3" json:"query,omitempty"`
 }
 

@@ -336,15 +336,20 @@ func TestDeprecated(t *testing.T) {
 func TestBuildCustomQueryCommand(t *testing.T) {
 	b := &Builder{}
 	customCommandCalled := false
-	cmd, err := b.BuildQueryCommand(map[string]*autocliv1.ModuleOptions{
-		"test": {
-			Query: testCmdDesc,
+
+	appOptions := AppOptions{
+		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+			"test": {
+				Query: testCmdDesc,
+			},
 		},
-	}, map[string]*cobra.Command{
+	}
+
+	cmd, err := b.BuildQueryCommand(appOptions, map[string]*cobra.Command{
 		"test": {Use: "test", Run: func(cmd *cobra.Command, args []string) {
 			customCommandCalled = true
 		}},
-	})
+	}, enhanceQuery)
 	assert.NilError(t, err)
 	cmd.SetArgs([]string{"test", "query"})
 	assert.NilError(t, cmd.Execute())

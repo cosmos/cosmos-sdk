@@ -3,18 +3,27 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	b.ReportAllocs()
 	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
+	app, err := simtestutil.Setup(
+		depinject.Configs(
+			depinject.Supply(log.NewNopLogger()),
+			testutil.AppConfig,
+		),
+		&accountKeeper,
+	)
 	require.NoError(b, err)
 
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
@@ -37,7 +46,11 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	b.ReportAllocs()
 	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
+	app, err := simtestutil.Setup(
+		depinject.Configs(
+			depinject.Supply(log.NewNopLogger()),
+			testutil.AppConfig,
+		), &accountKeeper)
 	require.NoError(b, err)
 
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})

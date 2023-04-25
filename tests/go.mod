@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.20
 
 require (
-	cosmossdk.io/api v0.4.0
+	cosmossdk.io/api v0.4.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v1.0.0
@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
-	cosmossdk.io/x/tx v0.5.1
+	cosmossdk.io/x/tx v0.5.5
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
@@ -22,7 +22,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.48.0
 	github.com/cosmos/gogoproto v1.4.8
 	github.com/golang/mock v1.6.0
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/protobuf v1.30.0
@@ -49,7 +49,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
-	github.com/bits-and-blooms/bitset v1.6.0 // indirect
+	github.com/bits-and-blooms/bitset v1.7.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -191,8 +191,8 @@ require (
 // Replace here are pending PRs, or version to be tagged.
 // It must be in sync with SimApp temporary replaces
 replace (
-	cosmossdk.io/api => ../api
 	// TODO tag all extracted modules after SDK refactor
+	cosmossdk.io/api => ../api
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant

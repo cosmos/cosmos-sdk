@@ -78,7 +78,7 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	addr, err := ak.addressCdc.StringToBytes(req.Address)
+	addr, err := ak.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 		return nil, errors.New("empty address bytes is not allowed")
 	}
 
-	text, err := ak.addressCdc.BytesToString(req.AddressBytes)
+	text, err := ak.BytesToString(req.AddressBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 		return nil, errors.New("empty address string is not allowed")
 	}
 
-	bz, err := ak.addressCdc.StringToBytes(req.AddressString)
+	bz, err := ak.StringToBytes(req.AddressString)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccou
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := ak.addressCdc.StringToBytes(req.Address)
+	addr, err := ak.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -245,16 +245,4 @@ func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccou
 			Sequence:      account.GetSequence(),
 		},
 	}, nil
-}
-
-// BytesToString converts an address from bytes to string, using the
-// keeper's bech32 prefix.
-func (ak AccountKeeper) BytesToString(address []byte) (string, error) {
-	return ak.addressCdc.BytesToString(address)
-}
-
-// StringToBytes converts an address from string to bytes, using the
-// keeper's bech32 prefix.
-func (ak AccountKeeper) StringToBytes(address string) ([]byte, error) {
-	return ak.addressCdc.StringToBytes(address)
 }

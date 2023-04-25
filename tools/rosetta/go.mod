@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.0.0
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230418140744-0dde947d0ab7
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230424095137-b73c17cb9cc8
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0
 	github.com/spf13/cobra v1.7.0
@@ -17,13 +17,13 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.4.0 // indirect
+	cosmossdk.io/api v0.4.1 // indirect
 	cosmossdk.io/collections v0.1.0 // indirect
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc // indirect
-	cosmossdk.io/x/tx v0.5.1-0.20230407182919-057d2e09bd63 // indirect
+	cosmossdk.io/x/tx v0.5.5 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -82,6 +82,7 @@ require (
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
+	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect

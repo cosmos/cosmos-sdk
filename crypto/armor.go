@@ -8,7 +8,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 	"golang.org/x/crypto/argon2"
-	"golang.org/x/crypto/openpgp/armor" // nolint:staticcheck TODO: remove this dependency
+	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck TODO: remove this dependency
 
 	errorsmod "cosmossdk.io/errors"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -209,7 +209,7 @@ func UnarmorDecryptPrivKey(armorStr, passphrase string) (privKey cryptotypes.Pri
 	return privKey, header[headerType], err
 }
 
-func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf string) (privKey cryptotypes.PrivKey, err error) {
+func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey cryptotypes.PrivKey, err error) {
 	// Key derivation
 	var (
 		key          []byte

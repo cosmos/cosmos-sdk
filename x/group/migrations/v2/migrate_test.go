@@ -31,7 +31,7 @@ var (
 
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, groupmodule.AppModuleBasic{}).Codec
-	storeKey := storetypes.NewKVStoreKey(v2.ModuleName)
+	storeKey := storetypes.NewKVStoreKey(group.StoreKey)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 

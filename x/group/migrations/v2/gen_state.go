@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 // MigrateGenState accepts exported v0.46 x/auth genesis state and migrates it to
@@ -34,7 +35,7 @@ func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
 		derivationKey := make([]byte, 8)
 		binary.BigEndian.PutUint64(derivationKey, groupPolicyAccountCounter)
 
-		cred, err := authtypes.NewModuleCredential(ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
+		cred, err := authtypes.NewModuleCredential(group.ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
 		if err != nil {
 			panic(err)
 		}

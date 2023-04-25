@@ -1,8 +1,6 @@
 package v2
 
 const (
-	ModuleName = "group"
-
 	// Group Table
 	GroupTablePrefix    byte = 0x0
 	GroupTableSeqPrefix byte = 0x1

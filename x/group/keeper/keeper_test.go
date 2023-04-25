@@ -84,7 +84,7 @@ func (s *TestSuite) SetupTest() {
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
 	config := group.DefaultConfig()
-	s.groupKeeper = keeper.NewKeeper(runtime.NewKVStoreService(key), encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
+	s.groupKeeper = keeper.NewKeeper(runtime.NewKVStoreService(key), bApp.MsgServiceRouter(), s.accountKeeper, config)
 	s.ctx = testCtx.Ctx.WithBlockTime(s.blockTime)
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 

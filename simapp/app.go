@@ -323,7 +323,7 @@ func NewSimApp(
 		Example of setting group params:
 		groupConfig.MaxMetadataLen = 1000
 	*/
-	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
+	app.GroupKeeper = groupkeeper.NewKeeper(runtime.NewKVStoreService(keys[group.StoreKey]), app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
 
 	// get skipUpgradeHeights from the app options
 	skipUpgradeHeights := map[int64]bool{}

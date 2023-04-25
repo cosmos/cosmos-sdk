@@ -28,8 +28,10 @@ func NewQuerier(keeper Keeper) Querier {
 
 // Params queries params of distribution module
 func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	params := k.GetParams(ctx)
+	params, err := k.GetParams(c)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
@@ -65,10 +67,16 @@ func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryVa
 	}
 
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	rewards, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	if err != nil {
+		return nil, err
+	}
 
 	// validator's commission
-	validatorCommission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+	validatorCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryValidatorDistributionInfoResponse{
 		Commission:      validatorCommission.Commission,
@@ -98,7 +106,11 @@ func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.Query
 	if validator == nil {
 		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
 	}
-	rewards := k.GetValidatorOutstandingRewards(ctx, valAdr)
+
+	rewards, err := k.GetValidatorOutstandingRewards(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: rewards}, nil
 }
@@ -124,7 +136,10 @@ func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidato
 	if validator == nil {
 		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
 	}
-	commission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+	commission, err := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryValidatorCommissionResponse{Commission: commission}, nil
 }
@@ -208,7 +223,10 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 	}
 
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	rewards, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
 }
@@ -239,7 +257,10 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-			delReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+			delReward, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+			if err != nil {
+				panic(err)
+			}
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
 			total = total.Add(delReward...)
@@ -292,16 +313,20 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delAdr)
+	withdrawAddr, err := k.GetDelegatorWithdrawAddr(c, delAdr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr.String()}, nil
 }
 
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	pool := k.GetFeePoolCommunityCoins(ctx)
+	pool, err := k.GetFeePoolCommunityCoins(c)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
 }

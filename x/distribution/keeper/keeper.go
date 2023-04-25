@@ -65,7 +65,12 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr, withdrawAddr sdk
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", withdrawAddr)
 	}
 
-	if !k.GetWithdrawAddrEnabled(ctx) {
+	withdrawAddrEnabled, err := k.GetWithdrawAddrEnabled(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !withdrawAddrEnabled {
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
@@ -109,7 +114,11 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 // withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	// fetch validator accumulated commission
-	accumCommission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
+	accumCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	if accumCommission.Commission.IsZero() {
 		return nil, types.ErrNoValidatorCommission
 	}
@@ -118,13 +127,24 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	k.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
 
 	// update outstanding
-	outstanding := k.GetValidatorOutstandingRewards(ctx, valAddr).Rewards
-	k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(sdk.NewDecCoinsFromCoins(commission...))})
+	outstanding, err := k.GetValidatorOutstandingRewards(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: outstanding.Rewards.Sub(sdk.NewDecCoinsFromCoins(commission...))})
+	if err != nil {
+		return nil, err
+	}
 
 	if !commission.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
-		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
+		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, accAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
 		if err != nil {
 			return nil, err
 		}
@@ -161,9 +181,11 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 		return err
 	}
 
-	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
-	k.SetFeePool(ctx, feePool)
+	feePool, err := k.GetFeePool(ctx)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
+	return k.SetFeePool(ctx, feePool)
 }

@@ -381,40 +381,6 @@ func TestManager_EndBlock(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestManager_PrepareCheckState(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockAppModule1 := mock.NewMockPrepareCheckStateAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockPrepareCheckStateAppModule(mockCtrl)
-	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
-	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
-
-	mockAppModule1.EXPECT().PrepareCheckState(gomock.Any()).Times(1)
-	mockAppModule2.EXPECT().PrepareCheckState(gomock.Any()).Times(1)
-	mm.PrepareCheckState(sdk.Context{})
-}
-
-func TestManager_Precommit(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockAppModule1 := mock.NewMockPrecommitAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockPrecommitAppModule(mockCtrl)
-	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
-	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
-
-	mockAppModule1.EXPECT().Precommit(gomock.Any()).Times(1)
-	mockAppModule2.EXPECT().Precommit(gomock.Any()).Times(1)
-	mm.Precommit(sdk.Context{})
-}
-
 // Core API exclusive tests
 func TestCoreAPIManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)

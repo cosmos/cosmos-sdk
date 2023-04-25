@@ -6,8 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // sequenceStorageKey is a fix key to read/ write data on the storage layer
@@ -57,7 +55,7 @@ func (s Sequence) PeekNextVal(store storetypes.KVStore) uint64 {
 func (s Sequence) InitVal(store storetypes.KVStore, seq uint64) error {
 	pStore := prefix.NewStore(store, []byte{s.prefix})
 	if pStore.Has(sequenceStorageKey) {
-		return errorsmod.Wrap(errors.ErrORMUniqueConstraint, "already initialized")
+		return errorsmod.Wrap(ErrORMUniqueConstraint, "already initialized")
 	}
 	pStore.Set(sequenceStorageKey, EncodeSequence(seq))
 	return nil

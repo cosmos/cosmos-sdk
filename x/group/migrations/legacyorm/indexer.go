@@ -1,11 +1,8 @@
 package orm
 
 import (
-	storetypes "cosmossdk.io/store/types"
-
 	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	storetypes "cosmossdk.io/store/types"
 )
 
 // IndexerFunc creates one or multiple index keys for the source object.
@@ -23,7 +20,7 @@ type Indexer struct {
 // NewIndexer returns an indexer that supports multiple reference keys for an entity.
 func NewIndexer(indexerFunc IndexerFunc) (*Indexer, error) {
 	if indexerFunc == nil {
-		return nil, errors.ErrORMInvalidArgument.Wrap("Indexer func must not be nil")
+		return nil, ErrORMInvalidArgument.Wrap("Indexer func must not be nil")
 	}
 	return &Indexer{
 		indexerFunc: pruneEmptyKeys(indexerFunc),
@@ -34,7 +31,7 @@ func NewIndexer(indexerFunc IndexerFunc) (*Indexer, error) {
 // NewUniqueIndexer returns an indexer that requires exactly one reference keys for an entity.
 func NewUniqueIndexer(f UniqueIndexerFunc) (*Indexer, error) {
 	if f == nil {
-		return nil, errors.ErrORMInvalidArgument.Wrap("Indexer func must not be nil")
+		return nil, ErrORMInvalidArgument.Wrap("Indexer func must not be nil")
 	}
 	adaptor := func(indexerFunc UniqueIndexerFunc) IndexerFunc {
 		return func(v interface{}) ([]interface{}, error) {
@@ -128,7 +125,7 @@ func uniqueKeysAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, 
 		return err
 	}
 	if len(secondaryIndexKeyBytes) == 0 {
-		return errorsmod.Wrap(errors.ErrORMInvalidArgument, "empty index key")
+		return errorsmod.Wrap(ErrORMInvalidArgument, "empty index key")
 	}
 
 	if err := checkUniqueIndexKey(store, secondaryIndexKeyBytes); err != nil {
@@ -149,7 +146,7 @@ func checkUniqueIndexKey(store storetypes.KVStore, secondaryIndexKeyBytes []byte
 	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
 	defer it.Close()
 	if it.Valid() {
-		return errors.ErrORMUniqueConstraint
+		return ErrORMUniqueConstraint
 	}
 	return nil
 }
@@ -161,7 +158,7 @@ func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, ro
 		return err
 	}
 	if len(secondaryIndexKeyBytes) == 0 {
-		return errorsmod.Wrap(errors.ErrORMInvalidArgument, "empty index key")
+		return errorsmod.Wrap(ErrORMInvalidArgument, "empty index key")
 	}
 
 	encodedKey, err := buildKeyFromParts([]interface{}{secondaryIndexKey, []byte(rowID)})
@@ -169,7 +166,7 @@ func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, ro
 		return err
 	}
 	if len(encodedKey) == 0 {
-		return errorsmod.Wrap(errors.ErrORMInvalidArgument, "empty index key")
+		return errorsmod.Wrap(ErrORMInvalidArgument, "empty index key")
 	}
 
 	store.Set(encodedKey, []byte{})

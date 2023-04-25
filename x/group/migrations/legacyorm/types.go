@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // Unique identifier of a persistent table.
@@ -104,7 +103,7 @@ type RowGetter func(store storetypes.KVStore, rowID RowID, dest proto.Message) e
 func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec) RowGetter {
 	return func(store storetypes.KVStore, rowID RowID, dest proto.Message) error {
 		if len(rowID) == 0 {
-			return errorsmod.Wrap(errors.ErrORMEmptyKey, "key must not be nil")
+			return errorsmod.Wrap(ErrORMEmptyKey, "key must not be nil")
 		}
 		if err := assertCorrectType(model, dest); err != nil {
 			return err

@@ -11,7 +11,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // indexer creates and modifies the second MultiKeyIndex based on the operations and changes on the primary object.
@@ -47,17 +46,17 @@ func NewIndex(tb Indexable, prefix byte, indexerF IndexerFunc, indexKey interfac
 func newIndex(tb Indexable, prefix byte, indexer *Indexer, indexerF IndexerFunc, indexKey interface{}) (MultiKeyIndex, error) {
 	rowGetter := tb.RowGetter()
 	if rowGetter == nil {
-		return MultiKeyIndex{}, errors.ErrORMInvalidArgument.Wrap("rowGetter must not be nil")
+		return MultiKeyIndex{}, ErrORMInvalidArgument.Wrap("rowGetter must not be nil")
 	}
 	if indexKey == nil {
-		return MultiKeyIndex{}, errors.ErrORMInvalidArgument.Wrap("indexKey must not be nil")
+		return MultiKeyIndex{}, ErrORMInvalidArgument.Wrap("indexKey must not be nil")
 	}
 
 	// Verify indexKey type is bytes, string or uint64
 	switch indexKey.(type) {
 	case []byte, string, uint64:
 	default:
-		return MultiKeyIndex{}, errors.ErrORMInvalidArgument.Wrap("indexKey must be []byte, string or uint64")
+		return MultiKeyIndex{}, ErrORMInvalidArgument.Wrap("indexKey must be []byte, string or uint64")
 	}
 
 	idx := MultiKeyIndex{
@@ -178,7 +177,7 @@ func getStartEndBz(startI, endI interface{}) ([]byte, []byte, error) {
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return nil, nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
+		return nil, nil, errorsmod.Wrap(ErrORMInvalidArgument, "start must be less than end")
 	}
 
 	return start, end, nil
@@ -245,7 +244,7 @@ type indexIterator struct {
 // The key is the rowID and not any MultiKeyIndex key.
 func (i indexIterator) LoadNext(dest proto.Message) (RowID, error) {
 	if !i.it.Valid() {
-		return nil, errors.ErrORMIteratorDone
+		return nil, ErrORMIteratorDone
 	}
 	indexPrefixKey := i.it.Key()
 	rowID, err := stripRowID(indexPrefixKey, i.indexKey)

@@ -48,7 +48,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak, genesisHandler: keeper.HasGenesis},
 		keeper:         keeper,
 		bankKeeper:     bk,
 		accKeeper:      ak,
@@ -68,8 +68,9 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 type AppModuleBasic struct {
-	cdc codec.Codec
-	ac  address.Codec
+	cdc            codec.Codec
+	ac             address.Codec
+	genesisHandler appmodule.HasGenesis
 }
 
 // Name returns the group module's name.
@@ -84,12 +85,13 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the group module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data group.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
+func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+	source, err := genesis.SourceFromRawJSON(bz)
+	if err != nil {
+		panic(err)
 	}
-	return data.Validate()
+
+	return a.genesisHandler.ValidateGenesis(source)
 }
 
 // GetQueryCmd returns the cli query commands for the group module

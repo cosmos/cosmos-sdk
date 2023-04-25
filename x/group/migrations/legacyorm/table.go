@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 var (
@@ -42,7 +41,7 @@ type table struct {
 // newTable creates a new table
 func newTable(prefix [2]byte, model proto.Message, cdc codec.Codec) (*table, error) {
 	if model == nil {
-		return nil, errors.ErrORMInvalidArgument.Wrap("Model must not be nil")
+		return nil, ErrORMInvalidArgument.Wrap("Model must not be nil")
 	}
 	tp := reflect.TypeOf(model)
 	if tp.Kind() == reflect.Ptr {
@@ -77,7 +76,7 @@ func (a *table) AddAfterDeleteInterceptor(interceptor AfterDeleteInterceptor) {
 // keys.
 func (a table) Create(store types.KVStore, rowID RowID, obj proto.Message) error {
 	if a.Has(store, rowID) {
-		return errors.ErrORMUniqueConstraint
+		return ErrORMUniqueConstraint
 	}
 
 	return a.Set(store, rowID, obj)
@@ -104,7 +103,7 @@ func (a table) Update(store types.KVStore, rowID RowID, newValue proto.Message) 
 // keys.
 func (a table) Set(store types.KVStore, rowID RowID, newValue proto.Message) error {
 	if len(rowID) == 0 {
-		return errors.ErrORMEmptyKey
+		return ErrORMEmptyKey
 	}
 	if err := assertCorrectType(a.model, newValue); err != nil {
 		return err
@@ -207,7 +206,7 @@ func (a table) GetOne(store types.KVStore, rowID RowID, dest proto.Message) erro
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (a table) PrefixScan(store types.KVStore, start, end RowID) (Iterator, error) {
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), errorsmod.Wrap(errors.ErrORMInvalidArgument, "start must be before end")
+		return NewInvalidIterator(), errorsmod.Wrap(ErrORMInvalidArgument, "start must be before end")
 	}
 	pStore := prefix.NewStore(store, a.prefix[:])
 	return &typeSafeIterator{
@@ -228,7 +227,7 @@ func (a table) PrefixScan(store types.KVStore, start, end RowID) (Iterator, erro
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (a table) ReversePrefixScan(store types.KVStore, start, end RowID) (Iterator, error) {
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), errorsmod.Wrap(errors.ErrORMInvalidArgument, "start must be before end")
+		return NewInvalidIterator(), errorsmod.Wrap(ErrORMInvalidArgument, "start must be before end")
 	}
 	pStore := prefix.NewStore(store, a.prefix[:])
 	return &typeSafeIterator{
@@ -265,14 +264,14 @@ func (a table) Import(store types.KVStore, data interface{}, _ uint64) error {
 	// Provided data must be a slice
 	modelSlice := reflect.ValueOf(data)
 	if modelSlice.Kind() != reflect.Slice {
-		return errorsmod.Wrap(errors.ErrORMInvalidArgument, "data must be a slice")
+		return errorsmod.Wrap(ErrORMInvalidArgument, "data must be a slice")
 	}
 
 	// Import values from slice
 	for i := 0; i < modelSlice.Len(); i++ {
 		obj, ok := modelSlice.Index(i).Interface().(PrimaryKeyed)
 		if !ok {
-			return errorsmod.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
+			return errorsmod.Wrapf(ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
 		}
 		err := a.Create(store, PrimaryKey(obj), obj)
 		if err != nil {
@@ -304,7 +303,7 @@ type typeSafeIterator struct {
 
 func (i typeSafeIterator) LoadNext(dest proto.Message) (RowID, error) {
 	if !i.it.Valid() {
-		return nil, errors.ErrORMIteratorDone
+		return nil, ErrORMIteratorDone
 	}
 	rowID := i.it.Key()
 	i.it.Next()

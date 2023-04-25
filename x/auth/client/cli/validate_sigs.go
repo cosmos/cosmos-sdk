@@ -6,14 +6,12 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/registry"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -132,27 +130,12 @@ func printAndValidateSigs(
 				},
 			}
 
-			txBytes, err := clientCtx.TxConfig.TxEncoder()(tx)
-			if err != nil {
-				cmd.PrintErrf("failed to encode transaction: %v", err)
+			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
+			if !ok {
+				cmd.PrintErrf("expected V2AdaptableTx")
 				return false
 			}
-			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
-			if err != nil {
-				cmd.PrintErrf("failed to create decoder: %v", err)
-				return false
-			}
-			decodedTx, err := decodeCtx.Decode(txBytes)
-			if err != nil {
-				cmd.PrintErrf("failed to decode transaction: %v", err)
-				return false
-			}
-			txData := txsigning.TxData{
-				Body:          decodedTx.Tx.Body,
-				AuthInfo:      decodedTx.Tx.AuthInfo,
-				AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
-				BodyBytes:     decodedTx.TxRaw.BodyBytes,
-			}
+			txData := adaptableTx.GetSigningTxData()
 
 			err = authsigning.VerifySignature(cmd.Context(), pubKey, txSignerData, sig.Data, signModeHandler, txData)
 			if err != nil {

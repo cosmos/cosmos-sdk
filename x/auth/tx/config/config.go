@@ -201,7 +201,7 @@ func NewGRPCCoinMetadataQueryFn(grpcConn grpc.ClientConnInterface) textual.CoinM
 func NewSignModeOptionsWithMetadataQueryFn(fn textual.CoinMetadataQueryFn) (tx.SignModeOptions, error) {
 	protoFiles := registry.MergedProtoRegistry()
 	typeResolver := protoregistry.GlobalTypes
-	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
+	signersContext, err := txsigning.NewContext(txsigning.Options{FileResolver: protoFiles})
 	if err != nil {
 		return tx.SignModeOptions{}, err
 	}
@@ -210,7 +210,6 @@ func NewSignModeOptionsWithMetadataQueryFn(fn textual.CoinMetadataQueryFn) (tx.S
 	signModeOptions := tx.SignModeOptions{
 		Direct: &direct.SignModeHandler{},
 		DirectAux: &directaux.SignModeHandlerOptions{
-			FileResolver:   protoFiles,
 			TypeResolver:   typeResolver,
 			SignersContext: signersContext,
 		},

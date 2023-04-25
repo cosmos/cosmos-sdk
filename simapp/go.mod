@@ -205,6 +205,8 @@ replace (
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/upgrade => ../x/upgrade
+	// TODO: remove after release 0.6.2
+	cosmossdk.io/x/tx => ../x/tx
 )
 
 // Below are the long-lived replace of the SimApp

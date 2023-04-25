@@ -10,14 +10,11 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/registry"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -117,11 +114,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
 
-		decoder, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
-		if err != nil {
-			return err
-		}
-
 		// read each signature and add it to the multisig if valid
 		for i := 2; i < len(args); i++ {
 			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
@@ -148,20 +140,12 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 						Value:   anyPk.Value,
 					},
 				}
-				txBytes, err := txCfg.TxEncoder()(txBuilder.GetTx())
-				if err != nil {
-					return err
+				builtTx := txBuilder.GetTx()
+				adaptableTx, ok := builtTx.(signing.V2AdaptableTx)
+				if !ok {
+					return fmt.Errorf("expected Tx to be a V2AdaptableTx")
 				}
-				decodedTx, err := decoder.Decode(txBytes)
-				if err != nil {
-					return err
-				}
-				txData := txsigning.TxData{
-					Body:          decodedTx.Tx.Body,
-					AuthInfo:      decodedTx.Tx.AuthInfo,
-					AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
-					BodyBytes:     decodedTx.TxRaw.BodyBytes,
-				}
+				txData := adaptableTx.GetSigningTxData()
 
 				err = signing.VerifySignature(cmd.Context(), sig.PubKey, txSignerData, sig.Data,
 					txCfg.SignModeHandler(), txData)
@@ -343,24 +327,13 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				},
 			}
 
-			txBytes, err := txCfg.TxEncoder()(txBldr.GetTx())
-			if err != nil {
-				return err
+			builtTx := txBldr.GetTx()
+			adaptableTx, ok := builtTx.(signing.V2AdaptableTx)
+			if !ok {
+				return fmt.Errorf("expected Tx to be signing.V2AdaptableTx, got %T", builtTx)
 			}
-			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
-			if err != nil {
-				return err
-			}
-			decodedTx, err := decodeCtx.Decode(txBytes)
-			if err != nil {
-				return err
-			}
-			txData := txsigning.TxData{
-				Body:          decodedTx.Tx.Body,
-				AuthInfo:      decodedTx.Tx.AuthInfo,
-				AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
-				BodyBytes:     decodedTx.TxRaw.BodyBytes,
-			}
+			txData := adaptableTx.GetSigningTxData()
+
 			for _, sig := range signatureBatch {
 				err = signing.VerifySignature(cmd.Context(), sig[i].PubKey, txSignerData, sig[i].Data,
 					txCfg.SignModeHandler(), txData)

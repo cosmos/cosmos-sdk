@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,8 +38,12 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	typeResolver := protoregistry.GlobalTypes
+	//addressCodec := authkeeper.NewBech32Codec("cosmos")
 	protoFiles := protoCodec.InterfaceRegistry()
-	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
+	signersContext, err := txsigning.NewContext(txsigning.Options{
+		FileResolver: protoFiles,
+		AddressCodec: nil,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +55,6 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 			signModeOptions.Direct = &direct.SignModeHandler{}
 		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
 			signModeOptions.DirectAux = &directaux.SignModeHandlerOptions{
-				FileResolver:   protoFiles,
 				TypeResolver:   typeResolver,
 				SignersContext: signersContext,
 			}

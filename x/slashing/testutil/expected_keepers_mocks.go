@@ -334,11 +334,9 @@ func (mr *MockStakingKeeperMockRecorder) MaxValidators(arg0 interface{}) *gomock
 }
 
 // Slash mocks base method.
-func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 stakingtypes.Infraction) math.Int {
+func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 types2.Infraction) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(math.Int)
-	return ret0
+	m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
 }
 
 // Slash indicates an expected call of Slash.

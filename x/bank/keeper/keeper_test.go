@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -139,6 +140,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		log.NewNopLogger(),
 	)
 
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -240,6 +242,7 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 			nil,
 			nil,
 			authority,
+			log.NewNopLogger(),
 		)
 	}
 

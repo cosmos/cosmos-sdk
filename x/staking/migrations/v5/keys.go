@@ -37,7 +37,7 @@ func ParseDelegationKey(bz []byte) (sdk.AccAddress, sdk.ValAddress, error) {
 		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", bz)
 	}
 
-	del := bz[0:int(delAddrLen)]
+	del := bz[:int(delAddrLen)]
 	bz = bz[int(delAddrLen):] // remove the length byte of a delegator address
 	if len(bz) == 0 {
 		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", bz)

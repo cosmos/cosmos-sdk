@@ -9,6 +9,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -81,16 +82,16 @@ func (s *KeeperTestSuite) TestJailAndSlash() {
 	s.stakingKeeper.EXPECT().SlashWithInfractionReason(s.ctx,
 		consAddr,
 		s.ctx.BlockHeight(),
-		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
+		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
 		stakingtypes.Infraction_INFRACTION_UNSPECIFIED,
-	).Return(sdk.NewInt(0))
+	).Return(sdkmath.NewInt(0))
 
 	s.slashingKeeper.Slash(
 		s.ctx,
 		consAddr,
 		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
-		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
+		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
 	)
 
@@ -102,16 +103,16 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 	s.stakingKeeper.EXPECT().SlashWithInfractionReason(s.ctx,
 		consAddr,
 		s.ctx.BlockHeight(),
-		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
+		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
-	).Return(sdk.NewInt(0))
+	).Return(sdkmath.NewInt(0))
 
 	s.slashingKeeper.SlashWithInfractionReason(
 		s.ctx,
 		consAddr,
 		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
-		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
+		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)

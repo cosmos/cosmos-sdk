@@ -161,7 +161,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	}
 
 	rewards = rewards.Add(delRewards...)
-	return
+	return rewards, nil
 }
 
 func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {

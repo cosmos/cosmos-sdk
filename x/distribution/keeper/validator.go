@@ -12,18 +12,28 @@ import (
 )
 
 // initialize rewards for a new validator
-func (k Keeper) initializeValidator(ctx sdk.Context, val stakingtypes.ValidatorI) {
+func (k Keeper) initializeValidator(ctx sdk.Context, val stakingtypes.ValidatorI) error {
 	// set initial historical rewards (period 0) with reference count of 1
-	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	err := k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		return err
+	}
 
 	// set current rewards (starting at period 1)
-	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		return err
+	}
 
 	// set accumulated commission
-	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
+	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
+	if err != nil {
+		return err
+	}
 
 	// set outstanding rewards
-	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	return err
 }
 
 // increment validator period, returning the period just ended
@@ -114,9 +124,9 @@ func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress,
 	historical.ReferenceCount--
 	if historical.ReferenceCount == 0 {
 		return k.DeleteValidatorHistoricalReward(ctx, valAddr, period)
-	} else {
-		return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 	}
+
+	return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 }
 
 func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {

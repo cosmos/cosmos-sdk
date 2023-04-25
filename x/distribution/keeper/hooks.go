@@ -23,8 +23,7 @@ func (k Keeper) Hooks() Hooks {
 // initialize validator distribution record
 func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
-	h.k.initializeValidator(ctx, val)
-	return nil
+	return h.k.initializeValidator(ctx, val)
 }
 
 // AfterValidatorRemoved performs clean up after a validator is removed

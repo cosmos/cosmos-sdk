@@ -53,11 +53,15 @@ func (k Keeper) IterateDelegatorWithdrawAddrs(ctx context.Context, handler func(
 func (k Keeper) GetFeePool(ctx context.Context) (feePool types.FeePool, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.FeePoolKey)
+	if err != nil {
+		return
+	}
+
 	if b == nil {
 		panic("Stored fee pool should not have been nil")
 	}
 	err = k.cdc.Unmarshal(b, &feePool)
-	return
+	return feePool, err
 }
 
 // set the global fee pool distribution info
@@ -104,8 +108,12 @@ func (k Keeper) SetPreviousProposerConsAddr(ctx context.Context, consAddr sdk.Co
 func (k Keeper) GetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) (period types.DelegatorStartingInfo, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.GetDelegatorStartingInfoKey(val, del))
+	if err != nil {
+		return
+	}
+
 	err = k.cdc.Unmarshal(b, &period)
-	return
+	return period, err
 }
 
 // set the starting info associated with a delegator

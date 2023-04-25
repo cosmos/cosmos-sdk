@@ -929,6 +929,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// commission should be zero
 	valCommission, err = distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
+	require.NoError(t, err)
 	require.True(t, valCommission.Commission.IsZero())
 }
 

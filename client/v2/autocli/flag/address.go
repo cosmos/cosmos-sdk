@@ -2,16 +2,19 @@ package flag
 
 import (
 	"context"
+	"fmt"
 
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
-	"github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/core/address"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 type addressStringType struct{}
 
 func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
-	if b.AddressPrefix == "" {
+	if b.AddressCodec == nil {
 		conn, err := b.GetClientConn()
 		if err != nil {
 			panic(err)
@@ -24,9 +27,11 @@ func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
 		if resp == nil || resp.Config == nil {
 			panic("bech32 account address prefix is not set")
 		}
-		b.AddressPrefix = resp.Config.Bech32AccountAddressPrefix
+
+		b.AddressCodec = addresscodec.NewBech32Codec(resp.Config.Bech32AccountAddressPrefix)
 	}
-	return &addressValue{addressPrefix: b.AddressPrefix}
+
+	return &addressValue{addressCodec: b.AddressCodec}
 }
 
 func (a addressStringType) DefaultValue() string {
@@ -34,8 +39,8 @@ func (a addressStringType) DefaultValue() string {
 }
 
 type addressValue struct {
-	value         string
-	addressPrefix string
+	value        string
+	addressCodec address.Codec
 }
 
 func (a addressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
@@ -48,10 +53,11 @@ func (a addressValue) String() string {
 
 // Set implements the flag.Value interface for addressValue it only supports bech32 addresses.
 func (a *addressValue) Set(s string) error {
-	_, err := types.GetFromBech32(s, a.addressPrefix)
+	_, err := a.addressCodec.StringToBytes(s)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid bech32 account address: %w", err)
 	}
+
 	a.value = s
 
 	return nil

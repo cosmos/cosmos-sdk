@@ -11,9 +11,13 @@ import (
 )
 
 // initialize starting info for a new delegation
-func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
+func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) error {
 	// period has already been incremented - we want to store the period ended by this delegation action
-	previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
+	valCurrentRewards, err := k.GetValidatorCurrentRewards(ctx, val)
+	if err != nil {
+		return err
+	}
+	previousPeriod := valCurrentRewards.Period - 1
 
 	// increment reference count for the period we're going to track
 	k.incrementReferenceCount(ctx, val, previousPeriod)
@@ -25,13 +29,13 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
-	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
+	return k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 
 // calculate the rewards accrued by a delegation between two periods
 func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingtypes.ValidatorI,
 	startingPeriod, endingPeriod uint64, stake math.LegacyDec,
-) (rewards sdk.DecCoins) {
+) (sdk.DecCoins, error) {
 	// sanity check
 	if startingPeriod > endingPeriod {
 		panic("startingPeriod cannot be greater than endingPeriod")
@@ -43,21 +47,32 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingty
 	}
 
 	// return staking * (ending - starting)
-	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
-	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
+	starting, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+
+	ending, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+
 	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio)
 	if difference.IsAnyNegative() {
 		panic("negative rewards should not be possible")
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-	rewards = difference.MulDecTruncate(stake)
-	return
+	rewards := difference.MulDecTruncate(stake)
+	return rewards, nil
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
+func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
 	// fetch starting info for delegation
-	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	startingInfo, err := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	if err != nil {
+		return
+	}
 
 	if startingInfo.Height == uint64(ctx.BlockHeight()) {
 		// started this height, no rewards yet
@@ -83,7 +98,11 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
 				if endingPeriod > startingPeriod {
-					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
+					delRewards , err := k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)
+					if err != nil {
+						panic(err)
+					}
+					rewards, err = rewards.Add(...)
 
 					// Note: It is necessary to truncate so we don't allow withdrawing
 					// more rewards than owed.

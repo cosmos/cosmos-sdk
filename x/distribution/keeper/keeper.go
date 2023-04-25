@@ -99,7 +99,10 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 	}
 
 	// reinitialize the delegation
-	k.initializeDelegation(ctx, valAddr, delAddr)
+	err = k.initializeDelegation(ctx, valAddr, delAddr)
+	if err != nil {
+		return nil, err
+	}
 	return rewards, nil
 }
 

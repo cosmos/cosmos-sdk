@@ -103,8 +103,7 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 
 // create new delegation period record
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	h.k.initializeDelegation(ctx, valAddr, delAddr)
-	return nil
+	return h.k.initializeDelegation(ctx, valAddr, delAddr)
 }
 
 // record the slash event

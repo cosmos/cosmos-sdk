@@ -195,13 +195,13 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx)).
 		WithVoteInfos(req.LastCommitInfo.GetVotes()).
-		WithCometInfo(reqBeginBlockInfo{req})
+		WithCometInfo(cometInfo{Misbehavior: req.ByzantineValidators, ValidatorsHash: req.Header.ValidatorsHash, ProposerAddress: req.Header.ProposerAddress, LastCommit: req.LastCommitInfo})
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash).
-			WithCometInfo(reqBeginBlockInfo{req})
+			WithCometInfo(cometInfo{Misbehavior: req.ByzantineValidators, ValidatorsHash: req.Header.ValidatorsHash, ProposerAddress: req.Header.ProposerAddress, LastCommit: req.LastCommitInfo})
 	}
 
 	if app.beginBlocker != nil {
@@ -290,7 +290,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
-		WithCometInfo(reqPrepareProposalInfo{req})
+		WithCometInfo(prepareProposalInfo{req})
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -349,7 +349,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithCometInfo(reqProcessProposalInfo{req})
+		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit})
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).

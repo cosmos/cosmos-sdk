@@ -8,14 +8,15 @@ import (
 	"cosmossdk.io/core/comet"
 )
 
-type CometInfo struct {
-	Misbehavior        []abci.Misbehavior
-	NextValidatorsHash []byte
-	ProposerAddress    []byte
-	LastCommit         abci.CommitInfo
+// CometInfo defines the properties provided by comet to the application
+type cometInfo struct {
+	Misbehavior     []abci.Misbehavior
+	ValidatorsHash  []byte
+	ProposerAddress []byte
+	LastCommit      abci.CommitInfo
 }
 
-func (r CometInfo) GetEvidence() []comet.Misbehavior {
+func (r cometInfo) GetEvidence() []comet.Misbehavior {
 	return misbehaviorWrapperList(r.Misbehavior)
 }
 
@@ -27,23 +28,26 @@ func misbehaviorWrapperList(validators []abci.Misbehavior) []comet.Misbehavior {
 	return misbehaviors
 }
 
-func (r CometInfo) GetValidatorsHash() []byte {
-	return r.NextValidatorsHash
+func (r cometInfo) GetValidatorsHash() []byte {
+	return r.ValidatorsHash
 }
 
-func (r CometInfo) GetProposerAddress() []byte {
+func (r cometInfo) GetProposerAddress() []byte {
 	return r.ProposerAddress
 }
 
-func (r CometInfo) GetLastCommit() comet.CommitInfo {
+func (r cometInfo) GetLastCommit() comet.CommitInfo {
 	return commitInfoWrapper{r.LastCommit}
 }
 
-var _ comet.BlockInfo = (*CometInfo)(nil)
+var _ comet.BlockInfo = (*cometInfo)(nil)
 
+// commitInfoWrapper is a wrapper around abci.CommitInfo that implements CommitInfo interface
 type commitInfoWrapper struct {
 	abci.CommitInfo
 }
+
+var _ comet.CommitInfo = (*commitInfoWrapper)(nil)
 
 func (c commitInfoWrapper) Round() int32 {
 	return c.CommitInfo.Round
@@ -61,9 +65,12 @@ func voteInfoWrapperList(votes []abci.VoteInfo) []comet.VoteInfo {
 	return voteInfos
 }
 
+// voteInfoWrapper is a wrapper around abci.VoteInfo that implements VoteInfo interface
 type voteInfoWrapper struct {
 	abci.VoteInfo
 }
+
+var _ comet.VoteInfo = (*voteInfoWrapper)(nil)
 
 func (v voteInfoWrapper) SignedLastBlock() bool {
 	return v.VoteInfo.SignedLastBlock
@@ -73,9 +80,12 @@ func (v voteInfoWrapper) Validator() comet.Validator {
 	return validatorWrapper{v.VoteInfo.Validator}
 }
 
+// validatorWrapper is a wrapper around abci.Validator that implements Validator interface
 type validatorWrapper struct {
 	abci.Validator
 }
+
+var _ comet.Validator = (*validatorWrapper)(nil)
 
 func (v validatorWrapper) Address() []byte {
 	return v.Validator.Address
@@ -109,32 +119,35 @@ func (m misbehaviorWrapper) TotalVotingPower() int64 {
 	return m.Misbehavior.TotalVotingPower
 }
 
-type reqPrepareProposalInfo struct {
+type prepareProposalInfo struct {
 	abci.RequestPrepareProposal
 }
 
-func (r reqPrepareProposalInfo) GetEvidence() []comet.Misbehavior {
-	return misbehaviorWrapperList(r.Misbehavior)
+var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
 
+func (r prepareProposalInfo) GetEvidence() []comet.Misbehavior {
+	return misbehaviorWrapperList(r.Misbehavior)
 }
 
-func (r reqPrepareProposalInfo) GetValidatorsHash() []byte {
+func (r prepareProposalInfo) GetValidatorsHash() []byte {
 	return r.NextValidatorsHash
 }
 
-func (r reqPrepareProposalInfo) GetProposerAddress() []byte {
+func (r prepareProposalInfo) GetProposerAddress() []byte {
 	return r.RequestPrepareProposal.ProposerAddress
 }
 
-func (r reqPrepareProposalInfo) GetLastCommit() comet.CommitInfo {
+func (r prepareProposalInfo) GetLastCommit() comet.CommitInfo {
 	return extendedCommitInfoWrapper{r.RequestPrepareProposal.LocalLastCommit}
 }
 
-var _ comet.BlockInfo = (*reqPrepareProposalInfo)(nil)
+var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
 
 type extendedCommitInfoWrapper struct {
 	abci.ExtendedCommitInfo
 }
+
+var _ comet.CommitInfo = (*extendedCommitInfoWrapper)(nil)
 
 func (e extendedCommitInfoWrapper) Round() int32 {
 	return e.ExtendedCommitInfo.Round
@@ -155,6 +168,8 @@ func extendedVoteInfoWrapperList(votes []abci.ExtendedVoteInfo) []comet.VoteInfo
 type extendedVoteInfoWrapper struct {
 	abci.ExtendedVoteInfo
 }
+
+var _ comet.VoteInfo = (*extendedVoteInfoWrapper)(nil)
 
 func (e extendedVoteInfoWrapper) SignedLastBlock() bool {
 	return e.ExtendedVoteInfo.SignedLastBlock

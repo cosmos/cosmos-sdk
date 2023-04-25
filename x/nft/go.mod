@@ -7,6 +7,7 @@ require (
 	cosmossdk.io/core v0.6.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
+	cosmossdk.io/log v1.0.0
 	cosmossdk.io/math v1.0.0
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664
@@ -24,7 +25,6 @@ require (
 
 require (
 	cosmossdk.io/collections v0.1.0 // indirect
-	cosmossdk.io/log v1.0.0 // indirect
 	cosmossdk.io/x/tx v0.5.5 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

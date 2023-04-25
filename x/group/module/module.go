@@ -98,10 +98,19 @@ func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	source, err := genesis.SourceFromRawJSON(bz)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	return a.genesisHandler.ValidateGenesis(source)
+	if err := a.genesisHandler.ValidateGenesis(source); err != nil {
+		return err
+	}
+
+	var data group.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
+	}
+
+	return data.Validate()
 }
 
 // GetQueryCmd returns the cli query commands for the group module

@@ -1,7 +1,6 @@
 package group
 
 import (
-	"encoding/json"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -10,8 +9,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Validate performs basic genesis state validation returning an error upon any failure.
-func Validate(data json.RawMessage) error {
+// NewGenesisState creates a new genesis state with default values.
+func NewGenesisState() *GenesisState {
+	return &GenesisState{}
+}
+
+// Validate performs basic genesis state validation returning an error upon any
+// failure.
+func (s GenesisState) Validate() error {
 	groups := make(map[uint64]GroupInfo)
 	groupPolicies := make(map[string]GroupPolicyInfo)
 	groupMembers := make(map[uint64]GroupMember)

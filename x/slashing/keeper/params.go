@@ -3,6 +3,8 @@ package keeper
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -28,12 +30,12 @@ func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
 }
 
 // SlashFractionDoubleSign - fraction of power slashed in case of double sign
-func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	return k.GetParams(ctx).SlashFractionDoubleSign
 }
 
 // SlashFractionDowntime - fraction of power slashed for downtime
-func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	return k.GetParams(ctx).SlashFractionDowntime
 }
 

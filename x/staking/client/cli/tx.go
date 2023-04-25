@@ -136,11 +136,11 @@ func NewEditValidatorCmd() *cobra.Command {
 			details, _ := cmd.Flags().GetString(FlagDetails)
 			description := types.NewDescription(moniker, identity, website, security, details)
 
-			var newRate *sdk.Dec
+			var newRate *math.LegacyDec
 
 			commissionRate, _ := cmd.Flags().GetString(FlagCommissionRate)
 			if commissionRate != "" {
-				rate, err := sdk.NewDecFromStr(commissionRate)
+				rate, err := math.LegacyNewDecFromStr(commissionRate)
 				if err != nil {
 					return fmt.Errorf("invalid new commission rate: %v", err)
 				}
@@ -152,7 +152,7 @@ func NewEditValidatorCmd() *cobra.Command {
 
 			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
-				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
+				msb, ok := math.NewIntFromString(minSelfDelegationString)
 				if !ok {
 					return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 				}
@@ -577,7 +577,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 
 	// get the initial validator min self delegation
 	msbStr := config.MinSelfDelegation
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
+	minSelfDelegation, ok := math.NewIntFromString(msbStr)
 
 	if !ok {
 		return txBldr, nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")

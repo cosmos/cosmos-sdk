@@ -8,12 +8,15 @@ import (
 	"cosmossdk.io/core/comet"
 )
 
-type reqBeginBlockInfo struct {
-	abci.RequestBeginBlock
+type CometInfo struct {
+	Misbehavior        []abci.Misbehavior
+	NextValidatorsHash []byte
+	ProposerAddress    []byte
+	LastCommit         abci.CommitInfo
 }
 
-func (r reqBeginBlockInfo) Evidence() []comet.Misbehavior {
-	return misbehaviorWrapperList(r.ByzantineValidators)
+func (r CometInfo) GetEvidence() []comet.Misbehavior {
+	return misbehaviorWrapperList(r.Misbehavior)
 }
 
 func misbehaviorWrapperList(validators []abci.Misbehavior) []comet.Misbehavior {
@@ -24,19 +27,19 @@ func misbehaviorWrapperList(validators []abci.Misbehavior) []comet.Misbehavior {
 	return misbehaviors
 }
 
-func (r reqBeginBlockInfo) ValidatorsHash() []byte {
-	return r.Header.ValidatorsHash
+func (r CometInfo) GetValidatorsHash() []byte {
+	return r.NextValidatorsHash
 }
 
-func (r reqBeginBlockInfo) ProposerAddress() []byte {
-	return r.Header.ProposerAddress
+func (r CometInfo) GetProposerAddress() []byte {
+	return r.ProposerAddress
 }
 
-func (r reqBeginBlockInfo) DecidedLastCommit() comet.CommitInfo {
-	return commitInfoWrapper{r.LastCommitInfo}
+func (r CometInfo) GetLastCommit() comet.CommitInfo {
+	return commitInfoWrapper{r.LastCommit}
 }
 
-var _ comet.BlockInfo = (*reqBeginBlockInfo)(nil)
+var _ comet.BlockInfo = (*CometInfo)(nil)
 
 type commitInfoWrapper struct {
 	abci.CommitInfo
@@ -67,18 +70,18 @@ func (v voteInfoWrapper) SignedLastBlock() bool {
 }
 
 func (v voteInfoWrapper) Validator() comet.Validator {
-	return validateWrapper{v.VoteInfo.Validator}
+	return validatorWrapper{v.VoteInfo.Validator}
 }
 
-type validateWrapper struct {
+type validatorWrapper struct {
 	abci.Validator
 }
 
-func (v validateWrapper) Address() []byte {
+func (v validatorWrapper) Address() []byte {
 	return v.Validator.Address
 }
 
-func (v validateWrapper) Power() int64 {
+func (v validatorWrapper) Power() int64 {
 	return v.Validator.Power
 }
 
@@ -95,7 +98,7 @@ func (m misbehaviorWrapper) Height() int64 {
 }
 
 func (m misbehaviorWrapper) Validator() comet.Validator {
-	return validateWrapper{m.Misbehavior.Validator}
+	return validatorWrapper{m.Misbehavior.Validator}
 }
 
 func (m misbehaviorWrapper) Time() time.Time {
@@ -110,21 +113,20 @@ type reqPrepareProposalInfo struct {
 	abci.RequestPrepareProposal
 }
 
-func (r reqPrepareProposalInfo) Evidence() []comet.Misbehavior {
-	//TODO implement me
-	panic("implement me")
+func (r reqPrepareProposalInfo) GetEvidence() []comet.Misbehavior {
+	return misbehaviorWrapperList(r.Misbehavior)
+
 }
 
-func (r reqPrepareProposalInfo) ValidatorsHash() []byte {
-	//TODO implement me
-	panic("implement me")
+func (r reqPrepareProposalInfo) GetValidatorsHash() []byte {
+	return r.NextValidatorsHash
 }
 
-func (r reqPrepareProposalInfo) ProposerAddress() []byte {
+func (r reqPrepareProposalInfo) GetProposerAddress() []byte {
 	return r.RequestPrepareProposal.ProposerAddress
 }
 
-func (r reqPrepareProposalInfo) DecidedLastCommit() comet.CommitInfo {
+func (r reqPrepareProposalInfo) GetLastCommit() comet.CommitInfo {
 	return extendedCommitInfoWrapper{r.RequestPrepareProposal.LocalLastCommit}
 }
 
@@ -159,29 +161,5 @@ func (e extendedVoteInfoWrapper) SignedLastBlock() bool {
 }
 
 func (e extendedVoteInfoWrapper) Validator() comet.Validator {
-	return validateWrapper{e.ExtendedVoteInfo.Validator}
+	return validatorWrapper{e.ExtendedVoteInfo.Validator}
 }
-
-type reqProcessProposalInfo struct {
-	abci.RequestProcessProposal
-}
-
-func (r reqProcessProposalInfo) Evidence() []comet.Misbehavior {
-	return misbehaviorWrapperList(r.Misbehavior)
-}
-
-func (r reqProcessProposalInfo) ValidatorsHash() []byte {
-	// TODO: is this correct???
-	return r.RequestProcessProposal.NextValidatorsHash
-}
-
-func (r reqProcessProposalInfo) ProposerAddress() []byte {
-	return r.RequestProcessProposal.ProposerAddress
-}
-
-func (r reqProcessProposalInfo) DecidedLastCommit() comet.CommitInfo {
-	// TODO: is this correct???
-	return commitInfoWrapper{r.RequestProcessProposal.ProposedLastCommit}
-}
-
-var _ comet.BlockInfo = &reqProcessProposalInfo{}

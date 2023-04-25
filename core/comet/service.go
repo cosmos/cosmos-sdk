@@ -16,12 +16,12 @@ type Service interface {
 
 // BlockInfo is the information comet provides apps in ABCI
 type BlockInfo interface {
-	Evidence() []Misbehavior // Evidence misbehavior of the block
+	GetEvidence() []Misbehavior // Evidence misbehavior of the block
 	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
-	ValidatorsHash() []byte
-	ProposerAddress() []byte       // ProposerAddress returns the address of the block proposer
-	DecidedLastCommit() CommitInfo // DecidedLastCommit returns the last commit info
+	GetValidatorsHash() []byte
+	GetProposerAddress() []byte // ProposerAddress returns the address of the block proposer
+	GetLastCommit() CommitInfo  // DecidedLastCommit returns the last commit info
 }
 
 // MisbehaviorType is the type of misbehavior for a validator

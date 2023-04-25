@@ -323,8 +323,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	f.slashingKeeper.AddPubkey(f.ctx, pks[0])
 
-	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info)
+	info := slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
 
 	tstaking.CreateValidatorWithValPower(valAddr, val, power, true)
 	validatorUpdates, err := f.stakingKeeper.EndBlocker(f.ctx)
@@ -370,7 +370,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator misses an additional 500 more blocks within the SignedBlockWindow (here 1000 blocks).
 	latest := f.slashingKeeper.SignedBlocksWindow(f.ctx) + height
 	// misses 500 blocks + within the signing windows i.e. 700-1700
-	// validators misses all 1000 block of a SignedBlockWindows
+	// validators misses all 1000 blocks of a SignedBlockWindows
 	for ; height < latest+1; height++ {
 		f.slashingKeeper.HandleValidatorSignature(f.ctx.WithBlockHeight(height), val.Address(), newPower, false)
 	}
@@ -379,8 +379,11 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	f.stakingKeeper.EndBlocker(f.ctx)
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
 
+	info = slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
+
 	// check all the signing information
-	signInfo, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx.WithBlockHeight(height), consAddr)
+	signInfo, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, consAddr)
 	assert.Assert(t, found)
 	assert.Equal(t, int64(700), signInfo.StartHeight)
 	assert.Equal(t, int64(0), signInfo.MissedBlocksCounter)
@@ -389,6 +392,9 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// some blocks pass
 	height = int64(5000)
 	f.ctx = f.ctx.WithBlockHeight(height)
+
+	info = slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
 
 	// validator rejoins and starts signing again
 	f.stakingKeeper.Unjail(f.ctx, consAddr)

@@ -153,7 +153,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		c.EventManager().EmitEvent(
+		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
 				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address),

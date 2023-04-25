@@ -8,12 +8,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
 	"cosmossdk.io/x/nft/testutil"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -44,7 +47,10 @@ type SimTestSuite struct {
 
 func (suite *SimTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
-		testutil.AppConfig,
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&suite.codec,
 		&suite.interfaceRegistry,
 		&suite.txConfig,

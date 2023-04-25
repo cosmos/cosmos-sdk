@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/core/store"
@@ -55,12 +56,13 @@ func (k Keeper) GetAuthority() string {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With(log.ModuleKey, "x/"+types.ModuleName)
 }
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
-func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr, withdrawAddr sdk.AccAddress) error {
+func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr sdk.AccAddress) error {
 	if k.bankKeeper.BlockedAddr(withdrawAddr) {
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", withdrawAddr)
 	}
@@ -74,7 +76,8 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr, withdrawAddr sdk
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
-	ctx.EventManager().EmitEvent(
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSetWithdrawAddress,
 			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
@@ -86,25 +89,26 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr, withdrawAddr sdk
 }
 
 // withdraw rewards from a delegation
-func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
-	val := k.stakingKeeper.Validator(ctx, valAddr)
+func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	val := k.stakingKeeper.Validator(sdkCtx, valAddr)
 	if val == nil {
 		return nil, types.ErrNoValidatorDistInfo
 	}
 
-	del := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+	del := k.stakingKeeper.Delegation(sdkCtx, delAddr, valAddr)
 	if del == nil {
 		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
 	// withdraw rewards
-	rewards, err := k.withdrawDelegationRewards(ctx, val, del)
+	rewards, err := k.withdrawDelegationRewards(sdkCtx, val, del)
 	if err != nil {
 		return nil, err
 	}
 
 	// reinitialize the delegation
-	err = k.initializeDelegation(ctx, valAddr, delAddr)
+	err = k.initializeDelegation(sdkCtx, valAddr, delAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +116,9 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 }
 
 // withdraw validator commission
-func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
+func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	// fetch validator accumulated commission
 	accumCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAddr)
 	if err != nil {
@@ -144,13 +150,13 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 			return nil, err
 		}
 
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, withdrawAddr, commission)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	ctx.EventManager().EmitEvent(
+	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeWithdrawCommission,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
@@ -161,7 +167,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 }
 
 // GetTotalRewards returns the total amount of fee distribution rewards held in the store
-func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
+func (k Keeper) GetTotalRewards(ctx context.Context) (totalRewards sdk.DecCoins) {
 	k.IterateValidatorOutstandingRewards(ctx,
 		func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
 			totalRewards = totalRewards.Add(rewards.Rewards...)
@@ -176,8 +182,9 @@ func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
 // The amount is first added to the distribution module account and then directly
 // added to the pool. An error is returned if the amount cannot be sent to the
 // module account.
-func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error {
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
+func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(sdkCtx, sender, types.ModuleName, amount); err != nil {
 		return err
 	}
 

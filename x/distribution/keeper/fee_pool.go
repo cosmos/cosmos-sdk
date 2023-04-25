@@ -1,13 +1,15 @@
 package keeper
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // DistributeFromFeePool distributes funds from the distribution module account to
 // a receiver address while updating the community pool
-func (k Keeper) DistributeFromFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	feePool, err := k.GetFeePool(ctx)
 	if err != nil {
 		return err
@@ -23,7 +25,8 @@ func (k Keeper) DistributeFromFeePool(ctx sdk.Context, amount sdk.Coins, receive
 
 	feePool.CommunityPool = newPool
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, receiveAddr, amount)
 	if err != nil {
 		return err
 	}

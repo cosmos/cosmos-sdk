@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -33,7 +34,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 }
 
 // calculate the rewards accrued by a delegation between two periods
-func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingtypes.ValidatorI,
+func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val stakingtypes.ValidatorI,
 	startingPeriod, endingPeriod uint64, stake math.LegacyDec,
 ) (sdk.DecCoins, error) {
 	// sanity check
@@ -67,14 +68,15 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingty
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
+func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
 	// fetch starting info for delegation
 	startingInfo, err := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 	if err != nil {
 		return
 	}
 
-	if startingInfo.Height == uint64(ctx.BlockHeight()) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if startingInfo.Height == uint64(sdkCtx.BlockHeight()) {
 		// started this height, no rewards yet
 		return
 	}
@@ -92,7 +94,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 	startingHeight := startingInfo.Height
 	// Slashes this block happened after reward allocation, but we have to account
 	// for them for the stake sanity check below.
-	endingHeight := uint64(ctx.BlockHeight())
+	endingHeight := uint64(sdkCtx.BlockHeight())
 	if endingHeight > startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {

@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -23,7 +22,7 @@ func (k Keeper) GetParams(ctx context.Context) (params types.Params, err error) 
 
 // SetParams sets the distribution parameters.
 // CONTRACT: This method performs no validation of the parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
@@ -33,7 +32,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 }
 
 // GetCommunityTax returns the current distribution community tax.
-func (k Keeper) GetCommunityTax(ctx sdk.Context) (math.LegacyDec, error) {
+func (k Keeper) GetCommunityTax(ctx context.Context) (math.LegacyDec, error) {
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return math.LegacyDec{}, err
@@ -44,7 +43,7 @@ func (k Keeper) GetCommunityTax(ctx sdk.Context) (math.LegacyDec, error) {
 
 // GetWithdrawAddrEnabled returns the current distribution withdraw address
 // enabled parameter.
-func (k Keeper) GetWithdrawAddrEnabled(ctx sdk.Context) (enabled bool, err error) {
+func (k Keeper) GetWithdrawAddrEnabled(ctx context.Context) (enabled bool, err error) {
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return false, err

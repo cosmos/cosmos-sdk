@@ -6,6 +6,7 @@ import (
 	"time"
 
 	_ "cosmossdk.io/x/feegrant/module"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -21,6 +22,8 @@ import (
 	"cosmossdk.io/x/feegrant/simulation"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,7 +35,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/stretchr/testify/suite"
 )
 
 type SimTestSuite struct {
@@ -81,7 +83,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins)
+		err := banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}
 

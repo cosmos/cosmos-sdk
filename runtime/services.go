@@ -8,6 +8,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	"github.com/cosmos/cosmos-sdk/runtime/services"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -28,8 +29,16 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 
 type cometInfoService struct{}
 
-func (c cometInfoService) GetCometInfo(ctx context.Context) comet.BlockInfo {
+func (cometInfoService) GetCometInfo(ctx context.Context) comet.BlockInfo {
 	return sdk.UnwrapSDKContext(ctx).CometInfo()
 }
 
 var _ comet.Service = cometInfoService{}
+
+type headerInfoService struct{}
+
+func (headerInfoService) GetHeaderInfo(ctx context.Context) header.Info {
+	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
+}
+
+var _ header.Service = headerInfoService{}

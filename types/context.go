@@ -13,6 +13,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 )
 
 /*
@@ -24,10 +25,13 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	baseCtx              context.Context
-	ms                   storetypes.MultiStore
-	header               cmtproto.Header
-	headerHash           []byte
+	baseCtx context.Context
+	ms      storetypes.MultiStore
+	// Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
+	header cmtproto.Header
+	// Deprecated: Use HeaderService for hash
+	headerHash []byte
+	// Deprecated: Use HeaderService for chainID and CometService for the rest
 	chainID              string
 	txBytes              []byte
 	logger               log.Logger
@@ -44,6 +48,7 @@ type Context struct {
 	transientKVGasConfig storetypes.GasConfig
 	streamingManager     storetypes.StreamingManager
 	cometInfo            comet.BlockInfo
+	headerInfo           header.Info
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -69,6 +74,7 @@ func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGas
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
 func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
+func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
 
 // clone the header before returning
 func (c Context) BlockHeader() cmtproto.Header {
@@ -269,6 +275,12 @@ func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
 // WithCometInfo
 func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
 	c.cometInfo = cometInfo
+	return c
+}
+
+// WithCometInfo
+func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
+	c.headerInfo = headerInfo
 	return c
 }
 

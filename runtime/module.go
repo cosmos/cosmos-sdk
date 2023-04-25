@@ -65,7 +65,7 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
-			ProvideBlockInfoService,
+			ProvideHeaderInfoService,
 			ProvideCometInfoService,
 		),
 		appmodule.Invoke(SetupAppBuilder),
@@ -216,6 +216,6 @@ func ProvideCometInfoService() comet.Service {
 	return cometInfoService{}
 }
 
-func ProvideBlockInfoService(app *AppBuilder) header.Service {
-	panic("TODO")
+func ProvideHeaderInfoService(app *AppBuilder) header.Service {
+	return headerInfoService{}
 }

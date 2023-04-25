@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-type HasBeginBlocker interface {
-	BeginBlock(context.Context, BlockInfo) error
-}
-
 // Service is an interface that can be used to get information specific to Comet
 type Service interface {
 	GetCometInfo(context.Context) BlockInfo

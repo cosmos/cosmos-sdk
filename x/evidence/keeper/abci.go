@@ -20,8 +20,8 @@ func (k Keeper) BeginBlocker(goCtx context.Context) {
 	bi := k.cometInfo.GetCometInfo(goCtx)
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	for _, tmEvidence := range bi.Evidence {
-		switch tmEvidence.Type {
+	for _, tmEvidence := range bi.GetEvidence() {
+		switch tmEvidence.Type() {
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.
 		case comet.LightClientAttack, comet.DuplicateVote:
@@ -29,7 +29,7 @@ func (k Keeper) BeginBlocker(goCtx context.Context) {
 			k.handleEquivocationEvidence(ctx, evidence)
 
 		default:
-			k.Logger(ctx).Error(fmt.Sprintf("ignored unknown evidence type: %x", tmEvidence.Type))
+			k.Logger(ctx).Error(fmt.Sprintf("ignored unknown evidence type: %x", tmEvidence.Type()))
 		}
 	}
 }

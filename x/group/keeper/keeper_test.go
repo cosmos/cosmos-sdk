@@ -135,7 +135,7 @@ func (s *TestSuite) setNextAccount() {
 	derivationKey := make([]byte, 8)
 	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-	ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{keeper.GroupPolicyTablePrefix}, derivationKey)
+	ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{0x20}, derivationKey)
 	s.Require().NoError(err)
 
 	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(ac)

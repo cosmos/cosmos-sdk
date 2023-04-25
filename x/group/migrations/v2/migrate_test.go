@@ -16,8 +16,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	orm "github.com/cosmos/cosmos-sdk/x/group/migrations/legacyorm"
 	v2 "github.com/cosmos/cosmos-sdk/x/group/migrations/v2"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 )
@@ -54,7 +53,7 @@ func TestMigrate(t *testing.T) {
 }
 
 func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec) (orm.PrimaryKeyTable, orm.Sequence, error) {
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
+	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{v2.GroupPolicyTablePrefix}, &v2.GroupPolicyInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -67,7 +66,7 @@ func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc code
 			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
 		}
 
-		if err := groupPolicyTable.Create(ctx.KVStore(storeKey), &groupPolicyInfo); err != nil {
+		if err := groupPolicyTable.Create(ctx.KVStore(storeKey), &v2.GroupPolicyInfo{groupPolicyInfo}); err != nil {
 			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
 		}
 

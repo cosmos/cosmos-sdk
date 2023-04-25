@@ -7,6 +7,7 @@ import (
 	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -19,8 +20,9 @@ import (
 )
 
 type Keeper struct {
+	appmodule.HasGenesis
+
 	accKeeper group.AccountKeeper
-	db        ormdb.ModuleDB
 	state     groupv1.StateStore
 	router    baseapp.MessageRouter
 	config    group.Config
@@ -46,11 +48,11 @@ func NewKeeper(storeService store.KVStoreService, cdc codec.Codec, router baseap
 	}
 
 	return Keeper{
-		db:        modDb,
-		router:    router,
-		accKeeper: accKeeper,
-		state:     state,
-		config:    config,
+		HasGenesis: modDb.GenesisHandler(),
+		router:     router,
+		accKeeper:  accKeeper,
+		state:      state,
+		config:     config,
 	}
 }
 

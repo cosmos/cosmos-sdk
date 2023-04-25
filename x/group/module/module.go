@@ -12,6 +12,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 
@@ -131,15 +132,29 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	am.keeper.InitGenesis(ctx, cdc, data)
+	source, err := genesis.SourceFromRawJSON(data)
+	if err != nil {
+		panic(err)
+	}
+
+	am.keeper.InitGenesis(ctx, source)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the group
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx, cdc)
-	return cdc.MustMarshalJSON(gs)
+	target := genesis.RawJSONTarget{}
+	if err := am.keeper.ExportGenesis(ctx, target.Target()); err != nil {
+		panic(err)
+	}
+
+	exported, err := target.JSON()
+	if err != nil {
+		panic(err)
+	}
+
+	return exported
 }
 
 // RegisterServices registers a gRPC query service to respond to the
@@ -177,9 +192,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // RegisterStoreDecoder registers a decoder for group module's types
-func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr["group"] = simulation.NewDecodeStore(am.cdc)
-}
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {

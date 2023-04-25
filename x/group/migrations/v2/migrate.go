@@ -10,15 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
-)
-
-const (
-	ModuleName = "group"
-
-	// Group Policy Table
-	GroupPolicyTablePrefix    byte = 0x20
-	GroupPolicyTableSeqPrefix byte = 0x21
+	orm "github.com/cosmos/cosmos-sdk/x/group/migrations/legacyorm"
 )
 
 // Migrate migrates the x/group module state from the consensus version 1 to version 2.

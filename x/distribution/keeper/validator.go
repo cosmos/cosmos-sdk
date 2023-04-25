@@ -37,11 +37,11 @@ func (k Keeper) initializeValidator(ctx sdk.Context, val stakingtypes.ValidatorI
 }
 
 // increment validator period, returning the period just ended
-func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) uint64 {
+func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) (uint64, error) {
 	// fetch current rewards
 	rewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	// calculate current ratio
@@ -52,19 +52,19 @@ func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.Valid
 		// ergo we instead add to the community pool
 		feePool, err := k.GetFeePool(ctx)
 		if err != nil {
-			panic(err)
+			return 0, err
 		}
 
 		outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 		if err != nil {
-			panic(err)
+			return 0, err
 		}
 
 		feePool.CommunityPool = feePool.CommunityPool.Add(rewards.Rewards...)
 		outstanding.Rewards = outstanding.GetRewards().Sub(rewards.Rewards)
 		err = k.SetFeePool(ctx, feePool)
 		if err != nil {
-			panic(err)
+			return 0, err
 		}
 
 		err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)

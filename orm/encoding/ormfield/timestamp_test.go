@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+	"cosmossdk.io/orm/encoding/ormfield"
 )
 
 func TestTimestamp(t *testing.T) {

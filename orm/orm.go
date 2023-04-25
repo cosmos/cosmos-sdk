@@ -14,8 +14,8 @@ import (
 
 	"cosmossdk.io/depinject"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"cosmossdk.io/orm/model/ormdb"
+	"cosmossdk.io/orm/model/ormtable"
 )
 
 func init() {

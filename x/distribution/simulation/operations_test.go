@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -30,7 +32,7 @@ import (
 func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, suite.cdc, suite.accountKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, suite.cdc, suite.txConfig, suite.accountKeeper,
 		suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
 
 	// setup 3 accounts
@@ -49,7 +51,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgFundCommunityPool, types.ModuleName, sdk.MsgTypeURL(&types.MsgFundCommunityPool{})},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		suite.Require().NoError(err)
 
@@ -234,7 +236,12 @@ func (suite *SimTestSuite) SetupTest() {
 		appBuilder *runtime.AppBuilder
 		err        error
 	)
-	suite.app, err = simtestutil.Setup(distrtestutil.AppConfig, &suite.accountKeeper,
+	suite.app, err = simtestutil.Setup(
+		depinject.Configs(
+			distrtestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
+		&suite.accountKeeper,
 		&suite.bankKeeper,
 		&suite.cdc,
 		&appBuilder,

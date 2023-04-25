@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
@@ -35,7 +37,10 @@ type fixture struct {
 func initFixture(t assert.TestingT) *fixture {
 	f := &fixture{}
 	app, err := simtestutil.Setup(
-		testutil.AppConfig,
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&f.bankKeeper,
 		&f.slashingKeeper,
 		&f.stakingKeeper,

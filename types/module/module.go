@@ -138,9 +138,6 @@ func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *
 }
 
 // AddTxCommands adds all tx commands to the rootTxCmd.
-//
-// TODO: Remove clientCtx argument.
-// REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 	for _, b := range bm {
 		if cmd := b.GetTxCmd(); cmd != nil {
@@ -150,9 +147,6 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 }
 
 // AddQueryCommands adds all query commands to the rootQueryCmd.
-//
-// TODO: Remove clientCtx argument.
-// REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	for _, b := range bm {
 		if cmd := b.GetQueryCmd(); cmd != nil {
@@ -213,6 +207,19 @@ type EndBlockAppModule interface {
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
+// PrepareCheckStateAppModule is an extension interface that contains information about the AppModule
+// and PrepareCheckState.
+type PrepareCheckStateAppModule interface {
+	AppModule
+	PrepareCheckState(sdk.Context)
+}
+
+// PreommitAppModule is an extension interface that contains information about the AppModule and Precommit.
+type PrecommitAppModule interface {
+	AppModule
+	Precommit(sdk.Context)
+}
+
 type HasABCIEndblock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
@@ -259,12 +266,14 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules            map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
-	OrderInitGenesis   []string
-	OrderExportGenesis []string
-	OrderBeginBlockers []string
-	OrderEndBlockers   []string
-	OrderMigrations    []string
+	Modules                  map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
+	OrderInitGenesis         []string
+	OrderExportGenesis       []string
+	OrderBeginBlockers       []string
+	OrderEndBlockers         []string
+	OrderPrepareCheckStaters []string
+	OrderPrecommiters        []string
+	OrderMigrations          []string
 }
 
 // NewManager creates a new Manager object.
@@ -277,11 +286,13 @@ func NewManager(modules ...AppModule) *Manager {
 	}
 
 	return &Manager{
-		Modules:            moduleMap,
-		OrderInitGenesis:   modulesStr,
-		OrderExportGenesis: modulesStr,
-		OrderBeginBlockers: modulesStr,
-		OrderEndBlockers:   modulesStr,
+		Modules:                  moduleMap,
+		OrderInitGenesis:         modulesStr,
+		OrderExportGenesis:       modulesStr,
+		OrderBeginBlockers:       modulesStr,
+		OrderPrepareCheckStaters: modulesStr,
+		OrderPrecommiters:        modulesStr,
+		OrderEndBlockers:         modulesStr,
 	}
 }
 
@@ -299,11 +310,13 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	sort.Strings(modulesStr)
 
 	return &Manager{
-		Modules:            simpleModuleMap,
-		OrderInitGenesis:   modulesStr,
-		OrderExportGenesis: modulesStr,
-		OrderBeginBlockers: modulesStr,
-		OrderEndBlockers:   modulesStr,
+		Modules:                  simpleModuleMap,
+		OrderInitGenesis:         modulesStr,
+		OrderExportGenesis:       modulesStr,
+		OrderBeginBlockers:       modulesStr,
+		OrderEndBlockers:         modulesStr,
+		OrderPrecommiters:        modulesStr,
+		OrderPrepareCheckStaters: modulesStr,
 	}
 }
 
@@ -355,6 +368,28 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 			return !hasEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
+}
+
+// SetOrderPrepareCheckStaters sets the order of set prepare-check-stater calls
+func (m *Manager) SetOrderPrepareCheckStaters(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderPrepareCheckStaters", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasPrepareCheckState := module.(PrepareCheckStateAppModule)
+			return !hasPrepareCheckState
+		})
+	m.OrderPrepareCheckStaters = moduleNames
+}
+
+// SetOrderPrecommiters sets the order of set precommiter calls
+func (m *Manager) SetOrderPrecommiters(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderPrecommiters", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasPrecommit := module.(PrecommitAppModule)
+			return !hasPrecommit
+		})
+	m.OrderPrecommiters = moduleNames
 }
 
 // SetOrderMigrations sets the order of migrations to be run. If not set
@@ -726,6 +761,28 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 		ValidatorUpdates: validatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}, nil
+}
+
+// Precommit performs precommit functionality for all modules.
+func (m *Manager) Precommit(ctx sdk.Context) {
+	for _, moduleName := range m.OrderPrecommiters {
+		module, ok := m.Modules[moduleName].(PrecommitAppModule)
+		if !ok {
+			continue
+		}
+		module.Precommit(ctx)
+	}
+}
+
+// PrepareCheckState performs functionality for preparing the check state for all modules.
+func (m *Manager) PrepareCheckState(ctx sdk.Context) {
+	for _, moduleName := range m.OrderPrepareCheckStaters {
+		module, ok := m.Modules[moduleName].(PrepareCheckStateAppModule)
+		if !ok {
+			continue
+		}
+		module.PrepareCheckState(ctx)
+	}
 }
 
 // GetVersionMap gets consensus version from all modules

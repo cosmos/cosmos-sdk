@@ -120,7 +120,7 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *math.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *math.LegacyDec, newMinSelfDelegation *math.Int) *MsgEditValidator {
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,

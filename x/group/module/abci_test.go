@@ -6,9 +6,13 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/stretchr/testify/suite"
+
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -22,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {
@@ -45,7 +48,10 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
-		grouptestutil.AppConfig,
+		depinject.Configs(
+			grouptestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&s.interfaceRegistry,
 		&s.bankKeeper,
 		&s.stakingKeeper,

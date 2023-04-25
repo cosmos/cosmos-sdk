@@ -17,11 +17,17 @@ type HandlerMap struct {
 
 // NewHandlerMap constructs a new sign mode handler map. The first handler is used as the default.
 func NewHandlerMap(handlers ...SignModeHandler) *HandlerMap {
+	if len(handlers) == 0 {
+		panic("no handlers")
+	}
 	res := &HandlerMap{
 		signModeHandlers: map[signingv1beta1.SignMode]SignModeHandler{},
 	}
 
 	for i, handler := range handlers {
+		if handler == nil {
+			panic("nil handler")
+		}
 		mode := handler.Mode()
 		if i == 0 {
 			res.defaultMode = mode

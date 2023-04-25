@@ -11,6 +11,8 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -78,7 +80,10 @@ func (suite *SimTestSuite) SetupTest() {
 	startupCfg.ValidatorSet = createValidator
 
 	app, err := simtestutil.SetupWithConfiguration(
-		testutil.AppConfig,
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		startupCfg,
 		&suite.legacyAmino,
 		&suite.codec,
@@ -210,7 +215,7 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 	}
 
 	validator.DelegatorShares = math.LegacyNewDec(100)
-	validator.Tokens = sdk.NewInt(1000000)
+	validator.Tokens = math.NewInt(1000000)
 
 	stakingKeeper.SetValidator(ctx, validator)
 

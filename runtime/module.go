@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
-
-	"cosmossdk.io/core/store"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -144,6 +144,7 @@ type AppInputs struct {
 	BaseAppOptions    []BaseAppOption
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       *codec.LegacyAmino
+	Logger            log.Logger
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -152,6 +153,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.config = inputs.Config
 	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 	app.appConfig = inputs.AppConfig
+	app.logger = inputs.Logger
 
 	for name, mod := range inputs.Modules {
 		if basicMod, ok := mod.(module.AppModuleBasic); ok {

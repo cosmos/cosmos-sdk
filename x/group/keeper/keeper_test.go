@@ -31,7 +31,10 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-const minExecutionPeriod = 5 * time.Second
+const (
+	testSeq            = uint64(1) // TODO to fix
+	minExecutionPeriod = 5 * time.Second
+)
 
 type TestSuite struct {
 	suite.Suite
@@ -131,7 +134,7 @@ func (s *TestSuite) SetupTest() {
 }
 
 func (s *TestSuite) setNextAccount() {
-	nextAccVal := s.groupKeeper.GetGroupPolicySeq(s.sdkCtx) + 1
+	nextAccVal := testSeq + 1 // TODO to fix
 	derivationKey := make([]byte, 8)
 	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 

@@ -401,6 +401,10 @@ func (k Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroups
 	var res group.QueryGroupsByMemberResponse
 	for it.Next() {
 		member, err := it.Value()
+		if err != nil {
+			return nil, err
+		}
+
 		groupInfo, err := k.getGroupInfo(ctx, member.GroupId)
 		if err != nil {
 			return nil, err

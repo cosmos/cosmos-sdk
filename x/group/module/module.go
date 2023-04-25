@@ -80,8 +80,18 @@ func (AppModuleBasic) Name() string {
 
 // DefaultGenesis returns default genesis state as raw bytes for the group
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(group.NewGenesisState())
+func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	target := genesis.RawJSONTarget{}
+	if err := a.genesisHandler.DefaultGenesis(target.Target()); err != nil {
+		panic(err)
+	}
+
+	defaultJSON, err := target.JSON()
+	if err != nil {
+		panic(err)
+	}
+
+	return defaultJSON
 }
 
 // ValidateGenesis performs genesis state validation for the group module.
@@ -139,7 +149,10 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 		panic(err)
 	}
 
-	am.keeper.InitGenesis(ctx, source)
+	if err := am.keeper.InitGenesis(ctx, source); err != nil {
+		panic(err)
+	}
+
 	return []abci.ValidatorUpdate{}
 }
 
@@ -244,7 +257,6 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 
 	k := keeper.NewKeeper(
 		in.KVStoreService,
-		in.Cdc,
 		in.MsgServiceRouter,
 		in.AccountKeeper,
 		group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen},

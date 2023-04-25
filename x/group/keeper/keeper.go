@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/orm/model/ormdb"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
@@ -29,7 +28,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeService store.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(storeService store.KVStoreService, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	modDb, err := ormdb.NewModuleDB(group.ORMSchema, ormdb.ModuleDBOptions{KVStoreService: storeService})
 	if err != nil {
 		panic(err)

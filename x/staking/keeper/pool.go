@@ -72,7 +72,7 @@ func (k Keeper) StakingTokenSupply(ctx sdk.Context) math.Int {
 func (k Keeper) BondedRatio(ctx sdk.Context) math.LegacyDec {
 	stakeSupply := k.StakingTokenSupply(ctx)
 	if stakeSupply.IsPositive() {
-		return sdk.NewDecFromInt(k.TotalBondedTokens(ctx)).QuoInt(stakeSupply)
+		return math.LegacyNewDecFromInt(k.TotalBondedTokens(ctx)).QuoInt(stakeSupply)
 	}
 
 	return math.LegacyZeroDec()

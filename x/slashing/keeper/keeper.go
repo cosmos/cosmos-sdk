@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -72,13 +73,13 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
 // module to make the necessary validator changes. It specifies no intraction reason.
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64) {
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64) {
 	k.SlashWithInfractionReason(ctx, consAddr, fraction, power, distributionHeight, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 }
 
 // SlashWithInfractionReason attempts to slash a validator. The slash is delegated to the staking
 // module to make the necessary validator changes. It specifies an intraction reason.
-func (k Keeper) SlashWithInfractionReason(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64, infraction stakingtypes.Infraction) {
+func (k Keeper) SlashWithInfractionReason(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64, infraction stakingtypes.Infraction) {
 	coinsBurned := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, fraction, infraction)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

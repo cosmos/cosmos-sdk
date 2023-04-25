@@ -209,7 +209,7 @@ func UnarmorDecryptPrivKey(armorStr, passphrase string) (privKey cryptotypes.Pri
 	return privKey, header[headerType], err
 }
 
-func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string, kdf string) (privKey cryptotypes.PrivKey, err error) {
+func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey cryptotypes.PrivKey, err error) {
 	// Key derivation
 	var (
 		key          []byte

@@ -27,23 +27,10 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress()
 
-<<<<<<< HEAD
-	if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
-		// Ignore evidence that cannot be handled.
-		//
-		// NOTE: We used to panic with:
-		// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
-		// but this couples the expectations of the app to both Tendermint and
-		// the simulator.  Both are expected to provide the full range of
-		// allowable but none of the disallowed evidence types.  Instead of
-		// getting this coordination right, it is easier to relax the
-		// constraints and ignore evidence that cannot be handled.
-=======
 	validator := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
 	if validator == nil || validator.IsUnbonded() {
 		// Defensive: Simulation doesn't take unbonding periods into account, and
 		// CometBFT might break this assumption at some point.
->>>>>>> 97e4978f0 (feat: update the slashing and evidence modules to work with ICS (#15908))
 		return
 	}
 
@@ -87,31 +74,6 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 		}
 	}
 
-<<<<<<< HEAD
-	validator := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
-	if validator == nil || validator.IsUnbonded() {
-		// Defensive: Simulation doesn't take unbonding periods into account, and
-		// Tendermint might break this assumption at some point.
-		return
-	}
-
-	if !validator.GetOperator().Empty() {
-		if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
-			// Ignore evidence that cannot be handled.
-			//
-			// NOTE: We used to panic with:
-			// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
-			// but this couples the expectations of the app to both Tendermint and
-			// the simulator.  Both are expected to provide the full range of
-			// allowable but none of the disallowed evidence types.  Instead of
-			// getting this coordination right, it is easier to relax the
-			// constraints and ignore evidence that cannot be handled.
-			return
-		}
-	}
-
-=======
->>>>>>> 97e4978f0 (feat: update the slashing and evidence modules to work with ICS (#15908))
 	if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {
 		panic(fmt.Sprintf("expected signing info for validator %s but not found", consAddr))
 	}

@@ -651,7 +651,7 @@ func (k Keeper) updateRedelegationDstVal(ctx sdk.Context, delAddr sdk.AccAddress
 	var red types.Redelegation
 	k.cdc.MustUnmarshal(bz, &red)
 	k.RemoveRedelegation(ctx, red)
-	red.ValidatorSrcAddress = newDstVal.String()
+	red.ValidatorDstAddress = newDstVal.String()
 	k.SetRedelegation(ctx, red)
 
 	// over ride the existing ubd entries with unbonding id

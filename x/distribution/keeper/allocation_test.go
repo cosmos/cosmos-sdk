@@ -323,7 +323,15 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	}
 	distrKeeper.AllocateTokens(ctx, 31, votes)
 
-	require.True(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr0).Rewards.IsValid())
-	require.True(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr1).Rewards.IsValid())
-	require.True(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr2).Rewards.IsValid())
+	val0OutstandingRewards, err = distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr0)
+	require.NoError(t, err)
+	require.True(t, val0OutstandingRewards.Rewards.IsValid())
+
+	val1OutstandingRewards, err = distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr1)
+	require.NoError(t, err)
+	require.True(t, val1OutstandingRewards.Rewards.IsValid())
+
+	val2OutstandingRewards, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr2)
+	require.NoError(t, err)
+	require.True(t, val2OutstandingRewards.Rewards.IsValid())
 }

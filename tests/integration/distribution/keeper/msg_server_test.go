@@ -10,7 +10,6 @@ import (
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -260,9 +259,10 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		},
 	}
 	height := f.app.LastBlockHeight()
-	require.Panics(t, func() {
-		f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-	})
+
+	_, err = f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+	assert.Error(t, err, "previous proposer not set")
+
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -276,16 +276,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			if f.app.LastBlockHeight() != height {
 				panic(fmt.Errorf("expected block height to be %d, got %d", height, f.app.LastBlockHeight()))
 			}
-
-			prevProposerConsAddr, err := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-			assert.NilError(t, err)
-			assert.Assert(t, prevProposerConsAddr.Empty() == false)
-			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
-			var previousTotalPower int64
-			for _, voteInfo := range f.sdkCtx.VoteInfos() {
-				previousTotalPower += voteInfo.Validator.Power
-			}
-			assert.Equal(t, previousTotalPower, int64(100))
 
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -308,6 +298,16 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				curOutstandingRewards, _ := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
 				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
+
+			prevProposerConsAddr, err := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+			assert.NilError(t, err)
+			assert.Assert(t, prevProposerConsAddr.Empty() == false)
+			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
+			var previousTotalPower int64
+			for _, voteInfo := range f.sdkCtx.VoteInfos() {
+				previousTotalPower += voteInfo.Validator.Power
+			}
+			assert.Equal(t, previousTotalPower, int64(100))
 		})
 	}
 }

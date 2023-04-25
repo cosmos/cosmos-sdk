@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
+	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"

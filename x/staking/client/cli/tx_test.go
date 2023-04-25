@@ -308,6 +308,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 func (s *CLITestSuite) TestNewEditValidatorCmd() {
 	cmd := cli.NewEditValidatorCmd()
 
+	moniker := "testing"
 	details := "bio"
 	identity := "test identity"
 	securityContact := "test contact"
@@ -383,8 +384,20 @@ func (s *CLITestSuite) TestNewEditValidatorCmd() {
 			"",
 		},
 		{
+			"edit validator moniker", // https://github.com/cosmos/cosmos-sdk/issues/10660
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagEditMoniker, moniker),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			"",
+		},
+		{
 			"with all edit flags",
 			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagEditMoniker, moniker),
 				fmt.Sprintf("--details=%s", details),
 				fmt.Sprintf("--identity=%s", identity),
 				fmt.Sprintf("--security-contact=%s", securityContact),

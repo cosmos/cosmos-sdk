@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -12,7 +13,7 @@ import (
 )
 
 // initialize rewards for a new validator
-func (k Keeper) initializeValidator(ctx sdk.Context, val stakingtypes.ValidatorI) error {
+func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.ValidatorI) error {
 	// set initial historical rewards (period 0) with reference count of 1
 	err := k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
 	if err != nil {
@@ -37,7 +38,7 @@ func (k Keeper) initializeValidator(ctx sdk.Context, val stakingtypes.ValidatorI
 }
 
 // increment validator period, returning the period just ended
-func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) (uint64, error) {
+func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.ValidatorI) (uint64, error) {
 	// fetch current rewards
 	rewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 	if err != nil {
@@ -69,7 +70,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.Valid
 
 		err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 		if err != nil {
-			panic(err)
+			return 0, err
 		}
 
 		current = sdk.DecCoins{}
@@ -81,25 +82,34 @@ func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.Valid
 	// fetch historical rewards for last period
 	historical, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	cumRewardRatio := historical.CumulativeRewardRatio
 
 	// decrement reference count
-	k.decrementReferenceCount(ctx, val.GetOperator(), rewards.Period-1)
+	err = k.decrementReferenceCount(ctx, val.GetOperator(), rewards.Period-1)
+	if err != nil {
+		return 0, err
+	}
 
 	// set new historical rewards with reference count of 1
-	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
+	err = k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
+	if err != nil {
+		return 0, err
+	}
 
 	// set current rewards, incrementing period by 1
-	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
+	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
+	if err != nil {
+		return 0, err
+	}
 
-	return rewards.Period
+	return rewards.Period, nil
 }
 
 // increment the reference count for a historical rewards value
-func (k Keeper) incrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress, period uint64) error {
+func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddress, period uint64) error {
 	historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
 	if err != nil {
 		return err
@@ -112,7 +122,7 @@ func (k Keeper) incrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress,
 }
 
 // decrement the reference count for a historical rewards value, and delete if zero references remain
-func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress, period uint64) error {
+func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddress, period uint64) error {
 	historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
 	if err != nil {
 		return err
@@ -129,21 +139,25 @@ func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress,
 	return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 }
 
-func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
 	if fraction.GT(math.LegacyOneDec()) || fraction.IsNegative() {
 		panic(fmt.Sprintf("fraction must be >=0 and <=1, current fraction: %v", fraction))
 	}
 
-	val := k.stakingKeeper.Validator(ctx, valAddr)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	val := k.stakingKeeper.Validator(sdkCtx, valAddr)
 
 	// increment current period
-	newPeriod := k.IncrementValidatorPeriod(ctx, val)
+	newPeriod, err := k.IncrementValidatorPeriod(ctx, val)
+	if err != nil {
+		return err
+	}
 
 	// increment reference count on period we need to track
 	k.incrementReferenceCount(ctx, valAddr, newPeriod)
 
 	slashEvent := types.NewValidatorSlashEvent(newPeriod, fraction)
-	height := uint64(ctx.BlockHeight())
+	height := uint64(sdkCtx.BlockHeight())
 
-	k.SetValidatorSlashEvent(ctx, valAddr, height, newPeriod, slashEvent)
+	return k.SetValidatorSlashEvent(ctx, valAddr, height, newPeriod, slashEvent)
 }

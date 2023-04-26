@@ -25,8 +25,7 @@ func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, rec
 
 	feePool.CommunityPool = newPool
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, receiveAddr, amount)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 	if err != nil {
 		return err
 	}

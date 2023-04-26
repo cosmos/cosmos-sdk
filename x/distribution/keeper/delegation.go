@@ -12,7 +12,7 @@ import (
 )
 
 // initialize starting info for a new delegation
-func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) error {
+func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) error {
 	// period has already been incremented - we want to store the period ended by this delegation action
 	valCurrentRewards, err := k.GetValidatorCurrentRewards(ctx, val)
 	if err != nil {
@@ -23,14 +23,15 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// increment reference count for the period we're going to track
 	k.incrementReferenceCount(ctx, val, previousPeriod)
 
-	validator := k.stakingKeeper.Validator(ctx, val)
-	delegation := k.stakingKeeper.Delegation(ctx, del, val)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	validator := k.stakingKeeper.Validator(sdkCtx, val)
+	delegation := k.stakingKeeper.Delegation(sdkCtx, del, val)
 
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
-	return k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
+	return k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
 }
 
 // calculate the rewards accrued by a delegation between two periods
@@ -164,7 +165,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	return rewards, nil
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
+func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	hasInfo, err := k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 	if err != nil {
@@ -176,7 +177,11 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	}
 
 	// end current period and calculate rewards
-	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+	endingPeriod, err := k.IncrementValidatorPeriod(ctx, val)
+	if err != nil {
+		return nil, err
+	}
+
 	rewardsRaw, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 	if err != nil {
 		return nil, err
@@ -219,14 +224,21 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 
 	// update the outstanding rewards and the community pool only if the
 	// transaction was successful
-	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
+	err = k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
+	if err != nil {
+		return nil, err
+	}
+
 	feePool, err := k.GetFeePool(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
-	k.SetFeePool(ctx, feePool)
+	err = k.SetFeePool(ctx, feePool)
+	if err != nil {
+		return nil, err
+	}
 
 	// decrement reference count of starting period
 	startingInfo, err := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
@@ -235,10 +247,16 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	}
 
 	startingPeriod := startingInfo.PreviousPeriod
-	k.decrementReferenceCount(ctx, del.GetValidatorAddr(), startingPeriod)
+	err = k.decrementReferenceCount(ctx, del.GetValidatorAddr(), startingPeriod)
+	if err != nil {
+		return nil, err
+	}
 
 	// remove delegator starting info
-	k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	err = k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	if err != nil {
+		return nil, err
+	}
 
 	if finalRewards.IsZero() {
 		baseDenom, _ := sdk.GetBaseDenom()

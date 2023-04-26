@@ -14,6 +14,8 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -624,7 +626,10 @@ func (app *SimApp) AutoCliOpts() autocli.AppOptions {
 		}
 	}
 
-	return autocli.AppOptions{Modules: modules}
+	return autocli.AppOptions{
+		Modules:      modules,
+		AddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+	}
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.

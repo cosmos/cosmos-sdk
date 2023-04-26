@@ -5,7 +5,6 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"cosmossdk.io/core/address"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
@@ -31,19 +30,17 @@ type config struct {
 // An empty struct is a valid configuration and will result in a TxConfig with default values.
 type ConfigOptions struct {
 	// If SigningHandler is specified it will be used instead constructing one.
+	// This option supersedes all below options, whose sole purpose are to configure the creation of
+	// txsigning.HandlerMap.
 	SigningHandler *txsigning.HandlerMap
-	// If SigningContext is specified it will be used when constructing sign mode handlers.
-	SigningContext *txsigning.Context
 	// EnabledSignModes is the list of sign modes that will be enabled in the txsigning.HandlerMap.
 	EnabledSignModes []signingtypes.SignMode
-	// TypeResolver is the protobuf message type resolver that will be used when constructing sign mode handlers.
-	TypeResolver protoregistry.MessageTypeResolver
-	// FileResolver is the protobuf file resolver that will be used when constructing a txsigning.Context.
-	FileResolver txsigning.ProtoFileResolver
-	// AddressCodec is the address codec that will be used when constructing a txsigning.Context.
-	AddressCodec address.Codec
-	// ValidatorCodec is the validator address codec that will be used when constructing a txsigning.Context.
-	ValidatorCodec address.Codec
+	// If SigningContext is specified it will be used when constructing sign mode handlers. If nil, one will be created
+	// with the options specified in SigningOptions.
+	SigningContext *txsigning.Context
+	// SigningOptions are the options that will be used when constructing a txsigning.Context and sign mode handlers.
+	// If nil defaults will be used.
+	SigningOptions *txsigning.Options
 	// TextualCoinMetadataQueryFn is the function that will be used to query coin metadata when constructing
 	// textual sign mode handler. This is required if SIGN_MODE_TEXTUAL is enabled.
 	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
@@ -97,11 +94,15 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 		return txConfig
 	}
 
-	if opts.TypeResolver == nil {
-		opts.TypeResolver = protoregistry.GlobalTypes
+	signingOpts := opts.SigningOptions
+	if signingOpts == nil {
+		signingOpts = &txsigning.Options{}
 	}
-	if opts.FileResolver == nil {
-		opts.FileResolver = protoCodec.InterfaceRegistry()
+	if signingOpts.TypeResolver == nil {
+		signingOpts.TypeResolver = protoregistry.GlobalTypes
+	}
+	if signingOpts.FileResolver == nil {
+		signingOpts.FileResolver = protoCodec.InterfaceRegistry()
 	}
 	if len(opts.EnabledSignModes) == 0 {
 		opts.EnabledSignModes = DefaultSignModes
@@ -109,18 +110,14 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 
 	if opts.SigningContext == nil {
 		sdkConfig := sdk.GetConfig()
-		if opts.AddressCodec == nil {
-			opts.AddressCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix())
+		if signingOpts.AddressCodec == nil {
+			signingOpts.AddressCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix())
 		}
-		if opts.ValidatorCodec == nil {
-			opts.ValidatorCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix())
+		if signingOpts.ValidatorAddressCodec == nil {
+			signingOpts.ValidatorAddressCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix())
 		}
 		var err error
-		opts.SigningContext, err = txsigning.NewContext(txsigning.Options{
-			FileResolver:          opts.FileResolver,
-			AddressCodec:          opts.AddressCodec,
-			ValidatorAddressCodec: opts.ValidatorCodec,
-		})
+		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
 		if err != nil {
 			panic(err)
 		}
@@ -135,7 +132,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 			handlers[i] = &direct.SignModeHandler{}
 		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
 			handlers[i], err = directaux.NewSignModeHandler(directaux.SignModeHandlerOptions{
-				TypeResolver:   opts.TypeResolver,
+				TypeResolver:   signingOpts.TypeResolver,
 				SignersContext: opts.SigningContext,
 			})
 			if err != nil {
@@ -144,15 +141,15 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 			aminoJSONEncoder := aminojson.NewAminoJSON()
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
-				FileResolver: opts.FileResolver,
-				TypeResolver: opts.TypeResolver,
+				FileResolver: signingOpts.FileResolver,
+				TypeResolver: signingOpts.TypeResolver,
 				Encoder:      &aminoJSONEncoder,
 			})
 		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
 			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
 				CoinMetadataQuerier: opts.TextualCoinMetadataQueryFn,
-				FileResolver:        opts.FileResolver,
-				TypeResolver:        opts.TypeResolver,
+				FileResolver:        signingOpts.FileResolver,
+				TypeResolver:        signingOpts.TypeResolver,
 			})
 			if opts.TextualCoinMetadataQueryFn == nil {
 				panic("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")

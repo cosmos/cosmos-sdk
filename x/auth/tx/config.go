@@ -160,7 +160,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 		}
 	}
 	for i, m := range customSignModes {
-		handlers[i+len(configOptions.EnabledSignModes)] = m
+		handlers[i+lenSignModes] = m
 	}
 
 	txConfig.handler = txsigning.NewHandlerMap(handlers...)

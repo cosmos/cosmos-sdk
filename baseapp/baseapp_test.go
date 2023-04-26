@@ -445,9 +445,6 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	header := cmtproto.Header{Height: 1}
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-
 	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
 		err, ok := recoveryObj.(error)
 		if !ok {
@@ -466,7 +463,9 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 		tx := newTxCounter(t, suite.txConfig, 0, 0)
 
 		require.PanicsWithValue(t, customPanicMsg, func() {
-			suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+			bz, err := suite.txConfig.TxEncoder()(tx)
+			require.NoError(t, err)
+			suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{bz}})
 		})
 	}
 }
@@ -592,8 +591,8 @@ func TestSetMinGasPrices(t *testing.T) {
 
 func TestGetMaximumBlockGas(t *testing.T) {
 	suite := NewBaseAppSuite(t)
-	suite.baseApp.InitChain(abci.RequestInitChain{})
-	ctx := suite.baseApp.NewContext(true, cmtproto.Header{})
+	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{})
+	ctx := suite.baseApp.NewContext(true, cmtproto.Header{}) // TODO remove header here
 
 	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))

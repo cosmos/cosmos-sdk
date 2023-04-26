@@ -40,7 +40,7 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 	return gasInfo, result, err
 }
 
-func (app *BaseApp) NewContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
+func (app *BaseApp) NewContext(isCheckTx bool, header cmtproto.Header) sdk.Context { // todo discuss how to remove header, wrapper or no
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)

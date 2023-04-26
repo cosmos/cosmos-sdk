@@ -112,7 +112,7 @@ func (s *SimTestSuite) SetupTest() {
 	for _, account := range accounts[1:] {
 		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
 		accountKeeper.SetAccount(ctx, acc)
-		s.Require().NoError(banktestutil.FundAccount(bankKeeper, ctx, account.Address, initCoins))
+		s.Require().NoError(banktestutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
 	}
 
 	s.accountKeeper = accountKeeper

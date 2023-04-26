@@ -95,7 +95,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
-		keys[banktypes.StoreKey],
+		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
@@ -123,10 +123,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	startTokens := stakingKeeper.TokensFromConsensusPower(sdkCtx, 10)
 	bondDenom := stakingKeeper.BondDenom(sdkCtx)
 	notBondedPool := stakingKeeper.GetNotBondedPool(sdkCtx)
-	assert.NilError(t, banktestutil.FundModuleAccount(bankKeeper, sdkCtx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	assert.NilError(t, banktestutil.FundModuleAccount(sdkCtx, bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 	accountKeeper.SetModuleAccount(sdkCtx, notBondedPool)
 	bondedPool := stakingKeeper.GetBondedPool(sdkCtx)
-	assert.NilError(t, banktestutil.FundModuleAccount(bankKeeper, sdkCtx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	assert.NilError(t, banktestutil.FundModuleAccount(sdkCtx, bankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 	accountKeeper.SetModuleAccount(sdkCtx, bondedPool)
 
 	qr := integrationApp.QueryHelper()
@@ -227,7 +227,7 @@ func setValidator(f *deterministicFixture, t *testing.T, validator stakingtypes.
 
 	delegatorAddress := sdk.AccAddress(validator.GetOperator())
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
-	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegatorAddress, coins)
+	banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins)
 
 	_, err := f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
 	assert.NilError(t, err)
@@ -312,7 +312,7 @@ func fundAccountAndDelegate(f *deterministicFixture, t *testing.T, delegator sdk
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
-	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegator, coins)
+	banktestutil.FundAccount(f.ctx, f.bankKeeper, delegator, coins)
 
 	shares, err := f.stakingKeeper.Delegate(f.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
 	return shares, err

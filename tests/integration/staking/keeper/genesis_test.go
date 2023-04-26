@@ -78,8 +78,8 @@ func TestInitGenesis(t *testing.T) {
 	i2 := len(validators)
 	assert.NilError(t,
 		banktestutil.FundModuleAccount(
-			f.bankKeeper,
 			f.sdkCtx,
+			f.bankKeeper,
 			types.BondedPoolName,
 			sdk.NewCoins(
 				sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(i2))),
@@ -211,8 +211,8 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	// mint coins in the bonded pool representing the validators coins
 	assert.NilError(t,
 		banktestutil.FundModuleAccount(
-			f.bankKeeper,
 			f.sdkCtx,
+			f.bankKeeper,
 			types.BondedPoolName,
 			sdk.NewCoins(sdk.NewCoin(params.BondDenom, bondedPoolAmt)),
 		),

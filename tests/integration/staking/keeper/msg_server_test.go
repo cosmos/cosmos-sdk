@@ -25,7 +25,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
 	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 5)
 
-	assert.NilError(t, testutil.FundModuleAccount(f.bankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), startTokens))))
+	assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), startTokens))))
 	f.accountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	moduleBalance := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), f.stakingKeeper.BondDenom(ctx))

@@ -181,7 +181,15 @@ func TestUnJailNotBonded(t *testing.T) {
 	tstaking.CheckValidator(addr, -1, true)
 
 	// verify we cannot unjail (yet)
-	assert.ErrorContains(t, f.slashingKeeper.Unjail(f.ctx, addr), "cannot be unjailed")
+	msgUnjail := slashingtypes.MsgUnjail{
+		ValidatorAddr: addr.String(),
+	}
+	_, err = f.app.RunMsg(
+		&msgUnjail,
+		integration.WithAutomaticBeginEndBlock(),
+		integration.WithAutomaticCommit(),
+	)
+	assert.ErrorContains(t, err, "cannot be unjailed")
 
 	f.stakingKeeper.EndBlocker(f.ctx)
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
@@ -192,7 +200,12 @@ func TestUnJailNotBonded(t *testing.T) {
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 
 	// verify we can immediately unjail
-	assert.NilError(t, f.slashingKeeper.Unjail(f.ctx, addr))
+	_, err = f.app.RunMsg(
+		&msgUnjail,
+		integration.WithAutomaticBeginEndBlock(),
+		integration.WithAutomaticCommit(),
+	)
+	assert.NilError(t, err)
 
 	tstaking.CheckValidator(addr, -1, false)
 }

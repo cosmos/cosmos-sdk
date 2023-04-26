@@ -3,6 +3,8 @@ package simapp
 import (
 	"time"
 
+	"google.golang.org/protobuf/types/known/durationpb"
+
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -24,14 +26,31 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
+
+	_ "cosmossdk.io/x/evidence"                       // import for side-effects
+	_ "cosmossdk.io/x/feegrant/module"                // import for side-effects
+	_ "cosmossdk.io/x/nft/module"                     // import for side-effects
+	_ "cosmossdk.io/x/upgrade"                        // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"   // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/authz/module"   // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/crisis"         // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/distribution"   // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/gov"            // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/group/module"   // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/slashing"       // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import for side-effects
+
 	"cosmossdk.io/core/appconfig"
 	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"google.golang.org/protobuf/types/known/durationpb"
-
-	"cosmossdk.io/x/feegrant"
-
 	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"

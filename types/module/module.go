@@ -90,6 +90,21 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 	return moduleMap
 }
 
+// NewBasicManagerFromManager creates a new BasicManager from a Manager
+func NewBasicManagerFromManager(manager *Manager) BasicManager {
+	moduleMap := make(map[string]AppModuleBasic)
+	for name, module := range manager.Modules {
+		appModuleBasic, ok := module.(AppModuleBasic)
+		if !ok {
+			continue
+		}
+
+		moduleMap[name] = appModuleBasic
+	}
+
+	return moduleMap
+}
+
 // RegisterLegacyAminoCodec registers all module codecs
 func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	for _, b := range bm {

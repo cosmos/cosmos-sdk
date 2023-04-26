@@ -36,7 +36,7 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 	// set bonded pool supply
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), totalSupply))
 
 	// unbond genesis validator delegations
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
@@ -81,8 +81,8 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// create a random pool
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 1234)))))
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 10000)))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 1234)))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 10000)))))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
@@ -136,7 +136,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), valTokens))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), valTokens))))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -243,8 +243,8 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 501)))))
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 0)))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 501)))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 0)))))
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
@@ -319,7 +319,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 
 		notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-		assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, tokens))))
+		assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, tokens))))
 		app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 		validators[i] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
 	}
@@ -338,7 +338,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	newTokens := sdk.NewCoins()
 
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), newTokens))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), newTokens))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// test that the two largest validators are
@@ -370,7 +370,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
 	newTokens = sdk.NewCoins(sdk.NewCoin(params.BondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 1)))
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), newTokens))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), newTokens))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
@@ -385,7 +385,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], _ = validators[3].RemoveDelShares(math.LegacyNewDec(201))
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, rmTokens))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, rmTokens))))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
@@ -399,7 +399,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(200))
 
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)

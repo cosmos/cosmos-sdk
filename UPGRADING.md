@@ -71,6 +71,7 @@ This is no longer the case, the assertion has been loosened to only require modu
 The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
 
 * `x/auth`
+* `x/bank`
 * `x/consensus`
 * `x/feegrant`
 * `x/nft`

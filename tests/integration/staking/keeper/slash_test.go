@@ -27,7 +27,7 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
 
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), totalSupply))
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -37,7 +37,7 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 
 	// set bonded pool balance
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), bondedCoins))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, bondedPool.GetName(), bondedCoins))
 
 	for i := int64(0); i < numVals; i++ {
 		validator := testutil.NewValidator(t, addrVals[i], PKs[i])
@@ -103,7 +103,7 @@ func TestSlashRedelegation(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	_ = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), startCoins))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, bondedPool.GetName(), startCoins))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// set a redelegation with an expiration timestamp beyond which the
@@ -370,7 +370,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	rdCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdTokens.MulRaw(2)))
 
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), rdCoins))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, bondedPool.GetName(), rdCoins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -539,8 +539,8 @@ func TestSlashBoth(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), bondedCoins))
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), notBondedCoins))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, bondedPool.GetName(), bondedCoins))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), notBondedCoins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)

@@ -12,10 +12,6 @@ import (
 type addressStringType struct{}
 
 func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
-	if b.AddressCodec == nil {
-		panic("bech32 account address prefix is not set")
-	}
-
 	return &addressValue{addressCodec: b.AddressCodec}
 }
 

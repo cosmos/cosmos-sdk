@@ -1,6 +1,8 @@
 package autocli
 
 import (
+	"errors"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/core/address"
@@ -19,8 +21,8 @@ import (
 //	var autoCliOpts autocli.AppOptions
 //	err := depinject.Inject(appConfig, &encodingConfig.InterfaceRegistry, &autoCliOpts)
 //
-// If depinject isn't used, options can be provided manually or extracted from modules. One method for extracting autocli
-// options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
+// If depinject isn't used, options can be provided manually or extracted from modules and the address codec is provided by the auth keeper.
+// One method for extracting autocli options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
 type AppOptions struct {
 	depinject.In
 
@@ -68,6 +70,10 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
+	if builder.AddressCodec == nil {
+		return errors.New("address codec is required in builder")
+	}
+
 	// extract any custom commands from modules
 	customQueryCmds, customMsgCmds := map[string]*cobra.Command{}, map[string]*cobra.Command{}
 	for name, module := range appOptions.Modules {

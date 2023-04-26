@@ -87,23 +87,23 @@ Examples:
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "granter"}, {ProtoField: "grantee"}},
 					FlagOptions: map[string]*autocliv1.FlagOptions{
 						FlagExpiration: {
-							Name: FlagExpiration,
+							Name:  FlagExpiration,
 							Usage: "The RFC 3339 timestamp after which the grant expires for the user",
 						},
 						FlagAllowedMsgs: {
-							Name: FlagAllowedMsgs,
+							Name:  FlagAllowedMsgs,
 							Usage: "Set of allowed messages for fee allowance",
 						},
 						FlagSpendLimit: {
-							Name: FlagSpendLimit,
+							Name:  FlagSpendLimit,
 							Usage: "Spend limit specifies the max limit can be used, if not mentioned there is no limit",
 						},
 						FlagPeriod: {
-							Name: FlagPeriod,
-							Usage: "Period specifies the time duration(in seconds) in which period_limit coins can be spent before that allowance is reset (ex: 3600)"
+							Name:  FlagPeriod,
+							Usage: "Period specifies the time duration(in seconds) in which period_limit coins can be spent before that allowance is reset (ex: 3600)",
 						},
 						FlagPeriodLimit: {
-							Name: FlagPeriodLimit,
+							Name:  FlagPeriodLimit,
 							Usage: "Period limit specifies the maximum number of coins that can be spent in the period",
 						},
 					},

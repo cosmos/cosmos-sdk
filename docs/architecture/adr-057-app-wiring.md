@@ -301,7 +301,8 @@ Code generation requires that all providers and invokers and their parameters ar
 
 ### Module Semantic Versioning
 
-When we start creating semantically versioned SDK modules that are in standalone go modules, whenever there is a state machine breaking change to a module:
+When we start creating semantically versioned SDK modules that are in standalone go modules, a state machine breaking
+change to a module should be handled as follows:
 - the semantic major version should be incremented, and
 - a new semantically versioned module config protobuf type should be created.
 
@@ -318,6 +319,14 @@ This practice will eventually allow us to use appconfig to load new versions of 
 Effectively, there should be a 1:1 correspondence between a semantically versioned go module and a 
 versioned module config protobuf type, and major versioning bumps should occur whenever state machine breaking changes
 are made to a module.
+
+NOTE: SDK modules that are standalone go modules _should not_ adopt semantic versioning until the concerns described in
+[ADR 054: Module Semantic Versioning](./adr-054-semver-compatible-modules.md) are
+addressed. The short-term solution for this issue was left somewhat unresolved. However, the easiest tactic is
+likely to use a standalone API go module and follow the guidelines described in this comment: https://github.com/cosmos/cosmos-sdk/pull/11802#issuecomment-1406815181. For the time-being, it is recommended that
+Cosmos SDK modules continue to follow tried and true [0-based versioning](https://0ver.org) until an officially
+recommended solution is provided. This section of the ADR will be updated when that happens and for now, this section
+should be considered as a design recommendation for future adoption of semantic versioning.
 
 ## Consequences
 

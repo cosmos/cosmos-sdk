@@ -4,16 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/types/known/anypb"
-
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/registry"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -106,59 +100,4 @@ func VerifySignature(
 	default:
 		return fmt.Errorf("unexpected SignatureData %T", signatureData)
 	}
-}
-
-// GetSignBytesAdapter returns the sign bytes for a given transaction and sign mode.  It accepts the arguments expected
-// for signing in x/auth/tx and converts them to the arguments expected by the txsigning.HandlerMap, then applies
-// HandlerMap.GetSignBytes to get the sign bytes.
-func GetSignBytesAdapter(
-	ctx context.Context,
-	encoder sdk.TxEncoder,
-	handlerMap *txsigning.HandlerMap,
-	mode signing.SignMode,
-	signerData SignerData,
-	tx sdk.Tx,
-) ([]byte, error) {
-	// round trip performance hit.
-	// could be avoided if we had a way to get the bytes from the txBuilder.
-	txBytes, err := encoder(tx)
-	if err != nil {
-		return nil, err
-	}
-	decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
-	if err != nil {
-		return nil, err
-	}
-	decodedTx, err := decodeCtx.Decode(txBytes)
-	if err != nil {
-		return nil, err
-	}
-	txData := txsigning.TxData{
-		Body:          decodedTx.Tx.Body,
-		AuthInfo:      decodedTx.Tx.AuthInfo,
-		AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
-		BodyBytes:     decodedTx.TxRaw.BodyBytes,
-	}
-	txSignMode, err := internalSignModeToAPI(mode)
-	if err != nil {
-		return nil, err
-	}
-
-	anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
-	if err != nil {
-		return nil, err
-	}
-
-	txSignerData := txsigning.SignerData{
-		ChainID:       signerData.ChainID,
-		AccountNumber: signerData.AccountNumber,
-		Sequence:      signerData.Sequence,
-		Address:       signerData.Address,
-		PubKey: &anypb.Any{
-			TypeUrl: anyPk.TypeUrl,
-			Value:   anyPk.Value,
-		},
-	}
-	// Generate the bytes to be signed.
-	return handlerMap.GetSignBytes(ctx, txSignMode, txSignerData, txData)
 }

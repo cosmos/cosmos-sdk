@@ -66,13 +66,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 	sdkConfig := sdk.GetConfig()
 	txConfigOptions := tx.ConfigOptions{
-		FileResolver: in.ProtoFileResolver,
-		// From static config? But this is already in auth config.
-		// - Provide codecs there as types?
-		// - Provide static prefix there exported from config?
-		// - Just do as below?
-		AddressCodec:   authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
-		ValidatorCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
+		SigningOptions: &txsigning.Options{
+			FileResolver: in.ProtoFileResolver,
+			// From static config? But this is already in auth config.
+			// - Provide codecs there as types?
+			// - Provide static prefix there exported from config?
+			// - Just do as below?
+			AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
+			ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
+		},
 	}
 	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions, customSignModeHandlers...)
 

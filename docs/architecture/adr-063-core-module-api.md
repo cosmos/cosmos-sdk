@@ -443,13 +443,16 @@ described in this ADR, a common go module should be created with shared runtime 
 to share initially are probably the message/query router, inter-module client, service register, and event router.
 This common runtime module should be created initially as the `cosmossdk.io/runtime/common` go module.
 
-When this new architecture has been implemented, the main dependency for any Cosmos SDK module would be
-`cosmossdk.io/core` and this module should be able to be used with any supported consensus engine (to the extent
+When this new architecture has been implemented, the main dependency for a Cosmos SDK module would be
+`cosmossdk.io/core` and that module should be able to be used with any supported consensus engine (to the extent
 that it does not explicitly depend on consensus engine specific functionality such as Comet' block headers). An
 app developer would then be able to choose which consensus engine they want to use by importing the corresponding
 runtime module. The current `BaseApp` would be refactored into the `cosmossdk.io/runtime/comet` module, the router
 infrastructure in `baseapp/` would be refactored into `cosmossdk.io/runtime/common` and support ADR 033, and eventually
 a dependency on `github.com/cosmos/cosmos-sdk` would no longer be required.
+
+In short, modules would depend primarily on `cosmossdk.io/core`, and each `cosmossdk.io/runtime/{consensus-engine}`
+would implement the `cosmossdk.io/core` functionality for that consensus engine.
 
 ### Testing
 

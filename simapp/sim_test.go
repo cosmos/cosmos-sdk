@@ -330,32 +330,9 @@ func TestAppStateDeterminism(t *testing.T) {
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
-<<<<<<< HEAD
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
-=======
-	// We will be overriding the random seed and just run a single simulation on the provided seed value
-	if config.Seed != simcli.DefaultSeedValue {
-		numSeeds = 1
-	}
-
-	appOptions := viper.New()
-	if FlagEnableStreamingValue {
-		m := make(map[string]interface{})
-		m["streaming.abci.keys"] = []string{"*"}
-		m["streaming.abci.plugin"] = "abci_v1"
-		m["streaming.abci.stop-node-on-err"] = true
-		for key, value := range m {
-			appOptions.SetDefault(key, value)
-		}
-	}
-	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
-	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
-	if simcli.FlagVerboseValue {
-		appOptions.SetDefault(flags.FlagLogLevel, "debug")
-	}
->>>>>>> e59c4a857 (fix: unique constraint violation for group policy sim genesis (#15943))
 
 	for i := 0; i < numSeeds; i++ {
 		if config.Seed == simcli.DefaultSeedValue {

@@ -4,31 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
-	"cosmossdk.io/core/address"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"cosmossdk.io/core/address"
 )
 
 type addressStringType struct{}
 
 func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
 	if b.AddressCodec == nil {
-		conn, err := b.GetClientConn()
-		if err != nil {
-			panic(err)
-		}
-		reflectionClient := reflectionv2alpha1.NewReflectionServiceClient(conn)
-		resp, err := reflectionClient.GetConfigurationDescriptor(ctx, &reflectionv2alpha1.GetConfigurationDescriptorRequest{})
-		if err != nil {
-			panic(err)
-		}
-		if resp == nil || resp.Config == nil {
-			panic("bech32 account address prefix is not set")
-		}
-
-		b.AddressCodec = addresscodec.NewBech32Codec(resp.Config.Bech32AccountAddressPrefix)
+		panic("bech32 account address prefix is not set")
 	}
 
 	return &addressValue{addressCodec: b.AddressCodec}

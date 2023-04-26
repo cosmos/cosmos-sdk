@@ -34,8 +34,7 @@ type AppOptions struct {
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
 	// AddressCodec is the address codec to use for the app.
-	// If not provided the default address prefix will be fetched from the reflection client.
-	AddressCodec address.Codec `optional:"true"`
+	AddressCodec address.Codec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -57,9 +56,6 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
 			AddressCodec: appOptions.AddressCodec,
-			GetClientConn: func() (grpc.ClientConnInterface, error) {
-				return client.GetClientQueryContext(rootCmd)
-			},
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)

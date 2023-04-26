@@ -7,8 +7,6 @@ import (
 	"os"
 	"path"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc"
@@ -18,6 +16,12 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/client/v2/autocli"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 const DefaultConfigDirName = ".hubl"
@@ -25,20 +29,20 @@ const DefaultConfigDirName = ".hubl"
 type ChainInfo struct {
 	client *grpc.ClientConn
 
-	ConfigDir     string
-	Chain         string
-	ModuleOptions map[string]*autocliv1.ModuleOptions
-	ProtoFiles    *protoregistry.Files
-	Context       context.Context
-	Config        *ChainConfig
+	Context    context.Context
+	AppOptions autocli.AppOptions
+	ConfigDir  string
+	Chain      string
+	Config     *ChainConfig
+	ProtoFiles *protoregistry.Files
 }
 
 func NewChainInfo(configDir, chain string, config *ChainConfig) *ChainInfo {
 	return &ChainInfo{
-		ConfigDir: configDir,
-		Chain:     chain,
-		Config:    config,
 		Context:   context.Background(),
+		Config:    config,
+		Chain:     chain,
+		ConfigDir: configDir,
 	}
 }
 
@@ -123,22 +127,29 @@ func (c *ChainInfo) Load(reload bool) error {
 		}
 
 		autocliQueryClient := autocliv1.NewQueryClient(client)
-		appOptionsRes, err := autocliQueryClient.AppOptions(c.Context, &autocliv1.AppOptionsRequest{})
+		appOptsRes, err := autocliQueryClient.AppOptions(c.Context, &autocliv1.AppOptionsRequest{})
 		if err != nil {
-			appOptionsRes = guessAutocli(c.ProtoFiles)
+			appOptsRes = guessAutocli(c.ProtoFiles)
 		}
 
-		bz, err := proto.Marshal(appOptionsRes)
-		if err != nil {
-			return err
-		}
-
-		err = os.WriteFile(appOptsFilename, bz, 0o600)
+		addressPrefix, err := getAddressPrefix(c.Context, client)
 		if err != nil {
 			return err
 		}
 
-		c.ModuleOptions = appOptionsRes.ModuleOptions
+		bz, err := proto.Marshal(appOptsRes)
+		if err != nil {
+			return err
+		}
+
+		if err := os.WriteFile(appOptsFilename, bz, 0o600); err != nil {
+			return err
+		}
+
+		c.AppOptions = autocli.AppOptions{
+			ModuleOptions: appOptsRes.ModuleOptions,
+			AddressCodec:  addresscodec.NewBech32Codec(addressPrefix),
+		}
 	} else {
 		bz, err := os.ReadFile(appOptsFilename)
 		if err != nil {
@@ -146,12 +157,14 @@ func (c *ChainInfo) Load(reload bool) error {
 		}
 
 		var appOptsRes autocliv1.AppOptionsResponse
-		err = proto.Unmarshal(bz, &appOptsRes)
-		if err != nil {
+		if err := proto.Unmarshal(bz, &appOptsRes); err != nil {
 			return err
 		}
 
-		c.ModuleOptions = appOptsRes.ModuleOptions
+		c.AppOptions = autocli.AppOptions{
+			ModuleOptions: appOptsRes.ModuleOptions,
+			AddressCodec:  addresscodec.NewBech32Codec(c.Config.Bech32Prefix),
+		}
 	}
 
 	return nil
@@ -184,4 +197,19 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 	}
 
 	return nil, errors.Wrapf(res, "error loading gRPC client")
+}
+
+// getAddressPrefix returns the address prefix of the chain.
+func getAddressPrefix(ctx context.Context, conn grpc.ClientConnInterface) (string, error) {
+	reflectionClient := reflectionv2alpha1.NewReflectionServiceClient(conn)
+	resp, err := reflectionClient.GetConfigurationDescriptor(ctx, &reflectionv2alpha1.GetConfigurationDescriptorRequest{})
+	if err != nil {
+		return "", err
+	}
+
+	if resp == nil || resp.Config == nil || resp.Config.Bech32AccountAddressPrefix == "" {
+		return "", errors.New("bech32 account address prefix is not set")
+	}
+
+	return resp.Config.Bech32AccountAddressPrefix, nil
 }

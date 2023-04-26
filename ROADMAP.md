@@ -38,7 +38,7 @@ Welcome to the Cosmos SDK's team roadmap.
 
 ### Dev UX
 
-* [ ] [Release collections v1](https://github.com/cosmos/cosmos-sdk/issues/14300) 
+* [x] [Release collections v0.1](https://github.com/cosmos/cosmos-sdk/issues/14300) 
     * Collections is a new abstraction layer similar to the ORM. In the ADR phase it received support from many in the ecosystem. 
     * V1 release should allow modules to be migrated to collections.  
     * Migrate 3 modules to use collections api
@@ -46,7 +46,7 @@ Welcome to the Cosmos SDK's team roadmap.
 * [ ] [Release ORM v1](https://github.com/cosmos/cosmos-sdk/issues/11088)
 * [x] [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) 
     * Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up a audit before final release.
-* [ ] Core API
+* [x] Core API
     * [Merge ADR for Core API](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-063-core-module-api.md) 
     * Migrate three modules to use core api
 * [x] Module Dependency 
@@ -59,13 +59,13 @@ Welcome to the Cosmos SDK's team roadmap.
     * Come to consensus on module dependency graph for the future
     * Begin socializing conventions 
 * [ ] [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
-* [ ] [Auth module](https://github.com/cosmos/cosmos-sdk/issues/14900)
+* [x] [Auth module](https://github.com/cosmos/cosmos-sdk/issues/14900)
     * Produce a spec/ADR on a proposed new auth module. 
 * [x] [Implement Amino Json encoder](https://github.com/cosmos/cosmos-sdk/issues/10993)
 
 ### Testing
 
-* [ ] [integration testing framework](https://github.com/cosmos/cosmos-sdk/issues/14145) 
+* [x] [integration testing framework](https://github.com/cosmos/cosmos-sdk/issues/14145) 
     * design and merge a integration testing framework. 
     * The goals of the framework would that a module only needs to depend on modules that it depends on outside of testing, not all modules in the sdk like today.
 
@@ -74,7 +74,7 @@ Welcome to the Cosmos SDK's team roadmap.
 
 Issue: https://github.com/cosmos/cosmos-sdk/issues/12272
 
-* [ ] [ADR ABCI 2.0](https://github.com/cosmos/cosmos-sdk/issues/14674)
+* [x] [ADR ABCI 2.0](https://github.com/cosmos/cosmos-sdk/issues/14674)
     * Write ADR for integration of vote extensions & finalize block
 
 **Blocked**:
@@ -104,20 +104,20 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 ### Storage
 
-* Completion of Storage v2
-    * Goal is to complete the rewrite storage
+* [ ] Storage v2
+    * Goal is to get 60% of the way through the rewrite of storage
     * Begin testing the rewrite on mainnets if possible
     * External Audit
-* Optimistic Execution spec is merged and implementation has begun
+* [ ] Optimistic Execution spec is merged and implementation has begun
     * Goal is to have the spec merged and implementation started. 
-* Store Design should enable parallel execution of transactions. 
-    * Goal is to enable it but it may still require some work to complete it
 
 ### Client UX
 
-* Add signing support to hubl
+* [ ] Hubl/AutoCLI
     * Signing support is added to hubl
-    * Potentially integrating keystone (coordinate with Zondax)
+    * add module support, deprecate/remove legacy cli
+* [ ] [Consensus Key Rotation](https://github.com/cosmos/cosmos-sdk/issues/5231) 
+    * Merge pull request and updated ADR into main
 
 ### Dev UX
 
@@ -126,31 +126,43 @@ Issue: https://github.com/cosmos/iavl/issues/548
 * Adopt core api fully in modules
     * Goal is to remove the Cosmos SDK and Comet as a dependency from all modules
     * Release v1 of modules that have their dependency graph cleaned up
+* [ ] [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
+    * complete migration away from global bech32 usage
+* [ ] Make sdk.Msg only be `proto.message`
+    * [ ] [Make ValidateBasic Optional](https://github.com/cosmos/cosmos-sdk/issues/15648)
+    * [ ] [Make GetSigners be optional](https://github.com/cosmos/cosmos-sdk/issues/15677)
+    * [ ] 
 
 ### ABCI 2.0
 
-**Blocked**:
+* [ ] Integrate ABCI 2.0
 
-> once cometBFT has a release candidate of ABCI 2.0 (cmt 0.38)
+### Testing 
 
-* Integrate ABCI 2.0
+* [ ] [integration testing framework](https://github.com/cosmos/cosmos-sdk/issues/14145)
+    * Migrate modules to use the integration testing framework
 
 ### Modules
+
+* [ ] [Invariant Checking](https://github.com/cosmos/cosmos-sdk/issues/15706)
+    * design a new system for checking invairants
+    * implement changes
+    * audit current invariants
 
 * Governance
     * Make gov and groups composable with each other, not duplicate
 * Staking
     * Research a new staking design
     * Begin Implementation
-* Auth/Accounts v2
+* [ ] [Accounts](https://github.com/cosmos/cosmos-sdk/issues/14900)
     * Spec is merged 
     * Implementation is completed
-    * External Audit
+    * External Audit is scheduled
 
 ### Research
 
-* Feemarket Abstractions
-    * Spec on how to abstract fee markets to allow applications to write complex fee markets
+* Commitment Structure
+    * identify different commitment structures that could be used in the sdk and how they would be plugged (highlevel)
 
 ## Q3
 

@@ -53,7 +53,7 @@ func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAdd
 		accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
 	}
 
-	groupKeeper = groupkeeper.NewKeeper(runtime.NewKVStoreService(key), bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	groupKeeper = groupkeeper.NewKeeper(runtime.NewKVStoreService(key), encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
 	group.RegisterQueryServer(queryHelper, groupKeeper)

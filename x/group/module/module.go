@@ -266,6 +266,7 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 
 	k := keeper.NewKeeper(
 		in.KVStoreService,
+		in.Cdc,
 		in.MsgServiceRouter,
 		in.AccountKeeper,
 		group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen},

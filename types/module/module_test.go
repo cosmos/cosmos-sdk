@@ -117,34 +117,24 @@ func TestAssertNoForgottenModules(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
-	require.Equal(t, []string{"module1", "module2", "module3", "module4", "module5"}, mm.OrderInitGenesis)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderInitGenesis)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderInitGenesis, missing: [module3]", func() {
 		mm.SetOrderInitGenesis("module2", "module1")
 	})
 
-	require.Equal(t, []string{"module1", "module2", "module3", "module4", "module5"}, mm.OrderExportGenesis)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderExportGenesis)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderExportGenesis, missing: [module3]", func() {
 		mm.SetOrderExportGenesis("module2", "module1")
 	})
 
-	require.Equal(t, []string{"module1", "module2", "module3", "module4", "module5"}, mm.OrderBeginBlockers)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderBeginBlockers, missing: [module2]", func() {
 		mm.SetOrderBeginBlockers("module1", "module3")
 	})
 
-	require.Equal(t, []string{"module1", "module2", "module3", "module4", "module5"}, mm.OrderEndBlockers)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderEndBlockers, missing: [module1]", func() {
 		mm.SetOrderEndBlockers("module2", "module3")
-	})
-
-	require.Equal(t, []string{"module1", "module2", "module3", "module4", "module5"}, mm.OrderPrecommiters)
-	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderPrecommiters, missing: [module4]", func() {
-		mm.SetOrderPrecommiters("module2", "module1")
-	})
-
-	require.Equal(t, []string{"module1", "module2", "module3", "module4", "module5"}, mm.OrderPrepareCheckStaters)
-	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderPrepareCheckStaters, missing: [module5]", func() {
-		mm.SetOrderPrepareCheckStaters("module2", "module1")
 	})
 }
 

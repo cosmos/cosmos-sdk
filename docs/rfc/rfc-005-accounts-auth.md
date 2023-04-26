@@ -136,7 +136,7 @@ message MsgDeploy {
   string sender = 1;
   string kind = 2;
   google.Protobuf.Any init_message = 3;
-  repeated cosmos.base.v1beta1.Coin funds = 4 [(gogoproto.nullable) = false];
+  repeated google.Protobuf.Any authorize_messages = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgDeployResponse {
@@ -149,7 +149,7 @@ message MsgExecute {
   string sender = 1;
   string address = 2;
   google.Protobuf.Any message = 3;
-  repeated cosmos.base.v1beta1.Coin funds = 4 [(gogoproto.nullable) = false];
+  repeated google.Protobuf.Any authorize_messages = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgExecuteResponse {
@@ -167,6 +167,20 @@ that the account instantiation might produce.
 
 Sends a `StateTransition` execution request, where the state transition is represented by the `message` which is a `google.Protobuf.Any`.
 The account can then decide if to process it or not based on the `sender`.
+
+#### Authorize Messages
+
+The `Deploy` and `Execute` messages have a field in common called `authorize_messages`, these messages are messages that the account
+can execute on behalf of the sender. For example, in case an account is expecting some funds to be sent from the sender,
+the sender can attach a `MsgSend` that the account can execute on the sender's behalf. These authorizations are short-lived,
+they live only for the duration of the `Deploy` or `Execute` message execution, or until they are consumed.
+
+An alternative would have been to add a `funds` field, like it happens in cosmwasm, which guarantees the called contract that
+the funds are available and sent in the context of the message execution. This would have been a simpler approach, but it would
+have been limited to the context of `MsgSend` only, where the asset is `sdk.Coins`. The proposed generic way, instead, allows
+the account to execute any message on behalf of the sender, which is more flexible, it could include NFT send execution, or 
+more complex things like `MsgMultiSend` or `MsgDelegate`, etc.
+
 
 ### Further discussion
 

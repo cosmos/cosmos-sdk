@@ -138,3 +138,9 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+// TODO: remove after merge of https://github.com/cosmos/cosmos-sdk/pull/15873 and tagging releases
+replace (
+	github.com/cosmos/cosmos-sdk => ../..
+	cosmossdk.io/x/tx => ../../x/tx
+)

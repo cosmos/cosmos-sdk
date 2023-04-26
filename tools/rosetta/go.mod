@@ -138,8 +138,3 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// this seems to be required
-replace github.com/cosmos/cosmos-sdk => ../..
-// TODO: replace after release 0.6.2
-replace cosmossdk.io/x/tx => ../../x/tx

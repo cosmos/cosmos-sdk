@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 )
 
 // environment variable names
@@ -28,6 +29,8 @@ const (
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 	EnvDisableLogs          = "COSMOVISOR_DISABLE_LOGS"
+	EnvColorLogs            = "COSMOVISOR_COLOR_LOGS"
+	EnvTimeFormatLogs       = "COSMOVISOR_TIMEFORMAT_LOGS"
 )
 
 const (
@@ -52,6 +55,8 @@ type Config struct {
 	DataBackupPath        string
 	PreupgradeMaxRetries  int
 	DisableLogs           bool
+	ColorLogs             bool
+	TimeFormatLogs        string
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -160,6 +165,12 @@ func GetConfigFromEnv() (*Config, error) {
 		errs = append(errs, err)
 	}
 	if cfg.DisableLogs, err = booleanOption(EnvDisableLogs, false); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.ColorLogs, err = booleanOption(EnvColorLogs, true); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.TimeFormatLogs, err = timeFormatOptionFromEnv(EnvTimeFormatLogs, time.Kitchen); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -361,6 +372,43 @@ func booleanOption(name string, defaultVal bool) (bool, error) {
 	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
 }
 
+// checks and validates env option
+func timeFormatOptionFromEnv(env, defaultVal string) (string, error) {
+	val, set := os.LookupEnv(env)
+	if !set {
+		return defaultVal, nil
+	}
+	switch val {
+	case "layout":
+		return time.Layout, nil
+	case "ansic":
+		return time.ANSIC, nil
+	case "unixdate":
+		return time.UnixDate, nil
+	case "rubydate":
+		return time.RubyDate, nil
+	case "rfc822":
+		return time.RFC822, nil
+	case "rfc822z":
+		return time.RFC822Z, nil
+	case "rfc850":
+		return time.RFC850, nil
+	case "rfc1123":
+		return time.RFC1123, nil
+	case "rfc1123z":
+		return time.RFC1123Z, nil
+	case "rfc3339":
+		return time.RFC3339, nil
+	case "rfc3339nano":
+		return time.RFC3339Nano, nil
+	case "kitchen":
+		return time.Kitchen, nil
+	case "":
+		return "", nil
+	}
+	return "", fmt.Errorf("env variable %q must have a timeformat value (\"layout|ansic|unixdate|rubydate|rfc822|rfc822z|rfc850|rfc1123|rfc1123z|rfc3339|rfc3339nano|kitchen\"), got %q", EnvTimeFormatLogs, val)
+}
+
 // DetailString returns a multi-line string with details about this config.
 func (cfg Config) DetailString() string {
 	configEntries := []struct{ name, value string }{
@@ -374,6 +422,8 @@ func (cfg Config) DetailString() string {
 		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
 		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
+		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
+		{EnvTimeFormatLogs, fmt.Sprintf("%s", cfg.TimeFormatLogs)},
 	}
 
 	derivedEntries := []struct{ name, value string }{

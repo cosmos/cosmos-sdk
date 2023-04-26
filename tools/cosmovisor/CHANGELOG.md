@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Features
 
+* [#15972](https://github.com/cosmos/cosmos-sdk/pull/15972) Extend `cosmovisor` configuration with new log format options
 * [#15361](https://github.com/cosmos/cosmos-sdk/pull/15361) Add `cosmovisor config` command to display the configuration used by cosmovisor.
 
 ## Client Breaking Changes

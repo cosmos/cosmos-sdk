@@ -1,10 +1,13 @@
 package main
 
 import (
+	"os"
+
 	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 var runCmd = &cobra.Command{
@@ -24,10 +27,15 @@ func Run(cmd *cobra.Command, args []string, options ...RunOption) error {
 		return err
 	}
 
-	logger := cmd.Context().Value(log.ContextKey).(log.Logger)
-
+	var logger log.Logger
 	if cfg.DisableLogs {
 		logger = log.NewCustomLogger(zerolog.Nop())
+	} else {
+		logger = log.NewLogger(
+			os.Stdout,
+			log.ColorOption(cfg.ColorLogs),
+			log.TimeFormatOption(cfg.TimeFormatLogs),
+		).With(log.ModuleKey, "cosmovisor")
 	}
 
 	runCfg := DefaultRunConfig

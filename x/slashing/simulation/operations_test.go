@@ -111,7 +111,7 @@ func (suite *SimTestSuite) SetupTest() {
 	for _, account := range suite.accounts {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins))
+		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 
 	suite.mintKeeper.SetParams(suite.ctx, minttypes.DefaultParams())

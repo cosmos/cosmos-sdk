@@ -121,7 +121,7 @@ func (s *paginationTestSuite) TestPagination() {
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.ctx, addr1, balances))
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 
 	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}
@@ -229,7 +229,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.ctx, addr1, balances))
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 
 	s.T().Log("verify paginate with custom limit and countTotal, Reverse false")
 	pageReq := &query.PageRequest{Limit: 2, CountTotal: true, Reverse: true, Key: nil}
@@ -348,7 +348,7 @@ func (s *paginationTestSuite) TestPaginate() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
-	err := testutil.FundAccount(s.bankKeeper, s.ctx, addr1, balances)
+	err := testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances)
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}

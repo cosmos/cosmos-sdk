@@ -1,11 +1,13 @@
 package v3
 
 import (
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
@@ -18,8 +20,8 @@ import (
 // - Migrate coin storage to save only amount.
 // - Add an additional reverse index from denomination to address.
 // - Remove duplicate denom from denom metadata store key.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
-	store := ctx.KVStore(storeKey)
+func MigrateStore(ctx sdk.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 	err := addDenomReverseIndex(store, cdc, ctx.Logger())
 	if err != nil {
 		return err

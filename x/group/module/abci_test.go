@@ -133,11 +133,11 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 
 	groupPolicyAddr, err := s.addressCodec.StringToBytes(policyRes.Address)
 	s.Require().NoError(err)
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, ctx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	groupPolicyAddr2, err := s.addressCodec.StringToBytes(policyRes2.Address)
 	s.Require().NoError(err)
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, ctx, groupPolicyAddr2, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr2, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	votingPeriod := policy.GetVotingPeriod()
 
@@ -169,7 +169,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -185,7 +185,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -201,7 +201,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -216,7 +216,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -236,7 +236,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().Error(err) // since proposal with status Aborted cannot be executed
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},

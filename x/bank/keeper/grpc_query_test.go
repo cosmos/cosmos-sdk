@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
 
 	res, err = queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	origCoins := sdk.NewCoins(fooCoins, barCoins, ibcCoins)
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
 
 	addIBCMetadata(ctx, suite.bankKeeper)
 
@@ -121,8 +121,9 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 }
 
 func (suite *KeeperTestSuite) TestSpendableBalances() {
-	ctx := suite.ctx
 	_, _, addr := testdata.KeyTestPubAddr()
+
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	ctx = ctx.WithBlockTime(time.Now())
 	queryClient := suite.mockQueryClient(ctx)
 
@@ -155,7 +156,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	)
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for some tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
@@ -172,8 +173,9 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 }
 
 func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
-	ctx := suite.ctx
 	_, _, addr := testdata.KeyTestPubAddr()
+
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	ctx = ctx.WithBlockTime(time.Now())
 	queryClient := suite.mockQueryClient(ctx)
 
@@ -201,7 +203,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	)
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for half of the tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))

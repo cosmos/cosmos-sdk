@@ -10,9 +10,9 @@ require (
 	cosmossdk.io/log v1.0.0
 	cosmossdk.io/math v1.0.0
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
-	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664
+	github.com/cometbft/cometbft v0.37.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230425130609-df76824016cf
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230426101247-6dfe7351a5c2
 	github.com/cosmos/gogoproto v1.4.8
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3

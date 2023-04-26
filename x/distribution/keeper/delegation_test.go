@@ -72,7 +72,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// end period
-	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// historical count should be 2 still
 	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
@@ -156,7 +156,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// end period
-	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
 	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
@@ -255,7 +255,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// end period
-	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
 	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
@@ -398,7 +398,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
-	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards for del1
 	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del0, endingPeriod)
@@ -542,7 +542,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// end period
-	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
 	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
@@ -715,7 +715,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// end period
-	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards for del1
 	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
@@ -843,7 +843,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	// end period
-	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards for del1
 	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)

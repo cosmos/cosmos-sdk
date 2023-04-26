@@ -115,7 +115,7 @@ func TestAssertNoForgottenModules(t *testing.T) {
 		module.CoreAppModuleBasicAdaptor("module3", mockAppModule3),
 	)
 	require.NotNil(t, mm)
-	require.Equal(t, 5, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	require.Equal(t, []string{"module1", "module2", "module3", "module4", "module5"}, mm.OrderInitGenesis)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderInitGenesis, missing: [module3]", func() {

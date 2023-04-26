@@ -115,6 +115,10 @@ func (s StdTxConfig) TxDecoder() sdk.TxDecoder {
 	return mkDecoder(s.Cdc.Unmarshal)
 }
 
+func (s StdTxConfig) SetTxDecoder(t sdk.TxDecoder) {
+	// no-op
+}
+
 func (s StdTxConfig) TxJSONEncoder() sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return s.Cdc.MarshalJSON(tx)

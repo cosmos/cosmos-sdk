@@ -67,6 +67,10 @@ func (g config) TxDecoder() sdk.TxDecoder {
 	return g.decoder
 }
 
+func (g *config) SetTxDecoder(decoder sdk.TxDecoder) {
+	g.decoder = decoder
+}
+
 func (g config) TxJSONEncoder() sdk.TxEncoder {
 	return g.jsonEncoder
 }

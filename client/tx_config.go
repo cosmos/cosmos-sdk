@@ -1,6 +1,7 @@
 package client
 
 import (
+	txsigning "cosmossdk.io/x/tx/signing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -27,7 +28,7 @@ type (
 
 		NewTxBuilder() TxBuilder
 		WrapTxBuilder(sdk.Tx) (TxBuilder, error)
-		SignModeHandler() signing.SignModeHandler
+		SignModeHandler() *txsigning.HandlerMap
 	}
 
 	// TxBuilder defines an interface which an application-defined concrete transaction

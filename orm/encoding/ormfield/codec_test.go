@@ -4,19 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
-	"time"
-
-	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
+	"cosmossdk.io/orm/encoding/ormfield"
+	"cosmossdk.io/orm/internal/testutil"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 func TestCodec(t *testing.T) {
@@ -108,11 +103,12 @@ func TestCompactUInt32(t *testing.T) {
 		by := ormfield.EncodeCompactUint32(y)
 
 		cmp := bytes.Compare(bx, by)
-		if x < y {
+		switch {
+		case x < y:
 			assert.Equal(t, -1, cmp)
-		} else if x == y {
+		case x == y:
 			assert.Equal(t, 0, cmp)
-		} else {
+		default:
 			assert.Equal(t, 1, cmp)
 		}
 
@@ -156,11 +152,12 @@ func TestCompactUInt64(t *testing.T) {
 		by := ormfield.EncodeCompactUint64(y)
 
 		cmp := bytes.Compare(bx, by)
-		if x < y {
+		switch {
+		case x < y:
 			assert.Equal(t, -1, cmp)
-		} else if x == y {
+		case x == y:
 			assert.Equal(t, 0, cmp)
-		} else {
+		default:
 			assert.Equal(t, 1, cmp)
 		}
 
@@ -171,36 +168,4 @@ func TestCompactUInt64(t *testing.T) {
 		assert.NilError(t, err)
 		assert.Equal(t, y, y2)
 	})
-}
-
-func TestTimestamp(t *testing.T) {
-	cdc := ormfield.TimestampCodec{}
-
-	// nil value
-	buf := &bytes.Buffer{}
-	assert.NilError(t, cdc.Encode(protoreflect.Value{}, buf))
-	assert.Equal(t, 1, len(buf.Bytes()))
-	val, err := cdc.Decode(buf)
-	assert.NilError(t, err)
-	assert.Assert(t, !val.IsValid())
-
-	// no nanos
-	ts := timestamppb.New(time.Date(2022, 1, 1, 12, 30, 15, 0, time.UTC))
-	val = protoreflect.ValueOfMessage(ts.ProtoReflect())
-	buf = &bytes.Buffer{}
-	assert.NilError(t, cdc.Encode(val, buf))
-	assert.Equal(t, 6, len(buf.Bytes()))
-	val2, err := cdc.Decode(buf)
-	assert.NilError(t, err)
-	assert.Equal(t, 0, cdc.Compare(val, val2))
-
-	// nanos
-	ts = timestamppb.New(time.Date(2022, 1, 1, 12, 30, 15, 235809753, time.UTC))
-	val = protoreflect.ValueOfMessage(ts.ProtoReflect())
-	buf = &bytes.Buffer{}
-	assert.NilError(t, cdc.Encode(val, buf))
-	assert.Equal(t, 9, len(buf.Bytes()))
-	val2, err = cdc.Decode(buf)
-	assert.NilError(t, err)
-	assert.Equal(t, 0, cdc.Compare(val, val2))
 }

@@ -37,10 +37,10 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // BondedRatio mocks base method.
-func (m *MockStakingKeeper) BondedRatio(ctx types.Context) types.Dec {
+func (m *MockStakingKeeper) BondedRatio(ctx types.Context) math.LegacyDec {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BondedRatio", ctx)
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(math.LegacyDec)
 	return ret0
 }
 
@@ -151,7 +151,7 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // MintCoins mocks base method.
-func (m *MockBankKeeper) MintCoins(ctx types.Context, name string, amt types.Coins) error {
+func (m *MockBankKeeper) MintCoins(ctx context.Context, name string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MintCoins", ctx, name, amt)
 	ret0, _ := ret[0].(error)
@@ -165,7 +165,7 @@ func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, name, amt interface{}) *gom
 }
 
 // SendCoinsFromModuleToAccount mocks base method.
-func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromModuleToAccount", ctx, senderModule, recipientAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -179,7 +179,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 }
 
 // SendCoinsFromModuleToModule mocks base method.
-func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx types.Context, senderModule, recipientModule string, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromModuleToModule", ctx, senderModule, recipientModule, amt)
 	ret0, _ := ret[0].(error)

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
@@ -25,7 +27,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 )
@@ -64,7 +65,11 @@ func initFixture(t assert.TestingT) *fixture {
 	f := &fixture{}
 	var evidenceKeeper keeper.Keeper
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&evidenceKeeper,
 		&f.interfaceRegistry,
 		&f.accountKeeper,
@@ -100,7 +105,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
-	staking.EndBlocker(ctx, f.stakingKeeper)
+	f.stakingKeeper.EndBlocker(f.ctx)
 	assert.DeepEqual(t,
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),
@@ -172,7 +177,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
-	staking.EndBlocker(ctx, f.stakingKeeper)
+	f.stakingKeeper.EndBlocker(f.ctx)
 	assert.DeepEqual(t,
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(amt))),

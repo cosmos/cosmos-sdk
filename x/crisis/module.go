@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -199,7 +200,8 @@ type ModuleInputs struct {
 	Cdc     codec.Codec
 	AppOpts servertypes.AppOptions `optional:"true"`
 
-	BankKeeper types.SupplyKeeper
+	BankKeeper   types.SupplyKeeper
+	AddressCodec address.Codec
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -236,6 +238,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		feeCollectorName,
 		authority.String(),
+		in.AddressCodec,
 	)
 
 	var skipGenesisInvariants bool

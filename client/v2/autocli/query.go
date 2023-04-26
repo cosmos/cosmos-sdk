@@ -16,24 +16,11 @@ import (
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
-func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
+func (b *Builder) BuildQueryCommand(appOptions AppOptions, customCmds map[string]*cobra.Command, enhanceQuery enhanceCommandFunc) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
 
-	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
-		txQueryDesc := modOpts.Query
-		if txQueryDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
-			err := b.AddQueryServiceCommands(subCmd, txQueryDesc)
-			if err != nil {
-				return err
-			}
-
-			cmd.AddCommand(subCmd)
-		}
-		return nil
-	}
-	if err := b.enhanceCommandCommon(queryCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
+	if err := b.enhanceCommandCommon(queryCmd, appOptions, customCmds, enhanceQuery); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +86,6 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		}
 
 		cmd.AddCommand(methodCmd)
-
 	}
 
 	return nil

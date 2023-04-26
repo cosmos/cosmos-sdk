@@ -7,14 +7,15 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -439,7 +440,9 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
 				var result sdk.TxResponse
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().NotNil(result.Height)
-				s.Require().Contains(result.RawLog, tc.rawLogContains)
+				if ok := s.deepContains(result.Events, tc.rawLogContains); !ok {
+					s.Require().Fail("raw log does not contain the expected value, expected value: %s", tc.rawLogContains)
+				}
 			}
 		})
 	}
@@ -1251,7 +1254,7 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	defer filename.Close()
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
-	queryResJSON, err := authclitestutil.QueryAccountExec(val.ClientCtx, addr)
+	queryResJSON, err := authclitestutil.QueryAccountExec(val.ClientCtx, addr, address.NewBech32Codec("cosmos"))
 	s.Require().NoError(err)
 	var account sdk.AccountI
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
@@ -1319,7 +1322,7 @@ func (s *E2ETestSuite) TestGetAccountCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			out, err := authclitestutil.QueryAccountExec(clientCtx, tc.address)
+			out, err := authclitestutil.QueryAccountExec(clientCtx, tc.address, address.NewBech32Codec("cosmos"))
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
@@ -1509,7 +1512,7 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	sigV2 := signing.SignatureV2{
 		PubKey: val1.PubKey,
 		Data: &signing.SingleSignatureData{
-			SignMode:  txCfg.SignModeHandler().DefaultMode(),
+			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: nil,
 		},
 	}
@@ -1959,4 +1962,15 @@ func (s *E2ETestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress
 	s.Require().NoError(err)
 	startTokens := balRes.Balances.AmountOf(denom)
 	return startTokens
+}
+
+func (s *E2ETestSuite) deepContains(events []abci.Event, value string) bool {
+	for _, e := range events {
+		for _, attr := range e.Attributes {
+			if strings.Contains(attr.Value, value) {
+				return true
+			}
+		}
+	}
+	return false
 }

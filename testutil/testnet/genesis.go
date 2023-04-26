@@ -1,12 +1,14 @@
 package testnet
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	cmttypes "github.com/cometbft/cometbft/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -14,6 +16,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -109,17 +115,20 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 	if err != nil {
 		panic(err)
 	}
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
+
+	if err := msg.Validate(); err != nil {
 		panic(err)
 	}
 
+<<<<<<< HEAD
 	msg.DelegatorAddress = sdk.AccAddress(valAddr).String()
 
 	if err := msg.ValidateBasic(); err != nil {
 		panic(err)
 	}
 
+=======
+>>>>>>> main
 	txConf := authtx.NewTxConfig(b.codec, authtx.DefaultSignModes)
 
 	txb := txConf.NewTxBuilder()
@@ -144,7 +153,9 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 	}
 
 	// Generate bytes to be signed.
-	bytesToSign, err := txConf.SignModeHandler().GetSignBytes(
+	bytesToSign, err := authsigning.GetSignBytesAdapter(
+		context.Background(),
+		txConf.SignModeHandler(),
 		signing.SignMode_SIGN_MODE_DIRECT,
 		authsigning.SignerData{
 			ChainID: b.chainID,

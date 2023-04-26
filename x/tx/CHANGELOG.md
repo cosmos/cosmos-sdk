@@ -33,6 +33,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking
 
+* [#15709](https://github.com/cosmos/cosmos-sdk/pull/15709):
+  * `GetSignersContext` has been renamed to `signing.Context`
+  * `GetSigners` now returns `[][]byte` instead of `[]string`
+  * `GetSignersOptions` has been renamed to `signing.Options` and requires `address.Codec`s for account and validator addresses
+  * `GetSignersOptions.ProtoFiles` has been renamed to `signing.Options.FileResolver`
+
+### Bug Fixes
+* [#15849](https://github.com/cosmos/cosmos-sdk/pull/15849) Fix int64 usage for 32 bit platforms.
+
+## v0.5.1
+
+### Features
+
+* [#15414](https://github.com/cosmos/cosmos-sdk/pull/15414) Add basic transaction decoding support.
+
+## v0.5.0
+
+### API Breaking
+
 * [#15581](https://github.com/cosmos/cosmos-sdk/pull/15581) `GetSignersOptions` and `directaux.SignModeHandlerOptions` now
 require a `signing.ProtoFileResolver` interface instead of `protodesc.Resolver`.
 * [#15742](https://github.com/cosmos/cosmos-sdk/pull/15742) The `direct_aux` package has been renamed to `directaux` in line with Go conventions. No other types were changed during the package rename.

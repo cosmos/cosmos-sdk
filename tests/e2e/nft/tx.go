@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -92,6 +93,7 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 func (s *E2ETestSuite) TestCLITxSend() {
+	cmd := cli.NewCmdSend()
 	val := s.network.Validators[0]
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
@@ -122,10 +124,8 @@ func (s *E2ETestSuite) TestCLITxSend() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 			args = append(args, tc.args...)
-			out, err := ExecSend(
-				val,
-				args,
-			)
+
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

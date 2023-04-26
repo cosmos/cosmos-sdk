@@ -7,6 +7,7 @@ import (
 )
 
 // SetParams sets the gov module's parameters.
+// CONTRACT: This method performs no validation of the parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params v1.Params) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)

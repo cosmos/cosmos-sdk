@@ -1,10 +1,11 @@
 package flag
 
 import (
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	"cosmossdk.io/core/address"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.
@@ -23,10 +24,8 @@ type Builder struct {
 	messageFlagTypes map[protoreflect.FullName]Type
 	scalarFlagTypes  map[string]Type
 
-	// AddressPrefix is the prefix for the address flag
-	AddressPrefix string
-	// reflectionClient is the reflection client for the address flag
-	GetClientConn func() (grpc.ClientConnInterface, error)
+	// AddressCodec is the address codec used for the address flag
+	AddressCodec address.Codec
 }
 
 func (b *Builder) init() {

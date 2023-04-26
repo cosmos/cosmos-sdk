@@ -41,9 +41,7 @@ var InitTokens = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 type fixture struct {
 	app *integration.App
 
-	ctx  sdk.Context
-	cdc  codec.Codec
-	keys map[string]*storetypes.KVStoreKey
+	ctx sdk.Context
 
 	bankKeeper     bankkeeper.Keeper
 	slashingKeeper slashingkeeper.Keeper
@@ -85,7 +83,7 @@ func initFixture(t testing.TB) *fixture {
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
-		keys[banktypes.StoreKey],
+		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
@@ -113,7 +111,7 @@ func initFixture(t testing.TB) *fixture {
 
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
 	slashingKeeper.SetParams(sdkCtx, testutil.TestParams())
-	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 5, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
+	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 6, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
 
 	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3), time.Unix(2, 0), false, int64(10))
 	info2 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4), time.Unix(2, 0), false, int64(10))
@@ -124,8 +122,6 @@ func initFixture(t testing.TB) *fixture {
 	return &fixture{
 		app:            integrationApp,
 		ctx:            sdkCtx,
-		cdc:            cdc,
-		keys:           keys,
 		bankKeeper:     bankKeeper,
 		slashingKeeper: slashingKeeper,
 		stakingKeeper:  stakingKeeper,
@@ -141,8 +137,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	p.MaxValidators = 5
 	f.stakingKeeper.SetParams(f.ctx, p)
 
-	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 6, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 200))
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(f.addrDels)
 	pks := simtestutil.CreateTestPubKeys(6)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 
@@ -217,8 +212,7 @@ func TestHandleNewValidator(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 1, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 0))
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(f.addrDels)
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
@@ -265,8 +259,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	addrDels := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 1, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 200))
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(f.addrDels)
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
 	power := int64(100)

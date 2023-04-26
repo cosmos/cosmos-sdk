@@ -27,14 +27,25 @@ type config struct {
 	protoCodec  codec.ProtoCodecMarshaler
 }
 
+// ConfigOptions define the configuration of a TxConfig when calling NewTxConfigWithOptions.
+// An empty struct is a valid configuration and will result in a TxConfig with default values.
 type ConfigOptions struct {
-	SigningHandler             *txsigning.HandlerMap
-	SigningContext             *txsigning.Context
-	EnabledSignModes           []signingtypes.SignMode
-	TypeResolver               protoregistry.MessageTypeResolver
-	FileResolver               txsigning.ProtoFileResolver
-	AddressCodec               address.Codec
-	ValidatorCodec             address.Codec
+	// If SigningHandler is specified it will be used instead constructing one.
+	SigningHandler *txsigning.HandlerMap
+	// If SigningContext is specified it will be used when constructing sign mode handlers.
+	SigningContext *txsigning.Context
+	// EnabledSignModes is the list of sign modes that will be enabled in the txsigning.HandlerMap.
+	EnabledSignModes []signingtypes.SignMode
+	// TypeResolver is the protobuf message type resolver that will be used when constructing sign mode handlers.
+	TypeResolver protoregistry.MessageTypeResolver
+	// FileResolver is the protobuf file resolver that will be used when constructing a txsigning.Context.
+	FileResolver txsigning.ProtoFileResolver
+	// AddressCodec is the address codec that will be used when constructing a txsigning.Context.
+	AddressCodec address.Codec
+	// ValidatorCodec is the validator address codec that will be used when constructing a txsigning.Context.
+	ValidatorCodec address.Codec
+	// TextualCoinMetadataQueryFn is the function that will be used to query coin metadata when constructing
+	// textual sign mode handler. This is required if SIGN_MODE_TEXTUAL is enabled.
 	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
 }
 

@@ -21,7 +21,7 @@ import (
 //	var autoCliOpts autocli.AppOptions
 //	err := depinject.Inject(appConfig, &encodingConfig.InterfaceRegistry, &autoCliOpts)
 //
-// If depinject isn't used, options can be provided manually or extracted from modules and the address codec is provided by the auth keeper.
+// If depinject isn't used, options can be provided manually or extracted from modules and the address codec can be provided by the auth keeper.
 // One method for extracting autocli options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
 type AppOptions struct {
 	depinject.In

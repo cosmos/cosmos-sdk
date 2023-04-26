@@ -47,7 +47,13 @@ type Misbehavior interface {
 // CommitInfo is the commit information of ABCI
 type CommitInfo interface {
 	Round() int32
-	Votes() []VoteInfo
+	Votes() VoteInfos
+}
+
+// VoteInfos is an interface to get specific votes in a efficient way
+type VoteInfos interface {
+	Len() int
+	Get(int) VoteInfo
 }
 
 // VoteInfo is the vote information of ABCI

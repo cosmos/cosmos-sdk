@@ -53,16 +53,23 @@ func (c commitInfoWrapper) Round() int32 {
 	return c.CommitInfo.Round
 }
 
-func (c commitInfoWrapper) Votes() []comet.VoteInfo {
-	return voteInfoWrapperList(c.CommitInfo.Votes)
+func (c commitInfoWrapper) Votes() comet.VoteInfos {
+	return abciVoteInfoWrapper{c.CommitInfo.Votes}
 }
 
-func voteInfoWrapperList(votes []abci.VoteInfo) []comet.VoteInfo {
-	voteInfos := make([]comet.VoteInfo, len(votes))
-	for i, v := range votes {
-		voteInfos[i] = voteInfoWrapper{v}
-	}
-	return voteInfos
+// abciVoteInfoWrapper is a wrapper around abci.VoteInfo that implements VoteInfos interface
+type abciVoteInfoWrapper struct {
+	votes []abci.VoteInfo
+}
+
+var _ comet.VoteInfos = (*abciVoteInfoWrapper)(nil)
+
+func (e abciVoteInfoWrapper) Len() int {
+	return len(e.votes)
+}
+
+func (e abciVoteInfoWrapper) Get(i int) comet.VoteInfo {
+	return voteInfoWrapper{e.votes[i]}
 }
 
 // voteInfoWrapper is a wrapper around abci.VoteInfo that implements VoteInfo interface
@@ -153,16 +160,22 @@ func (e extendedCommitInfoWrapper) Round() int32 {
 	return e.ExtendedCommitInfo.Round
 }
 
-func (e extendedCommitInfoWrapper) Votes() []comet.VoteInfo {
-	return extendedVoteInfoWrapperList(e.ExtendedCommitInfo.Votes)
+func (e extendedCommitInfoWrapper) Votes() comet.VoteInfos {
+	return extendedVoteInfoWrapperList{e.ExtendedCommitInfo.Votes}
 }
 
-func extendedVoteInfoWrapperList(votes []abci.ExtendedVoteInfo) []comet.VoteInfo {
-	voteInfos := make([]comet.VoteInfo, len(votes))
-	for i, v := range votes {
-		voteInfos[i] = extendedVoteInfoWrapper{v}
-	}
-	return voteInfos
+type extendedVoteInfoWrapperList struct {
+	votes []abci.ExtendedVoteInfo
+}
+
+var _ comet.VoteInfos = (*extendedVoteInfoWrapperList)(nil)
+
+func (e extendedVoteInfoWrapperList) Len() int {
+	return len(e.votes)
+}
+
+func (e extendedVoteInfoWrapperList) Get(i int) comet.VoteInfo {
+	return extendedVoteInfoWrapper{e.votes[i]}
 }
 
 type extendedVoteInfoWrapper struct {

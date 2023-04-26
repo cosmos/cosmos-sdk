@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -11,7 +12,7 @@ import (
 )
 
 // InitGenesis initializes the bank module's state from a given genesis state.
-func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
+func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisState) {
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
@@ -51,7 +52,7 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 }
 
 // ExportGenesis returns the bank module's genesis state.
-func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+func (k BaseKeeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	totalSupply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: query.MaxLimit})
 	if err != nil {
 		panic(fmt.Errorf("unable to fetch total supply %v", err))

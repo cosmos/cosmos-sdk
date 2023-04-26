@@ -1,17 +1,17 @@
-# Cosmos SDK v0.47.1 Release Notes
+# Cosmos SDK v0.47.2 Release Notes
 
 💬 [**Release Discussion**](https://github.com/cosmos/community)
 
 ## 📝 Changelog
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.1/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/release/v0.47.0...v0.47.1) from last release.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.2/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/release/v0.47.1...v0.47.2) from last release.
 
 Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release/v0.47.x/UPGRADING.md) when migrating from `v0.46.x` to `v0.47.0`.
 
 ## 🚀 Highlights
 
-This is the first patch release for the `v0.47.x` line. Missed the v0.47.0 announcement? Read it [here](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0).
+For this second patch release of the `v0.47.x` line, we focused on fixing bugs and improving the developer experience.
+Missed the v0.47.0 announcement? Read it [here](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0).
 
-It includes sweet things we could not include in `v0.47.0` due to the feature freeze.
-
-Notably, it introduces a new `x/group` query for listing of all groups on a chain and a `x/gov` helper function for commands to use when the command is for submitting a governance proposal.
+Notably, [a fix](https://github.com/cosmos/cosmos-sdk/pull/15683) for loading archival states (thank you @catShaark).
+Additionally, the release fixes an issue where querying previous block heights would return an incorrect timestamp.

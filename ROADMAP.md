@@ -118,6 +118,8 @@ Issue: https://github.com/cosmos/iavl/issues/548
     * add module support, deprecate/remove legacy cli
 * [ ] [Consensus Key Rotation](https://github.com/cosmos/cosmos-sdk/issues/5231) 
     * Merge pull request and updated ADR into main
+* [ ] [Operator key rotation](https://github.com/cosmos/cosmos-sdk/issues/3863)
+    * add support to rotate operator keys
 
 ### Dev UX
 
@@ -131,7 +133,10 @@ Issue: https://github.com/cosmos/iavl/issues/548
 * [ ] Make sdk.Msg only be `proto.message`
     * [ ] [Make ValidateBasic Optional](https://github.com/cosmos/cosmos-sdk/issues/15648)
     * [ ] [Make GetSigners be optional](https://github.com/cosmos/cosmos-sdk/issues/15677)
-    * [ ] 
+* [ ] [Collections](https://github.com/cosmos/cosmos-sdk/issues/14300) 
+    * continue migrating modules
+    * Add query support
+    * Add schema support
 
 ### ABCI 2.0
 
@@ -148,21 +153,17 @@ Issue: https://github.com/cosmos/iavl/issues/548
     * design a new system for checking invairants
     * implement changes
     * audit current invariants
-
-* Governance
-    * Make gov and groups composable with each other, not duplicate
-* Staking
-    * Research a new staking design
-    * Begin Implementation
 * [ ] [Accounts](https://github.com/cosmos/cosmos-sdk/issues/14900)
-    * Spec is merged 
     * Implementation is completed
     * External Audit is scheduled
 
 ### Research
 
-* Commitment Structure
+* [ ] Commitment Structure
     * identify different commitment structures that could be used in the sdk and how they would be plugged (highlevel)
+* [ ] Cross lang
+    * What is needed to support many languages
+    * Encoding of passing between the cgo/ffi boundry
 
 ## Q3
 
@@ -181,9 +182,11 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 ### Modules
 
+* Governance
+    * Make gov and groups composable with each other, not duplicate
 * Staking
-    * Complete staking redesign 
-    * External Audit 
+    * Research a new staking design
+    * Begin Implementation
 
 
 ### Research

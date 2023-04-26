@@ -53,7 +53,7 @@ func SetupUnbondingTests(t *testing.T, app *simapp.SimApp, ctx sdk.Context, hook
 	bondDenom = app.StakingKeeper.BondDenom(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	assert.NilError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, app.BankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 	app.BankKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, types.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, startTokens)))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 

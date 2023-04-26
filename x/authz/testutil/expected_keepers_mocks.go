@@ -129,7 +129,7 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // IsSendEnabledCoins mocks base method.
-func (m *MockBankKeeper) IsSendEnabledCoins(ctx types.Context, coins ...types.Coin) error {
+func (m *MockBankKeeper) IsSendEnabledCoins(ctx context.Context, coins ...types.Coin) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx}
 	for _, a := range coins {
@@ -148,7 +148,7 @@ func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoins(ctx interface{}, coins 
 }
 
 // SpendableCoins mocks base method.
-func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableCoins", ctx, addr)
 	ret0, _ := ret[0].(types.Coins)

@@ -150,7 +150,7 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 
 	// set module account coins
 	distrAcc := suite.distrKeeper.GetDistributionAccount(suite.ctx)
-	suite.Require().NoError(banktestutil.FundModuleAccount(suite.bankKeeper, suite.ctx, distrAcc.GetName(), sdk.NewCoins(
+	suite.Require().NoError(banktestutil.FundModuleAccount(suite.ctx, suite.bankKeeper, distrAcc.GetName(), sdk.NewCoins(
 		sdk.NewCoin(tokenName, math.NewInt(10)),
 		sdk.NewCoin("stake", math.NewInt(5)),
 	)))
@@ -269,7 +269,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	for _, account := range accounts {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins))
+		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 
 	return accounts

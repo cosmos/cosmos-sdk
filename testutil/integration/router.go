@@ -45,22 +45,22 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, req cmtabcitypes.RequestInitChain) (cmtabcitypes.ResponseInitChain, error) {
+	bApp.SetInitChainer(func(ctx sdk.Context, req *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
 				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
 			}
 		}
 
-		return cmtabcitypes.ResponseInitChain{}, nil
+		return &cmtabcitypes.ResponseInitChain{}, nil
 	})
 
 	moduleManager := module.NewManager(modules...)
-	bApp.SetBeginBlocker(func(_ sdk.Context, req cmtabcitypes.RequestBeginBlock) (cmtabcitypes.ResponseBeginBlock, error) {
-		return moduleManager.BeginBlock(sdkCtx, req)
+	bApp.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
+		return moduleManager.BeginBlock(sdkCtx)
 	})
-	bApp.SetEndBlocker(func(_ sdk.Context, req cmtabcitypes.RequestEndBlock) (cmtabcitypes.ResponseEndBlock, error) {
-		return moduleManager.EndBlock(sdkCtx, req)
+	bApp.SetEndBlocker(func(_ sdk.Context) (sdk.EndBlock, error) {
+		return moduleManager.EndBlock(sdkCtx)
 	})
 
 	router := baseapp.NewMsgServiceRouter()
@@ -71,8 +71,8 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 		panic(fmt.Errorf("failed to load application version from store: %w", err))
 	}
 
-	bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName})
-	bApp.Commit()
+	bApp.InitChain(context.Background(), &cmtabcitypes.RequestInitChain{ChainId: appName})
+	bApp.Commit(context.TODO(), &cmtabcitypes.RequestCommit{})
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
@@ -99,7 +99,7 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	}
 
 	if cfg.AutomaticCommit {
-		defer app.Commit()
+		defer app.Commit(context.TODO(), &cmtabcitypes.RequestCommit{})
 	}
 
 	if cfg.AutomaticBeginEndBlock {

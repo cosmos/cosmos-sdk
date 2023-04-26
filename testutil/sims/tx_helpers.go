@@ -116,8 +116,15 @@ func SignCheckDeliver(
 	}
 
 	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(types2.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+	// app.BeginBlock(types2.RequestBeginBlock{Header: header})
+	// gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+
+	bz, err := txCfg.TxEncoder()(tx)
+
+	resBlock, err := app.FinalizeBlock(context.TODO(), &types2.RequestFinalizeBlock{
+		Height: header.Height,
+		Txs:    [][]byte{bz},
+	})
 
 	if expPass {
 		require.NoError(t, err)
@@ -127,8 +134,11 @@ func SignCheckDeliver(
 		require.Nil(t, res)
 	}
 
-	app.EndBlock(types2.RequestEndBlock{})
-	app.Commit()
+	app.Commit(context.TODO(), &types2.RequestCommit{})
 
-	return gInfo, res, err
+	gInfo := sdk.GasInfo{GasWanted: uint64(resBlock.TxResults[0].GasWanted), GasUsed: uint64(resBlock.TxResults[0].GasUsed)}
+
+	txRes := sdk.Result{Data: resBlock.TxResults[0].Data, Log: resBlock.TxResults[0].Log, Events: resBlock.TxResults[0].Events}
+
+	return gInfo, &txRes, err
 }

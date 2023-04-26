@@ -140,7 +140,7 @@ func TestBuilderWithAux(t *testing.T) {
 	}
 
 	signBz, err = authsigning.GetSignBytesAdapter(
-		context.Background(), txConfig.TxEncoder(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
+		context.Background(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
 		signerData, w.GetTx())
 
 	require.NoError(t, err)

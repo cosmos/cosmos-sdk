@@ -5,14 +5,17 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 
+	"cosmossdk.io/core/address"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
+	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 )
 
 type config struct {
@@ -22,6 +25,17 @@ type config struct {
 	jsonDecoder sdk.TxDecoder
 	jsonEncoder sdk.TxEncoder
 	protoCodec  codec.ProtoCodecMarshaler
+}
+
+type ConfigOptions struct {
+	SigningHandler             *txsigning.HandlerMap
+	SigningContext             *txsigning.Context
+	EnabledSignModes           []signingtypes.SignMode
+	TypeResolver               protoregistry.MessageTypeResolver
+	FileResolver               txsigning.ProtoFileResolver
+	AddressCodec               address.Codec
+	ValidatorCodec             address.Codec
+	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
@@ -37,58 +51,95 @@ type config struct {
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	typeResolver := protoregistry.GlobalTypes
-	//addressCodec := authkeeper.NewBech32Codec("cosmos")
-	protoFiles := protoCodec.InterfaceRegistry()
-	signersContext, err := txsigning.NewContext(txsigning.Options{
-		FileResolver: protoFiles,
-		AddressCodec: nil,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	signModeOptions := &SignModeOptions{}
-	for _, m := range enabledSignModes {
-		switch m {
-		case signingtypes.SignMode_SIGN_MODE_DIRECT:
-			signModeOptions.Direct = &direct.SignModeHandler{}
-		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
-			signModeOptions.DirectAux = &directaux.SignModeHandlerOptions{
-				TypeResolver:   typeResolver,
-				SignersContext: signersContext,
-			}
-		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-			aminoJSONEncoder := aminojson.NewAminoJSON()
-			signModeOptions.AminoJSON = &aminojson.SignModeHandlerOptions{
-				FileResolver: protoFiles,
-				TypeResolver: typeResolver,
-				Encoder:      &aminoJSONEncoder,
-			}
-		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
-			panic("cannot use NewTxConfig with SIGN_MODE_TEXTUAL enabled; please use NewTxConfigWithOptions")
-		}
-	}
-
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(*signModeOptions, customSignModes...))
+	return NewTxConfigWithOptions(protoCodec, ConfigOptions{EnabledSignModes: enabledSignModes}, customSignModes...)
 }
 
-func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, signModeOptions SignModeOptions,
+func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(signModeOptions, customSignModes...))
-}
-
-// NewTxConfigWithHandler returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
-func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler *txsigning.HandlerMap) client.TxConfig {
-	return &config{
-		handler:     handler,
+	var err error
+	txConfig := &config{
 		decoder:     DefaultTxDecoder(protoCodec),
 		encoder:     DefaultTxEncoder(),
 		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
 		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
 		protoCodec:  protoCodec,
 	}
+
+	opts := &configOptions
+	if opts.SigningHandler != nil {
+		txConfig.handler = opts.SigningHandler
+		return txConfig
+	}
+
+	if opts.TypeResolver == nil {
+		opts.TypeResolver = protoregistry.GlobalTypes
+	}
+	if opts.FileResolver == nil {
+		opts.FileResolver = protoCodec.InterfaceRegistry()
+	}
+	if len(opts.EnabledSignModes) == 0 {
+		opts.EnabledSignModes = DefaultSignModes
+	}
+
+	if opts.SigningContext == nil {
+		if opts.AddressCodec == nil {
+			opts.AddressCodec = authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
+		}
+		if opts.ValidatorCodec == nil {
+			opts.ValidatorCodec = authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr)
+		}
+		opts.SigningContext, err = txsigning.NewContext(txsigning.Options{
+			FileResolver:          opts.FileResolver,
+			AddressCodec:          opts.AddressCodec,
+			ValidatorAddressCodec: opts.ValidatorCodec,
+		})
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	lenSignModes := len(configOptions.EnabledSignModes)
+	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(customSignModes))
+	for i, m := range configOptions.EnabledSignModes {
+		switch m {
+		case signingtypes.SignMode_SIGN_MODE_DIRECT:
+			handlers[i] = &direct.SignModeHandler{}
+		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
+			handlers[i], err = directaux.NewSignModeHandler(directaux.SignModeHandlerOptions{
+				TypeResolver:   opts.TypeResolver,
+				SignersContext: opts.SigningContext,
+			})
+			if err != nil {
+				panic(err)
+			}
+		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+			aminoJSONEncoder := aminojson.NewAminoJSON()
+			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
+				FileResolver: opts.FileResolver,
+				TypeResolver: opts.TypeResolver,
+				Encoder:      &aminoJSONEncoder,
+			})
+		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
+			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
+				CoinMetadataQuerier: opts.TextualCoinMetadataQueryFn,
+				FileResolver:        opts.FileResolver,
+				TypeResolver:        opts.TypeResolver,
+			})
+			if opts.TextualCoinMetadataQueryFn == nil {
+				panic("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
+			}
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	for i, m := range customSignModes {
+		handlers[i+len(configOptions.EnabledSignModes)] = m
+	}
+
+	txConfig.handler = txsigning.NewHandlerMap(handlers...)
+	return txConfig
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {

@@ -16,6 +16,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -65,6 +66,7 @@ type AccountKeeper struct {
 	storeService store.KVStoreService
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
+	bech32Prefix string
 
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
@@ -98,7 +100,8 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	return AccountKeeper{
-		Codec:         NewBech32Codec(bech32Prefix),
+		Codec:         authcodec.NewBech32Codec(bech32Prefix),
+		bech32Prefix:  bech32Prefix,
 		storeService:  storeService,
 		proto:         proto,
 		cdc:           cdc,
@@ -256,12 +259,7 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	bech32Codec, ok := ak.Codec.(bech32Codec)
-	if !ok {
-		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.Codec)
-	}
-
-	return bech32Codec.bech32Prefix, nil
+	return ak.bech32Prefix, nil
 }
 
 // SetParams sets the auth module's parameters.

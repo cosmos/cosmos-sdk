@@ -11,16 +11,19 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: mintv1beta1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					Use:   "params",
-					Short: "query minting parameters",
+					RpcMethod: "Params",
+					Use:       "params",
+					Short:     "query minting parameters",
 				},
 				{
-					Use:   "inflation",
-					Short: "Query the current minting inflation value",
+					RpcMethod: "Inflation",
+					Use:       "inflation",
+					Short:     "Query the current minting inflation value",
 				},
 				{
-					Use:   "annual-provisions",
-					Short: "Query the current minting annual provisions value",
+					RpcMethod: "AnnualProvisions",
+					Use:       "annual-provisions",
+					Short:     "Query the current minting annual provisions value",
 				},
 			},
 		},

@@ -96,11 +96,12 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 	}
 
 	if opts.SigningContext == nil {
+		sdkConfig := sdk.GetConfig()
 		if opts.AddressCodec == nil {
-			opts.AddressCodec = authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
+			opts.AddressCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix())
 		}
 		if opts.ValidatorCodec == nil {
-			opts.ValidatorCodec = authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr)
+			opts.ValidatorCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix())
 		}
 		opts.SigningContext, err = txsigning.NewContext(txsigning.Options{
 			FileResolver:          opts.FileResolver,

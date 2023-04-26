@@ -64,14 +64,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	if in.CustomSignModeHandlers != nil {
 		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
+	sdkConfig := sdk.GetConfig()
 	txConfigOptions := tx.ConfigOptions{
 		FileResolver: in.ProtoFileResolver,
 		// From static config? But this is already in auth config.
 		// - Provide codecs there as types?
 		// - Provide static prefix there exported from config?
 		// - Just do as below?
-		AddressCodec:   authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		ValidatorCodec: authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
+		AddressCodec:   authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
+		ValidatorCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
 	}
 	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions, customSignModeHandlers...)
 

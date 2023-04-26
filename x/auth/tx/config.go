@@ -44,6 +44,8 @@ type ConfigOptions struct {
 	// TextualCoinMetadataQueryFn is the function that will be used to query coin metadata when constructing
 	// textual sign mode handler. This is required if SIGN_MODE_TEXTUAL is enabled.
 	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
+	// CustomSignModes are the custom sign modes that will be added to the txsigning.HandlerMap.
+	CustomSignModes []txsigning.SignModeHandler
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
@@ -72,14 +74,15 @@ var DefaultSignModes = []signingtypes.SignMode{
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	return NewTxConfigWithOptions(protoCodec, ConfigOptions{EnabledSignModes: enabledSignModes}, customSignModes...)
+	return NewTxConfigWithOptions(protoCodec, ConfigOptions{
+		EnabledSignModes: enabledSignModes,
+		CustomSignModes:  customSignModes,
+	})
 }
 
 // NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
 // custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
-func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions,
-	customSignModes ...txsigning.SignModeHandler,
-) client.TxConfig {
+func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) client.TxConfig {
 	txConfig := &config{
 		decoder:     DefaultTxDecoder(protoCodec),
 		encoder:     DefaultTxEncoder(),
@@ -124,7 +127,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 	}
 
 	lenSignModes := len(configOptions.EnabledSignModes)
-	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(customSignModes))
+	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(opts.CustomSignModes))
 	for i, m := range configOptions.EnabledSignModes {
 		var err error
 		switch m {
@@ -159,7 +162,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 			}
 		}
 	}
-	for i, m := range customSignModes {
+	for i, m := range opts.CustomSignModes {
 		handlers[i+lenSignModes] = m
 	}
 

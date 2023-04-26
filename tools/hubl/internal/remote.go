@@ -7,12 +7,13 @@ import (
 	"path"
 	"strings"
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/client/v2/autocli/flag"
@@ -121,9 +122,6 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 				AddressCodec: addresscodec.NewBech32Codec(chainConfig.Bech32Prefix),
 				TypeResolver: &dynamicTypeResolver{chainInfo},
 				FileResolver: chainInfo.ProtoFiles,
-				GetClientConn: func() (grpc.ClientConnInterface, error) {
-					return chainInfo.OpenClient()
-				},
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()

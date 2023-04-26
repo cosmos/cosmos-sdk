@@ -88,6 +88,22 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			continue
 		}
 
+		appOpts := autocli.AppOptions{
+			ModuleOptions: chainInfo.ModuleOptions,
+		}
+
+		builder := &autocli.Builder{
+			Builder: flag.Builder{
+				AddressCodec: addresscodec.NewBech32Codec(chainConfig.Bech32Prefix),
+				TypeResolver: &dynamicTypeResolver{chainInfo},
+				FileResolver: chainInfo.ProtoFiles,
+			},
+			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
+				return chainInfo.OpenClient()
+			},
+			AddQueryConnFlags: func(command *cobra.Command) {},
+		}
+
 		var (
 			update   bool
 			reconfig bool
@@ -112,22 +128,6 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 		chainCmd.Flags().BoolVar(&update, flagUpdate, false, "update the CLI commands for the selected chain (should be used after every chain upgrade)")
 		chainCmd.Flags().BoolVar(&reconfig, flagConfig, false, "re-configure the selected chain (allows choosing a new gRPC endpoint and refreshes data")
 		chainCmd.Flags().BoolVar(&insecure, flagInsecure, false, "allow re-configuring the selected chain using an insecure gRPC connection")
-
-		appOpts := autocli.AppOptions{
-			ModuleOptions: chainInfo.ModuleOptions,
-		}
-
-		builder := &autocli.Builder{
-			Builder: flag.Builder{
-				AddressCodec: addresscodec.NewBech32Codec(chainConfig.Bech32Prefix),
-				TypeResolver: &dynamicTypeResolver{chainInfo},
-				FileResolver: chainInfo.ProtoFiles,
-			},
-			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
-				return chainInfo.OpenClient()
-			},
-			AddQueryConnFlags: func(command *cobra.Command) {},
-		}
 
 		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
 			return nil, err

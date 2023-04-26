@@ -239,8 +239,6 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	simapp.ModuleBasics.AddQueryCommands(cmd)
-
 	return cmd
 }
 
@@ -264,8 +262,6 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 		authcmd.GetAuxToFeeCommand(),
 	)
-
-	simapp.ModuleBasics.AddTxCommands(cmd)
 
 	return cmd
 }

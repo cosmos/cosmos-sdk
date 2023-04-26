@@ -65,9 +65,9 @@ var DefaultSignModes = []signingtypes.SignMode{
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
 //
-// NOTE: Use NewTxConfigWithHandler to provide a custom signing handler in case the sign mode
-// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191). Use NewTxConfigWithOptions
-// to enable SIGN_MODE_TEXTUAL (for testing purposes for now).
+// NOTE: Use NewTxConfigWithOptions to provide a custom signing handler in case the sign mode
+// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL
+// (for testing purposes for now).
 //
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage.  Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
@@ -78,6 +78,8 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 	return NewTxConfigWithOptions(protoCodec, ConfigOptions{EnabledSignModes: enabledSignModes}, customSignModes...)
 }
 
+// NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
+// custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
 func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {

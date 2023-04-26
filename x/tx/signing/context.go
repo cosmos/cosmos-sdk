@@ -4,13 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	"cosmossdk.io/core/address"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/core/address"
 )
 
 // Context is a context for retrieving the list of signers from a
@@ -102,7 +103,7 @@ func (c *Context) Validate() error {
 			sd := fd.Services().Get(i)
 
 			// Skip services that are not annotated with the "cosmos.msg.v1.service" option.
-			if ext := proto.GetExtension(sd.Options(), msgv1.E_Service); ext == nil || ext.(bool) != true {
+			if ext := proto.GetExtension(sd.Options(), msgv1.E_Service); ext == nil || !ext.(bool) {
 				continue
 			}
 

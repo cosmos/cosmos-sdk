@@ -11,8 +11,10 @@ type AminoCodec struct {
 	*LegacyAmino
 }
 
-var _ BinaryCodec = &AminoCodec{}
-var _ JSONCodec = &AminoCodec{}
+var (
+	_ BinaryCodec = &AminoCodec{}
+	_ JSONCodec   = &AminoCodec{}
+)
 
 // Deprecated: NewAminoCodec returns a reference to a new AminoCodec.
 // Use NewLegacyAmino instead.

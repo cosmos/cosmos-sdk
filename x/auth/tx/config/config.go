@@ -75,8 +75,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
 			ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
 		},
+		CustomSignModes: customSignModeHandlers,
 	}
-	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions, customSignModeHandlers...)
+	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers

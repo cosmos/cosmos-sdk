@@ -162,6 +162,8 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
+	// TODO: remove after release 0.6.2
+	cosmossdk.io/x/tx => ./x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
@@ -172,8 +174,6 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	// Downgraded to avoid bugs in following commits which caused simulations to fail.
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	// TODO: remove after release 0.6.2
-	cosmossdk.io/x/tx => ./x/tx
 )
 
 retract (

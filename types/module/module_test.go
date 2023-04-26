@@ -106,19 +106,13 @@ func TestAssertNoForgottenModules(t *testing.T) {
 	mockAppModule1 := mock.NewMockEndBlockAppModule(mockCtrl)
 	mockAppModule2 := mock.NewMockBeginBlockAppModule(mockCtrl)
 	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
-	mockAppModule4 := mock.NewMockPrecommitAppModule(mockCtrl)
-	mockAppModule5 := mock.NewMockPrepareCheckStateAppModule(mockCtrl)
 
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mockAppModule4.EXPECT().Name().Times(2).Return("module4")
-	mockAppModule5.EXPECT().Name().Times(2).Return("module5")
 	mm := module.NewManager(
 		mockAppModule1,
 		mockAppModule2,
 		module.CoreAppModuleBasicAdaptor("module3", mockAppModule3),
-		mockAppModule4,
-		mockAppModule5,
 	)
 	require.NotNil(t, mm)
 	require.Equal(t, 5, len(mm.Modules))

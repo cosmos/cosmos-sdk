@@ -163,7 +163,7 @@ Issue: https://github.com/cosmos/iavl/issues/548
     * identify different commitment structures that could be used in the sdk and how they would be plugged (highlevel)
 * [ ] Cross lang
     * What is needed to support many languages
-    * Encoding of passing between the cgo/ffi boundry
+    * Encoding of passing between the cgo/ffi boundary
 
 ## Q3
 
@@ -193,8 +193,6 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 * Nonce Lanes
     * Goal is to produce a spec and/or viability of using lanes for nonces instead of a single sequence number. 
-* Merklization 
-    * Research different trees and commitment structures
 
 ## Q4
 

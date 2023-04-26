@@ -104,12 +104,13 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 ### Storage
 
-* [ ] Storage v2
+* [ ] [Storage v2](https://github.com/cosmos/cosmos-sdk/issues/12986)
     * Goal is to get 60% of the way through the rewrite of storage
     * Begin testing the rewrite on mainnets if possible
     * External Audit
-* [ ] Optimistic Execution spec is merged and implementation has begun
-    * Goal is to have the spec merged and implementation started. 
+* [ ] [Optimistic Execution](https://github.com/cosmos/cosmos-sdk/issues/15365)
+    * Spec merged 
+    * Implementation started. 
 
 ### Client UX
 
@@ -131,7 +132,7 @@ Issue: https://github.com/cosmos/iavl/issues/548
 * [ ] [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
     * complete migration away from global bech32 usage
 * [ ] Make sdk.Msg only be `proto.message`
-    * [ ] [Make ValidateBasic Optional](https://github.com/cosmos/cosmos-sdk/issues/15648)
+    * [x] [Make ValidateBasic Optional](https://github.com/cosmos/cosmos-sdk/issues/15648)
     * [ ] [Make GetSigners be optional](https://github.com/cosmos/cosmos-sdk/issues/15677)
 * [ ] [Collections](https://github.com/cosmos/cosmos-sdk/issues/14300) 
     * continue migrating modules
@@ -140,7 +141,7 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 ### ABCI 2.0
 
-* [ ] Integrate ABCI 2.0
+* [ ] [Integrate ABCI 2.0](https://github.com/cosmos/cosmos-sdk/issues/12272)
 
 ### Testing 
 

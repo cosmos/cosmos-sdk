@@ -136,12 +136,10 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	votes := []abci.VoteInfo{
 		{
-			Validator:       abciValA,
-			SignedLastBlock: true,
+			Validator: abciValA,
 		},
 		{
-			Validator:       abciValB,
-			SignedLastBlock: true,
+			Validator: abciValB,
 		},
 	}
 	distrKeeper.AllocateTokens(ctx, 200, votes)
@@ -246,16 +244,13 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	votes := []abci.VoteInfo{
 		{
-			Validator:       abciValA,
-			SignedLastBlock: true,
+			Validator: abciValA,
 		},
 		{
-			Validator:       abciValB,
-			SignedLastBlock: true,
+			Validator: abciValB,
 		},
 		{
-			Validator:       abciValC,
-			SignedLastBlock: true,
+			Validator: abciValC,
 		},
 	}
 	distrKeeper.AllocateTokens(ctx, 31, votes)

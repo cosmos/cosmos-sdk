@@ -1,11 +1,13 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
 	"strings"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -85,21 +87,6 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			continue
 		}
 
-		builder := &autocli.Builder{
-			Builder: flag.Builder{
-				AddressCodec: chainInfo.AppOptions.AddressCodec,
-				TypeResolver: &dynamicTypeResolver{chainInfo},
-				FileResolver: chainInfo.ProtoFiles,
-				GetClientConn: func() (grpc.ClientConnInterface, error) {
-					return chainInfo.OpenClient()
-				},
-			},
-			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
-				return chainInfo.OpenClient()
-			},
-			AddQueryConnFlags: func(command *cobra.Command) {},
-		}
-
 		var (
 			update   bool
 			reconfig bool
@@ -125,7 +112,26 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 		chainCmd.Flags().BoolVar(&reconfig, flagConfig, false, "re-configure the selected chain (allows choosing a new gRPC endpoint and refreshes data")
 		chainCmd.Flags().BoolVar(&insecure, flagInsecure, false, "allow re-configuring the selected chain using an insecure gRPC connection")
 
-		if err := chainInfo.AppOptions.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
+		appOpts := autocli.AppOptions{
+			ModuleOptions: chainInfo.ModuleOptions,
+		}
+
+		builder := &autocli.Builder{
+			Builder: flag.Builder{
+				AddressCodec: addresscodec.NewBech32Codec(chainConfig.Bech32Prefix),
+				TypeResolver: &dynamicTypeResolver{chainInfo},
+				FileResolver: chainInfo.ProtoFiles,
+				GetClientConn: func() (grpc.ClientConnInterface, error) {
+					return chainInfo.OpenClient()
+				},
+			},
+			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
+				return chainInfo.OpenClient()
+			},
+			AddQueryConnFlags: func(command *cobra.Command) {},
+		}
+
+		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
 			return nil, err
 		}
 
@@ -176,7 +182,19 @@ func reconfigure(cmd *cobra.Command, config *Config, configDir, chain string) er
 		return err
 	}
 
+	client, err := chainInfo.OpenClient()
+	if err != nil {
+		return err
+	}
+
+	addressPrefix, err := getAddressPrefix(context.Background(), client)
+	if err != nil {
+		return err
+	}
+
+	chainConfig.Bech32Prefix = addressPrefix
 	config.Chains[chain] = chainConfig
+
 	if err := SaveConfig(configDir, config); err != nil {
 		return err
 	}

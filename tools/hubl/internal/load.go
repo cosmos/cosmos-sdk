@@ -20,8 +20,6 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/client/v2/autocli"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 const DefaultConfigDirName = ".hubl"
@@ -29,12 +27,13 @@ const DefaultConfigDirName = ".hubl"
 type ChainInfo struct {
 	client *grpc.ClientConn
 
-	Context    context.Context
-	AppOptions autocli.AppOptions
-	ConfigDir  string
-	Chain      string
-	Config     *ChainConfig
-	ProtoFiles *protoregistry.Files
+	Context   context.Context
+	ConfigDir string
+	Chain     string
+	Config    *ChainConfig
+
+	ProtoFiles    *protoregistry.Files
+	ModuleOptions map[string]*autocliv1.ModuleOptions
 }
 
 func NewChainInfo(configDir, chain string, config *ChainConfig) *ChainInfo {
@@ -132,11 +131,6 @@ func (c *ChainInfo) Load(reload bool) error {
 			appOptsRes = guessAutocli(c.ProtoFiles)
 		}
 
-		addressPrefix, err := getAddressPrefix(c.Context, client)
-		if err != nil {
-			return err
-		}
-
 		bz, err := proto.Marshal(appOptsRes)
 		if err != nil {
 			return err
@@ -146,10 +140,7 @@ func (c *ChainInfo) Load(reload bool) error {
 			return err
 		}
 
-		c.AppOptions = autocli.AppOptions{
-			ModuleOptions: appOptsRes.ModuleOptions,
-			AddressCodec:  addresscodec.NewBech32Codec(addressPrefix),
-		}
+		c.ModuleOptions = appOptsRes.ModuleOptions
 	} else {
 		bz, err := os.ReadFile(appOptsFilename)
 		if err != nil {
@@ -161,10 +152,7 @@ func (c *ChainInfo) Load(reload bool) error {
 			return err
 		}
 
-		c.AppOptions = autocli.AppOptions{
-			ModuleOptions: appOptsRes.ModuleOptions,
-			AddressCodec:  addresscodec.NewBech32Codec(c.Config.Bech32Prefix),
-		}
+		c.ModuleOptions = appOptsRes.ModuleOptions
 	}
 
 	return nil

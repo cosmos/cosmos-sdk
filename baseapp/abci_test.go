@@ -58,10 +58,10 @@ func TestABCI_InitChain(t *testing.T) {
 
 	// set a value in the store on init chain
 	key, value := []byte("hello"), []byte("goodbye")
-	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
-		return abci.ResponseInitChain{}, nil
+		return &abci.ResponseInitChain{}, nil
 	}
 
 	query := abci.RequestQuery{
@@ -966,7 +966,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	suite.baseApp.InitChain(abci.RequestInitChain{
+	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1185,7 +1185,7 @@ func TestABCI_Query(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	suite.baseApp.InitChain(abci.RequestInitChain{
+	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1420,7 +1420,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 			value := ctx.KVStore(capKey1).Get(someKey)
 			// We should be able to access any state written in InitChain
 			require.Equal(t, "foo", string(value))
-			return &abci.ResponsePrepareProposal{Txs: req.Txs}
+			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 		})
 	}
 
@@ -1449,9 +1449,9 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
-	})
+	// suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+	// 	Header: cmtproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+	// })
 }
 
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {

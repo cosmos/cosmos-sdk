@@ -15,6 +15,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -26,7 +27,6 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Skip("disable till comet fixes data races")
 	s.T().Log("setting up integration test suite")
 
 	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
@@ -45,7 +45,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestStatusCommand() {
-	s.T().Skip("data race in comet is causing this to fail")
 	val0 := s.network.Validators[0]
 	cmd := rpc.StatusCommand()
 
@@ -73,7 +72,6 @@ func (s *IntegrationTestSuite) TestCLIQueryConn() {
 }
 
 func (s *IntegrationTestSuite) TestQueryABCIHeight() {
-	s.T().Skip("data race in comet is causing this to fail")
 	testCases := []struct {
 		name      string
 		reqHeight int64
@@ -112,7 +110,7 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 			req := abci.RequestQuery{
 				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
 				Height: tc.reqHeight,
-				Data:   banktypes.CreateAccountBalancesPrefix(val.Address),
+				Data:   address.MustLengthPrefix(val.Address),
 				Prove:  true,
 			}
 

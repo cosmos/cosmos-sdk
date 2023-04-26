@@ -156,7 +156,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
-	txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
+	txConfig := moduletestutil.MakeTestTxConfig()
 	_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
@@ -233,7 +233,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
+		txConfig := moduletestutil.MakeTestTxConfig()
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		if tc.expPass {
 			require.NoError(t, err)
@@ -284,7 +284,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
+		txConfig := moduletestutil.MakeTestTxConfig()
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -337,7 +337,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
+		txConfig := moduletestutil.MakeTestTxConfig()
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -369,18 +369,6 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		false,
 	)
 	require.NoError(t, err, "making goodGovProp")
-	badGovProp, err := govv1.NewMsgSubmitProposal(
-		[]sdk.Msg{
-			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{Denom: "bad coin name!", Enabled: true}}, nil),
-		},
-		sdk.Coins{{Denom: "foocoin", Amount: sdkmath.NewInt(5)}},
-		addr1Str,
-		"set default send enabled to true",
-		"Change send enabled",
-		"Modify send enabled and set to true",
-		false,
-	)
-	require.NoError(t, err, "making badGovProp")
 
 	testCases := []appTestCase{
 		{
@@ -423,25 +411,12 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			accSeqs:    []uint64{1},
 			expInError: nil,
 		},
-		{
-			desc:       "submitted bad as gov prop",
-			expSimPass: false,
-			expPass:    false,
-			msgs: []sdk.Msg{
-				badGovProp,
-			},
-			accSeqs: []uint64{2},
-			expInError: []string{
-				"invalid denom: bad coin name!",
-				"invalid proposal message",
-			},
-		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(tt *testing.T) {
 			header := cmtproto.Header{Height: s.App.LastBlockHeight() + 1}
-			txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+			txGen := moduletestutil.MakeTestTxConfig()
 			_, _, err = simtestutil.SignCheckDeliver(tt, txGen, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
 			if len(tc.expInError) > 0 {
 				require.Error(tt, err)

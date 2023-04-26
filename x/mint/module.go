@@ -216,8 +216,7 @@ func init() {
 	)
 }
 
-//nolint:revive
-type MintInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	ModuleKey              depinject.OwnModuleKey
@@ -234,15 +233,14 @@ type MintInputs struct {
 	StakingKeeper types.StakingKeeper
 }
 
-//nolint:revive
-type MintOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	MintKeeper keeper.Keeper
 	Module     appmodule.AppModule
 }
 
-func ProvideModule(in MintInputs) MintOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
@@ -267,5 +265,5 @@ func ProvideModule(in MintInputs) MintOutputs {
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn, in.LegacySubspace)
 
-	return MintOutputs{MintKeeper: k, Module: m}
+	return ModuleOutputs{MintKeeper: k, Module: m}
 }

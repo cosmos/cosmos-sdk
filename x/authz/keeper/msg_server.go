@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,22 +14,30 @@ var _ authz.MsgServer = Keeper{}
 
 // Grant implements the MsgServer.Grant method to create a new grant.
 func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
-	if err != nil {
-		return nil, err
+	if strings.EqualFold(msg.Grantee, msg.Granter) {
+		return nil, authz.ErrGranteeIsGranter
 	}
 
-	// create the account if it is not in account state
-	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
-	if granteeAcc == nil {
-		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
-		k.authKeeper.SetAccount(ctx, granteeAcc)
+	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 
 	granter, err := k.authKeeper.StringToBytes(msg.Granter)
 	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
+	}
+
+	if err := msg.Grant.ValidateBasic(); err != nil {
 		return nil, err
+	}
+
+	// create the account if it is not in account state
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
+	if granteeAcc == nil {
+		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
+		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 
 	authorization, err := msg.GetAuthorization()
@@ -51,18 +60,26 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 
 // Revoke implements the MsgServer.Revoke method.
 func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
-	if err != nil {
-		return nil, err
-	}
-	granter, err := k.authKeeper.StringToBytes(msg.Granter)
-	if err != nil {
-		return nil, err
+	if strings.EqualFold(msg.Grantee, msg.Granter) {
+		return nil, authz.ErrGranteeIsGranter
 	}
 
-	err = k.DeleteGrant(ctx, grantee, granter, msg.MsgTypeUrl)
+	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
 	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
+	}
+
+	granter, err := k.authKeeper.StringToBytes(msg.Granter)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
+	}
+
+	if msg.MsgTypeUrl == "" {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("missing msg method name")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err = k.DeleteGrant(ctx, grantee, granter, msg.MsgTypeUrl); err != nil {
 		return nil, err
 	}
 
@@ -75,13 +92,22 @@ func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecR
 	if msg.Grantee == "" {
 		return nil, errors.New("empty address string is not allowed")
 	}
+
 	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
+	}
+
+	if len(msg.Msgs) == 0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
 	}
 
 	msgs, err := msg.GetMessages()
 	if err != nil {
+		return nil, err
+	}
+
+	if err := validateMsgs(msgs); err != nil {
 		return nil, err
 	}
 
@@ -91,4 +117,19 @@ func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecR
 	}
 
 	return &authz.MsgExecResponse{Results: results}, nil
+}
+
+func validateMsgs(msgs []sdk.Msg) error {
+	for _, msg := range msgs {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

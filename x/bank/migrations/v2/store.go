@@ -65,7 +65,7 @@ func migrateBalanceKeys(store storetypes.KVStore, logger log.Logger) {
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v1.AddressFromBalancesStore(oldStoreIter.Key())
 		denom := oldStoreIter.Key()[v1auth.AddrLen:]
-		newStoreKey := types.CreatePrefixedAccountStoreKey(addr, denom)
+		newStoreKey := CreatePrefixedAccountStoreKey(addr, denom)
 
 		// Set new key on store. Values don't change.
 		store.Set(newStoreKey, oldStoreIter.Value())
@@ -132,4 +132,10 @@ func pruneZeroSupply(store storetypes.KVStore) error {
 	}
 
 	return nil
+}
+
+// CreatePrefixedAccountStoreKey returns the key for the given account and denomination.
+// This method can be used when performing an ABCI query for the balance of an account.
+func CreatePrefixedAccountStoreKey(addr, denom []byte) []byte {
+	return append(CreateAccountBalancesPrefix(addr), denom...)
 }

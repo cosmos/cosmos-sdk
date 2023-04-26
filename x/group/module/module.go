@@ -2,17 +2,14 @@ package module
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 
@@ -32,85 +29,16 @@ import (
 // ConsensusVersion defines the current x/group module consensus version.
 const ConsensusVersion = 3
 
-var (
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
-)
-
-type AppModule struct {
-	AppModuleBasic
-	keeper     keeper.Keeper
-	bankKeeper group.BankKeeper
-	accKeeper  group.AccountKeeper
-	registry   cdctypes.InterfaceRegistry
-}
-
-// NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak, genesisHandler: keeper.HasGenesis},
-		keeper:         keeper,
-		bankKeeper:     bk,
-		accKeeper:      ak,
-		registry:       registry,
-	}
-}
-
-var (
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
-)
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 type AppModuleBasic struct {
-	cdc            codec.Codec
-	ac             address.Codec
-	genesisHandler appmodule.HasGenesis
+	cdc codec.Codec
+	ac  address.Codec
 }
 
 // Name returns the group module's name.
 func (AppModuleBasic) Name() string {
 	return group.ModuleName
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the group
-// module.
-func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	target := genesis.RawJSONTarget{}
-	if err := a.genesisHandler.DefaultGenesis(target.Target()); err != nil {
-		panic(err)
-	}
-
-	defaultJSON, err := target.JSON()
-	if err != nil {
-		panic(err)
-	}
-
-	return defaultJSON
-}
-
-// ValidateGenesis performs genesis state validation for the group module.
-func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	source, err := genesis.SourceFromRawJSON(bz)
-	if err != nil {
-		return err
-	}
-
-	if err := a.genesisHandler.ValidateGenesis(source); err != nil {
-		return err
-	}
-
-	var data group.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
-	}
-
-	return data.Validate()
 }
 
 // GetQueryCmd returns the cli query commands for the group module
@@ -140,6 +68,37 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	group.RegisterLegacyAminoCodec(cdc)
 }
 
+var (
+	_ module.AppModuleSimulation = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
+)
+
+type AppModule struct {
+	AppModuleBasic
+	keeper     keeper.Keeper
+	bankKeeper group.BankKeeper
+	accKeeper  group.AccountKeeper
+	registry   cdctypes.InterfaceRegistry
+}
+
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
+		keeper:         keeper,
+		bankKeeper:     bk,
+		accKeeper:      ak,
+		registry:       registry,
+	}
+}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the group module's name.
 func (AppModule) Name() string {
 	return group.ModuleName
@@ -148,37 +107,6 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
-}
-
-// InitGenesis performs genesis initialization for the group module. It returns
-// no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	source, err := genesis.SourceFromRawJSON(data)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := am.keeper.InitGenesis(ctx, source); err != nil {
-		panic(err)
-	}
-
-	return []abci.ValidatorUpdate{}
-}
-
-// ExportGenesis returns the exported genesis state as raw bytes for the group
-// module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	target := genesis.RawJSONTarget{}
-	if err := am.keeper.ExportGenesis(ctx, target.Target()); err != nil {
-		panic(err)
-	}
-
-	exported, err := target.JSON()
-	if err != nil {
-		panic(err)
-	}
-
-	return exported
 }
 
 // RegisterServices registers a gRPC query service to respond to the

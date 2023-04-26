@@ -35,9 +35,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// The default power validators are initialized to have within tests
-var InitTokens = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
-
 type fixture struct {
 	app *integration.App
 
@@ -229,7 +226,7 @@ func TestHandleNewValidator(t *testing.T) {
 	f.stakingKeeper.EndBlocker(f.ctx)
 	assert.DeepEqual(
 		t, f.bankKeeper.GetAllBalances(f.ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.GetParams(f.ctx).BondDenom, InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.GetParams(f.ctx).BondDenom, testutil.InitTokens.Sub(amt))),
 	)
 	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(f.ctx, addr).GetBondedTokens())
 

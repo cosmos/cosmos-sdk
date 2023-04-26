@@ -1,4 +1,4 @@
-package slashing_test
+package testutil
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -441,7 +441,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	suite.baseApp.InitChain(abci.RequestInitChain{
+	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -540,7 +540,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
 
 	suite.baseApp.EndBlock(abci.RequestEndBlock{})
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 }
 
 // Test and ensure that invalid block heights always cause errors.
@@ -554,11 +554,9 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
-	app.Commit()
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2}})
-	app.Commit()
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 2})
 
 	testCases := []struct {
 		name   string
@@ -638,9 +636,9 @@ func TestLoadVersionPruning(t *testing.T) {
 	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
 	// (keep recent) and 3 (keep every).
 	for i := int64(1); i <= 7; i++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
-		res := app.Commit()
-		lastCommitID = storetypes.CommitID{Version: i, Hash: res.Data}
+		res, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: i})
+		require.NoError(t, err)
+		lastCommitID = storetypes.CommitID{Version: i, Hash: res.AppHash}
 	}
 
 	for _, v := range []int64{1, 2, 4} {

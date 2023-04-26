@@ -10,8 +10,7 @@ require (
 	github.com/cometbft/cometbft v0.37.1
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/gogoproto v1.4.8
-	github.com/cosmos/iavl v1.0.0-alpha.1.0.20230323131452-2cf795ac2a2c
-	github.com/cosmos/ics23/go v0.9.1-0.20221207100636-b1abd8678aab
+	github.com/cosmos/iavl v1.0.0-alpha.1.0.20230426165223-bd015a13dbbc
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/go-hclog v1.5.0
@@ -27,6 +26,8 @@ require (
 	gotest.tools/v3 v3.4.0
 )
 
+require github.com/cosmos/ics23/go v0.10.0
+
 require (
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -38,15 +39,15 @@ require (
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
-	github.com/emicklei/dot v1.3.1 // indirect
+	github.com/emicklei/dot v1.4.2 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/getsentry/sentry-go v0.18.0 // indirect
+	github.com/getsentry/sentry-go v0.12.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
+	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/jhump/protoreflect v1.15.1 // indirect

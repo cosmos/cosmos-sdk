@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"reflect"
 
-	"cosmossdk.io/core/address"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/tx/signing"
 )
 
@@ -362,9 +362,9 @@ func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
 type failingAddressCodec struct{}
 
 func (f failingAddressCodec) StringToBytes(string) ([]byte, error) {
-	return nil, fmt.Errorf("InterfaceRefactory requires a proper address codec implementation to do address conversion")
+	return nil, fmt.Errorf("InterfaceRegistry requires a proper address codec implementation to do address conversion")
 }
 
 func (f failingAddressCodec) BytesToString([]byte) (string, error) {
-	return "", fmt.Errorf("InterfaceRefactory requires a proper address codec implementation to do address conversion")
+	return "", fmt.Errorf("InterfaceRegistry requires a proper address codec implementation to do address conversion")
 }

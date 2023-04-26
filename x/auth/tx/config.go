@@ -83,7 +83,6 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	var err error
 	txConfig := &config{
 		decoder:     DefaultTxDecoder(protoCodec),
 		encoder:     DefaultTxEncoder(),
@@ -116,6 +115,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 		if opts.ValidatorCodec == nil {
 			opts.ValidatorCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix())
 		}
+		var err error
 		opts.SigningContext, err = txsigning.NewContext(txsigning.Options{
 			FileResolver:          opts.FileResolver,
 			AddressCodec:          opts.AddressCodec,
@@ -129,6 +129,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 	lenSignModes := len(configOptions.EnabledSignModes)
 	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(customSignModes))
 	for i, m := range configOptions.EnabledSignModes {
+		var err error
 		switch m {
 		case signingtypes.SignMode_SIGN_MODE_DIRECT:
 			handlers[i] = &direct.SignModeHandler{}

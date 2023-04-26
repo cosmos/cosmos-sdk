@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/errors"
+	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -124,5 +126,17 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 
 	k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
 	k.slashingKeeper.Tombstone(ctx, consAddr)
-	k.SetEvidence(ctx, evidence)
+	fmt.Printf("evidence: %v\n", evidence)
+
+	handler := k.router.GetRoute(evidence.Route())
+	fmt.Printf("handler: %v\n", handler)
+	if err := handler(ctx, evidence); err != nil {
+		panic(errors.Wrap(types.ErrInvalidEvidence, err.Error()))
+	}
+
+	var e exported.Evidence
+	e = evidence
+	k.SetEvidence(ctx, e)
+
+	// k.SetEvidence(ctx, evidence)
 }

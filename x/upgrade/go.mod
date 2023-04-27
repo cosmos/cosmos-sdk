@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.6.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/log v1.0.0
+	cosmossdk.io/log v1.1.0
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	github.com/armon/go-metrics v0.4.1
 	github.com/cometbft/cometbft v0.37.1

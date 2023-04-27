@@ -45,6 +45,7 @@ type fixture struct {
 	stakingKeeper  *stakingkeeper.Keeper
 
 	addrDels []sdk.AccAddress
+	valAddrs []sdk.ValAddress
 }
 
 func initFixture(t testing.TB) *fixture {
@@ -109,6 +110,7 @@ func initFixture(t testing.TB) *fixture {
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
 	slashingKeeper.SetParams(sdkCtx, testutil.TestParams())
 	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 6, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3), time.Unix(2, 0), false, int64(10))
 	info2 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4), time.Unix(2, 0), false, int64(10))
@@ -123,6 +125,7 @@ func initFixture(t testing.TB) *fixture {
 		slashingKeeper: slashingKeeper,
 		stakingKeeper:  stakingKeeper,
 		addrDels:       addrDels,
+		valAddrs:       valAddrs,
 	}
 }
 
@@ -134,13 +137,12 @@ func TestUnJailNotBonded(t *testing.T) {
 	p.MaxValidators = 5
 	f.stakingKeeper.SetParams(f.ctx, p)
 
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(f.addrDels)
 	pks := simtestutil.CreateTestPubKeys(6)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 
 	// create max (5) validators all with the same power
 	for i := uint32(0); i < p.MaxValidators; i++ {
-		addr, val := valAddrs[i], pks[i]
+		addr, val := f.valAddrs[i], pks[i]
 		tstaking.CreateValidatorWithValPower(addr, val, 100, true)
 	}
 
@@ -148,7 +150,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
-	addr, val := valAddrs[5], pks[5]
+	addr, val := f.valAddrs[5], pks[5]
 	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 50)
 	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
@@ -209,9 +211,8 @@ func TestHandleNewValidator(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(f.addrDels)
 	pks := simtestutil.CreateTestPubKeys(1)
-	addr, val := valAddrs[0], pks[0]
+	addr, val := f.valAddrs[0], pks[0]
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 	f.ctx = f.ctx.WithBlockHeight(f.slashingKeeper.SignedBlocksWindow(f.ctx) + 1)
 
@@ -256,9 +257,8 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(f.addrDels)
 	pks := simtestutil.CreateTestPubKeys(1)
-	addr, val := valAddrs[0], pks[0]
+	addr, val := f.valAddrs[0], pks[0]
 	power := int64(100)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 

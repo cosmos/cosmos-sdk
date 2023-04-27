@@ -445,7 +445,7 @@ This common runtime module should be created initially as the `cosmossdk.io/runt
 
 When this new architecture has been implemented, the main dependency for a Cosmos SDK module would be
 `cosmossdk.io/core` and that module should be able to be used with any supported consensus engine (to the extent
-that it does not explicitly depend on consensus engine specific functionality such as Comet' block headers). An
+that it does not explicitly depend on consensus engine specific functionality such as Comet's block headers). An
 app developer would then be able to choose which consensus engine they want to use by importing the corresponding
 runtime module. The current `BaseApp` would be refactored into the `cosmossdk.io/runtime/comet` module, the router
 infrastructure in `baseapp/` would be refactored into `cosmossdk.io/runtime/common` and support ADR 033, and eventually
@@ -453,6 +453,11 @@ a dependency on `github.com/cosmos/cosmos-sdk` would no longer be required.
 
 In short, modules would depend primarily on `cosmossdk.io/core`, and each `cosmossdk.io/runtime/{consensus-engine}`
 would implement the `cosmossdk.io/core` functionality for that consensus engine.
+
+On additional piece that would need to be resolved as part of this architecture is how runtimes relate to the server.
+Likely it would make sense to modularize the current server architecture so that it can be used with any runtime even
+if that is based on a consensus engine besides Comet. This means that eventually the Comet runtime would need to
+encapsulate the logic for starting Comet and the ABCI app.
 
 ### Testing
 

@@ -280,12 +280,6 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 		clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
 
-		// TODO Remove this once SIGN_MODE_TEXTUAL is released
-		// ref: https://github.com/cosmos/cosmos-sdk/issues/11970
-		if keyType == keyring.TypeLedger && clientCtx.SignModeStr == flags.SignModeTextual {
-			return clientCtx, fmt.Errorf("SIGN_MODE_TEXTUAL is currently not supported, please follow https://github.com/cosmos/cosmos-sdk/issues/11970")
-		}
-
 		// If the `from` signer account is a ledger key, we need to use
 		// SIGN_MODE_AMINO_JSON, because ledger doesn't support proto yet.
 		// ref: https://github.com/cosmos/cosmos-sdk/issues/8109

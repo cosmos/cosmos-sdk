@@ -45,8 +45,8 @@ cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
-cosmossdk.io/log v1.0.0 h1:NGKZ/A5rd4PduDfoscgABklX557PWjQINbosZy/m3Jk=
-cosmossdk.io/log v1.0.0/go.mod h1:CwX9BLiBruZb7lzLlRr3R231d/fVPUXk8gAdV4LQap0=
+cosmossdk.io/log v1.1.0 h1:v0ogPHYeTzPcBTcPR1A3j1hkei4pZama8kz8LKlCMv0=
+cosmossdk.io/log v1.1.0/go.mod h1:6zjroETlcDs+mm62gd8Ig7mZ+N+fVOZS91V17H+M4N4=
 cosmossdk.io/math v1.0.0 h1:ro9w7eKx23om2tZz/VM2Pf+z2WAbGX1yDQQOJ6iGeJw=
 cosmossdk.io/math v1.0.0/go.mod h1:Ygz4wBHrgc7g0N+8+MrnTfS9LLn9aaTGa9hKopuym5k=
 cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc h1:9piuA+NYmhe+SyMPtMoboLw/djgDbrI3dD5TG020Tnk=
@@ -155,8 +155,8 @@ github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE
 github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0/go.mod h1:4Zcjuz89kmFXt9morQgcfYZAYZ5n8WHjt81YYWIwtTM=
 github.com/coinbase/rosetta-sdk-go/types v1.0.0 h1:jpVIwLcPoOeCR6o1tU+Xv7r5bMONNbHU7MuEHboiFuA=
 github.com/coinbase/rosetta-sdk-go/types v1.0.0/go.mod h1:eq7W2TMRH22GTW0N0beDnN931DW0/WOI1R2sdHNHG4c=
-github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664 h1:BbCkbnaU3R603XpnbqvuDU8Kfv+hjhiFILOHhVFntsw=
-github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664/go.mod h1:Y2MMMN//O5K4YKd8ze4r9jmk4Y7h0ajqILXbH5JQFVs=
+github.com/cometbft/cometbft v0.37.1 h1:KLxkQTK2hICXYq21U2hn1W5hOVYUdQgDQ1uB+90xPIg=
+github.com/cometbft/cometbft v0.37.1/go.mod h1:Y2MMMN//O5K4YKd8ze4r9jmk4Y7h0ajqILXbH5JQFVs=
 github.com/cometbft/cometbft-db v0.7.0 h1:uBjbrBx4QzU0zOEnU8KxoDl18dMNgDh+zZRUE0ucsbo=
 github.com/confio/ics23/go v0.9.0 h1:cWs+wdbS2KRPZezoaaj+qBleXgUk5WOQFMP3CQFGTr4=
 github.com/confio/ics23/go v0.9.0/go.mod h1:4LPZ2NYqnYIVRklaozjNR1FScgDJ2s5Xrp+e/mYVRak=
@@ -172,8 +172,6 @@ github.com/cosmos/cosmos-db v1.0.0-rc.1 h1:SjnT8B6WKMW9WEIX32qMhnEEKcI7ZP0+G1Sa9
 github.com/cosmos/cosmos-db v1.0.0-rc.1/go.mod h1:Dnmk3flSf5lkwCqvvjNpoxjpXzhxnCAFzKHlbaForso=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQYKXTdEcpW6o=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
-github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230424095137-b73c17cb9cc8 h1:zIl1WnrW5ZP1VwhpbwVBZtCntkNKYNIkg4233/dZ3BU=
-github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230424095137-b73c17cb9cc8/go.mod h1:JicgV9n3SAu5uuoyDvQ2gSHYLyFvyRrIUYB5T2Q4HRw=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=

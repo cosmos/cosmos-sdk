@@ -418,11 +418,8 @@ func TestAnteHandlerSequences(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					accNums: []uint64{0},
-					accSeqs: []uint64{0},
-					msgs:    []sdk.Msg{msg},
-					privs:   []cryptotypes.PrivKey{accs[0].priv},
-				}
+					msgs: []sdk.Msg{msg},
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			true,
@@ -434,7 +431,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 				accs := suite.CreateTestAccounts(1)
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
 				msgs := []sdk.Msg{msg}
-				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{accs[0].acc.GetAccountNumber()}, []uint64{accs[0].acc.GetSequence()}
 
 				// This will be called only once given that the second tx will fail
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
@@ -445,11 +442,8 @@ func TestAnteHandlerSequences(t *testing.T) {
 				require.NoError(t, err)
 
 				return TestCaseArgs{
-					accNums: accNums,
-					accSeqs: accSeqs,
-					msgs:    msgs,
-					privs:   privs,
-				}
+					msgs: msgs,
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			false,
@@ -462,7 +456,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
 				msgs := []sdk.Msg{msg}
 
-				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{accs[0].acc.GetAccountNumber()}, []uint64{accs[0].acc.GetSequence()}
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				// Send the same tx before running the test case, then change the sequence to a valid one.
@@ -471,14 +465,11 @@ func TestAnteHandlerSequences(t *testing.T) {
 				require.NoError(t, err)
 
 				// +1 the account sequence
-				accSeqs = []uint64{1}
+				require.NoError(t, accs[0].acc.SetSequence(accs[0].acc.GetSequence()+1))
 
 				return TestCaseArgs{
-					accNums: accNums,
-					accSeqs: accSeqs,
-					msgs:    msgs,
-					privs:   privs,
-				}
+					msgs: msgs,
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			true,
@@ -494,11 +485,8 @@ func TestAnteHandlerSequences(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					accNums: []uint64{0, 1, 2},
-					accSeqs: []uint64{0, 0, 0},
-					msgs:    []sdk.Msg{msg1, msg2},
-					privs:   []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv},
-				}
+					msgs: []sdk.Msg{msg1, msg2},
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			true,
@@ -512,7 +500,9 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msg2 := testdata.NewTestMsg(accs[2].acc.GetAddress(), accs[0].acc.GetAddress())
 				msgs := []sdk.Msg{msg1, msg2}
 
-				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+				privs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}
+				accNums := []uint64{accs[0].acc.GetAccountNumber(), accs[1].acc.GetAccountNumber(), accs[2].acc.GetAccountNumber()}
+				accSeqs := []uint64{accs[0].acc.GetSequence(), accs[1].acc.GetSequence(), accs[2].acc.GetSequence()}
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				// Send the same tx before running the test case, to trigger replay protection.
@@ -521,11 +511,8 @@ func TestAnteHandlerSequences(t *testing.T) {
 				require.NoError(t, err)
 
 				return TestCaseArgs{
-					accNums: accNums,
-					accSeqs: accSeqs,
-					msgs:    []sdk.Msg{msg1, msg2},
-					privs:   privs,
-				}
+					msgs: []sdk.Msg{msg1, msg2},
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			false,
@@ -539,7 +526,9 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msg2 := testdata.NewTestMsg(accs[2].acc.GetAddress(), accs[0].acc.GetAddress())
 				msgs := []sdk.Msg{msg1, msg2}
 
-				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+				privs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}
+				accNums := []uint64{accs[0].acc.GetAccountNumber(), accs[1].acc.GetAccountNumber(), accs[2].acc.GetAccountNumber()}
+				accSeqs := []uint64{accs[0].acc.GetSequence(), accs[1].acc.GetSequence(), accs[2].acc.GetSequence()}
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				// Send the same tx before running the test case, to trigger replay protection.
@@ -551,7 +540,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 				// thus the sequence (0) is incorrect.
 				msg1 = testdata.NewTestMsg(accs[1].acc.GetAddress())
 				msgs = []sdk.Msg{msg1}
-				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[1].priv}, []uint64{1}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{0}
 
 				return TestCaseArgs{
 					accNums: accNums,
@@ -572,7 +561,9 @@ func TestAnteHandlerSequences(t *testing.T) {
 				msg2 := testdata.NewTestMsg(accs[2].acc.GetAddress(), accs[0].acc.GetAddress())
 				msgs := []sdk.Msg{msg1, msg2}
 
-				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+				privs := []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}
+				accNums := []uint64{accs[0].acc.GetAccountNumber(), accs[1].acc.GetAccountNumber(), accs[2].acc.GetAccountNumber()}
+				accSeqs := []uint64{accs[0].acc.GetSequence(), accs[1].acc.GetSequence(), accs[2].acc.GetSequence()}
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				// Send the same tx before running the test case, to trigger replay protection.
@@ -584,7 +575,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 				// and the sequence was fixed (1).
 				msg1 = testdata.NewTestMsg(accs[1].acc.GetAddress())
 				msgs = []sdk.Msg{msg1}
-				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[1].priv}, []uint64{1}, []uint64{1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{accs[1].acc.GetSequence() + 1}
 
 				return TestCaseArgs{
 					accNums: accNums,

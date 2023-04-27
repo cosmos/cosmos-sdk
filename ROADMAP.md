@@ -105,66 +105,128 @@ Issue: https://github.com/cosmos/iavl/issues/548
 ### Storage
 
 * [ ] [Storage v2](https://github.com/cosmos/cosmos-sdk/issues/12986)
-    * Goal is to get 60% of the way through the rewrite of storage
-    * Begin testing the rewrite on mainnets if possible
-    * External Audit
+    * Objective: 
+        * Goal is to get 60% of the way through the rewrite of storage
+        * Begin testing the rewrite on mainnets if possible
+        * External Audit
+    * Progress:
+        * On pause till ABCI 2.0 ships
 * [ ] [Optimistic Execution](https://github.com/cosmos/cosmos-sdk/issues/15365)
-    * Spec merged 
-    * Implementation started. 
+    * Objective:
+        * Users should be able to pick between delayed execution and optimistic
+        * RFC/ADR is merged
+        * Implementation started. 
+    * Progess:
+        * On pause till ABCI 2.0 is merged
 
 ### Client UX
 
 * [ ] Hubl/AutoCLI
-    * Signing support is added to hubl
-    * add module support, deprecate/remove legacy cli
+    * Objective:
+        * Allow users to sign and submit transactions using hubl
+        * Add module support for autocli
+        * Deprecate/remove legacy cli (optional)
+    * Progress:
+        * Signing support is being refactored and is near completion
+        * Adapting modules to use autocli instead of manually written cli
 * [ ] [Consensus Key Rotation](https://github.com/cosmos/cosmos-sdk/issues/5231) 
+    * Objective:
+        * Allow users to rotate consensus keys for their validators
+    * Progerss
     * Merge pull request and updated ADR into main
 * [ ] [Operator key rotation](https://github.com/cosmos/cosmos-sdk/issues/3863)
-    * add support to rotate operator keys
+    * Objective: 
+        * Allow users to rotate operator keys for their validators 
+    * Progress:
+        * secondary val index was added to support operator key rotation
+        * Pr is open and is being worked on 
 
 ### Dev UX
 
 * Toolkit/SDK ADR. 
-    * Come to consensus on how to make the sdk composable 
+    * Objective: 
+        * Produce a RFC/ADR on how to make core composable
+        * Merge RFC/ADR into main
+    * Progress: 
+        * on pause until abci 2.0 integration is completed 
 * Adopt core api fully in modules
-    * Goal is to remove the Cosmos SDK and Comet as a dependency from all modules
-    * Release v1 of modules that have their dependency graph cleaned up
+    * Objective:
+        * Remove the Cosmos SDK and Comet as a dependency from all modules
+        * Release v1 of modules that have their dependency graph cleaned up
+        * Spin out 4 more modules into their own go.mods
+    * Progress:
+        * Core api has been integrated into all modules
+        * KvStoreService is being added to all modules
 * [ ] [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
-    * complete migration away from global bech32 usage
+    * Objective:
+        * Depreacte global bech32 setting
+    * Progress:
+        * All modules except bank use the `address.Codec`
 * [ ] Make sdk.Msg only be `proto.message`
-    * [x] [Make ValidateBasic Optional](https://github.com/cosmos/cosmos-sdk/issues/15648)
-    * [ ] [Make GetSigners be optional](https://github.com/cosmos/cosmos-sdk/issues/15677)
+    * Objectives: 
+        * Reduce sdk.Msg to only be proto.message
+        * Reduce boilerplate in `msgs.go`
+    * Progess: 
+        * [x] [Make ValidateBasic Optional](https://github.com/cosmos/cosmos-sdk/issues/15648)
+        * [ ] [Make GetSigners be optional](https://github.com/cosmos/cosmos-sdk/issues/15677)
+        * [ ] Remove GetsignBytes for legacy amino encoding
 * [ ] [Collections](https://github.com/cosmos/cosmos-sdk/issues/14300) 
-    * continue migrating modules
-    * Add query support
-    * Add schema support
+    * Objectives
+        * Migrate all modules
+        * Add query support
+        * Add schema support
+    * Progress: 
+        * We have migrated three modules
 
 ### ABCI 2.0
 
-* [ ] [Integrate ABCI 2.0](https://github.com/cosmos/cosmos-sdk/issues/12272)
+* [ ] [ABCI 2.0](https://github.com/cosmos/cosmos-sdk/issues/12272)
+    * Objectives:
+        * Integrate comet 0.38 
+        * QA 
+    * Progress:
+        * Integration has started
+
 
 ### Testing 
 
-* [ ] [integration testing framework](https://github.com/cosmos/cosmos-sdk/issues/14145)
-    * Migrate modules to use the integration testing framework
+* [ ] [Integration framework](https://github.com/cosmos/cosmos-sdk/issues/14145)
+    * Objectives: 
+        * Migrate all modules 
+    * Progress:
+        * We have migrated 2-4 modules currently
 
 ### Modules
 
 * [ ] [Invariant Checking](https://github.com/cosmos/cosmos-sdk/issues/15706)
-    * design a new system for checking invairants
-    * implement changes
-    * audit current invariants
+    * Objective:
+        * Design a new system for checking invairants
+        * Implement changes
+        * Audit current invariants
+    * Progress: 
+        * NA
 * [ ] [Accounts](https://github.com/cosmos/cosmos-sdk/issues/14900)
-    * Implementation is completed
-    * External Audit is scheduled
+    * Objective: 
+        * Allow users to use account abstractions
+        * Implementation is completed
+        * External Audit is scheduled (if needed)
+    * Progress: 
+        * RFC/ADR is in review
 
 ### Research
 
 * [ ] Commitment Structure
-    * identify different commitment structures that could be used in the sdk and how they would be plugged (highlevel)
+    * Objective: 
+        * Identify different commitment structures that could be used in the sdk and how they would be plugged (highlevel)
+    * Progress:
+        * Conversations in slack have started
 * [ ] Cross lang
-    * What is needed to support many languages
-    * Encoding of passing between the cgo/ffi boundary
+    * Objective: 
+        * Answer, what is needed to support many languages
+        * Answer, what sort of encoding of passing between the cgo/ffi boundary
+    * Progress: 
+        * working group is meeting bi weekly
+        * ADR/RFC is in review
 
 ## Q3
 

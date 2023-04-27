@@ -132,7 +132,7 @@ func printAndValidateSigs(
 
 			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
 			if !ok {
-				cmd.PrintErrf("expected V2AdaptableTx")
+				cmd.PrintErrf("expected V2AdaptableTx, got %T", tx)
 				return false
 			}
 			txData := adaptableTx.GetSigningTxData()

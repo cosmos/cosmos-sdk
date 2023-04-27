@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
+
 	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -143,7 +144,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				builtTx := txBuilder.GetTx()
 				adaptableTx, ok := builtTx.(signing.V2AdaptableTx)
 				if !ok {
-					return fmt.Errorf("expected Tx to be a V2AdaptableTx")
+					return fmt.Errorf("expected Tx to be signing.V2AdaptableTx, got %T", builtTx)
 				}
 				txData := adaptableTx.GetSigningTxData()
 

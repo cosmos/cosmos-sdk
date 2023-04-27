@@ -98,7 +98,7 @@ func ProvideApp() (
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.Options{
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
 		ProtoFiles:            protoFiles,
 		AddressCodec:          globalAccAddressCodec{},
 		ValidatorAddressCodec: globalValAddressCodec{},

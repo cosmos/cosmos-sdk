@@ -175,7 +175,7 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 }
 
 func TestGetSigners(t *testing.T) {
-	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.Options{
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
 		AddressCodec:          testAddressCodec{},
 		ValidatorAddressCodec: testAddressCodec{},
 		ProtoFiles:            protoregistry.GlobalFiles,

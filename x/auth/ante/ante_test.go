@@ -49,13 +49,10 @@ func TestSimulateGasCost(t *testing.T) {
 				}
 
 				return TestCaseArgs{
-					accNums:   []uint64{0, 1, 2},
-					accSeqs:   []uint64{0, 0, 0},
 					feeAmount: feeAmount,
 					gasLimit:  testdata.NewTestGasLimit(),
 					msgs:      msgs,
-					privs:     []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv},
-				}
+				}.WithAccountsInfo(accs)
 			},
 			true,
 			true,
@@ -74,13 +71,10 @@ func TestSimulateGasCost(t *testing.T) {
 				}
 
 				return TestCaseArgs{
-					accNums:   []uint64{0, 1, 2},
-					accSeqs:   []uint64{0, 0, 0},
 					feeAmount: feeAmount,
 					gasLimit:  simulatedGas,
 					msgs:      msgs,
-					privs:     []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv},
-				}
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			true,
@@ -238,11 +232,8 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					accNums: []uint64{0},
-					accSeqs: []uint64{0},
-					msgs:    []sdk.Msg{msg},
-					privs:   []cryptotypes.PrivKey{accs[0].priv},
-				}
+					msgs: []sdk.Msg{msg},
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			true,
@@ -294,11 +285,8 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					accNums: []uint64{0, 1},
-					accSeqs: []uint64{0, 0},
-					msgs:    []sdk.Msg{msg1, msg2},
-					privs:   []cryptotypes.PrivKey{accs[0].priv, accs[1].priv},
-				}
+					msgs: []sdk.Msg{msg1, msg2},
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			true,

@@ -409,7 +409,7 @@ jobs:
         id: git_diff
         with:
           PATTERNS: |
-            simapp/**/*.go
+            **/*.go
             simapp/go.mod
             simapp/go.sum
       - name: tests simapp

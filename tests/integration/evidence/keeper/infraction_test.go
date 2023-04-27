@@ -23,7 +23,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -122,6 +121,9 @@ func initFixture(t testing.TB) *fixture {
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
 
 	evidenceKeeper := keeper.NewKeeper(cdc, keys[evidencetypes.StoreKey], stakingKeeper, slashingKeeper, address.NewBech32Codec("cosmos"))
+	router := evidencetypes.NewRouter()
+	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
+	evidenceKeeper.SetRouter(router)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
@@ -155,46 +157,9 @@ func initFixture(t testing.TB) *fixture {
 	}
 }
 
-// func initFixture2(t assert.TestingT) *fixture {
-// 	f := &fixture{}
-// 	var evidenceKeeper keeper.Keeper
-
-// 	app, err := simtestutil.Setup(
-// 		depinject.Configs(
-// 			testutil.AppConfig,
-// 			depinject.Supply(log.NewNopLogger()),
-// 		),
-// 		&evidenceKeeper,
-// 		&f.interfaceRegistry,
-// 		&f.accountKeeper,
-// 		&f.bankKeeper,
-// 		&f.slashingKeeper,
-// 		&f.stakingKeeper,
-// 	)
-// 	assert.NilError(t, err)
-
-// 	router := types.NewRouter()
-// 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
-// 	evidenceKeeper.SetRouter(router)
-
-// 	f.ctx = app.BaseApp.NewContext(false, cmtproto.Header{Height: 1})
-// 	f.app = app
-// 	f.evidenceKeeper = evidenceKeeper
-
-// 	return f
-// }
-
 func TestHandleDoubleSign(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-
-	router := types.NewRouter()
-	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(f.evidenceKeeper))
-	f.evidenceKeeper.SetRouter(router)
-
-	// fmt.Printf("a: %v\n", a)
-	b, _ := f.evidenceKeeper.GetEvidenceHandler(types.RouteEquivocation)
-	fmt.Printf("b: %v\n", b)
 
 	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1)
 	populateValidators(t, f)
@@ -301,7 +266,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		}},
 	}
 
-	f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams)
+	// f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams)
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
 	fmt.Printf("cp.Evidence: %v\n", cp.Evidence)
 

@@ -132,7 +132,7 @@ Issue: https://github.com/cosmos/iavl/issues/548
 * [ ] [Consensus Key Rotation](https://github.com/cosmos/cosmos-sdk/issues/5231) 
     * Objective:
         * Allow users to rotate consensus keys for their validators
-    * Progerss
+    * Progress
     * Merge pull request and updated ADR into main
 * [ ] [Operator key rotation](https://github.com/cosmos/cosmos-sdk/issues/3863)
     * Objective: 

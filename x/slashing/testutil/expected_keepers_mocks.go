@@ -334,7 +334,7 @@ func (mr *MockStakingKeeperMockRecorder) MaxValidators(arg0 interface{}) *gomock
 }
 
 // Slash mocks base method.
-func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec) math.Int {
+func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec) math.Int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(math.Int)
@@ -348,7 +348,7 @@ func (mr *MockStakingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 inte
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockStakingKeeper) SlashWithInfractionReason(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 types1.Infraction) math.Int {
+func (m *MockStakingKeeper) SlashWithInfractionReason(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 types1.Infraction) math.Int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(math.Int)
@@ -551,7 +551,7 @@ func (mr *MockStakingHooksMockRecorder) BeforeValidatorModified(ctx, valAddr int
 }
 
 // BeforeValidatorSlashed mocks base method.
-func (m *MockStakingHooks) BeforeValidatorSlashed(ctx types.Context, valAddr types.ValAddress, fraction types.Dec) error {
+func (m *MockStakingHooks) BeforeValidatorSlashed(ctx types.Context, valAddr types.ValAddress, fraction math.LegacyDec) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BeforeValidatorSlashed", ctx, valAddr, fraction)
 	ret0, _ := ret[0].(error)

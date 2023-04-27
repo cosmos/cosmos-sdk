@@ -23,6 +23,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -32,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -66,10 +68,7 @@ type fixture struct {
 	app *integration.App
 
 	sdkCtx sdk.Context
-	cdc    codec.Codec
-	keys   map[string]*storetypes.KVStoreKey
 
-	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
 	evidenceKeeper *keeper.Keeper
 	slashingKeeper slashingkeeper.Keeper
@@ -78,7 +77,7 @@ type fixture struct {
 
 func initFixture(t testing.TB) *fixture {
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, consensusparamtypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
@@ -116,6 +115,8 @@ func initFixture(t testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
+	// consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authority.String(), runtime.EventService{})
+
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
 
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
@@ -132,7 +133,10 @@ func initFixture(t testing.TB) *fixture {
 	evidenceModule := evidence.NewAppModule(*evidenceKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule, slashingModule, evidenceModule)
-
+	// fmt.Printf("integrationApp.BaseApp.IsSealed(): %v\n", integrationApp.BaseApp.IsSealed())
+	// integrationApp.BaseApp.SetParamStore(consensusParamsKeeper.ParamsStore)
+	a := integrationApp.BaseApp.GetConsensusParams(newCtx)
+	fmt.Printf("integrationApp.BaseApp.GetConsensusParams(newCtx): %v\n", a)
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// Register MsgServer and QueryServer
@@ -147,9 +151,6 @@ func initFixture(t testing.TB) *fixture {
 	return &fixture{
 		app:            integrationApp,
 		sdkCtx:         sdkCtx,
-		cdc:            cdc,
-		keys:           keys,
-		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		evidenceKeeper: evidenceKeeper,
 		slashingKeeper: slashingKeeper,
@@ -266,9 +267,8 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		}},
 	}
 
-	// f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams)
+	f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams)
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
-	fmt.Printf("cp.Evidence: %v\n", cp.Evidence)
 
 	ctx = ctx.WithConsensusParams(cp)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))

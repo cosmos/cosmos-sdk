@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -71,7 +72,7 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 		panic(fmt.Errorf("failed to load application version from store: %w", err))
 	}
 
-	bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName})
+	bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams})
 	bApp.Commit()
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)

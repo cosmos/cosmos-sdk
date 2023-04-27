@@ -13,6 +13,7 @@ type (
 	TxEncodingConfig interface {
 		TxEncoder() sdk.TxEncoder
 		TxDecoder() sdk.TxDecoder
+		SetTxDecoder(sdk.TxDecoder)
 		TxJSONEncoder() sdk.TxEncoder
 		TxJSONDecoder() sdk.TxDecoder
 		MarshalSignatureJSON([]signingtypes.SignatureV2) ([]byte, error)

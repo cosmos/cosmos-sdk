@@ -617,11 +617,8 @@ func TestAnteHandlerFees(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), feeAmount).Return(sdkerrors.ErrInsufficientFunds)
 
 				return TestCaseArgs{
-					accNums: []uint64{0},
-					accSeqs: []uint64{0},
-					msgs:    []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())},
-					privs:   []cryptotypes.PrivKey{accs[0].priv},
-				}
+					msgs: []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())},
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			false,
@@ -634,11 +631,8 @@ func TestAnteHandlerFees(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), feeAmount).Return(nil)
 
 				return TestCaseArgs{
-					accNums: []uint64{0},
-					accSeqs: []uint64{0},
-					msgs:    []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())},
-					privs:   []cryptotypes.PrivKey{accs[0].priv},
-				}
+					msgs: []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())},
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			true,
@@ -667,13 +661,10 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				return TestCaseArgs{
-					accNums:   []uint64{0},
-					accSeqs:   []uint64{0},
 					feeAmount: sdk.NewCoins(sdk.NewInt64Coin("atom", 0)),
 					gasLimit:  0,
 					msgs:      []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())},
-					privs:     []cryptotypes.PrivKey{accs[0].priv},
-				}
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			false,
@@ -686,13 +677,10 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 				suite.txBuilder.SetMemo("abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 
 				return TestCaseArgs{
-					accNums:   []uint64{0},
-					accSeqs:   []uint64{0},
 					feeAmount: sdk.NewCoins(sdk.NewInt64Coin("atom", 0)),
 					gasLimit:  801,
 					msgs:      []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())},
-					privs:     []cryptotypes.PrivKey{accs[0].priv},
-				}
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			false,
@@ -705,13 +693,10 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 				suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
 
 				return TestCaseArgs{
-					accNums:   []uint64{0},
-					accSeqs:   []uint64{0},
 					feeAmount: sdk.NewCoins(sdk.NewInt64Coin("atom", 0)),
 					gasLimit:  50000,
 					msgs:      []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())},
-					privs:     []cryptotypes.PrivKey{accs[0].priv},
-				}
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			false,
@@ -723,13 +708,10 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 				accs := suite.CreateTestAccounts(1)
 				suite.txBuilder.SetMemo(strings.Repeat("0123456789", 10))
 				return TestCaseArgs{
-					accNums:   []uint64{0},
-					accSeqs:   []uint64{0},
 					feeAmount: sdk.NewCoins(sdk.NewInt64Coin("atom", 0)),
 					gasLimit:  60000,
 					msgs:      []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())},
-					privs:     []cryptotypes.PrivKey{accs[0].priv},
-				}
+				}.WithAccountsInfo(accs)
 			},
 			false,
 			true,

@@ -11,9 +11,20 @@ import (
 
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
-	k.SetProposalID(ctx, data.StartingProposalId)
-	k.SetParams(ctx, *data.Params)
-	k.SetConstitution(ctx, data.Constitution)
+	err := k.SetProposalID(ctx, data.StartingProposalId)
+	if err != nil {
+		panic(err)
+	}
+
+	err = k.SetParams(ctx, *data.Params)
+	if err != nil {
+		panic(err)
+	}
+
+	err = k.SetConstitution(ctx, data.Constitution)
+	if err != nil {
+		panic(err)
+	}
 
 	// check if the deposits pool account exists
 	moduleAcc := k.GetGovernanceAccount(ctx)

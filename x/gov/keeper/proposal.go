@@ -203,7 +203,6 @@ func (keeper Keeper) GetProposal(ctx context.Context, proposalID uint64) (propos
 }
 
 // SetProposal sets a proposal to store.
-// Panics if can't marshal the proposal.
 func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) error {
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
@@ -228,7 +227,6 @@ func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) erro
 }
 
 // DeleteProposal deletes a proposal from store.
-// Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) error {
 	store := keeper.storeService.OpenKVStore(ctx)
 	proposal, err := keeper.GetProposal(ctx, proposalID)
@@ -258,7 +256,6 @@ func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) erro
 }
 
 // IterateProposals iterates over all the proposals and performs a callback function.
-// Panics when the iterator encounters a proposal which can't be unmarshaled.
 func (keeper Keeper) IterateProposals(ctx context.Context, cb func(proposal v1.Proposal) error) error {
 	store := keeper.storeService.OpenKVStore(ctx)
 	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.ProposalsKeyPrefix)
@@ -280,7 +277,6 @@ func (keeper Keeper) IterateProposals(ctx context.Context, cb func(proposal v1.P
 		}
 	}
 
-	// TODO: when we change the store iterator to one that returns an error we should return it here
 	return nil
 }
 

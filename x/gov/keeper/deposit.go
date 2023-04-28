@@ -197,13 +197,14 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 
 	// Add or update deposit object
 	deposit, err := keeper.GetDeposit(ctx, proposalID, depositorAddr)
-	if err == nil {
+	switch {
+	case err == nil:
 		// deposit exists
 		deposit.Amount = sdk.NewCoins(deposit.Amount...).Add(depositAmount...)
-	} else if errors.IsOf(err, types.ErrDepositNotFound) {
+	case errors.IsOf(err, types.ErrDepositNotFound):
 		// deposit doesn't exist
 		deposit = v1.NewDeposit(proposalID, depositorAddr, depositAmount)
-	} else {
+	default:
 		// failed to get deposit
 		return false, err
 	}

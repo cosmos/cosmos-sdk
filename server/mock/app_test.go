@@ -1,13 +1,13 @@
 package mock
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -38,8 +38,8 @@ func TestInitApp(t *testing.T) {
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
 	}
-	app.InitChain(req)
-	app.Commit()
+	app.InitChain(context.TODO(), &req)
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	// make sure we can query these values
 	query := abci.RequestQuery{
@@ -47,7 +47,8 @@ func TestInitApp(t *testing.T) {
 		Data: []byte("foo"),
 	}
 
-	qres := app.Query(query)
+	qres, err := app.Query(context.TODO(), &query)
+	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	require.Equal(t, []byte("bar"), qres.Value)
 }
@@ -64,18 +65,16 @@ func TestDeliverTx(t *testing.T) {
 	tx := NewTx(key, value, randomAccounts[0].Address)
 	txBytes := tx.GetSignBytes()
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
-		AppHash: []byte("apphash"),
-		Height:  1,
-	}})
+	res, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Hash:   []byte("apphash"),
+		Height: 1,
+		Txs:    [][]byte{txBytes},
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, res.AppHash)
 
-	dres := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, uint32(0), dres.Code, dres.Log)
-
-	app.EndBlock(abci.RequestEndBlock{})
-
-	cres := app.Commit()
-	require.NotEmpty(t, cres.Data)
+	_, err = app.Commit(context.TODO(), &abci.RequestCommit{})
+	require.NoError(t, err)
 
 	// make sure we can query these values
 	query := abci.RequestQuery{
@@ -83,7 +82,8 @@ func TestDeliverTx(t *testing.T) {
 		Data: []byte(key),
 	}
 
-	qres := app.Query(query)
+	qres, err := app.Query(context.TODO(), &query)
+	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	require.Equal(t, []byte(value), qres.Value)
 }

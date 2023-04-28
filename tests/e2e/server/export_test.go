@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
@@ -96,8 +95,10 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
-				app.Commit()
+				app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+					Height: i,
+				})
+				app.Commit(context.TODO(), &abci.RequestCommit{})
 			}
 
 			output := &bytes.Buffer{}
@@ -181,14 +182,14 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
 	assert.NilError(t, err)
 
-	app.InitChain(
-		abci.RequestInitChain{
+	app.InitChain(context.TODO(),
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   appGenesis.AppState,
 		},
 	)
-	app.Commit()
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	cmd := server.ExportCmd(
 		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {

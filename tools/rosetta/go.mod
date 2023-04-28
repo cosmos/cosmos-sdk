@@ -144,4 +144,5 @@ require (
 replace (
 	github.com/cosmos/cosmos-sdk => ../..
 	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/store => ../../store
 )

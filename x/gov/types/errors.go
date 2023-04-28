@@ -27,4 +27,5 @@ var (
 	ErrNoDeposits              = errors.Register(ModuleName, 19, "no deposits found")
 	ErrVotingPeriodEnded       = errors.Register(ModuleName, 20, "voting period already ended")
 	ErrInvalidProposal         = errors.Register(ModuleName, 21, "invalid proposal")
+	ErrStopIterating           = errors.Register(ModuleName, 22, "stop iteration")
 )

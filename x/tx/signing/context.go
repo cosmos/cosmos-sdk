@@ -4,14 +4,15 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	"cosmossdk.io/core/address"
 )
 
 // Context is a context for retrieving the list of signers from a
@@ -77,7 +78,7 @@ func NewContext(options Options) (*Context, error) {
 		getSignersFuncs:       map[protoreflect.FullName]getSignersFunc{},
 	}
 
-	return c, nil
+	return c, c.init()
 }
 
 type getSignersFunc func(proto.Message) ([][]byte, error)
@@ -91,25 +92,26 @@ func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, 
 	return signersFields, nil
 }
 
-// Validate performs a dry run of getting all msg's signers. This has 2 benefits:
+// init performs a dry run of getting all msg's signers. This has 2 benefits:
 // - it will error if any Msg has forgotten the "cosmos.msg.v1.signer"
 // annotation
 // - it will pre-populate the context's internal cache for getSignersFuncs
 // so that calling it in antehandlers will be faster.
-func (c *Context) Validate() error {
+func (c *Context) init() error {
 	var errs []error
 	c.fileResolver.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		for i := 0; i < fd.Services().Len(); i++ {
 			sd := fd.Services().Get(i)
-
-			// Skip services that are not annotated with the "cosmos.msg.v1.service" option.
-			if ext := proto.GetExtension(sd.Options(), msgv1.E_Service); ext == nil || !ext.(bool) {
+			// We use the heuristic that services named "Msg" are exactly the
+			// ones that need the proto annotation check.
+			if sd.Name() != "Msg" {
 				continue
 			}
 
 			for j := 0; j < sd.Methods().Len(); j++ {
 				md := sd.Methods().Get(j).Input()
-				_, err := c.getGetSignersFn(md)
+				msg := dynamicpb.NewMessage(md)
+				_, err := c.GetSigners(msg)
 				if err != nil {
 					errs = append(errs, err)
 				}
@@ -282,7 +284,9 @@ func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Co
 	return addrCdc
 }
 
-func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+// GetSigners returns the signers for a given message.
+func (c *Context) GetSigners(msg proto.Message) ([][]byte, error) {
+	messageDescriptor := msg.ProtoReflect().Descriptor()
 	f, ok := c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {
 		var err error
@@ -291,16 +295,6 @@ func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescript
 			return nil, err
 		}
 		c.getSignersFuncs[messageDescriptor.FullName()] = f
-	}
-
-	return f, nil
-}
-
-// GetSigners returns the signers for a given message.
-func (c *Context) GetSigners(msg proto.Message) ([][]byte, error) {
-	f, err := c.getGetSignersFn(msg.ProtoReflect().Descriptor())
-	if err != nil {
-		return nil, err
 	}
 
 	return f(msg)

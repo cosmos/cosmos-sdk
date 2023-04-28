@@ -109,15 +109,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	feePool, err := k.GetFeePool(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		panic(err)
-	}
+	feePool := k.GetFeePool(ctx)
+	params := k.GetParams(ctx)
 
 	dwi := make([]types.DelegatorWithdrawInfo, 0)
 	k.IterateDelegatorWithdrawAddrs(ctx, func(del, addr sdk.AccAddress) (stop bool) {
@@ -128,11 +121,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	pp, err := k.GetPreviousProposerConsAddr(ctx)
-	if err != nil {
-		panic(err)
-	}
-
+	pp := k.GetPreviousProposerConsAddr(ctx)
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
 
 	k.IterateValidatorOutstandingRewards(ctx,

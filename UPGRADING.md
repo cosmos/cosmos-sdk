@@ -71,10 +71,8 @@ This is no longer the case, the assertion has been loosened to only require modu
 The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
 
 * `x/auth`
-* `x/authz`
 * `x/bank`
 * `x/consensus`
-* `x/distribution`
 * `x/feegrant`
 * `x/nft`
 
@@ -93,11 +91,6 @@ The following modules `NewKeeper` function now also take a `log.Logger`:
 
 * `x/bank`
 
-The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
-
-* `x/authz`
-* `x/bank`
-* `x/distribution`
 
 ### depinject
 
@@ -142,6 +135,8 @@ The `sdk.Msg` interface has been updated to not require the implementation of th
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
 #### `x/auth`
+
+Methods in the `AccountKeeper` now use `context.Context` instead of `sdk.Context`. Any module that has an interface for it will need to update and re-generate mocks if needed.
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`.  Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 

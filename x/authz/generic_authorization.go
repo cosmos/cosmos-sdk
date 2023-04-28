@@ -1,8 +1,6 @@
 package authz
 
 import (
-	context "context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,7 +19,7 @@ func (a GenericAuthorization) MsgTypeURL() string {
 }
 
 // Accept implements Authorization.Accept.
-func (a GenericAuthorization) Accept(ctx context.Context, msg sdk.Msg) (AcceptResponse, error) {
+func (a GenericAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (AcceptResponse, error) {
 	return AcceptResponse{Accept: true}, nil
 }
 

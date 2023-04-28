@@ -1,7 +1,12 @@
 package codec
 
 import (
+	"fmt"
+
 	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // Deprecated: AminoCodec defines a codec that utilizes Codec for both binary and JSON
@@ -11,10 +16,7 @@ type AminoCodec struct {
 	*LegacyAmino
 }
 
-var (
-	_ BinaryCodec = &AminoCodec{}
-	_ JSONCodec   = &AminoCodec{}
-)
+var _ Codec = &AminoCodec{}
 
 // Deprecated: NewAminoCodec returns a reference to a new AminoCodec.
 // Use NewLegacyAmino instead.
@@ -129,3 +131,21 @@ func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
 func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
+
+func (ac *AminoCodec) GetMsgAnySigners(*types.Any) ([]string, protov2.Message, error) {
+	return nil, nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) GetMsgV1Signers(proto.Message) ([]string, protov2.Message, error) {
+	return nil, nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) GetMsgV2Signers(protov2.Message) ([]string, error) {
+	return nil, fmt.Errorf("amino codec does not support getting msg signers")
+}
+
+func (ac *AminoCodec) InterfaceRegistry() types.InterfaceRegistry {
+	panic("amino codec does not support interface registry")
+}
+
+func (ac *AminoCodec) mustEmbedCodec() {}

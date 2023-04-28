@@ -53,7 +53,7 @@ func TestBeginBlocker(t *testing.T) {
 	stakingKeeper.EndBlocker(ctx)
 	require.Equal(
 		t, bankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(stakingKeeper.GetParams(ctx).BondDenom, testutil.InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(stakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, stakingKeeper.Validator(ctx, addr).GetBondedTokens())
 

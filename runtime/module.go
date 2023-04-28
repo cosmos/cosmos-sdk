@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -98,22 +97,7 @@ func ProvideApp() (
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles:            protoFiles,
-		AddressCodec:          globalAccAddressCodec{},
-		ValidatorAddressCodec: globalValAddressCodec{},
-	})
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
-
-	// validate the signing context to make sure that messages are properly configured
-	// with cosmos.msg.v1.signer
-	err = interfaceRegistry.SigningContext().Validate()
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
-
+	interfaceRegistry := codectypes.NewInterfaceRegistryWithProtoFiles(protoFiles)
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
@@ -227,34 +211,4 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
-}
-
-// globalAccAddressCodec is a temporary address codec that we will use until we
-// can populate it with the correct bech32 prefixes without depending on the global.
-type globalAccAddressCodec struct{}
-
-func (g globalAccAddressCodec) StringToBytes(text string) ([]byte, error) {
-	if text == "" {
-		return nil, nil
-	}
-	return sdk.AccAddressFromBech32(text)
-}
-
-func (g globalAccAddressCodec) BytesToString(bz []byte) (string, error) {
-	if bz == nil {
-		return "", nil
-	}
-	return sdk.AccAddress(bz).String(), nil
-}
-
-// globalValAddressCodec is a temporary address codec that we will use until we
-// can populate it with the correct bech32 prefixes without depending on the global.
-type globalValAddressCodec struct{}
-
-func (g globalValAddressCodec) StringToBytes(text string) ([]byte, error) {
-	return sdk.ValAddressFromBech32(text)
-}
-
-func (g globalValAddressCodec) BytesToString(bz []byte) (string, error) {
-	return sdk.ValAddress(bz).String(), nil
 }

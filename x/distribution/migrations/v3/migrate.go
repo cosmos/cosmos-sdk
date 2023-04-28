@@ -1,7 +1,7 @@
 package v3
 
 import (
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -21,8 +21,8 @@ var ParamsKey = []byte{0x09}
 // version 3. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params module and stores them directly into the x/distribution
 // module state.
-func MigrateStore(ctx sdk.Context, storeService store.KVStoreService, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
-	store := storeService.OpenKVStore(ctx)
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
+	store := ctx.KVStore(storeKey)
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
@@ -39,5 +39,7 @@ func MigrateStore(ctx sdk.Context, storeService store.KVStoreService, legacySubs
 		return err
 	}
 
-	return store.Set(ParamsKey, bz)
+	store.Set(ParamsKey, bz)
+
+	return nil
 }

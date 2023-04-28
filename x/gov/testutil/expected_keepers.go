@@ -37,5 +37,5 @@ type StakingKeeper interface {
 
 // DistributionKeeper defines the expected distribution keeper
 type DistributionKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

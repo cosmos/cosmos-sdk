@@ -8,7 +8,6 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +18,6 @@ import (
 
 func TestStoreMigration(t *testing.T) {
 	distributionKey := storetypes.NewKVStoreKey("distribution")
-	storeService := runtime.NewKVStoreService(distributionKey)
 	ctx := testutil.DefaultContext(distributionKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(distributionKey)
 
@@ -87,7 +85,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v2.MigrateStore(ctx, storeService)
+	err := v2.MigrateStore(ctx, distributionKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

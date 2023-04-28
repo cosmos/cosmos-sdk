@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -25,7 +24,6 @@ import (
 func TestCalculateRewardsBasic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -38,7 +36,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -72,14 +70,13 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// end period
-	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// historical count should be 2 still
 	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// calculate delegation rewards
-	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be zero
 	require.True(t, rewards.IsZero())
@@ -90,25 +87,21 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
-	endingPeriod, _ = distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod = distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, rewards)
 
 	// commission should be the other half
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, valCommission.Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission)
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -121,7 +114,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -156,11 +149,10 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// end period
-	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
-	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be zero
 	require.True(t, rewards.IsZero())
@@ -189,26 +181,22 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
-	endingPeriod, _ = distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod = distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecFromInt(initial.QuoRaw(2))}}, rewards)
 
 	// commission should be the other half
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecFromInt(initial.QuoRaw(2))}},
-		valCommission.Commission)
+		distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission)
 }
 
 func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -221,7 +209,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -255,11 +243,10 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// end period
-	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
-	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be zero
 	require.True(t, rewards.IsZero())
@@ -309,26 +296,22 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
-	endingPeriod, _ = distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod = distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecFromInt(initial)}}, rewards)
 
 	// commission should be the other half
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecFromInt(initial)}},
-		valCommission.Commission)
+		distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission)
 }
 
 func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -341,7 +324,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -398,32 +381,27 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
-	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards for del1
-	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del0, endingPeriod)
-	require.NoError(t, err)
+	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del0, endingPeriod)
 
 	// rewards for del0 should be 3/4 initial
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial * 3 / 4)}}, rewards)
 
 	// calculate delegation rewards for del2
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
 
 	// rewards for del2 should be 1/4 initial
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial * 1 / 4)}}, rewards)
 
 	// commission should be equal to initial (50% twice)
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial)}}, valCommission.Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission)
 }
 
 func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -436,7 +414,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -496,7 +474,6 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -509,7 +486,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -542,11 +519,10 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// end period
-	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
-	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be zero
 	require.True(t, rewards.IsZero())
@@ -590,25 +566,21 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
-	endingPeriod, _ = distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod = distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}, rewards)
 
 	// commission should be the other half
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}, valCommission.Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission)
 }
 
 func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -621,7 +593,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -715,32 +687,27 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// end period
-	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards for del1
-	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards for del1 should be 2/3 initial (half initial first period, 1/6 initial second period)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.QuoInt64(2).Add(initial.QuoInt64(6))}}, rewards)
 
 	// calculate delegation rewards for del2
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
 
 	// rewards for del2 should be initial / 3
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.QuoInt64(3)}}, rewards)
 
 	// commission should be equal to initial (twice 50% commission, unaffected by slashing)
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}, valCommission.Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission)
 }
 
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -753,7 +720,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -843,26 +810,22 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	// end period
-	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards for del1
-	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards for del1 should be zero
 	require.True(t, rewards.IsZero())
 
 	// calculate delegation rewards for del2
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
 
 	// rewards for del2 should be zero
 	require.True(t, rewards.IsZero())
 
 	// commission should be zero
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
-	require.True(t, valCommission.Commission.IsZero())
+	require.True(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission.IsZero())
 
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -877,26 +840,22 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	// end period
-	endingPeriod, _ = distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod = distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards for del1
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards for del1 should be zero
 	require.True(t, rewards.IsZero())
 
 	// calculate delegation rewards for del2
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
 
 	// rewards for del2 should be 1/4 initial
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 4)}}, rewards)
 
 	// commission should be half initial
-	valCommission, err = distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, valCommission.Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission)
 
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -911,32 +870,27 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	// end period
-	endingPeriod, _ = distrKeeper.IncrementValidatorPeriod(ctx, val)
+	endingPeriod = distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// calculate delegation rewards for del1
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards for del1 should be 1/4 initial
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 4)}}, rewards)
 
 	// calculate delegation rewards for del2
-	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
-	require.NoError(t, err)
+	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
 
 	// rewards for del2 should be 1/2 initial
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, rewards)
 
 	// commission should be zero
-	valCommission, err = distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
-	require.NoError(t, err)
-	require.True(t, valCommission.Commission.IsZero())
+	require.True(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission.IsZero())
 }
 
 func Test100PercentCommissionReward(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -949,7 +903,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		key,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,

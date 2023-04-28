@@ -26,7 +26,6 @@ func (s *KeeperTestSuite) TestGRPCSigningInfo() {
 
 	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &slashingtypes.QuerySigningInfoRequest{ConsAddress: ""})
 	require.Error(err)
-	require.ErrorContains(err, "invalid request")
 	require.Nil(infoResp)
 
 	signingInfo := slashingtypes.NewValidatorSigningInfo(

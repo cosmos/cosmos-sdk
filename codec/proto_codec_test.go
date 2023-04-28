@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/status"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -175,16 +174,11 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 }
 
 func TestGetSigners(t *testing.T) {
-	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
-		AddressCodec:          testAddressCodec{},
-		ValidatorAddressCodec: testAddressCodec{},
-		ProtoFiles:            protoregistry.GlobalFiles,
-	})
-	require.NoError(t, err)
+	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	testAddr := sdk.AccAddress("test")
+	testAddr := sdk.AccAddress([]byte("test"))
 	testAddrStr := testAddr.String()
-	testAddr2 := sdk.AccAddress("test2")
+	testAddr2 := sdk.AccAddress([]byte("test2"))
 	testAddrStr2 := testAddr2.String()
 
 	msgSendV1 := banktypes.NewMsgSend(testAddr, testAddr2, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1))))
@@ -196,27 +190,17 @@ func TestGetSigners(t *testing.T) {
 
 	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
 	require.NoError(t, err)
-	require.Equal(t, [][]byte{testAddr}, signers)
+	require.Equal(t, []string{testAddrStr}, signers)
 	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
 
 	signers, err = cdc.GetMsgV2Signers(msgSendV2)
 	require.NoError(t, err)
-	require.Equal(t, [][]byte{testAddr}, signers)
+	require.Equal(t, []string{testAddrStr}, signers)
 
 	msgSendAny, err := types.NewAnyWithValue(msgSendV1)
 	require.NoError(t, err)
 	signers, msgSendV2Copy, err = cdc.GetMsgAnySigners(msgSendAny)
 	require.NoError(t, err)
-	require.Equal(t, [][]byte{testAddr}, signers)
+	require.Equal(t, []string{testAddrStr}, signers)
 	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
-}
-
-type testAddressCodec struct{}
-
-func (t testAddressCodec) StringToBytes(text string) ([]byte, error) {
-	return sdk.AccAddressFromBech32(text)
-}
-
-func (t testAddressCodec) BytesToString(bz []byte) (string, error) {
-	return sdk.AccAddress(bz).String(), nil
 }

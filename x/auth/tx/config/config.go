@@ -7,14 +7,17 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/direct"
+	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,7 +35,7 @@ import (
 func init() {
 	appmodule.Register(&txconfigv1.Config{},
 		appmodule.Provide(ProvideModule),
-		appmodule.Provide(ProvideProtoRegistry),
+		appmodule.Provide(ProvideSignModeOptions),
 	)
 }
 
@@ -40,7 +43,7 @@ type ModuleInputs struct {
 	depinject.In
 	Config              *txconfigv1.Config
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
-	ProtoFileResolver   txsigning.ProtoFileResolver
+	SignModeOptions     tx.SignModeOptions
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
 	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
@@ -55,29 +58,22 @@ type ModuleOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideProtoRegistry() txsigning.ProtoFileResolver {
-	return registry.MergedProtoRegistry()
+// ProvideSignModeOptions provides the default x/tx SignModeOptions for the SDK.
+func ProvideSignModeOptions(bk BankKeeper) tx.SignModeOptions {
+	opts, err := NewSignModeOptionsWithMetadataQueryFn(NewBankKeeperCoinMetadataQueryFn(bk))
+	if err != nil {
+		panic(err)
+	}
+	return opts
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
+	var txConfig client.TxConfig
 	var customSignModeHandlers []txsigning.SignModeHandler
 	if in.CustomSignModeHandlers != nil {
 		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
-	sdkConfig := sdk.GetConfig()
-	txConfigOptions := tx.ConfigOptions{
-		SigningOptions: &txsigning.Options{
-			FileResolver: in.ProtoFileResolver,
-			// From static config? But this is already in auth config.
-			// - Provide codecs there as types?
-			// - Provide static prefix there exported from config?
-			// - Just do as below?
-			AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
-			ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
-		},
-		CustomSignModes: customSignModeHandlers,
-	}
-	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+	txConfig = tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, in.SignModeOptions, customSignModeHandlers...)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers
@@ -199,6 +195,38 @@ func NewGRPCCoinMetadataQueryFn(grpcConn grpc.ClientConnInterface) textual.CoinM
 
 		return res.Metadata, nil
 	}
+}
+
+// NewSignModeOptionsWithMetadataQueryFn creates a new SignModeOptions instance
+func NewSignModeOptionsWithMetadataQueryFn(fn textual.CoinMetadataQueryFn) (tx.SignModeOptions, error) {
+	protoFiles := registry.MergedProtoRegistry()
+	typeResolver := protoregistry.GlobalTypes
+	signersContext, err := txsigning.NewGetSignersContext(txsigning.GetSignersOptions{ProtoFiles: protoFiles})
+	if err != nil {
+		return tx.SignModeOptions{}, err
+	}
+
+	aminoJSONEncoder := aminojson.NewAminoJSON()
+	signModeOptions := tx.SignModeOptions{
+		Direct: &direct.SignModeHandler{},
+		DirectAux: &directaux.SignModeHandlerOptions{
+			FileResolver:   protoFiles,
+			TypeResolver:   typeResolver,
+			SignersContext: signersContext,
+		},
+		AminoJSON: &aminojson.SignModeHandlerOptions{
+			FileResolver: protoFiles,
+			TypeResolver: typeResolver,
+			Encoder:      &aminoJSONEncoder,
+		},
+		Textual: &textual.SignModeOptions{
+			CoinMetadataQuerier: fn,
+			FileResolver:        protoFiles,
+			TypeResolver:        typeResolver,
+		},
+	}
+
+	return signModeOptions, nil
 }
 
 // metadataExists parses the error, and only propagates the error if it's

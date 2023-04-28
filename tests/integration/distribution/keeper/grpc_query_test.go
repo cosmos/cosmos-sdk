@@ -100,11 +100,8 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	// set outstanding rewards
-	err := f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
-	assert.NilError(t, err)
-
-	rewards, err := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
-	assert.NilError(t, err)
+	f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	rewards := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
 
 	testCases := []struct {
 		name      string

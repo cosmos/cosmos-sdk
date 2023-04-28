@@ -2,6 +2,7 @@ package client
 
 import (
 	txsigning "cosmossdk.io/x/tx/signing"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -48,5 +49,9 @@ type (
 		SetTimeoutHeight(height uint64)
 		SetFeeGranter(feeGranter sdk.AccAddress)
 		AddAuxSignerData(tx.AuxSignerData) error
+	}
+
+	ExtendedTxBuilder interface {
+		SetExtensionOptions(extOpts ...*codectypes.Any)
 	}
 )

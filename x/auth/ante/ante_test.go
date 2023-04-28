@@ -805,7 +805,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				require.NoError(t, err)
 
 				msgs = []sdk.Msg{msg3}
-				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[0].priv, accs[1].priv}, []uint64{accs[0].acc.GetAccountNumber(), accs[1].acc.GetAccountNumber()}, []uint64{accs[0].acc.GetSequence() + 1, accs[1].acc.GetSequence() + 1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[1].priv, accs[2].priv}, []uint64{accs[1].acc.GetAccountNumber(), accs[2].acc.GetAccountNumber()}, []uint64{accs[1].acc.GetSequence() + 1, accs[2].acc.GetSequence() + 1}
 
 				return TestCaseArgs{
 					accNums: accNums,

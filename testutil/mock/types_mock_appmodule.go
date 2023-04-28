@@ -44,18 +44,6 @@ func (m *MockAppModuleWithAllExtensions) EXPECT() *MockAppModuleWithAllExtension
 	return m.recorder
 }
 
-// BeginBlock mocks base method.
-func (m *MockAppModuleWithAllExtensions) BeginBlock(arg0 types1.Context, arg1 types.RequestBeginBlock) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "BeginBlock", arg0, arg1)
-}
-
-// BeginBlock indicates an expected call of BeginBlock.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) BeginBlock(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginBlock", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).BeginBlock), arg0, arg1)
-}
-
 // ConsensusVersion mocks base method.
 func (m *MockAppModuleWithAllExtensions) ConsensusVersion() uint64 {
 	m.ctrl.T.Helper()
@@ -85,17 +73,18 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) DefaultGenesis(arg0 interf
 }
 
 // EndBlock mocks base method.
-func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 types1.Context, arg1 types.RequestEndBlock) []types.ValidatorUpdate {
+func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]types.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EndBlock", arg0, arg1)
+	ret := m.ctrl.Call(m, "EndBlock", arg0)
 	ret0, _ := ret[0].([]types.ValidatorUpdate)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // EndBlock indicates an expected call of EndBlock.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) EndBlock(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAppModuleWithAllExtensionsMockRecorder) EndBlock(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).EndBlock), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).EndBlock), arg0)
 }
 
 // ExportGenesis mocks base method.

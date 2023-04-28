@@ -39,7 +39,7 @@ func initChain(
 		ConsensusParams: consensusParams,
 		Time:            genesisTimestamp,
 	}
-	res := app.InitChain(req)
+	res := app.InitChain(context.TODO(), &req)
 	validators := newMockValidators(r, res.Validators, params)
 
 	return validators, genesisTimestamp, accounts, chainID

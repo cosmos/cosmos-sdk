@@ -106,12 +106,12 @@ func ProvideApp() (
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
 	app := &App{
-		storeKeys:         nil,
-		interfaceRegistry: interfaceRegistry,
-		cdc:               cdc,
-		amino:             amino,
-		basicManager:      module.BasicManager{},
-		msgServiceRouter:  msgServiceRouter,
+		BasicModuleManager: module.BasicManager{},
+		storeKeys:          nil,
+		interfaceRegistry:  interfaceRegistry,
+		cdc:                cdc,
+		amino:              amino,
+		msgServiceRouter:   msgServiceRouter,
 	}
 	appBuilder := &AppBuilder{app}
 
@@ -136,20 +136,20 @@ func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
-	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
+	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 
 	for name, mod := range inputs.Modules {
 		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
-			app.basicManager[name] = customBasicMod
+			app.BasicModuleManager[name] = customBasicMod
 			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
 			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 			continue
 		}
 
 		if basicMod, ok := mod.(module.AppModuleBasic); ok {
-			app.basicManager[name] = basicMod
+			app.BasicModuleManager[name] = basicMod
 			basicMod.RegisterInterfaces(inputs.InterfaceRegistry)
 			basicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 		}

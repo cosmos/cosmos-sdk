@@ -91,15 +91,17 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 }
 
 // NewBasicManagerFromManager creates a new BasicManager from a Manager
-func NewBasicManagerFromManager(manager *Manager) BasicManager {
+func NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic) BasicManager {
 	moduleMap := make(map[string]AppModuleBasic)
 	for name, module := range manager.Modules {
-		appModuleBasic, ok := module.(AppModuleBasic)
-		if !ok {
+		if customBasicMod, ok := customModuleBasics[name]; ok {
+			moduleMap[name] = customBasicMod
 			continue
 		}
 
-		moduleMap[name] = appModuleBasic
+		if basicMod, ok := module.(AppModuleBasic); ok {
+			moduleMap[name] = basicMod
+		}
 	}
 
 	return moduleMap

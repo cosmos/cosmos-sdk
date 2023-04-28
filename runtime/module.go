@@ -121,14 +121,15 @@ func ProvideApp() (
 type AppInputs struct {
 	depinject.In
 
-	AppConfig         *appv1alpha1.Config
-	Config            *runtimev1alpha1.Module
-	AppBuilder        *AppBuilder
-	Modules           map[string]appmodule.AppModule
-	BaseAppOptions    []BaseAppOption
-	InterfaceRegistry codectypes.InterfaceRegistry
-	LegacyAmino       *codec.LegacyAmino
-	Logger            log.Logger
+	AppConfig          *appv1alpha1.Config
+	Config             *runtimev1alpha1.Module
+	AppBuilder         *AppBuilder
+	Modules            map[string]appmodule.AppModule
+	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
+	BaseAppOptions     []BaseAppOption
+	InterfaceRegistry  codectypes.InterfaceRegistry
+	LegacyAmino        *codec.LegacyAmino
+	Logger             log.Logger
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -140,6 +141,13 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.logger = inputs.Logger
 
 	for name, mod := range inputs.Modules {
+		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
+			app.basicManager[name] = customBasicMod
+			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
+			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+			continue
+		}
+
 		if basicMod, ok := mod.(module.AppModuleBasic); ok {
 			app.basicManager[name] = basicMod
 			basicMod.RegisterInterfaces(inputs.InterfaceRegistry)

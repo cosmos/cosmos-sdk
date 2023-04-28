@@ -16,10 +16,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 const appName = "integration-app"
@@ -47,8 +51,12 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	bApp.MountKVStores(keys)
 
 	bApp.SetInitChainer(func(ctx sdk.Context, req cmtabcitypes.RequestInitChain) (cmtabcitypes.ResponseInitChain, error) {
+		fmt.Printf("consensusparamkeeper.StoreKey: %v\n", consensusparamkeeper.StoreKey)
+		// ctx.KVStore(keys[consensusparamkeeper.StoreKey]).Set([]byte(keys[consensusparamkeeper.StoreKey].Name()), []byte("no_key"))
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
+
+				fmt.Printf("req.ConsensusParams: %v\n", req.ConsensusParams)
 				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
 			}
 		}
@@ -67,6 +75,9 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	router := baseapp.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(router)
+
+	consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
+	bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 
 	if err := bApp.LoadLatestVersion(); err != nil {
 		panic(fmt.Errorf("failed to load application version from store: %w", err))

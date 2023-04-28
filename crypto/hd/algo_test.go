@@ -3,7 +3,7 @@ package hd
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types/eth"
+	"github.com/ledgerwatch/erigon-lib/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,8 +29,8 @@ func TestDerivation(t *testing.T) {
 	require.False(t, privkey.Equals(badPrivKey))
 
 	// require.Equal(t, account.Address.String(), "0xA588C66983a81e800Db4dF74564F09f91c026351")
-	require.Equal(t, eth.BytesToAddress(privkey.PubKey().Address().Bytes()).String(), "0xA588C66983a81e800Db4dF74564F09f91c026351")
-	require.NotEqual(t, eth.BytesToAddress(badPrivKey.PubKey().Address().Bytes()).String(), "0xA588C66983a81e800Db4dF74564F09f91c026351")
+	require.Equal(t, common.BytesToAddress(privkey.PubKey().Address().Bytes()).String(), "0xA588C66983a81e800Db4dF74564F09f91c026351")
+	require.NotEqual(t, common.BytesToAddress(badPrivKey.PubKey().Address().Bytes()).String(), "0xA588C66983a81e800Db4dF74564F09f91c026351")
 
 }
 

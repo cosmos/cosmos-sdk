@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	secp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/eth"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -157,7 +156,7 @@ func (pubKey PubKey) Address() cmtcrypto.Address {
 	if err != nil || pubk == nil {
 		return nil
 	}
-	return cmtcrypto.Address(eth.Keccak256(FromECDSAPub(pubk)[1:])[12:])
+	return cmtcrypto.Address(Keccak256(FromECDSAPub(pubk)[1:])[12:])
 }
 
 // Bytes returns the raw bytes of the ECDSA public key.

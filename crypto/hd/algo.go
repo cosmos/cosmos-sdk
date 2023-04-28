@@ -2,7 +2,7 @@ package hd
 
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/eth"
+	ethsecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/eth"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/go-bip39"
 )
@@ -69,7 +69,7 @@ func (s secp256k1Algo) Generate() GenerateFn {
 		bzArr := make([]byte, secp256k1.PrivKeySize)
 		copy(bzArr, bz)
 		if s.keyType == EthSecp256k1Type {
-			return &eth.PrivKey{Key: bz}
+			return &ethsecp256k1.PrivKey{Key: bz}
 		}
 		return &secp256k1.PrivKey{Key: bz}
 	}

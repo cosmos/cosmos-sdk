@@ -76,7 +76,7 @@ func (privKey PrivKey) PubKey() cryptotypes.PubKey {
 	}
 
 	return &PubKey{
-		Key: secp.CompressPubkey(ecdsaPrivKey.PublicKey.X, ecdsaPrivKey.PublicKey.Y),
+		Key: CompressPubkey(&ecdsaPrivKey.PublicKey),
 	}
 }
 

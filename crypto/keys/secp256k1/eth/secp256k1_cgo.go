@@ -51,10 +51,16 @@ func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
 	return secp256k1.VerifySignature(pubKey.Key, msg, sig)
 }
 
+// DecompressPubkey decompresses a 33-byte compressed public key.
 func DecompressPubkey(pubkey []byte) (*ecdsa.PublicKey, error) {
 	x, y := secp.DecompressPubkey(pubkey)
 	if x == nil {
 		return nil, fmt.Errorf("invalid public key")
 	}
 	return &ecdsa.PublicKey{X: x, Y: y, Curve: secp.S256()}, nil
+}
+
+// CompressPubkey encodes a public key to the 33-byte compressed format.
+func CompressPubkey(pubkey *ecdsa.PublicKey) []byte {
+	return secp.CompressPubkey(pubkey.X, pubkey.Y)
 }

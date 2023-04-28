@@ -88,7 +88,8 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID2 := proposal2.Id
 
-	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], s1.GovKeeper.GetParams(ctx).MinDeposit)
+	params, _ := s1.GovKeeper.GetParams(ctx)
+	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], params.MinDeposit)
 	assert.NilError(t, err)
 	assert.Assert(t, votingStarted)
 
@@ -105,7 +106,7 @@ func TestImportExportQueues(t *testing.T) {
 	distributionGenState := s1.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
-	govGenState := gov.ExportGenesis(ctx, s1.GovKeeper)
+	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)
 	genesisState := s1.appBuilder.DefaultGenesis()
 
 	genesisState[authtypes.ModuleName] = s1.cdc.MustMarshalJSON(authGenState)
@@ -144,8 +145,9 @@ func TestImportExportQueues(t *testing.T) {
 
 	ctx2 := s2.app.BaseApp.NewContext(false, cmtproto.Header{})
 
+	params, err = s2.GovKeeper.GetParams(ctx2)
 	// Jump the time forward past the DepositPeriod and VotingPeriod
-	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*s2.GovKeeper.GetParams(ctx2).MaxDepositPeriod).Add(*s2.GovKeeper.GetParams(ctx2).VotingPeriod))
+	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
 	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1)
@@ -156,7 +158,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	macc := s2.GovKeeper.GetGovernanceAccount(ctx2)
-	assert.DeepEqual(t, sdk.Coins(s2.GovKeeper.GetParams(ctx2).MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	assert.DeepEqual(t, sdk.Coins(params.MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	gov.EndBlocker(ctx2, s2.GovKeeper)

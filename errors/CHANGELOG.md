@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* [#15989](https://github.com/cosmos/cosmos-sdk/pull/15989) Add `ErrStopIterating` for modules to use for breaking out of iteration.
+
 ## v1.0.0
 
 ### Features

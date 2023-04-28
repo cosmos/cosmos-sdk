@@ -158,7 +158,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			require.NoError(t, err)
 
 			// check result
-			ctx = bapp.GetContextForDeliverTx(txBytes)
+			ctx = bapp.GetContextForFinalizeBlock(txBytes)
 			okValue := ctx.KVStore(bapp.UnsafeFindStoreKey(banktypes.ModuleName)).Get([]byte("ok"))
 
 			if tc.expErr {

@@ -218,7 +218,7 @@ func TestStartStandAlone(t *testing.T) {
 	svr, err := abci_server.NewServer(svrAddr, "socket", app)
 	require.NoError(t, err, "error creating listener")
 
-	svr.SetLogger(servercmtlog.CometZeroLogWrapper{Logger: logger.With("module", "abci-server")})
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "abci-server")})
 	err = svr.Start()
 	require.NoError(t, err)
 

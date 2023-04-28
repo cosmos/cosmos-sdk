@@ -1,5 +1,5 @@
-//go:build libsecp256k1_sdk
-// +build libsecp256k1_sdk
+//go:build !libsecp256k1_sdk
+// +build !libsecp256k1_sdk
 
 package eth
 

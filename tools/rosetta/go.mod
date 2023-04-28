@@ -3,7 +3,7 @@ module cosmossdk.io/tools/rosetta
 go 1.20
 
 require (
-	cosmossdk.io/log v1.0.0
+	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.0
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.37.1
@@ -23,7 +23,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc // indirect
-	cosmossdk.io/x/tx v0.5.5 // indirect
+	cosmossdk.io/x/tx v0.6.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -140,5 +140,8 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// this seems to be required
-replace github.com/cosmos/cosmos-sdk => ../..
+// TODO: remove after merge of https://github.com/cosmos/cosmos-sdk/pull/15873 and tagging releases
+replace (
+	github.com/cosmos/cosmos-sdk => ../..
+	cosmossdk.io/x/tx => ../../x/tx
+)

@@ -164,9 +164,9 @@ func TestImportExportQueues(t *testing.T) {
 	gov.EndBlocker(ctx2, s2.GovKeeper)
 
 	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1)
-	assert.Assert(t, ok == false)
+	assert.assert(t, ok == false)
 
-	proposal2, ok = s2.GovKeeper.GetProposal(ctx2, proposalID2)
-	assert.Assert(t, ok)
+	proposal2, err = s2.GovKeeper.GetProposal(ctx2, proposalID2)
+	assert.Assert(t, err == nil)
 	assert.Assert(t, proposal2.Status == v1.StatusRejected)
 }

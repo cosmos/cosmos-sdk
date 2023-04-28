@@ -277,10 +277,10 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	for i, priv := range privs {
 		addr := sdk.AccAddress(priv.PubKey().Address())
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i)))
+		require.NoError(t, acc.SetAccountNumber(uint64(i)+1000))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
-		accNums[i] = uint64(i)
+		accNums[i] = acc.GetAccountNumber()
 		accSeqs[i] = uint64(0)
 	}
 	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))

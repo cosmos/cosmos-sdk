@@ -13,8 +13,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/x/tx/signing"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -29,7 +27,6 @@ type ProtoCodecMarshaler interface {
 // encoding.
 type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
-	getSignersCtx     *signing.GetSignersContext
 }
 
 var (
@@ -39,16 +36,8 @@ var (
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
-	getSignersCtx, err := signing.NewGetSignersContext(
-		signing.GetSignersOptions{
-			ProtoFiles: interfaceRegistry,
-		})
-	if err != nil {
-		panic(err)
-	}
 	return &ProtoCodec{
 		interfaceRegistry: interfaceRegistry,
-		getSignersCtx:     getSignersCtx,
 	}
 }
 
@@ -277,7 +266,7 @@ func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
 }
 
-func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]string, proto.Message, error) {
+func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, proto.Message, error) {
 	msgv2, err := anyutil.Unpack(&anypb.Any{
 		TypeUrl: msg.TypeUrl,
 		Value:   msg.Value,
@@ -286,17 +275,17 @@ func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]string, proto.Message, 
 		return nil, nil, err
 	}
 
-	signers, err := pc.getSignersCtx.GetSigners(msgv2)
+	signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgv2)
 	return signers, msgv2, err
 }
 
-func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([]string, error) {
-	return pc.getSignersCtx.GetSigners(msg)
+func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([][]byte, error) {
+	return pc.interfaceRegistry.SigningContext().GetSigners(msg)
 }
 
-func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([]string, proto.Message, error) {
+func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
 	if msgV2, ok := msg.(proto.Message); ok {
-		signers, err := pc.getSignersCtx.GetSigners(msgV2)
+		signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgV2)
 		return signers, msgV2, err
 	}
 	a, err := types.NewAnyWithValue(msg)

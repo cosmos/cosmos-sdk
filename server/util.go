@@ -170,7 +170,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 			// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
 			filterFunc, err := log.ParseLogLevel(logLvlStr)
 			if err != nil {
-				break
+				return err
 			}
 
 			opts = append(opts, log.FilterOption(filterFunc))

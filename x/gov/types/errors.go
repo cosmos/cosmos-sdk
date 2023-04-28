@@ -28,4 +28,6 @@ var (
 	ErrVotingPeriodEnded       = errors.Register(ModuleName, 20, "voting period already ended")
 	ErrInvalidProposal         = errors.Register(ModuleName, 21, "invalid proposal")
 	ErrStopIterating           = errors.Register(ModuleName, 22, "stop iteration")
+	ErrDepositNotFound         = errors.Register(ModuleName, 23, "deposit is not found")
+	ErrVoteNotFound            = errors.Register(ModuleName, 24, "deposit is not found")
 )

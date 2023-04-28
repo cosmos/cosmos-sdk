@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
@@ -38,9 +39,12 @@ func (q Keeper) Proposal(ctx context.Context, req *v1.QueryProposalRequest) (*v1
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	proposal, found := q.GetProposal(ctx, req.ProposalId)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+	proposal, err := q.GetProposal(ctx, req.ProposalId)
+	if err != nil {
+		if errors.IsOf(err, types.ErrProposalNotFound) {
+			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &v1.QueryProposalResponse{Proposal: &proposal}, nil
@@ -70,7 +74,9 @@ func (q Keeper) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*
 					return nil, err
 				}
 
-				_, matchVoter = q.GetVote(ctx, p.Id, voter)
+				_, err = q.GetVote(ctx, p.Id, voter)
+				// if no error, vote found, matchVoter = true
+				matchVoter = err == nil
 			}
 
 			// match depositor (if supplied)
@@ -79,7 +85,9 @@ func (q Keeper) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*
 				if err != nil {
 					return nil, err
 				}
-				_, matchDepositor = q.GetDeposit(ctx, p.Id, depositor)
+				_, err = q.GetDeposit(ctx, p.Id, depositor)
+				// if no error, deposit found, matchDepositor = true
+				matchDepositor = err == nil
 			}
 
 			if matchVoter && matchDepositor && matchStatus {
@@ -115,10 +123,13 @@ func (q Keeper) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVo
 	if err != nil {
 		return nil, err
 	}
-	vote, found := q.GetVote(ctx, req.ProposalId, voter)
-	if !found {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
+	vote, err := q.GetVote(ctx, req.ProposalId, voter)
+	if err != nil {
+		if errors.IsOf(err, types.ErrVoteNotFound) {
+			return nil, status.Errorf(codes.InvalidArgument,
+				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &v1.QueryVoteResponse{Vote: &vote}, nil
@@ -208,10 +219,13 @@ func (q Keeper) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (*v1.Q
 	if err != nil {
 		return nil, err
 	}
-	deposit, found := q.GetDeposit(ctx, req.ProposalId, depositor)
-	if !found {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)
+	deposit, err := q.GetDeposit(ctx, req.ProposalId, depositor)
+	if err != nil {
+		if errors.IsOf(err, types.ErrDepositNotFound) {
+			return nil, status.Errorf(codes.InvalidArgument,
+				"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &v1.QueryDepositResponse{Deposit: &deposit}, nil
@@ -258,9 +272,12 @@ func (q Keeper) TallyResult(ctx context.Context, req *v1.QueryTallyResultRequest
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	proposal, ok := q.GetProposal(ctx, req.ProposalId)
-	if !ok {
-		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+	proposal, err := q.GetProposal(ctx, req.ProposalId)
+	if err != nil {
+		if errors.IsOf(err, types.ErrProposalNotFound) {
+			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	var tallyResult v1.TallyResult

@@ -16,23 +16,23 @@ import (
 )
 
 // GetDeposit gets the deposit of a specific depositor on a specific proposal
-func (keeper Keeper) GetDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit v1.Deposit, found bool) {
+func (keeper Keeper) GetDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit v1.Deposit, err error) {
 	store := keeper.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.DepositKey(proposalID, depositorAddr))
 	if err != nil {
-		return deposit, false
+		return deposit, err
 	}
 
 	if bz == nil {
-		return deposit, false
+		return deposit, types.ErrDepositNotFound
 	}
 
 	err = keeper.cdc.Unmarshal(bz, &deposit)
 	if err != nil {
-		return deposit, false
+		return deposit, err
 	}
 
-	return deposit, true
+	return deposit, nil
 }
 
 // SetDeposit sets a Deposit to the gov store
@@ -53,9 +53,9 @@ func (keeper Keeper) SetDeposit(ctx context.Context, deposit v1.Deposit) error {
 
 // GetAllDeposits returns all the deposits from the store
 func (keeper Keeper) GetAllDeposits(ctx context.Context) (deposits v1.Deposits, err error) {
-	err = keeper.IterateAllDeposits(ctx, func(deposit v1.Deposit) bool {
+	err = keeper.IterateAllDeposits(ctx, func(deposit v1.Deposit) error {
 		deposits = append(deposits, &deposit)
-		return false
+		return nil
 	})
 
 	return
@@ -63,9 +63,9 @@ func (keeper Keeper) GetAllDeposits(ctx context.Context) (deposits v1.Deposits, 
 
 // GetDeposits returns all the deposits of a proposal
 func (keeper Keeper) GetDeposits(ctx context.Context, proposalID uint64) (deposits v1.Deposits, err error) {
-	err = keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
+	err = keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) error {
 		deposits = append(deposits, &deposit)
-		return false
+		return nil
 	})
 
 	return
@@ -75,38 +75,47 @@ func (keeper Keeper) GetDeposits(ctx context.Context, proposalID uint64) (deposi
 func (keeper Keeper) DeleteAndBurnDeposits(ctx context.Context, proposalID uint64) error {
 	store := keeper.storeService.OpenKVStore(ctx)
 
-	err := keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
+	err := keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) error {
 		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, deposit.Amount)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		depositor, err := keeper.authKeeper.StringToBytes(deposit.Depositor)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		store.Delete(types.DepositKey(proposalID, depositor))
-		return false
+		err = store.Delete(types.DepositKey(proposalID, depositor))
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 
 	return err
 }
 
 // IterateAllDeposits iterates over all the stored deposits and performs a callback function.
-func (keeper Keeper) IterateAllDeposits(ctx context.Context, cb func(deposit v1.Deposit) (stop bool)) error {
+func (keeper Keeper) IterateAllDeposits(ctx context.Context, cb func(deposit v1.Deposit) error) error {
 	store := keeper.storeService.OpenKVStore(ctx)
 	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.DepositsKeyPrefix)
-
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit v1.Deposit
 
-		keeper.cdc.MustUnmarshal(iterator.Value(), &deposit)
+		err := keeper.cdc.Unmarshal(iterator.Value(), &deposit)
+		if err != nil {
+			return err
+		}
 
-		if cb(deposit) {
-			break
+		err = cb(deposit)
+		// exit early without error if cb returns ErrStopIterating
+		if errors.IsOf(err, types.ErrStopIterating) {
+			return nil
+		} else if err != nil {
+			return err
 		}
 	}
 
@@ -114,7 +123,7 @@ func (keeper Keeper) IterateAllDeposits(ctx context.Context, cb func(deposit v1.
 }
 
 // IterateDeposits iterates over all the proposals deposits and performs a callback function
-func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb func(deposit v1.Deposit) (stop bool)) error {
+func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb func(deposit v1.Deposit) error) error {
 	store := keeper.storeService.OpenKVStore(ctx)
 	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.DepositsKey(proposalID))
 
@@ -122,11 +131,17 @@ func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb 
 
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit v1.Deposit
+		err := keeper.cdc.Unmarshal(iterator.Value(), &deposit)
+		if err != nil {
+			return err
+		}
 
-		keeper.cdc.MustUnmarshal(iterator.Value(), &deposit)
-
-		if cb(deposit) {
-			break
+		err = cb(deposit)
+		// exit early without error if cb returns ErrStopIterating
+		if errors.IsOf(err, types.ErrStopIterating) {
+			return nil
+		} else if err != nil {
+			return err
 		}
 	}
 
@@ -137,9 +152,12 @@ func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb 
 // Activates voting period when appropriate and returns true in that case, else returns false.
 func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (bool, error) {
 	// Checks to see if proposal exists
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
-	if !ok {
-		return false, errors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
+	proposal, err := keeper.GetProposal(ctx, proposalID)
+	if err != nil {
+		if errors.IsOf(err, types.ErrProposalNotFound) {
+			return false, errors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
+		}
+		return false, err
 	}
 
 	// Check if proposal is still depositable
@@ -148,7 +166,7 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	// update the governance module's account coins pool
-	err := keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
+	err = keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
 	if err != nil {
 		return false, err
 	}
@@ -178,12 +196,16 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	// Add or update deposit object
-	deposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
-
-	if found {
+	deposit, err := keeper.GetDeposit(ctx, proposalID, depositorAddr)
+	if err == nil {
+		// deposit exists
 		deposit.Amount = sdk.NewCoins(deposit.Amount...).Add(depositAmount...)
-	} else {
+	} else if errors.IsOf(err, types.ErrDepositNotFound) {
+		// deposit doesn't exist
 		deposit = v1.NewDeposit(proposalID, depositorAddr, depositAmount)
+	} else {
+		// failed to get deposit
+		return false, err
 	}
 
 	// called when deposit has been added to a proposal, however the proposal may not be active
@@ -296,22 +318,22 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 func (keeper Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uint64) error {
 	store := keeper.storeService.OpenKVStore(ctx)
 
-	err := keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
+	err := keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) error {
 		depositor, err := keeper.authKeeper.StringToBytes(deposit.Depositor)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		err = keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		err = store.Delete(types.DepositKey(proposalID, depositor))
 		if err != nil {
-			panic(err)
+			return err
 		}
-		return false
+		return nil
 	})
 
 	return err

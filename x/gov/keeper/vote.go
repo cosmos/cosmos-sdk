@@ -77,23 +77,23 @@ func (keeper Keeper) GetVotes(ctx context.Context, proposalID uint64) (votes v1.
 }
 
 // GetVote gets the vote from an address on a specific proposal
-func (keeper Keeper) GetVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool) {
+func (keeper Keeper) GetVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, err error) {
 	store := keeper.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.VoteKey(proposalID, voterAddr))
 	if err != nil {
-		return vote, false
+		return vote, err
 	}
 
 	if bz == nil {
-		return vote, false
+		return vote, types.ErrVoteNotFound
 	}
 
 	err = keeper.cdc.Unmarshal(bz, &vote)
 	if err != nil {
-		return vote, false
+		return vote, err
 	}
 
-	return vote, true
+	return vote, nil
 }
 
 // SetVote sets a Vote to the gov store

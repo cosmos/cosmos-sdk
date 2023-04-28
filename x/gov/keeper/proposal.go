@@ -123,9 +123,9 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 // CancelProposal will cancel proposal before the voting period ends
 func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, proposer string) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
-	if !ok {
-		return types.ErrProposalNotFound.Wrapf("proposal_id %d", proposalID)
+	proposal, err := keeper.GetProposal(ctx, proposalID)
+	if err != nil {
+		return err
 	}
 
 	// Checking proposal have proposer or not because old proposal doesn't have proposer field,
@@ -183,25 +183,23 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 }
 
 // GetProposal gets a proposal from store by ProposalID.
-// Panics if can't unmarshal the proposal.
-func (keeper Keeper) GetProposal(ctx context.Context, proposalID uint64) (v1.Proposal, bool) {
+func (keeper Keeper) GetProposal(ctx context.Context, proposalID uint64) (proposal v1.Proposal, err error) {
 	store := keeper.storeService.OpenKVStore(ctx)
 
 	bz, err := store.Get(types.ProposalKey(proposalID))
-	if bz == nil {
-		return v1.Proposal{}, false
-	}
-
 	if err != nil {
-		panic(err)
+		return
 	}
 
-	var proposal v1.Proposal
-	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
-		panic(err)
+	if bz == nil {
+		return proposal, types.ErrProposalNotFound.Wrapf("proposal %d doesn't exist", proposalID)
 	}
 
-	return proposal, true
+	if err = keeper.UnmarshalProposal(bz, &proposal); err != nil {
+		return
+	}
+
+	return proposal, nil
 }
 
 // SetProposal sets a proposal to store.
@@ -233,9 +231,9 @@ func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) erro
 // Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) error {
 	store := keeper.storeService.OpenKVStore(ctx)
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
-	if !ok {
-		return types.ErrProposalNotFound.Wrapf("proposal_id %d", proposalID)
+	proposal, err := keeper.GetProposal(ctx, proposalID)
+	if err != nil {
+		return err
 	}
 
 	if proposal.DepositEndTime != nil {
@@ -261,7 +259,7 @@ func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) erro
 
 // IterateProposals iterates over all the proposals and performs a callback function.
 // Panics when the iterator encounters a proposal which can't be unmarshaled.
-func (keeper Keeper) IterateProposals(ctx context.Context, cb func(proposal v1.Proposal) (stop bool)) error {
+func (keeper Keeper) IterateProposals(ctx context.Context, cb func(proposal v1.Proposal) error) error {
 	store := keeper.storeService.OpenKVStore(ctx)
 	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.ProposalsKeyPrefix)
 	defer iterator.Close()
@@ -273,8 +271,12 @@ func (keeper Keeper) IterateProposals(ctx context.Context, cb func(proposal v1.P
 			return err
 		}
 
-		if cb(proposal) {
-			break
+		err = cb(proposal)
+		// exit early without error if cb returns ErrStopIterating
+		if errorsmod.IsOf(err, types.ErrStopIterating) {
+			return nil
+		} else if err != nil {
+			return err
 		}
 	}
 
@@ -284,9 +286,9 @@ func (keeper Keeper) IterateProposals(ctx context.Context, cb func(proposal v1.P
 
 // GetProposals returns all the proposals from store
 func (keeper Keeper) GetProposals(ctx context.Context) (proposals v1.Proposals, err error) {
-	err = keeper.IterateProposals(ctx, func(proposal v1.Proposal) bool {
+	err = keeper.IterateProposals(ctx, func(proposal v1.Proposal) error {
 		proposals = append(proposals, &proposal)
-		return false
+		return nil
 	})
 	return
 }
@@ -318,12 +320,16 @@ func (keeper Keeper) GetProposalsFiltered(ctx context.Context, params v1.QueryPr
 
 		// match voter address (if supplied)
 		if len(params.Voter) > 0 {
-			_, matchVoter = keeper.GetVote(ctx, p.Id, params.Voter)
+			_, err = keeper.GetVote(ctx, p.Id, params.Voter)
+			// if no error, vote found, matchVoter = true
+			matchVoter = err == nil
 		}
 
 		// match depositor (if supplied)
 		if len(params.Depositor) > 0 {
-			_, matchDepositor = keeper.GetDeposit(ctx, p.Id, params.Depositor)
+			_, err = keeper.GetDeposit(ctx, p.Id, params.Depositor)
+			// if no error, deposit found, matchDepositor = true
+			matchDepositor = err == nil
 		}
 
 		if matchVoter && matchDepositor && matchStatus {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	corestoretypes "cosmossdk.io/core/store"
+	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -175,7 +176,7 @@ func (k Keeper) RemoveFromInactiveProposalQueue(ctx context.Context, proposalID 
 
 // IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
 // and performs a callback function
-func (k Keeper) IterateActiveProposalsQueue(ctx context.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) error {
+func (k Keeper) IterateActiveProposalsQueue(ctx context.Context, endTime time.Time, cb func(proposal v1.Proposal) error) error {
 	iterator, err := k.ActiveProposalQueueIterator(ctx, endTime)
 	if err != nil {
 		return err
@@ -184,13 +185,17 @@ func (k Keeper) IterateActiveProposalsQueue(ctx context.Context, endTime time.Ti
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitActiveProposalQueueKey(iterator.Key())
-		proposal, found := k.GetProposal(ctx, proposalID)
-		if !found {
-			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
+		proposal, err := k.GetProposal(ctx, proposalID)
+		if err != nil {
+			return err
 		}
 
-		if cb(proposal) {
-			break
+		err = cb(proposal)
+		// exit early without error if cb returns ErrStopIterating
+		if errors.IsOf(err, types.ErrStopIterating) {
+			return nil
+		} else if err != nil {
+			return err
 		}
 	}
 
@@ -199,7 +204,7 @@ func (k Keeper) IterateActiveProposalsQueue(ctx context.Context, endTime time.Ti
 
 // IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
 // and performs a callback function
-func (k Keeper) IterateInactiveProposalsQueue(ctx context.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) error {
+func (k Keeper) IterateInactiveProposalsQueue(ctx context.Context, endTime time.Time, cb func(proposal v1.Proposal) error) error {
 	iterator, err := k.InactiveProposalQueueIterator(ctx, endTime)
 	if err != nil {
 		return err
@@ -208,13 +213,17 @@ func (k Keeper) IterateInactiveProposalsQueue(ctx context.Context, endTime time.
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitInactiveProposalQueueKey(iterator.Key())
-		proposal, found := k.GetProposal(ctx, proposalID)
-		if !found {
-			return types.ErrProposalNotFound.Wrapf("proposal %d does not exist", proposalID)
+		proposal, err := k.GetProposal(ctx, proposalID)
+		if err != nil {
+			return err
 		}
 
-		if cb(proposal) {
-			break
+		err = cb(proposal)
+		// exit early without error if cb returns ErrStopIterating
+		if errors.IsOf(err, types.ErrStopIterating) {
+			return nil
+		} else if err != nil {
+			return err
 		}
 	}
 

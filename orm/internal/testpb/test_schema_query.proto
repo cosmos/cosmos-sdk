@@ -16,15 +16,11 @@ service TestSchemaQueryService {
   // ListExampleTable queries the ExampleTable table using prefix and range queries against defined indexes.
   rpc ListExampleTable(ListExampleTableRequest) returns (ListExampleTableResponse) {}
   // Get queries the ExampleAutoIncrementTable table by its primary key.
-  rpc GetExampleAutoIncrementTable(GetExampleAutoIncrementTableRequest) returns (GetExampleAutoIncrementTableResponse) {
-  }
+  rpc GetExampleAutoIncrementTable(GetExampleAutoIncrementTableRequest) returns (GetExampleAutoIncrementTableResponse) {}
   // GetExampleAutoIncrementTableByX queries the ExampleAutoIncrementTable table by its X index
-  rpc GetExampleAutoIncrementTableByX(GetExampleAutoIncrementTableByXRequest)
-      returns (GetExampleAutoIncrementTableByXResponse) {}
-  // ListExampleAutoIncrementTable queries the ExampleAutoIncrementTable table using prefix and range queries against
-  // defined indexes.
-  rpc ListExampleAutoIncrementTable(ListExampleAutoIncrementTableRequest)
-      returns (ListExampleAutoIncrementTableResponse) {}
+  rpc GetExampleAutoIncrementTableByX(GetExampleAutoIncrementTableByXRequest) returns (GetExampleAutoIncrementTableByXResponse) {}
+  // ListExampleAutoIncrementTable queries the ExampleAutoIncrementTable table using prefix and range queries against defined indexes.
+  rpc ListExampleAutoIncrementTable(ListExampleAutoIncrementTableRequest) returns (ListExampleAutoIncrementTableResponse) {}
   // GetExampleSingleton queries the ExampleSingleton singleton.
   rpc GetExampleSingleton(GetExampleSingletonRequest) returns (GetExampleSingletonResponse) {}
   // Get queries the ExampleTimestamp table by its primary key.
@@ -43,8 +39,7 @@ service TestSchemaQueryService {
   rpc ListSimpleExample(ListSimpleExampleRequest) returns (ListSimpleExampleResponse) {}
   // Get queries the ExampleAutoIncFieldName table by its primary key.
   rpc GetExampleAutoIncFieldName(GetExampleAutoIncFieldNameRequest) returns (GetExampleAutoIncFieldNameResponse) {}
-  // ListExampleAutoIncFieldName queries the ExampleAutoIncFieldName table using prefix and range queries against
-  // defined indexes.
+  // ListExampleAutoIncFieldName queries the ExampleAutoIncFieldName table using prefix and range queries against defined indexes.
   rpc ListExampleAutoIncFieldName(ListExampleAutoIncFieldNameRequest) returns (ListExampleAutoIncFieldNameResponse) {}
 }
 
@@ -90,7 +85,7 @@ message ListExampleTableRequest {
       // bz_str specifies the value of the BzStr index key to use in the query.
       BzStr bz_str = 4;
     }
-
+    
     message U32I64Str {
       // u32 is the value of the u32 field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
@@ -102,7 +97,7 @@ message ListExampleTableRequest {
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional string str = 3;
     }
-
+    
     message U64Str {
       // u64 is the value of the u64 field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
@@ -111,7 +106,7 @@ message ListExampleTableRequest {
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional string str = 2;
     }
-
+    
     message StrU32 {
       // str is the value of the str field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
@@ -120,7 +115,7 @@ message ListExampleTableRequest {
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional uint32 u32 = 2;
     }
-
+    
     message BzStr {
       // bz is the value of the bz field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
@@ -130,7 +125,7 @@ message ListExampleTableRequest {
       optional string str = 2;
     }
   }
-
+  
   // query specifies the type of query - either a prefix or range query.
   oneof query {
     // prefix_query specifies the index key value to use for the prefix query.
@@ -140,7 +135,7 @@ message ListExampleTableRequest {
   }
   // pagination specifies optional pagination parameters.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
-
+  
   // RangeQuery specifies the from/to index keys for a range query.
   message RangeQuery {
     // from is the index key to use for the start of the range query.
@@ -194,20 +189,20 @@ message ListExampleAutoIncrementTableRequest {
       // x specifies the value of the X index key to use in the query.
       X x = 2;
     }
-
+    
     message Id {
       // id is the value of the id field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional uint64 id = 1;
     }
-
+    
     message X {
       // x is the value of the x field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional string x = 1;
     }
   }
-
+  
   // query specifies the type of query - either a prefix or range query.
   oneof query {
     // prefix_query specifies the index key value to use for the prefix query.
@@ -217,7 +212,7 @@ message ListExampleAutoIncrementTableRequest {
   }
   // pagination specifies optional pagination parameters.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
-
+  
   // RangeQuery specifies the from/to index keys for a range query.
   message RangeQuery {
     // from is the index key to use for the start of the range query.
@@ -239,7 +234,8 @@ message ListExampleAutoIncrementTableResponse {
 }
 
 // GetExampleSingletonRequest is the TestSchemaQuery/GetExampleSingletonRequest request type.
-message GetExampleSingletonRequest {}
+message GetExampleSingletonRequest {
+}
 
 // GetExampleSingletonResponse is the TestSchemaQuery/GetExampleSingletonResponse request type.
 message GetExampleSingletonResponse {
@@ -269,20 +265,20 @@ message ListExampleTimestampRequest {
       // ts specifies the value of the Ts index key to use in the query.
       Ts ts = 2;
     }
-
+    
     message Id {
       // id is the value of the id field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional uint64 id = 1;
     }
-
+    
     message Ts {
       // ts is the value of the ts field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional google.protobuf.Timestamp ts = 1;
     }
   }
-
+  
   // query specifies the type of query - either a prefix or range query.
   oneof query {
     // prefix_query specifies the index key value to use for the prefix query.
@@ -292,7 +288,7 @@ message ListExampleTimestampRequest {
   }
   // pagination specifies optional pagination parameters.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
-
+  
   // RangeQuery specifies the from/to index keys for a range query.
   message RangeQuery {
     // from is the index key to use for the start of the range query.
@@ -336,20 +332,20 @@ message ListExampleDurationRequest {
       // dur specifies the value of the Dur index key to use in the query.
       Dur dur = 2;
     }
-
+    
     message Id {
       // id is the value of the id field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional uint64 id = 1;
     }
-
+    
     message Dur {
       // dur is the value of the dur field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional google.protobuf.Duration dur = 1;
     }
   }
-
+  
   // query specifies the type of query - either a prefix or range query.
   oneof query {
     // prefix_query specifies the index key value to use for the prefix query.
@@ -359,7 +355,7 @@ message ListExampleDurationRequest {
   }
   // pagination specifies optional pagination parameters.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
-
+  
   // RangeQuery specifies the from/to index keys for a range query.
   message RangeQuery {
     // from is the index key to use for the start of the range query.
@@ -413,20 +409,20 @@ message ListSimpleExampleRequest {
       // unique specifies the value of the Unique index key to use in the query.
       Unique unique = 2;
     }
-
+    
     message Name {
       // name is the value of the name field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional string name = 1;
     }
-
+    
     message Unique {
       // unique is the value of the unique field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional string unique = 1;
     }
   }
-
+  
   // query specifies the type of query - either a prefix or range query.
   oneof query {
     // prefix_query specifies the index key value to use for the prefix query.
@@ -436,7 +432,7 @@ message ListSimpleExampleRequest {
   }
   // pagination specifies optional pagination parameters.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
-
+  
   // RangeQuery specifies the from/to index keys for a range query.
   message RangeQuery {
     // from is the index key to use for the start of the range query.
@@ -478,14 +474,14 @@ message ListExampleAutoIncFieldNameRequest {
       // foo specifies the value of the Foo index key to use in the query.
       Foo foo = 1;
     }
-
+    
     message Foo {
       // foo is the value of the foo field in the index.
       // It can be omitted to query for all valid values of that field in this segment of the index.
       optional uint64 foo = 1;
     }
   }
-
+  
   // query specifies the type of query - either a prefix or range query.
   oneof query {
     // prefix_query specifies the index key value to use for the prefix query.
@@ -495,7 +491,7 @@ message ListExampleAutoIncFieldNameRequest {
   }
   // pagination specifies optional pagination parameters.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
-
+  
   // RangeQuery specifies the from/to index keys for a range query.
   message RangeQuery {
     // from is the index key to use for the start of the range query.
@@ -515,3 +511,4 @@ message ListExampleAutoIncFieldNameResponse {
   // pagination is the pagination response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
+

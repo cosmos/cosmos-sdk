@@ -14,21 +14,24 @@ import (
 	"syscall"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
-	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	tmcfg "github.com/cometbft/cometbft/config"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	tmflags "github.com/cometbft/cometbft/libs/cli/flags"
-	tmlog "github.com/cometbft/cometbft/libs/log"
-	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	"cosmossdk.io/log"
+	dbm "github.com/cometbft/cometbft-db"
+	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	tmlog "github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	serverlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -153,24 +156,35 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		return err
 	}
 
-	var logger tmlog.Logger
+	var opts []log.Option
 	if serverCtx.Viper.GetString(flags.FlagLogFormat) == tmcfg.LogFormatJSON {
-		logger = tmlog.NewTMJSONLogger(tmlog.NewSyncWriter(os.Stdout))
-	} else {
-		logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
-	}
-	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel)
-	if err != nil {
-		return err
+		opts = append(opts, log.OutputJSONOption())
 	}
 
-	// Check if the tendermint flag for trace logging is set if it is then setup
-	// a tracing logger in this app as well.
-	if serverCtx.Viper.GetBool(tmcli.TraceFlag) {
-		logger = tmlog.NewTracingLogger(logger)
+	// check and set filter level or keys for the logger if any
+	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
+	if logLvlStr != "" {
+		logLvl, err := zerolog.ParseLevel(logLvlStr)
+		switch {
+		case err != nil:
+			// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
+			filterFunc, err := log.ParseLogLevel(logLvlStr)
+			if err != nil {
+				return err
+			}
+
+			opts = append(opts, log.FilterOption(filterFunc))
+		case serverCtx.Viper.GetBool(tmcli.TraceFlag):
+			// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
+			// Note it overrides log level passed in `log_levels`.
+			opts = append(opts, log.LevelOption(zerolog.TraceLevel))
+		default:
+			opts = append(opts, log.LevelOption(logLvl))
+		}
 	}
 
-	serverCtx.Logger = logger.With("module", "server")
+	logger := log.NewLogger(tmlog.NewSyncWriter(os.Stdout), opts...).With(log.ModuleKey, "server")
+	serverCtx.Logger = serverlog.CometLoggerWrapper{Logger: logger}
 
 	return SetCmdServerContext(cmd, serverCtx)
 }

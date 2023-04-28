@@ -3,7 +3,6 @@ package eth
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	fmt "fmt"
 	"math/big"
 
 	secp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
@@ -11,14 +10,6 @@ import (
 
 // ----------------------------------------------------------------------------
 // Helper Functions
-
-func DecompressPubkey(pubkey []byte) (*ecdsa.PublicKey, error) {
-	x, y := secp.DecompressPubkey(pubkey)
-	if x == nil {
-		return nil, fmt.Errorf("invalid public key")
-	}
-	return &ecdsa.PublicKey{X: x, Y: y, Curve: secp.S256()}, nil
-}
 
 func paddedBigBytes(bigint *big.Int, n int) []byte {
 	if bigint.BitLen()/8 >= n {

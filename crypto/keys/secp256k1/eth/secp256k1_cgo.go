@@ -50,3 +50,11 @@ func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
 	// the signature needs to be in [R || S] format when provided to VerifySignature
 	return secp256k1.VerifySignature(pubKey.Key, msg, sig)
 }
+
+func DecompressPubkey(pubkey []byte) (*ecdsa.PublicKey, error) {
+	x, y := secp.DecompressPubkey(pubkey)
+	if x == nil {
+		return nil, fmt.Errorf("invalid public key")
+	}
+	return &ecdsa.PublicKey{X: x, Y: y, Curve: secp.S256()}, nil
+}

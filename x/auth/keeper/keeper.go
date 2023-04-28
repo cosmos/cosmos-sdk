@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/collections/indexes"
 	"errors"
 	"fmt"
 
@@ -58,6 +59,28 @@ type AccountKeeperI interface {
 	GetModulePermissions() map[string]types.PermissionsForAddress
 }
 
+func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
+	return AccountsIndexes{
+		Number: indexes.NewUnique(
+			sb, types.AccountNumberStoreKeyPrefix, "account_by_number", collections.Uint64Key, sdk.AccAddressKey,
+			func(_ sdk.AccAddress, v sdk.AccountI) (uint64, error) {
+				return v.GetAccountNumber(), nil
+			},
+		),
+	}
+}
+
+type AccountsIndexes struct {
+	// Number is a unique index that indexes accounts by their account number.
+	Number *indexes.Unique[uint64, sdk.AccAddress, sdk.AccountI]
+}
+
+func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.AccountI] {
+	return []collections.Index[sdk.AccAddress, sdk.AccountI]{
+		a.Number,
+	}
+}
+
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
@@ -78,6 +101,7 @@ type AccountKeeper struct {
 	// State
 	Params        collections.Item[types.Params]
 	AccountNumber collections.Sequence
+	Accounts      *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -109,6 +133,7 @@ func NewAccountKeeper(
 		authority:     authority,
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
 }
 

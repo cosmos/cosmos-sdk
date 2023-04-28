@@ -44,7 +44,7 @@ func TestSetPubKey(t *testing.T) {
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i)))
+		require.NoError(t, acc.SetAccountNumber(uint64(i+1000)))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
@@ -156,7 +156,7 @@ func TestSigVerification(t *testing.T) {
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i)))
+		require.NoError(t, acc.SetAccountNumber(uint64(i)+1000))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}

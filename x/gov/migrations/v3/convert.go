@@ -163,7 +163,7 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
 
 		default:
-			return nil, fmt.Errorf("vote does not have neither Options nor Option")
+			return nil, fmt.Errorf("vote does not have neither InterfaceRegistryOptions nor Option")
 		}
 
 		newVotes[i] = &v1.Vote{

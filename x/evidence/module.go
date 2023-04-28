@@ -213,7 +213,7 @@ type ModuleInputs struct {
 	SlashingKeeper types.SlashingKeeper
 	AddressCodec   address.Codec
 
-	BlockInfoService comet.Service
+	BlockInfoService comet.InfoService
 }
 
 type ModuleOutputs struct {

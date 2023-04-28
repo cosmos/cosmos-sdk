@@ -212,7 +212,7 @@ func ProvideEventService() event.Service {
 	return EventService{}
 }
 
-func ProvideCometInfoService() comet.Service {
+func ProvideCometInfoService() comet.InfoService {
 	return cometInfoService{}
 }
 

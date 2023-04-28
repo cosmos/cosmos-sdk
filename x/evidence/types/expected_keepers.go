@@ -47,6 +47,6 @@ type (
 	}
 
 	Cometinfo interface {
-		comet.Service
+		comet.InfoService
 	}
 )

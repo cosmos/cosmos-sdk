@@ -33,7 +33,7 @@ func (cometInfoService) GetCometInfo(ctx context.Context) comet.BlockInfo {
 	return sdk.UnwrapSDKContext(ctx).CometInfo()
 }
 
-var _ comet.Service = cometInfoService{}
+var _ comet.InfoService = cometInfoService{}
 
 type headerInfoService struct{}
 

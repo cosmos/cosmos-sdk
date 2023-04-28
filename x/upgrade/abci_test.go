@@ -189,6 +189,7 @@ func TestCanClear(t *testing.T) {
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
+	height := s.ctx.BlockHeader().Height + 1
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: height}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 	VerifyDoUpgrade(t)

@@ -6,35 +6,32 @@ import (
 
 // Default parameter values
 const (
-	DefaultMaxMemoCharacters         uint64 = 256
-	DefaultTxSigLimit                uint64 = 7
-	DefaultTxSizeCostPerByte         uint64 = 10
-	DefaultSigVerifyCostED25519      uint64 = 590
-	DefaultSigVerifyCostSecp256k1    uint64 = 1000
-	DefaultSigVerifyCostEthSecp256k1 uint64 = 8293
+	DefaultMaxMemoCharacters      uint64 = 256
+	DefaultTxSigLimit             uint64 = 7
+	DefaultTxSizeCostPerByte      uint64 = 10
+	DefaultSigVerifyCostED25519   uint64 = 590
+	DefaultSigVerifyCostSecp256k1 uint64 = 1000
 )
 
 // NewParams creates a new Params object
-func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1, sigVerifyCostEthSecp256k1 uint64) Params {
+func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64) Params {
 	return Params{
-		MaxMemoCharacters:         maxMemoCharacters,
-		TxSigLimit:                txSigLimit,
-		TxSizeCostPerByte:         txSizeCostPerByte,
-		SigVerifyCostED25519:      sigVerifyCostED25519,
-		SigVerifyCostSecp256k1:    sigVerifyCostSecp256k1,
-		SigVerifyCostEthSecp256k1: sigVerifyCostEthSecp256k1,
+		MaxMemoCharacters:      maxMemoCharacters,
+		TxSigLimit:             txSigLimit,
+		TxSizeCostPerByte:      txSizeCostPerByte,
+		SigVerifyCostED25519:   sigVerifyCostED25519,
+		SigVerifyCostSecp256k1: sigVerifyCostSecp256k1,
 	}
 }
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return Params{
-		MaxMemoCharacters:         DefaultMaxMemoCharacters,
-		TxSigLimit:                DefaultTxSigLimit,
-		TxSizeCostPerByte:         DefaultTxSizeCostPerByte,
-		SigVerifyCostED25519:      DefaultSigVerifyCostED25519,
-		SigVerifyCostSecp256k1:    DefaultSigVerifyCostSecp256k1,
-		SigVerifyCostEthSecp256k1: DefaultSigVerifyCostEthSecp256k1,
+		MaxMemoCharacters:      DefaultMaxMemoCharacters,
+		TxSigLimit:             DefaultTxSigLimit,
+		TxSizeCostPerByte:      DefaultTxSizeCostPerByte,
+		SigVerifyCostED25519:   DefaultSigVerifyCostED25519,
+		SigVerifyCostSecp256k1: DefaultSigVerifyCostSecp256k1,
 	}
 }
 

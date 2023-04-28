@@ -199,7 +199,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 			rapid.Uint64Min(1).Draw(t, "tx-size-cost-per-byte"),
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-ed25519"),
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-Secp256k1"),
-			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-EthSecp256k1"),
 		)
 		err := suite.accountKeeper.SetParams(suite.ctx, params)
 		suite.Require().NoError(err)
@@ -209,7 +208,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 	})
 
 	// Regression test
-	params := types.NewParams(15, 167, 100, 1, 21457, 39999)
+	params := types.NewParams(15, 167, 100, 1, 21457)
 
 	err := suite.accountKeeper.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)

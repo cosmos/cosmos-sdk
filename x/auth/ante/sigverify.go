@@ -12,7 +12,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	ethsecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/eth"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -413,10 +412,6 @@ func DefaultSigVerificationGasConsumer(
 
 	case *secp256k1.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
-		return nil
-
-	case *ethsecp256k1.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: ethsecp256k1")
 		return nil
 
 	case *secp256r1.PubKey:

@@ -16,10 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-<<<<<<< HEAD
-=======
-
->>>>>>> main
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -120,15 +116,6 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 		panic(err)
 	}
 
-<<<<<<< HEAD
-	msg.DelegatorAddress = sdk.AccAddress(valAddr).String()
-
-	if err := msg.ValidateBasic(); err != nil {
-		panic(err)
-	}
-
-=======
->>>>>>> main
 	txConf := authtx.NewTxConfig(b.codec, authtx.DefaultSignModes)
 
 	txb := txConf.NewTxBuilder()

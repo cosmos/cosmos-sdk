@@ -11,7 +11,7 @@ const (
 	DefaultTxSizeCostPerByte         uint64 = 10
 	DefaultSigVerifyCostED25519      uint64 = 590
 	DefaultSigVerifyCostSecp256k1    uint64 = 1000
-	DefaultSigVerifyCostEthSecp256k1 uint64 = 21000
+	DefaultSigVerifyCostEthSecp256k1 uint64 = 8293
 )
 
 // NewParams creates a new Params object

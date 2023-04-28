@@ -31,7 +31,6 @@ func TestDerivation(t *testing.T) {
 	// require.Equal(t, account.Address.String(), "0xA588C66983a81e800Db4dF74564F09f91c026351")
 	require.Equal(t, common.BytesToAddress(privkey.PubKey().Address().Bytes()).String(), "0xA588C66983a81e800Db4dF74564F09f91c026351")
 	require.NotEqual(t, common.BytesToAddress(badPrivKey.PubKey().Address().Bytes()).String(), "0xA588C66983a81e800Db4dF74564F09f91c026351")
-
 }
 
 func TestDefaults(t *testing.T) {

@@ -36,7 +36,8 @@ const (
 )
 
 var (
-	secp256k1N, _ = new(big.Int).SetString("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16)
+	secp256SetStr = "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
+	secp256k1N, _ = new(big.Int).SetString(secp256SetStr, 16)
 )
 
 // Amino encoding names

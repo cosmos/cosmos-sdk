@@ -248,7 +248,9 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 		ctx := server.NewDefaultContext()
 		tmCfg := ctx.Config
-		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
+		// Reduce the target height duration so that blocks are produced faster
+		// during tests.
+		tmCfg.Consensus.TargetHeightDuration = time.Millisecond * 300
 
 		// Only allow the first validator to expose an RPC, API and gRPC
 		// server/client due to Tendermint in-process constraints.

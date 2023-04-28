@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go v1.40.45 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/celestiaorg/nmt v0.14.0 // indirect
+	github.com/celestiaorg/nmt v0.15.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -175,7 +175,7 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
-	github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.17.0-tm-v0.34.27
+	github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.18.0-tm-v0.34.27
 )
 
 retract (

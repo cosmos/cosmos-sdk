@@ -160,11 +160,10 @@ github.com/btcsuite/winsvc v1.0.0/go.mod h1:jsenWakMcC0zFBFurPLEAyrnc/teJEM1O46f
 github.com/bwesterb/go-ristretto v1.2.0/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=
 github.com/c-bata/go-prompt v0.2.2/go.mod h1:VzqtzE2ksDBcdln8G7mk2RX9QyGjH+OVqOCSiVIqS34=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
-github.com/celestiaorg/celestia-core v1.17.0-tm-v0.34.27 h1:7EIZ0pzRB4eaRnsscTLtLruJhokmcinHUgB8ruDh6sU=
-github.com/celestiaorg/celestia-core v1.17.0-tm-v0.34.27/go.mod h1:gMRZPCntAn3FvoF9/NBszOolf89Ggrj7qLbeFIUFam4=
-github.com/celestiaorg/merkletree v0.0.0-20210714075610-a84dc3ddbbe4 h1:CJdIpo8n5MFP2MwK0gSRcOVlDlFdQJO1p+FqdxYzmvc=
-github.com/celestiaorg/nmt v0.14.0 h1:ET1PXBm8f3KHCAB7+sRVMTmvejkpQp6HAQsGLjIRtcY=
-github.com/celestiaorg/nmt v0.14.0/go.mod h1:b+pwd9cGTSSYLZnUIQSJl07pusJdFeEvCVsVfSRH9gA=
+github.com/celestiaorg/celestia-core v1.18.0-tm-v0.34.27 h1:RpwimQk/cc+2PUduPDKSwQJWI0+IpoIzQEiQIT/s1PY=
+github.com/celestiaorg/celestia-core v1.18.0-tm-v0.34.27/go.mod h1:8PbX2OIPehldawXWAzNWPxBPnfFtcYtjHecE45b2Beg=
+github.com/celestiaorg/nmt v0.15.0 h1:ID9QlMIeP6WK/iiGcfnYLu2qqVIq0UYe/dc3TVPt6EA=
+github.com/celestiaorg/nmt v0.15.0/go.mod h1:GfwIvQPhUakn1modWxJ+rv8dUjJzuXg5H+MLFM1o7nY=
 github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/cenkalti/backoff/v4 v4.1.1/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=

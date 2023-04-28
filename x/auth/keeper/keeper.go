@@ -76,7 +76,7 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	ParamsState   collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
+	Params        collections.Item[types.Params]
 	AccountNumber collections.Sequence
 }
 
@@ -107,7 +107,7 @@ func NewAccountKeeper(
 		cdc:           cdc,
 		permAddrs:     permAddrs,
 		authority:     authority,
-		ParamsState:   collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 	}
 }
@@ -265,12 +265,12 @@ func (ak AccountKeeper) getBech32Prefix() (string, error) {
 // SetParams sets the auth module's parameters.
 // CONTRACT: This method performs no validation of the parameters.
 func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
-	return ak.ParamsState.Set(ctx, params)
+	return ak.Params.Set(ctx, params)
 }
 
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
-	params, err := ak.ParamsState.Get(ctx)
+	params, err := ak.Params.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}

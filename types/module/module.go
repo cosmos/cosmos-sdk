@@ -92,7 +92,7 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 
 // NewBasicManagerFromManager creates a new BasicManager from a Manager
 // The BasicManager will contain all AppModuleBasic from the AppModule Manager
-// Module's AppModuleBasic can be overriden by passing a custom AppModuleBasic map
+// Module's AppModuleBasic can be overridden by passing a custom AppModuleBasic map
 func NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic) BasicManager {
 	moduleMap := make(map[string]AppModuleBasic)
 	for name, module := range manager.Modules {

@@ -283,7 +283,23 @@ func (f Factory) PreprocessTx(keyname string, builder client.TxBuilder) error {
 	return f.preprocessTxHook(f.chainID, key.GetType(), builder)
 }
 
-// WithExtensionOptions returns a Factory with given extension options added to the existing options.
+// WithExtensionOptions returns a Factory with given extension options added to the existing options,
+// Example to add dynamic fee extension options:
+//
+//	extOpt := ethermint.ExtensionOptionDynamicFeeTx{
+//		MaxPriorityPrice: sdk.NewInt(1000000),
+//	}
+//
+//	extBytes, _ := extOpt.Marshal()
+//
+//	extOpts := []*types.Any{
+//		{
+//			TypeUrl: "/ethermint.types.v1.ExtensionOptionDynamicFeeTx",
+//			Value:   extBytes,
+//		},
+//	}
+//
+// txf.WithExtensionOptions(extOpts...)
 func (f Factory) WithExtensionOptions(extOpts ...*codectypes.Any) Factory {
 	f.extOptions = extOpts
 	return f

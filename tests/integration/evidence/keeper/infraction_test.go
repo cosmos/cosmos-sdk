@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"testing"
@@ -17,7 +16,6 @@ import (
 	"cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -125,7 +123,7 @@ func TestHandleDoubleSign(t *testing.T) {
 		}},
 	})
 
-	f.app.BaseApp.SetCometInfo(nci)
+	ctx.WithCometInfo(nci)
 
 	f.evidenceKeeper.BeginBlocker(ctx)
 
@@ -194,7 +192,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		}},
 	})
 
-	f.app.BaseApp.SetCometInfo(nci)
+	ctx.WithCometInfo(nci)
 
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
 
@@ -249,15 +247,74 @@ func testEquivocationHandler(_ interface{}) types.Handler {
 }
 
 type CometService struct {
-	ci comet.BlockInfo
-}
-
-func (cs CometService) GetCometInfo(_ context.Context) comet.BlockInfo {
-	return cs.ci
+	Evidence []abci.Misbehavior
 }
 
 func NewCometInfo(bg abci.RequestBeginBlock) comet.BlockInfo {
-	return comet.BlockInfo{
-		Evidence: baseapp.FromABCIEvidence(bg.ByzantineValidators),
+	return CometService{
+		Evidence: bg.ByzantineValidators,
 	}
+}
+
+func (r CometService) GetEvidence() []comet.Misbehavior {
+	return misbehaviorWrapperList(r.Evidence)
+}
+
+func misbehaviorWrapperList(validators []abci.Misbehavior) []comet.Misbehavior {
+	misbehaviors := make([]comet.Misbehavior, len(validators))
+	for i, v := range validators {
+		misbehaviors[i] = misbehaviorWrapper{v}
+	}
+	return misbehaviors
+}
+
+func (CometService) GetValidatorsHash() []byte {
+	return []byte{}
+}
+
+func (CometService) GetProposerAddress() []byte {
+	return []byte{}
+}
+
+func (CometService) GetLastCommit() comet.CommitInfo {
+	return nil
+}
+
+type misbehaviorWrapper struct {
+	abci.Misbehavior
+}
+
+func (m misbehaviorWrapper) Type() comet.MisbehaviorType {
+	return comet.MisbehaviorType(m.Misbehavior.Type)
+}
+
+func (m misbehaviorWrapper) Height() int64 {
+	return m.Misbehavior.Height
+}
+
+func (m misbehaviorWrapper) Validator() comet.Validator {
+	return validatorWrapper{m.Misbehavior.Validator}
+}
+
+func (m misbehaviorWrapper) Time() time.Time {
+	return m.Misbehavior.Time
+}
+
+func (m misbehaviorWrapper) TotalVotingPower() int64 {
+	return m.Misbehavior.TotalVotingPower
+}
+
+// validatorWrapper is a wrapper around abci.Validator that implements Validator interface
+type validatorWrapper struct {
+	abci.Validator
+}
+
+var _ comet.Validator = (*validatorWrapper)(nil)
+
+func (v validatorWrapper) Address() []byte {
+	return v.Validator.Address
+}
+
+func (v validatorWrapper) Power() int64 {
+	return v.Validator.Power
 }

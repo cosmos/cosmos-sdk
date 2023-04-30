@@ -51,6 +51,8 @@ type (
 		AddAuxSignerData(tx.AuxSignerData) error
 	}
 
+	// ExtendedTxBuilder extends the TxBuilder interface,
+	// which is used to set extension options to be included in a transaction.
 	ExtendedTxBuilder interface {
 		SetExtensionOptions(extOpts ...*codectypes.Any)
 	}

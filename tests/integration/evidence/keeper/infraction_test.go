@@ -185,8 +185,6 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
-	// f.app.BaseApp.CometInfoService =
-
 	nci := NewCometInfo(abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
@@ -249,8 +247,6 @@ func testEquivocationHandler(_ interface{}) types.Handler {
 		return nil
 	}
 }
-
-// CometService
 
 type CometService struct {
 	ci comet.BlockInfo

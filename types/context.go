@@ -272,13 +272,13 @@ func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
 	return c
 }
 
-// WithCometInfo
+// WithCometInfo returns a Context with an updated comet info
 func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
 	c.cometInfo = cometInfo
 	return c
 }
 
-// WithCometInfo
+// WithHeaderInfo returns a Context with an updated header info
 func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
 	c.headerInfo = headerInfo
 	return c

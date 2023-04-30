@@ -8,6 +8,8 @@ import (
 	"cosmossdk.io/core/comet"
 )
 
+var _ comet.BlockInfo = (*cometInfo)(nil)
+
 // CometInfo defines the properties provided by comet to the application
 type cometInfo struct {
 	Misbehavior     []abci.Misbehavior
@@ -39,8 +41,6 @@ func (r cometInfo) GetProposerAddress() []byte {
 func (r cometInfo) GetLastCommit() comet.CommitInfo {
 	return commitInfoWrapper{r.LastCommit}
 }
-
-var _ comet.BlockInfo = (*cometInfo)(nil)
 
 // commitInfoWrapper is a wrapper around abci.CommitInfo that implements CommitInfo interface
 type commitInfoWrapper struct {

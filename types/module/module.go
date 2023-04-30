@@ -669,7 +669,6 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.
 				return abci.ResponseBeginBlock{}, err
 			}
 		}
-
 	}
 
 	return abci.ResponseBeginBlock{

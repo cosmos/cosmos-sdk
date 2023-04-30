@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Service is an interface that can be used to get information specific to Comet
+// InfoService is an interface that can be used to get information specific to Comet
 type InfoService interface {
 	GetCometInfo(context.Context) BlockInfo
 }

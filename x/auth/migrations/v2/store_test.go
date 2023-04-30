@@ -8,6 +8,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -57,7 +59,10 @@ func TestMigrateVestingAccounts(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 	app, err := simtestutil.Setup(
-		authtestutil.AppConfig,
+		depinject.Configs(
+			authtestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&accountKeeper,
 		&bankKeeper,
 		&stakingKeeper,

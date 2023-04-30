@@ -83,7 +83,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 	if v.MinSelfDelegation == "" {
 		return validator{}, fmt.Errorf("must specify minimum self delegation")
 	}
-	minSelfDelegation, ok := sdk.NewIntFromString(v.MinSelfDelegation)
+	minSelfDelegation, ok := math.NewIntFromString(v.MinSelfDelegation)
 	if !ok {
 		return validator{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
@@ -106,17 +106,17 @@ func buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr string) (commiss
 		return commission, errors.New("must specify all validator commission parameters")
 	}
 
-	rate, err := sdk.NewDecFromStr(rateStr)
+	rate, err := math.LegacyNewDecFromStr(rateStr)
 	if err != nil {
 		return commission, err
 	}
 
-	maxRate, err := sdk.NewDecFromStr(maxRateStr)
+	maxRate, err := math.LegacyNewDecFromStr(maxRateStr)
 	if err != nil {
 		return commission, err
 	}
 
-	maxChangeRate, err := sdk.NewDecFromStr(maxChangeRateStr)
+	maxChangeRate, err := math.LegacyNewDecFromStr(maxChangeRateStr)
 	if err != nil {
 		return commission, err
 	}

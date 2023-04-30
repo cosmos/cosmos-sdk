@@ -4,9 +4,9 @@ package testpb
 
 import (
 	context "context"
-	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	ormlist "cosmossdk.io/orm/model/ormlist"
+	ormtable "cosmossdk.io/orm/model/ormtable"
+	ormerrors "cosmossdk.io/orm/types/ormerrors"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -544,6 +544,7 @@ func NewExampleTimestampTable(db ormtable.Schema) (ExampleTimestampTable, error)
 type ExampleDurationTable interface {
 	Insert(ctx context.Context, exampleDuration *ExampleDuration) error
 	InsertReturningId(ctx context.Context, exampleDuration *ExampleDuration) (uint64, error)
+	LastInsertedSequence(ctx context.Context) (uint64, error)
 	Update(ctx context.Context, exampleDuration *ExampleDuration) error
 	Save(ctx context.Context, exampleDuration *ExampleDuration) error
 	Delete(ctx context.Context, exampleDuration *ExampleDuration) error
@@ -625,6 +626,10 @@ func (this exampleDurationTable) Delete(ctx context.Context, exampleDuration *Ex
 
 func (this exampleDurationTable) InsertReturningId(ctx context.Context, exampleDuration *ExampleDuration) (uint64, error) {
 	return this.table.InsertReturningPKey(ctx, exampleDuration)
+}
+
+func (this exampleDurationTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
+	return this.table.LastInsertedSequence(ctx)
 }
 
 func (this exampleDurationTable) Has(ctx context.Context, id uint64) (found bool, err error) {

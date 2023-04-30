@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -49,7 +50,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TestNewMsgCreateVestingAccountCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	cmd := cli.NewMsgCreateVestingAccountCmd()
+	cmd := cli.NewMsgCreateVestingAccountCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{
@@ -138,7 +139,7 @@ func (s *CLITestSuite) TestNewMsgCreateVestingAccountCmd() {
 
 func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	cmd := cli.NewMsgCreatePermanentLockedAccountCmd()
+	cmd := cli.NewMsgCreatePermanentLockedAccountCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{
@@ -217,7 +218,7 @@ func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 
 func (s *CLITestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	cmd := cli.NewMsgCreatePeriodicVestingAccountCmd()
+	cmd := cli.NewMsgCreatePeriodicVestingAccountCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{

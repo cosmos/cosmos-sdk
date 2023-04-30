@@ -7,6 +7,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,13 +27,16 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		accountKeeper authkeeper.AccountKeeper
 	)
 	app, err := simtestutil.SetupWithConfiguration(
-		configurator.NewAppConfig(
-			configurator.BankModule(),
-			configurator.TxModule(),
-			configurator.StakingModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.AuthModule(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.BankModule(),
+				configurator.TxModule(),
+				configurator.StakingModule(),
+				configurator.ParamsModule(),
+				configurator.ConsensusModule(),
+				configurator.AuthModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		simtestutil.DefaultStartUpConfig(),
 		&stakingKeeper, &bankKeeper, &accountKeeper)
@@ -45,7 +50,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	notBondedPool := stakingKeeper.GetNotBondedPool(ctx)
 	startTokens := stakingKeeper.TokensFromConsensusPower(ctx, 5)
 
-	assert.NilError(t, testutil.FundModuleAccount(bankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), startTokens))))
+	assert.NilError(t, testutil.FundModuleAccount(ctx, bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), startTokens))))
 	accountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	moduleBalance := bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), stakingKeeper.BondDenom(ctx))

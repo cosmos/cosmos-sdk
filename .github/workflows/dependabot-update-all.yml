@@ -17,7 +17,7 @@ jobs:
           token: ${{ secrets.PRBOT_PAT }}
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19.7
+          go-version: 1.19.8
       - name: Extract updated dependency
         id: deps
         run: |

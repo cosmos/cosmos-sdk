@@ -33,7 +33,7 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if len(records) == 0 {
+	if len(records) == 0 && clientCtx.OutputFormat == OutputFormatJSON {
 		cmd.Println("No records were found in keyring")
 		return nil
 	}

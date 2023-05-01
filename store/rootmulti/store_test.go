@@ -486,7 +486,9 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
+	// Since we are using the request as a reference, the path will be modified.
 	query.Data = k2
+	query.Path = "/store2/key"
 	qres = multi.Query(&query)
 	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v2, qres.Value)

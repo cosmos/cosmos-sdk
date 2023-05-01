@@ -95,14 +95,14 @@ func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 
 // SetPubKey sets the aux signer's pubkey in the AuxSignerData.
 func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
-	any, err := codectypes.NewAnyWithValue(pk)
+	anyAnimal, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return err
 	}
 
 	b.checkEmptyFields()
 
-	b.auxSignerData.SignDoc.PublicKey = any
+	b.auxSignerData.SignDoc.PublicKey = anyAnimal
 
 	return nil
 }

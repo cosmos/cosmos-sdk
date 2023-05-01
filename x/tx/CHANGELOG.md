@@ -31,6 +31,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* [#15873](https://github.com/cosmos/cosmos-sdk/pull/15873): add `Validate` method and only check for errors when `Validate` is explicitly called.
+
+## v0.6.0
+
 ### API Breaking
 
 * [#15709](https://github.com/cosmos/cosmos-sdk/pull/15709):
@@ -38,6 +44,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `GetSigners` now returns `[][]byte` instead of `[]string`
   * `GetSignersOptions` has been renamed to `signing.Options` and requires `address.Codec`s for account and validator addresses
   * `GetSignersOptions.ProtoFiles` has been renamed to `signing.Options.FileResolver`
+
+### Bug Fixes
+* [#15849](https://github.com/cosmos/cosmos-sdk/pull/15849) Fix int64 usage for 32 bit platforms.
 
 ## v0.5.1
 

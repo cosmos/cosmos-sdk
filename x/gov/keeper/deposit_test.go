@@ -305,7 +305,7 @@ func TestChargeDeposit(t *testing.T) {
 				govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
 				params := v1.DefaultParams()
 				params.ProposalCancelRatio = tc.proposalCancelRatio
-				TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(10000000000))
+				TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000000))
 				for _, addr := range TestAddrs {
 					authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
 					authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()

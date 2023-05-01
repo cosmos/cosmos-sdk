@@ -7,22 +7,23 @@ import (
 
 	"cosmossdk.io/collections"
 
-	"cosmossdk.io/log"
-	gogotypes "github.com/cosmos/gogoproto/types"
-
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
 type AccountKeeperI interface {
+	address.Codec
+
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
 	NewAccountWithAddress(context.Context, sdk.AccAddress) sdk.AccountI
 
@@ -60,21 +61,23 @@ type AccountKeeperI interface {
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
+	address.Codec
+
 	storeService store.KVStoreService
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
+	bech32Prefix string
 
 	// The prototypical AccountI constructor.
-	proto      func() sdk.AccountI
-	addressCdc address.Codec
+	proto func() sdk.AccountI
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
 
 	// State
-
-	ParamsState collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
+	ParamsState   collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
+	AccountNumber collections.Sequence
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -94,18 +97,18 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	bech32Codec := NewBech32Codec(bech32Prefix)
-
 	sb := collections.NewSchemaBuilder(storeService)
 
 	return AccountKeeper{
-		storeService: storeService,
-		proto:        proto,
-		cdc:          cdc,
-		permAddrs:    permAddrs,
-		addressCdc:   bech32Codec,
-		authority:    authority,
-		ParamsState:  collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Codec:         authcodec.NewBech32Codec(bech32Prefix),
+		bech32Prefix:  bech32Prefix,
+		storeService:  storeService,
+		proto:         proto,
+		cdc:           cdc,
+		permAddrs:     permAddrs,
+		authority:     authority,
+		ParamsState:   collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 	}
 }
 
@@ -117,7 +120,7 @@ func (ak AccountKeeper) GetAuthority() string {
 // GetAddressCodec returns the x/auth module's address.
 // x/auth is tied to bech32 encoded user accounts
 func (ak AccountKeeper) GetAddressCodec() address.Codec {
-	return ak.addressCdc
+	return ak.Codec
 }
 
 // Logger returns a module-specific logger.
@@ -148,32 +151,11 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
 func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	var accNumber uint64
-	store := ak.storeService.OpenKVStore(ctx)
-
-	bz, err := store.Get(types.GlobalAccountNumberKey)
+	n, err := ak.AccountNumber.Next(ctx)
 	if err != nil {
-		// panics only on nil key, which should not be possible
 		panic(err)
 	}
-	if bz == nil {
-		// initialize the account numbers
-		accNumber = 0
-	} else {
-		val := gogotypes.UInt64Value{}
-
-		err := ak.cdc.Unmarshal(bz, &val)
-		if err != nil {
-			panic(err)
-		}
-
-		accNumber = val.GetValue()
-	}
-
-	bz = ak.cdc.MustMarshal(&gogotypes.UInt64Value{Value: accNumber + 1})
-	store.Set(types.GlobalAccountNumberKey, bz)
-
-	return accNumber
+	return n
 }
 
 // GetModulePermissions fetches per-module account permissions.
@@ -277,12 +259,7 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	bech32Codec, ok := ak.addressCdc.(bech32Codec)
-	if !ok {
-		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.addressCdc)
-	}
-
-	return bech32Codec.bech32Prefix, nil
+	return ak.bech32Prefix, nil
 }
 
 // SetParams sets the auth module's parameters.

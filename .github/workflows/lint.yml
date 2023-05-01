@@ -5,10 +5,9 @@ on:
       - main
       - release/**
   pull_request:
+  merge_group:
 permissions:
   contents: read
-  # Optional: allow read access to pull request. Use with `only-new-issues` option.
-  # pull-requests: read
 jobs:
   golangci:
     name: golangci-lint
@@ -18,11 +17,11 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: 1.20.3
-      # Trying GOGC=300 as an experiment, because GOGC=off didn't seem to affect speed much.
+      # Trying GOGC=400 as an experiment, because GOGC=off didn't seem to affect speed much.
       #
       # Linux runners are noted to have 7GB of RAM according to:
       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
       #
       # And the GC guide suggests setting GOMEMLIMIT slightly under the available memory
       # when running on a dedicated system, which is a safe assumption in the CI job case.
-      - run: GOMEMLIMIT=6800MiB GOGC=300 make lint
+      - run: GOMEMLIMIT=6800MiB GOGC=400 make lint

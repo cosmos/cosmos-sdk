@@ -3,7 +3,7 @@ package ormtable
 import (
 	"math"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
+	"cosmossdk.io/orm/internal/listinternal"
 
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 )

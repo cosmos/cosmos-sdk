@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/depinject"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -33,7 +34,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
-const ConsensusVersion = 4
+const ConsensusVersion = 5
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -42,7 +43,9 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the auth module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	ac address.Codec
+}
 
 // Name returns the auth module's name.
 func (AppModuleBasic) Name() string {
@@ -83,8 +86,8 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 // GetQueryCmd returns the root query command for the auth module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.ac)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the auth module.
@@ -114,7 +117,7 @@ func (am AppModule) IsAppModule() {}
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
-		AppModuleBasic:    AppModuleBasic{},
+		AppModuleBasic:    AppModuleBasic{ac: accountKeeper.GetAddressCodec()},
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 		legacySubspace:    ss,
@@ -145,9 +148,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
 
-	// see migrations/v5/doc.go
-	if err := cfg.RegisterMigration(types.ModuleName, 4, func(ctx sdk.Context) error { return nil }); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err))
+	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4To5); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5", types.ModuleName))
 	}
 }
 
@@ -206,7 +208,7 @@ func init() {
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
 func ProvideAddressCodec(config *modulev1.Module) address.Codec {
-	return keeper.NewBech32Codec(config.Bech32Prefix)
+	return authcodec.NewBech32Codec(config.Bech32Prefix)
 }
 
 type ModuleInputs struct {

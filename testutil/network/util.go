@@ -58,7 +58,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		appGenesisProvider,
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(cmtCfg.Instrumentation),
-		servercmtlog.CometZeroLogWrapper{Logger: logger.With("module", val.Moniker)},
+		servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.Moniker)},
 	)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func startInProcess(cfg Config, val *Validator) error {
 
 		app.RegisterTxService(val.ClientCtx)
 		app.RegisterTendermintService(val.ClientCtx)
-		app.RegisterNodeService(val.ClientCtx)
+		app.RegisterNodeService(val.ClientCtx, *val.AppConfig)
 	}
 
 	ctx := context.Background()

@@ -200,6 +200,7 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(ProvideAddressCodec),
 		appmodule.Provide(ProvideModule),
 	)
 }

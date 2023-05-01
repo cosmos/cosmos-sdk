@@ -15,24 +15,24 @@ import (
 )
 
 type msgServer struct {
-	Keeper
+	BaseKeeper
 }
 
 var _ types.MsgServer = msgServer{}
 
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
-	return &msgServer{Keeper: keeper}
+func NewMsgServerImpl(keeper BaseKeeper) types.MsgServer {
+	return &msgServer{BaseKeeper: keeper}
 }
 
 func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
 
-	from, err := k.StringToBytes(msg.FromAddress)
+	from, err := k.stringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 	}
-	to, err := k.StringToBytes(msg.ToAddress)
+	to, err := k.stringToBytes(msg.ToAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 	}
@@ -101,7 +101,7 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 	}
 
 	for _, out := range msg.Outputs {
-		accAddr, err := k.StringToBytes(out.Address)
+		accAddr, err := k.stringToBytes(out.Address)
 		if err != nil {
 			return nil, err
 		}

@@ -38,7 +38,7 @@ func (m *MockDistributionKeeper) EXPECT() *MockDistributionKeeperMockRecorder {
 }
 
 // GetFeePoolCommunityCoins mocks base method.
-func (m *MockDistributionKeeper) GetFeePoolCommunityCoins(ctx types.Context) types.DecCoins {
+func (m *MockDistributionKeeper) GetFeePoolCommunityCoins(ctx context.Context) types.DecCoins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeePoolCommunityCoins", ctx)
 	ret0, _ := ret[0].(types.DecCoins)
@@ -52,7 +52,7 @@ func (mr *MockDistributionKeeperMockRecorder) GetFeePoolCommunityCoins(ctx inter
 }
 
 // GetValidatorOutstandingRewardsCoins mocks base method.
-func (m *MockDistributionKeeper) GetValidatorOutstandingRewardsCoins(ctx types.Context, val types.ValAddress) types.DecCoins {
+func (m *MockDistributionKeeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val types.ValAddress) types.DecCoins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetValidatorOutstandingRewardsCoins", ctx, val)
 	ret0, _ := ret[0].(types.DecCoins)

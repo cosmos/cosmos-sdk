@@ -78,7 +78,7 @@ func (s *E2ETestSuite) SetupSuite() {
 
 		// Make sure not to forget to persist `myParams` into the actual store,
 		// this is done in InitChain.
-		app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
+		app.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 			subspace.SetParamSet(ctx, &paramSet)
 
 			return app.InitChainer(ctx, req)

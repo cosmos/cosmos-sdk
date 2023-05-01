@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -64,7 +65,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		)
 	}
 
-	app.Commit()
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger.With("instance", "second"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
@@ -107,8 +108,8 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	app.InitChain(abci.RequestInitChain{})
-	app.Commit()
+	app.InitChain(context.TODO(), &abci.RequestInitChain{})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	testCases := []struct {
 		name         string

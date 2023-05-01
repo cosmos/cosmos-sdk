@@ -67,7 +67,7 @@ type ToRosettaConverter interface {
 	// SigningComponents returns rosetta's components required to build a signable transaction
 	SigningComponents(tx authsigning.Tx, metadata *ConstructionMetadata, rosPubKeys []*rosettatypes.PublicKey) (txBytes []byte, payloadsToSign []*rosettatypes.SigningPayload, err error)
 	// Tx converts a CometBFT transaction and tx result if provided to a rosetta tx
-	Tx(rawTx cmttypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error)
+	Tx(rawTx cmttypes.Tx, txResult *abci.ExecTxResult) (*rosettatypes.Transaction, error)
 	// TxIdentifiers converts a CometBFT tx to transaction identifiers
 	TxIdentifiers(txs []cmttypes.Tx) []*rosettatypes.TransactionIdentifier
 	// BalanceOps converts events to balance operations
@@ -261,7 +261,7 @@ func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, e
 }
 
 // Tx converts a CometBFT raw transaction and its result (if provided) to a rosetta transaction
-func (c converter) Tx(rawTx cmttypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error) {
+func (c converter) Tx(rawTx cmttypes.Tx, txResult *abci.ExecTxResult) (*rosettatypes.Transaction, error) {
 	// decode tx
 	tx, err := c.txDecode(rawTx)
 	if err != nil {

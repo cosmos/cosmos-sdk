@@ -201,12 +201,6 @@ type HasConsensusVersion interface {
 	ConsensusVersion() uint64
 }
 
-// BeginBlockAppModule is an extension interface that contains information about the AppModule and BeginBlock.
-type BeginBlockAppModule interface {
-	AppModule
-	BeginBlock(sdk.Context, abci.RequestBeginBlock)
-}
-
 type HasABCIEndblock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
@@ -243,11 +237,11 @@ func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns an empty module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
+func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context) error { return nil }
 
 // EndBlock returns an empty module end-block
-func (GenesisOnlyAppModule) EndBlock(sdk.Context) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error) {
+	return []abci.ValidatorUpdate{}, nil
 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
@@ -334,7 +328,7 @@ func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasBeginBlock := module.(BeginBlockAppModule)
+			_, hasBeginBlock := module.(appmodule.HasBeginBlocker)
 			return !hasBeginBlock
 		})
 	m.OrderBeginBlockers = moduleNames
@@ -392,7 +386,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (abci.ResponseInitChain, error) {
+func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -407,12 +401,12 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			// core API genesis
 			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
 			if err != nil {
-				return abci.ResponseInitChain{}, err
+				return &abci.ResponseInitChain{}, err
 			}
 
 			err = module.InitGenesis(ctx, source)
 			if err != nil {
-				return abci.ResponseInitChain{}, err
+				return &abci.ResponseInitChain{}, err
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
@@ -422,7 +416,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
+					return &abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
 				}
 				validatorUpdates = moduleValUpdates
 			}
@@ -431,10 +425,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		return abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
+		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
-	return abci.ResponseInitChain{
+	return &abci.ResponseInitChain{
 		Validators: validatorUpdates,
 	}, nil
 }
@@ -651,21 +645,19 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 // BeginBlock performs begin block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.
-func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
+func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
-		if module, ok := m.Modules[moduleName].(BeginBlockAppModule); ok {
-			module.BeginBlock(ctx, req)
-		} else if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			err := module.BeginBlock(ctx)
 			if err != nil {
-				return abci.ResponseBeginBlock{}, err
+				return sdk.BeginBlock{}, err
 			}
 		}
 	}
 
-	return abci.ResponseBeginBlock{
+	return sdk.BeginBlock{
 		Events: ctx.EventManager().ABCIEvents(),
 	}, nil
 }

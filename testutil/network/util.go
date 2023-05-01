@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -56,7 +57,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		nodeKey,
 		proxy.NewLocalClientCreator(app),
 		appGenesisProvider,
-		node.DefaultDBProvider,
+		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cmtCfg.Instrumentation),
 		servercmtlog.CometZeroLogWrapper{Logger: logger.With("module", val.Moniker)},
 	)

@@ -116,7 +116,7 @@ func initFixture(t testing.TB) *fixture {
 				Address: valAddr,
 				Power:   100,
 			},
-			SignedLastBlock: true,
+			BlockIdFlag: types.BlockIDFlagCommit,
 		},
 	})
 

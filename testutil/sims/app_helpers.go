@@ -1,6 +1,7 @@
 package sims
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -161,23 +162,20 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
+	app.InitChain(context.Background(), &abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: DefaultConsensusParams,
+		AppStateBytes:   stateBytes,
+	},
 	)
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
-		app.Commit()
-		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
+		app.Commit(context.TODO(), &abci.RequestCommit{})
+		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
-			AppHash:            app.LastCommitID().Hash,
-			ValidatorsHash:     valSet.Hash(),
 			NextValidatorsHash: valSet.Hash(),
-		}})
+		})
 	}
 
 	return app, nil

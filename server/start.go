@@ -11,6 +11,7 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -327,7 +328,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 			nodeKey,
 			proxy.NewLocalClientCreator(app),
 			genDocProvider,
-			node.DefaultDBProvider,
+			cmtcfg.DefaultDBProvider,
 			node.DefaultMetricsProvider(cfg.Instrumentation),
 			servercmtlog.CometZeroLogWrapper{Logger: svrCtx.Logger},
 		)

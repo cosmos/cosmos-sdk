@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"reflect"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	"cosmossdk.io/core/address"
+
+	"cosmossdk.io/x/tx/signing"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -112,12 +114,8 @@ type interfaceMap = map[string]reflect.Type
 
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
-	protoFiles, err := proto.MergedRegistry()
-	if err != nil {
-		panic(err)
-	}
-	registry, err := NewInterfaceRegistryWithOptions(Options{
-		ProtoFiles:            protoFiles,
+	registry, err := NewInterfaceRegistryWithOptions(InterfaceRegistryOptions{
+		ProtoFiles:            protoregistry.GlobalFiles,
 		AddressCodec:          failingAddressCodec{},
 		ValidatorAddressCodec: failingAddressCodec{},
 	})
@@ -127,13 +125,20 @@ func NewInterfaceRegistry() InterfaceRegistry {
 	return registry
 }
 
-type Options struct {
-	ProtoFiles            *protoregistry.Files
-	AddressCodec          address.Codec
+// InterfaceRegistryOptions are options for creating a new InterfaceRegistry.
+type InterfaceRegistryOptions struct {
+	// ProtoFiles is the set of files to use for the registry. It is required.
+	ProtoFiles *protoregistry.Files
+
+	// AddressCodec is the address codec to use for the registry. It is required.
+	AddressCodec address.Codec
+
+	// ValidatorAddressCodec is the validator address codec to use for the registry. It is required.
 	ValidatorAddressCodec address.Codec
 }
 
-func NewInterfaceRegistryWithOptions(options Options) (InterfaceRegistry, error) {
+// NewInterfaceRegistryWithOptions returns a new InterfaceRegistry with the given options.
+func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (InterfaceRegistry, error) {
 	if options.ProtoFiles == nil {
 		return nil, fmt.Errorf("proto files must be provided")
 	}
@@ -365,9 +370,9 @@ func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
 type failingAddressCodec struct{}
 
 func (f failingAddressCodec) StringToBytes(string) ([]byte, error) {
-	return nil, fmt.Errorf("InterfaceRefactory requires a proper address codec implementation to do address conversion")
+	return nil, fmt.Errorf("InterfaceRegistry requires a proper address codec implementation to do address conversion")
 }
 
 func (f failingAddressCodec) BytesToString([]byte) (string, error) {
-	return "", fmt.Errorf("InterfaceRefactory requires a proper address codec implementation to do address conversion")
+	return "", fmt.Errorf("InterfaceRegistry requires a proper address codec implementation to do address conversion")
 }

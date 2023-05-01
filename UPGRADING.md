@@ -36,6 +36,10 @@ simd config migrate v0.48
 
 More information about [confix](https://docs.cosmos.network/main/tooling/confix).
 
+#### Events
+
+The log section of abci.TxResult is not populated in the case of successful msg(s) execution. Instead a new attribute is added to all messages indicating the `msg_index` which identifies which events and attributes relate the same transaction
+
 #### gRPC-Web
 
 gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
@@ -67,7 +71,10 @@ This is no longer the case, the assertion has been loosened to only require modu
 The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
 
 * `x/auth`
+* `x/authz`
+* `x/bank`
 * `x/consensus`
+* `x/distribution`
 * `x/feegrant`
 * `x/nft`
 
@@ -82,6 +89,35 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 )
 ```
 
+The following modules `NewKeeper` function now also take a `log.Logger`:
+
+* `x/bank`
+
+The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
+
+* `x/authz`
+* `x/bank`
+* `x/distribution`
+
+### depinject
+
+For `depinject` users, now the logger must be supplied through the main `depinject.Inject` function instead of passing it to `appBuilder.Build`.
+
+```diff
+appConfig = depinject.Configs(
+	AppConfig,
+	depinject.Supply(
+		// supply the application options
+		appOpts,
++		logger,
+	...
+```
+
+```diff
+- app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
++ app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+```
+
 ### Packages
 
 #### Store
@@ -93,6 +129,10 @@ References to `types/store.go` which contained aliases for store types have been
 The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
 
+#### Client
+
+The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type.  If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
+
 ### Modules
 
 #### `**all**`
@@ -103,7 +143,7 @@ It is now recommended to validate message directly in the message server. When t
 
 #### `x/auth`
 
-Methods in the `AccountKeeper` now use `context.Context` instead of `sdk.Context`. Any module that has an interface for it will need to update and re-generate mocks if needed.
+For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`.  Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 
 #### `x/capability`
 

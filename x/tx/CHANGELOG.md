@@ -31,6 +31,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## v0.6.0
 
+### Improvements
+
+* [#15873](https://github.com/cosmos/cosmos-sdk/pull/15873): add `Validate` method and only check for errors when `Validate` is explicitly called.
+
+## v0.6.0
+
 ### API Breaking
 
 * [#15709](https://github.com/cosmos/cosmos-sdk/pull/15709):

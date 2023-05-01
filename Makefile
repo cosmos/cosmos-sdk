@@ -238,7 +238,7 @@ ifneq (,$(shell which tparse 2>/dev/null))
 	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
-		echo "Running unit tests for module $$module"; \
+		echo "Running unit tests for $$(grep '^module' go.mod)"; \
 		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
@@ -249,7 +249,7 @@ else
 	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
-		echo "Running unit tests for module $$module"; \
+		echo "Running unit tests for $$(grep '^module' go.mod)"; \
 		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
@@ -398,7 +398,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.12.0
+protoVer=0.13.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

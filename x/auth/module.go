@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/depinject"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -132,7 +133,7 @@ func (AppModule) Name() string {
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.accountKeeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.accountKeeper))
 
 	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer(), am.legacySubspace)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -207,7 +208,7 @@ func init() {
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
 func ProvideAddressCodec(config *modulev1.Module) address.Codec {
-	return keeper.NewBech32Codec(config.Bech32Prefix)
+	return authcodec.NewBech32Codec(config.Bech32Prefix)
 }
 
 type ModuleInputs struct {

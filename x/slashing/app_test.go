@@ -4,11 +4,14 @@ import (
 	"errors"
 	"testing"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -51,15 +54,21 @@ func TestSlashingMsgs(t *testing.T) {
 		slashingKeeper keeper.Keeper
 	)
 
-	app, err := sims.SetupWithConfiguration(configurator.NewAppConfig(
-		configurator.ParamsModule(),
-		configurator.AuthModule(),
-		configurator.StakingModule(),
-		configurator.SlashingModule(),
-		configurator.TxModule(),
-		configurator.ConsensusModule(),
-		configurator.BankModule()),
+	app, err := sims.SetupWithConfiguration(
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.ParamsModule(),
+				configurator.AuthModule(),
+				configurator.StakingModule(),
+				configurator.SlashingModule(),
+				configurator.TxModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		),
 		startupCfg, &stakingKeeper, &bankKeeper, &slashingKeeper)
+	require.NoError(t, err)
 
 	baseApp := app.BaseApp
 

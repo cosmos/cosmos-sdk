@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -31,7 +32,10 @@ func TestDecodeStore(t *testing.T) {
 		cdc           codec.Codec
 		accountKeeper authkeeper.AccountKeeper
 	)
-	err := depinject.Inject(testutil.AppConfig, &cdc, &accountKeeper)
+	err := depinject.Inject(depinject.Configs(
+		testutil.AppConfig,
+		depinject.Supply(log.NewNopLogger()),
+	), &cdc, &accountKeeper)
 	require.NoError(t, err)
 
 	acc := types.NewBaseAccountWithAddress(delAddr1)

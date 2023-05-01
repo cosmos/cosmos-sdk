@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -440,7 +440,9 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
 				var result sdk.TxResponse
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().NotNil(result.Height)
-				s.Require().Contains(result.RawLog, tc.rawLogContains)
+				if ok := s.deepContains(result.Events, tc.rawLogContains); !ok {
+					s.Require().Fail("raw log does not contain the expected value, expected value: %s", tc.rawLogContains)
+				}
 			}
 		})
 	}
@@ -1510,7 +1512,7 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	sigV2 := signing.SignatureV2{
 		PubKey: val1.PubKey,
 		Data: &signing.SingleSignatureData{
-			SignMode:  txCfg.SignModeHandler().DefaultMode(),
+			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: nil,
 		},
 	}
@@ -1960,4 +1962,15 @@ func (s *E2ETestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress
 	s.Require().NoError(err)
 	startTokens := balRes.Balances.AmountOf(denom)
 	return startTokens
+}
+
+func (s *E2ETestSuite) deepContains(events []abci.Event, value string) bool {
+	for _, e := range events {
+		for _, attr := range e.Attributes {
+			if strings.Contains(attr.Value, value) {
+				return true
+			}
+		}
+	}
+	return false
 }

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/cockroachdb/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,21 +37,6 @@ func (m MsgAuthorizeCircuitBreaker) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// ValidateBasic does a sanity check on the provided data
-func (m MsgAuthorizeCircuitBreaker) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.Granter)
-	if err != nil {
-		return errors.Wrap(err, "granter")
-	}
-
-	_, err = sdk.AccAddressFromBech32(m.Grantee)
-	if err != nil {
-		return errors.Wrap(err, "granter")
-	}
-
-	return nil
-}
-
 // NewMsgTripCircuitBreaker creates a new MsgTripCircuitBreaker instance.
 func NewMsgTripCircuitBreaker(authority string, urls []string) *MsgTripCircuitBreaker {
 	return &MsgTripCircuitBreaker{
@@ -79,16 +63,6 @@ func (m MsgTripCircuitBreaker) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// ValidateBasic does a sanity check on the provided data
-func (m MsgTripCircuitBreaker) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.Authority)
-	if err != nil {
-		return errors.Wrap(err, "granter")
-	}
-
-	return nil
-}
-
 // NewMsgResetCircuitBreaker creates a new MsgResetCircuitBreaker instance.
 func NewMsgResetCircuitBreaker(authority string, urls []string) *MsgResetCircuitBreaker {
 	return &MsgResetCircuitBreaker{
@@ -113,14 +87,4 @@ func (m MsgResetCircuitBreaker) GetSigners() []sdk.AccAddress {
 	granter := sdk.MustAccAddressFromBech32(m.Authority)
 
 	return []sdk.AccAddress{granter}
-}
-
-// ValidateBasic does a sanity check on the provided data
-func (m MsgResetCircuitBreaker) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.Authority)
-	if err != nil {
-		return errors.Wrap(err, "granter")
-	}
-
-	return nil
 }

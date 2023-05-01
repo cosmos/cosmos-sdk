@@ -335,7 +335,9 @@ func (st *Store) Query(req *abci.RequestQuery) (res *abci.ResponseQuery) {
 
 	// store the height we chose in the response, with 0 being changed to the
 	// latest height
-	res.Height = getHeight(tree, req)
+	res = &abci.ResponseQuery{
+		Height: getHeight(tree, req),
+	}
 
 	switch req.Path {
 	case "/key": // get by key

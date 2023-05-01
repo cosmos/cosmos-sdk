@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/depinject"
 	storetypes "cosmossdk.io/store/types"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -38,15 +37,9 @@ import (
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -70,7 +63,6 @@ type SimApp struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
-	autoCliOpts       autocli.AppOptions
 
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
@@ -124,15 +116,6 @@ func NewSimApp(
 				appOpts,
 				// supply the logger
 				logger,
-				// supply custom module basics
-				map[string]module.AppModuleBasic{
-					genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-					govtypes.ModuleName: gov.NewAppModuleBasic(
-						[]govclient.ProposalHandler{
-							paramsclient.ProposalHandler,
-						},
-					),
-				},
 
 				// ADVANCED CONFIGURATION
 
@@ -166,7 +149,6 @@ func NewSimApp(
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
-		&app.autoCliOpts,
 		&app.AccountKeeper,
 		&app.BankKeeper,
 		&app.StakingKeeper,
@@ -286,11 +268,6 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// AutoCliOpts returns the autocli options for the app.
-func (app *SimApp) AutoCliOpts() autocli.AppOptions {
-	return app.autoCliOpts
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

@@ -1,6 +1,7 @@
 # Upgrading Cosmos SDK
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
+Note, always read the **SimApp** section for more information about updates when wiring your application.
 
 ## [Unreleased]
 

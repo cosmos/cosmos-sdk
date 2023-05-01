@@ -38,18 +38,18 @@ import (
 type App struct {
 	*baseapp.BaseApp
 
-	ModuleManager      *module.Manager
-	BasicModuleManager module.BasicManager
-	configurator       module.Configurator
-	config             *runtimev1alpha1.Module
-	storeKeys          []storetypes.StoreKey
-	interfaceRegistry  codectypes.InterfaceRegistry
-	cdc                codec.Codec
-	amino              *codec.LegacyAmino
-	baseAppOptions     []BaseAppOption
-	msgServiceRouter   *baseapp.MsgServiceRouter
-	appConfig          *appv1alpha1.Config
-	logger             log.Logger
+	ModuleManager     *module.Manager
+	configurator      module.Configurator
+	config            *runtimev1alpha1.Module
+	storeKeys         []storetypes.StoreKey
+	interfaceRegistry codectypes.InterfaceRegistry
+	cdc               codec.Codec
+	amino             *codec.LegacyAmino
+	basicManager      module.BasicManager
+	baseAppOptions    []BaseAppOption
+	msgServiceRouter  *baseapp.MsgServiceRouter
+	appConfig         *appv1alpha1.Config
+	logger            log.Logger
 	// initChainer is the init chainer function defined by the app config.
 	// this is only required if the chain wants to add special InitChainer logic.
 	initChainer sdk.InitChainer
@@ -65,12 +65,12 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 			return fmt.Errorf("AppModule named %q already exists", name)
 		}
 
-		if _, ok := a.BasicModuleManager[name]; ok {
+		if _, ok := a.basicManager[name]; ok {
 			return fmt.Errorf("AppModuleBasic named %q already exists", name)
 		}
 
 		a.ModuleManager.Modules[name] = appModule
-		a.BasicModuleManager[name] = appModule
+		a.basicManager[name] = appModule
 		appModule.RegisterInterfaces(a.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.amino)
 
@@ -169,7 +169,7 @@ func (a *App) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConfig) {
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
-	a.BasicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	a.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
@@ -204,7 +204,7 @@ func (a *App) LoadHeight(height int64) error {
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.BasicModuleManager.DefaultGenesis(a.cdc)
+	return a.basicManager.DefaultGenesis(a.cdc)
 }
 
 // GetStoreKeys returns all the stored store keys.

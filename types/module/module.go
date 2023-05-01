@@ -756,7 +756,9 @@ func (m *Manager) Precommit(ctx sdk.Context) error {
 		if !ok {
 			continue
 		}
-		return module.Precommit(ctx)
+		if err := module.Precommit(ctx); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -768,7 +770,9 @@ func (m *Manager) PrepareCheckState(ctx sdk.Context) error {
 		if !ok {
 			continue
 		}
-		return module.PrepareCheckState(ctx)
+		if err := module.PrepareCheckState(ctx); err != nil {
+			return err
+		}
 	}
 	return nil
 }

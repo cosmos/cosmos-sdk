@@ -557,6 +557,10 @@ func TestManager_PrepareCheckState(t *testing.T) {
 	mockAppModule2.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(nil)
 	err := mm.PrepareCheckState(sdk.Context{})
 	require.NoError(t, err)
+
+	mockAppModule1.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(errors.New("some error"))
+	err = mm.PrepareCheckState(sdk.Context{})
+	require.EqualError(t, err, "some error")
 }
 
 func TestManager_Precommit(t *testing.T) {
@@ -576,6 +580,10 @@ func TestManager_Precommit(t *testing.T) {
 	mockAppModule2.EXPECT().Precommit(gomock.Any()).Times(1).Return(nil)
 	err := mm.Precommit(sdk.Context{})
 	require.NoError(t, err)
+
+	mockAppModule1.EXPECT().Precommit(gomock.Any()).Times(1).Return(errors.New("some error"))
+	err = mm.Precommit(sdk.Context{})
+	require.EqualError(t, err, "some error")
 }
 
 // MockCoreAppModule allows us to test functions like DefaultGenesis

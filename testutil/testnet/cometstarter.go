@@ -167,7 +167,7 @@ func (s *CometStarter) Start() (n *node.Node, err error) {
 			appGenesisProvider,
 			node.DefaultDBProvider,
 			node.DefaultMetricsProvider(s.cfg.Instrumentation),
-			servercmtlog.CometZeroLogWrapper{Logger: s.logger},
+			servercmtlog.CometLoggerWrapper{Logger: s.logger},
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create comet node: %w", err)

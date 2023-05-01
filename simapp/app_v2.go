@@ -172,6 +172,7 @@ func NewSimApp(
 			depinject.Supply(
 				// supply the application options
 				appOpts,
+				logger,
 
 				// ADVANCED CONFIGURATION
 
@@ -253,7 +254,7 @@ func NewSimApp(
 	// }
 	// baseAppOptions = append(baseAppOptions, prepareOpt)
 
-	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
+	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
 	// register streaming services
 	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {

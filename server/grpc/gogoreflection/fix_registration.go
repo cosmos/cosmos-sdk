@@ -39,15 +39,15 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 	}
 
 	// check into proto registry
-	for id, desc := range proto.RegisteredExtensions(m) { //nolint:staticcheck // kept for backwards compatibility
+	for id, desc := range proto.RegisteredExtensions(m) { //nolint:staticcheck // keep for backward compatibility
 		if id == extID {
 			return &gogoproto.ExtensionDesc{
-				ExtendedType:  desc.ExtendedType,
-				ExtensionType: desc.ExtensionType,
-				Field:         desc.Field,
-				Name:          desc.Name,
-				Tag:           desc.Tag,
-				Filename:      desc.Filename,
+				ExtendedType:  desc.ExtendedType,  //nolint:staticcheck // keep for backward compatibility
+				ExtensionType: desc.ExtensionType, //nolint:staticcheck // keep for backward compatibility
+				Field:         desc.Field,         //nolint:staticcheck // keep for backward compatibility
+				Name:          desc.Name,          //nolint:staticcheck // keep for backward compatibility
+				Tag:           desc.Tag,           //nolint:staticcheck // keep for backward compatibility
+				Filename:      desc.Filename,      //nolint:staticcheck // keep for backward compatibility
 			}
 		}
 	}

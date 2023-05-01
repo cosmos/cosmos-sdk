@@ -3,6 +3,8 @@ package distribution_test
 import (
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
@@ -16,7 +18,12 @@ import (
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
 
-	app, err := simtestutil.SetupAtGenesis(testutil.AppConfig, &accountKeeper)
+	app, err := simtestutil.SetupAtGenesis(
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
+		&accountKeeper)
 	assert.NilError(t, err)
 
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})

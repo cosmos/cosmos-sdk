@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -26,7 +25,6 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 
 // Build builds an *App instance.
 func (a *AppBuilder) Build(
-	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -35,7 +33,7 @@ func (a *AppBuilder) Build(
 		baseAppOptions = append(baseAppOptions, option)
 	}
 
-	bApp := baseapp.NewBaseApp(a.app.config.AppName, logger, db, nil, baseAppOptions...)
+	bApp := baseapp.NewBaseApp(a.app.config.AppName, a.app.logger, db, nil, baseAppOptions...)
 	bApp.SetMsgServiceRouter(a.app.msgServiceRouter)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)

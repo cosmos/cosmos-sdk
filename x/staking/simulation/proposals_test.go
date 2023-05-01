@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
@@ -43,5 +44,5 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, uint32(300), msgUpdateParams.Params.HistoricalEntries)
 	assert.Equal(t, uint32(539), msgUpdateParams.Params.MaxValidators)
 	assert.Equal(t, 8898194435*time.Second, msgUpdateParams.Params.UnbondingTime)
-	assert.DeepEqual(t, sdk.NewDecWithPrec(579040435581502128, 18), msgUpdateParams.Params.MinCommissionRate)
+	assert.DeepEqual(t, sdkmath.LegacyNewDecWithPrec(579040435581502128, 18), msgUpdateParams.Params.MinCommissionRate)
 }

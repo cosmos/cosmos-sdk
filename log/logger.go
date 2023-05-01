@@ -2,12 +2,11 @@ package log
 
 import (
 	"io"
-	"time"
 
 	"github.com/rs/zerolog"
 )
 
-// Defines commons keys for logging.
+// ModuleKey defines a module logging key.
 const ModuleKey = "module"
 
 // ContextKey is used to store the logger in the context.
@@ -58,14 +57,21 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 
 	output := dst
 	if !logCfg.OutputJSON {
-		output = zerolog.ConsoleWriter{Out: dst, TimeFormat: time.Kitchen}
+		output = zerolog.ConsoleWriter{
+			Out:        dst,
+			NoColor:    !logCfg.Color,
+			TimeFormat: logCfg.TimeFormat,
+		}
 	}
 
 	if logCfg.Filter != nil {
 		output = NewFilterWriter(output, logCfg.Filter)
 	}
 
-	logger := zerolog.New(output).With().Timestamp().Logger()
+	logger := zerolog.New(output)
+	if logCfg.TimeFormat != "" {
+		logger = logger.With().Timestamp().Logger()
+	}
 
 	if logCfg.Level != zerolog.NoLevel {
 		logger = logger.Level(logCfg.Level)

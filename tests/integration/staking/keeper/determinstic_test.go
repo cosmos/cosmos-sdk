@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
@@ -51,7 +53,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := simtestutil.Setup(
-		stakingtestutil.AppConfig,
+		depinject.Configs(
+			stakingtestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&f.bankKeeper,
 		&f.accountKeeper,
 		&f.stakingKeeper,
@@ -147,7 +152,7 @@ func setValidator(f *deterministicFixture, t *testing.T, validator stakingtypes.
 
 	delegatorAddress := sdk.AccAddress(validator.GetOperator())
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
-	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegatorAddress, coins)
+	banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins)
 
 	_, err := f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
 	assert.NilError(t, err)
@@ -232,7 +237,7 @@ func fundAccountAndDelegate(f *deterministicFixture, t *testing.T, delegator sdk
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
-	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegator, coins)
+	banktestutil.FundAccount(f.ctx, f.bankKeeper, delegator, coins)
 
 	shares, err := f.stakingKeeper.Delegate(f.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
 	return shares, err
@@ -322,7 +327,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 11985, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14475, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {

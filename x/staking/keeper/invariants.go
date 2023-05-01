@@ -165,7 +165,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		)
 
 		validators := k.GetAllValidators(ctx)
-		validatorsDelegationShares := map[string]sdk.Dec{}
+		validatorsDelegationShares := map[string]math.LegacyDec{}
 
 		// initialize a map: validator -> its delegation shares
 		for _, validator := range validators {

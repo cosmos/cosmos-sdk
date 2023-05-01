@@ -16,11 +16,14 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
 type AccountKeeperI interface {
+	address.Codec
+
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
 	NewAccountWithAddress(context.Context, sdk.AccAddress) sdk.AccountI
 
@@ -58,20 +61,21 @@ type AccountKeeperI interface {
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
+	address.Codec
+
 	storeService store.KVStoreService
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
+	bech32Prefix string
 
 	// The prototypical AccountI constructor.
-	proto      func() sdk.AccountI
-	addressCdc address.Codec
+	proto func() sdk.AccountI
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
 
 	// State
-
 	ParamsState   collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
 	AccountNumber collections.Sequence
 }
@@ -93,16 +97,15 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	bech32Codec := NewBech32Codec(bech32Prefix)
-
 	sb := collections.NewSchemaBuilder(storeService)
 
 	return AccountKeeper{
+		Codec:         authcodec.NewBech32Codec(bech32Prefix),
+		bech32Prefix:  bech32Prefix,
 		storeService:  storeService,
 		proto:         proto,
 		cdc:           cdc,
 		permAddrs:     permAddrs,
-		addressCdc:    bech32Codec,
 		authority:     authority,
 		ParamsState:   collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
@@ -117,7 +120,7 @@ func (ak AccountKeeper) GetAuthority() string {
 // GetAddressCodec returns the x/auth module's address.
 // x/auth is tied to bech32 encoded user accounts
 func (ak AccountKeeper) GetAddressCodec() address.Codec {
-	return ak.addressCdc
+	return ak.Codec
 }
 
 // Logger returns a module-specific logger.
@@ -256,12 +259,7 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	bech32Codec, ok := ak.addressCdc.(bech32Codec)
-	if !ok {
-		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.addressCdc)
-	}
-
-	return bech32Codec.bech32Prefix, nil
+	return ak.bech32Prefix, nil
 }
 
 // SetParams sets the auth module's parameters.

@@ -750,25 +750,27 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 }
 
 // Precommit performs precommit functionality for all modules.
-func (m *Manager) Precommit(ctx sdk.Context) {
+func (m *Manager) Precommit(ctx sdk.Context) error {
 	for _, moduleName := range m.OrderPrecommiters {
 		module, ok := m.Modules[moduleName].(appmodule.HasPrecommit)
 		if !ok {
 			continue
 		}
-		module.Precommit(ctx)
+		return module.Precommit(ctx)
 	}
+	return nil
 }
 
 // PrepareCheckState performs functionality for preparing the check state for all modules.
-func (m *Manager) PrepareCheckState(ctx sdk.Context) {
+func (m *Manager) PrepareCheckState(ctx sdk.Context) error {
 	for _, moduleName := range m.OrderPrepareCheckStaters {
 		module, ok := m.Modules[moduleName].(appmodule.HasPrepareCheckState)
 		if !ok {
 			continue
 		}
-		module.PrepareCheckState(ctx)
+		return module.PrepareCheckState(ctx)
 	}
+	return nil
 }
 
 // GetVersionMap gets consensus version from all modules

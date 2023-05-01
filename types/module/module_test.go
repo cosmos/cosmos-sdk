@@ -540,6 +540,44 @@ func TestCoreAPIManager_EndBlock(t *testing.T) {
 	require.EqualError(t, err, "some error")
 }
 
+func TestManager_PrepareCheckState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	mockAppModule1.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(nil)
+	mockAppModule2.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(nil)
+	err := mm.PrepareCheckState(sdk.Context{})
+	require.NoError(t, err)
+}
+
+func TestManager_Precommit(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	mockAppModule1.EXPECT().Precommit(gomock.Any()).Times(1).Return(nil)
+	mockAppModule2.EXPECT().Precommit(gomock.Any()).Times(1).Return(nil)
+	err := mm.Precommit(sdk.Context{})
+	require.NoError(t, err)
+}
+
 // MockCoreAppModule allows us to test functions like DefaultGenesis
 type MockCoreAppModule struct{}
 

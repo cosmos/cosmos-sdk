@@ -9,6 +9,6 @@ import "cosmos/app/v1alpha1/module.proto";
 // services for modules that use the ORM.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/orm"
+    go_import: "cosmossdk.io/orm"
   };
 }

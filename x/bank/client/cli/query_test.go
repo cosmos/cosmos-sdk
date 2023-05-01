@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -99,21 +98,18 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			var outBuf bytes.Buffer
-
-			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 
-			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
 
-			err := cmd.Execute()
+			out, err := clitestutil.ExecTestCLICmd(tc.ctxGen(), cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(outBuf.Bytes(), tc.expectResult))
+				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(out.Bytes(), tc.expectResult))
 				s.Require().NoError(err)
 			}
 		})
@@ -183,21 +179,16 @@ func (s *CLITestSuite) TestGetSpendableBalancesCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			var outBuf bytes.Buffer
-
-			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())
-
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
+			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
 
-			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
-
-			err := cmd.Execute()
+			out, err := clitestutil.ExecTestCLICmd(tc.ctxGen(), cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(outBuf.Bytes(), tc.expectResult))
+				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(out.Bytes(), tc.expectResult))
 				s.Require().NoError(err)
 			}
 		})
@@ -266,21 +257,18 @@ func (s *CLITestSuite) TestGetCmdDenomsMetadata() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			var outBuf bytes.Buffer
-
-			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 
-			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
 
-			err := cmd.Execute()
+			out, err := clitestutil.ExecTestCLICmd(tc.ctxGen(), cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(outBuf.Bytes(), tc.expectResult))
+				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(out.Bytes(), tc.expectResult))
 				s.Require().NoError(err)
 			}
 		})
@@ -352,21 +340,16 @@ func (s *CLITestSuite) TestGetCmdQueryTotalSupply() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			var outBuf bytes.Buffer
-
-			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())
-
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
+			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
 
-			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
-
-			err := cmd.Execute()
+			out, err := clitestutil.ExecTestCLICmd(tc.ctxGen(), cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(outBuf.Bytes(), tc.expectResult))
+				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(out.Bytes(), tc.expectResult))
 				s.Require().NoError(err)
 			}
 		})
@@ -426,21 +409,18 @@ func (s *CLITestSuite) TestGetCmdQuerySendEnabled() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			var outBuf bytes.Buffer
-
-			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 
-			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
 
-			err := cmd.Execute()
+			out, err := clitestutil.ExecTestCLICmd(tc.ctxGen(), cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(outBuf.Bytes(), tc.expectResult))
+				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(out.Bytes(), tc.expectResult))
 				s.Require().NoError(err)
 			}
 		})

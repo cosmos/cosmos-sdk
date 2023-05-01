@@ -117,7 +117,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	for i := 0; i < numAccs; i++ {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		acc.SetAccountNumber(uint64(i))
+		acc.SetAccountNumber(uint64(i + 1000))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		accounts = append(accounts, TestAccount{acc, priv})
 	}
@@ -144,6 +144,16 @@ type TestCaseArgs struct {
 	privs     []cryptotypes.PrivKey
 }
 
+func (t TestCaseArgs) WithAccountsInfo(accs []TestAccount) TestCaseArgs {
+	newT := t
+	for _, acc := range accs {
+		newT.accNums = append(newT.accNums, acc.acc.GetAccountNumber())
+		newT.accSeqs = append(newT.accSeqs, acc.acc.GetSequence())
+		newT.privs = append(newT.privs, acc.priv)
+	}
+	return newT
+}
+
 // DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a test case, for
 // example to test for replay protection.
 func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, simulate bool) (sdk.Context, error) {
@@ -153,7 +163,10 @@ func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKe
 
 	tx, txErr := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, chainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, txErr)
-	return suite.anteHandler(suite.ctx, tx, simulate)
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	bytesCtx := suite.ctx.WithTxBytes(txBytes)
+	require.NoError(t, err)
+	return suite.anteHandler(bytesCtx, tx, simulate)
 }
 
 func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCaseArgs) {
@@ -165,7 +178,10 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 	// ante handlers, but here we sometimes also test the tx creation
 	// process.
 	tx, txErr := suite.CreateTestTx(suite.ctx, args.privs, args.accNums, args.accSeqs, args.chainID, signing.SignMode_SIGN_MODE_DIRECT)
-	newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	bytesCtx := suite.ctx.WithTxBytes(txBytes)
+	newCtx, anteErr := suite.anteHandler(bytesCtx, tx, tc.simulate)
 
 	if tc.expPass {
 		require.NoError(t, txErr)

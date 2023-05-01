@@ -27,6 +27,7 @@ type (
 		DeleteVersions(versions ...int64) error
 		Version() int64
 		Hash() ([]byte, error)
+		WorkingHash() ([]byte, error)
 		VersionExists(version int64) bool
 		GetVersioned(key []byte, version int64) ([]byte, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
@@ -100,4 +101,8 @@ func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) (int64, 
 
 func (it *immutableTree) LazyLoadVersionForOverwriting(targetVersion int64) (int64, error) {
 	panic("cannot call 'LazyLoadVersionForOverwriting' on an immutable IAVL tree")
+}
+
+func (it *immutableTree) WorkingHash() ([]byte, error) {
+	panic("cannot call 'WorkingHash' on an immutable IAVL tree")
 }

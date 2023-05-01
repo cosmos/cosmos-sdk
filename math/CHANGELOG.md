@@ -40,6 +40,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 * [#15714](https://github.com/cosmos/cosmos-sdk/pull/15714) `FormatInt` returns an error on empty string
 
+### Improvements
+
+* [#15768](https://github.com/cosmos/cosmos-sdk/pull/15768) Removed the second call to the `init` method for the global variable `grand`.
+
 ## [math/v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0) - 2023-03-23
 
 ### Bug Fixes

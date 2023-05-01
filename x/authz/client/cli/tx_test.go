@@ -1,19 +1,24 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"testing"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+<<<<<<< HEAD
 	"cosmossdk.io/core/address"
+||||||| 67c1c788b2
+=======
+	sdkmath "cosmossdk.io/math"
+
+	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
+>>>>>>> main
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -69,7 +74,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -77,7 +81,7 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	s.grantee = make([]sdk.AccAddress, 6)
@@ -155,7 +159,6 @@ func (s *CLITestSuite) SetupSuite() {
 		},
 	)
 	s.Require().NoError(err)
-
 	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 
 	s.ac = addresscodec.NewBech32Codec("cosmos")
@@ -380,7 +383,7 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 				fmt.Sprintf("--%s=%s", cli.FlagAllowList, fmt.Sprintf("%s,%s", s.grantee[1], s.grantee[1])),
 			},
 			true,
-			"duplicate entry",
+			"duplicate address",
 		},
 		{
 			"Valid tx generic authorization",

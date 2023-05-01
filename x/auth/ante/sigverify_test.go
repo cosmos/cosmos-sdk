@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -126,17 +127,18 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 
 func TestSigVerification(t *testing.T) {
 	suite := SetupTestSuite(t, true)
-	suite.txBankKeeper.EXPECT().DenomMetadata(suite.ctx, gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
+	suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
 
 	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_TEXTUAL, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
 	// here which includes it.
-	txt, err := txmodule.NewTextualWithGRPCConn(suite.clientCtx)
-	require.NoError(t, err)
-	suite.clientCtx.TxConfig = authtx.NewTxConfigWithTextual(
+	txConfigOpts := authtx.ConfigOptions{
+		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
+		EnabledSignModes:           enabledSignModes,
+	}
+	suite.clientCtx.TxConfig = authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
-		enabledSignModes,
-		txt,
+		txConfigOpts,
 	)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -163,15 +165,18 @@ func TestSigVerification(t *testing.T) {
 	gasLimit := testdata.NewTestGasLimit()
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-	txt, err = txmodule.NewTextualWithBankKeeper(suite.txBankKeeper)
-	require.NoError(t, err)
-	anteTxConfig := authtx.NewTxConfigWithTextual(
+	txConfigOpts = authtx.ConfigOptions{
+		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper),
+		EnabledSignModes:           enabledSignModes,
+	}
+	anteTxConfig := authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
-		enabledSignModes,
-		txt,
+		txConfigOpts,
 	)
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
+	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
 
 	type testCase struct {
 		name        string
@@ -211,7 +216,7 @@ func TestSigVerification(t *testing.T) {
 					txSigs[0] = signing.SignatureV2{
 						PubKey: tc.privs[0].PubKey(),
 						Data: &signing.SingleSignatureData{
-							SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+							SignMode:  defaultSignMode,
 							Signature: badSig,
 						},
 						Sequence: tc.accSeqs[0],
@@ -220,7 +225,10 @@ func TestSigVerification(t *testing.T) {
 					tx = suite.txBuilder.GetTx()
 				}
 
-				_, err = antehandler(suite.ctx, tx, false)
+				txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+				require.NoError(t, err)
+				byteCtx := suite.ctx.WithTxBytes(txBytes)
+				_, err = antehandler(byteCtx, tx, false)
 				if tc.shouldErr {
 					require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
 				} else {
@@ -287,6 +295,10 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	svgc := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
+
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	suite.ctx = suite.ctx.WithTxBytes(txBytes)
 
 	// Determine gas consumption of antehandler with default params
 	before := suite.ctx.GasMeter().GasConsumed()

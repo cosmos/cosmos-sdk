@@ -8,7 +8,7 @@ import (
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"cosmossdk.io/orm/model/ormtable"
 )
 
 type singletonGen struct {

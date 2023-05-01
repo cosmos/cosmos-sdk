@@ -1,18 +1,11 @@
 package v1
 
 import (
-	"fmt"
-
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/gov/codec"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -65,48 +58,6 @@ func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (m MsgSubmitProposal) ValidateBasic() error {
-	if m.Title == "" {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
-	}
-	if m.Summary == "" {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
-	}
-
-	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
-	}
-
-	deposit := sdk.NewCoins(m.InitialDeposit...)
-	if !deposit.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
-	}
-
-	if deposit.IsAnyNegative() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
-	}
-
-	// Check that either metadata or Msgs length is non nil.
-	if len(m.Messages) == 0 && len(m.Metadata) == 0 {
-		return errorsmod.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
-	}
-
-	msgs, err := m.GetMsgs()
-	if err != nil {
-		return err
-	}
-
-	for idx, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
-			return errorsmod.Wrap(types.ErrInvalidProposalMsg,
-				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
-		}
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the message bytes to sign over.
 func (m MsgSubmitProposal) GetSignBytes() []byte {
 	bz := codec.Amino.MustMarshalJSON(&m)
@@ -129,22 +80,6 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgDeposit) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
-	}
-	amount := sdk.NewCoins(msg.Amount...)
-	if !amount.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
-	}
-	if amount.IsAnyNegative() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgDeposit) GetSignBytes() []byte {
 	bz := codec.Amino.MustMarshalJSON(&msg)
@@ -162,18 +97,6 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, meta
 	return &MsgVote{proposalID, voter.String(), option, metadata}
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgVote) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
-	}
-	if !ValidVoteOption(msg.Option) {
-		return errorsmod.Wrap(types.ErrInvalidVote, msg.Option.String())
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgVote) GetSignBytes() []byte {
 	bz := codec.Amino.MustMarshalJSON(&msg)
@@ -189,43 +112,6 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
-}
-
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgVoteWeighted) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
-	}
-	if len(msg.Options) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
-	}
-
-	totalWeight := math.LegacyNewDec(0)
-	usedOptions := make(map[VoteOption]bool)
-	for _, option := range msg.Options {
-		if !option.IsValid() {
-			return errorsmod.Wrap(types.ErrInvalidVote, option.String())
-		}
-		weight, err := sdk.NewDecFromStr(option.Weight)
-		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidVote, "Invalid weight: %s", err)
-		}
-		totalWeight = totalWeight.Add(weight)
-		if usedOptions[option.Option] {
-			return errorsmod.Wrap(types.ErrInvalidVote, "Duplicated vote option")
-		}
-		usedOptions[option.Option] = true
-	}
-
-	if totalWeight.GT(math.LegacyNewDec(1)) {
-		return errorsmod.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
-	}
-
-	if totalWeight.LT(math.LegacyNewDec(1)) {
-		return errorsmod.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
-	}
-
-	return nil
 }
 
 // GetSignBytes returns the message bytes to sign over.
@@ -276,15 +162,6 @@ func (c MsgExecLegacyContent) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 	return unpacker.UnpackAny(c.Content, &content)
 }
 
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgUpdateParams) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
-	return msg.Params.ValidateBasic()
-}
-
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
 	bz := codec.Amino.MustMarshalJSON(&msg)
@@ -303,15 +180,6 @@ func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal
 		ProposalId: proposalID,
 		Proposer:   proposer,
 	}
-}
-
-// ValidateBasic implements Msg
-func (msg MsgCancelProposal) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Proposer); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
-	}
-
-	return nil
 }
 
 // GetSignBytes implements Msg

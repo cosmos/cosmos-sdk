@@ -10,9 +10,9 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
+	"cosmossdk.io/orm/encoding/ormfield"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/testpb"
 )
 
 // TestFieldSpec defines a test field against the testpb.ExampleTable message.
@@ -84,8 +84,8 @@ var TestFieldSpecs = []TestFieldSpec{
 			if isNil >= 0.95 { // draw a nil 5% of the time
 				return nil
 			}
-			seconds := rapid.Int64Range(-9999999999, 9999999999).Draw(t, "seconds")
-			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
+			seconds := rapid.Int64Range(ormfield.TimestampSecondsMin, ormfield.TimestampSecondsMax).Draw(t, "seconds")
+			nanos := rapid.Int32Range(0, ormfield.TimestampNanosMax).Draw(t, "nanos")
 			return (&timestamppb.Timestamp{
 				Seconds: seconds,
 				Nanos:   nanos,
@@ -95,8 +95,15 @@ var TestFieldSpecs = []TestFieldSpec{
 	{
 		"dur",
 		rapid.Custom(func(t *rapid.T) protoreflect.Message {
-			seconds := rapid.Int64Range(0, 315576000000).Draw(t, "seconds")
-			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
+			isNil := rapid.Float32().Draw(t, "isNil")
+			if isNil >= 0.95 { // draw a nil 5% of the time
+				return nil
+			}
+			seconds := rapid.Int64Range(ormfield.DurationNanosMin, ormfield.DurationNanosMax).Draw(t, "seconds")
+			nanos := rapid.Int32Range(0, ormfield.DurationNanosMax).Draw(t, "nanos")
+			if seconds < 0 {
+				nanos = -nanos
+			}
 			return (&durationpb.Duration{
 				Seconds: seconds,
 				Nanos:   nanos,

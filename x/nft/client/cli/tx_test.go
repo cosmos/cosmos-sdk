@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -98,7 +97,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithChainID("test-chain")
 
 	s.ctx = svrcmd.CreateExecuteContext(context.Background())
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -106,7 +104,7 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	cfg, err := network.DefaultConfigWithAppConfig(nfttestutil.AppConfig)
 	s.Require().NoError(err)
@@ -155,7 +153,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 			},
 			0,
 			true,
-			"empty class id",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
 			"nft id is empty",
@@ -166,18 +164,18 @@ func (s *CLITestSuite) TestCLITxSend() {
 			},
 			0,
 			true,
-			"empty nft id",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
-			"invalid receiver address",
+			"empty receiver address",
 			[]string{
 				testClassID,
 				testID,
-				"invalid receiver",
+				"",
 			},
 			0,
 			true,
-			"Invalid receiver address",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
 			"valid transaction",

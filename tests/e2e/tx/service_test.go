@@ -1097,7 +1097,7 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
-	s.Require().Equal([]string{val.Address.String()}, txBuilder.GetTx().GetSigners())
+	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.

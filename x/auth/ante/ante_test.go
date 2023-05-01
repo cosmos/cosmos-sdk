@@ -119,7 +119,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 				require.NoError(t, err)
 
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
-				expectedSigners := []string{addr0.String(), addr1.String(), addr2.String()}
+				expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
 				require.Equal(t, expectedSigners, tx.GetSigners())
 
 				return TestCaseArgs{

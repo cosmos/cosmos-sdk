@@ -8,16 +8,18 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -55,7 +57,17 @@ type (
 )
 
 func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
-	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	protoRegistry, err := proto.MergedRegistry()
+	require.NoError(t, err)
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(
+		codectypes.InterfaceRegistryOptions{
+			ProtoFiles:            protoRegistry,
+			AddressCodec:          testAddressCodec{},
+			ValidatorAddressCodec: testAddressCodec{},
+		},
+	)
+	require.NoError(t, err)
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
@@ -656,4 +668,14 @@ func TestLoadVersionPruning(t *testing.T) {
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
+}
+
+type testAddressCodec struct{}
+
+func (t testAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return []byte(text), nil
+}
+
+func (t testAddressCodec) BytesToString(bz []byte) (string, error) {
+	return string(bz), nil
 }

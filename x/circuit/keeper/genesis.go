@@ -6,8 +6,10 @@ import (
 )
 
 func (k *Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
-	var permissions []*types.GenesisAccountPermissions
-	var disabledMsgs []string
+	var (
+		permissions  []*types.GenesisAccountPermissions
+		disabledMsgs []string
+	)
 
 	k.IteratePermissions(ctx, func(address []byte, perm types.Permissions) (stop bool) {
 		add, err := k.addressCodec.BytesToString(address)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -23,6 +24,8 @@ var _ Keeper = (*BaseKeeper)(nil)
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.
 type Keeper interface {
+	address.Codec
+
 	SendKeeper
 	WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
 
@@ -49,11 +52,6 @@ type Keeper interface {
 
 	DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
-
-	// StringToBytes decodes text to bytes
-	StringToBytes(text string) ([]byte, error)
-	// BytesToString encodes bytes to text
-	BytesToString(bz []byte) (string, error)
 
 	types.QueryServer
 }

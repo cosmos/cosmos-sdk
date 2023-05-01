@@ -11,14 +11,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-<<<<<<< HEAD
 	"cosmossdk.io/core/address"
-||||||| 67c1c788b2
-=======
 	sdkmath "cosmossdk.io/math"
 
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
->>>>>>> main
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

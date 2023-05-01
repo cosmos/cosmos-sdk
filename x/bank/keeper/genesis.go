@@ -25,10 +25,7 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 	genState.Balances = types.SanitizeGenesisBalances(genState.Balances)
 
 	for _, balance := range genState.Balances {
-		addr, err := balance.GetAddress(k.ak)
-		if err != nil {
-			panic(fmt.Errorf("error on setting balances %w", err))
-		}
+		addr := balance.GetAddress()
 
 		for _, coin := range balance.Coins {
 			err := k.Balances.Set(ctx, collections.Join(addr, coin.Denom), coin.Amount)

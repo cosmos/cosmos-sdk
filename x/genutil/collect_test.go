@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,7 +59,7 @@ func TestCollectTxsHandlesDirectories(t *testing.T) {
 	balItr := new(doNothingIterator)
 
 	dnc := &doNothingUnmarshalJSON{cdc}
-	if _, _, err := genutil.CollectTxs(dnc, txDecoder, "foo", testDir, genesis, balItr, types.DefaultMessageValidator, address.NewBech32Codec("cosmos")); err != nil {
+	if _, _, err := genutil.CollectTxs(dnc, txDecoder, "foo", testDir, genesis, balItr, types.DefaultMessageValidator); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -86,15 +86,8 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 	genBalIterator.IterateGenesisBalances(
 		cdc, appState,
 		func(balance bankexported.GenesisBalance) (stop bool) {
-			addr, err := balance.GetAddress()
-			if err != nil {
-				return true
-			}
-			addrSt, err := ac.BytesToString(addr) // this is ugly, we should avoid going to bytes and back
-			if err != nil {
-				return true
-			}
-			balancesMap[addrSt] = balance
+			addr := balance.GetAddress()
+			balancesMap[addr] = balance
 			return false
 		},
 	)
@@ -167,19 +160,9 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		}
 
 		if delBal.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
-
-			addr, err := delBal.GetAddress()
-			if err != nil {
-				return appGenTxs, persistentPeers, err
-			}
-
-			addrSt, err := ac.BytesToString(addr)
-			if err != nil {
-				return appGenTxs, persistentPeers, err
-			}
 			return appGenTxs, persistentPeers, fmt.Errorf(
 				"insufficient fund for delegation %v: %v < %v",
-				addrSt, delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
+				delBal.GetAddress(), delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
 			)
 		}
 

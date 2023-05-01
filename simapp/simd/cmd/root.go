@@ -7,16 +7,12 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
-	cmtcfg "github.com/cometbft/cometbft/config"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -37,6 +33,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the

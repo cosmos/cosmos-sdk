@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -246,7 +247,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	testCases := []struct {
 		msg         string
 		malleate    func()
-		deliverTxFn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
+		deliverTxFn baseapp.GenesisState
 		expPass     bool
 	}{
 		{
@@ -260,14 +261,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NoError(err)
 				genTxs[0] = tx
 			},
-			func(_ abci.RequestDeliverTx) abci.ResponseDeliverTx {
-				return abci.ResponseDeliverTx{
-					Code:      sdkerrors.ErrNoSignatures.ABCICode(),
-					GasWanted: int64(10000000),
-					GasUsed:   int64(41913),
-					Log:       "no signatures supplied",
-				}
-			},
+			GenesisState1{},
 			false,
 		},
 		{
@@ -293,15 +287,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NoError(err)
 				genTxs[0] = genTx
 			},
-			func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-				return abci.ResponseDeliverTx{
-					Code:      sdkerrors.ErrUnauthorized.ABCICode(),
-					GasWanted: int64(10000000),
-					GasUsed:   int64(41353),
-					Log:       "signature verification failed; please verify account number (4) and chain-id (): unauthorized",
-					Codespace: "sdk",
-				}
-			},
+			GenesisState2{},
 			true,
 		},
 	}
@@ -333,4 +319,27 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 
 func TestGenTxTestSuite(t *testing.T) {
 	suite.Run(t, new(GenTxTestSuite))
+}
+
+type GenesisState1 struct{}
+
+func (GenesisState1) SetState(_ []byte) abci.ResponseDeliverTx {
+	return abci.ResponseDeliverTx{
+		Code:      sdkerrors.ErrNoSignatures.ABCICode(),
+		GasWanted: int64(10000000),
+		GasUsed:   int64(41913),
+		Log:       "no signatures supplied",
+	}
+}
+
+type GenesisState2 struct{}
+
+func (GenesisState2) SetState(tx []byte) abci.ResponseDeliverTx {
+	return abci.ResponseDeliverTx{
+		Code:      sdkerrors.ErrUnauthorized.ABCICode(),
+		GasWanted: int64(10000000),
+		GasUsed:   int64(41353),
+		Log:       "signature verification failed; please verify account number (4) and chain-id (): unauthorized",
+		Codespace: "sdk",
+	}
 }

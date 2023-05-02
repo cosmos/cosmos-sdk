@@ -103,6 +103,7 @@ func NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]
 
 		if appModule, ok := module.(appmodule.AppModule); ok {
 			moduleMap[name] = CoreAppModuleBasicAdaptor(name, appModule)
+			continue
 		}
 
 		if basicMod, ok := module.(AppModuleBasic); ok {

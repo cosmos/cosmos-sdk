@@ -401,7 +401,8 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithPrepareProposal(true)
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -480,7 +481,8 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithProcessProposal(true)
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
@@ -603,6 +605,16 @@ func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVeri
 	return resp, err
 }
 
+// FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.
+// Specifically, it will execute an application's BeginBlock (if defined), followed
+// by the transactions in the proposal, finally followed by the application's
+// EndBlock (if defined).
+//
+// For each raw transaction, i.e. a byte slice, BaseApp will only execute it if
+// it adheres to the sdk.Tx interface. Otherwise, the raw transaction will be
+// skipped. This is to support compatibility with proposers injecting vote
+// extensions into the proposal, which should not themselves be executed in cases
+// where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
@@ -657,9 +669,16 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 	beginBlock := app.beginBlock(req)
 	events = append(events, beginBlock.Events...)
 
-	txResults := make([]*abci.ExecTxResult, len(req.Txs))
-	for i, rawTx := range req.Txs {
-		txResults[i] = app.deliverTx(rawTx) // TODO
+	// Iterate over all raw transactions in the proposal and attempt to execute
+	// them, gathering the execution results.
+	//
+	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
+	// vote extensions, so skip those.
+	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
+	for _, rawTx := range req.Txs {
+		if _, err := app.txDecoder(rawTx); err == nil {
+			txResults = append(txResults, app.deliverTx(rawTx))
+		}
 	}
 
 	if app.finalizeBlockState.ms.TracingEnabled() {
@@ -683,7 +702,8 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
-		AppHash:               app.flushCommit().Hash,
+		// TODO: Do not commit, but use current IAVL root hash!
+		AppHash: app.flushCommit().Hash,
 	}, nil
 }
 

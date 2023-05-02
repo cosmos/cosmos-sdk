@@ -34,6 +34,8 @@ type Context struct {
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
+	prepareProposal      bool
+	processProposal      bool
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
 	eventManager         EventManagerI
@@ -60,6 +62,8 @@ func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMe
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
 func (c Context) IsCheckTx() bool                               { return c.checkTx }
 func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
+func (c Context) IsPrepareProposal() bool                       { return c.prepareProposal }
+func (c Context) IsProcessProposal() bool                       { return c.processProposal }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }
@@ -231,6 +235,18 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 		c.checkTx = true
 	}
 	c.recheckTx = isRecheckTx
+	return c
+}
+
+// WithPrepareProposal returns a Context with PrepareProposal toggle set to v.
+func (c Context) WithPrepareProposal(v bool) Context {
+	c.prepareProposal = v
+	return c
+}
+
+// WithProcessProposal returns a Context with ProcessProposal toggle set to v.
+func (c Context) WithProcessProposal(v bool) Context {
+	c.processProposal = v
 	return c
 }
 

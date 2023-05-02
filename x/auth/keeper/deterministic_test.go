@@ -74,7 +74,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.accountKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(suite.accountKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	suite.key = key
@@ -239,7 +239,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 
 func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.AccountKeeper) types.QueryClient {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, ak)
+	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(ak))
 	return types.NewQueryClient(queryHelper)
 }
 

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
@@ -43,7 +45,10 @@ type SimTestSuite struct {
 
 func (suite *SimTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
-		testutil.AppConfig,
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,
@@ -103,7 +108,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	for _, account := range accounts {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins))
+		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 
 	return accounts

@@ -7,6 +7,8 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -62,13 +64,16 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := simstestutil.Setup(
-		configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.TxModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.TxModule(),
+				configurator.ParamsModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+				configurator.StakingModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		&f.bankKeeper,
 		&interfaceRegistry,
@@ -86,7 +91,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 }
 
 func fundAccount(f *deterministicFixture, addr sdk.AccAddress, coin ...sdk.Coin) {
-	err := banktestutil.FundAccount(f.bankKeeper, f.ctx, addr, sdk.NewCoins(coin...))
+	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin...))
 	assert.NilError(&testing.T{}, err)
 }
 
@@ -169,7 +174,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
 
-		err := banktestutil.FundAccount(f.bankKeeper, f.ctx, addr, coins)
+		err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, coins)
 		assert.NilError(t, err)
 
 		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(len(denoms))).Draw(rt, "pagination"))
@@ -181,7 +186,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 		sdk.NewCoin("denom", sdk.NewInt(100)),
 	)
 
-	err := banktestutil.FundAccount(f.bankKeeper, f.ctx, addr1, coins)
+	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr1, coins)
 	assert.NilError(t, err)
 
 	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
@@ -445,7 +450,7 @@ func TestGRPCDenomOwners(t *testing.T) {
 				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
-			err := banktestutil.FundAccount(f.bankKeeper, f.ctx, addr, sdk.NewCoins(coin))
+			err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin))
 			assert.NilError(t, err)
 		}
 
@@ -471,7 +476,7 @@ func TestGRPCDenomOwners(t *testing.T) {
 		addr, err := sdk.AccAddressFromBech32(denomOwners[i].Address)
 		assert.NilError(t, err)
 
-		err = banktestutil.FundAccount(f.bankKeeper, f.ctx, addr, sdk.NewCoins(coin1))
+		err = banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin1))
 		assert.NilError(t, err)
 	}
 

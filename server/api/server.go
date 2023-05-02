@@ -149,9 +149,9 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), servercmtlog.CometZeroLogWrapper{Logger: s.logger}, cmtCfg)
+			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		} else {
-			errCh <- tmrpcserver.Serve(s.listener, s.Router, servercmtlog.CometZeroLogWrapper{Logger: s.logger}, cmtCfg)
+			errCh <- tmrpcserver.Serve(s.listener, s.Router, servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		}
 	}(cfg.API.EnableUnsafeCORS)
 

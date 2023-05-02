@@ -3,6 +3,8 @@ package bank_test
 import (
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
@@ -109,16 +111,20 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = genAccounts
 
-	app, err := simtestutil.SetupWithConfiguration(configurator.NewAppConfig(
-		configurator.ParamsModule(),
-		configurator.AuthModule(),
-		configurator.StakingModule(),
-		configurator.TxModule(),
-		configurator.ConsensusModule(),
-		configurator.BankModule(),
-		configurator.GovModule(),
-		configurator.DistributionModule(),
-	),
+	app, err := simtestutil.SetupWithConfiguration(
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.ParamsModule(),
+				configurator.AuthModule(),
+				configurator.StakingModule(),
+				configurator.TxModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+				configurator.GovModule(),
+				configurator.DistributionModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		),
 		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper)
 
 	res.App = app
@@ -143,7 +149,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
 	baseApp.Commit()
 
@@ -180,7 +186,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
 	baseApp.Commit()
 
@@ -260,9 +266,9 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
 	baseApp.Commit()
 
@@ -305,7 +311,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
 	baseApp.Commit()
 
@@ -354,7 +360,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	s := createTestSuite(t, genAccs)
 
 	ctx := s.App.BaseApp.NewContext(false, cmtproto.Header{})
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
 	addr1Str := addr1.String()
 	govAddr := s.BankKeeper.GetAuthority()
 	goodGovProp, err := govv1.NewMsgSubmitProposal(

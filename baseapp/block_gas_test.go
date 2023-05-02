@@ -82,14 +82,18 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			err               error
 		)
 
-		err = depinject.Inject(configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.TxModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
-		),
+		err = depinject.Inject(
+			depinject.Configs(
+				configurator.NewAppConfig(
+					configurator.AuthModule(),
+					configurator.TxModule(),
+					configurator.ParamsModule(),
+					configurator.ConsensusModule(),
+					configurator.BankModule(),
+					configurator.StakingModule(),
+				),
+				depinject.Supply(log.NewNopLogger()),
+			),
 			&bankKeeper,
 			&accountKeeper,
 			&interfaceRegistry,
@@ -99,7 +103,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&appBuilder)
 		require.NoError(t, err)
 
-		bapp := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+		bapp := appBuilder.Build(dbm.NewMemDB(), nil)
 		err = bapp.Load(true)
 		require.NoError(t, err)
 

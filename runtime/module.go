@@ -121,11 +121,11 @@ func ProvideApp() (
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
 	app := &App{
-		basicManager:      module.BasicManager{},
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
+		basicManager:      module.BasicManager{},
 		msgServiceRouter:  msgServiceRouter,
 	}
 	appBuilder := &AppBuilder{app}

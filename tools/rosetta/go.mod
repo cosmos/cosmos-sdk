@@ -143,5 +143,6 @@ require (
 replace (
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/core => ../../core
 	github.com/cosmos/cosmos-sdk => ../..
 )

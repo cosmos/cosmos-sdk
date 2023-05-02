@@ -190,8 +190,6 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/collections v0.1.0 h1:nzJGeiq32KnZroSrhB6rPifw4I85Cgmzw/YAmr4luv8=
 cosmossdk.io/collections v0.1.0/go.mod h1:xbauc0YsbUF8qKMVeBZl0pFCunxBIhKN/WlxpZ3lBuo=
-cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4 h1:l1scDTT2VX18ZuR6P0irvT/bAP0h4297D/Lka5nz2vE=
-cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4/go.mod h1:J8R0E7soOpQFVqFiFd7EKepXCPpINa2n2t2EqbEsXnY=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=

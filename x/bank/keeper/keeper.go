@@ -478,11 +478,3 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx context.Context, cb func(sdk.Coin
 		return cb(sdk.NewCoin(s, m))
 	})
 }
-
-func (k BaseKeeper) stringToBytes(s string) ([]byte, error) {
-	return k.ak.StringToBytes(s)
-}
-
-func (k BaseKeeper) bytesToString(s []byte) (string, error) {
-	return k.ak.BytesToString(s)
-}

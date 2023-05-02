@@ -44,12 +44,12 @@ import (
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
-		interfaceRegistry   codectypes.InterfaceRegistry
-		appCodec            codec.Codec
-		txConfig            client.TxConfig
-		legacyAmino         *codec.LegacyAmino
-		autoCliOpts         autocli.AppOptions
-		moduleBasicsManager module.BasicManager
+		interfaceRegistry  codectypes.InterfaceRegistry
+		appCodec           codec.Codec
+		txConfig           client.TxConfig
+		legacyAmino        *codec.LegacyAmino
+		autoCliOpts        autocli.AppOptions
+		moduleBasicManager module.BasicManager
 	)
 
 	if err := depinject.Inject(depinject.Configs(simapp.AppConfig, depinject.Supply(log.NewNopLogger())),
@@ -58,7 +58,7 @@ func NewRootCmd() *cobra.Command {
 		&txConfig,
 		&legacyAmino,
 		&autoCliOpts,
-		&moduleBasicsManager,
+		&moduleBasicManager,
 	); err != nil {
 		panic(err)
 	}
@@ -113,7 +113,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, txConfig, interfaceRegistry, appCodec, moduleBasicsManager)
+	initRootCmd(rootCmd, txConfig, interfaceRegistry, appCodec, moduleBasicManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

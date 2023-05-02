@@ -34,11 +34,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [#15989](https://github.com/cosmos/cosmos-sdk/pull/15989) Add `ErrStopIterating` for modules to use for breaking out of iteration.
-
-## v1.0.0
-
-### Features
-
 * [#10779](https://github.com/cosmos/cosmos-sdk/pull/10779) Import code from the `github.com/cosmos/cosmos-sdk/types/errors` package.
 * [#11274](https://github.com/cosmos/cosmos-sdk/pull/11274) Add `RegisterWithGRPCCode` function to associate a gRPC error code with errors.
 

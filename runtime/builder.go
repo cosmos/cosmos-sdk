@@ -24,11 +24,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(
-	db dbm.DB,
-	traceStore io.Writer,
-	baseAppOptions ...func(*baseapp.BaseApp),
-) *App {
+func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
 	}
@@ -42,8 +38,7 @@ func (a *AppBuilder) Build(
 
 	a.app.BaseApp = bApp
 	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())
-	err := a.app.ModuleManager.RegisterServices(a.app.configurator)
-	if err != nil {
+	if err := a.app.ModuleManager.RegisterServices(a.app.configurator); err != nil {
 		panic(err)
 	}
 

@@ -165,6 +165,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	proposal1, err = s2.GovKeeper.GetProposal(ctx2, proposalID1)
 	assert.Assert(t, ok == nil)
+	assert.Assert(t, err == nil)
 
 	proposal2, err = s2.GovKeeper.GetProposal(ctx2, proposalID2)
 	assert.Assert(t, err == nil)

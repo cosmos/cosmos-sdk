@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"testing"
@@ -228,7 +229,7 @@ func newPubKey(pk string) (res cryptotypes.PubKey) {
 }
 
 func testEquivocationHandler(_ interface{}) types.Handler {
-	return func(ctx sdk.Context, e exported.Evidence) error {
+	return func(ctx context.Context, e exported.Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}

@@ -86,7 +86,7 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.
 func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) error {
-	if _,  := k.GetEvidence(ctx, evidence.Hash()); ok {
+	if _, err := k.GetEvidence(ctx, evidence.Hash()); err == nil {
 		return errors.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
 	}
 	if !k.router.HasRoute(evidence.Route()) {

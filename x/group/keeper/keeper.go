@@ -20,12 +20,11 @@ import (
 )
 
 type Keeper struct {
-	appmodule.HasGenesis
-
 	accKeeper group.AccountKeeper
 	state     groupv1.StateStore
 	router    baseapp.MessageRouter
 	config    group.Config
+	modDb     ormdb.ModuleDB
 
 	// used for migrations
 	storeService store.KVStoreService
@@ -52,11 +51,11 @@ func NewKeeper(storeService store.KVStoreService, cdc codec.Codec, router baseap
 	}
 
 	return Keeper{
-		HasGenesis: modDb.GenesisHandler(),
-		router:     router,
-		accKeeper:  accKeeper,
-		state:      state,
-		config:     config,
+		router:    router,
+		accKeeper: accKeeper,
+		state:     state,
+		config:    config,
+		modDb:     modDb,
 		// used for migrations
 		storeService: storeService,
 		cdc:          cdc,
@@ -66,6 +65,11 @@ func NewKeeper(storeService store.KVStoreService, cdc codec.Codec, router baseap
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
+}
+
+// GenesisHandler returns the genesis handler for the group module.
+func (k Keeper) GenesisHandler() appmodule.HasGenesis {
+	return k.modDb.GenesisHandler()
 }
 
 // proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.

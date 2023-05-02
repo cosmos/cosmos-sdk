@@ -87,7 +87,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		HasGenesis:     keeper.HasGenesis,
+		HasGenesis:     keeper.GenesisHandler(),
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
 		keeper:         keeper,
 		bankKeeper:     bk,

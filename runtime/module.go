@@ -66,13 +66,9 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
-<<<<<<< HEAD
 			ProvideHeaderInfoService,
 			ProvideCometInfoService,
-||||||| 7c59eade9a
-=======
 			ProvideBasicManager,
->>>>>>> main
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -241,7 +237,6 @@ func ProvideEventService() event.Service {
 	return EventService{}
 }
 
-<<<<<<< HEAD
 func ProvideCometInfoService() comet.InfoService {
 	return cometInfoService{}
 }
@@ -250,13 +245,10 @@ func ProvideHeaderInfoService(app *AppBuilder) header.Service {
 	return headerInfoService{}
 }
 
-||||||| 7c59eade9a
-=======
 func ProvideBasicManager(app *AppBuilder) module.BasicManager {
 	return app.app.basicManager
 }
 
->>>>>>> main
 // globalAccAddressCodec is a temporary address codec that we will use until we
 // can populate it with the correct bech32 prefixes without depending on the global.
 type globalAccAddressCodec struct{}

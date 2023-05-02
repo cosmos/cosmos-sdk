@@ -197,10 +197,9 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		}},
 	})
 
-	ctx.WithCometInfo(nci)
-
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
 
+	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)

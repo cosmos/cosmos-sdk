@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/simapp"
 	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -23,16 +23,16 @@ func BenchmarkGetValidator(b *testing.B) {
 		totalPower += int64(i)
 	}
 
-	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		app.StakingKeeper.SetValidator(ctx, validator)
+		f.stakingKeeper.SetValidator(f.sdkCtx, validator)
 	}
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		for _, addr := range valAddrs {
-			_, _ = app.StakingKeeper.GetValidator(ctx, addr)
+			_, _ = f.stakingKeeper.GetValidator(f.sdkCtx, addr)
 		}
 	}
 }
@@ -47,25 +47,25 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 		totalPower += int64(i)
 	}
 
-	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 	for _, validator := range vals {
-		app.StakingKeeper.SetValidator(ctx, validator)
+		f.stakingKeeper.SetValidator(f.sdkCtx, validator)
 	}
 
 	delegationsNum := 1000
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-			banktestutil.FundAccount(app.BankKeeper, ctx, delegator,
+			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
 			NewDel := types.NewDelegation(delegator, val, sdk.NewDec(int64(i)))
-			app.StakingKeeper.SetDelegation(ctx, NewDel)
+			f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel)
 		}
 	}
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		updateValidatorDelegations(ctx, app, valAddrs[0], sdk.ValAddress("val"))
+		updateValidatorDelegations(f, valAddrs[0], sdk.ValAddress("val"))
 	}
 }
 
@@ -79,34 +79,34 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 		totalPower += int64(i)
 	}
 
-	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		app.StakingKeeper.SetValidator(ctx, validator)
+		f.stakingKeeper.SetValidator(f.sdkCtx, validator)
 	}
 
 	delegationsNum := 1000
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-			banktestutil.FundAccount(app.BankKeeper, ctx, delegator,
+			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
 			NewDel := types.NewDelegation(delegator, val, sdk.NewDec(int64(i)))
-			app.StakingKeeper.SetDelegation(ctx, NewDel)
+			f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel)
 		}
 	}
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		updateValidatorDelegationsLegacy(ctx, app, valAddrs[0], sdk.ValAddress("val"))
+		updateValidatorDelegationsLegacy(f, valAddrs[0], sdk.ValAddress("val"))
 	}
 }
 
-func updateValidatorDelegationsLegacy(ctx sdk.Context, app *simapp.SimApp, existingValAddr, newValAddr sdk.ValAddress) {
-	storeKey := app.GetKey(types.StoreKey)
-	cdc, k := app.AppCodec(), app.StakingKeeper
+func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sdk.ValAddress) {
+	storeKey := f.keys[types.StoreKey]
+	cdc, k := f.cdc, f.stakingKeeper
 
-	store := ctx.KVStore(storeKey)
+	store := f.sdkCtx.KVStore(storeKey)
 
 	iterator := storetypes.KVStorePrefixIterator(store, types.DelegationKey)
 	defer iterator.Close()
@@ -114,18 +114,18 @@ func updateValidatorDelegationsLegacy(ctx sdk.Context, app *simapp.SimApp, exist
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(cdc, iterator.Value())
 		if delegation.GetValidatorAddr().Equals(existingValAddr) {
-			k.RemoveDelegation(ctx, delegation)
+			k.RemoveDelegation(f.sdkCtx, delegation)
 			delegation.ValidatorAddress = newValAddr.String()
-			k.SetDelegation(ctx, delegation)
+			k.SetDelegation(f.sdkCtx, delegation)
 		}
 	}
 }
 
-func updateValidatorDelegations(ctx sdk.Context, app *simapp.SimApp, existingValAddr, newValAddr sdk.ValAddress) {
-	storeKey := app.GetKey(types.StoreKey)
-	cdc, k := app.AppCodec(), app.StakingKeeper
+func updateValidatorDelegations(f *fixture, existingValAddr, newValAddr sdk.ValAddress) {
+	storeKey := f.keys[types.StoreKey]
+	cdc, k := f.cdc, f.stakingKeeper
 
-	store := ctx.KVStore(storeKey)
+	store := f.sdkCtx.KVStore(storeKey)
 
 	itr := storetypes.KVStorePrefixIterator(store, types.GetDelegationsByValPrefixKey(existingValAddr))
 	defer itr.Close()
@@ -141,12 +141,12 @@ func updateValidatorDelegations(ctx sdk.Context, app *simapp.SimApp, existingVal
 		delegation := types.MustUnmarshalDelegation(cdc, bz)
 
 		// remove old operator addr from delegation
-		if err := k.RemoveDelegation(ctx, delegation); err != nil {
+		if err := k.RemoveDelegation(f.sdkCtx, delegation); err != nil {
 			panic(err)
 		}
 
 		delegation.ValidatorAddress = newValAddr.String()
 		// add with new operator addr
-		k.SetDelegation(ctx, delegation)
+		k.SetDelegation(f.sdkCtx, delegation)
 	}
 }

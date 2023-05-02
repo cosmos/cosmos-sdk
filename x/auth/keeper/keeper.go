@@ -16,6 +16,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -65,6 +66,7 @@ type AccountKeeper struct {
 	storeService store.KVStoreService
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
+	bech32Prefix string
 
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
@@ -74,7 +76,7 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	ParamsState   collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
+	Params        collections.Item[types.Params]
 	AccountNumber collections.Sequence
 }
 
@@ -98,13 +100,14 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	return AccountKeeper{
-		Codec:         NewBech32Codec(bech32Prefix),
+		Codec:         authcodec.NewBech32Codec(bech32Prefix),
+		bech32Prefix:  bech32Prefix,
 		storeService:  storeService,
 		proto:         proto,
 		cdc:           cdc,
 		permAddrs:     permAddrs,
 		authority:     authority,
-		ParamsState:   collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 	}
 }
@@ -256,23 +259,18 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	bech32Codec, ok := ak.Codec.(bech32Codec)
-	if !ok {
-		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.Codec)
-	}
-
-	return bech32Codec.bech32Prefix, nil
+	return ak.bech32Prefix, nil
 }
 
 // SetParams sets the auth module's parameters.
 // CONTRACT: This method performs no validation of the parameters.
 func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
-	return ak.ParamsState.Set(ctx, params)
+	return ak.Params.Set(ctx, params)
 }
 
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
-	params, err := ak.ParamsState.Get(ctx)
+	params, err := ak.Params.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}

@@ -84,10 +84,14 @@ func (s *KeeperTestSuite) TestParams() {
 	require := s.Require()
 
 	expParams := stakingtypes.DefaultParams()
+	// check that the empty keeper loads the default
+	resParams := keeper.GetParams(ctx)
+	require.Equal(expParams, resParams)
+
 	expParams.MaxValidators = 555
 	expParams.MaxEntries = 111
 	keeper.SetParams(ctx, expParams)
-	resParams := keeper.GetParams(ctx)
+	resParams = keeper.GetParams(ctx)
 	require.True(expParams.Equal(resParams))
 }
 

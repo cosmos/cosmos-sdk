@@ -105,6 +105,16 @@ func TestCalculateGas(t *testing.T) {
 	}
 }
 
+func mockTxFactory(txCfg client.TxConfig) tx.Factory {
+	return tx.Factory{}.
+		WithTxConfig(txCfg).
+		WithAccountNumber(50).
+		WithSequence(23).
+		WithFees("50stake").
+		WithMemo("memo").
+		WithChainID("test-chain")
+}
+
 func TestBuildSimTx(t *testing.T) {
 	txCfg, cdc := newTestTxConfig()
 	defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
@@ -117,16 +127,7 @@ func TestBuildSimTx(t *testing.T) {
 	_, _, err = kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 
-	txf := tx.Factory{}.
-		WithTxConfig(txCfg).
-		WithAccountNumber(50).
-		WithSequence(23).
-		WithFees("50stake").
-		WithMemo("memo").
-		WithChainID("test-chain").
-		WithSignMode(defaultSignMode).
-		WithKeybase(kb)
-
+	txf := mockTxFactory(txCfg).WithSignMode(defaultSignMode).WithKeybase(kb)
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	bz, err := txf.BuildSimTx(msg)
 	require.NoError(t, err)
@@ -142,16 +143,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 
 	_, _, err = kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-
-	txf := tx.Factory{}.
-		WithTxConfig(txConfig).
-		WithAccountNumber(50).
-		WithSequence(23).
-		WithFees("50stake").
-		WithMemo("memo").
-		WithChainID("test-chain").
-		WithKeybase(kb)
-
+	txf := mockTxFactory(txConfig).WithKeybase(kb)
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	tx, err := txf.BuildUnsignedTx(msg)
 	require.NoError(t, err)
@@ -160,6 +152,23 @@ func TestBuildUnsignedTx(t *testing.T) {
 	sigs, err := tx.GetTx().(signing.SigVerifiableTx).GetSignaturesV2()
 	require.NoError(t, err)
 	require.Empty(t, sigs)
+}
+
+func TestBuildUnsignedTxWithWithExtensionOptions(t *testing.T) {
+	txCfg := moduletestutil.MakeBuilderTestTxConfig()
+	extOpts := []*codectypes.Any{
+		{
+			TypeUrl: "/test",
+			Value:   []byte("test"),
+		},
+	}
+	txf := mockTxFactory(txCfg).WithExtensionOptions(extOpts...)
+	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
+	tx, err := txf.BuildUnsignedTx(msg)
+	require.NoError(t, err)
+	require.NotNil(t, tx)
+	txb := tx.(*moduletestutil.TestTxBuilder)
+	require.Equal(t, extOpts, txb.ExtOptions)
 }
 
 func TestMnemonicInMemo(t *testing.T) {
@@ -238,13 +247,7 @@ func TestSign(t *testing.T) {
 	requireT.NotEqual(pubKey1.Bytes(), pubKey2.Bytes())
 	t.Log("Pub keys:", pubKey1, pubKey2)
 
-	txfNoKeybase := tx.Factory{}.
-		WithTxConfig(txConfig).
-		WithAccountNumber(50).
-		WithSequence(23).
-		WithFees("50stake").
-		WithMemo("memo").
-		WithChainID("test-chain")
+	txfNoKeybase := mockTxFactory(txConfig)
 	txfDirect := txfNoKeybase.
 		WithKeybase(kb).
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
@@ -405,13 +408,7 @@ func TestPreprocessHook(t *testing.T) {
 		return nil
 	})
 
-	txfDirect := tx.Factory{}.
-		WithTxConfig(txConfig).
-		WithAccountNumber(50).
-		WithSequence(23).
-		WithFees("50stake").
-		WithMemo("memo").
-		WithChainID("test-chain").
+	txfDirect := mockTxFactory(txConfig).
 		WithKeybase(kb).
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT).
 		WithPreprocessTxHook(preprocessHook)

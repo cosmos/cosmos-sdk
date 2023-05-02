@@ -6,15 +6,17 @@ import (
 	"net"
 	"testing"
 
-	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
-	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gotest.tools/v3/assert"
 
-	"google.golang.org/grpc/credentials/insecure"
+	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+
+	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/internal/testpb"
 )
 
 func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) *testClientConn {
@@ -47,9 +49,7 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 	}
 	b := &Builder{
 		Builder: flag.Builder{
-			GetClientConn: func() (grpc.ClientConnInterface, error) {
-				return conn, nil
-			},
+			AddressCodec: addresscodec.NewBech32Codec("cosmos"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

@@ -59,7 +59,7 @@ type SimTestSuite struct {
 }
 
 func (s *SimTestSuite) SetupTest() {
-	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+	sdk.DefaultPowerReduction = math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 
 	s.r = rand.New(rand.NewSource(1))
 	accounts := simtypes.RandomAccounts(s.r, 4)
@@ -112,7 +112,7 @@ func (s *SimTestSuite) SetupTest() {
 	for _, account := range accounts[1:] {
 		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
 		accountKeeper.SetAccount(ctx, acc)
-		s.Require().NoError(banktestutil.FundAccount(bankKeeper, ctx, account.Address, initCoins))
+		s.Require().NoError(banktestutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
 	}
 
 	s.accountKeeper = accountKeeper

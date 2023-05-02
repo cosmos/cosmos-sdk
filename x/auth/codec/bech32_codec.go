@@ -1,4 +1,4 @@
-package keeper
+package codec
 
 import (
 	"errors"
@@ -34,7 +34,7 @@ func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 	}
 
 	if hrp != bc.bech32Prefix {
-		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "hrp does not match bech32Prefix")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "hrp does not match bech32 prefix: expected '%s' got '%s'", bc.bech32Prefix, hrp)
 	}
 
 	if err := sdk.VerifyAddressFormat(bz); err != nil {

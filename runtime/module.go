@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
@@ -60,7 +61,7 @@ func init() {
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
-			ProvideGenesisState,
+			ProvideGenesisTxHandler,
 			ProvideKVStoreService,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
@@ -202,7 +203,7 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideGenesisState(appBuilder *AppBuilder) baseapp.GenesisState {
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.GenesisTxHandler {
 	return appBuilder.app.BaseApp
 }
 

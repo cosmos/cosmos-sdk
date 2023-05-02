@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/genesis"
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,7 +90,7 @@ func ValidateAccountInGenesis(
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
 func DeliverGenTxs(
 	ctx sdk.Context, genTxs []json.RawMessage,
-	stakingKeeper types.StakingKeeper, deliverTx baseapp.GenesisState,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.GenesisTxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]abci.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {
@@ -104,9 +104,9 @@ func DeliverGenTxs(
 			return nil, fmt.Errorf("failed to encode GenTx '%s': %s", genTx, err)
 		}
 
-		res := deliverTx.SetState(bz)
-		if !res.IsOK() {
-			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, res.Log)
+		err = deliverTx.ExecuteGenesisTx(bz)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, err)
 		}
 	}
 

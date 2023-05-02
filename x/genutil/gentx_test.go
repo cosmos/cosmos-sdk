@@ -2,24 +2,23 @@ package genutil_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/math"
 
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -247,7 +246,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	testCases := []struct {
 		msg         string
 		malleate    func()
-		deliverTxFn baseapp.GenesisState
+		deliverTxFn genesis.GenesisTxHandler
 		expPass     bool
 	}{
 		{
@@ -323,23 +322,12 @@ func TestGenTxTestSuite(t *testing.T) {
 
 type GenesisState1 struct{}
 
-func (GenesisState1) SetState(_ []byte) abci.ResponseDeliverTx {
-	return abci.ResponseDeliverTx{
-		Code:      sdkerrors.ErrNoSignatures.ABCICode(),
-		GasWanted: int64(10000000),
-		GasUsed:   int64(41913),
-		Log:       "no signatures supplied",
-	}
+func (GenesisState1) ExecuteGenesisTx(_ []byte) error {
+	return errors.New("no signatures supplied")
 }
 
 type GenesisState2 struct{}
 
-func (GenesisState2) SetState(tx []byte) abci.ResponseDeliverTx {
-	return abci.ResponseDeliverTx{
-		Code:      sdkerrors.ErrUnauthorized.ABCICode(),
-		GasWanted: int64(10000000),
-		GasUsed:   int64(41353),
-		Log:       "signature verification failed; please verify account number (4) and chain-id (): unauthorized",
-		Codespace: "sdk",
-	}
+func (GenesisState2) ExecuteGenesisTx(tx []byte) error {
+	return nil
 }

@@ -1,9 +1,9 @@
 package genutil
 
 import (
+	"cosmossdk.io/core/genesis"
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -12,7 +12,7 @@ import (
 // InitGenesis - initialize accounts and deliver genesis transactions
 func InitGenesis(
 	ctx sdk.Context, stakingKeeper types.StakingKeeper,
-	deliverTx baseapp.GenesisState, genesisState types.GenesisState,
+	deliverTx genesis.GenesisTxHandler, genesisState types.GenesisState,
 	txEncodingConfig client.TxEncodingConfig,
 ) (validators []abci.ValidatorUpdate, err error) {
 	if len(genesisState.GenTxs) > 0 {

@@ -10,10 +10,10 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/genesis"
 
 	"cosmossdk.io/depinject"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -81,13 +81,13 @@ type AppModule struct {
 
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
-	deliverTx        baseapp.GenesisState
+	deliverTx        genesis.GenesisTxHandler
 	txEncodingConfig client.TxEncodingConfig
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper types.AccountKeeper,
-	stakingKeeper types.StakingKeeper, deliverTx baseapp.GenesisState,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.GenesisTxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) module.GenesisOnlyAppModule {
 	return module.NewGenesisOnlyAppModule(AppModule{
@@ -139,7 +139,7 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	StakingKeeper types.StakingKeeper
-	DeliverTx     baseapp.GenesisState
+	DeliverTx     genesis.GenesisTxHandler
 	Config        client.TxConfig
 }
 

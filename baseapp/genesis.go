@@ -1,21 +1,22 @@
 package baseapp
 
 import (
+	"errors"
+
+	"cosmossdk.io/core/genesis"
 	"github.com/cometbft/cometbft/abci/types"
 )
 
-// GenesisState allows modules to define a set of state transitions
-// that will initialize the chain's state at genesis.
-type GenesisState interface {
-	// SetState sets the genesis state.
-	// This should be called in a order define by the application developer
-	SetState([]byte) types.ResponseDeliverTx
-}
+var _ genesis.GenesisTxHandler = (*BaseApp)(nil)
 
-var _ GenesisState = (*BaseApp)(nil)
-
-// SetState implements genesis.GenesisState from
+// ExecuteGenesisTx implements genesis.GenesisState from
 // cosmossdk.io/core/genesis to set initial state in genesis
-func (ba BaseApp) SetState(tx []byte) types.ResponseDeliverTx {
-	return ba.DeliverTx(types.RequestDeliverTx{Tx: tx})
+func (ba BaseApp) ExecuteGenesisTx(tx []byte) error {
+	res := ba.DeliverTx(types.RequestDeliverTx{Tx: tx})
+
+	if res.Code != types.CodeTypeOK {
+		return errors.New(res.Log)
+	}
+
+	return nil
 }

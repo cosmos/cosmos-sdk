@@ -192,7 +192,7 @@ func (k Keeper) IterateActiveProposalsQueue(ctx context.Context, endTime time.Ti
 
 		err = cb(proposal)
 		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, types.ErrStopIterating) {
+		if errors.IsOf(err, errors.ErrStopIterating) {
 			return nil
 		} else if err != nil {
 			return err
@@ -220,7 +220,7 @@ func (k Keeper) IterateInactiveProposalsQueue(ctx context.Context, endTime time.
 
 		err = cb(proposal)
 		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, types.ErrStopIterating) {
+		if errors.IsOf(err, errors.ErrStopIterating) {
 			return nil
 		} else if err != nil {
 			return err

@@ -127,7 +127,7 @@ func (keeper Keeper) IterateAllVotes(ctx context.Context, cb func(vote v1.Vote) 
 
 		err = cb(vote)
 		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, types.ErrStopIterating) {
+		if errors.IsOf(err, errors.ErrStopIterating) {
 			return nil
 		} else if err != nil {
 			return err
@@ -152,7 +152,7 @@ func (keeper Keeper) IterateVotes(ctx context.Context, proposalID uint64, cb fun
 
 		err = cb(vote)
 		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, types.ErrStopIterating) {
+		if errors.IsOf(err, errors.ErrStopIterating) {
 			return nil
 		} else if err != nil {
 			return err

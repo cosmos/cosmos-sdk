@@ -270,7 +270,7 @@ func (keeper Keeper) IterateProposals(ctx context.Context, cb func(proposal v1.P
 
 		err = cb(proposal)
 		// exit early without error if cb returns ErrStopIterating
-		if errorsmod.IsOf(err, types.ErrStopIterating) {
+		if errorsmod.IsOf(err, errorsmod.ErrStopIterating) {
 			return nil
 		} else if err != nil {
 			return err

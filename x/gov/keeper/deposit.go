@@ -112,7 +112,7 @@ func (keeper Keeper) IterateAllDeposits(ctx context.Context, cb func(deposit v1.
 
 		err = cb(deposit)
 		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, types.ErrStopIterating) {
+		if errors.IsOf(err, errors.ErrStopIterating) {
 			return nil
 		} else if err != nil {
 			return err
@@ -138,7 +138,7 @@ func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb 
 
 		err = cb(deposit)
 		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, types.ErrStopIterating) {
+		if errors.IsOf(err, errors.ErrStopIterating) {
 			return nil
 		} else if err != nil {
 			return err

@@ -1,4 +1,4 @@
-//go:build app_v1
+//go:build !app_v1
 
 package cmd
 
@@ -12,9 +12,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/params"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,10 +26,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -40,23 +41,32 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
-// NewRootCmd creates a new root command for simd. It is called once in the
-// main function.
+// NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
-	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	// note, this is not necessary when using app wiring, as depinject can be directly used (see root_v2.go)
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir()))
-	encodingConfig := params.EncodingConfig{
-		InterfaceRegistry: tempApp.InterfaceRegistry(),
-		Codec:             tempApp.AppCodec(),
-		TxConfig:          tempApp.TxConfig(),
-		Amino:             tempApp.LegacyAmino(),
+	var (
+		interfaceRegistry  codectypes.InterfaceRegistry
+		appCodec           codec.Codec
+		txConfig           client.TxConfig
+		legacyAmino        *codec.LegacyAmino
+		autoCliOpts        autocli.AppOptions
+		moduleBasicManager module.BasicManager
+	)
+
+	if err := depinject.Inject(depinject.Configs(simapp.AppConfig, depinject.Supply(log.NewNopLogger())),
+		&interfaceRegistry,
+		&appCodec,
+		&txConfig,
+		&legacyAmino,
+		&autoCliOpts,
+		&moduleBasicManager,
+	); err != nil {
+		panic(err)
 	}
 
 	initClientCtx := client.Context{}.
-		WithCodec(encodingConfig.Codec).
-		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-		WithLegacyAmino(encodingConfig.Amino).
+		WithCodec(appCodec).
+		WithInterfaceRegistry(interfaceRegistry).
+		WithLegacyAmino(legacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithHomeDir(simapp.DefaultNodeHome).
@@ -87,11 +97,11 @@ func NewRootCmd() *cobra.Command {
 				TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
 			}
 			txConfigWithTextual := tx.NewTxConfigWithOptions(
-				codec.NewProtoCodec(encodingConfig.InterfaceRegistry),
+				codec.NewProtoCodec(interfaceRegistry),
 				txConfigOpts,
 			)
-			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
 
+			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
@@ -103,9 +113,9 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, encodingConfig, tempApp.BasicModuleManager)
+	initRootCmd(rootCmd, txConfig, interfaceRegistry, appCodec, moduleBasicManager)
 
-	if err := tempApp.AutoCliOpts().EnhanceRootCommand(rootCmd); err != nil {
+	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
 
@@ -181,7 +191,13 @@ lru_size = 0`
 	return customAppTemplate, customAppConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, basicManager module.BasicManager) {
+func initRootCmd(
+	rootCmd *cobra.Command,
+	txConfig client.TxConfig,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	appCodec codec.Codec,
+	basicManager module.BasicManager,
+) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -198,14 +214,14 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
-		genesisCommand(encodingConfig, basicManager),
+		genesisCommand(txConfig, basicManager),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(simapp.DefaultNodeHome),
 	)
 
 	// add rosetta
-	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
+	rootCmd.AddCommand(rosettaCmd.RosettaCommand(interfaceRegistry, appCodec))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -213,8 +229,8 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(encodingConfig params.EncodingConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(encodingConfig.TxConfig, basicManager, simapp.DefaultNodeHome)
+func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genutilcli.Commands(txConfig, basicManager, simapp.DefaultNodeHome)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
@@ -294,8 +310,6 @@ func appExport(
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	var simApp *simapp.SimApp
-
 	// this check is necessary as we use the flag in x/upgrade.
 	// we can exit more gracefully by checking the flag here.
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
@@ -312,6 +326,7 @@ func appExport(
 	viperAppOpts.Set(server.FlagInvCheckPeriod, 1)
 	appOpts = viperAppOpts
 
+	var simApp *simapp.SimApp
 	if height != -1 {
 		simApp = simapp.NewSimApp(logger, db, traceStore, false, appOpts)
 
@@ -323,14 +338,4 @@ func appExport(
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
-}
-
-var tempDir = func() string {
-	dir, err := os.MkdirTemp("", "simapp")
-	if err != nil {
-		dir = simapp.DefaultNodeHome
-	}
-	defer os.RemoveAll(dir)
-
-	return dir
 }

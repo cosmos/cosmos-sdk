@@ -90,6 +90,25 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 	return moduleMap
 }
 
+// NewBasicManagerFromManager creates a new BasicManager from a Manager
+// The BasicManager will contain all AppModuleBasic from the AppModule Manager
+// Module's AppModuleBasic can be overridden by passing a custom AppModuleBasic map
+func NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic) BasicManager {
+	moduleMap := make(map[string]AppModuleBasic)
+	for name, module := range manager.Modules {
+		if customBasicMod, ok := customModuleBasics[name]; ok {
+			moduleMap[name] = customBasicMod
+			continue
+		}
+
+		if basicMod, ok := module.(AppModuleBasic); ok {
+			moduleMap[name] = basicMod
+		}
+	}
+
+	return moduleMap
+}
+
 // RegisterLegacyAminoCodec registers all module codecs
 func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	for _, b := range bm {

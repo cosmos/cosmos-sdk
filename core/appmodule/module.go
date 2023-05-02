@@ -45,7 +45,7 @@ type HasPrepareCheckState interface {
 	PrepareCheckState(context.Context) error
 }
 
-// HasPreommit is an extension interface that contains information about the AppModule and Precommit.
+// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
 type HasPrecommit interface {
 	AppModule
 	Precommit(context.Context) error

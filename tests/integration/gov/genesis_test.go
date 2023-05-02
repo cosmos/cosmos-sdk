@@ -163,8 +163,8 @@ func TestImportExportQueues(t *testing.T) {
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	gov.EndBlocker(ctx2, s2.GovKeeper)
 
-	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1)
-	assert.assert(t, ok == false)
+	proposal1, err = s2.GovKeeper.GetProposal(ctx2, proposalID1)
+	assert.Assert(t, ok == nil)
 
 	proposal2, err = s2.GovKeeper.GetProposal(ctx2, proposalID2)
 	assert.Assert(t, err == nil)

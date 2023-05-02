@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -131,9 +130,9 @@ func TestBalance_GetAddress(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			b := bank.Balance{Address: tt.Address}
 			if !tt.err {
-				require.Panics(t, func() { b.GetAddress() })
+				require.Equal(t, b.GetAddress(), tt.Address)
 			} else {
-				require.False(t, len(b.GetAddress()) == 0)
+				require.False(t, len(b.GetAddress()) != 0 && b.GetAddress() != tt.Address)
 			}
 		})
 	}
@@ -164,7 +163,7 @@ func TestSanitizeBalances(t *testing.T) {
 		// Ensure that every single value that comes after i is less than it.
 		for j := i + 1; j < len(sorted); j++ {
 			aj := sorted[j]
-			if got := strings.Compare(ai.GetAddress(), aj.GetAddress()); got > 0 {
+			if ai.GetAddress() == aj.GetAddress() {
 				t.Errorf("Balance(%d) > Balance(%d)", i, j)
 			}
 		}

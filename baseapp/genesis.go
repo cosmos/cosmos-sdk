@@ -7,7 +7,7 @@ import (
 	"github.com/cometbft/cometbft/abci/types"
 )
 
-var _ genesis.GenesisTxHandler = (*BaseApp)(nil)
+var _ genesis.TxHandler = (*BaseApp)(nil)
 
 // ExecuteGenesisTx implements genesis.GenesisState from
 // cosmossdk.io/core/genesis to set initial state in genesis

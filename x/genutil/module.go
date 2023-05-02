@@ -81,13 +81,13 @@ type AppModule struct {
 
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
-	deliverTx        genesis.GenesisTxHandler
+	deliverTx        genesis.TxHandler
 	txEncodingConfig client.TxEncodingConfig
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper types.AccountKeeper,
-	stakingKeeper types.StakingKeeper, deliverTx genesis.GenesisTxHandler,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) module.GenesisOnlyAppModule {
 	return module.NewGenesisOnlyAppModule(AppModule{
@@ -139,7 +139,7 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	StakingKeeper types.StakingKeeper
-	DeliverTx     genesis.GenesisTxHandler
+	DeliverTx     genesis.TxHandler
 	Config        client.TxConfig
 }
 

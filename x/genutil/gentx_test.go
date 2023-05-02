@@ -246,7 +246,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	testCases := []struct {
 		msg         string
 		malleate    func()
-		deliverTxFn genesis.GenesisTxHandler
+		deliverTxFn genesis.TxHandler
 		expPass     bool
 	}{
 		{

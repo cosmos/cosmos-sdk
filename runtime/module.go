@@ -210,7 +210,7 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.GenesisTxHandler {
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app.BaseApp
 }
 

@@ -90,7 +90,7 @@ func ValidateAccountInGenesis(
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
 func DeliverGenTxs(
 	ctx sdk.Context, genTxs []json.RawMessage,
-	stakingKeeper types.StakingKeeper, deliverTx genesis.GenesisTxHandler,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]abci.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {

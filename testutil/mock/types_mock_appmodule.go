@@ -359,6 +359,34 @@ func (mr *MockCoreAppModuleMockRecorder) IsOnePerModuleType() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockCoreAppModule)(nil).IsOnePerModuleType))
 }
 
+// Precommit mocks base method.
+func (m *MockCoreAppModule) Precommit(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Precommit", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Precommit indicates an expected call of Precommit.
+func (mr *MockCoreAppModuleMockRecorder) Precommit(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Precommit", reflect.TypeOf((*MockCoreAppModule)(nil).Precommit), arg0)
+}
+
+// PrepareCheckState mocks base method.
+func (m *MockCoreAppModule) PrepareCheckState(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PrepareCheckState", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PrepareCheckState indicates an expected call of PrepareCheckState.
+func (mr *MockCoreAppModuleMockRecorder) PrepareCheckState(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareCheckState", reflect.TypeOf((*MockCoreAppModule)(nil).PrepareCheckState), arg0)
+}
+
 // ValidateGenesis mocks base method.
 func (m *MockCoreAppModule) ValidateGenesis(arg0 appmodule.GenesisSource) error {
 	m.ctrl.T.Helper()

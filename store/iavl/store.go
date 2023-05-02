@@ -7,9 +7,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	ics23 "github.com/confio/ics23/go"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
+	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -141,6 +141,16 @@ func (st *Store) Commit() types.CommitID {
 		Version: version,
 		Hash:    hash,
 	}
+}
+
+// WorkingHash returns the hash of the current working tree.
+func (st *Store) WorkingHash() []byte {
+	hash, err := st.tree.WorkingHash()
+	if err != nil {
+		panic(fmt.Errorf("failed to retrieve working hash: %w", err))
+	}
+
+	return hash
 }
 
 // LastCommitID implements Committer.

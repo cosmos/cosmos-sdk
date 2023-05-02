@@ -10,6 +10,15 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
+// WithCollectionPaginationPairPrefix applies a prefix to a collection, whose key is a collection.Pair,
+// being paginated that needs prefixing.
+func WithCollectionPaginationPairPrefix[K1, K2 any](prefix K1) func(o *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
+	return func(o *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
+		prefix := collections.PairPrefix[K1, K2](prefix)
+		o.Prefix = &prefix
+	}
+}
+
 // CollectionsPaginateOptions provides extra options for pagination in collections.
 type CollectionsPaginateOptions[K any] struct {
 	// Prefix allows to optionally set a prefix for the pagination.
@@ -41,7 +50,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	ctx context.Context,
 	coll C,
 	pageReq *PageRequest,
-	predicateFunc func(key K, value V) (include bool),
+	predicateFunc func(key K, value V) (include bool, err error),
 	opts ...func(opt *CollectionsPaginateOptions[K]),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	if pageReq == nil {
@@ -89,7 +98,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	}
 	// invalid iter error is ignored to retain Paginate behavior
 	if errors.Is(err, collections.ErrInvalidIterator) {
-		return results, pageRes, nil
+		return results, new(PageResponse), nil
 	}
 	// strip the prefix from next key
 	if len(pageRes.NextKey) != 0 && prefix != nil {
@@ -108,7 +117,7 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 	offset uint64,
 	limit uint64,
 	countTotal bool,
-	predicateFunc func(K, V) bool,
+	predicateFunc func(K, V) (bool, error),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	iterator, err := getCollIter[K, V](ctx, coll, prefix, nil, reverse)
 	if err != nil {
@@ -137,12 +146,17 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 			// if no predicate function is specified then we just include the result
 			if predicateFunc == nil {
 				results = append(results, kv)
-				count++
 				// if predicate function is defined we check if the result matches the filtering criteria
-			} else if predicateFunc(kv.Key, kv.Value) {
-				results = append(results, kv)
-				count++
+			} else {
+				include, err := predicateFunc(kv.Key, kv.Value)
+				if err != nil {
+					return nil, nil, err
+				}
+				if include {
+					results = append(results, kv)
+				}
 			}
+			count++
 		// second case, we found all the objects specified within the limit
 		case count == limit:
 			key, err := iterator.Key()
@@ -200,7 +214,7 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 	key []byte,
 	reverse bool,
 	limit uint64,
-	predicateFunc func(K, V) bool,
+	predicateFunc func(K, V) (bool, error),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	iterator, err := getCollIter[K, V](ctx, coll, prefix, key, reverse)
 	if err != nil {
@@ -237,13 +251,18 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 		// if no predicate is specified then we just append the result
 		if predicateFunc == nil {
 			results = append(results, kv)
-			count++
 			// if predicate is applied we execute the predicate function
 			// and append only if predicateFunc yields true.
-		} else if predicateFunc(kv.Key, kv.Value) {
-			results = append(results, kv)
-			count++
+		} else {
+			include, err := predicateFunc(kv.Key, kv.Value)
+			if err != nil {
+				return nil, nil, err
+			}
+			if include {
+				results = append(results, kv)
+			}
 		}
+		count++
 	}
 
 	return results, &PageResponse{
@@ -259,13 +278,19 @@ func encodeCollKey[K, V any, C Collection[K, V]](coll C, key K) ([]byte, error) 
 }
 
 func getCollIter[K, V any, C Collection[K, V]](ctx context.Context, coll C, prefix, start []byte, reverse bool) (collections.Iterator[K, V], error) {
+	// TODO: maybe can be simplified
+	if reverse {
+		var end []byte
+		if prefix != nil {
+			start = storetypes.PrefixEndBytes(append(prefix, start...))
+			end = prefix
+		}
+		return coll.IterateRaw(ctx, end, start, collections.OrderDescending)
+	}
 	var end []byte
 	if prefix != nil {
 		start = append(prefix, start...)
 		end = storetypes.PrefixEndBytes(prefix)
-	}
-	if reverse {
-		return coll.IterateRaw(ctx, nil, start, collections.OrderDescending)
 	}
 	return coll.IterateRaw(ctx, start, end, collections.OrderAscending)
 }

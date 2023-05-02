@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -23,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -65,6 +67,7 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
+			ProvideBasicManager,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -89,14 +92,27 @@ func ProvideApp() (
 	protoTypes := protoregistry.GlobalTypes
 
 	// At startup, check that all proto annotations are correct.
-	err = msgservice.ValidateProtoAnnotations(protoFiles)
-	if err != nil {
+	if err := msgservice.ValidateProtoAnnotations(protoFiles); err != nil {
 		// Once we switch to using protoreflect-based antehandlers, we might
 		// want to panic here instead of logging a warning.
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	interfaceRegistry := codectypes.NewInterfaceRegistryWithProtoFiles(protoFiles)
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles:            protoFiles,
+		AddressCodec:          globalAccAddressCodec{},
+		ValidatorAddressCodec: globalValAddressCodec{},
+	})
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+	}
+
+	// validate the signing context to make sure that messages are properly configured
+	// with cosmos.msg.v1.signer
+	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+	}
+
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
@@ -120,23 +136,33 @@ func ProvideApp() (
 type AppInputs struct {
 	depinject.In
 
-	AppConfig         *appv1alpha1.Config
-	Config            *runtimev1alpha1.Module
-	AppBuilder        *AppBuilder
-	Modules           map[string]appmodule.AppModule
-	BaseAppOptions    []BaseAppOption
-	InterfaceRegistry codectypes.InterfaceRegistry
-	LegacyAmino       *codec.LegacyAmino
+	AppConfig          *appv1alpha1.Config
+	Config             *runtimev1alpha1.Module
+	AppBuilder         *AppBuilder
+	Modules            map[string]appmodule.AppModule
+	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
+	BaseAppOptions     []BaseAppOption
+	InterfaceRegistry  codectypes.InterfaceRegistry
+	LegacyAmino        *codec.LegacyAmino
+	Logger             log.Logger
 }
 
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
-	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 	app.appConfig = inputs.AppConfig
+	app.logger = inputs.Logger
+	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 
 	for name, mod := range inputs.Modules {
+		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
+			app.basicManager[name] = customBasicMod
+			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
+			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+			continue
+		}
+
 		if basicMod, ok := mod.(module.AppModuleBasic); ok {
 			app.basicManager[name] = basicMod
 			basicMod.RegisterInterfaces(inputs.InterfaceRegistry)
@@ -208,4 +234,38 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
+}
+
+func ProvideBasicManager(app *AppBuilder) module.BasicManager {
+	return app.app.basicManager
+}
+
+// globalAccAddressCodec is a temporary address codec that we will use until we
+// can populate it with the correct bech32 prefixes without depending on the global.
+type globalAccAddressCodec struct{}
+
+func (g globalAccAddressCodec) StringToBytes(text string) ([]byte, error) {
+	if text == "" {
+		return nil, nil
+	}
+	return sdk.AccAddressFromBech32(text)
+}
+
+func (g globalAccAddressCodec) BytesToString(bz []byte) (string, error) {
+	if bz == nil {
+		return "", nil
+	}
+	return sdk.AccAddress(bz).String(), nil
+}
+
+// globalValAddressCodec is a temporary address codec that we will use until we
+// can populate it with the correct bech32 prefixes without depending on the global.
+type globalValAddressCodec struct{}
+
+func (g globalValAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return sdk.ValAddressFromBech32(text)
+}
+
+func (g globalValAddressCodec) BytesToString(bz []byte) (string, error) {
+	return sdk.ValAddress(bz).String(), nil
 }

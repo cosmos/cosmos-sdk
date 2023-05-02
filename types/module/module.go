@@ -29,6 +29,7 @@ needlessly defining many placeholder functions
 package module
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -89,6 +90,25 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 	return moduleMap
 }
 
+// NewBasicManagerFromManager creates a new BasicManager from a Manager
+// The BasicManager will contain all AppModuleBasic from the AppModule Manager
+// Module's AppModuleBasic can be overridden by passing a custom AppModuleBasic map
+func NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic) BasicManager {
+	moduleMap := make(map[string]AppModuleBasic)
+	for name, module := range manager.Modules {
+		if customBasicMod, ok := customModuleBasics[name]; ok {
+			moduleMap[name] = customBasicMod
+			continue
+		}
+
+		if basicMod, ok := module.(AppModuleBasic); ok {
+			moduleMap[name] = basicMod
+		}
+	}
+
+	return moduleMap
+}
+
 // RegisterLegacyAminoCodec registers all module codecs
 func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	for _, b := range bm {
@@ -137,9 +157,6 @@ func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *
 }
 
 // AddTxCommands adds all tx commands to the rootTxCmd.
-//
-// TODO: Remove clientCtx argument.
-// REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 	for _, b := range bm {
 		if cmd := b.GetTxCmd(); cmd != nil {
@@ -149,9 +166,6 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 }
 
 // AddQueryCommands adds all query commands to the rootQueryCmd.
-//
-// TODO: Remove clientCtx argument.
-// REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	for _, b := range bm {
 		if cmd := b.GetQueryCmd(); cmd != nil {
@@ -211,6 +225,10 @@ type EndBlockAppModule interface {
 	AppModule
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
+type HasABCIEndblock interface {
+	AppModule
+	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
+}
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
@@ -253,12 +271,14 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules            map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
-	OrderInitGenesis   []string
-	OrderExportGenesis []string
-	OrderBeginBlockers []string
-	OrderEndBlockers   []string
-	OrderMigrations    []string
+	Modules                  map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
+	OrderInitGenesis         []string
+	OrderExportGenesis       []string
+	OrderBeginBlockers       []string
+	OrderEndBlockers         []string
+	OrderPrepareCheckStaters []string
+	OrderPrecommiters        []string
+	OrderMigrations          []string
 }
 
 // NewManager creates a new Manager object.
@@ -271,11 +291,13 @@ func NewManager(modules ...AppModule) *Manager {
 	}
 
 	return &Manager{
-		Modules:            moduleMap,
-		OrderInitGenesis:   modulesStr,
-		OrderExportGenesis: modulesStr,
-		OrderBeginBlockers: modulesStr,
-		OrderEndBlockers:   modulesStr,
+		Modules:                  moduleMap,
+		OrderInitGenesis:         modulesStr,
+		OrderExportGenesis:       modulesStr,
+		OrderBeginBlockers:       modulesStr,
+		OrderPrepareCheckStaters: modulesStr,
+		OrderPrecommiters:        modulesStr,
+		OrderEndBlockers:         modulesStr,
 	}
 }
 
@@ -293,11 +315,13 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	sort.Strings(modulesStr)
 
 	return &Manager{
-		Modules:            simpleModuleMap,
-		OrderInitGenesis:   modulesStr,
-		OrderExportGenesis: modulesStr,
-		OrderBeginBlockers: modulesStr,
-		OrderEndBlockers:   modulesStr,
+		Modules:                  simpleModuleMap,
+		OrderInitGenesis:         modulesStr,
+		OrderExportGenesis:       modulesStr,
+		OrderBeginBlockers:       modulesStr,
+		OrderEndBlockers:         modulesStr,
+		OrderPrecommiters:        modulesStr,
+		OrderPrepareCheckStaters: modulesStr,
 	}
 }
 
@@ -349,6 +373,28 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 			return !hasEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
+}
+
+// SetOrderPrepareCheckStaters sets the order of set prepare-check-stater calls
+func (m *Manager) SetOrderPrepareCheckStaters(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderPrepareCheckStaters", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasPrepareCheckState := module.(appmodule.HasPrepareCheckState)
+			return !hasPrepareCheckState
+		})
+	m.OrderPrepareCheckStaters = moduleNames
+}
+
+// SetOrderPrecommiters sets the order of set precommiter calls
+func (m *Manager) SetOrderPrecommiters(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderPrecommiters", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasPrecommit := module.(appmodule.HasPrecommit)
+			return !hasPrecommit
+		})
+	m.OrderPrecommiters = moduleNames
 }
 
 // SetOrderMigrations sets the order of migrations to be run. If not set
@@ -695,6 +741,22 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 			if err != nil {
 				return abci.ResponseEndBlock{}, err
 			}
+		} else if module, ok := m.Modules[moduleName].(HasABCIEndblock); ok {
+			moduleValUpdates, err := module.EndBlock(ctx)
+			if err != nil {
+				return abci.ResponseEndBlock{}, err
+			}
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
+					return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
+				}
+
+				for _, updates := range moduleValUpdates {
+					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
+				}
+			}
 		} else {
 			continue
 		}
@@ -704,6 +766,34 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 		ValidatorUpdates: validatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}, nil
+}
+
+// Precommit performs precommit functionality for all modules.
+func (m *Manager) Precommit(ctx sdk.Context) error {
+	for _, moduleName := range m.OrderPrecommiters {
+		module, ok := m.Modules[moduleName].(appmodule.HasPrecommit)
+		if !ok {
+			continue
+		}
+		if err := module.Precommit(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// PrepareCheckState performs functionality for preparing the check state for all modules.
+func (m *Manager) PrepareCheckState(ctx sdk.Context) error {
+	for _, moduleName := range m.OrderPrepareCheckStaters {
+		module, ok := m.Modules[moduleName].(appmodule.HasPrepareCheckState)
+		if !ok {
+			continue
+		}
+		if err := module.PrepareCheckState(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetVersionMap gets consensus version from all modules

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -29,7 +28,7 @@ func GenSignedBlocksWindow(r *rand.Rand) int64 {
 
 // GenMinSignedPerWindow randomized MinSignedPerWindow
 func GenMinSignedPerWindow(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
+	return math.LegacyNewDecWithPrec(int64(r.Intn(10)), 1)
 }
 
 // GenDowntimeJailDuration randomized DowntimeJailDuration
@@ -55,7 +54,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { signedBlocksWindow = GenSignedBlocksWindow(r) },
 	)
 
-	var minSignedPerWindow sdk.Dec
+	var minSignedPerWindow math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, MinSignedPerWindow, &minSignedPerWindow, simState.Rand,
 		func(r *rand.Rand) { minSignedPerWindow = GenMinSignedPerWindow(r) },
@@ -67,13 +66,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { downtimeJailDuration = GenDowntimeJailDuration(r) },
 	)
 
-	var slashFractionDoubleSign sdk.Dec
+	var slashFractionDoubleSign math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, SlashFractionDoubleSign, &slashFractionDoubleSign, simState.Rand,
 		func(r *rand.Rand) { slashFractionDoubleSign = GenSlashFractionDoubleSign(r) },
 	)
 
-	var slashFractionDowntime sdk.Dec
+	var slashFractionDowntime math.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, SlashFractionDowntime, &slashFractionDowntime, simState.Rand,
 		func(r *rand.Rand) { slashFractionDowntime = GenSlashFractionDowntime(r) },

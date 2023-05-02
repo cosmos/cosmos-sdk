@@ -16,7 +16,10 @@ var _ types.MsgServer = &Keeper{}
 // VerifyInvariant implements MsgServer.VerifyInvariant method.
 // It defines a method to verify a particular invariant.
 func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvariant) (*types.MsgVerifyInvariantResponse, error) {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if msg.Sender == "" {
+		return nil, sdkerrors.ErrInvalidAddress.Wrap("empty address string is not allowed")
+	}
+	sender, err := k.addressCodec.StringToBytes(msg.Sender)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
 	}
@@ -69,25 +72,21 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 
 // UpdateParams implements MsgServer.UpdateParams method.
 // It defines a method to update the x/crisis module parameters.
-func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if _, err := sdk.AccAddressFromBech32(req.Authority); err != nil {
-		return nil, errors.Wrap(err, "invalid authority address")
+func (k *Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
-	if k.authority != req.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
-	}
-
-	if !req.ConstantFee.IsValid() {
+	if !msg.ConstantFee.IsValid() {
 		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "invalid constant fee")
 	}
 
-	if req.ConstantFee.IsNegative() {
+	if msg.ConstantFee.IsNegative() {
 		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "negative constant fee")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.SetConstantFee(ctx, req.ConstantFee); err != nil {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if err := k.SetConstantFee(sdkCtx, msg.ConstantFee); err != nil {
 		return nil, err
 	}
 

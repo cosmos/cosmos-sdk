@@ -15,7 +15,7 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-func TestIntJsonTestcases(t *testing.T) {
+func TestIntJSONTestcases(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
 	raw, err := os.ReadFile("./internal/testdata/integers.json")
@@ -44,6 +44,24 @@ func TestIntJsonTestcases(t *testing.T) {
 				require.NoError(t, err)
 
 				checkNumberTest(t, r, protoreflect.ValueOf(i), tc[1])
+			}
+
+			// Parse test case strings as protobuf int64
+			ii, err := strconv.ParseInt(tc[0], 10, 64)
+			if err == nil {
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("INT64"))
+				require.NoError(t, err)
+
+				checkNumberTest(t, r, protoreflect.ValueOf(ii), tc[1])
+			}
+
+			// Parse test case strings as protobuf int32
+			ii, err = strconv.ParseInt(tc[0], 10, 32)
+			if err == nil {
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("INT32"))
+				require.NoError(t, err)
+
+				checkNumberTest(t, r, protoreflect.ValueOf(ii), tc[1])
 			}
 
 			// Parse test case strings as sdk.Ints

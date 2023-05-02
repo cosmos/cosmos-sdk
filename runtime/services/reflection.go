@@ -15,7 +15,7 @@ type ReflectionService struct {
 }
 
 func NewReflectionService() (*ReflectionService, error) {
-	fds, err := proto.MergedFileDescriptors()
+	fds, err := proto.MergedGlobalFileDescriptors()
 	if err != nil {
 		return nil, err
 	}

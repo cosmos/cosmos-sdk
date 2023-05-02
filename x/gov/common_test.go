@@ -6,7 +6,11 @@ import (
 	"sort"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -29,7 +33,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -112,14 +115,17 @@ func createTestSuite(t *testing.T) suite {
 	res := suite{}
 
 	app, err := simtestutil.SetupWithConfiguration(
-		configurator.NewAppConfig(
-			configurator.ParamsModule(),
-			configurator.AuthModule(),
-			configurator.StakingModule(),
-			configurator.BankModule(),
-			configurator.GovModule(),
-			configurator.ConsensusModule(),
-			configurator.DistributionModule(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.ParamsModule(),
+				configurator.AuthModule(),
+				configurator.StakingModule(),
+				configurator.BankModule(),
+				configurator.GovModule(),
+				configurator.ConsensusModule(),
+				configurator.DistributionModule(),
+			),
+			depinject.Supply(sdklog.NewNopLogger()),
 		),
 		simtestutil.DefaultStartUpConfig(),
 		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.DistributionKeeper, &res.StakingKeeper,

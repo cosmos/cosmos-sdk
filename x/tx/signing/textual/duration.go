@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	dpb "google.golang.org/protobuf/types/known/durationpb"
 )
@@ -23,9 +24,9 @@ func NewDurationValueRenderer() ValueRenderer {
 }
 
 const (
-	min_sec  = 60
-	hour_sec = 60 * min_sec
-	day_sec  = 24 * hour_sec
+	minSec  = 60
+	hourSec = 60 * minSec
+	daySec  = 24 * hourSec
 )
 
 type factors struct {
@@ -34,12 +35,12 @@ type factors struct {
 
 func factorSeconds(x int64) factors {
 	var f factors
-	f.days = x / day_sec
-	x -= f.days * day_sec
-	f.hours = x / hour_sec
-	x -= f.hours * hour_sec
-	f.minutes = x / min_sec
-	x -= f.minutes * min_sec
+	f.days = x / daySec
+	x -= f.days * daySec
+	f.hours = x / hourSec
+	x -= f.hours * hourSec
+	f.minutes = x / minSec
+	x -= f.minutes * minSec
 	f.seconds = x
 	return f
 }
@@ -84,8 +85,7 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value) 
 	if duration.Seconds < 0 || duration.Nanos < 0 {
 		negative = true
 		// copy to avoid side-effecting our input
-		d := *duration
-		duration = &d
+		duration = proto.Clone(duration).(*dpb.Duration)
 		duration.Seconds *= -1
 		duration.Nanos *= -1
 	}
@@ -123,61 +123,61 @@ var durRegexp = regexp.MustCompile(`^(-)?(?:([0-9]+) days?)?(?:, )?(?:([0-9]+) h
 // Parse implements the ValueRenderer interface.
 func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
-		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
+		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 
 	parts := durRegexp.FindStringSubmatch(screens[0].Content)
 	if parts == nil {
-		return protoreflect.Value{}, fmt.Errorf("bad duration format: %s", screens[0].Content)
+		return nilValue, fmt.Errorf("bad duration format: %s", screens[0].Content)
 	}
 
-	negative := parts[1] != ""
+	isNegative := parts[1] == "-"
 	var days, hours, minutes, seconds, nanos int64
 	var err error
 
 	if parts[2] != "" {
 		days, err = strconv.ParseInt(parts[2], 10, 64)
 		if err != nil {
-			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[2], err)
+			return nilValue, fmt.Errorf(`bad number "%s": %w`, parts[2], err)
 		}
 	}
 	if parts[3] != "" {
 		hours, err = strconv.ParseInt(parts[3], 10, 64)
 		if err != nil {
-			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[3], err)
+			return nilValue, fmt.Errorf(`bad number "%s": %w`, parts[3], err)
 		}
 	}
 	if parts[4] != "" {
 		minutes, err = strconv.ParseInt(parts[4], 10, 64)
 		if err != nil {
-			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[4], err)
+			return nilValue, fmt.Errorf(`bad number "%s": %w`, parts[4], err)
 		}
 	}
 	if parts[5] != "" {
 		seconds, err = strconv.ParseInt(parts[5], 10, 64)
 		if err != nil {
-			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[5], err)
+			return nilValue, fmt.Errorf(`bad number "%s": %w`, parts[5], err)
 		}
 		if parts[6] != "" {
 			if len(parts[6]) > 9 {
-				return protoreflect.Value{}, fmt.Errorf(`too many nanos "%s"`, parts[6])
+				return nilValue, fmt.Errorf(`too many nanos "%s"`, parts[6])
 			}
 			addZeros := 9 - len(parts[6])
 			text := parts[6] + strings.Repeat("0", addZeros)
 			nanos, err = strconv.ParseInt(text, 10, 32)
 			if err != nil {
-				return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, text, err)
+				return nilValue, fmt.Errorf(`bad number "%s": %w`, text, err)
 			}
 		}
 	}
 
 	dur := &dpb.Duration{}
-	dur.Seconds = days*day_sec + hours*hour_sec + minutes*min_sec + seconds
+	dur.Seconds = days*daySec + hours*hourSec + minutes*minSec + seconds
 	// #nosec G701
 	// Since there are 9 digits or fewer, this conversion is safe.
 	dur.Nanos = int32(nanos)
 
-	if negative {
+	if isNegative {
 		dur.Seconds *= -1
 		dur.Nanos *= -1
 	}

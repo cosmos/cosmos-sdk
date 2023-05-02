@@ -9,21 +9,17 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 
-	"google.golang.org/protobuf/reflect/protodesc"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
-	"google.golang.org/protobuf/proto"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // ModuleDB defines the ORM database type to be used by modules.
@@ -47,7 +43,7 @@ type ModuleDB interface {
 
 type moduleDB struct {
 	prefix       []byte
-	filesById    map[uint32]*fileDescriptorDB
+	filesByID    map[uint32]*fileDescriptorDB
 	tablesByName map[protoreflect.FullName]ormtable.Table
 }
 
@@ -83,7 +79,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 	prefix := schema.Prefix
 	db := &moduleDB{
 		prefix:       prefix,
-		filesById:    map[uint32]*fileDescriptorDB{},
+		filesByID:    map[uint32]*fileDescriptorDB{},
 		tablesByName: map[protoreflect.FullName]ormtable.Table{},
 	}
 
@@ -162,7 +158,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 			return nil, err
 		}
 
-		db.filesById[id] = fdSchema
+		db.filesByID[id] = fdSchema
 		for name, table := range fdSchema.tablesByName {
 			if _, ok := db.tablesByName[name]; ok {
 				return nil, ormerrors.UnexpectedError.Wrapf("duplicate table %s", name)
@@ -191,7 +187,7 @@ func (m moduleDB) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
-	fileSchema, ok := m.filesById[uint32(id)]
+	fileSchema, ok := m.filesByID[uint32(id)]
 	if !ok {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find FileDescriptor schema with id %d", id)
 	}

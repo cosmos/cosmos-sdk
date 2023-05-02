@@ -32,7 +32,7 @@ func benchmarkValidateGenesis(b *testing.B, n int) {
 		addr, pubKey := addressL[i], pubKeyL[i]
 		validator := testutil.NewValidator(b, addr, pubKey)
 		ni := int64(i + 1)
-		validator.Tokens = sdk.NewInt(ni)
+		validator.Tokens = math.NewInt(ni)
 		validator.DelegatorShares = math.LegacyNewDec(ni)
 		validators = append(validators, validator)
 	}

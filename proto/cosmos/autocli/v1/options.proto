@@ -6,10 +6,10 @@ option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 
 // ModuleOptions describes the CLI options for a Cosmos SDK module.
 message ModuleOptions {
-  // tx describes the tx command for the module.
+  // tx describes the tx commands for the module.
   ServiceCommandDescriptor tx = 1;
 
-  // query describes the tx command for the module.
+  // query describes the queries commands for the module.
   ServiceCommandDescriptor query = 2;
 }
 

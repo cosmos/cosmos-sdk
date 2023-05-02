@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
@@ -39,8 +40,8 @@ func TestProposalMsgs(t *testing.T) {
 
 	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
 	assert.Equal(t, int64(905), msgUpdateParams.Params.SignedBlocksWindow)
-	assert.DeepEqual(t, sdk.NewDecWithPrec(7, 2), msgUpdateParams.Params.MinSignedPerWindow)
-	assert.DeepEqual(t, sdk.NewDecWithPrec(60, 2), msgUpdateParams.Params.SlashFractionDoubleSign)
-	assert.DeepEqual(t, sdk.NewDecWithPrec(89, 2), msgUpdateParams.Params.SlashFractionDowntime)
+	assert.DeepEqual(t, sdkmath.LegacyNewDecWithPrec(7, 2), msgUpdateParams.Params.MinSignedPerWindow)
+	assert.DeepEqual(t, sdkmath.LegacyNewDecWithPrec(60, 2), msgUpdateParams.Params.SlashFractionDoubleSign)
+	assert.DeepEqual(t, sdkmath.LegacyNewDecWithPrec(89, 2), msgUpdateParams.Params.SlashFractionDowntime)
 	assert.Equal(t, 3313479009*time.Second, msgUpdateParams.Params.DowntimeJailDuration)
 }

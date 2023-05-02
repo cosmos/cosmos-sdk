@@ -1,11 +1,13 @@
 package keeper
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
@@ -15,6 +17,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,7 +26,7 @@ import (
 // module.
 type Keeper struct {
 	cdc            codec.BinaryCodec
-	storeKey       storetypes.StoreKey
+	storeService   store.KVStoreService
 	router         types.Router
 	stakingKeeper  types.StakingKeeper
 	slashingKeeper types.SlashingKeeper
@@ -32,12 +35,12 @@ type Keeper struct {
 
 // NewKeeper creates a new Keeper object.
 func NewKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stakingKeeper types.StakingKeeper,
+	cdc codec.BinaryCodec, storeService store.KVStoreService, stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper, ac address.Codec,
 ) *Keeper {
 	return &Keeper{
 		cdc:            cdc,
-		storeKey:       storeKey,
+		storeService:   storeService,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 		addressCodec:   ac,
@@ -45,8 +48,9 @@ func NewKeeper(
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // SetRouter sets the Evidence Handler router for the x/evidence module. Note,
@@ -81,8 +85,8 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // the corresponding registered Evidence Handler. An error is returned if no
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.
-func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
-	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
+func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) error {
+	if _,  := k.GetEvidence(ctx, evidence.Hash()); ok {
 		return errors.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
 	}
 	if !k.router.HasRoute(evidence.Route()) {
@@ -94,58 +98,73 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 		return errors.Wrap(types.ErrInvalidEvidence, err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSubmitEvidence,
 			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
 		),
 	)
 
-	k.SetEvidence(ctx, evidence)
-	return nil
+	return k.SetEvidence(ctx, evidence)
 }
 
 // SetEvidence sets Evidence by hash in the module's KVStore.
-func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	store.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
+func (k Keeper) SetEvidence(ctx context.Context, evidence exported.Evidence) error {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.KeyPrefixEvidence)
+	prefixStore.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
+	return nil
 }
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
-func (k Keeper) GetEvidence(ctx sdk.Context, hash []byte) (exported.Evidence, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-
-	bz := store.Get(hash)
+func (k Keeper) GetEvidence(ctx context.Context, hash []byte) (exported.Evidence, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.EvidenceKey(hash))
 	if len(bz) == 0 {
-		return nil, false
+		return nil, types.ErrNoEvidenceExists
 	}
 
-	return k.MustUnmarshalEvidence(bz), true
+	if err != nil {
+		return nil, err
+	}
+
+	return k.UnmarshalEvidence(bz)
 }
 
 // IterateEvidence provides an interator over all stored Evidence objects. For
 // each Evidence object, cb will be called. If the cb returns true, the iterator
 // will close and stop.
-func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	iterator := storetypes.KVStorePrefixIterator(store, nil)
+func (k Keeper) IterateEvidence(ctx context.Context, cb func(exported.Evidence) error) error {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(types.KeyPrefixEvidence, storetypes.PrefixEndBytes(types.KeyPrefixEvidence))
+	if err != nil {
+		return err
+	}
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		evidence := k.MustUnmarshalEvidence(iterator.Value())
+		evidence, err := k.UnmarshalEvidence(iterator.Value())
+		if err != nil {
+			return err
+		}
 
-		if cb(evidence) {
-			break
+		err = cb(evidence)
+		if errors.IsOf(err, errors.ErrStopIterating) {
+			return nil
+		} else if err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
 // GetAllEvidence returns all stored Evidence objects.
-func (k Keeper) GetAllEvidence(ctx sdk.Context) (evidence []exported.Evidence) {
-	k.IterateEvidence(ctx, func(e exported.Evidence) bool {
+func (k Keeper) GetAllEvidence(ctx context.Context) (evidence []exported.Evidence) {
+	k.IterateEvidence(ctx, func(e exported.Evidence) error {
 		evidence = append(evidence, e)
-		return false
+		return nil
 	})
 
 	return evidence

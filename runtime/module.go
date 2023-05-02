@@ -211,7 +211,7 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 }
 
 func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
-	return appBuilder.app.BaseApp
+	return appBuilder.app
 }
 
 func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {

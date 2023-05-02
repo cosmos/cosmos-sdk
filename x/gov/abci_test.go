@@ -486,6 +486,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			depositMultiplier := getDepositMultiplier(true)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
 			params, err := suite.GovKeeper.GetParams(ctx)
+			require.NoError(t, err)
 
 			SortAddresses(addrs)
 

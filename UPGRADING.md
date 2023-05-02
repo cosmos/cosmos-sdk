@@ -128,9 +128,9 @@ User manually wiring their chain need to add the logger argument when creating t
 #### Module Basics
 
 Previously, the `ModuleBasics` was a global variable that was used to register all modules's `AppModuleBasic` implementation.
-The global variable has been removed and the `ModuleBasics` can be now created from the `ModuleManager`.
+The global variable has been removed and the basic module manager can be now created from the module manager.
 
-For supplying different app module implementation simply pass them via `depinject.Supply` in the main `AppConfig`:
+This is automatically done for depinject users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
 
 ```go
 depinject.Supply(
@@ -146,7 +146,7 @@ depinject.Supply(
 		)
 ```
 
-Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function and pass a `map[string]module.AppModuleBasic` as argument for overridden some module's `AppModuleBasic`.
+Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overridding some module's `AppModuleBasic`.
 
 ### Packages
 

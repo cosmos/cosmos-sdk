@@ -39,12 +39,12 @@ func (s queryServer) AccountAddressByID(c context.Context, req *types.QueryAccou
 	accID := req.AccountId
 
 	ctx := sdk.UnwrapSDKContext(c)
-	address, err := s.k.Accounts.Indexes.Number.MatchExact(ctx, accID)
-	if err != nil {
+	address := s.k.GetAccountAddressByID(ctx, accID)
+	if len(address) == 0 {
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
 
-	return &types.QueryAccountAddressByIDResponse{AccountAddress: address.String()}, nil
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
 }
 
 func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {

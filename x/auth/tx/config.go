@@ -61,8 +61,7 @@ var DefaultSignModes = []signingtypes.SignMode{
 // first enabled sign mode will become the default sign mode.
 //
 // NOTE: Use NewTxConfigWithOptions to provide a custom signing handler in case the sign mode
-// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL
-// (for testing purposes for now).
+// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL.
 //
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage.  Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:

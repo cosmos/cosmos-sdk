@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/depinject"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
+
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -43,6 +44,7 @@ type ModuleInputs struct {
 	ProtoFileResolver   txsigning.ProtoFileResolver
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
+	MetadataBankKeeper     BankKeeper                         `optional:"true"`
 	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
 	FeeGrantKeeper         ante.FeegrantKeeper                `optional:"true"`
 	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
@@ -75,7 +77,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
 			ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
 		},
-		CustomSignModes: customSignModeHandlers,
+		CustomSignModes:            customSignModeHandlers,
+		TextualCoinMetadataQueryFn: NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper),
 	}
 	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
 

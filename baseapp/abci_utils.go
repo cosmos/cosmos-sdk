@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -19,12 +19,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
+// VoteExtensionThreshold defines the total voting power % that must be
+// submitted in order for all vote extensions to be considered valid for a
+// given height.
+var VoteExtensionThreshold = math.LegacyNewDecWithPrec(667, 3)
+
 type (
 	// Validator defines the interface contract require for verifying vote extension
 	// signatures. Typically, this will be implemented by the x/staking module,
 	// which has knowledge of the CometBFT public key.
 	Validator interface {
 		CmtConsPublicKey() (cmtprotocrypto.PublicKey, error)
+		BondedTokens() math.Int
 	}
 
 	// ValidatorStore defines the interface contract require for verifying vote
@@ -32,6 +38,7 @@ type (
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
 		GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (Validator, error)
+		TotalBondedTokens(ctx sdk.Context) math.Int
 	}
 )
 
@@ -58,6 +65,7 @@ func ValidateVoteExtensions(
 		return buf.Bytes(), nil
 	}
 
+	var sumVP math.Int
 	for _, vote := range extCommit.Votes {
 		if !extsEnabled {
 			if len(vote.VoteExtension) > 0 {
@@ -109,6 +117,16 @@ func ValidateVoteExtensions(
 		if !cmtPubKey.VerifySignature(extSignBytes, vote.ExtensionSignature) {
 			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
 		}
+
+		sumVP = sumVP.Add(validator.BondedTokens())
+	}
+
+	// Ensure we have at least 2/3 voting power that submitted valid vote
+	// extensions.
+	totalVP := valStore.TotalBondedTokens(ctx)
+	percentSubmitted := math.LegacyNewDecFromInt(sumVP).Quo(math.LegacyNewDecFromInt(totalVP))
+	if percentSubmitted.LT(VoteExtensionThreshold) {
+		return fmt.Errorf("not enough cumulative voting power received to verify vote extensions; got: %s, expected: >=%s", percentSubmitted, VoteExtensionThreshold)
 	}
 
 	return nil

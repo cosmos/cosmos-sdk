@@ -261,7 +261,7 @@ func NewCometInfo(bg abci.RequestBeginBlock) comet.BlockInfo {
 }
 
 func (r CometService) GetEvidence() comet.EvidenceList {
-	return evidenceWrapper{Evidence: r.Evidence}
+	return evidenceWrapper{evidence: r.Evidence}
 }
 
 func (CometService) GetValidatorsHash() []byte {
@@ -277,15 +277,15 @@ func (CometService) GetLastCommit() comet.CommitInfo {
 }
 
 type evidenceWrapper struct {
-	Evidence []abci.Misbehavior
+	evidence []abci.Misbehavior
 }
 
 func (e evidenceWrapper) Len() int {
-	return len(e.Evidence)
+	return len(e.evidence)
 }
 
 func (e evidenceWrapper) Get(i int) comet.Evidence {
-	return misbehaviorWrapper{e.Evidence[i]}
+	return misbehaviorWrapper{e.evidence[i]}
 }
 
 type misbehaviorWrapper struct {

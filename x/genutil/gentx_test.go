@@ -298,6 +298,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 			tc.malleate()
 
 			if tc.expPass {
+				suite.stakingKeeper.EXPECT().ApplyAndReturnValidatorSetUpdates(gomock.Any()).Return(nil, nil).AnyTimes()
 				suite.Require().NotPanics(func() {
 					genutil.DeliverGenTxs(
 						suite.ctx, genTxs, suite.stakingKeeper, tc.deliverTxFn,

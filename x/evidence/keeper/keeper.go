@@ -30,13 +30,13 @@ type Keeper struct {
 	slashingKeeper types.SlashingKeeper
 	addressCodec   address.Codec
 
-	cometInfo comet.InfoService
+	cometInfo comet.BlockInfoService
 }
 
 // NewKeeper creates a new Keeper object.
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper, ac address.Codec, ci comet.InfoService,
+	slashingKeeper types.SlashingKeeper, ac address.Codec, ci comet.BlockInfoService,
 ) *Keeper {
 	return &Keeper{
 		cdc:            cdc,

@@ -47,6 +47,6 @@ type (
 	}
 
 	Cometinfo interface {
-		comet.InfoService
+		comet.BlockInfoService
 	}
 )

@@ -90,7 +90,7 @@ type Misbehavior struct {
 	misBehaviorType  comet.MisbehaviorType
 }
 
-func NewCometMisbehavior(height, tvp int64, t time.Time, tpe comet.MisbehaviorType, val validator) comet.Misbehavior {
+func NewCometMisbehavior(height, tvp int64, t time.Time, tpe comet.MisbehaviorType, val validator) comet.Evidence {
 	return Misbehavior{
 		height:           height,
 		time:             t,

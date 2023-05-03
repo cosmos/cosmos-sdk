@@ -260,16 +260,8 @@ func NewCometInfo(bg abci.RequestBeginBlock) comet.BlockInfo {
 	}
 }
 
-func (r CometService) GetEvidence() []comet.Misbehavior {
-	return misbehaviorWrapperList(r.Evidence)
-}
-
-func misbehaviorWrapperList(validators []abci.Misbehavior) []comet.Misbehavior {
-	misbehaviors := make([]comet.Misbehavior, len(validators))
-	for i, v := range validators {
-		misbehaviors[i] = misbehaviorWrapper{v}
-	}
-	return misbehaviors
+func (r CometService) GetEvidence() comet.EvidenceList {
+	return evidenceWrapper{Evidence: r.Evidence}
 }
 
 func (CometService) GetValidatorsHash() []byte {
@@ -282,6 +274,18 @@ func (CometService) GetProposerAddress() []byte {
 
 func (CometService) GetLastCommit() comet.CommitInfo {
 	return nil
+}
+
+type evidenceWrapper struct {
+	Evidence []abci.Misbehavior
+}
+
+func (e evidenceWrapper) Len() int {
+	return len(e.Evidence)
+}
+
+func (e evidenceWrapper) Get(i int) comet.Evidence {
+	return misbehaviorWrapper{e.Evidence[i]}
 }
 
 type misbehaviorWrapper struct {

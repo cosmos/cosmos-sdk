@@ -27,18 +27,18 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 	return nil
 }
 
+var _ comet.BlockInfoService = cometInfoService{}
+
 type cometInfoService struct{}
 
-func (cometInfoService) GetCometInfo(ctx context.Context) comet.BlockInfo {
+func (cometInfoService) GetCometBlockInfo(ctx context.Context) comet.BlockInfo {
 	return sdk.UnwrapSDKContext(ctx).CometInfo()
 }
 
-var _ comet.InfoService = cometInfoService{}
+var _ header.Service = headerInfoService{}
 
 type headerInfoService struct{}
 
 func (headerInfoService) GetHeaderInfo(ctx context.Context) header.Info {
 	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
 }
-
-var _ header.Service = headerInfoService{}

@@ -18,16 +18,8 @@ type cometInfo struct {
 	LastCommit      abci.CommitInfo
 }
 
-func (r cometInfo) GetEvidence() []comet.Misbehavior {
-	return misbehaviorWrapperList(r.Misbehavior)
-}
-
-func misbehaviorWrapperList(validators []abci.Misbehavior) []comet.Misbehavior {
-	misbehaviors := make([]comet.Misbehavior, len(validators))
-	for i, v := range validators {
-		misbehaviors[i] = misbehaviorWrapper{v}
-	}
-	return misbehaviors
+func (r cometInfo) GetEvidence() comet.EvidenceList {
+	return evidenceWrapper{evidence: r.Misbehavior}
 }
 
 func (r cometInfo) GetValidatorsHash() []byte {
@@ -40,6 +32,18 @@ func (r cometInfo) GetProposerAddress() []byte {
 
 func (r cometInfo) GetLastCommit() comet.CommitInfo {
 	return commitInfoWrapper{r.LastCommit}
+}
+
+type evidenceWrapper struct {
+	evidence []abci.Misbehavior
+}
+
+func (e evidenceWrapper) Len() int {
+	return len(e.evidence)
+}
+
+func (e evidenceWrapper) Get(i int) comet.Evidence {
+	return misbehaviorWrapper{e.evidence[i]}
 }
 
 // commitInfoWrapper is a wrapper around abci.CommitInfo that implements CommitInfo interface
@@ -132,8 +136,8 @@ type prepareProposalInfo struct {
 
 var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
 
-func (r prepareProposalInfo) GetEvidence() []comet.Misbehavior {
-	return misbehaviorWrapperList(r.Misbehavior)
+func (r prepareProposalInfo) GetEvidence() comet.EvidenceList {
+	return evidenceWrapper{r.Misbehavior}
 }
 
 func (r prepareProposalInfo) GetValidatorsHash() []byte {

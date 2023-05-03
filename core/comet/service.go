@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-// InfoService is an interface that can be used to get information specific to Comet
-type InfoService interface {
-	GetCometInfo(context.Context) BlockInfo
+// BlockInfoService is an interface that can be used to get information specific to Comet
+type BlockInfoService interface {
+	GetCometBlockInfo(context.Context) BlockInfo
 }
 
 // BlockInfo is the information comet provides apps in ABCI
 type BlockInfo interface {
-	GetEvidence() []Misbehavior // Evidence misbehavior of the block
+	GetEvidence() EvidenceList // Evidence misbehavior of the block
 	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
 	GetValidatorsHash() []byte
@@ -35,8 +35,13 @@ type Validator interface {
 	Power() int64
 }
 
-// Misbehavior is the misbehavior information of ABCI
-type Misbehavior interface {
+type EvidenceList interface {
+	Len() int
+	Get(int) Evidence
+}
+
+// Evidence is the misbehavior information of ABCI
+type Evidence interface {
 	Type() MisbehaviorType
 	Validator() Validator
 	Height() int64

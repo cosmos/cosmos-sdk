@@ -331,16 +331,16 @@ func (m *MockCometinfo) EXPECT() *MockCometinfoMockRecorder {
 	return m.recorder
 }
 
-// GetCometInfo mocks base method.
-func (m *MockCometinfo) GetCometInfo(arg0 context.Context) comet.BlockInfo {
+// GetCometBlockInfo mocks base method.
+func (m *MockCometinfo) GetCometBlockInfo(arg0 context.Context) comet.BlockInfo {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCometInfo", arg0)
+	ret := m.ctrl.Call(m, "GetCometBlockInfo", arg0)
 	ret0, _ := ret[0].(comet.BlockInfo)
 	return ret0
 }
 
-// GetCometInfo indicates an expected call of GetCometInfo.
-func (mr *MockCometinfoMockRecorder) GetCometInfo(arg0 interface{}) *gomock.Call {
+// GetCometBlockInfo indicates an expected call of GetCometBlockInfo.
+func (mr *MockCometinfoMockRecorder) GetCometBlockInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometInfo", reflect.TypeOf((*MockCometinfo)(nil).GetCometInfo), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometBlockInfo", reflect.TypeOf((*MockCometinfo)(nil).GetCometBlockInfo), arg0)
 }

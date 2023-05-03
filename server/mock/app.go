@@ -38,6 +38,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &KVStoreTx{})
+	baseApp.SetInterfaceRegistry(interfaceRegistry)
 
 	router := bam.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(interfaceRegistry)

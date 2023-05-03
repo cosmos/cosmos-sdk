@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,12 +54,7 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	// We currently don't add SIGN_MODE_TEXTUAL as part of the default sign
-	// modes, as it's not released yet (including the Ledger app). However,
-	// textual's sign mode handler is already available in this package. If you
-	// want to use textual for **TESTING** purposes, feel free to create a
-	// handler that includes SIGN_MODE_TEXTUAL.
-	// ref: Tracking issue for SIGN_MODE_TEXTUAL https://github.com/cosmos/cosmos-sdk/issues/11970
+	signingtypes.SignMode_SIGN_MODE_TEXTUAL,
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The

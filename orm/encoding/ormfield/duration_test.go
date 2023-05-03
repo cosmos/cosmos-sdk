@@ -156,3 +156,110 @@ func TestDurationOutOfRange(t *testing.T) {
 		})
 	}
 }
+
+func TestDurationCompare(t *testing.T) {
+	t.Parallel()
+	cdc := ormfield.DurationCodec{}
+
+	tt := []struct {
+		name string
+		dur1 *durationpb.Duration
+		dur2 *durationpb.Duration
+		want int
+	}{
+		{
+			name: "equal",
+			dur1: &durationpb.Duration{
+				Seconds: 1,
+				Nanos:   1,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: 1,
+				Nanos:   1,
+			},
+			want: 0,
+		},
+		{
+			name: "seconds equal, dur1 nanos less than dur2 nanos",
+			dur1: &durationpb.Duration{
+				Seconds: 1,
+				Nanos:   1,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: 1,
+				Nanos:   2,
+			},
+			want: -1,
+		},
+		{
+			name: "seconds equal, dur1 nanos greater than dur2 nanos",
+			dur1: &durationpb.Duration{
+				Seconds: 1,
+				Nanos:   2,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: 1,
+				Nanos:   1,
+			},
+			want: 1,
+		},
+		{
+			name: "seconds less than",
+			dur1: &durationpb.Duration{
+				Seconds: 1,
+				Nanos:   1,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: 2,
+				Nanos:   1,
+			},
+			want: -1,
+		},
+		{
+			name: "seconds greater than",
+			dur1: &durationpb.Duration{
+				Seconds: 2,
+				Nanos:   1,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: 1,
+				Nanos:   1,
+			},
+			want: 1,
+		},
+		{
+			name: "negative seconds equal, dur1 nanos less than dur2 nanos",
+			dur1: &durationpb.Duration{
+				Seconds: -1,
+				Nanos:   -2,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: -1,
+				Nanos:   -1,
+			},
+			want: -1,
+		},
+	}
+
+	for _, tc := range tt {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			val1 := protoreflect.ValueOfMessage(tc.dur1.ProtoReflect())
+			val2 := protoreflect.ValueOfMessage(tc.dur2.ProtoReflect())
+			got := cdc.Compare(val1, val2)
+			assert.Equal(t, tc.want, got)
+
+			bz1 := encodeValue(t, cdc, val1)
+			bz2 := encodeValue(t, cdc, val2)
+			assert.Equal(t, tc.want, bytes.Compare(bz1, bz2))
+		})
+	}
+}
+
+func encodeValue(t *testing.T, cdc ormfield.Codec, val protoreflect.Value) []byte {
+	buf := &bytes.Buffer{}
+	assert.NilError(t, cdc.Encode(val, buf))
+	return buf.Bytes()
+}

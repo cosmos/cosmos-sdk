@@ -83,8 +83,6 @@ func initFixture(t testing.TB) *fixture {
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
-	fmt.Printf("cms.GetStore(keys[consensusparamtypes.StoreKey]): %v\n", cms.GetStore(keys[consensusparamtypes.StoreKey]))
-	fmt.Printf("cms.GetStore(keys[evidencetypes.StoreKey]): %v\n", cms.GetStore(keys[evidencetypes.StoreKey]))
 
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
@@ -135,11 +133,7 @@ func initFixture(t testing.TB) *fixture {
 	evidenceModule := evidence.NewAppModule(*evidenceKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule, slashingModule, evidenceModule)
-	
-	// fmt.Printf("integrationApp.BaseApp.IsSealed(): %v\n", integrationApp.BaseApp.IsSealed())
-	// integrationApp.BaseApp.SetParamStore(consensusParamsKeeper.ParamsStore)
-	a := integrationApp.BaseApp.GetConsensusParams(newCtx)
-	fmt.Printf("integrationApp.BaseApp.GetConsensusParams(newCtx): %v\n", a)
+
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// Register MsgServer and QueryServer
@@ -311,7 +305,6 @@ func testEquivocationHandler(_ interface{}) evidencetypes.Handler {
 			return err
 		}
 
-		fmt.Println("tesssssssss")
 		ee, ok := e.(*types.Equivocation)
 		if !ok {
 			return fmt.Errorf("unexpected evidence type: %T", e)

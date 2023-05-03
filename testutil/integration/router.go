@@ -51,12 +51,8 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	bApp.MountKVStores(keys)
 
 	bApp.SetInitChainer(func(ctx sdk.Context, req cmtabcitypes.RequestInitChain) (cmtabcitypes.ResponseInitChain, error) {
-		fmt.Printf("consensusparamkeeper.StoreKey: %v\n", consensusparamkeeper.StoreKey)
-		// ctx.KVStore(keys[consensusparamkeeper.StoreKey]).Set([]byte(keys[consensusparamkeeper.StoreKey].Name()), []byte("no_key"))
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
-
-				fmt.Printf("req.ConsensusParams: %v\n", req.ConsensusParams)
 				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
 			}
 		}
@@ -77,6 +73,7 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	bApp.SetMsgServiceRouter(router)
 
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
+
 	bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 
 	if err := bApp.LoadLatestVersion(); err != nil {

@@ -45,7 +45,8 @@ type (
 // ValidateVoteExtensions defines a helper function for verifying vote extension
 // signatures that may be passed or manually injected into a block proposal from
 // a proposer in ProcessProposal. It returns an error if any signature is invalid
-// or if unexpected vote extensions and/or signatures are found.
+// or if unexpected vote extensions and/or signatures are found or less than 2/3
+// power is received.
 func ValidateVoteExtensions(
 	ctx sdk.Context,
 	valStore ValidatorStore,

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -139,7 +140,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
 	badFeeAmount[0].Amount = sdkmath.NewInt(-5)
-	txBuilder := newBuilder(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
+	txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{

@@ -16,6 +16,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -781,8 +782,9 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 
 	builder := suite.txConfig.NewTxBuilder()
 	msgs := tx.GetMsgs()
-	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0})
-	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1})
+	_, _, addr := testdata.KeyTestPubAddr()
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0, Signer: addr.String()})
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1, Signer: addr.String()})
 
 	builder.SetMsgs(msgs...)
 	builder.SetMemo(tx.GetMemo())

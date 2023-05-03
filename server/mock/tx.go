@@ -86,7 +86,7 @@ var (
 )
 
 func NewTx(key, value string, accAddress sdk.AccAddress) *KVStoreTx {
-	bytes := fmt.Sprintf("%s=%s", key, value)
+	bytes := fmt.Sprintf("%s=%s=%s", key, value, accAddress)
 	return &KVStoreTx{
 		key:     []byte(key),
 		value:   []byte(value),
@@ -104,7 +104,7 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 }
 
 func (msg *KVStoreTx) GetMsgsV2() []protov2.Message {
-	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: "test"}} // this is a hack for tests
+	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}} // this is a hack for tests
 }
 
 func (msg *KVStoreTx) GetSignBytes() []byte {
@@ -135,6 +135,9 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	case 2:
 		k, v := split[0], split[1]
 		tx = &KVStoreTx{k, v, txBytes, nil}
+	case 3:
+		k, v, addr := split[0], split[1], split[2]
+		tx = &KVStoreTx{k, v, txBytes, addr}
 	default:
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}

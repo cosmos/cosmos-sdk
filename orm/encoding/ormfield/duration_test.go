@@ -12,79 +12,81 @@ import (
 	"cosmossdk.io/orm/encoding/ormfield"
 )
 
+func TestDurationNil(t *testing.T) {
+	t.Parallel()
+
+	cdc := ormfield.DurationCodec{}
+	buf := &bytes.Buffer{}
+	assert.NilError(t, cdc.Encode(protoreflect.Value{}, buf))
+	assert.Equal(t, 1, len(buf.Bytes()))
+	val, err := cdc.Decode(buf)
+	assert.NilError(t, err)
+	assert.Assert(t, !val.IsValid())
+}
+
 func TestDuration(t *testing.T) {
 	t.Parallel()
 	cdc := ormfield.DurationCodec{}
 
-	// nil value
-	t.Run("nil value", func(t *testing.T) {
-		t.Parallel()
-		buf := &bytes.Buffer{}
-		assert.NilError(t, cdc.Encode(protoreflect.Value{}, buf))
-		assert.Equal(t, 1, len(buf.Bytes()))
-		val, err := cdc.Decode(buf)
-		assert.NilError(t, err)
-		assert.Assert(t, !val.IsValid())
-	})
+	tt := []struct {
+		name    string
+		seconds int64
+		nanos   int32
+		wantLen int
+	}{
+		{
+			"no nanos",
+			100,
+			0,
+			6,
+		},
+		{
+			"with nanos",
+			3,
+			879468295,
+			9,
+		},
+		{
+			"min seconds, -1 nanos",
+			-315576000000,
+			-1,
+			9,
+		},
+		{
+			"min value",
+			-315576000000,
+			-999999999,
+			9,
+		},
+		{
+			"max value",
+			315576000000,
+			999999999,
+			9,
+		},
+		{
+			"max seconds, 1 nanos",
+			315576000000,
+			1,
+			9,
+		},
+	}
 
-	// no nanos
-	t.Run("no nanos", func(t *testing.T) {
-		t.Parallel()
-		dur, err := time.ParseDuration("100s")
-		assert.NilError(t, err)
-		durPb := durationpb.New(dur)
-		val := protoreflect.ValueOfMessage(durPb.ProtoReflect())
-		buf := &bytes.Buffer{}
-		assert.NilError(t, cdc.Encode(val, buf))
-		assert.Equal(t, 6, len(buf.Bytes()))
-		val2, err := cdc.Decode(buf)
-		assert.NilError(t, err)
-		assert.Equal(t, 0, cdc.Compare(val, val2))
-	})
-
-	t.Run("nanos", func(t *testing.T) {
-		t.Parallel()
-		dur, err := time.ParseDuration("3879468295ns")
-		assert.NilError(t, err)
-		durPb := durationpb.New(dur)
-		val := protoreflect.ValueOfMessage(durPb.ProtoReflect())
-		buf := &bytes.Buffer{}
-		assert.NilError(t, cdc.Encode(val, buf))
-		assert.Equal(t, 9, len(buf.Bytes()))
-		val2, err := cdc.Decode(buf)
-		assert.NilError(t, err)
-		assert.Equal(t, 0, cdc.Compare(val, val2))
-	})
-
-	t.Run("min value", func(t *testing.T) {
-		t.Parallel()
-		durPb := &durationpb.Duration{
-			Seconds: -315576000000,
-			Nanos:   -999999999,
-		}
-		val := protoreflect.ValueOfMessage(durPb.ProtoReflect())
-		buf := &bytes.Buffer{}
-		assert.NilError(t, cdc.Encode(val, buf))
-		assert.Equal(t, 9, len(buf.Bytes()))
-		val2, err := cdc.Decode(buf)
-		assert.NilError(t, err)
-		assert.Equal(t, 0, cdc.Compare(val, val2))
-	})
-
-	t.Run("max value", func(t *testing.T) {
-		t.Parallel()
-		durPb := &durationpb.Duration{
-			Seconds: 315576000000,
-			Nanos:   999999999,
-		}
-		val := protoreflect.ValueOfMessage(durPb.ProtoReflect())
-		buf := &bytes.Buffer{}
-		assert.NilError(t, cdc.Encode(val, buf))
-		assert.Equal(t, 9, len(buf.Bytes()))
-		val2, err := cdc.Decode(buf)
-		assert.NilError(t, err)
-		assert.Equal(t, 0, cdc.Compare(val, val2))
-	})
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			durPb := &durationpb.Duration{
+				Seconds: tc.seconds,
+				Nanos:   tc.nanos,
+			}
+			val := protoreflect.ValueOfMessage(durPb.ProtoReflect())
+			buf := &bytes.Buffer{}
+			assert.NilError(t, cdc.Encode(val, buf))
+			assert.Equal(t, tc.wantLen, len(buf.Bytes()))
+			val2, err := cdc.Decode(buf)
+			assert.NilError(t, err)
+			assert.Equal(t, 0, cdc.Compare(val, val2))
+		})
+	}
 }
 
 func TestDurationOutOfRange(t *testing.T) {
@@ -249,13 +251,28 @@ func TestDurationCompare(t *testing.T) {
 			val1 := protoreflect.ValueOfMessage(tc.dur1.ProtoReflect())
 			val2 := protoreflect.ValueOfMessage(tc.dur2.ProtoReflect())
 			got := cdc.Compare(val1, val2)
-			assert.Equal(t, tc.want, got)
+			assert.Equal(t, tc.want, got, "Compare(%v, %v)", tc.dur1, tc.dur2)
 
 			bz1 := encodeValue(t, cdc, val1)
 			bz2 := encodeValue(t, cdc, val2)
-			assert.Equal(t, tc.want, bytes.Compare(bz1, bz2))
+			assert.Equal(t, tc.want, bytes.Compare(bz1, bz2), "bytes.Compare(%v, %v)", bz1, bz2)
 		})
 	}
+
+	t.Run("nanos", func(t *testing.T) {
+		t.Parallel()
+		dur, err := time.ParseDuration("3879468295ns")
+		assert.NilError(t, err)
+		durPb := durationpb.New(dur)
+		val := protoreflect.ValueOfMessage(durPb.ProtoReflect())
+		buf := &bytes.Buffer{}
+		assert.NilError(t, cdc.Encode(val, buf))
+		assert.Equal(t, 9, len(buf.Bytes()))
+		val2, err := cdc.Decode(buf)
+		assert.NilError(t, err)
+		assert.Equal(t, 0, cdc.Compare(val, val2))
+	})
+
 }
 
 func encodeValue(t *testing.T, cdc ormfield.Codec, val protoreflect.Value) []byte {

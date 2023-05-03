@@ -46,7 +46,7 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 		if nanosInt < DurationNanosMin || nanosInt > 0 {
 			return fmt.Errorf("negative duration nanos is out of range %d, must be between %d and %d", nanosInt, DurationNanosMin, 0)
 		}
-		nanosInt = -nanosInt
+		nanosInt = DurationNanosMax + nanosInt + 1
 	} else if nanosInt < 0 || nanosInt > DurationNanosMax {
 		return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", nanosInt, 0, DurationNanosMax)
 	}
@@ -78,7 +78,7 @@ func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 	}
 
 	if negative {
-		nanos = -nanos
+		nanos = nanos - DurationNanosMax - 1
 	}
 
 	msg.Set(durationNanosField, protoreflect.ValueOfInt32(nanos))

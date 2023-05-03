@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
-	"cosmossdk.io/x/evidence/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -68,6 +67,7 @@ type fixture struct {
 	app *integration.App
 
 	sdkCtx sdk.Context
+	cdc    codec.Codec
 
 	bankKeeper     bankkeeper.Keeper
 	evidenceKeeper *keeper.Keeper
@@ -80,6 +80,13 @@ func initFixture(t testing.TB) *fixture {
 		authtypes.StoreKey, banktypes.StoreKey, paramtypes.StoreKey, consensusparamtypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
+
+	// register evidence Equivocation
+	cdc.InterfaceRegistry().RegisterInterface(
+		"cosmos.evidence.v1beta1.Evidence",
+		(*exported.Evidence)(nil),
+		&evidencetypes.Equivocation{},
+	)
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -115,8 +122,6 @@ func initFixture(t testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	// consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authority.String(), runtime.EventService{})
-
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
 
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
@@ -148,6 +153,7 @@ func initFixture(t testing.TB) *fixture {
 	return &fixture{
 		app:            integrationApp,
 		sdkCtx:         sdkCtx,
+		cdc:            cdc,
 		bankKeeper:     bankKeeper,
 		evidenceKeeper: evidenceKeeper,
 		slashingKeeper: slashingKeeper,
@@ -305,7 +311,7 @@ func testEquivocationHandler(_ interface{}) evidencetypes.Handler {
 			return err
 		}
 
-		ee, ok := e.(*types.Equivocation)
+		ee, ok := e.(*evidencetypes.Equivocation)
 		if !ok {
 			return fmt.Errorf("unexpected evidence type: %T", e)
 		}

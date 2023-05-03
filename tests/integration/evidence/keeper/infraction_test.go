@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
@@ -117,16 +118,19 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// double sign less than max age
 	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
-	evidence := abci.RequestBeginBlock{
+
+	nci := NewCometInfo(abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      time.Unix(0, 0),
 			Height:    0,
 		}},
-	}
+	})
 
-	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+	ctx = ctx.WithCometInfo(nci)
+
+	f.evidenceKeeper.BeginBlocker(ctx)
 
 	// should be jailed and tombstoned
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed())
@@ -137,7 +141,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+	f.evidenceKeeper.BeginBlocker(ctx)
 
 	// tokens should be the same (capped slash)
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
@@ -184,22 +188,23 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
-	evidence := abci.RequestBeginBlock{
+	nci := NewCometInfo(abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      ctx.BlockTime(),
 			Height:    0,
 		}},
-	}
+	})
 
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
 
+	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
 
-	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+	f.evidenceKeeper.BeginBlocker(ctx)
 
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed() == false)
 	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.Address())) == false)
@@ -243,4 +248,81 @@ func testEquivocationHandler(_ interface{}) types.Handler {
 
 		return nil
 	}
+}
+
+type CometService struct {
+	Evidence []abci.Misbehavior
+}
+
+func NewCometInfo(bg abci.RequestBeginBlock) comet.BlockInfo {
+	return CometService{
+		Evidence: bg.ByzantineValidators,
+	}
+}
+
+func (r CometService) GetEvidence() comet.EvidenceList {
+	return evidenceWrapper{evidence: r.Evidence}
+}
+
+func (CometService) GetValidatorsHash() []byte {
+	return []byte{}
+}
+
+func (CometService) GetProposerAddress() []byte {
+	return []byte{}
+}
+
+func (CometService) GetLastCommit() comet.CommitInfo {
+	return nil
+}
+
+type evidenceWrapper struct {
+	evidence []abci.Misbehavior
+}
+
+func (e evidenceWrapper) Len() int {
+	return len(e.evidence)
+}
+
+func (e evidenceWrapper) Get(i int) comet.Evidence {
+	return misbehaviorWrapper{e.evidence[i]}
+}
+
+type misbehaviorWrapper struct {
+	abci.Misbehavior
+}
+
+func (m misbehaviorWrapper) Type() comet.MisbehaviorType {
+	return comet.MisbehaviorType(m.Misbehavior.Type)
+}
+
+func (m misbehaviorWrapper) Height() int64 {
+	return m.Misbehavior.Height
+}
+
+func (m misbehaviorWrapper) Validator() comet.Validator {
+	return validatorWrapper{m.Misbehavior.Validator}
+}
+
+func (m misbehaviorWrapper) Time() time.Time {
+	return m.Misbehavior.Time
+}
+
+func (m misbehaviorWrapper) TotalVotingPower() int64 {
+	return m.Misbehavior.TotalVotingPower
+}
+
+// validatorWrapper is a wrapper around abci.Validator that implements Validator interface
+type validatorWrapper struct {
+	abci.Validator
+}
+
+var _ comet.Validator = (*validatorWrapper)(nil)
+
+func (v validatorWrapper) Address() []byte {
+	return v.Validator.Address
+}
+
+func (v validatorWrapper) Power() int64 {
+	return v.Validator.Power
 }

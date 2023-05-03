@@ -305,13 +305,13 @@ func TestDeliverGenTxs(t *testing.T) {
 			if tc.expPass {
 				require.NotPanics(t, func() {
 					genutil.DeliverGenTxs(
-						f.ctx, genTxs, f.stakingKeeper, f.baseApp.DeliverTx,
+						f.ctx, genTxs, f.stakingKeeper, f.baseApp,
 						f.encodingConfig.TxConfig,
 					)
 				})
 			} else {
 				_, err := genutil.DeliverGenTxs(
-					f.ctx, genTxs, f.stakingKeeper, f.baseApp.DeliverTx,
+					f.ctx, genTxs, f.stakingKeeper, f.baseApp,
 					f.encodingConfig.TxConfig,
 				)
 

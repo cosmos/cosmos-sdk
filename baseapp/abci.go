@@ -402,7 +402,7 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
-		WithPrepareProposal(true)
+		WithExecMode(sdk.ExecModePrepareProposal)
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -482,7 +482,7 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithProcessProposal(true)
+		WithExecMode(sdk.ExecModeProcessProposal)
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
@@ -540,7 +540,8 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		WithConsensusParams(cp).
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
 		WithBlockHeight(req.Height).
-		WithHeaderHash(req.Hash)
+		WithHeaderHash(req.Hash).
+		WithExecMode(sdk.ExecModeVoteExtension)
 
 	// add a deferred recover handler in case extendVote panics
 	defer func() {
@@ -658,7 +659,8 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
 		WithVoteInfos(req.DecidedLastCommit.Votes).
-		WithMisbehavior(req.Misbehavior)
+		WithMisbehavior(req.Misbehavior).
+		WithExecMode(sdk.ExecModeFinalize)
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.

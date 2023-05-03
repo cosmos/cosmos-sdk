@@ -162,6 +162,7 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
+	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
 	// TODO: remove after release 0.6.2
 	cosmossdk.io/x/tx => ./x/tx

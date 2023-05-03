@@ -1,7 +1,6 @@
 package flag
 
 import (
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -27,9 +26,6 @@ type Builder struct {
 
 	// AddressCodec is the address codec used for the address flag
 	AddressCodec address.Codec
-
-	// GetClientConn is the reflection client for the address flag
-	GetClientConn func() (grpc.ClientConnInterface, error)
 }
 
 func (b *Builder) init() {

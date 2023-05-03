@@ -1,6 +1,7 @@
 # Upgrading Cosmos SDK
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
+Note, always read the **SimApp** section for more information on application wiring updates.
 
 ## [Unreleased]
 
@@ -61,21 +62,26 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 
 ### SimApp
 
+<!-- TODO(@julienrbrt) collapse this section in 3 parts, general, app v1 and app v2 changes, now it is a bit confusing -->
+
 #### Module Assertions
 
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
 This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
 
-### Modules Keepers
+#### Modules Keepers
 
 The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
 
 * `x/auth`
+* `x/authz`
+* `x/bank`
 * `x/consensus`
+* `x/distribution`
 * `x/feegrant`
 * `x/nft`
 
-When not using depinject, the `runtime.NewKVStoreService` method can be used to create a `KVStoreService` from a `StoreKey`:
+User manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
 ```diff
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
@@ -86,14 +92,21 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 )
 ```
 
-The following modules `NewKeeper` function now also take a `log.Logger`:
+The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
+
+* `x/authz`
+* `x/bank`
+* `x/distribution`
+
+**Users using depinject do not need any changes, this is automatically done for them.**
+
+#### Logger
+
+The following modules `NewKeeper` function now take a `log.Logger`:
 
 * `x/bank`
 
-
-### depinject
-
-For `depinject` users, now the logger must be supplied through the main `depinject.Inject` function instead of passing it to `appBuilder.Build`.
+`depinject` users must now supply the logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
 
 ```diff
 appConfig = depinject.Configs(
@@ -109,6 +122,31 @@ appConfig = depinject.Configs(
 - app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 + app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 ```
+
+User manually wiring their chain need to add the logger argument when creating the keeper.
+
+#### Module Basics
+
+Previously, the `ModuleBasics` was a global variable that was used to register all modules's `AppModuleBasic` implementation.
+The global variable has been removed and the basic module manager can be now created from the module manager.
+
+This is automatically done for depinject users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
+
+```go
+depinject.Supply(
+			// supply custom module basics
+			map[string]module.AppModuleBasic{
+				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+				govtypes.ModuleName: gov.NewAppModuleBasic(
+					[]govclient.ProposalHandler{
+						paramsclient.ProposalHandler,
+					},
+				),
+			},
+		)
+```
+
+Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overridding some module's `AppModuleBasic`.
 
 ### Packages
 
@@ -134,8 +172,6 @@ The `sdk.Msg` interface has been updated to not require the implementation of th
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
 #### `x/auth`
-
-Methods in the `AccountKeeper` now use `context.Context` instead of `sdk.Context`. Any module that has an interface for it will need to update and re-generate mocks if needed.
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`.  Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 

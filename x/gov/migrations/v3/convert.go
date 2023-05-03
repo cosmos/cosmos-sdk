@@ -49,7 +49,7 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 		return v1beta1.Proposal{}, err
 	}
 	if len(msgs) != 1 {
-		return v1beta1.Proposal{}, sdkerrors.ErrInvalidType.Wrap("can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages is more than one")
+		return v1beta1.Proposal{}, sdkerrors.ErrInvalidType.Wrap("can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages not exactly one")
 	}
 	if legacyMsg, ok := msgs[0].(*v1.MsgExecLegacyContent); ok {
 		// check that the content struct can be unmarshalled
@@ -163,7 +163,7 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
 
 		default:
-			return nil, fmt.Errorf("vote does not have neither Options nor Option")
+			return nil, fmt.Errorf("vote does not have neither InterfaceRegistryOptions nor Option")
 		}
 
 		newVotes[i] = &v1.Vote{

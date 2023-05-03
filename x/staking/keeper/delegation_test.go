@@ -278,6 +278,68 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 	require.Equal(0, len(resUnbonds))
 }
 
+func (s *KeeperTestSuite) TestUnbondingDelegationsFromValidator() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	delAddrs, valAddrs := createValAddrs(2)
+
+	for _, addr := range delAddrs {
+		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+	}
+
+	ubd := stakingtypes.NewUnbondingDelegation(
+		delAddrs[0],
+		valAddrs[0],
+		0,
+		time.Unix(0, 0).UTC(),
+		sdk.NewInt(5),
+		0,
+	)
+
+	// set and retrieve a record
+	keeper.SetUnbondingDelegation(ctx, ubd)
+	resUnbond, found := keeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
+	require.True(found)
+	require.Equal(ubd, resUnbond)
+
+	// modify a records, save, and retrieve
+	expUnbond := sdk.NewInt(21)
+	ubd.Entries[0].Balance = expUnbond
+	keeper.SetUnbondingDelegation(ctx, ubd)
+
+	resUnbonds := keeper.GetUnbondingDelegations(ctx, delAddrs[0], 5)
+	require.Equal(1, len(resUnbonds))
+
+	resUnbonds = keeper.GetAllUnbondingDelegations(ctx, delAddrs[0])
+	require.Equal(1, len(resUnbonds))
+
+	resUnbonds = keeper.GetUnbondingDelegationsFromValidator(ctx, valAddrs[0])
+	require.Equal(1, len(resUnbonds))
+
+	resUnbond, found = keeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
+	require.True(found)
+	require.Equal(ubd, resUnbond)
+
+	resDelUnbond := keeper.GetDelegatorUnbonding(ctx, delAddrs[0])
+	require.Equal(expUnbond, resDelUnbond)
+
+	// delete a record
+	keeper.RemoveUnbondingDelegation(ctx, ubd)
+	_, found = keeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
+	require.False(found)
+
+	resUnbonds = keeper.GetUnbondingDelegations(ctx, delAddrs[0], 5)
+	require.Equal(0, len(resUnbonds))
+
+	resUnbonds = keeper.GetAllUnbondingDelegations(ctx, delAddrs[0])
+	require.Equal(0, len(resUnbonds))
+
+	resUnbonds = keeper.GetUnbondingDelegationsFromValidator(ctx, valAddrs[0])
+	require.Equal(0, len(resUnbonds))
+}
+
 func (s *KeeperTestSuite) TestUnbondDelegation() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()

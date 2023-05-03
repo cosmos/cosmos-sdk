@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/core/address"
 
@@ -115,7 +114,7 @@ type interfaceMap = map[string]reflect.Type
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
 	registry, err := NewInterfaceRegistryWithOptions(InterfaceRegistryOptions{
-		ProtoFiles:            protoregistry.GlobalFiles,
+		ProtoFiles:            proto.HybridResolver,
 		AddressCodec:          failingAddressCodec{},
 		ValidatorAddressCodec: failingAddressCodec{},
 	})

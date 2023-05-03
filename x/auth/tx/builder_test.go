@@ -139,7 +139,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
 	badFeeAmount[0].Amount = sdkmath.NewInt(-5)
-	txBuilder := newBuilder(nil)
+	txBuilder := newBuilder(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{

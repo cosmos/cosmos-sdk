@@ -11,7 +11,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store/metrics"
@@ -57,17 +56,7 @@ type (
 )
 
 func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
-	protoRegistry, err := proto.MergedRegistry()
-	require.NoError(t, err)
-	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(
-		codectypes.InterfaceRegistryOptions{
-			ProtoFiles:            protoRegistry,
-			AddressCodec:          testAddressCodec{},
-			ValidatorAddressCodec: testAddressCodec{},
-		},
-	)
-	require.NoError(t, err)
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdc := testutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)

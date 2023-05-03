@@ -12,11 +12,12 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
+
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -36,7 +37,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	baseApp.MountStores(capKeyMainStore)
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &KVStoreTx{})
 
 	router := bam.NewMsgServiceRouter()

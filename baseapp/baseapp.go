@@ -440,7 +440,6 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 	if app.paramStore == nil {
 		return cmtproto.ConsensusParams{}
 	}
-	fmt.Printf("app.paramStore: %v\n", app.paramStore)
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {

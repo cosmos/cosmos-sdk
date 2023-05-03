@@ -72,15 +72,19 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	router.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(router)
 
-	// set baseApp param store
-	consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
-	bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
-
 	if err := bApp.LoadLatestVersion(); err != nil {
 		panic(fmt.Errorf("failed to load application version from store: %w", err))
 	}
 
-	bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams})
+	if keys[consensusparamkeeper.StoreKey] != nil {
+		// set baseApp param store
+		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
+		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
+
+		bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams})
+	} else {
+		bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName})
+	}
 	bApp.Commit()
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)

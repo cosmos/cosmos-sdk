@@ -14,6 +14,18 @@ const (
 	DurationNanosMax   = 999999999
 )
 
+// DurationCodec encodes google.protobuf.Duration values with the following
+// encoding:
+// - nil is encoded as []byte{0xFF}
+// - seconds (which can range from -315,576,000,000 to +315,576,000,000) is encoded as 5 fixed bytes
+// - nanos (which can range from 0 to 999,999,999 or -999,999,999 to 0 if seconds is negative) is encoded as:
+//   - []byte{0x0} for zero nanos
+//   - 4 fixed bytes with the bit mask 0xC0 applied to the first byte, with negative nanos scaled so that -999,999,999
+//     is encoded as 1 and -1 is encoded as 999,999,999
+//
+// When iterating over timestamp indexes, nil values will always be ordered last.
+//
+// Values for seconds and nanos outside the ranges specified by google.protobuf.Duration will be rejected.
 type DurationCodec struct{}
 
 func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {

@@ -20,6 +20,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 	testutil2 "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -109,6 +110,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 	for height := int64(1); height <= int64(cfg.blocks); height++ {
 		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height}})
 
+		_, _, addr := testdata.KeyTestPubAddr()
 		for txNum := 0; txNum < cfg.blockTxs; txNum++ {
 			msgs := []sdk.Msg{}
 			for msgNum := 0; msgNum < 100; msgNum++ {
@@ -118,7 +120,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 				_, err := r.Read(value)
 				require.NoError(t, err)
 
-				msgs = append(msgs, &baseapptestutil.MsgKeyValue{Key: key, Value: value})
+				msgs = append(msgs, &baseapptestutil.MsgKeyValue{Key: key, Value: value, Signer: addr.String()})
 				keyCounter++
 			}
 

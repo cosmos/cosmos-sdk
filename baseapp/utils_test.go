@@ -15,15 +15,17 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/appconfig"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -322,9 +324,10 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 }
 
 func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+	_, _, addr := testdata.KeyTestPubAddr()
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
-		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false}
+		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addr.String()}
 		msgs = append(msgs, msg)
 	}
 

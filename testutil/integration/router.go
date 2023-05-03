@@ -72,8 +72,8 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	router.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(router)
 
+	// set baseApp param store
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
-
 	bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 
 	if err := bApp.LoadLatestVersion(); err != nil {

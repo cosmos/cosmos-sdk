@@ -79,6 +79,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
+// TODO(tip): remove
 func (suite *KeeperTestSuite) TestAccountMapperGetSet() {
 	ctx := suite.ctx
 	addr := sdk.AccAddress([]byte("some---------address"))

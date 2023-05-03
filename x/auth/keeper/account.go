@@ -4,8 +4,8 @@ import (
 	"context"
 	"cosmossdk.io/collections"
 	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // NewAccountWithAddress implements AccountKeeperI.
@@ -79,4 +79,19 @@ func (ak AccountKeeper) IterateAccounts(ctx context.Context, cb func(account sdk
 	if err != nil {
 		panic(err)
 	}
+}
+
+// GetAccountAddressById returns account address by id.
+// TODO remove this function
+func (ak AccountKeeper) GetAccountAddressByID(ctx context.Context, id uint64) string {
+	store := ak.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(append(types.AccountNumberStoreKeyPrefix.Bytes(), sdk.Uint64ToBigEndian(id)...))
+	if err != nil {
+		panic(err)
+	}
+
+	if bz == nil {
+		return ""
+	}
+	return sdk.AccAddress(bz).String()
 }

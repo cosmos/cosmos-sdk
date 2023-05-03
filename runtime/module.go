@@ -9,12 +9,12 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -61,7 +61,7 @@ func init() {
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
-			ProvideDeliverTx,
+			ProvideGenesisTxHandler,
 			ProvideKVStoreService,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
@@ -212,10 +212,8 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-		return appBuilder.app.BaseApp.DeliverTx(tx)
-	}
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+	return appBuilder.app
 }
 
 func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {

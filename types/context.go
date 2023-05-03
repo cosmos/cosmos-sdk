@@ -13,6 +13,20 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
+// ExecMode defines the execution mode which can be set on a Context.
+type ExecMode uint8
+
+// All possible execution modes.
+const (
+	ExecModeCheck ExecMode = iota
+	ExecModeReCheck
+	ExecModeSimulate
+	ExecModePrepareProposal
+	ExecModeProcessProposal
+	ExecModeVoteExtension
+	ExecModeFinalize
+)
+
 /*
 Context is an immutable object contains all information needed to
 process a request.
@@ -34,6 +48,7 @@ type Context struct {
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
+	execMode             ExecMode
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
 	eventManager         EventManagerI
@@ -60,6 +75,7 @@ func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMe
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
 func (c Context) IsCheckTx() bool                               { return c.checkTx }
 func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
+func (c Context) ExecMode() ExecMode                            { return c.execMode }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }
@@ -221,6 +237,7 @@ func (c Context) WithTransientKVGasConfig(gasConfig storetypes.GasConfig) Contex
 // WithIsCheckTx enables or disables CheckTx value for verifying transactions and returns an updated Context
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	c.checkTx = isCheckTx
+	c.execMode = ExecModeCheck
 	return c
 }
 
@@ -231,6 +248,13 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 		c.checkTx = true
 	}
 	c.recheckTx = isRecheckTx
+	c.execMode = ExecModeReCheck
+	return c
+}
+
+// WithExecMode returns a Context with an updated ExecMode.
+func (c Context) WithExecMode(m ExecMode) Context {
+	c.execMode = m
 	return c
 }
 

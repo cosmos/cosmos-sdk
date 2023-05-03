@@ -127,7 +127,7 @@ func ValidateVoteExtensions(
 	totalVP := valStore.TotalBondedTokens(ctx)
 	percentSubmitted := math.LegacyNewDecFromInt(sumVP).Quo(math.LegacyNewDecFromInt(totalVP))
 	if percentSubmitted.LT(VoteExtensionThreshold) {
-		return fmt.Errorf("not enough cumulative voting power received to verify vote extensions; got: %s, expected: >=%s", percentSubmitted, VoteExtensionThreshold)
+		return fmt.Errorf("insufficient cumulative voting power received to verify vote extensions; got: %s, expected: >=%s", percentSubmitted, VoteExtensionThreshold)
 	}
 
 	return nil

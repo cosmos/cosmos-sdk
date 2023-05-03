@@ -4,21 +4,20 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoregistry"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -62,11 +61,13 @@ func init() {
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
-			ProvideDeliverTx,
+			ProvideGenesisTxHandler,
 			ProvideKVStoreService,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
+			ProvideHeaderInfoService,
+			ProvideCometInfoService,
 			ProvideBasicManager,
 		),
 		appmodule.Invoke(SetupAppBuilder),
@@ -211,10 +212,8 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-		return appBuilder.app.BaseApp.DeliverTx(tx)
-	}
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+	return appBuilder.app
 }
 
 func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
@@ -234,6 +233,14 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
+}
+
+func ProvideCometInfoService() comet.BlockInfoService {
+	return cometInfoService{}
+}
+
+func ProvideHeaderInfoService(app *AppBuilder) header.Service {
+	return headerInfoService{}
 }
 
 func ProvideBasicManager(app *AppBuilder) module.BasicManager {

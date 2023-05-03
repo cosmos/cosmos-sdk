@@ -13,6 +13,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 
 	store "cosmossdk.io/core/store"
@@ -31,7 +32,6 @@ import (
 )
 
 var (
-	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -125,8 +125,9 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 }
 
 var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -169,8 +170,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	am.keeper.BeginBlocker(ctx, req)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	am.keeper.BeginBlocker(ctx)
+
+	return nil
 }
 
 // AppModuleSimulation functions
@@ -209,6 +212,8 @@ type ModuleInputs struct {
 	StakingKeeper  types.StakingKeeper
 	SlashingKeeper types.SlashingKeeper
 	AddressCodec   address.Codec
+
+	BlockInfoService comet.BlockInfoService
 }
 
 type ModuleOutputs struct {
@@ -219,7 +224,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec)
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec, in.BlockInfoService)
 	m := NewAppModule(*k)
 
 	return ModuleOutputs{EvidenceKeeper: *k, Module: m}

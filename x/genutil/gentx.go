@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/genesis"
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -84,14 +85,12 @@ func ValidateAccountInGenesis(
 	return nil
 }
 
-type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
-
 // DeliverGenTxs iterates over all genesis txs, decodes each into a Tx and
 // invokes the provided deliverTxfn with the decoded Tx. It returns the result
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
 func DeliverGenTxs(
 	ctx sdk.Context, genTxs []json.RawMessage,
-	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]abci.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {
@@ -105,9 +104,9 @@ func DeliverGenTxs(
 			return nil, fmt.Errorf("failed to encode GenTx '%s': %s", genTx, err)
 		}
 
-		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
-		if !res.IsOK() {
-			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, res.Log)
+		err = deliverTx.ExecuteGenesisTx(bz)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, err)
 		}
 	}
 

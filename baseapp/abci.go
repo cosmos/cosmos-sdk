@@ -194,12 +194,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx)).
-		WithVoteInfos(req.LastCommitInfo.GetVotes())
+		WithVoteInfos(req.LastCommitInfo.GetVotes()).
+		WithCometInfo(cometInfo{Misbehavior: req.ByzantineValidators, ValidatorsHash: req.Header.ValidatorsHash, ProposerAddress: req.Header.ProposerAddress, LastCommit: req.LastCommitInfo})
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
 			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
+			WithHeaderHash(req.Hash).
+			WithCometInfo(cometInfo{Misbehavior: req.ByzantineValidators, ValidatorsHash: req.Header.ValidatorsHash, ProposerAddress: req.Header.ProposerAddress, LastCommit: req.LastCommitInfo})
 	}
 
 	if app.beginBlocker != nil {
@@ -210,8 +212,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		}
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
-	// set the signed validators for addition to context in deliverTx
-	app.voteInfos = req.LastCommitInfo.GetVotes()
 
 	// call the streaming service hook with the BeginBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
@@ -287,7 +287,8 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithCometInfo(prepareProposalInfo{req})
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -345,7 +346,8 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit})
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).

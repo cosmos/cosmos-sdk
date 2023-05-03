@@ -786,7 +786,7 @@ func (s *VestingAccountTestSuite) TestContinuousVestingAccountMarshal() {
 	baseVesting := types.NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
 	acc := types.NewContinuousVestingAccountRaw(baseVesting, baseVesting.EndTime)
 
-	bz, err := s.accountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.Accounts.ValueCodec().Encode(acc)
 	require.Nil(err)
 
 	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
@@ -804,7 +804,7 @@ func (s *VestingAccountTestSuite) TestPeriodicVestingAccountMarshal() {
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewPeriodicVestingAccount(baseAcc, coins, time.Now().Unix(), types.Periods{types.Period{3600, coins}})
 
-	bz, err := s.accountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.Accounts.ValueCodec().Encode(acc)
 	require.Nil(err)
 
 	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
@@ -822,7 +822,7 @@ func (s *VestingAccountTestSuite) TestDelayedVestingAccountMarshal() {
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewDelayedVestingAccount(baseAcc, coins, time.Now().Unix())
 
-	bz, err := s.accountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.Accounts.ValueCodec().Encode(acc)
 	require.Nil(err)
 
 	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
@@ -840,7 +840,7 @@ func (s *VestingAccountTestSuite) TestPermanentLockedAccountMarshal() {
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewPermanentLockedAccount(baseAcc, coins)
 
-	bz, err := s.accountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.Accounts.ValueCodec().Encode(acc)
 	require.Nil(err)
 
 	acc2, err := s.accountKeeper.UnmarshalAccount(bz)

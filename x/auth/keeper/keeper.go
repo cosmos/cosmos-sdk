@@ -258,25 +258,10 @@ func (ak AccountKeeper) SetModuleAccount(ctx context.Context, macc sdk.ModuleAcc
 	ak.SetAccount(ctx, macc)
 }
 
-func (ak AccountKeeper) decodeAccount(bz []byte) sdk.AccountI {
-	acc, err := ak.UnmarshalAccount(bz)
-	if err != nil {
-		panic(err)
-	}
-
-	return acc
-}
-
-// MarshalAccount protobuf serializes an Account interface
-func (ak AccountKeeper) MarshalAccount(accountI sdk.AccountI) ([]byte, error) {
-	return ak.cdc.MarshalInterface(accountI)
-}
-
 // UnmarshalAccount returns an Account interface from raw encoded account
 // bytes of a Proto-based Account type
 func (ak AccountKeeper) UnmarshalAccount(bz []byte) (sdk.AccountI, error) {
-	var acc sdk.AccountI
-	return acc, ak.cdc.UnmarshalInterface(bz, &acc)
+	return ak.Accounts.ValueCodec().Decode(bz)
 }
 
 // GetCodec return codec.Codec object used by the keeper

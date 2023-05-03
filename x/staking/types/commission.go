@@ -53,7 +53,7 @@ func (cr CommissionRates) Validate() error {
 		return ErrCommissionGTMaxRate
 
 	case cr.Rate.LT(MinCommissionRate):
-		// rate cannot be less than 2%
+		// rate cannot be less than 5%
 		return ErrCommissionTooSmall
 	case cr.MaxChangeRate.IsNegative():
 		// change rate cannot be negative

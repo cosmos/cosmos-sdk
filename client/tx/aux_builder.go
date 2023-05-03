@@ -192,6 +192,25 @@ func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
+func validateSignDocDirectAux(sd *txv1beta1.SignDocDirectAux) error {
+	// validate basic
+	if len(sd.BodyBytes) == 0 {
+		return sdkerrors.ErrInvalidRequest.Wrap("body bytes cannot be empty")
+	}
+
+	if sd.PublicKey == nil {
+		return sdkerrors.ErrInvalidPubKey.Wrap("public key cannot be empty")
+	}
+
+	if sd.Tip != nil {
+		if sd.Tip.Tipper == "" {
+			return sdkerrors.ErrInvalidRequest.Wrap("tipper cannot be empty")
+		}
+	}
+
+	return nil
+}
+
 // GetSignBytes returns the builder's sign bytes.
 func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	auxTx := b.auxSignerData
@@ -216,19 +235,8 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 	sd.BodyBytes = bodyBz
 
-	// validate basic
-	if len(bodyBz) == 0 {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("body bytes cannot be empty")
-	}
-
-	if sd.PublicKey == nil {
-		return nil, sdkerrors.ErrInvalidPubKey.Wrap("public key cannot be empty")
-	}
-
-	if sd.Tip != nil {
-		if sd.Tip.Tipper == "" {
-			return nil, sdkerrors.ErrInvalidRequest.Wrap("tipper cannot be empty")
-		}
+	if err := validateSignDocDirectAux(sd); err != nil {
+		return nil, err
 	}
 
 	var signBz []byte
@@ -276,7 +284,23 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 // GetAuxSignerData returns the builder's AuxSignerData.
 func (b *AuxTxBuilder) GetAuxSignerData() (txv1beta1.AuxSignerData, error) {
-	return *b.auxSignerData, nil
+	a := *b.auxSignerData
+	if a.Address == "" {
+		return a, sdkerrors.ErrInvalidRequest.Wrapf("address cannot be empty")
+	}
+
+	if a.Mode != signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX &&
+		a.Mode != signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+		return a, sdkerrors.ErrInvalidRequest.Wrapf(
+			"AuxTxBuilder can only sign with %s or %s",
+			signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	}
+
+	if len(a.Sig) == 0 {
+		return a, sdkerrors.ErrNoSignatures.Wrap("signature cannot be empty")
+	}
+
+	return a, validateSignDocDirectAux(a.SignDoc)
 }
 
 func (b *AuxTxBuilder) checkEmptyFields() {

@@ -128,7 +128,7 @@ func TestHandleDoubleSign(t *testing.T) {
 		}},
 	})
 
-	ctx.WithCometInfo(nci)
+	ctx = ctx.WithCometInfo(nci)
 
 	f.evidenceKeeper.BeginBlocker(ctx)
 

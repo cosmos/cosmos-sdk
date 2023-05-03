@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.1
+	cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v1.1.0
@@ -29,8 +30,6 @@ require (
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.7
 )
-
-require cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4
 
 require (
 	cloud.google.com/go v0.110.0 // indirect

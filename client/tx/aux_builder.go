@@ -1,15 +1,24 @@
 package tx
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"context"
 
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/registry"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // AuxTxBuilder is a client-side builder for creating an AuxSignerData.
@@ -19,8 +28,8 @@ type AuxTxBuilder struct {
 	// - b.msgs is used for constructing the AMINO sign bz,
 	// - b.body is used for constructing the DIRECT_AUX sign bz.
 	msgs          []sdk.Msg
-	body          *tx.TxBody
-	auxSignerData *tx.AuxSignerData
+	body          *txv1beta1.TxBody
+	auxSignerData *txv1beta1.AuxSignerData
 }
 
 // NewAuxTxBuilder creates a new client-side builder for constructing an
@@ -54,12 +63,15 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 
 // SetMsgs sets an array of Msgs in the tx.
 func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
-	anys := make([]*codectypes.Any, len(msgs))
+	anys := make([]*anypb.Any, len(msgs))
 	for i, msg := range msgs {
-		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg)
+		legacyAny, err := codectypes.NewAnyWithValue(msg)
 		if err != nil {
 			return err
+		}
+		anys[i] = &anypb.Any{
+			TypeUrl: legacyAny.TypeUrl,
+			Value:   legacyAny.Value,
 		}
 	}
 
@@ -95,14 +107,17 @@ func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 
 // SetPubKey sets the aux signer's pubkey in the AuxSignerData.
 func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
-	anyAnimal, err := codectypes.NewAnyWithValue(pk)
+	legacyAny, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return err
 	}
 
 	b.checkEmptyFields()
 
-	b.auxSignerData.SignDoc.PublicKey = anyAnimal
+	b.auxSignerData.SignDoc.PublicKey = &anypb.Any{
+		TypeUrl: legacyAny.TypeUrl,
+		Value:   legacyAny.Value,
+	}
 
 	return nil
 }
@@ -116,16 +131,28 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s", signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	b.auxSignerData.Mode = mode
+	var err error
+	b.auxSignerData.Mode, err = authsigning.InternalSignModeToAPI(signing.SignMode_SIGN_MODE_DIRECT_AUX)
 
-	return nil
+	return err
 }
 
 // SetTip sets an optional tip in the AuxSignerData.
 func (b *AuxTxBuilder) SetTip(tip *tx.Tip) {
 	b.checkEmptyFields()
 
-	b.auxSignerData.SignDoc.Tip = tip
+	amount := make([]*basev1beta1.Coin, len(tip.Amount))
+	for i, coin := range tip.Amount {
+		amount[i] = &basev1beta1.Coin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.String(),
+		}
+	}
+
+	b.auxSignerData.SignDoc.Tip = &txv1beta1.Tip{
+		Amount: amount,
+		Tipper: tip.Tipper,
+	}
 }
 
 // SetSignature sets the aux signer's signature in the AuxSignerData.
@@ -139,7 +166,14 @@ func (b *AuxTxBuilder) SetSignature(sig []byte) {
 func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()
 
-	b.body.ExtensionOptions = extOpts
+	anyExtOpts := make([]*anypb.Any, len(extOpts))
+	for i, extOpt := range extOpts {
+		anyExtOpts[i] = &anypb.Any{
+			TypeUrl: extOpt.TypeUrl,
+			Value:   extOpt.Value,
+		}
+	}
+	b.body.ExtensionOptions = anyExtOpts
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
@@ -147,7 +181,14 @@ func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()
 
-	b.body.NonCriticalExtensionOptions = extOpts
+	anyNonCritExtOpts := make([]*anypb.Any, len(extOpts))
+	for i, extOpt := range extOpts {
+		anyNonCritExtOpts[i] = &anypb.Any{
+			TypeUrl: extOpt.TypeUrl,
+			Value:   extOpt.Value,
+		}
+	}
+	b.body.NonCriticalExtensionOptions = anyNonCritExtOpts
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
@@ -175,31 +216,41 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 	sd.BodyBytes = bodyBz
 
-	if err := b.auxSignerData.SignDoc.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	var signBz []byte
 	switch b.auxSignerData.Mode {
-	case signing.SignMode_SIGN_MODE_DIRECT_AUX:
+	case signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX:
 		{
 			signBz, err = proto.Marshal(b.auxSignerData.SignDoc)
 			if err != nil {
 				return nil, err
 			}
 		}
-	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+	case signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		{
-			signBz = legacytx.StdSignBytes(
-				b.auxSignerData.SignDoc.ChainId, b.auxSignerData.SignDoc.AccountNumber,
-				b.auxSignerData.SignDoc.Sequence, b.body.TimeoutHeight,
-				// Aux signer never signs over fee.
-				// For LEGACY_AMINO_JSON, we use the convention to sign
-				// over empty fees.
-				// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
-				legacytx.StdFee{},
-				b.msgs, b.body.Memo, b.auxSignerData.SignDoc.Tip,
+			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
+				// TODO: use hybrid resolver in gogoproto v1.4.9 ?
+				FileResolver: registry.MergedProtoRegistry(),
+			})
+			signBz, err = handler.GetSignBytes(
+				context.Background(),
+				txsigning.SignerData{
+					// TODO
+					Address:       "foo",
+					ChainID:       b.auxSignerData.SignDoc.ChainId,
+					AccountNumber: b.auxSignerData.SignDoc.AccountNumber,
+					Sequence:      b.auxSignerData.SignDoc.Sequence,
+					PubKey:        nil,
+				},
+				txsigning.TxData{
+					Body: body,
+					AuthInfo: &txv1beta1.AuthInfo{
+						SignerInfos: nil,
+						Fee:         &txv1beta1.Fee{},
+						Tip:         nil,
+					},
+				},
 			)
+			return signBz, err
 		}
 	default:
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got unknown sign mode %s", b.auxSignerData.Mode)
@@ -209,23 +260,19 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 }
 
 // GetAuxSignerData returns the builder's AuxSignerData.
-func (b *AuxTxBuilder) GetAuxSignerData() (tx.AuxSignerData, error) {
-	if err := b.auxSignerData.ValidateBasic(); err != nil {
-		return tx.AuxSignerData{}, err
-	}
-
+func (b *AuxTxBuilder) GetAuxSignerData() (txv1beta1.AuxSignerData, error) {
 	return *b.auxSignerData, nil
 }
 
 func (b *AuxTxBuilder) checkEmptyFields() {
 	if b.body == nil {
-		b.body = &tx.TxBody{}
+		b.body = &txv1beta1.TxBody{}
 	}
 
 	if b.auxSignerData == nil {
-		b.auxSignerData = &tx.AuxSignerData{}
+		b.auxSignerData = &txv1beta1.AuxSignerData{}
 		if b.auxSignerData.SignDoc == nil {
-			b.auxSignerData.SignDoc = &tx.SignDocDirectAux{}
+			b.auxSignerData.SignDoc = &txv1beta1.SignDocDirectAux{}
 		}
 	}
 }

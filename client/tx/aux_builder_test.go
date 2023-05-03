@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -233,7 +234,7 @@ func TestAuxTxBuilder(t *testing.T) {
 }
 
 // checkCorrectData that the auxSignerData's content matches the inputs we gave.
-func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData typestx.AuxSignerData, signMode signing.SignMode) {
+func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData txv1beta1.AuxSignerData, signMode signing.SignMode) {
 	pkAny, err := codectypes.NewAnyWithValue(pub1)
 	require.NoError(t, err)
 	msgAny, err := codectypes.NewAnyWithValue(msg1)

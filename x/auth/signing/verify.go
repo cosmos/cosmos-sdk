@@ -40,8 +40,8 @@ func APISignModeToInternal(mode signingv1beta1.SignMode) (signing.SignMode, erro
 	}
 }
 
-// internalSignModeToAPI converts a signing.SignMode to a protobuf SignMode.
-func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, error) {
+// InternalSignModeToAPI converts a signing.SignMode to a protobuf SignMode.
+func InternalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, error) {
 	switch mode {
 	case signing.SignMode_SIGN_MODE_DIRECT:
 		return signingv1beta1.SignMode_SIGN_MODE_DIRECT, nil
@@ -68,7 +68,7 @@ func VerifySignature(
 ) error {
 	switch data := signatureData.(type) {
 	case *signing.SingleSignatureData:
-		signMode, err := internalSignModeToAPI(data.SignMode)
+		signMode, err := InternalSignModeToAPI(data.SignMode)
 		if err != nil {
 			return err
 		}
@@ -87,7 +87,7 @@ func VerifySignature(
 			return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
 		}
 		err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
-			signMode, err := internalSignModeToAPI(mode)
+			signMode, err := InternalSignModeToAPI(mode)
 			if err != nil {
 				return nil, err
 			}

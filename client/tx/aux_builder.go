@@ -216,6 +216,21 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 	sd.BodyBytes = bodyBz
 
+	// validate basic
+	if len(bodyBz) == 0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("body bytes cannot be empty")
+	}
+
+	if sd.PublicKey == nil {
+		return nil, sdkerrors.ErrInvalidPubKey.Wrap("public key cannot be empty")
+	}
+
+	if sd.Tip != nil {
+		if sd.Tip.Tipper == "" {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap("tipper cannot be empty")
+		}
+	}
+
 	var signBz []byte
 	switch b.auxSignerData.Mode {
 	case signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX:

@@ -35,7 +35,7 @@ func GetSignBytesAdapter(
 	}
 	txData := adaptableTx.GetSigningTxData()
 
-	txSignMode, err := internalSignModeToAPI(mode)
+	txSignMode, err := InternalSignModeToAPI(mode)
 	if err != nil {
 		return nil, err
 	}

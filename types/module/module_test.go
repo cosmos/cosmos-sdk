@@ -103,38 +103,35 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 func TestAssertNoForgottenModules(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	mockAppModule1 := mock.NewMockEndBlockAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockBeginBlockAppModule(mockCtrl)
+	mockAppModule1 := mock.NewMockHasABCIEndblock(mockCtrl)
 	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(
 		mockAppModule1,
-		mockAppModule2,
 		module.CoreAppModuleBasicAdaptor("module3", mockAppModule3),
 	)
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
-	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderInitGenesis)
+	require.Equal(t, []string{"module1", "module3"}, mm.OrderInitGenesis)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderInitGenesis, missing: [module3]", func() {
-		mm.SetOrderInitGenesis("module2", "module1")
+		mm.SetOrderInitGenesis("module1")
 	})
 
-	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderExportGenesis)
+	require.Equal(t, []string{"module1", "module3"}, mm.OrderExportGenesis)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderExportGenesis, missing: [module3]", func() {
-		mm.SetOrderExportGenesis("module2", "module1")
+		mm.SetOrderExportGenesis("module1")
 	})
 
-	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
+	require.Equal(t, []string{"module1", "module3"}, mm.OrderBeginBlockers)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderBeginBlockers, missing: [module2]", func() {
 		mm.SetOrderBeginBlockers("module1", "module3")
 	})
 
-	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
+	require.Equal(t, []string{"module1", "module3"}, mm.OrderEndBlockers)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderEndBlockers, missing: [module1]", func() {
-		mm.SetOrderEndBlockers("module2", "module3")
+		mm.SetOrderEndBlockers("module3")
 	})
 }
 

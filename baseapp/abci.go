@@ -209,19 +209,8 @@ func (app *BaseApp) ListSnapshots(_ context.Context, req *abci.RequestListSnapsh
 		abciSnapshot, err := snapshot.ToABCI()
 		if err != nil {
 			app.logger.Error("failed to list snapshots", "err", err)
-			return nil, err
+			return resp, err
 		}
-<<<<<<< HEAD
-||||||| 9dc7b60541
-		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
-	}
-	// set the signed validators for addition to context in deliverTx
-	app.voteInfos = req.LastCommitInfo.GetVotes()
-=======
-		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
-	}
->>>>>>> main
-
 		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
 	}
 
@@ -411,15 +400,9 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-<<<<<<< HEAD
 		WithProposer(req.ProposerAddress).
-		WithExecMode(sdk.ExecModePrepareProposal)
-||||||| 9dc7b60541
-		WithProposer(req.ProposerAddress)
-=======
-		WithProposer(req.ProposerAddress).
+		WithExecMode(sdk.ExecModePrepareProposal).
 		WithCometInfo(prepareProposalInfo{req})
->>>>>>> main
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -498,15 +481,9 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-<<<<<<< HEAD
 		WithProposer(req.ProposerAddress).
+		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit}).
 		WithExecMode(sdk.ExecModeProcessProposal)
-||||||| 9dc7b60541
-		WithProposer(req.ProposerAddress)
-=======
-		WithProposer(req.ProposerAddress).
-		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit})
->>>>>>> main
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
@@ -653,8 +630,6 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		))
 	}
 
-	app.voteInfos = req.DecidedLastCommit.Votes
-
 	header := cmtproto.Header{
 		ChainID:            app.chainID,
 		Height:             req.Height,
@@ -683,7 +658,6 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
 		WithVoteInfos(req.DecidedLastCommit.Votes).
-		WithMisbehavior(req.Misbehavior).
 		WithExecMode(sdk.ExecModeFinalize)
 
 	if app.checkState != nil {
@@ -745,7 +719,7 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	if app.precommiter != nil {
-		app.precommiter(app.deliverState.ctx)
+		app.precommiter(app.finalizeBlockState.ctx)
 	}
 
 	rms, ok := app.cms.(*rootmulti.Store)
@@ -753,27 +727,7 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 		rms.SetCommitHeader(header)
 	}
 
-<<<<<<< HEAD
 	resp := &abci.ResponseCommit{
-||||||| 9dc7b60541
-	// Write the DeliverTx state into branched storage and commit the MultiStore.
-	// The write to the DeliverTx state writes all state transitions to the root
-	// MultiStore (app.cms) so when Commit() is called is persists those values.
-	app.deliverState.ms.Write()
-	commitID := app.cms.Commit()
-
-	res := abci.ResponseCommit{
-		Data:         commitID.Hash,
-=======
-	// Write the DeliverTx state into branched storage and commit the MultiStore.
-	// The write to the DeliverTx state writes all state transitions to the root
-	// MultiStore (app.cms) so when Commit() is called it persists those values.
-	app.deliverState.ms.Write()
-	commitID := app.cms.Commit()
-
-	res := abci.ResponseCommit{
-		Data:         commitID.Hash,
->>>>>>> main
 		RetainHeight: retainHeight,
 	}
 
@@ -1193,4 +1147,20 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	}
 
 	return retentionHeight
+}
+
+// toVoteInfo converts the new ExtendedVoteInfo to VoteInfo.
+func toVoteInfo(votes []abci.ExtendedVoteInfo) []abci.VoteInfo {
+	legacyVotes := make([]abci.VoteInfo, len(votes))
+	for i, vote := range votes {
+		legacyVotes[i] = abci.VoteInfo{
+			Validator: abci.Validator{
+				Address: vote.Validator.Address,
+				Power:   vote.Validator.Power,
+			},
+			BlockIdFlag: vote.BlockIdFlag,
+		}
+	}
+
+	return legacyVotes
 }

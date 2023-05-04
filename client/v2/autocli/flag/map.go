@@ -3,10 +3,11 @@ package flag
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"strings"
 )
 
 func bindSimpleMapFlag(flagSet *pflag.FlagSet, keyKind protoreflect.Kind, valueKind protoreflect.Kind, name, shorthand, usage string) HasValue {
@@ -204,7 +205,6 @@ func (m *compositeMapValue[T]) Set(s string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(keyValue)
 
 	simpleVal := m.valueType.NewValue(m.ctx, m.opts)
 	err = simpleVal.Set(val)

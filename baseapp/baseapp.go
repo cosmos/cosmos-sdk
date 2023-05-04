@@ -7,10 +7,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -19,6 +15,11 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
+
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/snapshots"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -578,7 +579,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 	}
 	ctx := modeState.ctx.
 		WithTxBytes(txBytes)
-		// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
+	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
@@ -738,7 +739,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
-	result, err = app.runMsgs(runMsgCtx, msgs, tx.GetMsgsV2(), mode)
+	msgsV2, err := tx.GetMsgsV2()
+	if err == nil {
+		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
+	}
 	if err == nil {
 		// Run optional postHandlers.
 		//

@@ -2,13 +2,14 @@ package flag
 
 import (
 	"context"
+	"strconv"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/util"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"strconv"
 )
 
 // namingOptions specifies internal naming options for flags.
@@ -17,6 +18,7 @@ type namingOptions struct {
 	Prefix string
 }
 
+// addFieldFlag adds a flag for the provided field to the flag set.
 func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options namingOptions) (name string, hasValue HasValue, err error) {
 	if opts == nil {
 		opts = &autocliv1.FlagOptions{}
@@ -68,7 +70,6 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 		val = bindSimpleMapFlag(flagSet, keyKind, valKind, name, shorthand, usage)
 	} else {
 		val = bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage)
-
 	}
 
 	// This is a bit of hacking around the pflag API, but the
@@ -107,6 +108,7 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 				}
 				ct.valueType = valType
 				ct.keyType = "int32"
+				return ct
 			case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 				ct := new(compositeMapType[int64])
 				ct.keyValueResolver = func(s string) (int64, error) {
@@ -115,6 +117,7 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 				}
 				ct.valueType = valType
 				ct.keyType = "int64"
+				return ct
 			case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
 				ct := new(compositeMapType[uint32])
 				ct.keyValueResolver = func(s string) (uint32, error) {
@@ -123,6 +126,7 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 				}
 				ct.valueType = valType
 				ct.keyType = "uint32"
+				return ct
 			case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
 				ct := new(compositeMapType[uint64])
 				ct.keyValueResolver = func(s string) (uint64, error) {
@@ -131,12 +135,13 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 				}
 				ct.valueType = valType
 				ct.keyType = "uint64"
+				return ct
 			case protoreflect.BoolKind:
 				ct := new(compositeMapType[bool])
 				ct.keyValueResolver = strconv.ParseBool
 				ct.valueType = valType
 				ct.keyType = "bool"
-
+				return ct
 			}
 			return nil
 

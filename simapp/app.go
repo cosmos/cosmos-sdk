@@ -9,11 +9,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/log"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -529,6 +530,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  app.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SigningContext:  txConfig.SigningContext(),
 		},
 	)
 	if err != nil {

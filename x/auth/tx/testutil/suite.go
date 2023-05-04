@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -74,8 +75,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 	s.Require().NoError(err)
 	tx := txBuilder.GetTx()
 	s.Require().Equal(msgs, tx.GetMsgs())
-	s.Require().Equal([]sdk.AccAddress{addr1, addr2}, tx.GetSigners())
-	s.Require().Equal(addr1.String(), tx.FeePayer())
+	s.Require().Equal([][]byte{addr1, addr2}, tx.GetSigners())
+	s.Require().Equal([]byte(addr1), tx.FeePayer())
 	s.Require().Error(tx.ValidateBasic()) // should fail because of no signatures
 }
 
@@ -127,7 +128,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Len(sigsV2, 2)
 	s.Require().True(sigEquals(sig1, sigsV2[0]))
 	s.Require().True(sigEquals(msig, sigsV2[1]))
-	s.Require().Equal([]sdk.AccAddress{addr, msigAddr}, sigTx.GetSigners())
+	s.Require().Equal([][]byte{addr, msigAddr}, sigTx.GetSigners())
 	s.Require().NoError(sigTx.ValidateBasic())
 
 	// sign transaction
@@ -178,7 +179,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Len(sigsV2, 2)
 	s.Require().True(sigEquals(sig1, sigsV2[0]))
 	s.Require().True(sigEquals(msig, sigsV2[1]))
-	s.Require().Equal([]sdk.AccAddress{addr, msigAddr}, sigTx.GetSigners())
+	s.Require().Equal([][]byte{addr, msigAddr}, sigTx.GetSigners())
 	s.Require().NoError(sigTx.ValidateBasic())
 }
 

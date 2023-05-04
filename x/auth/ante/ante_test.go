@@ -119,7 +119,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 				require.NoError(t, err)
 
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
-				expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
+				expectedSigners := [][]byte{addr0, addr1, addr2}
 				require.Equal(t, expectedSigners, tx.GetSigners())
 
 				return TestCaseArgs{
@@ -1328,6 +1328,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 								return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 							}
 						},
+						SigningContext: suite.clientCtx.TxConfig.SigningContext(),
 					},
 				)
 				require.NoError(t, err)

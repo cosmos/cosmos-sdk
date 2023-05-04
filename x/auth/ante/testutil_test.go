@@ -100,6 +100,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 			FeegrantKeeper:  suite.feeGrantKeeper,
 			SignModeHandler: suite.encCfg.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SigningContext:  suite.encCfg.TxConfig.SigningContext(),
 		},
 	)
 

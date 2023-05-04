@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
+
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -49,12 +50,14 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 // PubKeys must be set in context for all signers before any other sigverify decorators run
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SetPubKeyDecorator struct {
-	ak AccountKeeper
+	ak         AccountKeeper
+	signingCtx *txsigning.Context
 }
 
-func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
+func NewSetPubKeyDecorator(ak AccountKeeper, signingCtx *txsigning.Context) SetPubKeyDecorator {
 	return SetPubKeyDecorator{
-		ak: ak,
+		ak:         ak,
+		signingCtx: signingCtx,
 	}
 }
 
@@ -80,8 +83,13 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 		// Only make check if simulate=false
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
+			signerStr, err := spkd.signingCtx.AddressCodec().BytesToString(signers[i])
+			if err != nil {
+				return sdk.Context{}, err
+			}
+
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
-				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
+				"pubKey does not match signer address %s with signer index: %d", signerStr, i)
 		}
 
 		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])

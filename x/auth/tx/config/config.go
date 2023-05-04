@@ -10,8 +10,9 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
+	"cosmossdk.io/core/appmodule"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
@@ -133,6 +134,7 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  in.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SigningContext:  txConfig.SigningContext(),
 		},
 	)
 	if err != nil {

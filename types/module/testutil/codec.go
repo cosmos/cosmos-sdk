@@ -44,7 +44,7 @@ func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig
 }
 
 func MakeTestTxConfig() client.TxConfig {
-	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	return tx.NewTxConfig(cdc, tx.DefaultSignModes)
 }

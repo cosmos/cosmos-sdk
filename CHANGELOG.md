@@ -182,11 +182,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * The signature of `NewSigVerificationDecorator` has been changed to accept a `x/tx/signing.HandlerMap`.
     * The signature of `VerifySignature` has been changed to accept a `x/tx/signing.HandlerMap` and other structs from `x/tx` as arguments.
     * The signature of `NewTxConfigWithTextual` has been deprecated and its signature changed to accept a `SignModeOptions`.
-* (x/genutil) [#15999](https://github.com/cosmos/cosmos-sdk/pull/15999) Genutil now takes the `GenesisTxHanlder` interface instead of deliverTx. The interface is implemented on baseapp
+* (x/genutil) [#15999](https://github.com/cosmos/cosmos-sdk/pull/15999) Genutil now takes the `GenesisTxHandler` interface instead of deliverTx. The interface is implemented on baseapp
 * [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284)
   * `sdk.Msg.GetSigners` was deprecated and no longer supported. Use the `cosmos.msg.v1.signer` protobuf annotation instead.
   * `types/tx.Tx` no longer implements `sdk.Tx`.
   * `sdk.Tx` now requires a new methods `GetMsgsV2()`.
+  * `ante.HandlerOptions` has a new required field  `SigningContext *signing.Context`
+  * `ante.NewSetPubKeyDecorator` now requires `*signing.Context`
+  * `TxConfig` has a new method `SigningContext() *signing.Context`
 * (x/authx) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
 * (x/gov) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
 

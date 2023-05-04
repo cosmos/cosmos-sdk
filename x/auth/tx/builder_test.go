@@ -259,21 +259,21 @@ func TestBuilderFeePayer(t *testing.T) {
 
 	cases := map[string]struct {
 		txFeePayer      sdk.AccAddress
-		expectedSigners []sdk.AccAddress
-		expectedPayer   sdk.AccAddress
+		expectedSigners [][]byte
+		expectedPayer   []byte
 	}{
 		"no fee payer specified": {
-			expectedSigners: []sdk.AccAddress{addr1, addr2},
+			expectedSigners: [][]byte{addr1, addr2},
 			expectedPayer:   addr1,
 		},
 		"secondary signer set as fee payer": {
 			txFeePayer:      addr2,
-			expectedSigners: []sdk.AccAddress{addr1, addr2},
+			expectedSigners: [][]byte{addr1, addr2},
 			expectedPayer:   addr2,
 		},
 		"outside signer set as fee payer": {
 			txFeePayer:      addr3,
-			expectedSigners: []sdk.AccAddress{addr1, addr2, addr3},
+			expectedSigners: [][]byte{addr1, addr2, addr3},
 			expectedPayer:   addr3,
 		},
 	}
@@ -281,7 +281,7 @@ func TestBuilderFeePayer(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// setup basic tx
-			txBuilder := newBuilder(nil)
+			txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
 			err := txBuilder.SetMsgs(msgs...)
 			require.NoError(t, err)
 			txBuilder.SetGasLimit(200000)
@@ -315,5 +315,5 @@ func TestBuilderFeeGranter(t *testing.T) {
 
 	// set fee granter
 	txBuilder.SetFeeGranter(addr1)
-	require.Equal(t, addr1, txBuilder.GetTx().FeeGranter())
+	require.Equal(t, addr1.String(), txBuilder.GetTx().FeeGranter())
 }

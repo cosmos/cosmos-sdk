@@ -5,8 +5,13 @@ import (
 	"math/rand"
 	"time"
 
+	"google.golang.org/protobuf/types/known/anypb"
+
+	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	_ "github.com/cosmos/cosmos-sdk/testutil/api"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -94,11 +99,20 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 		moduleName = msgType
 	}
 
-	//if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
-	//	return NewOperationMsgBasic(moduleName, msgType, comment, ok, legacyMsg.GetSignBytes())
-	//}
+	anyMsg, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+	encoder := aminojson.NewAminoJSON()
+	msgBytes, err := encoder.Marshal(&anypb.Any{
+		TypeUrl: anyMsg.TypeUrl,
+		Value:   anyMsg.Value,
+	})
+	if err != nil {
+		panic(err)
+	}
 
-	return NewOperationMsgBasic(moduleName, msgType, comment, ok, cdc.MustMarshalJSON(msg))
+	return NewOperationMsgBasic(moduleName, msgType, comment, ok, msgBytes)
 }
 
 // NoOpMsg - create a no-operation message

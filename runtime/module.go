@@ -6,18 +6,19 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -86,10 +87,11 @@ func ProvideApp() (
 	protoregistry.MessageTypeResolver,
 	error,
 ) {
-	protoFiles, err := proto.MergedRegistry()
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
+	//protoFiles, err := proto.MergedRegistry()
+	protoFiles := proto.HybridResolver
+	//if err != nil {
+	//	return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+	//}
 	protoTypes := protoregistry.GlobalTypes
 
 	// At startup, check that all proto annotations are correct.

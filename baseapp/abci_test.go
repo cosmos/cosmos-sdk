@@ -626,7 +626,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	app.InitChain(abci.RequestInitChain{
+	app.InitChain(context.TODO(), &abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
 
@@ -636,7 +636,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 	})
 	app.Seal()
 
-	app.Commit()
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 	require.Equal(t, true, wasPrepareCheckStateCalled)
 }
 
@@ -653,7 +653,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	app.InitChain(abci.RequestInitChain{
+	app.InitChain(context.TODO(), &abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
 
@@ -663,7 +663,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 	})
 	app.Seal()
 
-	app.Commit()
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 	require.Equal(t, true, wasPrecommiterCalled)
 }
 
@@ -1434,8 +1434,8 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 		wasPrepareCheckStateCalled = true
 	})
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
-	app.Commit()
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	require.Equal(t, true, wasPrepareCheckStateCalled)
 }
@@ -1456,8 +1456,8 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 		wasPrecommiterCalled = true
 	})
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
-	app.Commit()
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	require.Equal(t, true, wasPrecommiterCalled)
 }

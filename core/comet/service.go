@@ -61,8 +61,18 @@ type VoteInfos interface {
 	Get(int) VoteInfo
 }
 
+// BlockIdFlag indicates which BlockID the signature is for
+type BlockIDFlag int32
+
+const (
+	BlockIDFlagUnknown BlockIDFlag = 0
+	BlockIDFlagAbsent  BlockIDFlag = 1
+	BlockIDFlagCommit  BlockIDFlag = 2
+	BlockIDFlagNil     BlockIDFlag = 3
+)
+
 // VoteInfo is the vote information of ABCI
 type VoteInfo interface {
 	Validator() Validator
-	SignedLastBlock() bool
+	GetBlockIdFlag() BlockIDFlag
 }

@@ -147,14 +147,9 @@ func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx,
 	for i := 0; i < len(ops); i++ {
 		op := ops[i]
 
-		protoMessage, err := c.ir.Resolve(op.Type)
+		msg, err := c.ir.Resolve(op.Type)
 		if err != nil {
 			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "operation not found: "+op.Type)
-		}
-
-		msg, ok := protoMessage.(sdk.Msg)
-		if !ok {
-			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "operation is not a valid supported sdk.Msg: "+op.Type)
 		}
 
 		err = c.Msg(op.Metadata, msg)
@@ -626,7 +621,7 @@ func (c converter) OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation,
 		})
 	}
 
-	return
+	return ops, signers, nil
 }
 
 func (c converter) SignedTx(txBytes []byte, signatures []*rosettatypes.Signature) (signedTxBytes []byte, err error) {

@@ -186,9 +186,6 @@ func TestEverything(t *testing.T) {
 		"--uints", "1,2,3",
 		"--uints", "4",
 	)
-	errOut := conn.errorOut.String()
-	res := conn.out.String()
-	fmt.Println(errOut, res)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 

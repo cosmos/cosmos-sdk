@@ -69,7 +69,11 @@ func printAndValidateSigs(
 	addrCdc := clientCtx.TxConfig.SigningContext().AddressCodec()
 
 	cmd.Println("Signers:")
-	signers := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		panic(err)
+	}
+
 	for i, signer := range signers {
 		signerStr, err := addrCdc.BytesToString(signer)
 		if err != nil {

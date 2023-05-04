@@ -103,8 +103,8 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
-func (msg *KVStoreTx) GetMsgsV2() []protov2.Message {
-	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}} // this is a hack for tests
+func (msg *KVStoreTx) GetMsgsV2() ([]protov2.Message, error) {
+	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}}, nil // this is a hack for tests
 }
 
 func (msg *KVStoreTx) GetSignBytes() []byte {
@@ -116,8 +116,8 @@ func (msg *KVStoreTx) ValidateBasic() error {
 	return nil
 }
 
-func (msg *KVStoreTx) GetSigners() [][]byte {
-	return nil
+func (msg *KVStoreTx) GetSigners() ([][]byte, error) {
+	return nil, nil
 }
 
 func (msg *KVStoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }

@@ -11,7 +11,7 @@ import (
 // handlers.
 type SigVerifiableTx interface {
 	types.Tx
-	GetSigners() [][]byte
+	GetSigners() ([][]byte, error)
 	GetPubKeys() ([]cryptotypes.PubKey, error) // If signer already has pubkey in context, this list will have nil in its place
 	GetSignaturesV2() ([]signing.SignatureV2, error)
 }

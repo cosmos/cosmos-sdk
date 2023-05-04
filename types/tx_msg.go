@@ -52,7 +52,7 @@ type (
 		HasMsgs
 
 		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
-		GetMsgsV2() []protov2.Message
+		GetMsgsV2() ([]protov2.Message, error)
 	}
 
 	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators

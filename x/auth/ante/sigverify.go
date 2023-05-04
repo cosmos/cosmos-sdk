@@ -71,7 +71,11 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if err != nil {
 		return ctx, err
 	}
-	signers := sigTx.GetSigners()
+
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return sdk.Context{}, err
+	}
 
 	for i, pk := range pubkeys {
 		// PublicKey was omitted from slice since it has already been set in context
@@ -178,7 +182,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
-	signers := sigTx.GetSigners()
+	signers, _ := sigTx.GetSigners()
 
 	for i, sig := range sigs {
 		signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signers[i])
@@ -263,7 +267,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, err
 	}
 
-	signers := sigTx.GetSigners()
+	signers, _ := sigTx.GetSigners()
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signers) {
@@ -362,7 +366,12 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	// increment sequence of all signers
-	for _, signer := range sigTx.GetSigners() {
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	for _, signer := range signers {
 		acc := isd.ak.GetAccount(ctx, signer)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
 			panic(err)

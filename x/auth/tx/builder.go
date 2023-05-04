@@ -8,6 +8,7 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -39,6 +40,7 @@ type wrapper struct {
 
 	signers [][]byte
 	msgsV2  []protov2.Message
+	err     error
 }
 
 var (
@@ -75,12 +77,12 @@ func (w *wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
 }
 
-func (w *wrapper) GetMsgsV2() []protov2.Message {
+func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
 	if w.msgsV2 == nil {
 		w.initSignersAndMsgsV2()
 	}
 
-	return w.msgsV2
+	return w.msgsV2, w.err
 }
 
 func (w *wrapper) ValidateBasic() error {
@@ -137,7 +139,7 @@ func (w *wrapper) ValidateBasic() error {
 		return sdkerrors.ErrNoSignatures
 	}
 
-	signers := w.GetSigners()
+	signers, _ := w.GetSigners()
 	if len(sigs) != len(signers) {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
@@ -181,18 +183,14 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 }
 
 func (w *wrapper) initSignersAndMsgsV2() {
-	var err error
-	w.signers, w.msgsV2, err = w.tx.GetSigners(w.cdc)
-	if err != nil {
-		panic(err)
-	}
+	w.signers, w.msgsV2, w.err = w.tx.GetSigners(w.cdc)
 }
 
-func (w *wrapper) GetSigners() [][]byte {
+func (w *wrapper) GetSigners() ([][]byte, error) {
 	if w.signers == nil {
 		w.initSignersAndMsgsV2()
 	}
-	return w.signers
+	return w.signers, w.err
 }
 
 func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
@@ -235,8 +233,14 @@ func (w *wrapper) FeePayer() []byte {
 		}
 		return feePayerAddr
 	}
+
 	// use first signer as default if no payer specified
-	return w.GetSigners()[0]
+	signers, err := w.GetSigners()
+	if err != nil {
+		return nil
+	}
+
+	return signers[0]
 }
 
 func (w *wrapper) FeeGranter() string {
@@ -412,8 +416,13 @@ func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 }
 
 func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
+	signers, err := w.GetSigners()
+	if err != nil {
+		panic(err)
+	}
+
 	if w.tx.AuthInfo.SignerInfos == nil {
-		w.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, len(w.GetSigners()))
+		w.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, len(signers))
 	}
 
 	w.tx.AuthInfo.SignerInfos[index] = info
@@ -426,8 +435,13 @@ func (w *wrapper) setSignatures(sigs [][]byte) {
 }
 
 func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
+	signers, err := w.GetSigners()
+	if err != nil {
+		panic(err)
+	}
+
 	if w.tx.Signatures == nil {
-		w.tx.Signatures = make([][]byte, len(w.GetSigners()))
+		w.tx.Signatures = make([][]byte, len(signers))
 	}
 
 	w.tx.Signatures[index] = sig
@@ -547,7 +561,12 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 
 	// Get the aux signer's index in GetSigners.
 	signerIndex := -1
-	for i, signer := range w.GetSigners() {
+	signers, err := w.GetSigners()
+	if err != nil {
+		return err
+	}
+
+	for i, signer := range signers {
 		addrBz, err := w.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(data.Address)
 		if err != nil {
 			return err

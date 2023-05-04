@@ -609,7 +609,12 @@ func (c converter) OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation,
 		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
 	}
 
-	for _, signer := range txBuilder.GetTx().GetSigners() {
+	signerAddrs, err := txBuilder.GetTx().GetSigners()
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+	}
+
+	for _, signer := range signerAddrs {
 		var signerStr string
 		signerStr, err = c.ir.SigningContext().AddressCodec().BytesToString(signer)
 		if err != nil {
@@ -697,7 +702,11 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 		return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
 	}
 
-	signers := tx.GetSigners()
+	signers, err := tx.GetSigners()
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+	}
+
 	// assert the signers data provided in options are the same as the expected signing accounts
 	// and that the number of rosetta provided public keys equals the one of the signers
 	if len(metadata.SignersData) != len(signers) || len(signers) != len(rosPubKeys) {

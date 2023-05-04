@@ -211,6 +211,16 @@ func (app *BaseApp) ListSnapshots(_ context.Context, req *abci.RequestListSnapsh
 			app.logger.Error("failed to list snapshots", "err", err)
 			return nil, err
 		}
+<<<<<<< HEAD
+||||||| 9dc7b60541
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
+	}
+	// set the signed validators for addition to context in deliverTx
+	app.voteInfos = req.LastCommitInfo.GetVotes()
+=======
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
+	}
+>>>>>>> main
 
 		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
 	}
@@ -398,11 +408,18 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 	}
 
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
-		WithVoteInfos(app.voteInfos).
+		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
+<<<<<<< HEAD
 		WithProposer(req.ProposerAddress).
 		WithExecMode(sdk.ExecModePrepareProposal)
+||||||| 9dc7b60541
+		WithProposer(req.ProposerAddress)
+=======
+		WithProposer(req.ProposerAddress).
+		WithCometInfo(prepareProposalInfo{req})
+>>>>>>> main
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -477,12 +494,19 @@ func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessP
 	}
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
-		WithVoteInfos(app.voteInfos).
+		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
+<<<<<<< HEAD
 		WithProposer(req.ProposerAddress).
 		WithExecMode(sdk.ExecModeProcessProposal)
+||||||| 9dc7b60541
+		WithProposer(req.ProposerAddress)
+=======
+		WithProposer(req.ProposerAddress).
+		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit})
+>>>>>>> main
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
@@ -720,12 +744,36 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 	header := app.finalizeBlockState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
+	if app.precommiter != nil {
+		app.precommiter(app.deliverState.ctx)
+	}
+
 	rms, ok := app.cms.(*rootmulti.Store)
 	if ok {
 		rms.SetCommitHeader(header)
 	}
 
+<<<<<<< HEAD
 	resp := &abci.ResponseCommit{
+||||||| 9dc7b60541
+	// Write the DeliverTx state into branched storage and commit the MultiStore.
+	// The write to the DeliverTx state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called is persists those values.
+	app.deliverState.ms.Write()
+	commitID := app.cms.Commit()
+
+	res := abci.ResponseCommit{
+		Data:         commitID.Hash,
+=======
+	// Write the DeliverTx state into branched storage and commit the MultiStore.
+	// The write to the DeliverTx state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called it persists those values.
+	app.deliverState.ms.Write()
+	commitID := app.cms.Commit()
+
+	res := abci.ResponseCommit{
+		Data:         commitID.Hash,
+>>>>>>> main
 		RetainHeight: retainHeight,
 	}
 
@@ -749,6 +797,10 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 	app.setState(execModeCheck, header)
 
 	app.finalizeBlockState = nil
+
+	if app.prepareCheckStater != nil {
+		app.prepareCheckStater(app.checkState.ctx)
+	}
 
 	var halt bool
 	switch {

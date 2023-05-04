@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	evidencetypes "cosmossdk.io/x/evidence/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -21,19 +20,14 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -49,12 +43,6 @@ var FlagEnableStreamingValue bool
 func init() {
 	simcli.GetSimulatorFlags()
 	flag.BoolVar(&FlagEnableStreamingValue, "EnableStreaming", false, "Enable streaming service")
-}
-
-type StoreKeysPrefixes struct {
-	A        storetypes.StoreKey
-	B        storetypes.StoreKey
-	Prefixes [][]byte
 }
 
 // fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
@@ -198,35 +186,39 @@ func TestAppImportExport(t *testing.T) {
 
 	fmt.Printf("comparing stores...\n")
 
-	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.GetKey(authtypes.StoreKey), newApp.GetKey(authtypes.StoreKey), [][]byte{}},
-		{
-			app.GetKey(stakingtypes.StoreKey), newApp.GetKey(stakingtypes.StoreKey),
-			[][]byte{
-				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
-				stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
-			},
-		}, // ordering may change but it doesn't matter
-		{app.GetKey(slashingtypes.StoreKey), newApp.GetKey(slashingtypes.StoreKey), [][]byte{}},
-		{app.GetKey(minttypes.StoreKey), newApp.GetKey(minttypes.StoreKey), [][]byte{}},
-		{app.GetKey(distrtypes.StoreKey), newApp.GetKey(distrtypes.StoreKey), [][]byte{}},
-		{app.GetKey(banktypes.StoreKey), newApp.GetKey(banktypes.StoreKey), [][]byte{banktypes.BalancesPrefix}},
-		{app.GetKey(paramtypes.StoreKey), newApp.GetKey(paramtypes.StoreKey), [][]byte{}},
-		{app.GetKey(govtypes.StoreKey), newApp.GetKey(govtypes.StoreKey), [][]byte{}},
-		{app.GetKey(evidencetypes.StoreKey), newApp.GetKey(evidencetypes.StoreKey), [][]byte{}},
-		{app.GetKey(authzkeeper.StoreKey), newApp.GetKey(authzkeeper.StoreKey), [][]byte{authzkeeper.GrantKey, authzkeeper.GrantQueuePrefix}},
+	// skip certain prefixes
+	skipPrefixes := map[string][][]byte{
+		stakingtypes.StoreKey: {
+			stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
+			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
+			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
+		},
+		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
+		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
+		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
 	}
 
-	for _, skp := range storeKeysPrefixes {
-		storeA := ctxA.KVStore(skp.A)
-		storeB := ctxB.KVStore(skp.B)
+	storeKeys := app.GetStoreKeys()
+	require.NotEmpty(t, storeKeys)
 
-		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skp.Prefixes)
-		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
+	for _, appKeyA := range storeKeys {
+		// only compare kvstores
+		if _, ok := appKeyA.(*storetypes.KVStoreKey); !ok {
+			continue
+		}
 
-		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
+		keyName := appKeyA.Name()
+		appKeyB := newApp.GetKey(keyName)
 
-		require.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+		storeA := ctxA.KVStore(appKeyA)
+		storeB := ctxB.KVStore(appKeyB)
+
+		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
+		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare %s", keyName)
+
+		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
+
+		require.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 	}
 }
 
@@ -334,6 +326,11 @@ func TestAppStateDeterminism(t *testing.T) {
 	numTimesToRunPerSeed := 3 // This used to be set to 5, but we've temporarily reduced it to 3 for the sake of faster CI.
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
+	// We will be overriding the random seed and just run a single simulation on the provided seed value
+	if config.Seed != simcli.DefaultSeedValue {
+		numSeeds = 1
+	}
+
 	appOptions := viper.New()
 	if FlagEnableStreamingValue {
 		m := make(map[string]interface{})
@@ -351,7 +348,11 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 
 	for i := 0; i < numSeeds; i++ {
-		config.Seed = rand.Int63()
+		if config.Seed == simcli.DefaultSeedValue {
+			config.Seed = rand.Int63()
+		}
+
+		fmt.Println("config.Seed: ", config.Seed)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger

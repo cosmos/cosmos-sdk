@@ -10,7 +10,6 @@ import (
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -88,16 +87,17 @@ func initFixture(t testing.TB) *fixture {
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
-		keys[banktypes.StoreKey],
+		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
+		log.NewNopLogger(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, keys[distrtypes.StoreKey], accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
@@ -150,7 +150,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)}),
 	})
 	f.distrKeeper.SetParams(f.sdkCtx, distrtypes.DefaultParams())
-	initFeePool := f.distrKeeper.GetFeePool(f.sdkCtx)
+	initFeePool, err := f.distrKeeper.GetFeePool(f.sdkCtx)
+	assert.NilError(t, err)
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
@@ -194,7 +195,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, f.valAddr, currentRewards)
 	f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
-	initOutstandingRewards := f.distrKeeper.GetValidatorOutstandingRewardsCoins(f.sdkCtx, f.valAddr)
+	initOutstandingRewards, err := f.distrKeeper.GetValidatorOutstandingRewardsCoins(f.sdkCtx, f.valAddr)
+	assert.NilError(t, err)
 
 	testCases := []struct {
 		name      string
@@ -257,9 +259,10 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		},
 	}
 	height := f.app.LastBlockHeight()
-	require.Panics(t, func() {
-		f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-	})
+
+	_, err = f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+	assert.Error(t, err, "previous proposer not set")
+
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -273,15 +276,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			if f.app.LastBlockHeight() != height {
 				panic(fmt.Errorf("expected block height to be %d, got %d", height, f.app.LastBlockHeight()))
 			}
-
-			prevProposerConsAddr := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-			assert.Assert(t, prevProposerConsAddr.Empty() == false)
-			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
-			var previousTotalPower int64
-			for _, voteInfo := range f.sdkCtx.VoteInfos() {
-				previousTotalPower += voteInfo.Validator.Power
-			}
-			assert.Equal(t, previousTotalPower, int64(100))
 
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -299,11 +293,21 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				assert.Assert(t, initBalance.IsAllLTE(curBalance))
 
 				// check rewards
-				curFeePool := f.distrKeeper.GetFeePool(f.sdkCtx)
+				curFeePool, _ := f.distrKeeper.GetFeePool(f.sdkCtx)
 				rewards := curFeePool.GetCommunityPool().Sub(initFeePool.CommunityPool)
-				curOutstandingRewards := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
+				curOutstandingRewards, _ := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
 				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
+
+			prevProposerConsAddr, err := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+			assert.NilError(t, err)
+			assert.Assert(t, prevProposerConsAddr.Empty() == false)
+			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
+			var previousTotalPower int64
+			for _, voteInfo := range f.sdkCtx.VoteInfos() {
+				previousTotalPower += voteInfo.Validator.Power
+			}
+			assert.Equal(t, previousTotalPower, int64(100))
 		})
 	}
 }
@@ -327,7 +331,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "empty delegator address",
 			preRun: func() {
-				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
 				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
 			},
@@ -341,7 +345,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "empty withdraw address",
 			preRun: func() {
-				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
 				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
 			},
@@ -355,7 +359,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "both empty addresses",
 			preRun: func() {
-				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
 				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
 			},
@@ -369,7 +373,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "withdraw address disabled",
 			preRun: func() {
-				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
 				params.WithdrawAddrEnabled = false
 				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
 			},
@@ -383,7 +387,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "valid msg with same delegator and withdraw address",
 			preRun: func() {
-				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
 				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
 			},
@@ -396,7 +400,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "valid msg",
 			preRun: func() {
-				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
 				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
 			},
@@ -420,7 +424,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 
 				// query the delegator withdraw address
-				addr := f.distrKeeper.GetDelegatorWithdrawAddr(f.sdkCtx, delAddr)
+				addr, _ := f.distrKeeper.GetDelegatorWithdrawAddr(f.sdkCtx, delAddr)
 				assert.DeepEqual(t, addr, delAddr)
 			} else {
 				assert.NilError(t, err)
@@ -432,7 +436,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 				assert.NilError(t, err)
 
 				// query the delegator withdraw address
-				addr := f.distrKeeper.GetDelegatorWithdrawAddr(f.sdkCtx, delAddr)
+				addr, _ := f.distrKeeper.GetDelegatorWithdrawAddr(f.sdkCtx, delAddr)
 				assert.DeepEqual(t, addr.String(), tc.msg.WithdrawAddress)
 			}
 		})
@@ -528,11 +532,11 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 				), balance)
 
 				// check remainder
-				remainder := f.distrKeeper.GetValidatorAccumulatedCommission(f.sdkCtx, f.valAddr).Commission
+				remainder, _ := f.distrKeeper.GetValidatorAccumulatedCommission(f.sdkCtx, f.valAddr)
 				assert.DeepEqual(t, sdk.DecCoins{
 					sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(1).Quo(math.LegacyNewDec(4))),
 					sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(2))),
-				}, remainder)
+				}, remainder.Commission)
 			}
 		})
 
@@ -545,7 +549,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 
 	// reset fee pool
 	f.distrKeeper.SetFeePool(f.sdkCtx, distrtypes.InitialFeePool())
-	initPool := f.distrKeeper.GetFeePool(f.sdkCtx)
+	initPool, _ := f.distrKeeper.GetFeePool(f.sdkCtx)
 	assert.Assert(t, initPool.CommunityPool.Empty())
 
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(100))
@@ -623,7 +627,8 @@ func TestMsgFundCommunityPool(t *testing.T) {
 				assert.NilError(t, err)
 
 				// query the community pool funds
-				assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), f.distrKeeper.GetFeePool(f.sdkCtx).CommunityPool)
+				feePool, _ := f.distrKeeper.GetFeePool(f.sdkCtx)
+				assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
 				assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, addr).Empty())
 			}
 		})
@@ -749,7 +754,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				assert.NilError(t, err)
 
 				// query the params and verify it has been updated
-				params := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
 				assert.DeepEqual(t, distrtypes.DefaultParams(), params)
 			}
 		})
@@ -764,7 +769,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 	f.distrKeeper.SetFeePool(f.sdkCtx, distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)}),
 	})
-	initialFeePool := f.distrKeeper.GetFeePool(f.sdkCtx)
+	initialFeePool, _ := f.distrKeeper.GetFeePool(f.sdkCtx)
 
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(100))
 	f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
@@ -827,7 +832,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 				assert.NilError(t, err)
 
 				// query the community pool to verify it has been updated
-				communityPool := f.distrKeeper.GetFeePoolCommunityCoins(f.sdkCtx)
+				communityPool, _ := f.distrKeeper.GetFeePoolCommunityCoins(f.sdkCtx)
 				newPool, negative := initialFeePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(tc.msg.Amount...))
 				assert.Assert(t, negative == false)
 				assert.DeepEqual(t, communityPool, newPool)
@@ -927,7 +932,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 				assert.NilError(t, err)
 
 				// check validator outstanding rewards
-				outstandingRewards := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, val)
+				outstandingRewards, _ := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, val)
 				for _, c := range tc.msg.Amount {
 					x := outstandingRewards.Rewards.AmountOf(c.Denom)
 					assert.DeepEqual(t, x, sdk.NewDecFromInt(c.Amount))

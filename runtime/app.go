@@ -6,6 +6,8 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/log"
+
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"golang.org/x/exp/slices"
@@ -47,6 +49,7 @@ type App struct {
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
+	logger            log.Logger
 	// initChainer is the init chainer function defined by the app config.
 	// this is only required if the chain wants to add special InitChainer logic.
 	initChainer sdk.InitChainer
@@ -100,6 +103,16 @@ func (a *App) Load(loadLatest bool) error {
 		a.SetEndBlocker(a.EndBlocker)
 	}
 
+	if len(a.config.Precommiters) != 0 {
+		a.ModuleManager.SetOrderPrecommiters(a.config.Precommiters...)
+		a.SetPrecommiter(a.Precommiter)
+	}
+
+	if len(a.config.PrepareCheckStaters) != 0 {
+		a.ModuleManager.SetOrderPrepareCheckStaters(a.config.PrepareCheckStaters...)
+		a.SetPrepareCheckStater(a.PrepareCheckStater)
+	}
+
 	if len(a.config.OrderMigrations) != 0 {
 		a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
 	}
@@ -121,6 +134,16 @@ func (a *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 // EndBlocker application updates every end block
 func (a *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	return a.ModuleManager.EndBlock(ctx)
+}
+
+// Precommiter application updates every commit
+func (a *App) Precommiter(ctx sdk.Context) {
+	a.ModuleManager.Precommit(ctx)
+}
+
+// PrepareCheckStater application updates every commit
+func (a *App) PrepareCheckStater(ctx sdk.Context) {
+	a.ModuleManager.PrepareCheckState(ctx)
 }
 
 // InitChainer initializes the chain.

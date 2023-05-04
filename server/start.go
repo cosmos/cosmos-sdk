@@ -235,7 +235,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
 
-	svr.SetLogger(servercmtlog.CometZeroLogWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
@@ -330,7 +330,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 			genDocProvider,
 			cmtcfg.DefaultDBProvider,
 			node.DefaultMetricsProvider(cfg.Instrumentation),
-			servercmtlog.CometZeroLogWrapper{Logger: svrCtx.Logger},
+			servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
 		)
 		if err != nil {
 			return err

@@ -1,3 +1,5 @@
+//go:build app_v1
+
 package cmd
 
 import (
@@ -5,17 +7,16 @@ import (
 	"io"
 	"os"
 
-	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -29,6 +30,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -42,8 +44,7 @@ import (
 // main function.
 func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	// note, this is not necessary when using app wiring, as depinject can be directly used.
-	// for consistency between app-v1 and app-v2, we do it the same way via methods on simapp
+	// note, this is not necessary when using app wiring, as depinject can be directly used (see root_v2.go)
 	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir()))
 	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: tempApp.InterfaceRegistry(),
@@ -82,18 +83,12 @@ func NewRootCmd() *cobra.Command {
 
 			// This needs to go after ReadFromClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
-			//
-			// TODO Currently, the TxConfig below doesn't include Textual, so
-			// an error will arise when using the --textual flag.
-			// ref: https://github.com/cosmos/cosmos-sdk/issues/11970
-			txt, err := txmodule.NewTextualWithGRPCConn(initClientCtx)
-			if err != nil {
-				return err
+			txConfigOpts := tx.ConfigOptions{
+				TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
 			}
-			txConfigWithTextual := tx.NewTxConfigWithTextual(
+			txConfigWithTextual := tx.NewTxConfigWithOptions(
 				codec.NewProtoCodec(encodingConfig.InterfaceRegistry),
-				encodingConfig.TxConfig.SignModeHandler().Modes(),
-				txt,
+				txConfigOpts,
 			)
 			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
 
@@ -108,7 +103,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, encodingConfig)
+	initRootCmd(rootCmd, encodingConfig, tempApp.BasicModuleManager)
 
 	if err := tempApp.AutoCliOpts().EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -186,13 +181,13 @@ lru_size = 0`
 	return customAppTemplate, customAppConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, basicManager module.BasicManager) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
-		NewTestnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		genutilcli.InitCmd(basicManager, simapp.DefaultNodeHome),
+		NewTestnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		pruning.Cmd(newApp),
@@ -203,7 +198,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
-		genesisCommand(encodingConfig),
+		genesisCommand(encodingConfig, basicManager),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(simapp.DefaultNodeHome),
@@ -218,8 +213,8 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(encodingConfig params.EncodingConfig, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(encodingConfig.TxConfig, simapp.ModuleBasics, simapp.DefaultNodeHome)
+func genesisCommand(encodingConfig params.EncodingConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genutilcli.Commands(encodingConfig.TxConfig, basicManager, simapp.DefaultNodeHome)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
@@ -245,8 +240,6 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	simapp.ModuleBasics.AddQueryCommands(cmd)
-
 	return cmd
 }
 
@@ -270,8 +263,6 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 		authcmd.GetAuxToFeeCommand(),
 	)
-
-	simapp.ModuleBasics.AddTxCommands(cmd)
 
 	return cmd
 }

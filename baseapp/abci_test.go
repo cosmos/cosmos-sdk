@@ -613,6 +613,60 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 // 	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
 // }
 
+func TestBaseApp_PrepareCheckState(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := log.NewTestLogger(t)
+
+	cp := &cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxGas: 5000000,
+		},
+	}
+
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: cp,
+	})
+
+	wasPrepareCheckStateCalled := false
+	app.SetPrepareCheckStater(func(ctx sdk.Context) {
+		wasPrepareCheckStateCalled = true
+	})
+	app.Seal()
+
+	app.Commit()
+	require.Equal(t, true, wasPrepareCheckStateCalled)
+}
+
+func TestBaseApp_Precommit(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := log.NewTestLogger(t)
+
+	cp := &cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxGas: 5000000,
+		},
+	}
+
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: cp,
+	})
+
+	wasPrecommiterCalled := false
+	app.SetPrecommiter(func(ctx sdk.Context) {
+		wasPrecommiterCalled = true
+	})
+	app.Seal()
+
+	app.Commit()
+	require.Equal(t, true, wasPrecommiterCalled)
+}
+
 func TestABCI_CheckTx(t *testing.T) {
 	// This ante handler reads the key and checks that the value matches the
 	// current counter. This ensures changes to the KVStore persist across
@@ -703,7 +757,7 @@ func TestABCI_DeliverTx(t *testing.T) {
 			events := res.TxResults[i].GetEvents()
 			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
 			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
-			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0].Attributes[0], events[2].Attributes[0], "msg handler update counter event")
 		}
 
 		suite.baseApp.Commit(context.Background(), &abci.RequestCommit{})
@@ -1363,6 +1417,49 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 			require.Equal(t, tc.expected, tc.bapp.GetBlockRetentionHeight(tc.commitHeight))
 		})
 	}
+}
+
+// Verifies that PrepareCheckState is called with the checkState.
+func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
+	t.Parallel()
+
+	logger := log.NewTestLogger(t)
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+
+	wasPrepareCheckStateCalled := false
+	app.SetPrepareCheckStater(func(ctx sdk.Context) {
+		require.Equal(t, true, ctx.IsCheckTx())
+		wasPrepareCheckStateCalled = true
+	})
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
+	app.Commit()
+
+	require.Equal(t, true, wasPrepareCheckStateCalled)
+}
+
+// Verifies that the Precommiter is called with the deliverState.
+func TestPrecommiterCalledWithDeliverState(t *testing.T) {
+	t.Parallel()
+
+	logger := log.NewTestLogger(t)
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+
+	wasPrecommiterCalled := false
+	app.SetPrecommiter(func(ctx sdk.Context) {
+		require.Equal(t, false, ctx.IsCheckTx())
+		require.Equal(t, false, ctx.IsReCheckTx())
+		wasPrecommiterCalled = true
+	})
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
+	app.Commit()
+
+	require.Equal(t, true, wasPrecommiterCalled)
 }
 
 func TestABCI_Proposal_HappyPath(t *testing.T) {

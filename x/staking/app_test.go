@@ -5,12 +5,16 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -53,7 +57,12 @@ func TestStakingMsgs(t *testing.T) {
 	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = accs
 
-	app, err := simtestutil.SetupWithConfiguration(testutil.AppConfig, startupCfg, &bankKeeper, &stakingKeeper)
+	app, err := simtestutil.SetupWithConfiguration(
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
+		startupCfg, &bankKeeper, &stakingKeeper)
 	require.NoError(t, err)
 	ctxCheck := app.BaseApp.NewContext(true, cmtproto.Header{})
 

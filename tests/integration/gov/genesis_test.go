@@ -9,6 +9,9 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -61,7 +64,10 @@ func TestImportExportQueues(t *testing.T) {
 
 	s1 := suite{}
 	s1.app, err = simtestutil.SetupWithConfiguration(
-		appConfig,
+		depinject.Configs(
+			appConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		simtestutil.DefaultStartUpConfig(),
 		&s1.AccountKeeper, &s1.BankKeeper, &s1.DistrKeeper, &s1.GovKeeper, &s1.StakingKeeper, &s1.cdc, &s1.appBuilder,
 	)
@@ -115,7 +121,10 @@ func TestImportExportQueues(t *testing.T) {
 
 	s2 := suite{}
 	s2.app, err = simtestutil.SetupWithConfiguration(
-		appConfig,
+		depinject.Configs(
+			appConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		simtestutil.DefaultStartUpConfig(),
 		&s2.AccountKeeper, &s2.BankKeeper, &s2.DistrKeeper, &s2.GovKeeper, &s2.StakingKeeper, &s2.cdc, &s2.appBuilder,
 	)

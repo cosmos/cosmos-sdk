@@ -59,7 +59,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		appGenesisProvider,
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cmtCfg.Instrumentation),
-		servercmtlog.CometZeroLogWrapper{Logger: logger.With("module", val.Moniker)},
+		servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.Moniker)},
 	)
 	if err != nil {
 		return err

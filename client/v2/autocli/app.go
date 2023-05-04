@@ -1,9 +1,11 @@
 package autocli
 
 import (
-	"fmt"
+	"errors"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -19,8 +21,8 @@ import (
 //	var autoCliOpts autocli.AppOptions
 //	err := depinject.Inject(appConfig, &encodingConfig.InterfaceRegistry, &autoCliOpts)
 //
-// If depinject isn't used, options can be provided manually or extracted from modules. One method for extracting autocli
-// options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
+// If depinject isn't used, options can be provided manually or extracted from modules and the address codec can be provided by the auth keeper.
+// One method for extracting autocli options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
 type AppOptions struct {
 	depinject.In
 
@@ -32,23 +34,17 @@ type AppOptions struct {
 	// app to override module options if they are either not provided by a
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
-}
 
-// RootCmd generates a root command for an app based on the AppOptions. This
-// command currently only includes query commands but will be enhanced over
-// time to cover the full scope of an app CLI.
-func (appOptions AppOptions) RootCmd() (*cobra.Command, error) {
-	rootCmd := &cobra.Command{}
-	err := appOptions.EnhanceRootCommand(rootCmd)
-	return rootCmd, err
+	// AddressCodec is the address codec to use for the app.
+	AddressCodec address.Codec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
-// only adding missing query commands and doesn't override commands already
+// only adding missing commands and doesn't override commands already
 // in the root command. This allows for the graceful integration of autocli with
 // existing app CLI commands where autocli simply automatically adds things that
-// weren't manually provided. It does take into account custom query commands
-// provided by modules with the HasCustomQueryCommand extension interface.
+// weren't manually provided. It does take into account custom commands
+// provided by modules with the HasCustomQueryCommand or HasCustomTxCommand extension interface.
 // Example Usage:
 //
 //	var autoCliOpts autocli.AppOptions
@@ -60,6 +56,9 @@ func (appOptions AppOptions) RootCmd() (*cobra.Command, error) {
 //	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
+		Builder: flag.Builder{
+			AddressCodec: appOptions.AddressCodec,
+		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
 		},
@@ -71,19 +70,12 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	moduleOptions := appOptions.ModuleOptions
-	if moduleOptions == nil {
-		moduleOptions = map[string]*autocliv1.ModuleOptions{}
-
-		for name, module := range appOptions.Modules {
-			if module, ok := module.(HasAutoCLIConfig); ok {
-				moduleOptions[name] = module.AutoCLIOptions()
-			}
-		}
+	if builder.AddressCodec == nil {
+		return errors.New("address codec is required in builder")
 	}
 
-	customQueryCmds := map[string]*cobra.Command{}
-	customMsgCmds := map[string]*cobra.Command{}
+	// extract any custom commands from modules
+	customQueryCmds, customMsgCmds := map[string]*cobra.Command{}, map[string]*cobra.Command{}
 	for name, module := range appOptions.Modules {
 		if queryModule, ok := module.(HasCustomQueryCommand); ok {
 			queryCmd := queryModule.GetQueryCmd()
@@ -101,27 +93,12 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 		}
 	}
 
-	// if we have an existing query command, enhance it or build a custom one
-	enhanceQuery := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
-		queryCmdDesc := modOpts.Query
-		if queryCmdDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
-			err := builder.AddQueryServiceCommands(cmd, queryCmdDesc)
-			if err != nil {
-				return err
-			}
-
-			cmd.AddCommand(subCmd)
-		}
-		return nil
-	}
-
 	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-		if err := builder.enhanceCommandCommon(queryCmd, moduleOptions, customQueryCmds, enhanceQuery); err != nil {
+		if err := builder.enhanceCommandCommon(queryCmd, appOptions, customQueryCmds, enhanceQuery); err != nil {
 			return err
 		}
 	} else {
-		queryCmd, err := builder.BuildQueryCommand(moduleOptions, customQueryCmds)
+		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds, enhanceQuery)
 		if err != nil {
 			return err
 		}
@@ -129,26 +106,12 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 		rootCmd.AddCommand(queryCmd)
 	}
 
-	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
-		txCmdDesc := modOpts.Tx
-		if txCmdDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
-			err := builder.AddQueryServiceCommands(cmd, txCmdDesc)
-			if err != nil {
-				return err
-			}
-
-			cmd.AddCommand(subCmd)
-		}
-		return nil
-	}
-
 	if msgCmd := findSubCommand(rootCmd, "tx"); msgCmd != nil {
-		if err := builder.enhanceCommandCommon(msgCmd, moduleOptions, customQueryCmds, enhanceMsg); err != nil {
+		if err := builder.enhanceCommandCommon(msgCmd, appOptions, customMsgCmds, enhanceMsg); err != nil {
 			return err
 		}
 	} else {
-		subCmd, err := builder.BuildMsgCommand(moduleOptions, customQueryCmds)
+		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds, enhanceMsg)
 		if err != nil {
 			return err
 		}

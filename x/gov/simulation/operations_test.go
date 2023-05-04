@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
@@ -382,16 +384,21 @@ type suite struct {
 func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 	res := suite{}
 
-	app, err := simtestutil.Setup(configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.TxModule(),
-		configurator.ParamsModule(),
-		configurator.BankModule(),
-		configurator.StakingModule(),
-		configurator.ConsensusModule(),
-		configurator.DistributionModule(),
-		configurator.GovModule(),
-	), &res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
+	app, err := simtestutil.Setup(
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.TxModule(),
+				configurator.ParamsModule(),
+				configurator.BankModule(),
+				configurator.StakingModule(),
+				configurator.ConsensusModule(),
+				configurator.DistributionModule(),
+				configurator.GovModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		),
+		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, cmtproto.Header{})
@@ -414,7 +421,7 @@ func getTestingAccounts(
 	for _, account := range accounts {
 		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
 		accountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, testutil.FundAccount(bankKeeper, ctx, account.Address, initCoins))
+		require.NoError(t, testutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
 	}
 
 	return accounts

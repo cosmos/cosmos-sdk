@@ -24,7 +24,7 @@ The `autocli` package is a [Go library](https://pkg.go.dev/cosmossdk.io/client/v
 Here are the steps to use the `autocli` package:
 
 1. Define your app's modules that implement the `appmodule.AppModule` interface.
-2. (optional) When willing to configure how behave `autocli` command generation, implement the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module. Learn more [here](#advanced-usage).
+2. Configure how behave `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module. Learn more [here](#advanced-usage).
 3. Use the `autocli.AppOptions` struct to specifies the modules you defined. If you are using the `depinject` package to manage your app's dependencies, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
 4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command and can also be found in the `client/v2/autocli/app.go` file. Additionally, this method adds the `autocli` functionality to your app's root command. This method is additive only, meaning that it does not create commands if they are already registered for a module. Instead, it adds any missing commands to the root command.
 

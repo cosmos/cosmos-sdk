@@ -3,8 +3,8 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.20
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230418140744-0dde947d0ab7
-	github.com/cosmos/gogoproto v1.4.8
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230424095137-b73c17cb9cc8
+	github.com/cosmos/gogoproto v1.4.9
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/regen-network/gocuke v0.6.2
@@ -14,15 +14,15 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.4.0 // indirect
+	cosmossdk.io/api v0.4.1 // indirect
 	cosmossdk.io/collections v0.1.0 // indirect
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/log v1.0.0 // indirect
+	cosmossdk.io/log v1.1.0 // indirect
 	cosmossdk.io/math v1.0.0 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc // indirect
-	cosmossdk.io/x/tx v0.5.1-0.20230407182919-057d2e09bd63 // indirect
+	cosmossdk.io/x/tx v0.5.5 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
@@ -34,7 +34,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230412222916-60cfeb46143b // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/cometbft/cometbft v0.37.1-0.20230411132551-3a91d155e664 // indirect
+	github.com/cometbft/cometbft v0.37.1 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.15.0 // indirect
+	github.com/prometheus/client_golang v1.15.1 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
@@ -86,6 +86,6 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	pgregory.net/rapid v0.5.5 // indirect
+	pgregory.net/rapid v0.5.7 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )

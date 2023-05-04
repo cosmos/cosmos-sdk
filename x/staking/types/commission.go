@@ -4,12 +4,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewCommissionRates returns an initialized validator commission rates.
-func NewCommissionRates(rate, maxRate, maxChangeRate sdk.Dec) CommissionRates {
+func NewCommissionRates(rate, maxRate, maxChangeRate math.LegacyDec) CommissionRates {
 	return CommissionRates{
 		Rate:          rate,
 		MaxRate:       maxRate,
@@ -18,7 +16,7 @@ func NewCommissionRates(rate, maxRate, maxChangeRate sdk.Dec) CommissionRates {
 }
 
 // NewCommission returns an initialized validator commission.
-func NewCommission(rate, maxRate, maxChangeRate sdk.Dec) Commission {
+func NewCommission(rate, maxRate, maxChangeRate math.LegacyDec) Commission {
 	return Commission{
 		CommissionRates: NewCommissionRates(rate, maxRate, maxChangeRate),
 		UpdateTime:      time.Unix(0, 0).UTC(),
@@ -27,7 +25,7 @@ func NewCommission(rate, maxRate, maxChangeRate sdk.Dec) Commission {
 
 // NewCommissionWithTime returns an initialized validator commission with a specified
 // update time which should be the current block BFT time.
-func NewCommissionWithTime(rate, maxRate, maxChangeRate sdk.Dec, updatedAt time.Time) Commission {
+func NewCommissionWithTime(rate, maxRate, maxChangeRate math.LegacyDec, updatedAt time.Time) Commission {
 	return Commission{
 		CommissionRates: NewCommissionRates(rate, maxRate, maxChangeRate),
 		UpdateTime:      updatedAt,
@@ -68,7 +66,7 @@ func (cr CommissionRates) Validate() error {
 
 // ValidateNewRate performs basic sanity validation checks of a new commission
 // rate. If validation fails, an SDK error is returned.
-func (c Commission) ValidateNewRate(newRate sdk.Dec, blockTime time.Time) error {
+func (c Commission) ValidateNewRate(newRate math.LegacyDec, blockTime time.Time) error {
 	switch {
 	case blockTime.Sub(c.UpdateTime).Hours() < 24:
 		// new rate cannot be changed more than once within 24 hours

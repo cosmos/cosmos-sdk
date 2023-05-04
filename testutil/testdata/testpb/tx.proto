@@ -31,9 +31,8 @@ message MsgCreateDogResponse {
 // https://github.com/cosmos/cosmos-sdk/issues/6213.
 message TestMsg {
   option (cosmos.msg.v1.signer) = "signers";
-
   option (gogoproto.goproto_getters) = false;
-  option (cosmos.msg.v1.signer) = "signers";
   option (amino.name) = "testpb/TestMsg";
+
   repeated string signers            = 1;
 }

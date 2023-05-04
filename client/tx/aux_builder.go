@@ -128,11 +128,12 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 	switch mode {
 	case signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 	default:
-		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s", signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s",
+			signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	var err error
-	b.auxSignerData.Mode, err = authsigning.InternalSignModeToAPI(signing.SignMode_SIGN_MODE_DIRECT_AUX)
+	b.auxSignerData.Mode, err = authsigning.InternalSignModeToAPI(mode)
 
 	return err
 }

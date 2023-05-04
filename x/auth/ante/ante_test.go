@@ -120,7 +120,9 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 				expectedSigners := [][]byte{addr0, addr1, addr2}
-				require.Equal(t, expectedSigners, tx.GetSigners())
+				signers, err := tx.GetSigners()
+				require.NoError(t, err)
+				require.Equal(t, expectedSigners, signers)
 
 				return TestCaseArgs{
 					accNums: accNums,

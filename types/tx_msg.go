@@ -98,11 +98,9 @@ type TxEncoder func(tx Tx) ([]byte, error)
 func MsgTypeURL(msg proto.Message) string {
 	if m, ok := msg.(protov2.Message); ok {
 		return "/" + string(m.ProtoReflect().Descriptor().FullName())
-	} else if m, ok := msg.(proto.Message); ok {
-		return "/" + proto.MessageName(m)
-	} else {
-		panic(fmt.Errorf("%T is not a proto message", m))
 	}
+
+	return "/" + proto.MessageName(msg)
 }
 
 // GetMsgFromTypeURL returns a `sdk.Msg` message type from a type URL

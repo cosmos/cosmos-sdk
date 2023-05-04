@@ -75,7 +75,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 	s.Require().NoError(err)
 	tx := txBuilder.GetTx()
 	s.Require().Equal(msgs, tx.GetMsgs())
-	s.Require().Equal([][]byte{addr1, addr2}, tx.GetSigners())
+	signers, err := tx.GetSigners()
+	s.Require().NoError(err)
+	s.Require().Equal([][]byte{addr1, addr2}, signers)
 	s.Require().Equal([]byte(addr1), tx.FeePayer())
 	s.Require().Error(tx.ValidateBasic()) // should fail because of no signatures
 }
@@ -128,7 +130,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Len(sigsV2, 2)
 	s.Require().True(sigEquals(sig1, sigsV2[0]))
 	s.Require().True(sigEquals(msig, sigsV2[1]))
-	s.Require().Equal([][]byte{addr, msigAddr}, sigTx.GetSigners())
+	signers, err := sigTx.GetSigners()
+	s.Require().NoError(err)
+	s.Require().Equal([][]byte{addr, msigAddr}, signers)
 	s.Require().NoError(sigTx.ValidateBasic())
 
 	// sign transaction
@@ -179,7 +183,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Len(sigsV2, 2)
 	s.Require().True(sigEquals(sig1, sigsV2[0]))
 	s.Require().True(sigEquals(msig, sigsV2[1]))
-	s.Require().Equal([][]byte{addr, msigAddr}, sigTx.GetSigners())
+	signers, err = sigTx.GetSigners()
+	s.Require().NoError(err)
+	s.Require().Equal([][]byte{addr, msigAddr}, signers)
 	s.Require().NoError(sigTx.ValidateBasic())
 }
 

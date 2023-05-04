@@ -290,7 +290,9 @@ func TestBuilderFeePayer(t *testing.T) {
 			// set fee payer
 			txBuilder.SetFeePayer(tc.txFeePayer)
 			// and check it updates fields properly
-			require.Equal(t, tc.expectedSigners, txBuilder.GetSigners())
+			signers, err := txBuilder.GetSigners()
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedSigners, signers)
 			require.Equal(t, tc.expectedPayer, txBuilder.FeePayer())
 		})
 	}

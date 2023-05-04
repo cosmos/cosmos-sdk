@@ -272,7 +272,6 @@ func TestDurationCompare(t *testing.T) {
 		assert.NilError(t, err)
 		assert.Equal(t, 0, cdc.Compare(val, val2))
 	})
-
 }
 
 func encodeValue(t *testing.T, cdc ormfield.Codec, val protoreflect.Value) []byte {

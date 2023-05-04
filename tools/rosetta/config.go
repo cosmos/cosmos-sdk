@@ -143,7 +143,7 @@ func (c *Config) validate() error {
 		return fmt.Errorf("cometbft rpc not provided")
 	}
 	if !strings.HasPrefix(c.TendermintRPC, "tcp://") {
-		c.TendermintRPC = fmt.Sprintf("tcp://%s", c.TendermintRPC)
+		fmt.Println("[Rosetta]- No 'tcp://' prefix for the tendermint rpc url.")
 	}
 
 	return nil

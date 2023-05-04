@@ -116,11 +116,14 @@ func updateValidators(
 func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	validators mockValidators, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header cmtproto.Header,
-) abci.RequestBeginBlock {
+	event func(route, op, evResult string),
+	height int64, time time.Time, proposer []byte,
+) abci.RequestFinalizeBlock {
 	if len(validators) == 0 {
-		return abci.RequestBeginBlock{
-			Header: header,
+		return abci.RequestFinalizeBlock{
+			Height:          height,
+			Time:            time,
+			ProposerAddress: proposer,
 		}
 	}
 
@@ -157,15 +160,17 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 				Address: pubkey.Address(),
 				Power:   mVal.val.Power,
 			},
-			SignedLastBlock: signed,
+			BlockIdFlag: cmtproto.BlockIDFlagCommit,
 		}
 	}
 
 	// return if no past times
 	if len(pastTimes) == 0 {
-		return abci.RequestBeginBlock{
-			Header: header,
-			LastCommitInfo: abci.CommitInfo{
+		return abci.RequestFinalizeBlock{
+			Height:          height,
+			Time:            time,
+			ProposerAddress: proposer,
+			DecidedLastCommit: abci.CommitInfo{
 				Votes: voteInfos,
 			},
 		}
@@ -175,12 +180,10 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	evidence := make([]abci.Misbehavior, 0)
 
 	for r.Float64() < params.EvidenceFraction() {
-		height := header.Height
-		time := header.Time
 		vals := voteInfos
 
-		if r.Float64() < params.PastEvidenceFraction() && header.Height > 1 {
-			height = int64(r.Intn(int(header.Height)-1)) + 1 // CometBFT starts at height 1
+		if r.Float64() < params.PastEvidenceFraction() && height > 1 {
+			height = int64(r.Intn(int(height)-1)) + 1 // CometBFT starts at height 1
 			// array indices offset by one
 			time = pastTimes[height-1]
 			vals = pastVoteInfos[height-1]
@@ -206,11 +209,13 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		event("begin_block", "evidence", "ok")
 	}
 
-	return abci.RequestBeginBlock{
-		Header: header,
-		LastCommitInfo: abci.CommitInfo{
+	return abci.RequestFinalizeBlock{
+		Height:          height,
+		Time:            time,
+		ProposerAddress: proposer,
+		DecidedLastCommit: abci.CommitInfo{
 			Votes: voteInfos,
 		},
-		ByzantineValidators: evidence,
+		Misbehavior: evidence,
 	}
 }

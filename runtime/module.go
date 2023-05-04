@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoregistry"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -66,6 +66,8 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
+			ProvideHeaderInfoService,
+			ProvideCometInfoService,
 			ProvideBasicManager,
 		),
 		appmodule.Invoke(SetupAppBuilder),
@@ -231,6 +233,14 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
+}
+
+func ProvideCometInfoService() comet.BlockInfoService {
+	return cometInfoService{}
+}
+
+func ProvideHeaderInfoService(app *AppBuilder) header.Service {
+	return headerInfoService{}
 }
 
 func ProvideBasicManager(app *AppBuilder) module.BasicManager {

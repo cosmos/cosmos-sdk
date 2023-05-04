@@ -48,6 +48,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -129,7 +130,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
 
 				// test amino json signer handler equivalence
-				gogoMsg, ok := gogo.(types.Msg)
+				gogoMsg, ok := gogo.(legacytx.LegacyMsg)
 				if !ok {
 					// not signable
 					return
@@ -430,7 +431,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.Equal(t, string(gogoBytes), string(newGogoBytes))
 
 			// test amino json signer handler equivalence
-			msg, ok := tc.gogo.(types.Msg)
+			msg, ok := tc.gogo.(legacytx.LegacyMsg)
 			if !ok {
 				// not signable
 				return

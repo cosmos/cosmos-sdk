@@ -162,7 +162,7 @@ func TestBuilderWithAux(t *testing.T) {
 	require.NoError(t, err)
 	tx, err := txConfig.TxDecoder()(txBz)
 	require.NoError(t, err)
-	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), feepayerAddr.String())
+	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), []byte(feepayerAddr))
 	require.Equal(t, tx.(sdk.FeeTx).GetFee(), fee)
 	require.Equal(t, tx.(sdk.FeeTx).GetGas(), gas)
 	require.Equal(t, tip, tx.(txtypes.TipTx).GetTip())

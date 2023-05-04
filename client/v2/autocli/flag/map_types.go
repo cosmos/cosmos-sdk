@@ -33,7 +33,6 @@ func (gm *genericMapValue[K, V]) Set(val string) error {
 		if len(kv) != 2 {
 			return errors.Errorf("%s must be formatted as key=value", pair)
 		}
-		var err error
 		key, err := gm.Options.keyParser(kv[0])
 		if err != nil {
 			return err

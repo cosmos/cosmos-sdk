@@ -174,25 +174,6 @@ func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
-func validateSignDocDirectAux(sd *txv1beta1.SignDocDirectAux) error {
-	// validate basic
-	if len(sd.BodyBytes) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("body bytes cannot be empty")
-	}
-
-	if sd.PublicKey == nil {
-		return sdkerrors.ErrInvalidPubKey.Wrap("public key cannot be empty")
-	}
-
-	if sd.Tip != nil {
-		if sd.Tip.Tipper == "" {
-			return sdkerrors.ErrInvalidRequest.Wrap("tipper cannot be empty")
-		}
-	}
-
-	return nil
-}
-
 // GetSignBytes returns the builder's sign bytes.
 func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	auxTx := b.auxSignerData

@@ -125,10 +125,8 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 			signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	var err error
 	b.auxSignerData.Mode = mode
-
-	return err
+	return nil
 }
 
 // SetTip sets an optional tip in the AuxSignerData.

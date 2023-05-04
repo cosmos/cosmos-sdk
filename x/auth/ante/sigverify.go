@@ -83,9 +83,15 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 		// Only make check if simulate=false
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
-			signerStr, err := spkd.signingCtx.AddressCodec().BytesToString(signers[i])
-			if err != nil {
-				return sdk.Context{}, err
+			var signerStr string
+			if spkd.signingCtx != nil {
+				var err error
+				signerStr, err = spkd.signingCtx.AddressCodec().BytesToString(signers[i])
+				if err != nil {
+					return sdk.Context{}, err
+				}
+			} else {
+				signerStr = sdk.AccAddress(signers[i]).String()
 			}
 
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,

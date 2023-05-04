@@ -11,7 +11,6 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -369,11 +368,11 @@ func (gr GasEstimateResponse) String() string {
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (txv1beta1.AuxSignerData, error) {
+func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
 	fromAddress, name, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
 	if err != nil {
-		return txv1beta1.AuxSignerData{}, err
+		return tx.AuxSignerData{}, err
 	}
 
 	b.SetAddress(fromAddress.String())
@@ -383,7 +382,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 	} else {
 		accNum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, fromAddress)
 		if err != nil {
-			return txv1beta1.AuxSignerData{}, err
+			return tx.AuxSignerData{}, err
 		}
 		b.SetAccountNumber(accNum)
 		b.SetSequence(seq)
@@ -391,45 +390,45 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 
 	err = b.SetMsgs(msgs...)
 	if err != nil {
-		return txv1beta1.AuxSignerData{}, err
+		return tx.AuxSignerData{}, err
 	}
 
 	if f.tip != nil {
 		if _, err := sdk.AccAddressFromBech32(f.tip.Tipper); err != nil {
-			return txv1beta1.AuxSignerData{}, sdkerrors.ErrInvalidAddress.Wrap("tipper must be a bech32 address")
+			return tx.AuxSignerData{}, sdkerrors.ErrInvalidAddress.Wrap("tipper must be a bech32 address")
 		}
 		b.SetTip(f.tip)
 	}
 
 	err = b.SetSignMode(f.SignMode())
 	if err != nil {
-		return txv1beta1.AuxSignerData{}, err
+		return tx.AuxSignerData{}, err
 	}
 
 	key, err := clientCtx.Keyring.Key(name)
 	if err != nil {
-		return txv1beta1.AuxSignerData{}, err
+		return tx.AuxSignerData{}, err
 	}
 
 	pub, err := key.GetPubKey()
 	if err != nil {
-		return txv1beta1.AuxSignerData{}, err
+		return tx.AuxSignerData{}, err
 	}
 
 	err = b.SetPubKey(pub)
 	if err != nil {
-		return txv1beta1.AuxSignerData{}, err
+		return tx.AuxSignerData{}, err
 	}
 
 	b.SetChainID(clientCtx.ChainID)
 	signBz, err := b.GetSignBytes()
 	if err != nil {
-		return txv1beta1.AuxSignerData{}, err
+		return tx.AuxSignerData{}, err
 	}
 
 	sig, _, err := clientCtx.Keyring.Sign(name, signBz, f.signMode)
 	if err != nil {
-		return txv1beta1.AuxSignerData{}, err
+		return tx.AuxSignerData{}, err
 	}
 	b.SetSignature(sig)
 

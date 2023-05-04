@@ -6,8 +6,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -18,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/registry"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // AuxTxBuilder is a client-side builder for creating an AuxSignerData.
@@ -29,7 +26,7 @@ type AuxTxBuilder struct {
 	// - b.body is used for constructing the DIRECT_AUX sign bz.
 	msgs          []sdk.Msg
 	body          *txv1beta1.TxBody
-	auxSignerData *txv1beta1.AuxSignerData
+	auxSignerData *tx.AuxSignerData
 }
 
 // NewAuxTxBuilder creates a new client-side builder for constructing an
@@ -107,17 +104,13 @@ func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 
 // SetPubKey sets the aux signer's pubkey in the AuxSignerData.
 func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
-	legacyAny, err := codectypes.NewAnyWithValue(pk)
+	anyPk, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return err
 	}
 
 	b.checkEmptyFields()
-
-	b.auxSignerData.SignDoc.PublicKey = &anypb.Any{
-		TypeUrl: legacyAny.TypeUrl,
-		Value:   legacyAny.Value,
-	}
+	b.auxSignerData.SignDoc.PublicKey = anyPk
 
 	return nil
 }
@@ -133,7 +126,7 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 	}
 
 	var err error
-	b.auxSignerData.Mode, err = authsigning.InternalSignModeToAPI(mode)
+	b.auxSignerData.Mode = mode
 
 	return err
 }
@@ -141,19 +134,7 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 // SetTip sets an optional tip in the AuxSignerData.
 func (b *AuxTxBuilder) SetTip(tip *tx.Tip) {
 	b.checkEmptyFields()
-
-	amount := make([]*basev1beta1.Coin, len(tip.Amount))
-	for i, coin := range tip.Amount {
-		amount[i] = &basev1beta1.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
-	}
-
-	b.auxSignerData.SignDoc.Tip = &txv1beta1.Tip{
-		Amount: amount,
-		Tipper: tip.Tipper,
-	}
+	b.auxSignerData.SignDoc.Tip = tip
 }
 
 // SetSignature sets the aux signer's signature in the AuxSignerData.
@@ -235,21 +216,20 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	}
 
 	sd.BodyBytes = bodyBz
-
-	if err := validateSignDocDirectAux(sd); err != nil {
+	if err = sd.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
 	var signBz []byte
 	switch b.auxSignerData.Mode {
-	case signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX:
+	case signing.SignMode_SIGN_MODE_DIRECT_AUX:
 		{
 			signBz, err = proto.Marshal(b.auxSignerData.SignDoc)
 			if err != nil {
 				return nil, err
 			}
 		}
-	case signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		{
 			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				// TODO: use hybrid resolver in gogoproto v1.4.9 ?
@@ -284,24 +264,12 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 }
 
 // GetAuxSignerData returns the builder's AuxSignerData.
-func (b *AuxTxBuilder) GetAuxSignerData() (txv1beta1.AuxSignerData, error) {
-	a := *b.auxSignerData
-	if a.Address == "" {
-		return a, sdkerrors.ErrInvalidRequest.Wrapf("address cannot be empty")
+func (b *AuxTxBuilder) GetAuxSignerData() (tx.AuxSignerData, error) {
+	if err := b.auxSignerData.ValidateBasic(); err != nil {
+		return tx.AuxSignerData{}, err
 	}
 
-	if a.Mode != signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX &&
-		a.Mode != signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
-		return a, sdkerrors.ErrInvalidRequest.Wrapf(
-			"AuxTxBuilder can only sign with %s or %s",
-			signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-	}
-
-	if len(a.Sig) == 0 {
-		return a, sdkerrors.ErrNoSignatures.Wrap("signature cannot be empty")
-	}
-
-	return a, validateSignDocDirectAux(a.SignDoc)
+	return *b.auxSignerData, nil
 }
 
 func (b *AuxTxBuilder) checkEmptyFields() {
@@ -310,9 +278,9 @@ func (b *AuxTxBuilder) checkEmptyFields() {
 	}
 
 	if b.auxSignerData == nil {
-		b.auxSignerData = &txv1beta1.AuxSignerData{}
+		b.auxSignerData = &tx.AuxSignerData{}
 		if b.auxSignerData.SignDoc == nil {
-			b.auxSignerData.SignDoc = &txv1beta1.SignDocDirectAux{}
+			b.auxSignerData.SignDoc = &tx.SignDocDirectAux{}
 		}
 	}
 }

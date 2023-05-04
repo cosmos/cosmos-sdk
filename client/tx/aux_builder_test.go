@@ -4,10 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -17,7 +14,6 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
@@ -237,12 +233,8 @@ func TestAuxTxBuilder(t *testing.T) {
 }
 
 // checkCorrectData that the auxSignerData's content matches the inputs we gave.
-func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData txv1beta1.AuxSignerData, signMode signing.SignMode) {
-	legacyPkAny, err := codectypes.NewAnyWithValue(pub1)
-	pkAny := &anypb.Any{
-		TypeUrl: legacyPkAny.TypeUrl,
-		Value:   legacyPkAny.Value,
-	}
+func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData typestx.AuxSignerData, signMode signing.SignMode) {
+	pkAny, err := codectypes.NewAnyWithValue(pub1)
 	require.NoError(t, err)
 	msgAny, err := codectypes.NewAnyWithValue(msg1)
 	require.NoError(t, err)
@@ -251,19 +243,6 @@ func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData txv1beta1.Aux
 	err = cdc.Unmarshal(auxSignerData.SignDoc.BodyBytes, &body)
 	require.NoError(t, err)
 
-	tipAmount := make([]*basev1beta1.Coin, len(tip.Amount))
-	for i, coin := range tip.Amount {
-		tipAmount[i] = &basev1beta1.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
-	}
-	txv1beta1Tip := &txv1beta1.Tip{
-		Amount: tipAmount,
-		Tipper: tip.Tipper,
-	}
-	apiSignMode, err := authsigning.InternalSignModeToAPI(signMode)
-
 	require.Equal(t, uint64(1), auxSignerData.SignDoc.AccountNumber)
 	require.Equal(t, uint64(2), auxSignerData.SignDoc.Sequence)
 	require.Equal(t, timeoutHeight, body.TimeoutHeight)
@@ -271,7 +250,7 @@ func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData txv1beta1.Aux
 	require.Equal(t, chainID, auxSignerData.SignDoc.ChainId)
 	require.Equal(t, msgAny, body.GetMessages()[0])
 	require.Equal(t, pkAny, auxSignerData.SignDoc.PublicKey)
-	require.Equal(t, txv1beta1Tip, auxSignerData.SignDoc.Tip)
-	require.Equal(t, apiSignMode, auxSignerData.Mode)
+	require.Equal(t, tip, auxSignerData.SignDoc.Tip)
+	require.Equal(t, signMode, auxSignerData.Mode)
 	require.Equal(t, rawSig, auxSignerData.Sig)
 }

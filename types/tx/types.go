@@ -1,12 +1,16 @@
 package tx
 
 import (
+	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // MaxGasWanted defines the max gas allowed.
@@ -29,6 +33,64 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 		panic(err)
 	}
 	return res
+}
+
+// ValidateBasic implements the ValidateBasic method on sdk.Tx.
+func (t *Tx) ValidateBasic() error {
+	if t == nil {
+		return fmt.Errorf("bad Tx")
+	}
+
+	body := t.Body
+	if body == nil {
+		return fmt.Errorf("missing TxBody")
+	}
+
+	authInfo := t.AuthInfo
+	if authInfo == nil {
+		return fmt.Errorf("missing AuthInfo")
+	}
+
+	fee := authInfo.Fee
+	if fee == nil {
+		return fmt.Errorf("missing fee")
+	}
+
+	if fee.GasLimit > MaxGasWanted {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"invalid gas supplied; %d > %d", fee.GasLimit, MaxGasWanted,
+		)
+	}
+
+	if fee.Amount.IsAnyNil() {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInsufficientFee,
+			"invalid fee provided: null",
+		)
+	}
+
+	if fee.Amount.IsAnyNegative() {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInsufficientFee,
+			"invalid fee provided: %s", fee.Amount,
+		)
+	}
+
+	if fee.Payer != "" {
+		_, err := sdk.AccAddressFromBech32(fee.Payer)
+		if err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
+		}
+	}
+
+	sigs := t.Signatures
+
+	if len(sigs) == 0 {
+		return sdkerrors.ErrNoSignatures
+	}
+
+	return nil
 }
 
 // GetSigners retrieves all the signers of a tx.

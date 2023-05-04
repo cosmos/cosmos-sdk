@@ -25,4 +25,5 @@ type Tx interface {
 	types.FeeTx
 	tx.TipTx
 	types.TxWithTimeoutHeight
+	types.HasValidateBasic
 }

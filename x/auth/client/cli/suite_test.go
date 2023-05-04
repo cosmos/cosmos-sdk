@@ -386,7 +386,7 @@ func (s *CLITestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Test validate-signatures
 	res, err := authtestutil.TxValidateSignaturesExec(s.clientCtx, unsignedTxFile.Name())
 	s.Require().EqualError(err, "signatures validation failed")
-	s.Require().True(strings.Contains(res.String(), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", s.val.String())))
+	s.Require().Contains(res.String(), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", s.val.String()))
 
 	// Test sign
 

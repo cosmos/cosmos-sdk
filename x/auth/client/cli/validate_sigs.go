@@ -66,11 +66,16 @@ func printAndValidateSigs(
 ) bool {
 	sigTx := tx.(authsigning.SigVerifiableTx)
 	signModeHandler := clientCtx.TxConfig.SignModeHandler()
+	addrCdc := clientCtx.TxConfig.SigningContext().AddressCodec()
 
 	cmd.Println("Signers:")
 	signers := sigTx.GetSigners()
 	for i, signer := range signers {
-		cmd.Printf("  %v: %v\n", i, signer)
+		signerStr, err := addrCdc.BytesToString(signer)
+		if err != nil {
+			panic(err)
+		}
+		cmd.Printf("  %v: %v\n", i, signerStr)
 	}
 
 	success := true

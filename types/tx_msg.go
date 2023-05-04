@@ -43,7 +43,6 @@ type (
 
 	// HasMsgs defines an interface a transaction must fulfill.
 	HasMsgs interface {
-		HasValidateBasic
 		// GetMsgs gets the all the transaction's messages.
 		GetMsgs() []Msg
 	}

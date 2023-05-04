@@ -661,13 +661,3 @@ func TestLoadVersionPruning(t *testing.T) {
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }
-
-type testAddressCodec struct{}
-
-func (t testAddressCodec) StringToBytes(text string) ([]byte, error) {
-	return []byte(text), nil
-}
-
-func (t testAddressCodec) BytesToString(bz []byte) (string, error) {
-	return string(bz), nil
-}

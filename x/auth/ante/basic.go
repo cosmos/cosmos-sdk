@@ -31,8 +31,10 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 		return next(ctx, tx, simulate)
 	}
 
-	if err := tx.ValidateBasic(); err != nil {
-		return ctx, err
+	if validateBasic, ok := tx.(sdk.HasValidateBasic); ok {
+		if err := validateBasic.ValidateBasic(); err != nil {
+			return ctx, err
+		}
 	}
 
 	return next(ctx, tx, simulate)

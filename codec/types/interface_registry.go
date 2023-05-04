@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/core/address"
 
@@ -102,7 +101,7 @@ type UnpackInterfacesMessage interface {
 }
 
 type interfaceRegistry struct {
-	*protoregistry.Files
+	signing.ProtoFileResolver
 	interfaceNames map[string]reflect.Type
 	interfaceImpls map[reflect.Type]interfaceMap
 	implInterfaces map[reflect.Type]reflect.Type
@@ -115,7 +114,7 @@ type interfaceMap = map[string]reflect.Type
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
 	registry, err := NewInterfaceRegistryWithOptions(InterfaceRegistryOptions{
-		ProtoFiles:            protoregistry.GlobalFiles,
+		ProtoFiles:            proto.HybridResolver,
 		AddressCodec:          failingAddressCodec{},
 		ValidatorAddressCodec: failingAddressCodec{},
 	})
@@ -128,7 +127,7 @@ func NewInterfaceRegistry() InterfaceRegistry {
 // InterfaceRegistryOptions are options for creating a new InterfaceRegistry.
 type InterfaceRegistryOptions struct {
 	// ProtoFiles is the set of files to use for the registry. It is required.
-	ProtoFiles *protoregistry.Files
+	ProtoFiles signing.ProtoFileResolver
 
 	// AddressCodec is the address codec to use for the registry. It is required.
 	AddressCodec address.Codec
@@ -154,12 +153,12 @@ func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (Interfac
 	}
 
 	return &interfaceRegistry{
-		interfaceNames: map[string]reflect.Type{},
-		interfaceImpls: map[reflect.Type]interfaceMap{},
-		implInterfaces: map[reflect.Type]reflect.Type{},
-		typeURLMap:     map[string]reflect.Type{},
-		Files:          options.ProtoFiles,
-		signingCtx:     signingCtx,
+		interfaceNames:    map[string]reflect.Type{},
+		interfaceImpls:    map[reflect.Type]interfaceMap{},
+		implInterfaces:    map[reflect.Type]reflect.Type{},
+		typeURLMap:        map[string]reflect.Type{},
+		ProtoFileResolver: options.ProtoFiles,
+		signingCtx:        signingCtx,
 	}, nil
 }
 

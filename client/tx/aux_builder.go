@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -13,7 +14,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/registry"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -213,14 +213,23 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		{
 			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
-				// TODO: use hybrid resolver in gogoproto v1.4.9 ?
-				FileResolver: registry.MergedProtoRegistry(),
+				FileResolver: proto.HybridResolver,
 			})
+			legacyTip := b.auxSignerData.SignDoc.Tip
+			tip := &txv1beta1.Tip{
+				Amount: make([]*basev1beta1.Coin, len(legacyTip.Amount)),
+				Tipper: legacyTip.Tipper,
+			}
+			for i, coin := range legacyTip.Amount {
+				tip.Amount[i] = &basev1beta1.Coin{
+					Denom:  coin.Denom,
+					Amount: coin.Amount.String(),
+				}
+			}
 			signBz, err = handler.GetSignBytes(
 				context.Background(),
 				txsigning.SignerData{
-					// TODO
-					Address:       "foo",
+					Address:       b.auxSignerData.Address,
 					ChainID:       b.auxSignerData.SignDoc.ChainId,
 					AccountNumber: b.auxSignerData.SignDoc.AccountNumber,
 					Sequence:      b.auxSignerData.SignDoc.Sequence,
@@ -230,8 +239,12 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 					Body: body,
 					AuthInfo: &txv1beta1.AuthInfo{
 						SignerInfos: nil,
-						Fee:         &txv1beta1.Fee{},
-						Tip:         nil,
+						// Aux signer never signs over fee.
+						// For LEGACY_AMINO_JSON, we use the convention to sign
+						// over empty fees.
+						// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
+						Fee: &txv1beta1.Fee{},
+						Tip: tip,
 					},
 				},
 			)

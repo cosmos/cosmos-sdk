@@ -220,6 +220,17 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 				Amount: make([]*basev1beta1.Coin, len(legacyTip.Amount)),
 				Tipper: legacyTip.Tipper,
 			}
+			auxBody := &txv1beta1.TxBody{
+				Messages:      body.Messages,
+				Memo:          body.Memo,
+				TimeoutHeight: body.TimeoutHeight,
+				// AuxTxBuilder has no concern with extension options, so we set them to nil.
+				// This preserves pre-PR#16025 behavior where extension options were ignored, this code path:
+				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/client/tx/aux_builder.go#L193
+				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/x/auth/migrations/legacytx/stdsign.go#L49
+				ExtensionOptions:            nil,
+				NonCriticalExtensionOptions: nil,
+			}
 			for i, coin := range legacyTip.Amount {
 				tip.Amount[i] = &basev1beta1.Coin{
 					Denom:  coin.Denom,
@@ -236,7 +247,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 					PubKey:        nil,
 				},
 				txsigning.TxData{
-					Body: body,
+					Body: auxBody,
 					AuthInfo: &txv1beta1.AuthInfo{
 						SignerInfos: nil,
 						// Aux signer never signs over fee.

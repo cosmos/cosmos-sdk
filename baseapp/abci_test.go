@@ -935,7 +935,8 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	// transaction with no known route
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
-		txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{})
+		_, _, addr := testdata.KeyTestPubAddr()
+		txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
 
@@ -948,7 +949,10 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		txBuilder = suite.txConfig.NewTxBuilder()
-		txBuilder.SetMsgs(&baseapptestutil.MsgCounter{}, &baseapptestutil.MsgCounter2{})
+		txBuilder.SetMsgs(
+			&baseapptestutil.MsgCounter{Signer: addr.String()},
+			&baseapptestutil.MsgCounter2{Signer: addr.String()},
+		)
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx = txBuilder.GetTx()
 

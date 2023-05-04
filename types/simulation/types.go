@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // Deprecated: Use WeightedProposalMsg instead.
@@ -95,9 +94,9 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 		moduleName = msgType
 	}
 
-	if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
-		return NewOperationMsgBasic(moduleName, msgType, comment, ok, legacyMsg.GetSignBytes())
-	}
+	//if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
+	//	return NewOperationMsgBasic(moduleName, msgType, comment, ok, legacyMsg.GetSignBytes())
+	//}
 
 	return NewOperationMsgBasic(moduleName, msgType, comment, ok, cdc.MustMarshalJSON(msg))
 }

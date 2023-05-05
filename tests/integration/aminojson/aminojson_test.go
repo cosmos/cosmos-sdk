@@ -91,7 +91,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
-	aj := aminojson.NewEncoder()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
 		name := string(tt.Pulsar.ProtoReflect().Descriptor().FullName())
@@ -192,7 +192,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
 		vesting.AppModuleBasic{})
 
-	aj := aminojson.NewEncoder()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 	addr1 := types.AccAddress("addr1")
 	now := time.Now()
 
@@ -480,7 +480,7 @@ func TestSendAuthorization(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		distribution.AppModuleBasic{}, bank.AppModuleBasic{})
 
-	aj := aminojson.NewEncoder()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	// beware, Coins has as custom MarshalJSON method which changes how nil is handled
 	// nil -> [] (empty list)

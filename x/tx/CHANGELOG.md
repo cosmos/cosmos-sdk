@@ -31,11 +31,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-## v0.6.3
+## v0.7.0
 
 ### API Breaking
 
 * [#16044](https://github.com/cosmos/cosmos-sdk/pull/16044): rename aminojson.NewAminoJSON -> aminojson.NewEncoder
+* [#16047](https://github.com/cosmos/cosmos-sdk/pull/16047): aminojson.NewEncoder now takes EncoderOptions as an argument.
 
 ## v0.6.2
 

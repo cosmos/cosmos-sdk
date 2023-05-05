@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -122,7 +123,7 @@ func (s *IntegrationTestSuite) TestParams() {
 }
 
 func (s *IntegrationTestSuite) TestAliasFunctions() {
-	stakingTokenSupply := sdk.NewIntFromUint64(100000000000)
+	stakingTokenSupply := math.NewIntFromUint64(100000000000)
 	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply)
 	s.Require().Equal(s.mintKeeper.StakingTokenSupply(s.ctx), stakingTokenSupply)
 

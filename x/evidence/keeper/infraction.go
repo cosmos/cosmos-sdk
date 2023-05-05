@@ -24,7 +24,7 @@ import (
 //
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
-func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) {
+func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	logger := k.Logger(sdkCtx)
 	consAddr := evidence.GetConsensusAddress()
@@ -33,7 +33,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	if validator == nil || validator.IsUnbonded() {
 		// Defensive: Simulation doesn't take unbonding periods into account, and
 		// CometBFT might break this assumption at some point.
-		return
+		return nil
 	}
 
 	if !validator.GetOperator().Empty() {
@@ -48,7 +48,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 			// getting this coordination right, it is easier to relax the
 			// constraints and ignore evidence that cannot be handled.
 			logger.Error(fmt.Sprintf("ignore evidence; expected public key for validator %s not found", consAddr))
-			return
+			return nil
 		}
 	}
 
@@ -72,7 +72,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 				"infraction_time", infractionTime,
 				"max_age_duration", cp.Evidence.MaxAgeDuration,
 			)
-			return
+			return nil
 		}
 	}
 
@@ -88,7 +88,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 			"infraction_height", infractionHeight,
 			"infraction_time", infractionTime,
 		)
-		return
+		return nil
 	}
 
 	logger.Info(
@@ -126,5 +126,5 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 
 	k.slashingKeeper.JailUntil(sdkCtx, consAddr, types.DoubleSignJailEndTime)
 	k.slashingKeeper.Tombstone(sdkCtx, consAddr)
-	k.SetEvidence(ctx, evidence)
+	return k.SetEvidence(ctx, evidence)
 }

@@ -171,9 +171,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	am.keeper.BeginBlocker(ctx)
-
-	return nil
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions

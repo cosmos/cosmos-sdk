@@ -19,9 +19,9 @@ const DefaultPage = 1
 // if the `limit` is not supplied, paginate will use `DefaultLimit`
 const DefaultLimit = 100
 
-// MaxLimit is the maximum limit the paginate function can handle
+// PAGINATION_MAX_LIMIT is the maximum limit the paginate function can handle
 // which equals the maximum value that can be stored in uint64
-var MaxLimit uint64 = math.MaxUint64
+var PAGINATION_MAX_LIMIT uint64 = math.MaxUint64
 
 // ParsePagination validate PageRequest and returns page number & limit.
 func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {

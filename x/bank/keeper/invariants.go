@@ -51,7 +51,7 @@ func NonnegativeBalanceInvariant(k ViewKeeper) sdk.Invariant {
 func TotalSupply(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		expectedTotal := sdk.Coins{}
-		supply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: query.MaxLimit})
+		supply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: query.PAGINATION_MAX_LIMIT})
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "query supply",
 				fmt.Sprintf("error querying total supply %v", err)), false

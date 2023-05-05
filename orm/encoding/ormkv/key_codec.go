@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+	"cosmossdk.io/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/ormfield"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 type KeyCodec struct {
@@ -177,11 +176,12 @@ func (cdc *KeyCodec) CompareKeys(values1, values2 []protoreflect.Value) int {
 	}
 
 	// values are equal but arrays of different length
-	if j == k {
+	switch {
+	case j == k:
 		return 0
-	} else if j < k {
+	case j < k:
 		return -1
-	} else {
+	default:
 		return 1
 	}
 }

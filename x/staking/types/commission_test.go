@@ -45,7 +45,7 @@ func TestCommissionValidateNewRate(t *testing.T) {
 
 	testCases := []struct {
 		input     types.Commission
-		newRate   sdk.Dec
+		newRate   math.LegacyDec
 		blockTime time.Time
 		expectErr bool
 	}{

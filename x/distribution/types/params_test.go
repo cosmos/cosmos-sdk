@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,9 +14,9 @@ func TestParams_ValidateBasic(t *testing.T) {
 	toDec := sdk.MustNewDecFromStr
 
 	type fields struct {
-		CommunityTax        sdk.Dec
-		BaseProposerReward  sdk.Dec
-		BonusProposerReward sdk.Dec
+		CommunityTax        sdkmath.LegacyDec
+		BaseProposerReward  sdkmath.LegacyDec
+		BonusProposerReward sdkmath.LegacyDec
 		WithdrawAddrEnabled bool
 	}
 	tests := []struct {

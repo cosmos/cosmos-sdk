@@ -24,7 +24,7 @@ func TestTxBuilder(t *testing.T) {
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	txBuilder := newBuilder(nil)
 
-	memo := "sometestmemo" //nolint:goconst
+	memo := "testmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
 	any, err := codectypes.NewAnyWithValue(pubkey)

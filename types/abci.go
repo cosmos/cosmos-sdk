@@ -19,6 +19,13 @@ type BeginBlocker func(ctx Context, req abci.RequestBeginBlock) (abci.ResponseBe
 // e.g. BFT timestamps rather than block height for any periodic EndBlock logic
 type EndBlocker func(ctx Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error)
 
+// PrepareCheckStater runs code during commit after the block has been committed, and the `checkState`
+// has been branched for the new block.
+type PrepareCheckStater func(ctx Context)
+
+// Precommiter runs code during commit immediately before the `deliverState` is written to the `rootMultiStore`.
+type Precommiter func(ctx Context)
+
 // PeerFilter responds to p2p filtering queries from Tendermint
 type PeerFilter func(info string) abci.ResponseQuery
 

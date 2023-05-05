@@ -1,6 +1,6 @@
 name: Build & Push
 # Build & Push builds the simapp docker image on every push to main and
-# and pushes the image to https://hub.docker.com/r/interchainio/simapp/tags
+# and pushes the image to https://ghcr.io/cosmos/simapp
 on:
   pull_request:
     paths:
@@ -11,6 +11,12 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+" # Push events to matching v*, i.e. v1.0, v20.15.10
       - "v[0-9]+.[0-9]+.[0-9]+-rc*" # Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: "SDK version (e.g 0.47.1)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -37,8 +43,8 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern={{version}}
-            type=semver,pattern=latest-{{major}}.{{minor}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{version}},value=v${{ inputs.tags }},enable=${{ inputs.tags != '' }}
           flavor: |
             latest=false
 

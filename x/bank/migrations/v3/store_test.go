@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -21,8 +22,9 @@ import (
 func TestMigrateStore(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := storetypes.NewKVStoreKey("bank")
+	storeService := runtime.NewKVStoreService(bankKey)
 	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
 	addr := sdk.AccAddress([]byte("addr________________"))
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
@@ -39,10 +41,10 @@ func TestMigrateStore(t *testing.T) {
 		prefixAccStore.Set([]byte(b.Denom), bz)
 	}
 
-	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v3.MigrateStore(ctx, storeService, encCfg.Codec))
 
 	for _, b := range balances {
-		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+		addrPrefixStore := prefix.NewStore(store, v3.CreateAccountBalancesPrefix(addr))
 		bz := addrPrefixStore.Get([]byte(b.Denom))
 		var expected math.Int
 		require.NoError(t, expected.Unmarshal(bz))
@@ -59,8 +61,9 @@ func TestMigrateStore(t *testing.T) {
 func TestMigrateDenomMetaData(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := storetypes.NewKVStoreKey("bank")
+	storeService := runtime.NewKVStoreService(bankKey)
 	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 	metaData := []types.Metadata{
 		{
 			Name:        "Cosmos Hub Atom",
@@ -98,7 +101,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		denomMetadataStore.Set(key, bz)
 	}
 
-	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v3.MigrateStore(ctx, storeService, encCfg.Codec))
 
 	denomMetadataStore = prefix.NewStore(store, v2.DenomMetadataPrefix)
 	denomMetadataIter := denomMetadataStore.Iterator(nil, nil)

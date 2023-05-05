@@ -79,10 +79,14 @@ func setupGovKeeper(t *testing.T) (
 	acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
 	acctKeeper.EXPECT().GetModuleAddress(disttypes.ModuleName).Return(distAcct).AnyTimes()
 	acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
+	acctKeeper.EXPECT().StringToBytes(govAcct.String()).Return(govAcct, nil).AnyTimes()
+	acctKeeper.EXPECT().BytesToString(govAcct).Return(govAcct.String(), nil).AnyTimes()
+
 	trackMockBalances(bankKeeper, distributionKeeper)
 	stakingKeeper.EXPECT().TokensFromConsensusPower(ctx, gomock.Any()).DoAndReturn(func(ctx sdk.Context, power int64) math.Int {
 		return sdk.TokensFromConsensusPower(power, math.NewIntFromUint64(1000000))
 	}).AnyTimes()
+
 	stakingKeeper.EXPECT().BondDenom(ctx).Return("stake").AnyTimes()
 	stakingKeeper.EXPECT().IterateBondedValidatorsByPower(gomock.Any(), gomock.Any()).AnyTimes()
 	stakingKeeper.EXPECT().IterateDelegations(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()

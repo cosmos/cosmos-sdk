@@ -13,7 +13,6 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -118,17 +117,14 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		codec      codec.Codec
 	)
 
-	if err := depinject.Inject(
-		appConfig,
-		append(extraOutputs, &appBuilder, &codec)...,
-	); err != nil {
+	if err := depinject.Inject(appConfig, append(extraOutputs, &appBuilder, &codec)...); err != nil {
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 
 	if startupConfig.BaseAppOption != nil {
-		app = appBuilder.Build(log.NewNopLogger(), startupConfig.DB, nil, startupConfig.BaseAppOption)
+		app = appBuilder.Build(startupConfig.DB, nil, startupConfig.BaseAppOption)
 	} else {
-		app = appBuilder.Build(log.NewNopLogger(), startupConfig.DB, nil)
+		app = appBuilder.Build(startupConfig.DB, nil)
 	}
 	if err := app.Load(true); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)

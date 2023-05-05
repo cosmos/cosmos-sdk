@@ -74,7 +74,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.accountKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(suite.accountKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	suite.key = key
@@ -145,7 +145,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	})
 
 	// Regression test
-	addr1, err := sdk.AccAddressFromBech32("cosmos1892yr6fzlj7ud0kfkah2ctrav3a4p4n060ze8f")
+	addr1, err := suite.accountKeeper.GetAddressCodec().StringToBytes("cosmos1892yr6fzlj7ud0kfkah2ctrav3a4p4n060ze8f")
 	suite.Require().NoError(err)
 	pub1, err := hex.DecodeString("D1002E1B019000010BB7034500E71F011F1CA90D5B000E134BFB0F3603030D0303")
 	suite.Require().NoError(err)
@@ -239,7 +239,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 
 func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.AccountKeeper) types.QueryClient {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, ak)
+	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(ak))
 	return types.NewQueryClient(queryHelper)
 }
 

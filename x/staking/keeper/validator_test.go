@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	// modify a records, save, and retrieve
 	validators[0].Status = stakingtypes.Bonded
 	validators[0].Tokens = keeper.TokensFromConsensusPower(ctx, 10)
-	validators[0].DelegatorShares = sdk.NewDecFromInt(validators[0].Tokens)
+	validators[0].DelegatorShares = math.LegacyNewDecFromInt(validators[0].Tokens)
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
 	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.True(found)
@@ -253,8 +253,8 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 	// tendermintUpdate set: {c1, c3} -> {c1', c3'}
 	delTokens1 := keeper.TokensFromConsensusPower(ctx, 20)
 	delTokens2 := keeper.TokensFromConsensusPower(ctx, 30)
-	validators[0], _ = validators[0].RemoveDelShares(sdk.NewDecFromInt(delTokens1))
-	validators[1], _ = validators[1].RemoveDelShares(sdk.NewDecFromInt(delTokens2))
+	validators[0], _ = validators[0].RemoveDelShares(math.LegacyNewDecFromInt(delTokens1))
+	validators[1], _ = validators[1].RemoveDelShares(math.LegacyNewDecFromInt(delTokens2))
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], false)
 	validators[1] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[1], false)
 
@@ -274,14 +274,14 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 
 	// Set MinCommissionRate to 0.05
 	params := keeper.GetParams(ctx)
-	params.MinCommissionRate = sdk.NewDecWithPrec(5, 2)
+	params.MinCommissionRate = math.LegacyNewDecWithPrec(5, 2)
 	keeper.SetParams(ctx, params)
 
 	commission1 := stakingtypes.NewCommissionWithTime(
-		sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1),
-		sdk.NewDecWithPrec(1, 1), time.Now().UTC().Add(time.Duration(-1)*time.Hour),
+		math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+		math.LegacyNewDecWithPrec(1, 1), time.Now().UTC().Add(time.Duration(-1)*time.Hour),
 	)
-	commission2 := stakingtypes.NewCommission(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1), sdk.NewDecWithPrec(1, 1))
+	commission2 := stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1), math.LegacyNewDecWithPrec(1, 1))
 
 	val1 := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
 	val2 := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[1].Address().Bytes()), PKs[1])
@@ -294,15 +294,15 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 
 	testCases := []struct {
 		validator   stakingtypes.Validator
-		newRate     sdk.Dec
+		newRate     math.LegacyDec
 		expectedErr bool
 	}{
 		{val1, math.LegacyZeroDec(), true},
-		{val2, sdk.NewDecWithPrec(-1, 1), true},
-		{val2, sdk.NewDecWithPrec(4, 1), true},
-		{val2, sdk.NewDecWithPrec(3, 1), true},
-		{val2, sdk.NewDecWithPrec(1, 2), true},
-		{val2, sdk.NewDecWithPrec(2, 1), false},
+		{val2, math.LegacyNewDecWithPrec(-1, 1), true},
+		{val2, math.LegacyNewDecWithPrec(4, 1), true},
+		{val2, math.LegacyNewDecWithPrec(3, 1), true},
+		{val2, math.LegacyNewDecWithPrec(1, 2), true},
+		{val2, math.LegacyNewDecWithPrec(2, 1), false},
 	}
 
 	for i, tc := range testCases {
@@ -344,12 +344,12 @@ func (s *KeeperTestSuite) TestValidatorToken() {
 	validator, _ = keeper.AddValidatorTokensAndShares(ctx, validator, addTokens)
 	require.Equal(addTokens, validator.Tokens)
 	validator, _ = keeper.GetValidator(ctx, valAddr)
-	require.Equal(sdk.NewDecFromInt(addTokens), validator.DelegatorShares)
+	require.Equal(math.LegacyNewDecFromInt(addTokens), validator.DelegatorShares)
 
-	keeper.RemoveValidatorTokensAndShares(ctx, validator, sdk.NewDecFromInt(delTokens))
+	keeper.RemoveValidatorTokensAndShares(ctx, validator, math.LegacyNewDecFromInt(delTokens))
 	validator, _ = keeper.GetValidator(ctx, valAddr)
 	require.Equal(delTokens, validator.Tokens)
-	require.True(validator.DelegatorShares.Equal(sdk.NewDecFromInt(delTokens)))
+	require.True(validator.DelegatorShares.Equal(math.LegacyNewDecFromInt(delTokens)))
 
 	keeper.RemoveValidatorTokens(ctx, validator, delTokens)
 	validator, _ = keeper.GetValidator(ctx, valAddr)

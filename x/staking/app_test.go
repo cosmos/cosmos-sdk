@@ -5,12 +5,16 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -53,7 +57,12 @@ func TestStakingMsgs(t *testing.T) {
 	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = accs
 
-	app, err := simtestutil.SetupWithConfiguration(testutil.AppConfig, startupCfg, &bankKeeper, &stakingKeeper)
+	app, err := simtestutil.SetupWithConfiguration(
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
+		startupCfg, &bankKeeper, &stakingKeeper)
 	require.NoError(t, err)
 	ctxCheck := app.BaseApp.NewContext(true, cmtproto.Header{})
 
@@ -68,7 +77,7 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
+	txConfig := moduletestutil.MakeTestTxConfig()
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))

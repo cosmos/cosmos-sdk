@@ -79,7 +79,7 @@ func (h signModeTextualHandler) GetSignBytesWithContext(ctx context.Context, mod
 
 	return h.t.GetSignBytes(ctx, txsigning.SignerData{
 		Address:       data.Address,
-		ChainId:       data.ChainID,
+		ChainID:       data.ChainID,
 		AccountNumber: data.AccountNumber,
 		Sequence:      data.Sequence,
 		PubKey: &anypb.Any{

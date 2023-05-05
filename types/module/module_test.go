@@ -100,6 +100,44 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 	goam.RegisterInvariants(mockInvariantRegistry)
 }
 
+func TestAssertNoForgottenModules(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+	mockAppModule1 := mock.NewMockEndBlockAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockBeginBlockAppModule(mockCtrl)
+	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
+
+	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
+	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
+	mm := module.NewManager(
+		mockAppModule1,
+		mockAppModule2,
+		module.CoreAppModuleBasicAdaptor("module3", mockAppModule3),
+	)
+	require.NotNil(t, mm)
+	require.Equal(t, 3, len(mm.Modules))
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderInitGenesis)
+	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderInitGenesis, missing: [module3]", func() {
+		mm.SetOrderInitGenesis("module2", "module1")
+	})
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderExportGenesis)
+	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderExportGenesis, missing: [module3]", func() {
+		mm.SetOrderExportGenesis("module2", "module1")
+	})
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
+	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderBeginBlockers, missing: [module2]", func() {
+		mm.SetOrderBeginBlockers("module1", "module3")
+	})
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
+	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderEndBlockers, missing: [module1]", func() {
+		mm.SetOrderEndBlockers("module2", "module3")
+	})
+}
+
 func TestManagerOrderSetters(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -128,6 +166,14 @@ func TestManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
 	mm.SetOrderEndBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderEndBlockers)
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderPrepareCheckStaters)
+	mm.SetOrderPrepareCheckStaters("module3", "module2", "module1")
+	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrepareCheckStaters)
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderPrecommiters)
+	mm.SetOrderPrecommiters("module3", "module2", "module1")
+	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
 func TestManager_RegisterInvariants(t *testing.T) {
@@ -431,6 +477,14 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
 	mm.SetOrderEndBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderEndBlockers)
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderPrepareCheckStaters)
+	mm.SetOrderPrepareCheckStaters("module3", "module2", "module1")
+	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrepareCheckStaters)
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderPrecommiters)
+	mm.SetOrderPrecommiters("module3", "module2", "module1")
+	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
 func TestCoreAPIManager_BeginBlock(t *testing.T) {
@@ -483,6 +537,52 @@ func TestCoreAPIManager_EndBlock(t *testing.T) {
 	// test panic
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
 	_, err = mm.EndBlock(sdk.Context{}, req)
+	require.EqualError(t, err, "some error")
+}
+
+func TestManager_PrepareCheckState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	mockAppModule1.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(nil)
+	mockAppModule2.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(nil)
+	err := mm.PrepareCheckState(sdk.Context{})
+	require.NoError(t, err)
+
+	mockAppModule1.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(errors.New("some error"))
+	err = mm.PrepareCheckState(sdk.Context{})
+	require.EqualError(t, err, "some error")
+}
+
+func TestManager_Precommit(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	mockAppModule1.EXPECT().Precommit(gomock.Any()).Times(1).Return(nil)
+	mockAppModule2.EXPECT().Precommit(gomock.Any()).Times(1).Return(nil)
+	err := mm.Precommit(sdk.Context{})
+	require.NoError(t, err)
+
+	mockAppModule1.EXPECT().Precommit(gomock.Any()).Times(1).Return(errors.New("some error"))
+	err = mm.Precommit(sdk.Context{})
 	require.EqualError(t, err, "some error")
 }
 

@@ -6,20 +6,14 @@ import (
 	"fmt"
 	"sort"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
-
+	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	store "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
-
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,18 +21,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
-	consensusVersion uint64 = 4
+	consensusVersion uint64 = 5
 )
 
 var (
-	_ module.EndBlockAppModule   = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasBeginBlocker  = AppModule{}
+	_ module.HasABCIEndblock     = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -62,7 +61,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the module's interface types
-func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -165,6 +164,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
+	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the staking module.
@@ -188,14 +190,15 @@ func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 // BeginBlock returns the begin blocker for the staking module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	c := sdk.UnwrapSDKContext(ctx)
-	BeginBlocker(c, am.keeper)
+
+	am.keeper.BeginBlocker(c)
 	return nil
 }
 
 // EndBlock returns the end blocker for the staking module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, am.keeper)
+func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	return am.keeper.EndBlocker(ctx)
 }
 
 func init() {
@@ -304,6 +307,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the staking module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+		simState.AppParams, simState.Cdc, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

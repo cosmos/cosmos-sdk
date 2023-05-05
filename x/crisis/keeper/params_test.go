@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestParams() {
 	// default params
-	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))
+	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 
 	testCases := []struct {
 		name        string
@@ -21,7 +23,7 @@ func (s *KeeperTestSuite) TestParams() {
 		},
 		{
 			name:        "negative constant fee",
-			constantFee: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(-1000)},
+			constantFee: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdkmath.NewInt(-1000)},
 			expErr:      true,
 		},
 		{

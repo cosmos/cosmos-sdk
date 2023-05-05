@@ -107,6 +107,18 @@ message ExampleTimestamp {
   google.protobuf.Timestamp ts   = 3;
 }
 
+message ExampleDuration {
+  option (cosmos.orm.v1.table) = {
+    id: 4
+    primary_key: {fields: "id" auto_increment: true}
+    index: {id: 1 fields: "dur"}
+  };
+
+  uint64                   id   = 1;
+  string                   name = 2;
+  google.protobuf.Duration dur  = 3;
+}
+
 message SimpleExample {
   option (cosmos.orm.v1.table) = {
     id: 5

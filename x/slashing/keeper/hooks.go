@@ -3,6 +3,7 @@ package keeper
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -84,7 +85,7 @@ func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.Va
 	return nil
 }
 
-func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec) error {
+func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
 	return nil
 }
 

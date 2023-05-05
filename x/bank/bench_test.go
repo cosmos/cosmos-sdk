@@ -73,10 +73,10 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	// some value conceivably higher than the benchmarks would ever go
-	require.NoError(b, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
+	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
 
 	baseApp.Commit()
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+	txGen := moduletestutil.MakeTestTxConfig()
 
 	// Precompute all txs
 	txs, err := genSequenceOfTxs(txGen, []sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
@@ -118,10 +118,10 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	// some value conceivably higher than the benchmarks would ever go
-	require.NoError(b, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
+	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
 
 	baseApp.Commit()
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+	txGen := moduletestutil.MakeTestTxConfig()
 
 	// Precompute all txs
 	txs, err := genSequenceOfTxs(txGen, []sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)

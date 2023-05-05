@@ -13,6 +13,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -47,6 +48,7 @@ var (
 type AppModuleBasic struct {
 	cdc                    codec.Codec
 	legacyProposalHandlers []govclient.ProposalHandler // legacy proposal handlers which live in governance cli and rest
+	ac                     address.Codec
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object
@@ -84,7 +86,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := v1.RegisterQueryHandlerClient(context.Background(), mux, v1.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -94,8 +96,8 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 }
 
 // GetTxCmd returns the root tx command for the gov module.
-func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	legacyProposalCLIHandlers := getProposalCLIHandlers(a.legacyProposalHandlers)
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	legacyProposalCLIHandlers := getProposalCLIHandlers(ab.legacyProposalHandlers)
 
 	return cli.NewTxCmd(legacyProposalCLIHandlers)
 }
@@ -109,12 +111,12 @@ func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Comma
 }
 
 // GetQueryCmd returns the root query command for the gov module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.ac)
 }
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
-func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	v1.RegisterInterfaces(registry)
 	v1beta1.RegisterInterfaces(registry)
 }
@@ -137,7 +139,7 @@ func NewAppModule(
 	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, ss govtypes.ParamSubspace,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -355,7 +357,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc,
+		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accountKeeper, am.bankKeeper, am.keeper,
 		simState.ProposalMsgs, simState.LegacyProposalContents,
 	)

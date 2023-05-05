@@ -12,7 +12,7 @@ import (
 // Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
 // voters
 func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult) {
-	results := make(map[v1.VoteOption]sdk.Dec)
+	results := make(map[v1.VoteOption]math.LegacyDec)
 	results[v1.OptionYes] = math.LegacyZeroDec()
 	results[v1.OptionAbstain] = math.LegacyZeroDec()
 	results[v1.OptionNo] = math.LegacyZeroDec()
@@ -36,9 +36,12 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes, burnD
 
 	keeper.IterateVotes(ctx, proposal.Id, func(vote v1.Vote) bool {
 		// if validator, just record it in the map
-		voter := sdk.MustAccAddressFromBech32(vote.Voter)
+		voter, err := keeper.authKeeper.StringToBytes(vote.Voter)
+		if err != nil {
+			panic(err)
+		}
 
-		valAddrStr := sdk.ValAddress(voter.Bytes()).String()
+		valAddrStr := sdk.ValAddress(voter).String()
 		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Options
 			currValidators[valAddrStr] = val

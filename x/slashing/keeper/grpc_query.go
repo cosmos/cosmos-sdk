@@ -13,7 +13,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Querier{}
+
+type Querier struct {
+	Keeper
+}
+
+func NewQuerier(keeper Keeper) Querier {
+	return Querier{Keeper: keeper}
+}
 
 // Params returns parameters of x/slashing module
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {

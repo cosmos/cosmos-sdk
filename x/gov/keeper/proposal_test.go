@@ -33,8 +33,8 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 		proposalID := proposal.Id
 		suite.govKeeper.SetProposal(suite.ctx, proposal)
 
-		gotProposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposalID)
-		suite.Require().True(ok)
+		gotProposal, err := suite.govKeeper.GetProposal(suite.ctx, proposalID)
+		suite.Require().Nil(err)
 		suite.Require().Equal(proposal, gotProposal)
 	}
 }
@@ -51,11 +51,8 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 
 	for _, tc := range testCases {
 		// delete non-existing proposal
-		suite.Require().PanicsWithValue(fmt.Sprintf("couldn't find proposal with id#%d", 10),
-			func() {
-				suite.govKeeper.DeleteProposal(suite.ctx, 10)
-			},
-		)
+		suite.Require().ErrorIs(suite.govKeeper.DeleteProposal(suite.ctx, 10), types.ErrProposalNotFound.Wrapf("proposal_id %d", 10))
+
 		tp := TestProposal
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
 		suite.Require().NoError(err)
@@ -85,11 +82,11 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 
 		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-		proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
-		suite.Require().True(ok)
+		proposal, err = suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
+		suite.Require().Nil(err)
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
-		activeIterator := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
+		activeIterator, _ := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
 		suite.Require().True(activeIterator.Valid())
 
 		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
@@ -121,11 +118,11 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 
 		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-		proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
-		suite.Require().True(ok)
+		proposal, err = suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
+		suite.Require().Nil(err)
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
-		activeIterator := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
+		activeIterator, _ := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
 		suite.Require().True(activeIterator.Valid())
 
 		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
@@ -231,7 +228,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for i, tc := range testCases {
 		suite.Run(fmt.Sprintf("Test Case %d", i), func() {
-			proposals := suite.govKeeper.GetProposalsFiltered(suite.ctx, tc.params)
+			proposals, _ := suite.govKeeper.GetProposalsFiltered(suite.ctx, tc.params)
 			suite.Require().Len(proposals, tc.expectedNumResults)
 
 			for _, p := range proposals {
@@ -255,8 +252,8 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	proposal2Resp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true)
 	proposal2ID := proposal2Resp.Id
 	makeProposalPass := func() {
-		proposal2, ok := suite.govKeeper.GetProposal(suite.ctx, proposal2ID)
-		suite.Require().True(ok)
+		proposal2, err := suite.govKeeper.GetProposal(suite.ctx, proposal2ID)
+		suite.Require().Nil(err)
 
 		proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
 		suite.govKeeper.SetProposal(suite.ctx, proposal2)

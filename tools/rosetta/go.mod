@@ -21,7 +21,7 @@ require (
 	cosmossdk.io/collections v0.1.0 // indirect
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
-	cosmossdk.io/errors v1.0.0-beta.7 // indirect
+	cosmossdk.io/errors v1.0.0-beta.7.0.20230429155654-3ee8242364e4 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc // indirect
 	cosmossdk.io/x/tx v0.6.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect

@@ -23,6 +23,7 @@ import (
 //
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
+
 func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equivocation) {
 	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress()
@@ -37,7 +38,14 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 		// allowable but none of the disallowed evidence types.  Instead of
 		// getting this coordination right, it is easier to relax the
 		// constraints and ignore evidence that cannot be handled.
-		return
+		newConsAddr, _, err := k.slashingKeeper.GetMappedPubkey(ctx, consAddr.Bytes())
+		if err != nil {
+			return
+		} else if newConsAddr != nil { // take the rotated key
+			consAddr = newConsAddr
+		} else {
+			return
+		}
 	}
 
 	// calculate the age of the evidence

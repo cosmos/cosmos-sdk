@@ -93,5 +93,10 @@ func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 }
 
 func (h Hooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey, _ sdk.Coin) error {
-	return h.k.PerformConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey)
+	if err := h.k.PerformConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey); err != nil {
+		return err
+	}
+
+	h.k.deleteAddrPubkeyRelation(ctx, oldPubKey.Address())
+	return nil
 }

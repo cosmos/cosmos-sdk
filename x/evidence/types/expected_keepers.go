@@ -23,6 +23,7 @@ type (
 	// evidence module.
 	SlashingKeeper interface {
 		GetPubkey(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
+		GetMappedPubkey(sdk.Context, cryptotypes.Address) (sdk.ConsAddress, cryptotypes.PubKey, error)
 		IsTombstoned(sdk.Context, sdk.ConsAddress) bool
 		HasValidatorSigningInfo(sdk.Context, sdk.ConsAddress) bool
 		Tombstone(sdk.Context, sdk.ConsAddress)

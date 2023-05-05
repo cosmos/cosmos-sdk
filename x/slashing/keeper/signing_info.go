@@ -186,5 +186,8 @@ func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptoty
 		k.SetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(newPubKey.Address()), missed.Index, missed.Missed)
 	}
 
+	// Sets a map to newly rotated consensus key with old consensus key
+	k.SetMappedConskey(ctx, sdk.ConsAddress(oldPubKey.Address()), sdk.ConsAddress(newPubKey.Address()))
+
 	return nil
 }

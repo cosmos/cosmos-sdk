@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -126,6 +127,89 @@ func TestHandleDoubleSign(t *testing.T) {
 	// should be jailed and tombstoned
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed())
 	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.Address())))
+
+	// tokens should be decreased
+	newTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
+	assert.Assert(t, newTokens.LT(oldTokens))
+
+	// submit duplicate evidence
+	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+
+	// tokens should be the same (capped slash)
+	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
+
+	// jump to past the unbonding period
+	ctx = ctx.WithBlockTime(time.Unix(1, 0).Add(stakingParams.UnbondingTime))
+
+	// require we cannot unjail
+	assert.Error(t, f.slashingKeeper.Unjail(ctx, operatorAddr), slashingtypes.ErrValidatorJailed.Error())
+
+	// require we be able to unbond now
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	del, _ := f.stakingKeeper.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
+	validator, _ := f.stakingKeeper.GetValidator(ctx, operatorAddr)
+	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
+	tstaking.Ctx = ctx
+	tstaking.Denom = stakingParams.BondDenom
+	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
+
+	// query evidence from store
+	evidences := f.evidenceKeeper.GetAllEvidence(ctx)
+	assert.Assert(t, len(evidences) == 1)
+}
+
+func TestHandleDoubleSignAfterRotation(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.ctx.WithIsCheckTx(false).WithBlockHeight(1)
+	populateValidators(t, f)
+
+	power := int64(100)
+	stakingParams := f.stakingKeeper.GetParams(ctx)
+	operatorAddr, val := valAddresses[0], pubkeys[0]
+	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
+
+	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
+
+	// execute end-blocker and verify validator attributes
+	staking.EndBlocker(ctx, f.stakingKeeper)
+	assert.DeepEqual(t,
+		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
+		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),
+	)
+	assert.DeepEqual(t, selfDelegation, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
+
+	NewPubkey := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB53")
+
+	msgServer := stakingkeeper.NewMsgServerImpl(f.stakingKeeper)
+	msg, err := stakingtypes.NewMsgRotateConsPubKey(operatorAddr, NewPubkey)
+	assert.NilError(t, err)
+	_, err = msgServer.RotateConsPubKey(ctx, msg)
+	assert.NilError(t, err)
+
+	// execute end-blocker and verify validator attributes
+	staking.EndBlocker(ctx, f.stakingKeeper)
+
+	// handle a signature to set signing info
+	f.slashingKeeper.HandleValidatorSignature(ctx, NewPubkey.Address(), selfDelegation.Int64(), true)
+
+	// double sign less than max age
+	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
+	evidence := abci.RequestBeginBlock{
+		ByzantineValidators: []abci.Misbehavior{{
+			Validator: abci.Validator{Address: val.Address(), Power: power},
+			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+			Time:      time.Unix(0, 0),
+			Height:    0,
+		}},
+	}
+
+	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+
+	// should be jailed and tombstoned
+	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed())
+	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(NewPubkey.Address())))
 
 	// tokens should be decreased
 	newTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()

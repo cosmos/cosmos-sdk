@@ -547,12 +547,12 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	// SetValidatorByConsAddr for NewPubKey
 	oldConsensusPubKey := val.ConsensusPubkey
 	val.ConsensusPubkey = msg.NewPubkey
+
+	k.SetValidator(ctx, val)
 	if err := k.SetValidatorByConsAddr(ctx, val); err != nil {
 		return nil, err
 	}
 
-	k.SetValidator(ctx, val)
-	k.SetValidatorByConsAddr(ctx, val)
 	k.SetValidatorByPowerIndex(ctx, val)
 
 	// Add ConsPubKeyRotationHistory for tracking rotation

@@ -1,32 +1,34 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
+
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // SetParams sets the gov module's parameters.
 // CONTRACT: This method performs no validation of the parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params v1.Params) error {
-	store := ctx.KVStore(k.storeKey)
+func (k Keeper) SetParams(ctx context.Context, params v1.Params) error {
+	store := k.storeService.OpenKVStore(ctx)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
 		return err
 	}
-	store.Set(types.ParamsKey, bz)
-
-	return nil
+	return store.Set(types.ParamsKey, bz)
 }
 
 // GetParams gets the gov module's parameters.
-func (k Keeper) GetParams(clientCtx sdk.Context) (params v1.Params) {
-	store := clientCtx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
+func (k Keeper) GetParams(ctx context.Context) (params v1.Params, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.ParamsKey)
+	if err != nil {
+		return params, err
+	}
 	if bz == nil {
-		return params
+		return params, nil
 	}
 
-	k.cdc.MustUnmarshal(bz, &params)
-	return params
+	err = k.cdc.Unmarshal(bz, &params)
+	return params, err
 }

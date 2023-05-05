@@ -143,17 +143,13 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 			tc.malleate()
 			appGenesisState, err := genutil.SetGenTxsInAppGenesisState(cdc, txJSONEncoder, make(map[string]json.RawMessage), genTxs)
 
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(appGenesisState[types.ModuleName])
+			suite.Require().NoError(err)
+			suite.Require().NotNil(appGenesisState[types.ModuleName])
 
-				var genesisState types.GenesisState
-				err := cdc.UnmarshalJSON(appGenesisState[types.ModuleName], &genesisState)
-				suite.Require().NoError(err)
-				suite.Require().NotNil(genesisState.GenTxs)
-			} else {
-				suite.Require().Error(err)
-			}
+			var genesisState types.GenesisState
+			err = cdc.UnmarshalJSON(appGenesisState[types.ModuleName], &genesisState)
+			suite.Require().NoError(err)
+			suite.Require().NotNil(genesisState.GenTxs)
 		})
 	}
 }

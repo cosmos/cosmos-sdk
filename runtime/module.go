@@ -164,11 +164,10 @@ func SetupAppBuilder(inputs AppInputs) {
 			continue
 		}
 
-		if basicMod, ok := mod.(module.AppModuleBasic); ok {
-			app.basicManager[name] = basicMod
-			basicMod.RegisterInterfaces(inputs.InterfaceRegistry)
-			basicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-		}
+		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
+		app.basicManager[name] = coreAppModuleBasic
+		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
+		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	}
 }
 

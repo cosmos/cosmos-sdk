@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
-	store "cosmossdk.io/store/types"
+	store "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -170,7 +170,7 @@ type ModuleInputs struct {
 
 	Config           *modulev1.Module
 	Cdc              codec.Codec
-	Key              *store.KVStoreKey
+	StoreService     store.KVStoreService
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter baseapp.MessageRouter
 
@@ -205,7 +205,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
@@ -316,7 +316,10 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 // ExportGenesis returns the exported genesis state as raw bytes for the gov
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs, err := ExportGenesis(ctx, am.keeper)
+	if err != nil {
+		panic(err)
+	}
 	return cdc.MustMarshalJSON(gs)
 }
 
@@ -327,8 +330,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	c := sdk.UnwrapSDKContext(ctx)
-	EndBlocker(c, am.keeper)
-	return nil
+	return EndBlocker(c, am.keeper)
 }
 
 // AppModuleSimulation functions

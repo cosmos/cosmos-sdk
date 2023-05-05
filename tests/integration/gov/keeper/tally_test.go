@@ -28,7 +28,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -57,7 +57,7 @@ func TestTallyNoQuorum(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, _, _ := app.GovKeeper.Tally(ctx, proposal)
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
 }
@@ -83,7 +83,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -110,7 +110,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, _, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -136,7 +136,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -164,7 +164,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits)
@@ -192,7 +192,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -220,7 +220,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -248,7 +248,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -286,7 +286,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -323,7 +323,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -365,7 +365,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -408,7 +408,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -453,7 +453,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -488,7 +488,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)

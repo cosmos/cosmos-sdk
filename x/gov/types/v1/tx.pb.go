@@ -2814,7 +2814,7 @@ func (m *MsgVoteWeighted) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Options", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceRegistryOptions", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {

@@ -15,6 +15,8 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -67,7 +69,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
 	sdkConfig := sdk.GetConfig()
+	// Append SIGN_MODE_TEXTUAL to the default sign modes.
+	enabledSignModes := append(tx.DefaultSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
 	txConfigOptions := tx.ConfigOptions{
+		EnabledSignModes: enabledSignModes,
 		SigningOptions: &txsigning.Options{
 			FileResolver: in.ProtoFileResolver,
 			// From static config? But this is already in auth config.

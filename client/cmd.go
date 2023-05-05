@@ -12,6 +12,8 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -279,6 +281,19 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		}
 
 		clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
+
+		if keyType == keyring.TypeLedger && clientCtx.SignModeStr == flags.SignModeTextual {
+			textualEnabled := false
+			for _, v := range clientCtx.TxConfig.SignModeHandler().SupportedModes() {
+				if v == signingv1beta1.SignMode_SIGN_MODE_TEXTUAL {
+					textualEnabled = true
+					break
+				}
+			}
+			if !textualEnabled {
+				return clientCtx, fmt.Errorf("SIGN_MODE_TEXTUAL is not available")
+			}
+		}
 
 		// If the `from` signer account is a ledger key, we need to use
 		// SIGN_MODE_AMINO_JSON, because ledger doesn't support proto yet.

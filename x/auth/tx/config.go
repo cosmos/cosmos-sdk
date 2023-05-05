@@ -54,7 +54,6 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	signingtypes.SignMode_SIGN_MODE_TEXTUAL,
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
@@ -63,7 +62,7 @@ var DefaultSignModes = []signingtypes.SignMode{
 // NOTE: Use NewTxConfigWithOptions to provide a custom signing handler in case the sign mode
 // is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL.
 //
-// We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage.  Within the SDK,
+// We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,

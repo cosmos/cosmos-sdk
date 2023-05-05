@@ -26,6 +26,7 @@ func AddGenesisAccount(
 	appendAcct bool,
 	genesisFileURL, amountStr, vestingAmtStr string,
 	vestingStart, vestingEnd int64,
+	moduleName string,
 ) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
@@ -61,6 +62,8 @@ func AddGenesisAccount(
 		default:
 			return errors.New("invalid vesting parameters; must supply start and end time or end time")
 		}
+	} else if moduleName != "" {
+		genAccount = authtypes.NewEmptyModuleAccount(moduleName, authtypes.Burner, authtypes.Minter)
 	} else {
 		genAccount = baseAccount
 	}

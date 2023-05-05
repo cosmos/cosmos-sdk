@@ -6,7 +6,8 @@ import (
 	"math/rand"
 	"time"
 
-	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -103,11 +104,21 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 	if err != nil {
 		panic(fmt.Errorf("failed to pack msg: %w", err))
 	}
-	encoder := aminojson.NewAminoJSON(aminojson.EncoderOptions{AllowUnnamedAnyTypes: true})
-	msgBytes, err := encoder.Marshal(&anypb.Any{
-		TypeUrl: anyMsg.TypeUrl,
-		Value:   anyMsg.Value,
-	})
+
+	resolver := protoregistry.GlobalTypes
+	protoType, err := resolver.FindMessageByURL(msgType)
+	if err != nil {
+		panic(fmt.Errorf("failed to find proto type for %s: %w", msgType, err))
+	}
+
+	valueMsg := protoType.New()
+	err = proto.Unmarshal(anyMsg.Value, valueMsg.Interface())
+	if err != nil {
+		panic(fmt.Errorf("failed to unmarshal msg: %w", err))
+	}
+
+	encoder := aminojson.NewAminoJSON()
+	msgBytes, err := encoder.Marshal(valueMsg.Interface())
 	if err != nil {
 		panic(fmt.Errorf("failed to marshal msg: %w", err))
 	}

@@ -29,7 +29,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 	cdc := amino.NewCodec()
 	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
 	cdc.RegisterConcrete(&testpb.NestedMessage{}, "NestedMessage", nil)
-	aj := aminojson.NewAminoJSON(aminojson.EncoderOptions{})
+	aj := aminojson.NewAminoJSON()
 
 	cases := map[string]struct {
 		msg       proto.Message
@@ -91,7 +91,7 @@ func TestAminoJSON(t *testing.T) {
 		Si64:     -59268425823934,
 		Sf64:     -659101379604211154,
 	}
-	bz, err := aminojson.NewAminoJSON(aminojson.EncoderOptions{}).Marshal(msg)
+	bz, err := aminojson.NewAminoJSON().Marshal(msg)
 	assert.NilError(t, err)
 	legacyBz, err := cdc.MarshalJSON(msg)
 	assert.NilError(t, err)
@@ -102,7 +102,7 @@ func TestRapid(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&testpb.ABitOfEverything{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
-		bz, err := aminojson.NewAminoJSON(aminojson.EncoderOptions{}).Marshal(msg)
+		bz, err := aminojson.NewAminoJSON().Marshal(msg)
 		assert.NilError(t, err)
 		checkInvariants(t, msg, bz)
 	})

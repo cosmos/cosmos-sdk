@@ -20,19 +20,14 @@ type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 // Encoder is a JSON encoder that uses the Amino JSON encoding rules for protobuf messages.
 type Encoder struct {
 	// maps cosmos_proto.scalar -> field encoder
-	scalarEncoders       map[string]FieldEncoder
-	messageEncoders      map[string]MessageEncoder
-	fieldEncoders        map[string]FieldEncoder
-	allowUnnamedAnyTypes bool
-}
-
-type EncoderOptions struct {
-	AllowUnnamedAnyTypes bool
+	scalarEncoders  map[string]FieldEncoder
+	messageEncoders map[string]MessageEncoder
+	fieldEncoders   map[string]FieldEncoder
 }
 
 // NewAminoJSON returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
 // rules.
-func NewAminoJSON(opts EncoderOptions) Encoder {
+func NewAminoJSON() Encoder {
 	enc := Encoder{
 		scalarEncoders: map[string]FieldEncoder{
 			"cosmos.Dec": cosmosDecEncoder,
@@ -47,7 +42,6 @@ func NewAminoJSON(opts EncoderOptions) Encoder {
 			"legacy_coins":     nullSliceAsEmptyEncoder,
 			"cosmos_dec_bytes": cosmosDecEncoder,
 		},
-		allowUnnamedAnyTypes: opts.AllowUnnamedAnyTypes,
 	}
 	return enc
 }

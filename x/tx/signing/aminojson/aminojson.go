@@ -42,7 +42,7 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 		h.typeResolver = options.TypeResolver
 	}
 	if options.Encoder == nil {
-		h.encoder = NewAminoJSON(EncoderOptions{})
+		h.encoder = NewAminoJSON()
 	} else {
 		h.encoder = *options.Encoder
 	}

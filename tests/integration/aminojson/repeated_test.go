@@ -17,7 +17,7 @@ import (
 
 func TestRepeatedFields(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
-	aj := aminojson.NewAminoJSON(aminojson.EncoderOptions{})
+	aj := aminojson.NewAminoJSON()
 
 	cases := map[string]struct {
 		gogo    gogoproto.Message

@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.0
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
-	cosmossdk.io/x/tx v0.6.1
+	cosmossdk.io/x/tx v0.6.3
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -164,8 +164,6 @@ require (
 replace (
 	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
-	// TODO: remove after release 0.6.2
-	cosmossdk.io/x/tx => ./x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

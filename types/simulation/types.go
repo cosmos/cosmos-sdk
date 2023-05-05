@@ -107,14 +107,18 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 		panic(fmt.Errorf("failed to find proto descriptor for %s: %w", msgType, err))
 	}
 
-	dynamicMsg := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor)).New().Interface()
+	dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+	dynamicMsg := dynamicMsgType.New().Interface()
 	gogoBytes, err := gogoproto.Marshal(msg)
 	if err != nil {
 		panic(fmt.Errorf("failed to marshal msg: %w", err))
 	}
 	err = proto.Unmarshal(gogoBytes, dynamicMsg)
+	if err != nil {
+		panic(fmt.Errorf("failed to unmarshal msg: %w", err))
+	}
 
-	encoder := aminojson.NewEncoder()
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: resolver})
 	jsonBytes, err := encoder.Marshal(dynamicMsg)
 	if err != nil {
 		panic(fmt.Errorf("failed to marshal msg: %w", err))

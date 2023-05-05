@@ -211,6 +211,8 @@ replace (
 
 // Below are the long-lived replace of the SimApp
 replace (
+	// TODO: remove after 0.7.0 release
+	cosmossdk.io/x/tx => ../x/tx
 	cosmossdk.io/core => ../core
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

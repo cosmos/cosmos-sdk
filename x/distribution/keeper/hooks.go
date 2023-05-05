@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -166,7 +167,11 @@ func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 }
 
 func (h Hooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, _ cryptotypes.PubKey, _ cryptotypes.PubKey, rotationFee sdk.Coin) error {
-	feePool := h.k.GetFeePool(ctx)
+	feePool, err := h.k.GetFeePool(ctx)
+	if err != nil {
+		return err
+	}
+
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(rotationFee)...)
 	h.k.SetFeePool(ctx, feePool)
 	return nil

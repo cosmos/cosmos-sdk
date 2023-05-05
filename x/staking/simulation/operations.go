@@ -121,6 +121,10 @@ func WeightedOperations(
 			weightMsgCancelUnbondingDelegation,
 			SimulateMsgCancelUnbondingDelegate(txGen, ak, bk, k),
 		),
+		simulation.NewWeightedOperation(
+			weightMsgCancelUnbondingDelegation,
+			SimulateMsgRotateConsPubKey(txGen, ak, bk, k),
+		),
 	}
 }
 
@@ -621,7 +625,7 @@ func SimulateMsgBeginRedelegate(
 	}
 }
 
-func SimulateMsgRotateConsPubKey(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -654,7 +658,7 @@ func SimulateMsgRotateConsPubKey(ak types.AccountKeeper, bk types.BankKeeper, k 
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			TxGen:           txGen,
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,

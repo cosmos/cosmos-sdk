@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -100,7 +101,7 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 
 	anyMsg, err := types.NewAnyWithValue(msg)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to pack msg: %w", err))
 	}
 	encoder := aminojson.NewAminoJSON()
 	msgBytes, err := encoder.Marshal(&anypb.Any{
@@ -108,7 +109,7 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 		Value:   anyMsg.Value,
 	})
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to marshal msg: %w", err))
 	}
 
 	return NewOperationMsgBasic(moduleName, msgType, comment, ok, msgBytes)

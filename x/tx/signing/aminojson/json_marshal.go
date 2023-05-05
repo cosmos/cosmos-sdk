@@ -25,9 +25,9 @@ type Encoder struct {
 	fieldEncoders   map[string]FieldEncoder
 }
 
-// NewAminoJSON returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
+// NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
 // rules.
-func NewAminoJSON() Encoder {
+func NewEncoder() Encoder {
 	enc := Encoder{
 		scalarEncoders: map[string]FieldEncoder{
 			"cosmos.Dec": cosmosDecEncoder,

@@ -29,13 +29,17 @@ type ModuleDB interface {
 	// GenesisHandler returns an implementation of appmodule.HasGenesis
 	// to be embedded in or called from app module implementations.
 	// Ex:
-	//   type Keeper struct {
+	//   type AppModule struct {
 	//     appmodule.HasGenesis
 	//   }
 	//
 	//   func NewKeeper(db ModuleDB) *Keeper {
-	//     return &Keeper{HasGenesis: db.GenesisHandler()}
+	//     return &Keeper{genesisHandler: db.GenesisHandler()}
 	//   }
+	//
+	//  func NewAppModule(keeper keeper.Keeper) AppModule {
+	//    return AppModule{HasGenesis: keeper.GenesisHandler()}
+	//  }
 	GenesisHandler() appmodule.HasGenesis
 
 	private()

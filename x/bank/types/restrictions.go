@@ -1,14 +1,18 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"context"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // A MintingRestrictionFn can restrict minting of coins.
-type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+type MintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
 
 var _ MintingRestrictionFn = NoOpMintingRestrictionFn
 
 // NoOpMintingRestrictionFn is a no-op MintingRestrictionFn.
-func NoOpMintingRestrictionFn(_ sdk.Context, _ sdk.Coins) error {
+func NoOpMintingRestrictionFn(_ context.Context, _ sdk.Coins) error {
 	return nil
 }
 
@@ -36,7 +40,7 @@ func ComposeMintingRestrictions(restrictions ...MintingRestrictionFn) MintingRes
 	case 1:
 		return toRun[0]
 	}
-	return func(ctx sdk.Context, coins sdk.Coins) error {
+	return func(ctx context.Context, coins sdk.Coins) error {
 		for _, r := range toRun {
 			err := r(ctx, coins)
 			if err != nil {
@@ -48,12 +52,12 @@ func ComposeMintingRestrictions(restrictions ...MintingRestrictionFn) MintingRes
 }
 
 // A SendRestrictionFn can restrict sends and/or provide a new receiver address.
-type SendRestrictionFn func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (newToAddr sdk.AccAddress, err error)
+type SendRestrictionFn func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (newToAddr sdk.AccAddress, err error)
 
 var _ SendRestrictionFn = NoOpSendRestrictionFn
 
 // NoOpSendRestrictionFn is a no-op SendRestrictionFn.
-func NoOpSendRestrictionFn(_ sdk.Context, _, toAddr sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
+func NoOpSendRestrictionFn(_ context.Context, _, toAddr sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
 	return toAddr, nil
 }
 
@@ -82,7 +86,7 @@ func ComposeSendRestrictions(restrictions ...SendRestrictionFn) SendRestrictionF
 	case 1:
 		return toRun[0]
 	}
-	return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+	return func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 		var err error
 		for _, r := range toRun {
 			toAddr, err = r(ctx, fromAddr, toAddr, amt)

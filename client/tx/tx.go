@@ -172,7 +172,8 @@ func SignWithPrivKey(
 	var sigV2 signing.SignatureV2
 
 	// Generate the bytes to be signed.
-	signBytes, err := authsigning.GetSignBytesWithContext(txConfig.SignModeHandler(), ctx, signMode, signerData, txBuilder.GetTx())
+	signBytes, err := authsigning.GetSignBytesAdapter(
+		ctx, txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return sigV2, err
 	}
@@ -248,10 +249,14 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
 
+	var err error
 	signMode := txf.signMode
 	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode = txf.txConfig.SignModeHandler().DefaultMode()
+		signMode, err = authsigning.APISignModeToInternal(txf.txConfig.SignModeHandler().DefaultMode())
+		if err != nil {
+			return err
+		}
 	}
 
 	k, err := txf.keybase.Key(name)
@@ -313,8 +318,9 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return err
 	}
 
-	// Generate the bytes to be signed.
-	bytesToSign, err := authsigning.GetSignBytesWithContext(txf.txConfig.SignModeHandler(), ctx, signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesAdapter(
+		ctx, txf.txConfig.SignModeHandler(),
+		signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}

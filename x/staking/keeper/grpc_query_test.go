@@ -29,6 +29,15 @@ func (s *KeeperTestSuite) TestGRPCQueryValidator() {
 			false,
 		},
 		{
+			"with valid and not existing address",
+			func() {
+				req = &types.QueryValidatorRequest{
+					ValidatorAddr: "cosmosvaloper15jkng8hytwt22lllv6mw4k89qkqehtahd84ptu",
+				}
+			},
+			false,
+		},
+		{
 			"valid request",
 			func() {
 				req = &types.QueryValidatorRequest{ValidatorAddr: validator.OperatorAddress}

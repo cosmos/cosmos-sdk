@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -46,7 +47,7 @@ func (s *MintingRestrictionTestHelper) NewArgs(name string, coins sdk.Coins) *Mi
 
 // NamedRestriction creates a new MintingRestrictionFn function that records the arguments it's called with and returns nil.
 func (s *MintingRestrictionTestHelper) NamedRestriction(name string) types.MintingRestrictionFn {
-	return func(_ sdk.Context, coins sdk.Coins) error {
+	return func(_ context.Context, coins sdk.Coins) error {
 		s.RecordCall(name, coins)
 		return nil
 	}
@@ -54,7 +55,7 @@ func (s *MintingRestrictionTestHelper) NamedRestriction(name string) types.Minti
 
 // ErrorRestriction creates a new MintingRestrictionFn function that returns an error.
 func (s *MintingRestrictionTestHelper) ErrorRestriction(message string) types.MintingRestrictionFn {
-	return func(_ sdk.Context, coins sdk.Coins) error {
+	return func(_ context.Context, coins sdk.Coins) error {
 		s.RecordCall(message, coins)
 		return errors.New(message)
 	}
@@ -432,7 +433,7 @@ func (s *SendRestrictionTestHelper) NewArgs(name string, fromAddr, toAddr sdk.Ac
 
 // NamedRestriction creates a new SendRestrictionFn function that records the arguments it's called with and returns the provided toAddr.
 func (s *SendRestrictionTestHelper) NamedRestriction(name string) types.SendRestrictionFn {
-	return func(_ sdk.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
+	return func(_ context.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
 		s.RecordCall(name, fromAddr, toAddr, coins)
 		return toAddr, nil
 	}
@@ -440,7 +441,7 @@ func (s *SendRestrictionTestHelper) NamedRestriction(name string) types.SendRest
 
 // NewToRestriction creates a new SendRestrictionFn function that returns a different toAddr than provided.
 func (s *SendRestrictionTestHelper) NewToRestriction(name string, addr sdk.AccAddress) types.SendRestrictionFn {
-	return func(_ sdk.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
+	return func(_ context.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
 		s.RecordCall(name, fromAddr, toAddr, coins)
 		return addr, nil
 	}
@@ -448,7 +449,7 @@ func (s *SendRestrictionTestHelper) NewToRestriction(name string, addr sdk.AccAd
 
 // ErrorRestriction creates a new SendRestrictionFn function that returns a nil toAddr and an error.
 func (s *SendRestrictionTestHelper) ErrorRestriction(message string) types.SendRestrictionFn {
-	return func(_ sdk.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
+	return func(_ context.Context, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) (sdk.AccAddress, error) {
 		s.RecordCall(message, fromAddr, toAddr, coins)
 		return nil, errors.New(message)
 	}

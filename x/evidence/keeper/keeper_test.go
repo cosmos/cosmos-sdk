@@ -78,6 +78,7 @@ type KeeperTestSuite struct {
 	accountKeeper  *evidencetestutil.MockAccountKeeper
 	slashingKeeper *evidencetestutil.MockSlashingKeeper
 	stakingKeeper  *evidencetestutil.MockStakingKeeper
+	blockInfo      *evidencetestutil.MockCometinfo
 	queryClient    types.QueryClient
 	encCfg         moduletestutil.TestEncodingConfig
 	msgServer      types.MsgServer
@@ -96,6 +97,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	slashingKeeper := evidencetestutil.NewMockSlashingKeeper(ctrl)
 	accountKeeper := evidencetestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := evidencetestutil.NewMockBankKeeper(ctrl)
+	suite.blockInfo = &evidencetestutil.MockCometinfo{}
 
 	evidenceKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -103,6 +105,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		stakingKeeper,
 		slashingKeeper,
 		address.NewBech32Codec("cosmos"),
+		&evidencetestutil.MockCometinfo{},
 	)
 
 	suite.stakingKeeper = stakingKeeper

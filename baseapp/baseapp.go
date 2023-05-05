@@ -3,7 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"sort"
-	"strings"
+	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -51,7 +51,7 @@ var _ abci.Application = (*BaseApp)(nil)
 type BaseApp struct {
 	// initialized on creation
 	logger            log.Logger
-	name              string                      // application name from abci.Info
+	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
@@ -62,17 +62,19 @@ type BaseApp struct {
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool         mempool.Mempool            // application side mempool
-	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
-	postHandler     sdk.PostHandler            // post handler, optional, e.g. for tips
-	initChainer     sdk.InitChainer            // initialize state with validators and state blob
-	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
-	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
-	prepareProposal sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
-	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
-	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
-	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
-	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	mempool            mempool.Mempool            // application side mempool
+	anteHandler        sdk.AnteHandler            // ante handler for fee and auth
+	postHandler        sdk.PostHandler            // post handler, optional, e.g. for tips
+	initChainer        sdk.InitChainer            // initialize state with validators and state blob
+	beginBlocker       sdk.BeginBlocker           // logic to run before any txs
+	processProposal    sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
+	prepareProposal    sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
+	endBlocker         sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
+	prepareCheckStater sdk.PrepareCheckStater     // logic to run during commit using the checkState
+	precommiter        sdk.Precommiter            // logic to run during commit using the deliverState
+	addrPeerFilter     sdk.PeerFilter             // filter peers by address and port
+	idPeerFilter       sdk.PeerFilter             // filter peers by node ID
+	fauxMerkleMode     bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -88,9 +90,6 @@ type BaseApp struct {
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache storetypes.MultiStorePersistentCache
-
-	// absent validators from begin block
-	voteInfos []abci.VoteInfo
 
 	// paramStore is used to query for ABCI consensus parameters from an
 	// application parameter store.
@@ -571,8 +570,8 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 		panic(fmt.Sprintf("state is nil for mode %v", mode))
 	}
 	ctx := modeState.ctx.
-		WithTxBytes(txBytes).
-		WithVoteInfos(app.voteInfos)
+		WithTxBytes(txBytes)
+		// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
@@ -773,7 +772,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
-	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 
@@ -797,10 +795,15 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// create message events
 		msgEvents := createEvents(msgResult.GetEvents(), msg)
 
-		// append message events, data and logs
+		// append message events and data
 		//
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
+		for j, event := range msgEvents {
+			// append message index to all events
+			msgEvents[j] = event.AppendAttributes(sdk.NewAttribute("msg_index", strconv.Itoa(i)))
+		}
+
 		events = events.AppendEvents(msgEvents)
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
@@ -816,7 +819,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			msgResponses = append(msgResponses, msgResponse)
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
 	data, err := makeABCIData(msgResponses)
@@ -826,7 +828,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 
 	return &sdk.Result{
 		Data:         data,
-		Log:          strings.TrimSpace(msgLogs.String()),
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil

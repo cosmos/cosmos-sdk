@@ -1,12 +1,14 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -24,22 +26,22 @@ type SendKeeper interface {
 	PrependSendRestriction(restriction types.SendRestrictionFn)
 	ClearSendRestriction()
 
-	InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
-	SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+	InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error
+	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 
-	GetParams(ctx sdk.Context) types.Params
-	SetParams(ctx sdk.Context, params types.Params) error
+	GetParams(ctx context.Context) types.Params
+	SetParams(ctx context.Context, params types.Params) error
 
-	IsSendEnabledDenom(ctx sdk.Context, denom string) bool
-	GetSendEnabledEntry(ctx sdk.Context, denom string) (types.SendEnabled, bool)
-	SetSendEnabled(ctx sdk.Context, denom string, value bool)
-	SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled)
-	DeleteSendEnabled(ctx sdk.Context, denoms ...string)
-	IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) (stop bool))
-	GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled
+	IsSendEnabledDenom(ctx context.Context, denom string) bool
+	GetSendEnabledEntry(ctx context.Context, denom string) (types.SendEnabled, bool)
+	SetSendEnabled(ctx context.Context, denom string, value bool)
+	SetAllSendEnabled(ctx context.Context, sendEnableds []*types.SendEnabled)
+	DeleteSendEnabled(ctx context.Context, denoms ...string)
+	IterateSendEnabledEntries(ctx context.Context, cb func(denom string, sendEnabled bool) (stop bool))
+	GetAllSendEnabledEntries(ctx context.Context) []types.SendEnabled
 
-	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
-	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+	IsSendEnabledCoin(ctx context.Context, coin sdk.Coin) bool
+	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
 	GetBlockedAddresses() map[string]bool
@@ -54,9 +56,10 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	cdc      codec.BinaryCodec
-	ak       types.AccountKeeper
-	storeKey storetypes.StoreKey
+	cdc          codec.BinaryCodec
+	ak           types.AccountKeeper
+	storeService store.KVStoreService
+	logger       log.Logger
 
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
@@ -70,22 +73,24 @@ type BaseSendKeeper struct {
 
 func NewBaseSendKeeper(
 	cdc codec.BinaryCodec,
-	storeKey storetypes.StoreKey,
+	storeService store.KVStoreService,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
+	logger log.Logger,
 ) BaseSendKeeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseSendKeeper{
-		BaseViewKeeper:  NewBaseViewKeeper(cdc, storeKey, ak),
+		BaseViewKeeper:  NewBaseViewKeeper(cdc, storeService, ak, logger),
 		cdc:             cdc,
 		ak:              ak,
-		storeKey:        storeKey,
+		storeService:    storeService,
 		blockedAddrs:    blockedAddrs,
 		authority:       authority,
+		logger:          logger,
 		sendRestriction: newSendRestriction(),
 	}
 }
@@ -111,7 +116,7 @@ func (k BaseSendKeeper) GetAuthority() string {
 }
 
 // GetParams returns the total set of bank parameters.
-func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
+func (k BaseSendKeeper) GetParams(ctx context.Context) (params types.Params) {
 	p, _ := k.Params.Get(ctx)
 	return p
 }
@@ -119,7 +124,7 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the total set of bank parameters.
 //
 // Note: params.SendEnabled is deprecated but it should be here regardless.
-func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
+func (k BaseSendKeeper) SetParams(ctx context.Context, params types.Params) error {
 	// Normally SendEnabled is deprecated but we still support it for backwards
 	// compatibility. Using params.Validate() would fail due to the SendEnabled
 	// deprecation.
@@ -135,7 +140,7 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 // InputOutputCoins performs multi-send functionality. It accepts an
 // input that corresponds to a series of outputs. It returns an error if the
 // input and outputs don't line up or if any single transfer of tokens fails.
-func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error {
+func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// Check supply invariant and validity of Coins.
 	if err := types.ValidateInputOutputs(input, outputs); err != nil {
@@ -152,7 +157,8 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 		return err
 	}
 
-	ctx.EventManager().EmitEvent(
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(types.AttributeKeySender, input.Address),
@@ -174,7 +180,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 			return err
 		}
 
-		ctx.EventManager().EmitEvent(
+		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
 				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
@@ -198,7 +204,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
-func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	var err error
 	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
 	if err != nil {
@@ -227,7 +233,8 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 
 	// bech32 encoding is expensive! Only do it once for fromAddr
 	fromAddrString := fromAddr.String()
-	ctx.EventManager().EmitEvents(sdk.Events{
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
@@ -246,7 +253,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 // subUnlockedCoins removes the unlocked amt coins of the given account. An error is
 // returned if the resulting balance is negative or the initial amount is invalid.
 // A coin_spent event is emitted after.
-func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -278,7 +285,8 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 		}
 	}
 
-	ctx.EventManager().EmitEvent(
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
 		types.NewCoinSpentEvent(addr, amt),
 	)
 
@@ -287,7 +295,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 
 // addCoins increase the addr balance by the given amt. Fails if the provided
 // amt is invalid. It emits a coin received event.
-func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -303,7 +311,8 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 	}
 
 	// emit coin received event
-	ctx.EventManager().EmitEvent(
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
 		types.NewCoinReceivedEvent(addr, amt),
 	)
 
@@ -311,7 +320,7 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 }
 
 // setBalance sets the coin balance for an account by address.
-func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
+func (k BaseSendKeeper) setBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}
@@ -330,7 +339,7 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 // IsSendEnabledCoins checks the coins provided and returns an ErrSendDisabled
 // if any of the coins are not configured for sending. Returns nil if sending is
 // enabled for all provided coins.
-func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
+func (k BaseSendKeeper) IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error {
 	if len(coins) == 0 {
 		return nil
 	}
@@ -347,7 +356,7 @@ func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) e
 }
 
 // IsSendEnabledCoin returns the current SendEnabled status of the provided coin's denom
-func (k BaseSendKeeper) IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
+func (k BaseSendKeeper) IsSendEnabledCoin(ctx context.Context, coin sdk.Coin) bool {
 	return k.IsSendEnabledDenom(ctx, coin.Denom)
 }
 
@@ -363,13 +372,13 @@ func (k BaseSendKeeper) GetBlockedAddresses() map[string]bool {
 }
 
 // IsSendEnabledDenom returns the current SendEnabled status of the provided denom.
-func (k BaseSendKeeper) IsSendEnabledDenom(ctx sdk.Context, denom string) bool {
+func (k BaseSendKeeper) IsSendEnabledDenom(ctx context.Context, denom string) bool {
 	return k.getSendEnabledOrDefault(ctx, denom, k.GetParams(ctx).DefaultSendEnabled)
 }
 
 // GetSendEnabledEntry gets a SendEnabled entry for the given denom.
 // The second return argument is true iff a specific entry exists for the given denom.
-func (k BaseSendKeeper) GetSendEnabledEntry(ctx sdk.Context, denom string) (types.SendEnabled, bool) {
+func (k BaseSendKeeper) GetSendEnabledEntry(ctx context.Context, denom string) (types.SendEnabled, bool) {
 	sendEnabled, found := k.getSendEnabled(ctx, denom)
 	if !found {
 		return types.SendEnabled{}, false
@@ -379,12 +388,12 @@ func (k BaseSendKeeper) GetSendEnabledEntry(ctx sdk.Context, denom string) (type
 }
 
 // SetSendEnabled sets the SendEnabled flag for a denom to the provided value.
-func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, denom string, value bool) {
+func (k BaseSendKeeper) SetSendEnabled(ctx context.Context, denom string, value bool) {
 	_ = k.SendEnabled.Set(ctx, denom, value)
 }
 
 // SetAllSendEnabled sets all the provided SendEnabled entries in the bank store.
-func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, entries []*types.SendEnabled) {
+func (k BaseSendKeeper) SetAllSendEnabled(ctx context.Context, entries []*types.SendEnabled) {
 	for _, entry := range entries {
 		_ = k.SendEnabled.Set(ctx, entry.Denom, entry.Enabled)
 	}
@@ -392,20 +401,20 @@ func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, entries []*types.Send
 
 // DeleteSendEnabled deletes the SendEnabled flags for one or more denoms.
 // If a denom is provided that doesn't have a SendEnabled entry, it is ignored.
-func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denoms ...string) {
+func (k BaseSendKeeper) DeleteSendEnabled(ctx context.Context, denoms ...string) {
 	for _, denom := range denoms {
 		_ = k.SendEnabled.Remove(ctx, denom)
 	}
 }
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
-func (k BaseSendKeeper) IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) bool) {
+func (k BaseSendKeeper) IterateSendEnabledEntries(ctx context.Context, cb func(denom string, sendEnabled bool) bool) {
 	_ = k.SendEnabled.Walk(ctx, nil, cb)
 }
 
 // GetAllSendEnabledEntries gets all the SendEnabled entries that are stored.
 // Any denominations not returned use the default value (set in Params).
-func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled {
+func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx context.Context) []types.SendEnabled {
 	var rv []types.SendEnabled
 	k.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) bool {
 		rv = append(rv, types.SendEnabled{Denom: denom, Enabled: sendEnabled})
@@ -425,7 +434,7 @@ func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEn
 //	if !found {
 //	    sendEnabled = DefaultSendEnabled
 //	}
-func (k BaseSendKeeper) getSendEnabled(ctx sdk.Context, denom string) (bool, bool) {
+func (k BaseSendKeeper) getSendEnabled(ctx context.Context, denom string) (bool, bool) {
 	has, err := k.SendEnabled.Has(ctx, denom)
 	if err != nil || !has {
 		return false, false
@@ -441,7 +450,7 @@ func (k BaseSendKeeper) getSendEnabled(ctx sdk.Context, denom string) (bool, boo
 
 // getSendEnabledOrDefault gets the SendEnabled value for a denom. If it's not
 // in the store, this will return defaultVal.
-func (k BaseSendKeeper) getSendEnabledOrDefault(ctx sdk.Context, denom string, defaultVal bool) bool {
+func (k BaseSendKeeper) getSendEnabledOrDefault(ctx context.Context, denom string, defaultVal bool) bool {
 	sendEnabled, found := k.getSendEnabled(ctx, denom)
 	if found {
 		return sendEnabled
@@ -481,7 +490,7 @@ func (r *sendRestriction) clear() {
 var _ types.SendRestrictionFn = sendRestriction{}.apply
 
 // apply applies the send restriction if there is one. If not, it's a no-op.
-func (r sendRestriction) apply(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+func (r sendRestriction) apply(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 	if r.fn == nil {
 		return toAddr, nil
 	}

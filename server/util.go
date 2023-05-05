@@ -213,10 +213,11 @@ func GetServerContextFromCmd(cmd *cobra.Command) *Context {
 }
 
 // SetCmdServerContext sets a command's Context value to the provided argument.
+// If the context has not been set, set the given context as the default.
 func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 	v := cmd.Context().Value(ServerContextKey)
 	if v == nil {
-		return errors.New("server context not set")
+		v = serverCtx
 	}
 
 	serverCtxPtr := v.(*Context)

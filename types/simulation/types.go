@@ -6,13 +6,14 @@ import (
 	"math/rand"
 	"time"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoregistry"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -100,30 +101,26 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 		moduleName = msgType
 	}
 
-	anyMsg, err := types.NewAnyWithValue(msg)
+	resolver := gogoproto.HybridResolver
+	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
 	if err != nil {
-		panic(fmt.Errorf("failed to pack msg: %w", err))
+		panic(fmt.Errorf("failed to find proto descriptor for %s: %w", msgType, err))
 	}
 
-	resolver := protoregistry.GlobalTypes
-	protoType, err := resolver.FindMessageByURL(msgType)
+	dynamicMsg := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor)).New().Interface()
+	gogoBytes, err := gogoproto.Marshal(msg)
 	if err != nil {
-		panic(fmt.Errorf("failed to find proto type for %s: %w", msgType, err))
+		panic(fmt.Errorf("failed to marshal msg: %w", err))
 	}
-
-	valueMsg := protoType.New()
-	err = proto.Unmarshal(anyMsg.Value, valueMsg.Interface())
-	if err != nil {
-		panic(fmt.Errorf("failed to unmarshal msg: %w", err))
-	}
+	err = proto.Unmarshal(gogoBytes, dynamicMsg)
 
 	encoder := aminojson.NewAminoJSON()
-	msgBytes, err := encoder.Marshal(valueMsg.Interface())
+	jsonBytes, err := encoder.Marshal(dynamicMsg)
 	if err != nil {
 		panic(fmt.Errorf("failed to marshal msg: %w", err))
 	}
 
-	return NewOperationMsgBasic(moduleName, msgType, comment, ok, msgBytes)
+	return NewOperationMsgBasic(moduleName, msgType, comment, ok, jsonBytes)
 }
 
 // NoOpMsg - create a no-operation message

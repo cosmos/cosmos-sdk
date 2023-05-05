@@ -103,7 +103,7 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 	if err != nil {
 		panic(fmt.Errorf("failed to pack msg: %w", err))
 	}
-	encoder := aminojson.NewAminoJSON()
+	encoder := aminojson.NewAminoJSON(aminojson.EncoderOptions{AllowUnnamedAnyTypes: true})
 	msgBytes, err := encoder.Marshal(&anypb.Any{
 		TypeUrl: anyMsg.TypeUrl,
 		Value:   anyMsg.Value,

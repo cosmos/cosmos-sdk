@@ -28,7 +28,7 @@ func (enc Encoder) marshalAny(message protoreflect.Message, writer io.Writer) er
 	}
 
 	_, named := getMessageAminoName(valueMsg)
-	if !named {
+	if !named && !enc.allowUnnamedAnyTypes {
 		return fmt.Errorf("message %s is packed into an any field, so requires an amino.name annotation",
 			anyMsg.TypeUrl)
 	}

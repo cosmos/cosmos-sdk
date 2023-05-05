@@ -3,7 +3,6 @@ package cosmos.nft.v1beta1;
 
 option go_package = "cosmossdk.io/x/nft";
 
-import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 
@@ -18,7 +17,6 @@ service Msg {
 // MsgSend represents a message to send a nft from one account to another account.
 message MsgSend {
   option (cosmos.msg.v1.signer) = "sender";
-  option (amino.name) = "cosmos-sdk/MsgSend";
 
   // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
   string class_id = 1;

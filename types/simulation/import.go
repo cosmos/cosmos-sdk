@@ -1,9 +1,9 @@
 package simulation
 
 import (
-	// NewOperationMsg (in this package) requires all the types to be imported for the amionJSON marshal to properly
-	// handle any types, and any types are required to support gogo types being generated, since they are not
-	// proto reflect capable.
+	// NewOperationMsg (in this package) requires all the types to be imported in order to dynamically create a protoreflect
+	// capable proto message for aminojson.Encoder to marshal into amino json.  Since we need a conrete instance of the
+	// type/proto message, and simulations (theoretically) can be run against any module, we need to import all the types.
 	_ "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	_ "cosmossdk.io/api/cosmos/auth/module/v1"

@@ -114,7 +114,7 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 	}
 	err = proto.Unmarshal(gogoBytes, dynamicMsg)
 
-	encoder := aminojson.NewAminoJSON()
+	encoder := aminojson.NewEncoder()
 	jsonBytes, err := encoder.Marshal(dynamicMsg)
 	if err != nil {
 		panic(fmt.Errorf("failed to marshal msg: %w", err))

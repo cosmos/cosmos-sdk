@@ -7,12 +7,13 @@ import (
 	"time"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/proto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -93,23 +94,32 @@ func NewOperationMsgBasic(moduleName, msgType, comment string, ok bool, msg []by
 }
 
 // NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string, _ *codec.ProtoCodec) OperationMsg {
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
 	msgType := sdk.MsgTypeURL(msg)
 	moduleName := sdk.GetModuleNameFromTypeURL(msgType)
 	if moduleName == "" {
 		moduleName = msgType
 	}
-	gogoAny, err := types.NewAnyWithValue(msg)
+
+	resolver := gogoproto.HybridResolver
+	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
 	if err != nil {
-		panic(fmt.Errorf("failed to create any from msg: %w", err))
-	}
-	anyMsg := &anypb.Any{
-		TypeUrl: gogoAny.TypeUrl,
-		Value:   gogoAny.Value,
+		panic(fmt.Errorf("failed to find proto descriptor for %s: %w", msgType, err))
 	}
 
-	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: gogoproto.HybridResolver})
-	jsonBytes, err := encoder.Marshal(anyMsg)
+	dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+	dynamicMsg := dynamicMsgType.New().Interface()
+	gogoBytes, err := gogoproto.Marshal(msg)
+	if err != nil {
+		panic(fmt.Errorf("failed to marshal msg: %w", err))
+	}
+	err = proto.Unmarshal(gogoBytes, dynamicMsg)
+	if err != nil {
+		panic(fmt.Errorf("failed to unmarshal msg: %w", err))
+	}
+
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: resolver})
+	jsonBytes, err := encoder.Marshal(dynamicMsg)
 	if err != nil {
 		panic(fmt.Errorf("failed to marshal msg: %w", err))
 	}

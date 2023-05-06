@@ -23,6 +23,7 @@ type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 // EncoderOptions are options for creating a new Encoder.
 type EncoderOptions struct {
 	FileResolver signing.ProtoFileResolver
+	TypeResolver protoregistry.MessageTypeResolver
 }
 
 // Encoder is a JSON encoder that uses the Amino JSON encoding rules for protobuf messages.
@@ -32,6 +33,7 @@ type Encoder struct {
 	messageEncoders map[string]MessageEncoder
 	fieldEncoders   map[string]FieldEncoder
 	fileResolver    signing.ProtoFileResolver
+	typeResolver    protoregistry.MessageTypeResolver
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -39,6 +41,9 @@ type Encoder struct {
 func NewEncoder(options EncoderOptions) Encoder {
 	if options.FileResolver == nil {
 		options.FileResolver = protoregistry.GlobalFiles
+	}
+	if options.TypeResolver == nil {
+		options.TypeResolver = protoregistry.GlobalTypes
 	}
 	enc := Encoder{
 		scalarEncoders: map[string]FieldEncoder{
@@ -55,6 +60,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"cosmos_dec_bytes": cosmosDecEncoder,
 		},
 		fileResolver: options.FileResolver,
+		typeResolver: options.TypeResolver,
 	}
 	return enc
 }

@@ -13,6 +13,8 @@ import (
 )
 
 func (enc Encoder) marshalAny(message protoreflect.Message, writer io.Writer) error {
+	// when a message contains a nested any field, and the top-level message has been unmarshalled into a dyanmicpb,
+	// the nested any field will also be a dynamicpb. In this case, we must use the dynamicpb API.
 	_, ok := message.Interface().(*dynamicpb.Message)
 	if ok {
 		return enc.marshalDynamic(message, writer)
@@ -23,30 +25,48 @@ func (enc Encoder) marshalAny(message protoreflect.Message, writer io.Writer) er
 		return fmt.Errorf("expected *anypb.Any, got %T", message.Interface())
 	}
 
-	desc, err := enc.fileResolver.FindDescriptorByName(protoreflect.FullName(anyMsg.TypeUrl[1:]))
-	if err != nil {
-		return errors.Wrapf(err, "can't resolve type URL %s", anyMsg.TypeUrl)
+	// build a message of the correct type
+	var protoMessage protoreflect.Message
+	typ, err := enc.typeResolver.FindMessageByURL(anyMsg.TypeUrl)
+	if err == nil {
+		// If the type is registered, we can use the proto API to unmarshal into a concrete type.
+		valueMsg := typ.New()
+		err = proto.Unmarshal(anyMsg.Value, valueMsg.Interface())
+		if err != nil {
+			return err
+		}
+		protoMessage = valueMsg
+	} else {
+		// otherwise we use the dynamicpb API to unmarshal into a dynamic message.
+		desc, err := enc.fileResolver.FindDescriptorByName(protoreflect.FullName(anyMsg.TypeUrl[1:]))
+		if err != nil {
+			return errors.Wrapf(err, "can't resolve type URL %s", anyMsg.TypeUrl)
+		}
+
+		valueMsg := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor)).New().Interface()
+		err = proto.Unmarshal(anyMsg.Value, valueMsg)
+		if err != nil {
+			return err
+		}
+		protoMessage = valueMsg.ProtoReflect()
 	}
 
-	_, named := getMessageAminoName(desc.Options())
+	_, named := getMessageAminoName(protoMessage.Descriptor().Options())
 	if !named {
 		return fmt.Errorf("message %s is packed into an any field, so requires an amino.name annotation",
 			anyMsg.TypeUrl)
 	}
 
-	valueMsg := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor)).New().Interface()
-	err = proto.Unmarshal(anyMsg.Value, valueMsg)
-	if err != nil {
-		return err
-	}
-	protoMessage := valueMsg.ProtoReflect()
-
 	return enc.beginMarshal(protoMessage, writer)
+
 }
 
+const anyTypeURLFieldName = "type_url"
+const anyValueFieldName = "value"
+
 func (enc Encoder) marshalDynamic(message protoreflect.Message, writer io.Writer) error {
-	msgName := message.Get(message.Descriptor().Fields().ByName("type_url")).String()[1:]
-	msgBytes := message.Get(message.Descriptor().Fields().ByName("value")).Bytes()
+	msgName := message.Get(message.Descriptor().Fields().ByName(anyTypeURLFieldName)).String()[1:]
+	msgBytes := message.Get(message.Descriptor().Fields().ByName(anyValueFieldName)).Bytes()
 
 	desc, err := enc.fileResolver.FindDescriptorByName(protoreflect.FullName(msgName))
 	if err != nil {

@@ -1,4 +1,4 @@
-# RFC 005: Accounts and Authentication
+# RFC 004: Accounts
 
 ## Changelog
 
@@ -6,22 +6,22 @@
 
 ## Abstract
 
-This RFC presents a proposal for modifying the account and authentication system within the Cosmos SDK. The primary objectives include:
+This RFC presents a proposal which introduces a new account abstraction system to the Cosmos SDK. The proposal's main goals are:
 
 Unifying ModuleAccounts and Externally Owned Accounts (EOA) to create a single actor type from a runtime perspective.
-Developing a versatile authentication and account abstraction system that enables accounts to possess arbitrary logic concerning:
+Developing a versatile account abstraction system that enables accounts to possess arbitrary logic concerning:
 1. State transition verification (authentication)
 2. Internal state modification
 3. State transition execution (when modules communicate through messages rather than keepers)
 
 Supporting additional use cases, such as:
-1. Recoverable and, in general, more intelligent accounts
+1. More intelligent accounts
 2. Streamlined extensions of authentication mechanisms (custom cryptographic pairings, but not only)
 3. Vesting accounts
 
 The proposal's full potential is realized when integrated with modules like `x/wasm` and `x/evm`. These modules facilitate 
 the deployment of accounts with custom and dynamic code, eliminating the need for app-level definition of account code. This enables the
-proposed account abstraction's use cases to evolve with the network itself.
+proposed account abstraction's use cases to evolve with the network itself, without needing to undergo chain upgrades.
 
 ## Proposal
 
@@ -34,10 +34,10 @@ as messages. The runtime does not differentiate between actors or apply any auth
 sender actors cannot impersonate others.
 
 This leads to significant implications: Externally Owned Accounts (EOA) and ModuleAccounts (system-owned identities) can
-be treated as the same entity. Authorization, which determines which actor can execute a particular state transition
-towards another actor, must be managed by the recipient of the state transition. For example, the 'bank' module decides
-if the 'mint' module is permitted to inflate a coin's supply. This eliminates the need for permissions in the 'auth' 
-module as they currently exist.
+be treated as the same entity (from the runtime point of view). Authorization, which determines which actor can execute
+a particular state transition towards another actor, must be managed by the recipient of the state transition. 
+For example, the 'bank' module decides if the 'mint' module is permitted to inflate a coin's supply. This eliminates the
+need for permissions in the 'auth' module as they currently exist.
 
 The key difference between EOA and ModuleAccount lies in the origin of state transitions on their behalf. In the case of
 ModuleAccount, a state transition cannot be initiated from a transaction (TX), as no valid credential can prove the sender
@@ -57,20 +57,31 @@ An `Account` type is defined at APP level, so it cannot be dynamically loaded as
 node code, unless we use something like `x/wasm`. 
 
 ```go
+type Schema struct {
+	state StateSchema // represents the state of an account
+	init InitSchema // represents the init msg schema
+	exec ExecSchema // represents the multiple execution msg schemas, containing also responses
+	query QuerySchema // represents the multiple query msg schemas, containing also responses
+	migrate *MigrateSchema // represents the multiple migrate msg schemas, containing also responses, it's optional
+}
+
 type InternalAccount struct {
 	init    func(ctx *Context, msg proto.Message) (*InitResponse, error)
 	execute func(ctx *Context, msg proto.Message) (*ExecuteResponse, error)
 	query   func(ctx *Context, msg proto.Message) (proto.Message, error)
-	schema  func() *Schema
+    schema  func() *Schema
+    migrate func(ctx *Context, msg proto.Message) (*MigrateResponse, error)
 }
 ```
 
 This is an internal view of the account as intended by the system. It is not meant to be what developers implement. An
-example implementation of the `InternalAccount` type can be found in [this](https://github.com/testinginprod/accounts-poc/blob/main/examples/recover/recover.go) example of account whose credentials can be
-recovered. In fact, even if the `Internal` implementation is untyped (with respect to `proto.Message`), the concrete implementation is fully typed.
+example implementation of the `InternalAccount` type can be found in [this](https://github.com/testinginprod/accounts-poc/blob/main/examples/recover/recover.go)
+example of account whose credentials can be recovered. In fact, even if the `Internal` implementation is untyped (with
+respect to `proto.Message`), the concrete implementation is fully typed.
 
 During any of the execution methods of `InternalAccount`, `schema` excluded, the account is given a `Context` which provides:
-- A namespaced `KVStore` for the account, which isolates the account state from others (NOTE: no `store keys` needed, the account address serves as `store key`).
+- A namespaced `KVStore` for the account, which isolates the account state from others (NOTE: no `store keys` needed,
+the account address serves as `store key`).
 - Information regarding itself (its address)
 - Information regarding the sender.
 - ...
@@ -104,10 +115,12 @@ Schema provides the definition of an account from `API` perspective, and it's th
 when interacting with an account from another account or module, for example: an account is an `authz-interface` account if
 it has the following message in its execution messages `MsgProxyStateTransition{ state_transition: google.Protobuf.Any }`.
 
-#### Other methods
+### Migrate
 
-Other methods could be added to the account, like `Migrate`, this is an implementation detail which is not meant to be covered 
-in this RFCs.
+Migrate defines the entrypoint that allows an `Account` to migrate its state from a previous version to a new one. Migrations
+can be initiated only by the account itself, concretely this means that the migrate action sender can only be the account address
+itself, if the account wants to allow another address to migrate it on its behalf then it could create an execution message
+that makes the account migrate itself.
 
 ### x/accounts module
 
@@ -130,6 +143,7 @@ The module protobuf definition for `x/accounts` are the following:
 service Msg {
   rpc Deploy(MsgDeploy) returns (MsgDeployResponse);
   rpc Execute(MsgExecute) returns (MsgExecuteResponse);
+  rpc Migrate(MsgMigrate) returns (MsgMigrateResponse);
 }
 
 message MsgDeploy {
@@ -155,6 +169,17 @@ message MsgExecute {
 message MsgExecuteResponse {
   google.Protobuf.Any data = 1;
 }
+
+message MsgMigrate {
+  string sender = 1;
+  string new_account_kind = 2;
+  google.Protobuf.Any migrate_message = 3;
+}
+
+message MsgMigrateResponse {
+  google.Protobuf.Any data = 1;
+}
+
 ```
 
 #### MsgDeploy
@@ -163,10 +188,23 @@ Deploys a new instance of the given account `kind` with initial settings represe
 Of course the `init_message` can be empty. A response is returned containing the account ID and humanised address, alongside some response
 that the account instantiation might produce.
 
+#### Address derivation
+
+In order to decouple public keys from account addresses, we introduce a new address derivation mechanism which is 
+
+
 #### MsgExecute
 
 Sends a `StateTransition` execution request, where the state transition is represented by the `message` which is a `google.Protobuf.Any`.
 The account can then decide if to process it or not based on the `sender`.
+
+### MsgMigrate
+
+Migrates an account to a new version of itself, the new version is represented by the `new_account_kind`. The state transition
+can only be incepted by the account itself, which means that the `sender` must be the account address itself. During the migration
+the account current state is given to the new version of the account, which then executes the migration logic using the `migrate_message`,
+it might change state or not, it's up to the account to decide. The response contains possible data that the account might produce
+after the migration.
 
 #### Authorize Messages
 
@@ -309,5 +347,5 @@ just update `x/auth` to support `x/accounts` deployment and key rotation message
 ## Major implications
 
 - Account unique identifier (represented as AccAddress) is decoupled from the authentication mechanism.
-- Accounts need to always be explicitly created. Bank would not create an account just because you're sending it coins.
+- Accounts need to always be explicitly created. Bank would not create an account in case it doesn't exist during a `MsgSend` execution.
 

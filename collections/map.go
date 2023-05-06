@@ -39,15 +39,15 @@ func NewMap[K, V any](
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
-	schemaBuilder.addCollection(m)
+	schemaBuilder.addCollection(collectionImpl[K, V]{m})
 	return m
 }
 
-func (m Map[K, V]) getName() string {
+func (m Map[K, V]) GetName() string {
 	return m.name
 }
 
-func (m Map[K, V]) getPrefix() []byte {
+func (m Map[K, V]) GetPrefix() []byte {
 	return m.prefix
 }
 

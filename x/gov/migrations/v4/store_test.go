@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -91,7 +92,8 @@ func TestMigrateStore(t *testing.T) {
 	store.Set(v1gov.ProposalKey(proposal2.Id), prop2Bz)
 
 	// Run migrations.
-	err = v4.MigrateStore(ctx, govKey, legacySubspace, cdc)
+	storeService := runtime.NewKVStoreService(govKey)
+	err = v4.MigrateStore(ctx, storeService, legacySubspace, cdc)
 	require.NoError(t, err)
 
 	// Check params

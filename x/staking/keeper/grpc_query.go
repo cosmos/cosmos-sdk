@@ -22,6 +22,10 @@ type Querier struct {
 
 var _ types.QueryServer = Querier{}
 
+func NewQuerier(keeper *Keeper) Querier {
+	return Querier{Keeper: keeper}
+}
+
 // Validators queries all validators that match the given status
 func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest) (*types.QueryValidatorsResponse, error) {
 	if req == nil {

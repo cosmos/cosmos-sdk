@@ -22,7 +22,7 @@ type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 
 // EncoderOptions are options for creating a new Encoder.
 type EncoderOptions struct {
-	// TypeResolver is used to resolve protobuf message types by TypeURL when marshalling any packed messages.
+	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver protoregistry.MessageTypeResolver
 	// FileResolver is used to resolve protobuf file descriptors TypeURL when TypeResolver fails.
 	FileResolver signing.ProtoFileResolver

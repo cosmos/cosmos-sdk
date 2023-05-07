@@ -101,12 +101,11 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 		moduleName = msgType
 	}
 
-	// Below is logic added to amino JSON compatibility with gogoproto messages.  x/tx/signing/aminojson
-	// cannot marshal gogoproto messages directly since they are not protoreflect enabled.
-	// One option is to convert the gogoproto message to an any message and then marshal that, but if we do that
-	// the encoder will reject messages that are not tagged with an amino.name.  Strictly speaking we don't need
-	// an amino.name on messages which aren't expected to be packed into any fields.
-	// So instead we convert it to a dynamic message, which is protoreflect enabled, and marshal that.
+	// Below is logic added for aminojson.Encoder compatibility with gogoproto messages.
+	// x/tx/signing/aminojson cannot marshal sdk.Msg (an alias to gogoproto.message) directly since this type is not
+	// protoreflect enabled like the std library google.golang.org/protobuf/proto.Message is.
+	//
+	// So we just convert to a dynamicpb message and marshal that directly
 	resolver := gogoproto.HybridResolver
 	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
 	if err != nil {

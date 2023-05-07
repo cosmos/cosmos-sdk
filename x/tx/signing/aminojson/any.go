@@ -58,7 +58,6 @@ func (enc Encoder) marshalAny(message protoreflect.Message, writer io.Writer) er
 	}
 
 	return enc.beginMarshal(protoMessage, writer)
-
 }
 
 const (

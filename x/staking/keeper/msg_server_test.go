@@ -252,7 +252,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	require.NotNil(pk)
 
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -260,7 +260,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	require.NotNil(res)
 
 	newRate := math.LegacyZeroDec()
-	invalidRate := sdk.NewDec(2)
+	invalidRate := math.LegacyNewDec(2)
 
 	lowSelfDel := math.OneInt()
 	highSelfDel := math.NewInt(100)
@@ -426,7 +426,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -551,7 +551,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
 
-	msg, err := stakingtypes.NewMsgCreateValidator(srcValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(srcValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
@@ -561,7 +561,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	s.accountKeeper.EXPECT().BytesToString(addr2).Return(addr2.String(), nil).AnyTimes()
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr2, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
 
-	msg, err = stakingtypes.NewMsgCreateValidator(dstValAddr, dstPk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err = stakingtypes.NewMsgCreateValidator(dstValAddr, dstPk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err = msgServer.CreateValidator(ctx, msg)
@@ -716,7 +716,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
 
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
@@ -844,7 +844,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
 
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)

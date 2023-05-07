@@ -61,8 +61,10 @@ func (enc Encoder) marshalAny(message protoreflect.Message, writer io.Writer) er
 
 }
 
-const anyTypeURLFieldName = "type_url"
-const anyValueFieldName = "value"
+const (
+	anyTypeURLFieldName = "type_url"
+	anyValueFieldName   = "value"
+)
 
 func (enc Encoder) marshalDynamic(message protoreflect.Message, writer io.Writer) error {
 	msgName := message.Get(message.Descriptor().Fields().ByName(anyTypeURLFieldName)).String()[1:]

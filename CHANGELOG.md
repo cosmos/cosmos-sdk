@@ -185,7 +185,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * The signature of `NewTxConfigWithTextual` has been deprecated and its signature changed to accept a `SignModeOptions`.
 * (x/genutil) [#15999](https://github.com/cosmos/cosmos-sdk/pull/15999) Genutil now takes the `GenesisTxHanlder` interface instead of deliverTx. The interface is implemented on baseapp
 * (types/math) [#16040](https://github.com/cosmos/cosmos-sdk/pull/16040) Remove unused aliases in math.go
-    * Remove aliases Uint, ZeroDec, OneDec, SmallestDec, NewDec, NewDecWithPrec, NewDecFromBigInt, NewDecFromInt, NewDecFromIntWithPrec, NewDecFromStr, MustNewDecFromStr, MaxSortableDec, ValidSortableDec, SortableDecBytes, DecsEqual, MinDec, MaxDec, DecEq, DecApproxEq, Precision, DecimalPrecisionsBits, NewIntFromBigInt, OneInt, NewInt, ZeroInt, IntEq, NewIntFromString, NewUint, NewIntFromUint64, MaxInt, MinInt, Uint        
 
 ### Client Breaking Changes
 

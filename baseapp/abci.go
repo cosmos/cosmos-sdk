@@ -785,8 +785,7 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 // state transitions are already flushed to disk and as a result, we already have
 // an application Merkle root.
 func (app *BaseApp) flushCommit() storetypes.CommitID {
-	app.finalizeBlockState.ms.Write()
-
+	// call commit to persist data to disk
 	commitID := app.cms.Commit()
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 

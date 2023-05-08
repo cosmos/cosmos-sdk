@@ -261,9 +261,9 @@ $ %s query block --%s=%s <hash>
 func BootstrapStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bootstrap-state",
-		Short: "Bootstrap cometbft state in an arbitrary block height using light client",
+		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Long: `
-Bootstrap cometbft state in an arbitrary block height using light client
+Bootstrap CometBFT state at an arbitrary block height using a light client
 `,
 
 		Args: cobra.NoArgs,

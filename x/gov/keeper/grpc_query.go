@@ -19,7 +19,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var _ v1.QueryServer = Keeper{}
+var _ v1.QueryServer = Querier{}
+
+type Querier struct {
+	*Keeper
+}
+
+func NewQuerier(keeper *Keeper) Querier {
+	return Querier{Keeper: keeper}
+}
 
 func (q Keeper) Constitution(ctx context.Context, req *v1.QueryConstitutionRequest) (*v1.QueryConstitutionResponse, error) {
 	constitution, err := q.GetConstitution(ctx)

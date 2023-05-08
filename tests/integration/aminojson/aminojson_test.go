@@ -30,6 +30,7 @@ import (
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -200,7 +201,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	genericAuthPulsar := newAny(t, &authzapi.GenericAuthorization{Msg: "foo"})
 	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
 	pubkeyAnyPulsar := newAny(t, &secp256k1.PubKey{Key: []byte("foo")})
-	dec10bz, _ := types.NewDec(10).Marshal()
+	dec10bz, _ := math.LegacyNewDec(10).Marshal()
 	int123bz, _ := types.NewInt(123).Marshal()
 
 	cases := map[string]struct {
@@ -251,7 +252,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &distapi.DelegatorStartingInfo{},
 		},
 		"distribution/delegator_starting_info/non_zero_dec": {
-			gogo:                &disttypes.DelegatorStartingInfo{Stake: types.NewDec(10)},
+			gogo:                &disttypes.DelegatorStartingInfo{Stake: math.LegacyNewDec(10)},
 			pulsar:              &distapi.DelegatorStartingInfo{Stake: "10.000000000000000000"},
 			protoUnmarshalFails: true,
 		},
@@ -331,7 +332,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"slashing/params/dec": {
 			gogo: &slashingtypes.Params{
 				DowntimeJailDuration: 1e9 + 7,
-				MinSignedPerWindow:   types.NewDec(10),
+				MinSignedPerWindow:   math.LegacyNewDec(10),
 			},
 			pulsar: &slashingapi.Params{
 				DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7},

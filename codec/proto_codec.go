@@ -163,10 +163,10 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 	return bz
 }
 
-// MarshalAminoJSON provides aminojson.Encoder compatibility with gogoproto messages.
-// x/tx/signing/aminojson cannot marshal gogoproto.message directly since this type is not
-// protoreflect enabled like the std library google.golang.org/protobuf/proto.Message is.
-// So we convert to a dynamicpb message and marshal that directly to JSON.
+// MarshalAminoJSON provides aminojson.Encoder compatibility for gogoproto messages.
+// x/tx/signing/aminojson cannot marshal gogoproto messages directly since this type does not implement
+// the standard library google.golang.org/protobuf/proto.Message.
+// We convert gogo types to dynamicpb messages and then marshal that directly to amino JSON.
 func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
 	desc, err := pc.interfaceRegistry.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
 	if err != nil {

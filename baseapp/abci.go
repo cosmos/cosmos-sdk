@@ -702,8 +702,7 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
-		// TODO: Do not commit, but use current IAVL root hash!
-		AppHash: app.workingHash(),
+		AppHash:               app.workingHash(),
 	}, nil
 }
 
@@ -797,13 +796,13 @@ func (app *BaseApp) flushCommit() storetypes.CommitID {
 // workingHash gets the apphash that will be finalized in commit.
 // These writes will be persisted to the root multi-store (app.cms) and flushed to
 // disk in the Commit phase. This means when the ABCI client requests Commit(), the application
-// state transitions are already flushed to disk and as a result, we already have
+// state transitions will be flushed to disk and as a result, but we already have
 // an application Merkle root.
 func (app *BaseApp) workingHash() []byte {
 	app.finalizeBlockState.ms.Write()
 
 	commitHash := app.cms.WorkingHash()
-	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitHash))
+	app.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
 
 	return commitHash
 }

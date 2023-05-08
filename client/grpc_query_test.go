@@ -91,7 +91,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 	)
 
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	// app.Commit(context.TODO(), &abci.RequestCommit{}) // TODO see if this is needed
 	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,

@@ -108,6 +108,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		Memo:          body.Memo,
 		Msgs:          txData.Body.Messages,
 		Fee:           fee,
+		Tip:           tip,
 	}
 
 	bz, err := h.encoder.Marshal(signDoc)

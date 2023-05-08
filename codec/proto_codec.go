@@ -168,8 +168,7 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 // protoreflect enabled like the std library google.golang.org/protobuf/proto.Message is.
 // So we convert to a dynamicpb message and marshal that directly to JSON.
 func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
-	resolver := gogoproto.HybridResolver
-	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
+	desc, err := pc.interfaceRegistry.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +184,7 @@ func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
 		return nil, err
 	}
 
-	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: resolver})
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: pc.interfaceRegistry})
 	jsonBytes, err := encoder.Marshal(dynamicMsg)
 	if err != nil {
 		return nil, err

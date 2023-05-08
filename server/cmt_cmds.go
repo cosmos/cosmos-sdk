@@ -260,8 +260,6 @@ $ %s query block --%s=%s <hash>
 	return cmd
 }
 
-var cmtconfig = cfg.DefaultConfig()
-
 func BootstrapStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bootstrap-state height",
@@ -276,30 +274,32 @@ Bootstrap cometbft state in an arbitrary block height using light client
 			if err != nil {
 				return err
 			}
-			return bootstrapStateCmd(height)
+			serverCtx := GetServerContextFromCmd(cmd)
+
+			return bootstrapStateCmd(height, serverCtx.Config)
 		},
 	}
 	return cmd
 }
 
-func bootstrapStateCmd(height uint64) error {
+func bootstrapStateCmd(height uint64, cfg *cfg.Config) error {
 	ctx := context.Background()
 
-	blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cmtconfig})
+	blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
 	if err != nil {
 		return err
 	}
 	blockStore := store.NewBlockStore(blockStoreDB)
 
-	stateDB, err := node.DefaultDBProvider(&node.DBContext{ID: "state", Config: cmtconfig})
+	stateDB, err := node.DefaultDBProvider(&node.DBContext{ID: "state", Config: cfg})
 	if err != nil {
 		return err
 	}
 	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
-		DiscardABCIResponses: cmtconfig.Storage.DiscardABCIResponses,
+		DiscardABCIResponses: cfg.Storage.DiscardABCIResponses,
 	})
 
-	genState, _, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, node.DefaultGenesisDocProviderFunc(cmtconfig))
+	genState, _, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, node.DefaultGenesisDocProviderFunc(cfg))
 	if err != nil {
 		return err
 	}
@@ -309,10 +309,10 @@ func bootstrapStateCmd(height uint64) error {
 	stateProvider, err := statesync.NewLightClientStateProvider(
 		ctx,
 		genState.ChainID, genState.Version, genState.InitialHeight,
-		cmtconfig.StateSync.RPCServers, light.TrustOptions{
-			Period: cmtconfig.StateSync.TrustPeriod,
-			Height: cmtconfig.StateSync.TrustHeight,
-			Hash:   cmtconfig.StateSync.TrustHashBytes(),
+		cfg.StateSync.RPCServers, light.TrustOptions{
+			Period: cfg.StateSync.TrustPeriod,
+			Height: cfg.StateSync.TrustHeight,
+			Hash:   cfg.StateSync.TrustHashBytes(),
 		}, servercmtlog.CometLoggerWrapper{Logger: log})
 	if err != nil {
 		return fmt.Errorf("failed to set up light client state provider: %w", err)

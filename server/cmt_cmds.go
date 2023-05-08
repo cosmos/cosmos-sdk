@@ -270,19 +270,15 @@ Bootstrap cometbft state in an arbitrary block height using light client
 
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			height, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
 			serverCtx := GetServerContextFromCmd(cmd)
 
-			return bootstrapStateCmd(height, serverCtx.Config)
+			return bootstrapStateCmd(serverCtx.Config)
 		},
 	}
 	return cmd
 }
 
-func bootstrapStateCmd(height uint64, cfg *cfg.Config) error {
+func bootstrapStateCmd(cfg *cfg.Config) error {
 	ctx := context.Background()
 
 	blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
@@ -318,12 +314,12 @@ func bootstrapStateCmd(height uint64, cfg *cfg.Config) error {
 		return fmt.Errorf("failed to set up light client state provider: %w", err)
 	}
 
-	state, err := stateProvider.State(ctx, height)
+	state, err := stateProvider.State(ctx, uint64(cfg.StateSync.TrustHeight))
 	if err != nil {
 		return err
 	}
 
-	commit, err := stateProvider.Commit(ctx, height)
+	commit, err := stateProvider.Commit(ctx, uint64(cfg.StateSync.TrustHeight))
 	if err != nil {
 		return err
 	}

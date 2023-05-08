@@ -107,6 +107,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/consensus) [#15553](https://github.com/cosmos/cosmos-sdk/pull/15553) Migrate consensus module to use collections
 * (x/bank) [#15764](https://github.com/cosmos/cosmos-sdk/pull/15764) Speedup x/bank InitGenesis
 * (x/auth) [#15867](https://github.com/cosmos/cosmos-sdk/pull/15867) Support better logging for signature verification failure.
+* (types/query) [#16041](https://github.com/cosmos/cosmos-sdk/pull/16041) change pagination max limit to a variable in order to be modifed by application devs
 
 ### State Machine Breaking
 
@@ -185,6 +186,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * The signature of `VerifySignature` has been changed to accept a `x/tx/signing.HandlerMap` and other structs from `x/tx` as arguments.
     * The signature of `NewTxConfigWithTextual` has been deprecated and its signature changed to accept a `SignModeOptions`.
 * (x/genutil) [#15999](https://github.com/cosmos/cosmos-sdk/pull/15999) Genutil now takes the `GenesisTxHanlder` interface instead of deliverTx. The interface is implemented on baseapp
+* (types/math) [#16040](https://github.com/cosmos/cosmos-sdk/pull/16040) Remove unused aliases in math.go
 
 ### Client Breaking Changes
 

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -373,7 +374,7 @@ func (s *E2ETestSuite) TestNewCmdCancelProposal() {
 					s.Require().NoError(err)
 					remainingAmount := v1.DefaultMinDepositTokens.Mul(
 						v1.DefaultProposalCancelRatio.Mul(sdk.MustNewDecFromStr("100")).TruncateInt(),
-					).Quo(sdk.NewIntFromUint64(100))
+					).Quo(math.NewIntFromUint64(100))
 
 					// new balance = old balance + remaining amount from proposal deposit - txFee (cancel proposal)
 					txFee := sdk.NewInt(10)

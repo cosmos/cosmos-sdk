@@ -1,9 +1,7 @@
 package server
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -262,24 +260,24 @@ $ %s query block --%s=%s <hash>
 
 func BootstrapStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bootstrap-state height",
+		Use:   "bootstrap-state",
 		Short: "Bootstrap cometbft state in an arbitrary block height using light client",
 		Long: `
 Bootstrap cometbft state in an arbitrary block height using light client
 `,
 
-		Args: cobra.ExactArgs(1),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 
-			return bootstrapStateCmd(serverCtx.Config)
+			return bootstrapStateCmd(cmd, serverCtx.Config)
+
 		},
 	}
 	return cmd
 }
 
-func bootstrapStateCmd(cfg *cfg.Config) error {
-	ctx := context.Background()
+func bootstrapStateCmd(cmd *cobra.Command, cfg *cfg.Config) error {
 
 	blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
 	if err != nil {
@@ -300,10 +298,10 @@ func bootstrapStateCmd(cfg *cfg.Config) error {
 		return err
 	}
 
-	log := logger.NewLogger(os.Stdout).With("module", "light")
+	log := logger.NewLogger(cmd.OutOrStderr()).With("module", "light")
 
 	stateProvider, err := statesync.NewLightClientStateProvider(
-		ctx,
+		cmd.Context(),
 		genState.ChainID, genState.Version, genState.InitialHeight,
 		cfg.StateSync.RPCServers, light.TrustOptions{
 			Period: cfg.StateSync.TrustPeriod,
@@ -314,12 +312,12 @@ func bootstrapStateCmd(cfg *cfg.Config) error {
 		return fmt.Errorf("failed to set up light client state provider: %w", err)
 	}
 
-	state, err := stateProvider.State(ctx, uint64(cfg.StateSync.TrustHeight))
+	state, err := stateProvider.State(cmd.Context(), uint64(cfg.StateSync.TrustHeight))
 	if err != nil {
 		return err
 	}
 
-	commit, err := stateProvider.Commit(ctx, uint64(cfg.StateSync.TrustHeight))
+	commit, err := stateProvider.Commit(cmd.Context(), uint64(cfg.StateSync.TrustHeight))
 	if err != nil {
 		return err
 	}

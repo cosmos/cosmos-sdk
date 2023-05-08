@@ -184,7 +184,6 @@ func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
 		protoMsg = dynamicMsgType.New().Interface()
 	}
@@ -193,7 +192,6 @@ func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	jsonBytes, err := encoder.Marshal(protoMsg)
 	if err != nil {
 		return nil, err

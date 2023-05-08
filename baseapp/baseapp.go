@@ -206,11 +206,15 @@ func NewBaseApp(
 	if app.prepareProposal == nil {
 		app.SetPrepareProposal(abciProposalHandler.PrepareProposalHandler())
 	}
-
 	if app.processProposal == nil {
 		app.SetProcessProposal(abciProposalHandler.ProcessProposalHandler())
 	}
-
+	if app.extendVote == nil {
+		app.SetExtendVoteHandler(NoOpExtendVote())
+	}
+	if app.verifyVoteExt == nil {
+		app.SetVerifyVoteExtensionHandler(NoOpVerifyVoteExtensionHandler())
+	}
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}

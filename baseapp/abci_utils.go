@@ -263,3 +263,19 @@ func NoOpProcessProposal() sdk.ProcessProposalHandler {
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 	}
 }
+
+// NoOpExtendVote defines a no-op ExtendVote handler. It will always return an
+// empty byte slice as the vote extension.
+func NoOpExtendVote() sdk.ExtendVoteHandler {
+	return func(_ sdk.Context, _ *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
+	}
+}
+
+// NoOpVerifyVoteExtensionHandler defines a no-op VerifyVoteExtension handler. It
+// will always return an ACCEPT status with no error.
+func NoOpVerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
+	return func(_ sdk.Context, _ *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	}
+}

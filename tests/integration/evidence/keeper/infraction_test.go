@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
@@ -34,6 +35,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -78,7 +82,8 @@ type fixture struct {
 
 func initFixture(t testing.TB) *fixture {
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, paramtypes.StoreKey, consensusparamtypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, paramtypes.StoreKey, consensusparamtypes.StoreKey,
+		evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey, distrtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, evidence.AppModuleBasic{}).Codec
 
@@ -93,6 +98,7 @@ func initFixture(t testing.TB) *fixture {
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		distrtypes.ModuleName:          {authtypes.Minter},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -117,8 +123,17 @@ func initFixture(t testing.TB) *fixture {
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+	distrKeeper := distrkeeper.NewKeeper(
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
+	)
+	distrKeeper.SetFeePool(newCtx, distrtypes.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
+	})
 
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
+	stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(distrKeeper.Hooks(), slashingKeeper.Hooks()),
+	)
 
 	evidenceKeeper := keeper.NewKeeper(cdc, keys[evidencetypes.StoreKey], stakingKeeper, slashingKeeper, address.NewBech32Codec("cosmos"), runtime.ProvideCometInfoService())
 	router := evidencetypes.NewRouter()
@@ -130,8 +145,9 @@ func initFixture(t testing.TB) *fixture {
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
 	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, nil, cdc.InterfaceRegistry())
 	evidenceModule := evidence.NewAppModule(*evidenceKeeper)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule, slashingModule, evidenceModule)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule, slashingModule, evidenceModule, distrModule)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
@@ -238,7 +254,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.ctx.WithIsCheckTx(false).WithBlockHeight(1)
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1)
 	populateValidators(t, f)
 
 	power := int64(100)
@@ -249,7 +265,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
-	staking.EndBlocker(ctx, f.stakingKeeper)
+	f.stakingKeeper.EndBlocker(ctx)
 	assert.DeepEqual(t,
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),
@@ -265,23 +281,23 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.NilError(t, err)
 
 	// execute end-blocker and verify validator attributes
-	staking.EndBlocker(ctx, f.stakingKeeper)
+	f.stakingKeeper.EndBlocker(ctx)
 
 	// handle a signature to set signing info
 	f.slashingKeeper.HandleValidatorSignature(ctx, NewPubkey.Address(), selfDelegation.Int64(), true)
 
 	// double sign less than max age
 	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
-	evidence := abci.RequestBeginBlock{
+	nci := NewCometInfo(abci.RequestBeginBlock{
 		ByzantineValidators: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      time.Unix(0, 0),
 			Height:    0,
 		}},
-	}
+	})
 
-	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+	f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
 
 	// should be jailed and tombstoned
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed())
@@ -292,7 +308,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	f.evidenceKeeper.BeginBlocker(ctx, evidence)
+	f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
 
 	// tokens should be the same (capped slash)
 	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))

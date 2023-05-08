@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 		int64(10),
 	)
 	slashingKeeper.SetValidatorSigningInfo(ctx, oldConsAddr, newInfo)
-	slashingKeeper.SetValidatorMissedBlockBitArray(ctx, oldConsAddr, 10, true)
+	slashingKeeper.SetMissedBlockBitmapValue(ctx, oldConsAddr, 10, true)
 	err := slashingKeeper.PerformConsensusPubKeyUpdate(ctx, pks[0], pks[1])
 	require.NoError(err)
 

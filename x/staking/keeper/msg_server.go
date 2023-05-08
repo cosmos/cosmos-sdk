@@ -648,7 +648,7 @@ func (k msgServer) getRotationFee(ctx sdk.Context, valBondedTokens math.Int, rot
 		defaultMultiplier = valBondedPercent
 	}
 	fee := defaultMultiplier.Mul(k.KeyRotationFee(ctx).Amount)
-	rotationsMultiplier := sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(rotationsMade)), nil))
+	rotationsMultiplier := math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(rotationsMade)), nil))
 	fee = fee.Mul(rotationsMultiplier)
 
 	return sdk.NewCoin(sdk.DefaultBondDenom, fee)

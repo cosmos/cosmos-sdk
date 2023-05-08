@@ -997,13 +997,28 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 // DefaultPrepareProposal. It is very important that the same validation logic
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
+//
+// Additional to the above mentioned conditions, total gas wanted by all
+// transactions in the proposal must not be more gas than the block gas limit.
+// sum_tx_gas_wanted <= block_gas_limit
 func (h DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		var gasWanted uint64
 		for _, txBytes := range req.Txs {
-			_, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
+			tx, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
+
+			feeTx, ok := tx.(sdk.FeeTx)
+			if !ok {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			}
+			gasWanted += feeTx.GetGas()
+		}
+
+		if gasWanted > ctx.BlockGasMeter().Limit() {
+			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
 
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}

@@ -122,7 +122,7 @@ func WeightedOperations(
 			SimulateMsgCancelUnbondingDelegate(txGen, ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
-			weightMsgCancelUnbondingDelegation,
+			weightMsgRotateConsPubKey,
 			SimulateMsgRotateConsPubKey(txGen, ak, bk, k),
 		),
 	}
@@ -643,11 +643,12 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		address := val.GetOperator()
 		acc := simtypes.RandomAccounts(r, 1)[0]
 
-		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
+		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(address))
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
 		}
 		account := ak.GetAccount(ctx, simAccount.Address)
+		fmt.Println("ctx", account, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg, err := types.NewMsgRotateConsPubKey(address, acc.PubKey)

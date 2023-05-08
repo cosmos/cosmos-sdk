@@ -144,11 +144,9 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 				panic(err)
 			}
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-			aminoJSONEncoder := aminojson.NewAminoJSON()
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				FileResolver: signingOpts.FileResolver,
 				TypeResolver: signingOpts.TypeResolver,
-				Encoder:      &aminoJSONEncoder,
 			})
 		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
 			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{

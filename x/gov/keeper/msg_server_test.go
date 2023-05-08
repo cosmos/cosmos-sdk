@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +34,8 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	initialDeposit := coins
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -317,7 +319,8 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -462,7 +465,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -707,7 +711,8 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -788,7 +793,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	initialDeposit := coins
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	minDeposit := params.MinDeposit
 
 	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
@@ -901,7 +907,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -1036,7 +1043,8 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -1289,7 +1297,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -1636,7 +1645,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 
 func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
-	baseDepositRatioDec := sdk.NewDec(baseDepositTestPercent).Quo(sdk.NewDec(100))
+	baseDepositRatioDec := sdkmath.LegacyNewDec(baseDepositTestPercent).Quo(sdkmath.LegacyNewDec(100))
 
 	testcases := map[string]struct {
 		minDeposit             sdk.Coins

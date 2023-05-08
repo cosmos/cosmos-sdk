@@ -264,7 +264,7 @@ func TestGRPCQueryTotalSupply(t *testing.T) {
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
 
 	req := &banktypes.QueryTotalSupplyRequest{}
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.TotalSupply, 243, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.TotalSupply, 150, false)
 }
 
 func TestGRPCQueryTotalSupplyOf(t *testing.T) {

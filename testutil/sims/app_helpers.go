@@ -158,18 +158,15 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain will set the validator set and initialize the genesis accounts
-	_, err = app.InitChain(context.Background(), &abci.RequestInitChain{
+	app.InitChain(context.Background(), &abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
 	})
-	if err != nil {
-		return nil, err
-	}
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
-		app.Commit(context.TODO(), &abci.RequestCommit{})
+		// app.Commit(context.TODO(), &abci.RequestCommit{}) // TODO figure out if this is needed?
 		_, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
 			NextValidatorsHash: valSet.Hash(),

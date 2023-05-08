@@ -177,7 +177,7 @@ func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
 
 	var protoMsg protoreflect.ProtoMessage
 	typ, err := protoregistry.GlobalTypes.FindMessageByURL(fmt.Sprintf("/%s", gogoproto.MessageName(msg)))
-	if err != nil {
+	if typ != nil && err != nil {
 		protoMsg = typ.New().Interface()
 	} else {
 		desc, err := pc.interfaceRegistry.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))

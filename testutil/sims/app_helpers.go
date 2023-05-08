@@ -168,10 +168,13 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
 		app.Commit(context.TODO(), &abci.RequestCommit{})
-		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		_, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
 			NextValidatorsHash: valSet.Hash(),
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to finalize block: %w", err)
+		}
 	}
 
 	return app, nil

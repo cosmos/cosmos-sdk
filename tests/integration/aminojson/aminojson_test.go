@@ -47,6 +47,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -143,6 +144,10 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 					AccNum:        1,
 					AccSeq:        2,
 					SignerAddress: "signerAddress",
+					Tip: &txv1beta1.Tip{
+						Tipper: "tipper",
+						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+					},
 					Fee: &txv1beta1.Fee{
 						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
 					},
@@ -160,6 +165,10 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				require.NoError(t, txBuilder.SetMsgs([]types.Msg{gogoMsg}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
 				txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
+				txBuilder.SetTip(&txtypes.Tip{
+					Amount: types.Coins{types.NewInt64Coin("uatom", 1000)},
+					Tipper: "tipper",
+				})
 				theTx := txBuilder.GetTx()
 
 				legacySigningData := signing.SignerData{

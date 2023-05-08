@@ -11,8 +11,11 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -158,6 +161,37 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 	}
 
 	return bz
+}
+
+// MarshalAminoJSON provides aminojson.Encoder compatibility with gogoproto messages.
+// x/tx/signing/aminojson cannot marshal sdk.Msg (an alias to gogoproto.message) directly since this type is not
+// protoreflect enabled like the std library google.golang.org/protobuf/proto.Message is.
+//
+// So we just convert to a dynamicpb message and marshal that directly to JSON.
+func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
+	resolver := gogoproto.HybridResolver
+	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
+	if err != nil {
+		return nil, err
+	}
+
+	dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+	dynamicMsg := dynamicMsgType.New().Interface()
+	gogoBytes, err := gogoproto.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+	err = proto.Unmarshal(gogoBytes, dynamicMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: resolver})
+	jsonBytes, err := encoder.Marshal(dynamicMsg)
+	if err != nil {
+		return nil, err
+	}
+	return jsonBytes, nil
 }
 
 // UnmarshalJSON implements JSONCodec.UnmarshalJSON method,

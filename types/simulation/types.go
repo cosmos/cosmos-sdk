@@ -6,14 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/dynamicpb"
-
-	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -100,33 +95,12 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 	if moduleName == "" {
 		moduleName = msgType
 	}
-
-	// Below is logic added for aminojson.Encoder compatibility with gogoproto messages.
-	// x/tx/signing/aminojson cannot marshal sdk.Msg (an alias to gogoproto.message) directly since this type is not
-	// protoreflect enabled like the std library google.golang.org/protobuf/proto.Message is.
-	//
-	// So we just convert to a dynamicpb message and marshal that directly
-	resolver := gogoproto.HybridResolver
-	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
-	if err != nil {
-		panic(fmt.Errorf("failed to find proto descriptor for %s: %w", msgType, err))
+	if cdc == nil {
+		cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 	}
-
-	dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
-	dynamicMsg := dynamicMsgType.New().Interface()
-	gogoBytes, err := gogoproto.Marshal(msg)
+	jsonBytes, err := cdc.MarshalAminoJSON(msg)
 	if err != nil {
-		panic(fmt.Errorf("failed to marshal msg: %w", err))
-	}
-	err = proto.Unmarshal(gogoBytes, dynamicMsg)
-	if err != nil {
-		panic(fmt.Errorf("failed to unmarshal msg: %w", err))
-	}
-
-	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: resolver})
-	jsonBytes, err := encoder.Marshal(dynamicMsg)
-	if err != nil {
-		panic(fmt.Errorf("failed to marshal msg: %w", err))
+		panic(fmt.Errorf("failed to marshal aminon JSON: %w", err))
 	}
 
 	return NewOperationMsgBasic(moduleName, msgType, comment, ok, jsonBytes)

@@ -2,14 +2,16 @@ syntax = "proto3";
 package cosmos.base.store.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/store/types";
 
 // CommitInfo defines commit information used by the multi-store when committing
 // a version/height.
 message CommitInfo {
-  int64              version     = 1;
-  repeated StoreInfo store_infos = 2 [(gogoproto.nullable) = false];
+  int64                     version     = 1;
+  repeated StoreInfo        store_infos = 2 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp timestamp   = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // StoreInfo defines store-specific commit information. It contains a reference

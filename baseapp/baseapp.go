@@ -139,6 +139,8 @@ type BaseApp struct { // nolint: maligned
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
+
+	latestHeader tmproto.Header
 }
 
 var _ upgrade.AppVersionManager = (*BaseApp)(nil)

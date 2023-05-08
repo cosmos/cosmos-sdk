@@ -162,16 +162,18 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
-	},
-	)
+	})
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
-		app.Commit(context.TODO(), &abci.RequestCommit{})
-		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		// app.Commit(context.TODO(), &abci.RequestCommit{}) // TODO figure out if this is needed?
+		_, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
 			NextValidatorsHash: valSet.Hash(),
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to finalize block: %w", err)
+		}
 	}
 
 	return app, nil

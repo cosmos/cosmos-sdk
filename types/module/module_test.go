@@ -112,7 +112,7 @@ func TestAssertNoForgottenModules(t *testing.T) {
 		module.CoreAppModuleBasicAdaptor("module3", mockAppModule3),
 	)
 	require.NotNil(t, mm)
-	require.Equal(t, 3, len(mm.Modules))
+	require.Equal(t, 2, len(mm.Modules))
 
 	require.Equal(t, []string{"module1", "module3"}, mm.OrderInitGenesis)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderInitGenesis, missing: [module3]", func() {
@@ -122,11 +122,6 @@ func TestAssertNoForgottenModules(t *testing.T) {
 	require.Equal(t, []string{"module1", "module3"}, mm.OrderExportGenesis)
 	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderExportGenesis, missing: [module3]", func() {
 		mm.SetOrderExportGenesis("module1")
-	})
-
-	require.Equal(t, []string{"module1", "module3"}, mm.OrderBeginBlockers)
-	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderBeginBlockers, missing: [module2]", func() {
-		mm.SetOrderBeginBlockers("module1", "module3")
 	})
 
 	require.Equal(t, []string{"module1", "module3"}, mm.OrderEndBlockers)

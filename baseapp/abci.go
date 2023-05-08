@@ -703,7 +703,7 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
 		// TODO: Do not commit, but use current IAVL root hash!
-		AppHash: app.flushCommit().Hash,
+		AppHash: app.workingHash(),
 	}, nil
 }
 
@@ -726,6 +726,8 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 	if ok {
 		rms.SetCommitHeader(header)
 	}
+
+	app.flushCommit()
 
 	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,
@@ -790,6 +792,20 @@ func (app *BaseApp) flushCommit() storetypes.CommitID {
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	return commitID
+}
+
+// workingHash gets the apphash that will be finalized in commit.
+// These writes will be persisted to the root multi-store (app.cms) and flushed to
+// disk in the Commit phase. This means when the ABCI client requests Commit(), the application
+// state transitions are already flushed to disk and as a result, we already have
+// an application Merkle root.
+func (app *BaseApp) workingHash() []byte {
+	app.finalizeBlockState.ms.Write()
+
+	commitHash := app.cms.WorkingHash()
+	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitHash))
+
+	return commitHash
 }
 
 // halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling

@@ -1,12 +1,21 @@
 package server
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
+	logger "cosmossdk.io/log"
+	cfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/light"
+	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
+	sm "github.com/cometbft/cometbft/state"
+	"github.com/cometbft/cometbft/statesync"
+	"github.com/cometbft/cometbft/store"
 	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -15,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -248,4 +258,79 @@ $ %s query block --%s=%s <hash>
 	cmd.Flags().String(auth.FlagType, auth.TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", auth.TypeHeight, auth.TypeHash))
 
 	return cmd
+}
+
+var cmtconfig = cfg.DefaultConfig()
+
+func BootstrapStateCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "bootstrap-state height",
+		Short: "Bootstrap cometbft state in an arbitrary block height using light client",
+		Long: `
+Bootstrap cometbft state in an arbitrary block height using light client
+`,
+
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			height, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			return bootstrapStateCmd(height)
+		},
+	}
+	return cmd
+}
+
+func bootstrapStateCmd(height uint64) error {
+	ctx := context.Background()
+
+	blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cmtconfig})
+	if err != nil {
+		return err
+	}
+	blockStore := store.NewBlockStore(blockStoreDB)
+
+	stateDB, err := node.DefaultDBProvider(&node.DBContext{ID: "state", Config: cmtconfig})
+	if err != nil {
+		return err
+	}
+	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
+		DiscardABCIResponses: cmtconfig.Storage.DiscardABCIResponses,
+	})
+
+	genState, _, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, node.DefaultGenesisDocProviderFunc(cmtconfig))
+	if err != nil {
+		return err
+	}
+
+	log := logger.NewLogger(os.Stdout).With("module", "light")
+
+	stateProvider, err := statesync.NewLightClientStateProvider(
+		ctx,
+		genState.ChainID, genState.Version, genState.InitialHeight,
+		cmtconfig.StateSync.RPCServers, light.TrustOptions{
+			Period: cmtconfig.StateSync.TrustPeriod,
+			Height: cmtconfig.StateSync.TrustHeight,
+			Hash:   cmtconfig.StateSync.TrustHashBytes(),
+		}, servercmtlog.CometLoggerWrapper{Logger: log})
+	if err != nil {
+		return fmt.Errorf("failed to set up light client state provider: %w", err)
+	}
+
+	state, err := stateProvider.State(ctx, height)
+	if err != nil {
+		return err
+	}
+
+	commit, err := stateProvider.Commit(ctx, height)
+	if err != nil {
+		return err
+	}
+
+	if err := stateStore.Bootstrap(state); err != nil {
+		return err
+	}
+
+	return blockStore.SaveSeenCommit(state.LastBlockHeight, commit)
 }

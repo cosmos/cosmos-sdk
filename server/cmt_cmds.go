@@ -278,7 +278,6 @@ Bootstrap CometBFT state at an arbitrary block height using a light client
 }
 
 func bootstrapStateCmd(cmd *cobra.Command, cfg *cfg.Config) error {
-
 	blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
 	if err != nil {
 		return err

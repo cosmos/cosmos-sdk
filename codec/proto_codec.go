@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -168,24 +169,32 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 // the standard library google.golang.org/protobuf/proto.Message.
 // We convert gogo types to dynamicpb messages and then marshal that directly to amino JSON.
 func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
-	desc, err := pc.interfaceRegistry.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
-	if err != nil {
-		return nil, err
-	}
-
-	dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
-	dynamicMsg := dynamicMsgType.New().Interface()
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: pc.interfaceRegistry})
 	gogoBytes, err := gogoproto.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
-	err = proto.Unmarshal(gogoBytes, dynamicMsg)
+
+	var protoMsg protoreflect.ProtoMessage
+	typ, err := protoregistry.GlobalTypes.FindMessageByURL(fmt.Sprintf("/%s", gogoproto.MessageName(msg)))
+	if err != nil {
+		protoMsg = typ.New().Interface()
+	} else {
+		desc, err := pc.interfaceRegistry.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
+		if err != nil {
+			return nil, err
+		}
+
+		dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+		protoMsg = dynamicMsgType.New().Interface()
+	}
+
+	err = proto.Unmarshal(gogoBytes, protoMsg)
 	if err != nil {
 		return nil, err
 	}
 
-	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: pc.interfaceRegistry})
-	jsonBytes, err := encoder.Marshal(dynamicMsg)
+	jsonBytes, err := encoder.Marshal(protoMsg)
 	if err != nil {
 		return nil, err
 	}

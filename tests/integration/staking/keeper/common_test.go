@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"gotest.tools/v3/assert"
 
@@ -45,7 +46,7 @@ type fixture struct {
 }
 
 func init() {
-	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+	sdk.DefaultPowerReduction = math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 }
 
 // intended to be used with require/assert:  require.True(ValEq(...))

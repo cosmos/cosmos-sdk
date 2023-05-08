@@ -1645,7 +1645,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 
 func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
-	baseDepositRatioDec := sdk.NewDec(baseDepositTestPercent).Quo(sdk.NewDec(100))
+	baseDepositRatioDec := sdkmath.LegacyNewDec(baseDepositTestPercent).Quo(sdkmath.LegacyNewDec(100))
 
 	testcases := map[string]struct {
 		minDeposit             sdk.Coins

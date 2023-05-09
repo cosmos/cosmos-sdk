@@ -18,7 +18,7 @@ func RestoreSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 		Use:   "restore <height> <format>",
 		Short: "Restore app state from local snapshot",
 		Long:  "Restore app state from local snapshot",
-		Args: cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)
 

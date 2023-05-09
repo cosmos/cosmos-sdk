@@ -297,7 +297,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 	chDone := make(chan restoreDone, 1)
 
 	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return errorsmod.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
 

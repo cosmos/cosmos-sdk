@@ -1085,9 +1085,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationAddEntry() {
 		0,
 	)
 	var initialEntries []stakingtypes.UnbondingDelegationEntry
-	for _, entry := range ubd.Entries {
-		initialEntries = append(initialEntries, entry)
-	}
+	initialEntries = append(initialEntries, ubd.Entries...)
 	require.Len(initialEntries, 1)
 
 	isNew := ubd.AddEntry(creationHeight, time.Unix(0, 0).UTC(), math.NewInt(5), 1)

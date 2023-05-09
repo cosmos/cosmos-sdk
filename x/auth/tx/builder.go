@@ -40,7 +40,6 @@ type wrapper struct {
 
 	signers [][]byte
 	msgsV2  []protov2.Message
-	err     error
 }
 
 var (
@@ -79,10 +78,13 @@ func (w *wrapper) GetMsgs() []sdk.Msg {
 
 func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
 	if w.msgsV2 == nil {
-		w.initSignersAndMsgsV2()
+		err := w.initSignersAndMsgsV2()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return w.msgsV2, w.err
+	return w.msgsV2, nil
 }
 
 func (w *wrapper) ValidateBasic() error {
@@ -90,56 +92,16 @@ func (w *wrapper) ValidateBasic() error {
 		return fmt.Errorf("bad Tx")
 	}
 
-	body := w.tx.Body
-	if body == nil {
-		return fmt.Errorf("missing TxBody")
-	}
-
-	authInfo := w.tx.AuthInfo
-	if authInfo == nil {
-		return fmt.Errorf("missing AuthInfo")
-	}
-
-	fee := authInfo.Fee
-	if fee == nil {
-		return fmt.Errorf("missing fee")
-	}
-
-	if fee.GasLimit > tx.MaxGasWanted {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", fee.GasLimit, tx.MaxGasWanted,
-		)
-	}
-
-	if fee.Amount.IsAnyNil() {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInsufficientFee,
-			"invalid fee provided: null",
-		)
-	}
-
-	if fee.Amount.IsAnyNegative() {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInsufficientFee,
-			"invalid fee provided: %s", fee.Amount,
-		)
-	}
-
-	if fee.Payer != "" {
-		_, err := sdk.AccAddressFromBech32(fee.Payer)
-		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
-		}
+	if err := w.tx.ValidateBasic(); err != nil {
+		return err
 	}
 
 	sigs := w.tx.Signatures
-
-	if len(sigs) == 0 {
-		return sdkerrors.ErrNoSignatures
+	signers, err := w.GetSigners()
+	if err != nil {
+		return err
 	}
 
-	signers, _ := w.GetSigners()
 	if len(sigs) != len(signers) {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
@@ -182,15 +144,20 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 	return w.authInfoBz
 }
 
-func (w *wrapper) initSignersAndMsgsV2() {
-	w.signers, w.msgsV2, w.err = w.tx.GetSigners(w.cdc)
+func (w *wrapper) initSignersAndMsgsV2() error {
+	var err error
+	w.signers, w.msgsV2, err = w.tx.GetSigners(w.cdc)
+	return err
 }
 
 func (w *wrapper) GetSigners() ([][]byte, error) {
 	if w.signers == nil {
-		w.initSignersAndMsgsV2()
+		err := w.initSignersAndMsgsV2()
+		if err != nil {
+			return nil, err
+		}
 	}
-	return w.signers, w.err
+	return w.signers, nil
 }
 
 func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {

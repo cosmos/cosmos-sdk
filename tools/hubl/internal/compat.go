@@ -9,7 +9,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1beta1 "cosmossdk.io/api/cosmos/base/reflection/v1beta1"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
+	"google.golang.org/grpc/reflection/grpc_reflection_v1"
 	"google.golang.org/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -35,13 +35,13 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 		}
 	}
 
-	reflectClient, err := grpc_reflection_v1alpha.NewServerReflectionClient(client).ServerReflectionInfo(ctx)
+	reflectClient, err := grpc_reflection_v1.NewServerReflectionClient(client).ServerReflectionInfo(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	fdMap := map[string]*descriptorpb.FileDescriptorProto{}
-	waitListServiceRes := make(chan *grpc_reflection_v1alpha.ListServiceResponse)
+	waitListServiceRes := make(chan *grpc_reflection_v1.ListServiceResponse)
 	waitc := make(chan struct{})
 	go func() {
 		for {
@@ -56,16 +56,16 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 			}
 
 			switch res := in.MessageResponse.(type) {
-			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
+			case *grpc_reflection_v1.ServerReflectionResponse_ListServicesResponse:
 				waitListServiceRes <- res.ListServicesResponse
-			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
+			case *grpc_reflection_v1.ServerReflectionResponse_FileDescriptorResponse:
 				processFileDescriptorsResponse(res, fdMap)
 			}
 		}
 	}()
 
-	if err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
-		MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_ListServices{},
+	if err = reflectClient.Send(&grpc_reflection_v1.ServerReflectionRequest{
+		MessageRequest: &grpc_reflection_v1.ServerReflectionRequest_ListServices{},
 	}); err != nil {
 		return nil, err
 	}
@@ -73,8 +73,8 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	listServiceRes := <-waitListServiceRes
 
 	for _, response := range listServiceRes.Service {
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
-			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
+		err = reflectClient.Send(&grpc_reflection_v1.ServerReflectionRequest{
+			MessageRequest: &grpc_reflection_v1.ServerReflectionRequest_FileContainingSymbol{
 				FileContainingSymbol: response.Name,
 			},
 		})
@@ -84,8 +84,8 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	}
 
 	for _, msgName := range interfaceImplNames {
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
-			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
+		err = reflectClient.Send(&grpc_reflection_v1.ServerReflectionRequest{
+			MessageRequest: &grpc_reflection_v1.ServerReflectionRequest_FileContainingSymbol{
 				FileContainingSymbol: msgName,
 			},
 		})
@@ -133,7 +133,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	return fdSet, nil
 }
 
-func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) {
+func processFileDescriptorsResponse(res *grpc_reflection_v1.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) {
 	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto {
 		fd := &descriptorpb.FileDescriptorProto{}
 		err := proto.Unmarshal(bz, fd)
@@ -158,7 +158,7 @@ func missingFileDescriptors(fdMap map[string]*descriptorpb.FileDescriptorProto, 
 }
 
 func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdMap map[string]*descriptorpb.FileDescriptorProto, missingFiles []string) error {
-	reflectClient, err := grpc_reflection_v1alpha.NewServerReflectionClient(client).ServerReflectionInfo(ctx)
+	reflectClient, err := grpc_reflection_v1.NewServerReflectionClient(client).ServerReflectionInfo(ctx)
 	if err != nil {
 		return err
 	}
@@ -176,15 +176,15 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 				panic(err)
 			}
 
-			if res, ok := in.MessageResponse.(*grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse); ok {
+			if res, ok := in.MessageResponse.(*grpc_reflection_v1.ServerReflectionResponse_FileDescriptorResponse); ok {
 				processFileDescriptorsResponse(res, fdMap)
 			}
 		}
 	}()
 
 	for _, file := range missingFiles {
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
-			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileByFilename{
+		err = reflectClient.Send(&grpc_reflection_v1.ServerReflectionRequest{
+			MessageRequest: &grpc_reflection_v1.ServerReflectionRequest_FileByFilename{
 				FileByFilename: file,
 			},
 		})

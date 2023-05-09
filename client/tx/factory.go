@@ -460,9 +460,14 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 
 // Prepare ensures the account defined by ctx.GetFromAddress() exists and
 // if the account number and/or the account sequence number are zero (not set),
-// they will be queried (when not in offline mode) for and set on the provided Factory.
+// they will be queried for and set on the provided Factory.
 // A new Factory with the updated fields will be returned.
+// Note: When in offline mode, the factory is simply returned.
 func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
+	if clientCtx.Offline {
+		return f, nil
+	}
+
 	fc := f
 	from := clientCtx.GetFromAddress()
 
@@ -471,7 +476,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	}
 
 	initNum, initSeq := fc.accountNumber, fc.sequence
-	if !clientCtx.Offline && (initNum == 0 || initSeq == 0) {
+	if initNum == 0 || initSeq == 0 {
 		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(clientCtx, from)
 		if err != nil {
 			return fc, err

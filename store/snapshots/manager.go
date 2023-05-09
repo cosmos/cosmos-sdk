@@ -320,7 +320,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 }
 
 func (m *Manager) loadChunkStream(height uint64, format uint32, chunkIDs <-chan uint32) <-chan io.ReadCloser {
-	chunks := make(chan io.ReadCloser)
+	chunks := make(chan io.ReadCloser, 4)
 	go func() {
 		defer close(chunks)
 

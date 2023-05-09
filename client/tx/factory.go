@@ -462,7 +462,7 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory.
 // A new Factory with the updated fields will be returned.
-// Note: When in offline mode, the factory is simply returned.
+// Note: When in offline mode, the Prepare does nothing and returns the original factory.
 func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	if clientCtx.Offline {
 		return f, nil

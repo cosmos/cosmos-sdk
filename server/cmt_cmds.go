@@ -1,13 +1,11 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"cosmossdk.io/log"
-	cfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/light"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -273,6 +271,7 @@ Bootstrap CometBFT state at an arbitrary block height using a light client
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			logger := log.NewLogger(cmd.OutOrStdout())
+			cfg := serverCtx.Config
 
 			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
@@ -289,70 +288,66 @@ Bootstrap CometBFT state at an arbitrary block height using a light client
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			return bootstrapStateCmd(cmd.Context(), height, logger, serverCtx.Config)
+			blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
+			if err != nil {
+				return err
+			}
+			blockStore := store.NewBlockStore(blockStoreDB)
+
+			stateDB, err := node.DefaultDBProvider(&node.DBContext{ID: "state", Config: cfg})
+			if err != nil {
+				return err
+			}
+			stateStore := sm.NewStore(stateDB, sm.StoreOptions{
+				DiscardABCIResponses: cfg.Storage.DiscardABCIResponses,
+			})
+
+			genState, _, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, node.DefaultGenesisDocProviderFunc(cfg))
+			if err != nil {
+				return err
+			}
+
+			stateProvider, err := statesync.NewLightClientStateProvider(
+				cmd.Context(),
+				genState.ChainID, genState.Version, genState.InitialHeight,
+				cfg.StateSync.RPCServers, light.TrustOptions{
+					Period: cfg.StateSync.TrustPeriod,
+					Height: cfg.StateSync.TrustHeight,
+					Hash:   cfg.StateSync.TrustHashBytes(),
+				}, servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "light")})
+			if err != nil {
+				return fmt.Errorf("failed to set up light client state provider: %w", err)
+			}
+
+			state, err := stateProvider.State(cmd.Context(), uint64(height))
+			if err != nil {
+				return fmt.Errorf("failed to get state: %w", err)
+			}
+
+			commit, err := stateProvider.Commit(cmd.Context(), uint64(height))
+			if err != nil {
+				return fmt.Errorf("failed to get commit: %w", err)
+			}
+
+			if err := stateStore.Bootstrap(state); err != nil {
+				return fmt.Errorf("failed to bootstrap state: %w", err)
+			}
+
+			if err := blockStore.SaveSeenCommit(state.LastBlockHeight, commit); err != nil {
+				return fmt.Errorf("failed to save seen commit: %w", err)
+			}
+
+			store.SaveBlockStoreState(&cmtstore.BlockStoreState{
+				// maintain the invariant that blocks in range [Base, Height] exists.
+				Base:   state.LastBlockHeight + 1,
+				Height: state.LastBlockHeight,
+			}, blockStoreDB)
+
+			return nil
 		},
 	}
 
 	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided will use the latest block height in app state")
 
 	return cmd
-}
-
-func bootstrapStateCmd(ctx context.Context, height int64, logger log.Logger, cfg *cfg.Config) error {
-	blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
-	if err != nil {
-		return err
-	}
-	blockStore := store.NewBlockStore(blockStoreDB)
-
-	stateDB, err := node.DefaultDBProvider(&node.DBContext{ID: "state", Config: cfg})
-	if err != nil {
-		return err
-	}
-	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
-		DiscardABCIResponses: cfg.Storage.DiscardABCIResponses,
-	})
-
-	genState, _, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, node.DefaultGenesisDocProviderFunc(cfg))
-	if err != nil {
-		return err
-	}
-
-	stateProvider, err := statesync.NewLightClientStateProvider(
-		ctx,
-		genState.ChainID, genState.Version, genState.InitialHeight,
-		cfg.StateSync.RPCServers, light.TrustOptions{
-			Period: cfg.StateSync.TrustPeriod,
-			Height: cfg.StateSync.TrustHeight,
-			Hash:   cfg.StateSync.TrustHashBytes(),
-		}, servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "light")})
-	if err != nil {
-		return fmt.Errorf("failed to set up light client state provider: %w", err)
-	}
-
-	state, err := stateProvider.State(ctx, uint64(height))
-	if err != nil {
-		return fmt.Errorf("failed to get state: %w", err)
-	}
-
-	commit, err := stateProvider.Commit(ctx, uint64(height))
-	if err != nil {
-		return fmt.Errorf("failed to get commit: %w", err)
-	}
-
-	if err := stateStore.Bootstrap(state); err != nil {
-		return fmt.Errorf("failed to bootstrap state: %w", err)
-	}
-
-	if err := blockStore.SaveSeenCommit(state.LastBlockHeight, commit); err != nil {
-		return fmt.Errorf("failed to save seen commit: %w", err)
-	}
-
-	store.SaveBlockStoreState(&cmtstore.BlockStoreState{
-		// maintain the invariant that blocks in range [Base, Height] exists.
-		Base:   state.LastBlockHeight + 1,
-		Height: state.LastBlockHeight,
-	}, blockStoreDB)
-
-	return nil
 }

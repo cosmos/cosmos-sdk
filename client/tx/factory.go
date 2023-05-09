@@ -71,9 +71,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		if flagSet.Changed(flags.FlagAccountNumber) && flagSet.Changed(flags.FlagSequence) {
 			accNum, _ = flagSet.GetUint64(flags.FlagAccountNumber)
 			accSeq, _ = flagSet.GetUint64(flags.FlagSequence)
-			if accNum == 0 || accSeq == 0 {
-				return Factory{}, errors.New("account-number and sequence cannot be both zero when in offline mode")
-			}
 		} else {
 			return Factory{}, errors.New("account-number and sequence must be set in offline mode")
 		}
@@ -474,7 +471,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	}
 
 	initNum, initSeq := fc.accountNumber, fc.sequence
-	if initNum == 0 || initSeq == 0 {
+	if !clientCtx.Offline && (initNum == 0 || initSeq == 0) {
 		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(clientCtx, from)
 		if err != nil {
 			return fc, err

@@ -1,11 +1,12 @@
 package simulation
 
 import (
+	"testing"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestNewStoreDecoderFuncFromCollectionsSchema(t *testing.T) {
@@ -31,6 +32,7 @@ func TestNewStoreDecoderFuncFromCollectionsSchema(t *testing.T) {
 	key1M2, err := collections.EncodeKeyWithPrefix(prefixM2, m2.KeyCodec(), int32(1))
 	require.NoError(t, err)
 	key2M2, err := collections.EncodeKeyWithPrefix(prefixM2, m2.KeyCodec(), int32(2))
+	require.NoError(t, err)
 
 	storeDec1 := dec(kv.Pair{
 		Key:   key1M1,

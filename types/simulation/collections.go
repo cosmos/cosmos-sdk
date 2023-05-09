@@ -2,9 +2,11 @@ package simulation
 
 import (
 	"bytes"
+	"fmt"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 

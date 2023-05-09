@@ -117,6 +117,10 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 		appHash = emptyHash[:]
 	}
 
+	// write the state writes to the underlying store and set the final commit.
+	// Commit should be called after initchain in order to commit changes to disk
+	app.finalizeBlockState.ms.Write()
+
 	// NOTE: We don't commit, since FinalizeBlock for a block at height
 	// initial_height starts from this state.
 	return &abci.ResponseInitChain{

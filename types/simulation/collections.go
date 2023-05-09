@@ -20,6 +20,9 @@ func NewStoreDecoderFuncFromCollectionsSchema(schema collections.Schema) func(kv
 	return func(kvA, kvB kv.Pair) string {
 		for i, prefix := range prefixes {
 			if bytes.HasPrefix(kvA.Key, prefix) {
+				if !bytes.HasPrefix(kvB.Key, prefix) {
+					panic(fmt.Sprintf("prefix mismatch, keyA has prefix %x (%s), but keyB does not %x (%s)", prefix, prefix, kvB.Key, kvB.Key))
+				}
 				vc := valueCodecs[i]
 				// unmarshal kvA.Value to the corresponding type
 				vA, err := vc.Decode(kvA.Value)

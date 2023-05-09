@@ -54,7 +54,7 @@ func (m Map[K, V]) GetPrefix() []byte {
 // Set maps the provided value to the provided key in the store.
 // Errors with ErrEncoding if key or value encoding fails.
 func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
-	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
+	bytesKey, err := EncodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 // errors with ErrNotFound if the key does not exist, or
 // with ErrEncoding if the key or value decoding fails.
 func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
-	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
+	bytesKey, err := EncodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return v, err
 	}
@@ -97,7 +97,7 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
 // Has reports whether the key is present in storage or not.
 // Errors with ErrEncoding if key encoding fails.
 func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
-	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
+	bytesKey, err := EncodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return false, err
 	}
@@ -109,7 +109,7 @@ func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
 // Errors with ErrEncoding if key encoding fails.
 // If the key does not exist then this is a no-op.
 func (m Map[K, V]) Remove(ctx context.Context, key K) error {
-	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
+	bytesKey, err := EncodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,9 @@ func (m Map[K, V]) KeyCodec() codec.KeyCodec[K] { return m.kc }
 // ValueCodec returns the Map's ValueCodec.
 func (m Map[K, V]) ValueCodec() codec.ValueCodec[V] { return m.vc }
 
-func encodeKeyWithPrefix[K any](prefix []byte, kc codec.KeyCodec[K], key K) ([]byte, error) {
+// EncodeKeyWithPrefix returns how the collection would store the key in storage given
+// prefix, key codec and the concrete key.
+func EncodeKeyWithPrefix[K any](prefix []byte, kc codec.KeyCodec[K], key K) ([]byte, error) {
 	prefixLen := len(prefix)
 	// preallocate buffer
 	keyBytes := make([]byte, prefixLen+kc.Size(key))

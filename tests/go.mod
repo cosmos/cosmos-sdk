@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
-	cosmossdk.io/x/tx v0.6.1
+	cosmossdk.io/x/tx v0.6.3
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cometbft/cometbft v0.37.1
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
@@ -144,8 +144,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.15.1 // indirect
-	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.42.0 // indirect
+	github.com/prometheus/client_model v0.4.0 // indirect
+	github.com/prometheus/common v0.43.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
@@ -170,7 +170,7 @@ require (
 	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/oauth2 v0.6.0 // indirect
+	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/term v0.7.0 // indirect
@@ -200,14 +200,13 @@ replace (
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 
-// temporary replace
-replace cosmossdk.io/x/tx => ../x/tx
-
 // Below are the long-lived replace for tests.
 replace (
 	cosmossdk.io/core => ../core
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
+	// TODO: remove after 0.7.0 release
+	cosmossdk.io/x/tx => ../x/tx
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

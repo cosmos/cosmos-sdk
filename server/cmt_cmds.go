@@ -1,11 +1,12 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
-	logger "cosmossdk.io/log"
+	"cosmossdk.io/log"
 	cfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/light"
 	"github.com/cometbft/cometbft/node"
@@ -24,6 +25,7 @@ import (
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -259,7 +261,7 @@ $ %s query block --%s=%s <hash>
 	return cmd
 }
 
-func BootstrapStateCmd() *cobra.Command {
+func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bootstrap-state",
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
@@ -270,15 +272,33 @@ Bootstrap CometBFT state at an arbitrary block height using a light client
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
+			logger := log.NewLogger(cmd.OutOrStdout())
 
-			return bootstrapStateCmd(cmd, serverCtx.Config)
+			height, err := cmd.Flags().GetInt64("height")
+			if err != nil {
+				return err
+			}
+			if height == 0 {
+				home := serverCtx.Viper.GetString(flags.FlagHome)
+				db, err := openDB(home, GetAppDBBackend(serverCtx.Viper))
+				if err != nil {
+					return err
+				}
 
+				app := appCreator(logger, db, nil, serverCtx.Viper)
+				height = app.CommitMultiStore().LastCommitID().Version
+			}
+
+			return bootstrapStateCmd(cmd.Context(), height, logger, serverCtx.Config)
 		},
 	}
+
+	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided will use the latest block height in app state")
+
 	return cmd
 }
 
-func bootstrapStateCmd(cmd *cobra.Command, cfg *cfg.Config) error {
+func bootstrapStateCmd(ctx context.Context, height int64, logger log.Logger, cfg *cfg.Config) error {
 	blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
 	if err != nil {
 		return err
@@ -298,26 +318,24 @@ func bootstrapStateCmd(cmd *cobra.Command, cfg *cfg.Config) error {
 		return err
 	}
 
-	log := logger.NewLogger(cmd.OutOrStderr()).With("module", "light")
-
 	stateProvider, err := statesync.NewLightClientStateProvider(
-		cmd.Context(),
+		ctx,
 		genState.ChainID, genState.Version, genState.InitialHeight,
 		cfg.StateSync.RPCServers, light.TrustOptions{
 			Period: cfg.StateSync.TrustPeriod,
 			Height: cfg.StateSync.TrustHeight,
 			Hash:   cfg.StateSync.TrustHashBytes(),
-		}, servercmtlog.CometLoggerWrapper{Logger: log})
+		}, servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "light")})
 	if err != nil {
 		return fmt.Errorf("failed to set up light client state provider: %w", err)
 	}
 
-	state, err := stateProvider.State(cmd.Context(), uint64(cfg.StateSync.TrustHeight))
+	state, err := stateProvider.State(ctx, uint64(height))
 	if err != nil {
 		return fmt.Errorf("failed to get state: %w", err)
 	}
 
-	commit, err := stateProvider.Commit(cmd.Context(), uint64(cfg.StateSync.TrustHeight))
+	commit, err := stateProvider.Commit(ctx, uint64(height))
 	if err != nil {
 		return fmt.Errorf("failed to get commit: %w", err)
 	}

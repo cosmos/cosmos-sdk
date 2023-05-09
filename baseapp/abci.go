@@ -798,8 +798,12 @@ func (app *BaseApp) flushCommit() storetypes.CommitID {
 // state transitions will be flushed to disk and as a result, but we already have
 // an application Merkle root.
 func (app *BaseApp) workingHash() []byte {
+	// Write the FinalizeBlock state into branched storage and commit the MultiStore.
+	// The write to the FinalizeBlock state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called it persists those values.
 	app.finalizeBlockState.ms.Write()
 
+	// Get the hash of all writes in order to return the apphash to the comet in finalizeBlock.
 	commitHash := app.cms.WorkingHash()
 	app.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
 

@@ -63,8 +63,8 @@ const (
 	opPrune    operation = "prune"
 	opRestore  operation = "restore"
 
-	// the channel is lightweight(`uint32`), so we can afford to have a big buffer
-	chunkBufferSize = 1024
+	chunkBufferSize = 4
+	chunkIDBufferSize = 1024
 
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
@@ -293,7 +293,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 	}
 
 	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
-	chChunkIDs := make(chan uint32, chunkBufferSize)
+	chChunkIDs := make(chan uint32, chunkIDBufferSize)
 	chDone := make(chan restoreDone, 1)
 
 	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
@@ -320,7 +320,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 }
 
 func (m *Manager) loadChunkStream(height uint64, format uint32, chunkIDs <-chan uint32) <-chan io.ReadCloser {
-	chunks := make(chan io.ReadCloser, 4)
+	chunks := make(chan io.ReadCloser, chunkBufferSize)
 	go func() {
 		defer close(chunks)
 

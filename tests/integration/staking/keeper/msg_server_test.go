@@ -5,14 +5,17 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCancelUnbondingDelegation(t *testing.T) {
@@ -37,8 +40,13 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 2, sdk.NewInt(10000))
 	valAddr := sdk.ValAddress(addrs[0])
 	delegatorAddr := addrs[1]
+
+	// setup a new validator with bonded status
+	validator, err := types.NewValidator(valAddr, PKs[0], types.NewDescription("Validator", "", "", "", ""))
+	validator.Status = types.Bonded
 	assert.NilError(t, err)
 	f.stakingKeeper.SetValidator(ctx, validator)
+
 	validatorAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 	assert.NilError(t, err)
 
@@ -167,54 +175,45 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 }
 
 func TestRotateConsPubKey(t *testing.T) {
-	// setup the app
-	var (
-		stakingKeeper *keeper.Keeper
-		bankKeeper    bankkeeper.Keeper
-		accountKeeper authkeeper.AccountKeeper
-	)
-	app, err := simtestutil.SetupWithConfiguration(
-		configurator.NewAppConfig(
-			configurator.BankModule(),
-			configurator.TxModule(),
-			configurator.StakingModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.AuthModule(),
-		),
-		simtestutil.DefaultStartUpConfig(),
-		&accountKeeper, &bankKeeper, &stakingKeeper)
-	assert.NilError(t, err)
+	t.Parallel()
+	f := initFixture(t)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := f.sdkCtx
+	stakingKeeper := f.stakingKeeper
+	bankKeeper := f.bankKeeper
+	accountKeeper := f.accountKeeper
+
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 	bondDenom := stakingKeeper.BondDenom(ctx)
 
 	params := stakingKeeper.GetParams(ctx)
 	params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
 	params.MaxConsPubkeyRotations = types.DefaultMaxConsPubKeyRotations
-	err = stakingKeeper.SetParams(ctx, params)
+	err := stakingKeeper.SetParams(ctx, params)
 	assert.NilError(t, err)
 
-	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 1000000))
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 4000000000000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-
-	validators := stakingKeeper.GetAllValidators(ctx)
-	require.Len(t, validators, 1)
 
 	// create 5 validators
 	for i := 0; i < 5; i++ {
-		val := testutil.NewValidator(t, valAddrs[i], PKs[i])
-		stakingKeeper.SetValidator(ctx, val)
-		stakingKeeper.SetValidatorByConsAddr(ctx, val)
-		stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+		comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+
+		msg, err := types.NewMsgCreateValidator(valAddrs[i], PKs[i], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000000000000000000)),
+			types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+		require.NoError(t, err)
+		_, err = msgServer.CreateValidator(ctx, msg)
+		require.NoError(t, err)
 	}
+
+	// call endblocker to update the validator state
+	_, err = stakingKeeper.EndBlocker(ctx.WithBlockHeight(ctx.BlockHeader().Height + 1))
+	require.NoError(t, err)
 
 	keyRotationFee := stakingKeeper.KeyRotationFee(ctx)
 
-	validators = stakingKeeper.GetAllValidators(ctx)
+	validators := stakingKeeper.GetAllValidators(ctx)
 	require.GreaterOrEqual(t, len(validators), 5)
-	validators = validators[1:]
 
 	testCases := []struct {
 		name           string
@@ -370,7 +369,6 @@ func TestRotateConsPubKey(t *testing.T) {
 			_, err = msgServer.RotateConsPubKey(newCtx, msg)
 
 			if testCase.pass {
-
 				require.NoError(t, err)
 
 				// rotation fee payment from sender to distrtypes
@@ -399,7 +397,7 @@ func TestRotateConsPubKey(t *testing.T) {
 }
 
 func calculateFee(fee sdk.Coin, rotationsMade int64) sdk.Coin {
-	fees := sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(rotationsMade)), nil))
+	fees := math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(rotationsMade)), nil))
 	fees = fee.Amount.Mul(fees)
 	return sdk.NewCoin(fee.Denom, fees)
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -596,6 +597,10 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	// Check if the signing account has enough balance to pay KeyRotationFee
 	// pays KeyRotationFee to community fund.
 	rotationFee := k.getRotationFee(ctx, validator.GetBondedTokens(), rotationsMade)
+	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), distrtypes.ModuleName, sdk.NewCoins(rotationFee))
+	if err != nil {
+		return nil, err
+	}
 
 	// deletes old ValidatorByConsAddr
 	err = k.DeleteValidatorByConsAddr(ctx, validator)

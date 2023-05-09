@@ -24,11 +24,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var PKs = simtestutil.CreateTestPubKeys(500)
@@ -91,7 +98,7 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 
 func initFixture(t testing.TB) *fixture {
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
 
@@ -107,6 +114,7 @@ func initFixture(t testing.TB) *fixture {
 		types.ModuleName:        {authtypes.Minter},
 		types.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		types.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		distrtypes.ModuleName:   {authtypes.Minter},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -132,11 +140,25 @@ func initFixture(t testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[types.StoreKey], accountKeeper, bankKeeper, authority.String())
 
+	distrKeeper := distrkeeper.NewKeeper(
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
+	)
+	distrKeeper.SetFeePool(newCtx, distrtypes.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
+	})
+
+	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
+	stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(distrKeeper.Hooks(), slashingKeeper.Hooks()),
+	)
+
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)
+	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, nil, cdc.InterfaceRegistry())
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule, distrModule, slashingModule)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

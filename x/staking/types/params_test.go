@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -25,6 +26,8 @@ func TestParamsEqual(t *testing.T) {
 
 func TestValidateParams(t *testing.T) {
 	params := types.DefaultParams()
+
+	coinZero := sdk.NewInt64Coin("stake", 0)
 
 	// default params have no error
 	require.NoError(t, params.Validate())

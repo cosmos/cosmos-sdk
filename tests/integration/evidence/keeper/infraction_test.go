@@ -281,7 +281,8 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.NilError(t, err)
 
 	// execute end-blocker and verify validator attributes
-	f.stakingKeeper.EndBlocker(ctx)
+	_, err = f.stakingKeeper.EndBlocker(ctx)
+	assert.NilError(t, err)
 
 	// handle a signature to set signing info
 	f.slashingKeeper.HandleValidatorSignature(ctx, NewPubkey.Address(), selfDelegation.Int64(), true)

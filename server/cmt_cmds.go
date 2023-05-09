@@ -338,8 +338,8 @@ Bootstrap CometBFT state at an arbitrary block height using a light client
 			}
 
 			store.SaveBlockStoreState(&cmtstore.BlockStoreState{
-				// maintain the invariant that blocks in range [Base, Height] exists.
-				Base:   state.LastBlockHeight + 1,
+				// it breaks the invariant that blocks in range [Base, Height] must exists, but it do works in practice.
+				Base:   state.LastBlockHeight,
 				Height: state.LastBlockHeight,
 			}, blockStoreDB)
 

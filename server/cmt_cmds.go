@@ -11,6 +11,7 @@ import (
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
+	cmtstore "github.com/cometbft/cometbft/proto/tendermint/store"
 	sm "github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/statesync"
 	"github.com/cometbft/cometbft/store"
@@ -313,17 +314,27 @@ func bootstrapStateCmd(cmd *cobra.Command, cfg *cfg.Config) error {
 
 	state, err := stateProvider.State(cmd.Context(), uint64(cfg.StateSync.TrustHeight))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get state: %w", err)
 	}
 
 	commit, err := stateProvider.Commit(cmd.Context(), uint64(cfg.StateSync.TrustHeight))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get commit: %w", err)
 	}
 
 	if err := stateStore.Bootstrap(state); err != nil {
-		return err
+		return fmt.Errorf("failed to bootstrap state: %w", err)
 	}
 
-	return blockStore.SaveSeenCommit(state.LastBlockHeight, commit)
+	if err := blockStore.SaveSeenCommit(state.LastBlockHeight, commit); err != nil {
+		return fmt.Errorf("failed to save seen commit: %w", err)
+	}
+
+	store.SaveBlockStoreState(&cmtstore.BlockStoreState{
+		// maintain the invariant that blocks in range [Base, Height] exists.
+		Base:   state.LastBlockHeight + 1,
+		Height: state.LastBlockHeight,
+	}, blockStoreDB)
+
+	return nil
 }

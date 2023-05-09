@@ -13,7 +13,7 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 		Long:  "Manage local snapshots",
 	}
 	cmd.AddCommand(
-		ListSnapshotsCmd(appCreator),
+		ListSnapshotsCmd,
 		RestoreSnapshotCmd(appCreator),
 	)
 	return cmd

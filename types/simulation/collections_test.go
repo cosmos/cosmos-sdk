@@ -50,4 +50,20 @@ func TestNewStoreDecoderFuncFromCollectionsSchema(t *testing.T) {
 	})
 
 	require.Equal(t, "-2147483647\n-2147483646", storeDec2)
+
+	// test key conflict
+
+	require.Panics(t, func() {
+		dec(
+			kv.Pair{Key: append(prefixM1.Bytes(), 0x1)},
+			kv.Pair{Key: append(prefixM2.Bytes(), 0x1)},
+		)
+	}, "must panic when keys do not have the same prefix")
+
+	require.Panics(t, func() {
+		dec(
+			kv.Pair{Key: []byte("unknown_1")},
+			kv.Pair{Key: []byte("unknown_2")},
+		)
+	}, "must panic on unknown prefixes")
 }

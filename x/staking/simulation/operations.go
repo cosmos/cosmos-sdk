@@ -648,6 +648,10 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
 		}
 		account := ak.GetAccount(ctx, simAccount.Address)
+		if account == nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("account %s not found", account)
+		}
+
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg, err := types.NewMsgRotateConsPubKey(address, acc.PubKey)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -16,14 +15,14 @@ import (
 
 // SignModeHandler implements the SIGN_MODE_LEGACY_AMINO_JSON signing mode.
 type SignModeHandler struct {
-	fileResolver protodesc.Resolver
+	fileResolver signing.ProtoFileResolver
 	typeResolver protoregistry.MessageTypeResolver
 	encoder      Encoder
 }
 
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
-	FileResolver protodesc.Resolver
+	FileResolver signing.ProtoFileResolver
 	TypeResolver protoregistry.MessageTypeResolver
 	Encoder      *Encoder
 }
@@ -42,7 +41,10 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 		h.typeResolver = options.TypeResolver
 	}
 	if options.Encoder == nil {
-		h.encoder = NewEncoder()
+		h.encoder = NewEncoder(EncoderOptions{
+			FileResolver: options.FileResolver,
+			TypeResolver: options.TypeResolver,
+		})
 	} else {
 		h.encoder = *options.Encoder
 	}
@@ -106,6 +108,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		Memo:          body.Memo,
 		Msgs:          txData.Body.Messages,
 		Fee:           fee,
+		Tip:           tip,
 	}
 
 	bz, err := h.encoder.Marshal(signDoc)

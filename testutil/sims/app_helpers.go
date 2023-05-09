@@ -166,7 +166,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
-		// app.Commit(context.TODO(), &abci.RequestCommit{}) // TODO figure out if this is needed?
+		app.Commit(context.TODO(), &abci.RequestCommit{})
 		_, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
 			NextValidatorsHash: valSet.Hash(),

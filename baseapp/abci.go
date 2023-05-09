@@ -702,8 +702,7 @@ func (app *BaseApp) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBl
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
-		// TODO: Do not commit, but use current IAVL root hash!
-		AppHash: app.flushCommit().Hash,
+		AppHash:               app.workingHash(),
 	}, nil
 }
 
@@ -726,6 +725,8 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 	if ok {
 		rms.SetCommitHeader(header)
 	}
+
+	app.commit()
 
 	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,
@@ -778,18 +779,36 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 	return resp, nil
 }
 
-// flushCommit writes all state transitions that occurred during FinalizeBlock.
-// These writes are persisted to the root multi-store (app.cms) and flushed to
+// commit commits all state transitions that occurred during FinalizeBlock.
+// These writes have been persisted to the root multi-store (app.cms) via workingHash and flushed to
 // disk. This means when the ABCI client requests Commit(), the application
 // state transitions are already flushed to disk and as a result, we already have
 // an application Merkle root.
-func (app *BaseApp) flushCommit() storetypes.CommitID {
-	app.finalizeBlockState.ms.Write()
-
+// CONTRACT: must be called after workingHash is called.
+func (app *BaseApp) commit() storetypes.CommitID {
+	// call commit to persist data to disk
 	commitID := app.cms.Commit()
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	return commitID
+}
+
+// workingHash gets the apphash that will be finalized in commit.
+// These writes will be persisted to the root multi-store (app.cms) and flushed to
+// disk in the Commit phase. This means when the ABCI client requests Commit(), the application
+// state transitions will be flushed to disk and as a result, but we already have
+// an application Merkle root.
+func (app *BaseApp) workingHash() []byte {
+	// Write the FinalizeBlock state into branched storage and commit the MultiStore.
+	// The write to the FinalizeBlock state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called it persists those values.
+	app.finalizeBlockState.ms.Write()
+
+	// Get the hash of all writes in order to return the apphash to the comet in finalizeBlock.
+	commitHash := app.cms.WorkingHash()
+	app.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
+
+	return commitHash
 }
 
 // halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling

@@ -340,7 +340,7 @@ func (m *Manager) loadChunkStream(height uint64, format uint32, chunkIDs <-chan 
 // doRestoreSnapshot do the heavy work of snapshot restoration after preliminary checks on request have passed.
 func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
 	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return errorsmod.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
 

@@ -3,58 +3,112 @@
 ## Changelog
 
 - 17/03/2023: DRAFT
+- 09/05/2023: DRAFT 2
 
-## Abstract
+## Problem Statement
 
-This RFC presents a proposal which introduces a new account abstraction system to the Cosmos SDK. The proposal's main goals are:
+The current implementation of accounts in the Cosmos SDK is limiting in terms of functionality, extensibility, and overall
+architecture. This RFC aims to address the following issues with the current account system:
 
-Unifying ModuleAccounts and Externally Owned Accounts (EOA) to create a single actor type from a runtime perspective.
-Developing a versatile account abstraction system that enables accounts to possess arbitrary logic concerning:
-1. State transition verification (authentication)
-2. Internal state modification
-3. State transition execution (when modules communicate through messages rather than keepers)
+### 1. Accounts Representation and Authentication Mechanism
 
-Supporting additional use cases, such as:
-1. More intelligent accounts
-2. Streamlined extensions of authentication mechanisms (custom cryptographic pairings, but not only)
-3. Vesting accounts
+The current SDK accounts are represented as `google.Protobuf.Any`, which are then encapsulated into the account interface.
+This account interface essentially represents the authentication mechanism, as it implements methods such as `GetNumber`
+and `GetSequence` that serve as abstractions over the authentication system. However, this approach restricts the scope and
+functionality of accounts within the SDK.
 
-The proposal's full potential is realized when integrated with modules like `x/wasm` and `x/evm`. These modules facilitate 
-the deployment of accounts with custom and dynamic code, eliminating the need for app-level definition of account code. This enables the
-proposed account abstraction's use cases to evolve with the network itself, without needing to undergo chain upgrades.
+### 2. Limited Account Interface
+
+The account interface in its current form is not versatile enough to accommodate more advanced account functionalities,
+such as implementing vesting capabilities or more complex authentication and authorization systems.
+
+### 3. Multiple Implementations of the Account Interface
+
+There are several implementations of the account interface, like `ModuleAccount`, but the existing abstraction does not
+allow for meaningful differentiation between them. This hinders the ability to create specialized accounts that cater to
+specific use cases.
+
+### 4. Primitive Authorization System
+
+The authorization system in the `x/auth` module is basic and defines authorizations solely for the functionalities of the
+`x/bank` module. Consequently, although the state transition authorization system is defined in `x/auth`, it only covers the
+use cases of `x/bank`, limiting the system's overall scope and adaptability.
+
+### 5. Cyclic Dependencies and Abstraction Leaks
+
+The current account system leads to cyclic dependencies and abstraction leaks throughout the Cosmos SDK. For instance,
+the `Vesting` functionality belongs to the `x/auth` module, which depends on the `x/bank` module. However,
+the `x/bank` module depends on the `x/auth` module again to identify the account type (either `Vesting` or `Base`) during
+a coin transfer. This dependency structure creates architectural issues and complicates the overall design of the SDK.
 
 ## Proposal
 
+This proposal aims to transform the way accounts are managed within the Cosmos SDK by introducing significant changes to
+their structure and functionality.
 
-### Account role
+### Rethinking Account Representation and Business Logic
 
-The proposal begins by clarifying the role of an account within the Cosmos SDK's runtime. Like modules, accounts are
-actors that can send and receive messages. They modify each other's states through state transitions, which are represented
-as messages. The runtime does not differentiate between actors or apply any authorization logic; it simply ensures that
-sender actors cannot impersonate others.
+Instead of representing accounts as simple `google.Protobuf.Any` structures stored in state with no business logi
+attached, this proposal suggests a more sophisticated account representation that is closer to module entities.
+In fact accounts should be able to receive messages and process them in the same way modules do, and be capable of storing
+state in a isolated (prefixed) portion of state belonging only to them, in the same way as modules do.
 
-This leads to significant implications: Externally Owned Accounts (EOA) and ModuleAccounts (system-owned identities) can
-be treated as the same entity (from the runtime point of view). Authorization, which determines which actor can execute
-a particular state transition towards another actor, must be managed by the recipient of the state transition. 
-For example, the 'bank' module decides if the 'mint' module is permitted to inflate a coin's supply. This eliminates the
-need for permissions in the 'auth' module as they currently exist.
+### Account Message Reception
 
-The key difference between EOA and ModuleAccount lies in the origin of state transitions on their behalf. In the case of
-ModuleAccount, a state transition cannot be initiated from a transaction (TX), as no valid credential can prove the sender
-is the ModuleAccount itself.
+We propose that accounts should be able to receive messages in the same way modules can, allowing them to manage their
+own state modifications without relying on other modules. This change would enable more advanced account functionality, such as the
+`VestingAccount` example, where the x/bank module previously needed to change the vestingState by casting the abstracted 
+account to `VestingAccount` and triggering the `TrackDelegation` call. Accounts are already capable of sending messages when
+a state transition, originating from a transaction, is executed.
 
-We can distinguish between EOA and ModuleAccount by considering an account as a ModuleAccount (or SystemOwnedAccount)
-when it is not possible to initiate a state transition on its behalf from a TX. Given that this distinction occurs during
-the VerifySignature stage of the AnteHandler and that authorization is managed by the state transition recipient, the
-execution runtime or other system actors to manage differences between account types. Instead, they should be treated as
-business logic units capable of sending and receiving messages. This further proves that there's no need to distinguish
-`ModuleAccounts` from `EOA`.
+When accounts receive messages, they will be able to identify the sender of the message and decide how to process the
+state transition, if at all.
+
+### Consequences
+
+These changes would have significant implications for the Cosmos SDK, resulting in a system of actors that are equal from
+the runtime perspective. The runtime would only be responsible for propagating messages between actors and would not
+manage the authorization system. Instead, actors would manage their own authorizations. For instance, there would be no
+need for the `x/auth` module to manage minting or burning of coins permissions, as it would fall within the scope of the
+`x/bank` module.
+
+The key difference between accounts and modules would lie in the origin of the message (state transition). Accounts
+(ExternallyOwnedAccount), which have credentials (e.g., a public/private key pairing), originate state transitions from
+transactions. In contrast, module state transitions do not have authentication credentials backing them and can be 
+caused by two factors: either as a consequence of a state transition coming from a transaction or triggered by a scheduler
+(e.g., the runtime's Begin/EndBlock).
+
+By implementing these proposed changes, the Cosmos SDK will benefit from a more extensible, versatile, and efficient account
+management system that is better suited to address the requirements of the Cosmos ecosystem.
+
+## Implementation
 
 ### Account Definition
 
 We define the new `Account` type, which is what an account needs to implement to be treated as such.
-An `Account` type is defined at APP level, so it cannot be dynamically loaded as the chain is running without upgrading the 
-node code, unless we use something like `x/wasm`. 
+An `Account` type is defined at APP level, so it cannot be dynamically loaded as the chain is running without upgrading the
+node code, unless we create something like a `CosmWasmAccount` which is an account backed by an `x/wasm` contract.
+
+```go
+// Account is what the developer implements to define an account.
+type Account[InitMsg proto.Message] interface {
+	// Init is the function that initialises an account instance of a given kind.
+	// InitMsg is used to initialise the initial state of an account.
+	Init(ctx *Context, msg InitMsg) error
+	// RegisterExecuteHandlers registers an account's execution messages.
+	RegisterExecuteHandlers(executeRouter *ExecuteRouter)
+	// RegisterQueryHandlers registers an account's query messages.
+	RegisterQueryHandlers(queryRouter *QueryRouter)
+	// RegisterMigrationHandlers registers an account's migration messages.
+	RegisterMigrationHandlers(migrationRouter *MigrationRouter)
+}
+
+```
+
+### The InternalAccount definition
+
+The public `Account` interface implementer is then converted by the runtime into an `InternalAccount` implementation,
+which contains all the information and business logic needed to operate the account.
 
 ```go
 type Schema struct {
@@ -81,14 +135,14 @@ respect to `proto.Message`), the concrete implementation is fully typed.
 
 During any of the execution methods of `InternalAccount`, `schema` excluded, the account is given a `Context` which provides:
 - A namespaced `KVStore` for the account, which isolates the account state from others (NOTE: no `store keys` needed,
-the account address serves as `store key`).
+  the account address serves as `store key`).
 - Information regarding itself (its address)
 - Information regarding the sender.
 - ...
 
 #### Init
 
-Init defines the entrypoint that allows for a new account instance of a given kind to be initialised. 
+Init defines the entrypoint that allows for a new account instance of a given kind to be initialised.
 The account is passed some opaque protobuf message which is then interpreted and contains the instructions that
 constitute the initial state of an account once it is deployed.
 
@@ -102,12 +156,12 @@ process the state transition based on the message provided and the sender of the
 
 #### Query
 
-Query defines a read-only entrypoint that provides a stable interface that links an account with its state. The reason for 
+Query defines a read-only entrypoint that provides a stable interface that links an account with its state. The reason for
 which `Query` is still being preferred as an addition to raw state reflection is to:
 - Provide a stable interface for querying (state can be optimised and change more frequently than a query)
 - Provide a way to define an account `Interface` with respect to its `Read/Write` paths.
 - Provide a way to query information that cannot be processed from raw state reflection, ex: compute information from lazy
-state that has not been yet concretely processed (eg: balances with respect to lazy inputs/outputs)
+  state that has not been yet concretely processed (eg: balances with respect to lazy inputs/outputs)
 
 #### Schema
 
@@ -130,7 +184,7 @@ credentials attached to it which means no action of an account can be incepted f
 
 This also has another important implication for which account addresses are now fully decoupled from the authentication mechanism
 which makes in turn off-chain operations a little more complex, as the chain becomes the real link between account identifier
-and credentials. 
+and credentials.
 
 We could also introduce a way to deterministically compute the account address.
 
@@ -190,7 +244,7 @@ that the account instantiation might produce.
 
 #### Address derivation
 
-In order to decouple public keys from account addresses, we introduce a new address derivation mechanism which is 
+In order to decouple public keys from account addresses, we introduce a new address derivation mechanism which is
 
 
 #### MsgExecute
@@ -216,7 +270,7 @@ they live only for the duration of the `Deploy` or `Execute` message execution, 
 An alternative would have been to add a `funds` field, like it happens in cosmwasm, which guarantees the called contract that
 the funds are available and sent in the context of the message execution. This would have been a simpler approach, but it would
 have been limited to the context of `MsgSend` only, where the asset is `sdk.Coins`. The proposed generic way, instead, allows
-the account to execute any message on behalf of the sender, which is more flexible, it could include NFT send execution, or 
+the account to execute any message on behalf of the sender, which is more flexible, it could include NFT send execution, or
 more complex things like `MsgMultiSend` or `MsgDelegate`, etc.
 
 
@@ -224,7 +278,7 @@ more complex things like `MsgMultiSend` or `MsgDelegate`, etc.
 
 #### Sub-accounts
 
-We could provide a way to link accounts to other accounts. Maybe during deployment the sender could decide to link the 
+We could provide a way to link accounts to other accounts. Maybe during deployment the sender could decide to link the
 newly created to its own account, although there might be use-cases for which the deployer is different from the account
 that needs to be linked, in this case a handshake protocol on linking would need to be defined.
 
@@ -248,104 +302,3 @@ message MsgDeployPredictable {
 And then the address becomes `bechify(concat(sender, nonce))`
 
 `x/accounts` would still use the monotonically increasing sequence as account number.
-
-## x/authn and account credentials
-
-We have initially mentioned that `x/accounts` only provides for a way to deploy accounts, but they're not backed by any 
-credential, which means no state transition on behalf of the account can be incepted from a TX.
-
-`x/authn` is meant to provide the link between accounts and their TX credentials.
-Specifically `x/authn` defines the following `tx` gRPC interface:
-
-```protobuf
-// Msg defines the Msg service.
-service Msg {
-  rpc CreateAuthenticatedAccount(MsgCreateAuthenticatedAccount) returns (MsgCreateAuthenticatedAccountResponse) {};
-  rpc UpdateCredentials(MsgUpdateCredentials) returns (MsgUpdateCredentialsResponse) {};
-  rpc DeleteCredentials(MsgDeleteCredentials) returns (MsgDeleteCredentials) {};
-}
-
-message MsgCreateAuthenticatedAccount {
-  string sender = 1;
-  google.Protobuf.Any credential = 2;
-  accounts.MsgDeploy deploy_msg = 3;
-}
-
-message MsgCreateAuthenticatedAccountResponse {
-  accounts.MsgDeployResponse deploy_response = 1;
-}
-
-message MsgUpdateCredentials {
-  string sender = 1;
-  string kind = 2;
-  google.Protobuf.Any  new_credential = 3;
-}
-
-message MsgUpdateCredentialsResponse {}
-
-message MsgDeleteCredentials {
-  string sender = 1;
-}
-message MsgDeleteCredentialsResponse {}
-```
-
-### MsgCreateAuthenticatedAccount
-
-This message contains an opaque credential defined as `google.Protobuf.Any`, alongside an `x/accounts/MsgDeploy` request.
-This creates a new account and couples it with a credential.
-
-### MsgUpdateCredentials & MsgDeleteCredentials
-
-The former allows for credentials of an account to be updated the latter destroys credentials for an account, making it 
-effectively impossible for the account to send state transitions from a TX forever, unless the account has logic to again
-update its credentials.
-
-### The credential interface
-
-The credential interface, represented in our gRPC `tx` interface as a `google.Protobuf.Any`, is implemented by any type 
-which satisfies the following interface:
-
-```go
-package authn
-
-type Credential[T any, PT interface{ *T; proto.Message }] interface {
-	*T
-	VerifySignedBytes(msgBytes []byte, signature []byte) bool
-}
-```
-#### VerifySignedBytes
-
-The credential is fetched from state based on the entity trying to authenticate the `state transition`, we know this by
-pulling the signer of the message from the message itself (currently). Then the credential just applies the verification
-logic.
-
-### Further discussion
-
-#### Credentials abstraction 
-
-Credentials are currently abstracted over entities that can verify arbitrary signed bytes, which covers the use-case of crypto
-curves.
-
-The idea is that in the future we can further abstract the authentication mechanism (not only the curve), this means that a chain
-can be able to define its own authentication mechanisms, which are not tied to the `SignMode` provided by the sdk.
-Trying to fit this change right now would have yielded into a much broader work, that would have most likely lead to impactful
-breaking changes.
-
-#### Update x/auth, instead of creating an x/authn module
-
-Considering the limitations over the credentials abstraction, the changeset for `x/auth` is still limited, so we could
-just update `x/auth` to support `x/accounts` deployment and key rotation messages.
-
-## Migration
-
-### Phase1
-
-- Implement `x/accounts` and `x/authn`
-- Accounts can be migrated explicitly either by sending `x/auth` a `MsgMigrateToAuthn`, or implicitly in the `AnteHandler`.
-- Move `auth` permissions  from `x/auth` to `x/bank`, as bank is the only consumer of this information.
-
-## Major implications
-
-- Account unique identifier (represented as AccAddress) is decoupled from the authentication mechanism.
-- Accounts need to always be explicitly created. Bank would not create an account in case it doesn't exist during a `MsgSend` execution.
-

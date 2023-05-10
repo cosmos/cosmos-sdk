@@ -18,8 +18,17 @@ func TestFactoryPrepate(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, output, factory)
 
-	factory = factory.WithAccountRetriever(client.MockAccountRetriever{ReturnAccNum: 10, ReturnAccSeq: 1})
+	factory = tx.Factory{}.WithAccountRetriever(client.MockAccountRetriever{ReturnAccNum: 10, ReturnAccSeq: 1}).WithAccountNumber(5)
 	output, err = factory.Prepare(clientCtx.WithFrom("foo"))
 	require.NoError(t, err)
 	require.NotEqual(t, output, factory)
+	require.Equal(t, output.AccountNumber(), uint64(5))
+	require.Equal(t, output.Sequence(), uint64(1))
+
+	factory = tx.Factory{}.WithAccountRetriever(client.MockAccountRetriever{ReturnAccNum: 10, ReturnAccSeq: 1})
+	output, err = factory.Prepare(clientCtx.WithFrom("foo"))
+	require.NoError(t, err)
+	require.NotEqual(t, output, factory)
+	require.Equal(t, output.AccountNumber(), uint64(10))
+	require.Equal(t, output.Sequence(), uint64(1))
 }

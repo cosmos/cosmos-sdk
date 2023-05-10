@@ -192,7 +192,10 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	_, err := baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	require.NoError(t, err)
 
 	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
@@ -242,6 +245,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		t.Logf("testing %s", tc.desc)
 		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 		txConfig := moduletestutil.MakeTestTxConfig()
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
@@ -272,7 +276,10 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	_, err := baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	require.NoError(t, err)
 
 	testCases := []appTestCase{
 		{
@@ -314,7 +321,10 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	_, err = baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	require.NoError(t, err)
 
 	testCases := []appTestCase{
 		{

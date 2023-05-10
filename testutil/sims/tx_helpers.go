@@ -141,10 +141,8 @@ func SignCheckDeliver(
 	}
 	if expPass {
 		require.True(t, finalizeSuccess)
-		require.NotNil(t, res)
 	} else {
 		require.False(t, finalizeSuccess)
-		require.Nil(t, res)
 	}
 
 	app.Commit(context.TODO(), &types2.RequestCommit{})

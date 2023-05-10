@@ -1,5 +1,5 @@
-//go:build ledger && test_ledger_mock
-// +build ledger,test_ledger_mock
+//go:build ledger 
+// +build ledger
 
 package ledger
 

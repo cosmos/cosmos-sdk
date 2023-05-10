@@ -26,9 +26,10 @@ const appName = "integration-app"
 type App struct {
 	*baseapp.BaseApp
 
-	ctx         sdk.Context
-	logger      log.Logger
-	queryHelper *baseapp.QueryServiceTestHelper
+	ctx           sdk.Context
+	logger        log.Logger
+	moduleManager module.Manager
+	queryHelper   *baseapp.QueryServiceTestHelper
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application
@@ -83,10 +84,11 @@ func NewIntegrationApp(
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{
-		BaseApp:     bApp,
-		logger:      logger,
-		ctx:         ctx,
-		queryHelper: baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
+		BaseApp:       bApp,
+		logger:        logger,
+		ctx:           ctx,
+		moduleManager: *moduleManager,
+		queryHelper:   baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
 	}
 }
 
@@ -109,11 +111,14 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 
 	if cfg.AutomaticBeginEndBlock {
 		height := app.LastBlockHeight() + 1
+		ctx := app.ctx.WithBlockHeight(height).WithChainID(appName)
+
 		app.logger.Info("Running beging block", "height", height)
-		app.BeginBlock(cmtabcitypes.RequestBeginBlock{Header: cmtproto.Header{Height: height, ChainID: appName}})
+		app.moduleManager.BeginBlock(ctx)
+
 		defer func() {
 			app.logger.Info("Running end block", "height", height)
-			app.EndBlock(cmtabcitypes.RequestEndBlock{})
+			app.moduleManager.EndBlock(ctx)
 		}()
 	}
 

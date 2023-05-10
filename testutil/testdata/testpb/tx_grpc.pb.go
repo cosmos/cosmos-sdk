@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: tx.proto
+// source: testpb/tx.proto
 
-package testdata_pulsar
+package testpb
 
 import (
 	context "context"
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_CreateDog_FullMethodName = "/testdata.Msg/CreateDog"
+	Msg_CreateDog_FullMethodName = "/testpb.Msg/CreateDog"
 )
 
 // MsgClient is the client API for Msg service.
@@ -96,7 +96,7 @@ func _Msg_CreateDog_Handler(srv interface{}, ctx context.Context, dec func(inter
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "testdata.Msg",
+	ServiceName: "testpb.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -105,5 +105,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "tx.proto",
+	Metadata: "testpb/tx.proto",
 }

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: query.proto
+// source: testpb/query.proto
 
-package testdata_pulsar
+package testpb
 
 import (
 	context "context"
@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Echo_FullMethodName     = "/testdata.Query/Echo"
-	Query_SayHello_FullMethodName = "/testdata.Query/SayHello"
-	Query_TestAny_FullMethodName  = "/testdata.Query/TestAny"
+	Query_Echo_FullMethodName     = "/testpb.Query/Echo"
+	Query_SayHello_FullMethodName = "/testpb.Query/SayHello"
+	Query_TestAny_FullMethodName  = "/testpb.Query/TestAny"
 )
 
 // QueryClient is the client API for Query service.
@@ -162,7 +162,7 @@ func _Query_TestAny_Handler(srv interface{}, ctx context.Context, dec func(inter
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "testdata.Query",
+	ServiceName: "testpb.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -179,5 +179,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "query.proto",
+	Metadata: "testpb/query.proto",
 }

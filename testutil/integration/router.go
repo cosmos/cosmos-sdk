@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
+	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -27,13 +26,21 @@ const appName = "integration-app"
 type App struct {
 	*baseapp.BaseApp
 
-	ctx         sdk.Context
-	logger      log.Logger
-	queryHelper *baseapp.QueryServiceTestHelper
+	ctx           sdk.Context
+	logger        log.Logger
+	moduleManager module.Manager
+	queryHelper   *baseapp.QueryServiceTestHelper
 }
 
-// NewIntegrationApp creates an application for testing purposes. This application is able to route messages to their respective handlers.
-func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
+// NewIntegrationApp creates an application for testing purposes. This application
+// is able to route messages to their respective handlers.
+func NewIntegrationApp(
+	sdkCtx sdk.Context,
+	logger log.Logger,
+	keys map[string]*storetypes.KVStoreKey,
+	appCodec codec.Codec,
+	modules ...module.AppModule,
+) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -45,7 +52,7 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, req *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
+	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
 				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
@@ -77,25 +84,25 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{
-		BaseApp: bApp,
-
-		logger:      logger,
-		ctx:         ctx,
-		queryHelper: baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
+		BaseApp:       bApp,
+		logger:        logger,
+		ctx:           ctx,
+		moduleManager: *moduleManager,
+		queryHelper:   baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
 	}
 }
 
-// RunMsg allows to run a message and return the response.
+// RunMsg provides the ability to run a message and return the response.
 // In order to run a message, the application must have a handler for it.
 // These handlers are registered on the application message service router.
-// The result of the message execution is returned as a Any type.
+// The result of the message execution is returned as an Any type.
 // That any type can be unmarshaled to the expected response type.
 // If the message execution fails, an error is returned.
 func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	// set options
-	cfg := Config{}
+	cfg := &Config{}
 	for _, opt := range option {
-		opt(&cfg)
+		opt(cfg)
 	}
 
 	if cfg.AutomaticCommit {
@@ -104,11 +111,14 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 
 	if cfg.AutomaticBeginEndBlock {
 		height := app.LastBlockHeight() + 1
-		app.logger.Info("Running beging block", "height", height)
-		app.BeginBlock(cmtabcitypes.RequestBeginBlock{Header: cmtproto.Header{Height: height, ChainID: appName}})
+		ctx := app.ctx.WithBlockHeight(height).WithChainID(appName)
+
+		app.logger.Info("Running BeginBlock", "height", height)
+		app.moduleManager.BeginBlock(ctx)
+
 		defer func() {
-			app.logger.Info("Running end block", "height", height)
-			app.EndBlock(cmtabcitypes.RequestEndBlock{})
+			app.logger.Info("Running EndBlock", "height", height)
+			app.moduleManager.EndBlock(ctx)
 		}()
 	}
 
@@ -137,8 +147,8 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	return response, nil
 }
 
-// Context returns the application context.
-// It can be unwraped to a sdk.Context, with the sdk.UnwrapSDKContext function.
+// Context returns the application context. It can be unwrapped to a sdk.Context,
+// with the sdk.UnwrapSDKContext function.
 func (app *App) Context() context.Context {
 	return app.ctx
 }
@@ -153,9 +163,11 @@ func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger) storetypes.CommitMultiStore {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, logger, metrics.NewNoOpMetrics())
+
 	for key := range keys {
 		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
 	}
+
 	_ = cms.LoadLatestVersion()
 	return cms
 }

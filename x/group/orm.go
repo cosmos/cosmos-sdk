@@ -66,7 +66,7 @@ func ProposalFromPulsar(proposal *groupv1.Proposal) Proposal {
 	}
 }
 
-func GroupInfoFromPulsar(groupInfo *groupv1.GroupInfo) GroupInfo {
+func GroupInfoFromPulsar(groupInfo *groupv1.GroupInfo) GroupInfo { //nolint:revive // naming is ok
 	return GroupInfo{
 		Id:          groupInfo.Id,
 		Admin:       groupInfo.Admin,
@@ -77,7 +77,7 @@ func GroupInfoFromPulsar(groupInfo *groupv1.GroupInfo) GroupInfo {
 	}
 }
 
-func GroupInfoToPulsar(groupInfo GroupInfo) *groupv1.GroupInfo {
+func GroupInfoToPulsar(groupInfo GroupInfo) *groupv1.GroupInfo { //nolint:revive // naming is ok
 	return &groupv1.GroupInfo{
 		Id:          groupInfo.Id,
 		Admin:       groupInfo.Admin,
@@ -88,7 +88,7 @@ func GroupInfoToPulsar(groupInfo GroupInfo) *groupv1.GroupInfo {
 	}
 }
 
-func GroupPolicyInfoFromPulsar(groupPolicyInfo *groupv1.GroupPolicyInfo) GroupPolicyInfo {
+func GroupPolicyInfoFromPulsar(groupPolicyInfo *groupv1.GroupPolicyInfo) GroupPolicyInfo { //nolint:revive // naming is ok
 	return GroupPolicyInfo{
 		Address:        groupPolicyInfo.Address,
 		GroupId:        groupPolicyInfo.GroupId,
@@ -99,7 +99,7 @@ func GroupPolicyInfoFromPulsar(groupPolicyInfo *groupv1.GroupPolicyInfo) GroupPo
 	}
 }
 
-func GroupPolicyInfoToPulsar(groupPolicyInfo GroupPolicyInfo) *groupv1.GroupPolicyInfo {
+func GroupPolicyInfoToPulsar(groupPolicyInfo GroupPolicyInfo) *groupv1.GroupPolicyInfo { //nolint:revive // naming is ok
 	return &groupv1.GroupPolicyInfo{
 		Address:        groupPolicyInfo.Address,
 		GroupId:        groupPolicyInfo.GroupId,
@@ -110,7 +110,7 @@ func GroupPolicyInfoToPulsar(groupPolicyInfo GroupPolicyInfo) *groupv1.GroupPoli
 	}
 }
 
-func GroupMemberFromPulsar(groupMember *groupv1.GroupMember) GroupMember {
+func GroupMemberFromPulsar(groupMember *groupv1.GroupMember) GroupMember { //nolint:revive // naming is ok
 	return GroupMember{
 		GroupId:       groupMember.GroupId,
 		MemberAddress: groupMember.Member.Address,
@@ -123,7 +123,7 @@ func GroupMemberFromPulsar(groupMember *groupv1.GroupMember) GroupMember {
 	}
 }
 
-func GroupMemberToPulsar(groupMember GroupMember) *groupv1.GroupMember {
+func GroupMemberToPulsar(groupMember GroupMember) *groupv1.GroupMember { //nolint:revive // naming is ok
 	return &groupv1.GroupMember{
 		GroupId:       groupMember.GroupId,
 		MemberAddress: groupMember.Member.Address,

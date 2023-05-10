@@ -192,14 +192,14 @@ func TestRotateConsPubKey(t *testing.T) {
 	err := stakingKeeper.SetParams(ctx, params)
 	assert.NilError(t, err)
 
-	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 4000000000000000000))
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 100))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 
 	// create 5 validators
 	for i := 0; i < 5; i++ {
 		comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 
-		msg, err := types.NewMsgCreateValidator(valAddrs[i], PKs[i], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000000000000000000)),
+		msg, err := types.NewMsgCreateValidator(valAddrs[i], PKs[i], sdk.NewCoin(sdk.DefaultBondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 30)),
 			types.Description{Moniker: "NewVal"}, comm, math.OneInt())
 		require.NoError(t, err)
 		_, err = msgServer.CreateValidator(ctx, msg)

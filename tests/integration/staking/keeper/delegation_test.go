@@ -7,11 +7,11 @@ import (
 	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
@@ -20,42 +20,28 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	ctx := f.sdkCtx
 
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, int64(1000))
-	f.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 5, f.stakingKeeper.TokensFromConsensusPower(ctx, 100))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 
-	addrDel := sdk.AccAddress([]byte("addr"))
-	accAmt := sdk.NewInt(10000)
-	initCoins := sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), accAmt))
-	if err := f.bankKeeper.MintCoins(ctx, types.ModuleName, initCoins); err != nil {
-		panic(err)
-	}
+	comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 
-	if err := f.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addrDel, initCoins); err != nil {
-		panic(err)
-	}
+	stakedTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 30)
+
+	// create a validator with self delegation
+	msg, err := types.NewMsgCreateValidator(valAddrs[0], PKs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakedTokens),
+		types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	require.NoError(t, err)
+	_, err = msgServer.CreateValidator(ctx, msg)
+	require.NoError(t, err)
+
+	_, err = f.stakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
+
+	addrDel := sdk.AccAddress(valAddrs[0])
 	addrVal := sdk.ValAddress(addrDel)
 
-	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 10)
-
 	bondDenom := f.stakingKeeper.BondDenom(ctx)
-	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
-
-	assert.NilError(t, banktestutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	f.accountKeeper.SetModuleAccount(ctx, notBondedPool)
-
-	// create a validator and a delegator to that validator
-	validator := testutil.NewValidator(t, addrVal, PKs[0])
-
-	validator, issuedShares := validator.AddTokensFromDel(startTokens)
-	assert.DeepEqual(t, startTokens, issuedShares.RoundInt())
-
-	validator = keeper.TestingUpdateValidator(f.stakingKeeper, ctx, validator, true)
-	assert.Assert(math.IntEq(t, startTokens, validator.BondedTokens()))
-	assert.Assert(t, validator.IsBonded())
-
-	delegation := types.NewDelegation(addrDel, addrVal, issuedShares)
-	f.stakingKeeper.SetDelegation(ctx, delegation)
-
 	maxEntries := f.stakingKeeper.MaxEntries(ctx)
 
 	oldBonded := f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -69,7 +55,12 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 		ctx = ctx.WithBlockHeight(i)
 		var amount math.Int
 		completionTime, amount, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
-		totalUnbonded = totalUnbonded.Add(amount)
+		if totalUnbonded.IsZero() {
+			totalUnbonded = amount
+		} else {
+			totalUnbonded = totalUnbonded.Add(amount)
+		}
+
 		assert.NilError(t, err)
 	}
 
@@ -84,7 +75,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	oldNotBonded = f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	// an additional unbond should fail due to max entries
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
+	_, _, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
 	assert.Error(t, err, "too many unbonding delegation entries for (delegator, validator) tuple")
 
 	newBonded = f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount

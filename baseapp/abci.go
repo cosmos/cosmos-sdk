@@ -788,7 +788,7 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 // disk. This means when the ABCI client requests Commit(), the application
 // state transitions are already flushed to disk and as a result, we already have
 // an application Merkle root.
-// CONTRACT: must be called after workingHash is called.
+// CONTRACT: must be called after `	app.finalizeBlockState.ms.Write()` is called
 func (app *BaseApp) commit() storetypes.CommitID {
 	// call commit to persist data to disk
 	commitID := app.cms.Commit()

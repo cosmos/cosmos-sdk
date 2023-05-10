@@ -6,7 +6,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
@@ -55,7 +54,7 @@ func LoadArchiveCmd() *cobra.Command {
 			if hdr.Name != SnapshotFileName {
 				return fmt.Errorf("invalid archive, expect file: snapshot, got: %s", hdr.Name)
 			}
-			bz, err := ioutil.ReadAll(tr)
+			bz, err := io.ReadAll(tr)
 			if err != nil {
 				return fmt.Errorf("failed to read snapshot file: %w", err)
 			}

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
 )
 
 // ----------------------------------------------------------------------------
@@ -328,7 +329,7 @@ func (coins DecCoins) Intersect(coinsB DecCoins) DecCoins {
 	for i, coin := range coins {
 		minCoin := DecCoin{
 			Denom:  coin.Denom,
-			Amount: MinDec(coin.Amount, coinsB.AmountOf(coin.Denom)),
+			Amount: math.LegacyMinDec(coin.Amount, coinsB.AmountOf(coin.Denom)),
 		}
 		res[i] = minCoin
 	}
@@ -456,14 +457,14 @@ func (coins DecCoins) AmountOf(denom string) Dec {
 
 	switch len(coins) {
 	case 0:
-		return ZeroDec()
+		return math.LegacyZeroDec()
 
 	case 1:
 		coin := coins[0]
 		if coin.Denom == denom {
 			return coin.Amount
 		}
-		return ZeroDec()
+		return math.LegacyZeroDec()
 
 	default:
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2

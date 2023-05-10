@@ -46,8 +46,8 @@ func TestGRPCParams(t *testing.T) {
 			malleate: func() {
 				params = types.Params{
 					CommunityTax:        sdk.NewDecWithPrec(3, 1),
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: true,
 				}
 

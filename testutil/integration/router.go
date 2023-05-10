@@ -90,10 +90,10 @@ func NewIntegrationApp(
 	}
 }
 
-// RunMsg allows to run a message and return the response.
+// RunMsg provides the ability to run a message and return the response.
 // In order to run a message, the application must have a handler for it.
 // These handlers are registered on the application message service router.
-// The result of the message execution is returned as a Any type.
+// The result of the message execution is returned as an Any type.
 // That any type can be unmarshaled to the expected response type.
 // If the message execution fails, an error is returned.
 func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {

@@ -5,6 +5,7 @@ on:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
+      types: ready_for_review
   push:
     branches:
       - main

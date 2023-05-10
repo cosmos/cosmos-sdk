@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "**.go"
+    types: ready_for_review
   push:
     branches:
       - main

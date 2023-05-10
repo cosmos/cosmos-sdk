@@ -392,7 +392,7 @@ func SimulateMsgUndelegate(
 				break
 			}
 		}
-		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. However, since smart contracts and module accounts can stake, we can ignore the error
 		if simAccount.PrivKey == nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "account private key is nil"), nil, nil
 		}
@@ -581,7 +581,7 @@ func SimulateMsgBeginRedelegate(
 			}
 		}
 
-		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. However, since smart contracts and module accounts can stake, we can ignore the error
 		if simAccount.PrivKey == nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "account private key is nil"), nil, nil
 		}

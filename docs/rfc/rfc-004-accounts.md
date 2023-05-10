@@ -102,12 +102,11 @@ type Account[InitMsg proto.Message] interface {
 	// RegisterMigrationHandlers registers an account's migration messages.
 	RegisterMigrationHandlers(migrationRouter *MigrationRouter)
 }
-
 ```
 
 ### The InternalAccount definition
 
-The public `Account` interface implementer is then converted by the runtime into an `InternalAccount` implementation,
+The public `Account` interface implementation is then converted by the runtime into an `InternalAccount` implementation,
 which contains all the information and business logic needed to operate the account.
 
 ```go

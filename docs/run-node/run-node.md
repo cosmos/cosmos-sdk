@@ -123,6 +123,17 @@ The previous command allow you to run a single node. This is enough for the next
 
 The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/docker-compose.yml).
 
+## State Sync
+
+State sync is the act in which a node syncs the latest or close to the latest state of a blockchain. This is useful for users who don't want to sync all the blocks in history. You can read more here: https://docs.cometbft.com/v0.37/core/state-sync
+
+### Local State Sync
+
+Local state sync work similar to normal state sync except that it works off a local snapshot of state instead of one provided via the p2p network. The steps to start local state sync are similar to normal state sync with a few different designs. 
+
+1. As mentioned in https://docs.cometbft.com/v0.37/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
+2. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
+<!-- 3. TODO after https://github.com/cosmos/cosmos-sdk/pull/16060 is merged -->
 ## Next {hide}
 
 Read about the [Interacting with your Node](./interact-node.md) {hide}

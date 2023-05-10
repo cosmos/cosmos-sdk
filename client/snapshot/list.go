@@ -10,8 +10,7 @@ import (
 // ListSnapshotsCmd returns the command to list local snapshots
 var ListSnapshotsCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List snapshots",
-	Long:  "List snapshots",
+	Short: "List local snapshots",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := server.GetServerContextFromCmd(cmd)
 		snapshotStore, err := server.GetSnapshotStore(ctx.Viper)

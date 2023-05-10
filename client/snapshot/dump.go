@@ -12,11 +12,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DumpArchiveCmd returns a command to dump the snapshot for portable archive format
+// DumpArchiveCmd returns a command to dump the snapshot as portable archive format
 func DumpArchiveCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dump <height> <format>",
-		Short: "Dump the snapshot for portable archive format",
+		Short: "Dump the snapshot as portable archive format",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)

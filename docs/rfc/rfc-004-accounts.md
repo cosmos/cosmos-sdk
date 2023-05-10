@@ -5,7 +5,7 @@
 - 17/03/2023: DRAFT
 - 09/05/2023: DRAFT 2
 
-## Problem Statement
+## Context
 
 The current implementation of accounts in the Cosmos SDK is limiting in terms of functionality, extensibility, and overall
 architecture. This RFC aims to address the following issues with the current account system:

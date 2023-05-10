@@ -4,7 +4,7 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.4.1
-	cosmossdk.io/collections v0.0.0-20230510092856-b3a73aa6684d
+	cosmossdk.io/collections v0.1.0
 	cosmossdk.io/core v0.6.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230429155654-3ee8242364e4
@@ -162,6 +162,8 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
+	// TODO: remove me after collections 0.2. is released.
+	cosmossdk.io/collections => ./collections
 	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
 	// TODO: remove after 0.7.0 release

@@ -50,8 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* (testutil) [#14991](https://github.com/cosmos/cosmos-sdk/pull/14991) The `testutil/testdata_pulsar` package has moved to `testutil/testdata/testpb`.
-Chains should not notice this breaking change as this package is testing utilities used by the SDK internally.
+* (testutil) [#14991](https://github.com/cosmos/cosmos-sdk/pull/14991) The `testutil/testdata_pulsar` package has moved to `testutil/testdata/testpb`.  Chains will not notice this breaking change as this package contains testing utilities only used by the SDK internally.
 
 ## [v0.47.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.2) - 2023-04-27
 

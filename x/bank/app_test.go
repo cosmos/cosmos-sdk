@@ -138,7 +138,8 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 // CheckBalance checks the balance of an account.
 func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper) {
 	ctxCheck := baseApp.NewContext(true, cmtproto.Header{})
-	require.True(t, balances.Equal(keeper.GetAllBalances(ctxCheck, addr)))
+	keeperBalances := keeper.GetAllBalances(ctxCheck, addr)
+	require.True(t, balances.Equal(keeperBalances))
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {
@@ -151,8 +152,11 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
+	_, err := baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	require.NoError(t, err)
 
 	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
@@ -164,7 +168,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
-	_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
 	checkBalance(t, baseApp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
@@ -187,7 +191,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
 	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
@@ -266,8 +270,8 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
 	testCases := []appTestCase{
@@ -309,7 +313,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
 	testCases := []appTestCase{

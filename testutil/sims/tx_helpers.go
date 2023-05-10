@@ -2,6 +2,7 @@ package sims
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -131,19 +132,30 @@ func SignCheckDeliver(
 		Txs:    [][]byte{bz},
 	})
 
+	var finalizeSuccess bool
+	for _, result := range resBlock.TxResults {
+		if result.Code == 0 {
+			finalizeSuccess = true
+			break
+		}
+	}
 	if expPass {
-		require.NoError(t, err)
+		require.True(t, finalizeSuccess)
 		require.NotNil(t, res)
 	} else {
-		require.Error(t, err)
+		require.False(t, finalizeSuccess)
 		require.Nil(t, res)
 	}
 
 	app.Commit(context.TODO(), &types2.RequestCommit{})
 
 	gInfo := sdk.GasInfo{GasWanted: uint64(resBlock.TxResults[0].GasWanted), GasUsed: uint64(resBlock.TxResults[0].GasUsed)}
-
 	txRes := sdk.Result{Data: resBlock.TxResults[0].Data, Log: resBlock.TxResults[0].Log, Events: resBlock.TxResults[0].Events}
+	if finalizeSuccess {
+		err = nil
+	} else {
+		err = fmt.Errorf(resBlock.TxResults[0].Log)
+	}
 
 	return gInfo, &txRes, err
 }

@@ -282,14 +282,9 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		ShowValidatorCmd(),
 		ShowAddressCmd(),
 		VersionCmd(),
-<<<<<<< HEAD
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
-=======
-		cmtcmd.ResetAllCmd,
-		cmtcmd.ResetStateCmd,
 		BootstrapStateCmd(appCreator),
->>>>>>> 25df90d0f (feat!: bootstrap comet cmd for local state sync  (#16061))
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)

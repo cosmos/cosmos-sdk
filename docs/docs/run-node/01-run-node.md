@@ -124,6 +124,22 @@ One example config to tweak is the `minimum-gas-prices` field inside `app.toml`,
  minimum-gas-prices = "0stake"
 ```
 
+:::tip
+When running a node (not a validator!) and not wanting to run the application mempool, set the `max-txs` field to `-1`.
+
+```toml
+[mempool]
+# Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
+# Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool.
+# Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
+#
+# Note, this configuration only applies to SDK built-in app-side mempool
+# implementations.
+max-txs = "-1"
+```
+
+:::
+
 ## Run a Localnet
 
 Now that everything is set up, you can finally start your node:

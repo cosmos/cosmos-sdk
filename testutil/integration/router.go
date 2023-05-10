@@ -113,11 +113,11 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		height := app.LastBlockHeight() + 1
 		ctx := app.ctx.WithBlockHeight(height).WithChainID(appName)
 
-		app.logger.Info("Running beging block", "height", height)
+		app.logger.Info("Running BeginBlock", "height", height)
 		app.moduleManager.BeginBlock(ctx)
 
 		defer func() {
-			app.logger.Info("Running end block", "height", height)
+			app.logger.Info("Running EndBlock", "height", height)
 			app.moduleManager.EndBlock(ctx)
 		}()
 	}

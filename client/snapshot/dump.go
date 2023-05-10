@@ -67,7 +67,7 @@ func DumpArchiveCmd() *cobra.Command {
 			tarWriter := tar.NewWriter(gzipWriter)
 			if err := tarWriter.WriteHeader(&tar.Header{
 				Name: SnapshotFileName,
-				Mode: 0644,
+				Mode: 0o644,
 				Size: int64(len(bz)),
 			}); err != nil {
 				return fmt.Errorf("failed to write snapshot header to tar: %w", err)
@@ -90,7 +90,7 @@ func DumpArchiveCmd() *cobra.Command {
 
 				if err := tarWriter.WriteHeader(&tar.Header{
 					Name: strconv.FormatUint(uint64(i), 10),
-					Mode: 0644,
+					Mode: 0o644,
 					Size: st.Size(),
 				}); err != nil {
 					return fmt.Errorf("failed to write chunk header to tar: %w", err)

@@ -24,7 +24,7 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
-	DefaultWeightMsgRotateConsPubKey          int = 100
+	DefaultWeightMsgRotateConsPubKey          int = 5
 
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"

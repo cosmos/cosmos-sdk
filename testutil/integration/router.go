@@ -98,9 +98,9 @@ func NewIntegrationApp(
 // If the message execution fails, an error is returned.
 func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	// set options
-	cfg := Config{}
+	cfg := &Config{}
 	for _, opt := range option {
-		opt(&cfg)
+		opt(cfg)
 	}
 
 	if cfg.AutomaticCommit {

@@ -31,8 +31,15 @@ type App struct {
 	queryHelper *baseapp.QueryServiceTestHelper
 }
 
-// NewIntegrationApp creates an application for testing purposes. This application is able to route messages to their respective handlers.
-func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*storetypes.KVStoreKey, appCodec codec.Codec, modules ...module.AppModule) *App {
+// NewIntegrationApp creates an application for testing purposes. This application
+// is able to route messages to their respective handlers.
+func NewIntegrationApp(
+	sdkCtx sdk.Context,
+	logger log.Logger,
+	keys map[string]*storetypes.KVStoreKey,
+	appCodec codec.Codec,
+	modules ...module.AppModule,
+) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -76,8 +83,7 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{
-		BaseApp: bApp,
-
+		BaseApp:     bApp,
 		logger:      logger,
 		ctx:         ctx,
 		queryHelper: baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
@@ -136,8 +142,8 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	return response, nil
 }
 
-// Context returns the application context.
-// It can be unwraped to a sdk.Context, with the sdk.UnwrapSDKContext function.
+// Context returns the application context. It can be unwrapped to a sdk.Context,
+// with the sdk.UnwrapSDKContext function.
 func (app *App) Context() context.Context {
 	return app.ctx
 }
@@ -152,9 +158,11 @@ func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger) storetypes.CommitMultiStore {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, logger, metrics.NewNoOpMetrics())
+
 	for key := range keys {
 		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
 	}
+
 	_ = cms.LoadLatestVersion()
 	return cms
 }

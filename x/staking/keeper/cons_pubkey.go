@@ -148,7 +148,7 @@ func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValA
 
 	count := uint32(0)
 	for ; prefixIterator.Valid(); prefixIterator.Next() {
-		count += 1
+		count++
 	}
 
 	return count >= k.MaxConsPubKeyRotations(ctx), count

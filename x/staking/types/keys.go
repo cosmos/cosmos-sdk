@@ -455,7 +455,7 @@ func GetBlockConsPubKeyRotationHistoryPrefix(height int64) []byte {
 
 func GetConsKeyRotationHistoryKey(valAddr sdk.ValAddress, height uint64) []byte {
 	key := append(ValidatorConsPubKeyRotationHistoryKey, address.MustLengthPrefix(valAddr)...)
-	return append(key, []byte(sdk.Uint64ToBigEndian(height))...)
+	return append(key, sdk.Uint64ToBigEndian(height)...)
 }
 
 func GetConsKeyRotationTimeKey(timestamp time.Time) []byte {

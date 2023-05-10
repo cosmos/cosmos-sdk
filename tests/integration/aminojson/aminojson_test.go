@@ -353,12 +353,14 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				Params: stakingtypes.Params{
 					UnbondingTime:  0,
 					KeyRotationFee: types.Coin{},
-				}},
+				},
+			},
 			pulsar: &stakingapi.MsgUpdateParams{
 				Params: &stakingapi.Params{
 					UnbondingTime:  &durationpb.Duration{Seconds: 0},
 					KeyRotationFee: &v1beta1.Coin{},
-				}},
+				},
+			},
 		},
 		"staking/create_validator": {
 			gogo: &stakingtypes.MsgCreateValidator{Pubkey: pubkeyAny},

@@ -357,7 +357,6 @@ func TestRotateConsPubKey(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-
 			newCtx := testCase.malleate()
 			oldDistrBalance := bankKeeper.GetBalance(newCtx, accountKeeper.GetModuleAddress(distrtypes.ModuleName), bondDenom)
 			msg, err := types.NewMsgRotateConsPubKey(

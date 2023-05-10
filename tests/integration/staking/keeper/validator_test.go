@@ -136,8 +136,6 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	validator = keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validator, true)
 	assert.DeepEqual(t, valTokens, validator.Tokens)
 
-	f.stakingKeeper.Hooks().AfterValidatorCreated(f.sdkCtx, validator.GetOperator())
-
 	// slash the validator by 100%
 	f.stakingKeeper.Slash(f.sdkCtx, sdk.ConsAddress(PKs[0].Address()), 0, 100, math.LegacyOneDec())
 	// apply TM updates

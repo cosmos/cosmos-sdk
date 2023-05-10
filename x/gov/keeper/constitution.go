@@ -1,18 +1,21 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
+
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func (keeper Keeper) GetConstitution(ctx sdk.Context) (constitution string) {
-	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(types.KeyConstitution)
+// GetConstitution gets the chain's constitution.
+func (keeper Keeper) GetConstitution(ctx context.Context) (string, error) {
+	store := keeper.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.KeyConstitution)
 
-	return string(bz)
+	return string(bz), err
 }
 
-func (keeper Keeper) SetConstitution(ctx sdk.Context, constitution string) {
-	store := ctx.KVStore(keeper.storeKey)
-	store.Set(types.KeyConstitution, []byte(constitution))
+// GetConstitution sets the chain's constitution.
+func (keeper Keeper) SetConstitution(ctx context.Context, constitution string) error {
+	store := keeper.storeService.OpenKVStore(ctx)
+	return store.Set(types.KeyConstitution, []byte(constitution))
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +59,7 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
 			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
-			NewDel := types.NewDelegation(delegator, val, sdk.NewDec(int64(i)))
+			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
 			f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel)
 		}
 	}
@@ -91,7 +92,7 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
 			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
-			NewDel := types.NewDelegation(delegator, val, sdk.NewDec(int64(i)))
+			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
 			f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel)
 		}
 	}

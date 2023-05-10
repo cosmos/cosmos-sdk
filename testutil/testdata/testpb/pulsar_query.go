@@ -1,8 +1,4 @@
-<<<<<<< HEAD:testutil/testdata_pulsar/query.go
-package testdata_pulsar
-=======
 package testpb
->>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/pulsar_query.go
 
 import (
 	"context"

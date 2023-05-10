@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_CreateDog_FullMethodName = "/testdata.Msg/CreateDog"
+	Msg_CreateDog_FullMethodName = "/testpb.Msg/CreateDog"
 )
 
 // MsgClient is the client API for Msg service.
@@ -39,11 +39,7 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 
 func (c *msgClient) CreateDog(ctx context.Context, in *MsgCreateDog, opts ...grpc.CallOption) (*MsgCreateDogResponse, error) {
 	out := new(MsgCreateDogResponse)
-<<<<<<< HEAD:testutil/testdata_pulsar/tx_grpc.pb.go
 	err := c.cc.Invoke(ctx, Msg_CreateDog_FullMethodName, in, out, opts...)
-=======
-	err := c.cc.Invoke(ctx, "/testpb.Msg/CreateDog", in, out, opts...)
->>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/tx_grpc.pb.go
 	if err != nil {
 		return nil, err
 	}
@@ -88,11 +84,7 @@ func _Msg_CreateDog_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-<<<<<<< HEAD:testutil/testdata_pulsar/tx_grpc.pb.go
 		FullMethod: Msg_CreateDog_FullMethodName,
-=======
-		FullMethod: "/testpb.Msg/CreateDog",
->>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/tx_grpc.pb.go
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateDog(ctx, req.(*MsgCreateDog))

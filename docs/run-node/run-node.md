@@ -125,11 +125,6 @@ The previous command allow you to run a single node. This is enough for the next
 
 The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/docker-compose.yml).
 
-## Next {hide}
-
-<<<<<<< HEAD:docs/run-node/run-node.md
-Read about the [Interacting with your Node](./interact-node.md) {hide}
-=======
 Logging provides a way to see what is going on with a node. By default the info level is set. This is a global level and all info logs will be outputted to the terminal. If you would like to filter specific logs to the terminal instead of all, then setting `module:log_level` is how this can work. 
 
 Example: 
@@ -151,4 +146,6 @@ Local state sync work similar to normal state sync except that it works off a lo
 1. As mentioned in https://docs.cometbft.com/v0.37/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
 2. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
 <!-- 3. TODO after https://github.com/cosmos/cosmos-sdk/pull/16060 is merged -->
->>>>>>> 25df90d0f (feat!: bootstrap comet cmd for local state sync  (#16061)):docs/docs/run-node/01-run-node.md
+## Next {hide}
+
+Read about the [Interacting with your Node](./interact-node.md) {hide}

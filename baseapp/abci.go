@@ -117,6 +117,10 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 		appHash = emptyHash[:]
 	}
 
+	// write the state writes to the underlying store and set the final commit.
+	// Commit should be called after initchain in order to commit changes to disk
+	app.finalizeBlockState.ms.Write()
+
 	// NOTE: We don't commit, since FinalizeBlock for a block at height
 	// initial_height starts from this state.
 	return &abci.ResponseInitChain{
@@ -784,7 +788,7 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 // disk. This means when the ABCI client requests Commit(), the application
 // state transitions are already flushed to disk and as a result, we already have
 // an application Merkle root.
-// CONTRACT: must be called after workingHash is called.
+// CONTRACT: must be called after `app.finalizeBlockState.ms.Write()` is called
 func (app *BaseApp) commit() storetypes.CommitID {
 	// call commit to persist data to disk
 	commitID := app.cms.Commit()

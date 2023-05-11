@@ -37,7 +37,7 @@ func TestMigrateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"v0.10",
-			true, "unknown migration function for version: v0.10 (supported versions v0.43, v0.46, v0.47)", func(_ string) {},
+			true, "unknown migration function for version: v0.10 (supported versions v0.43, v0.46, v0.47, v0.48)", func(_ string) {},
 		},
 		{
 			"invalid target version",
@@ -48,7 +48,7 @@ func TestMigrateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"v0.10",
-			true, "unknown migration function for version: v0.10 (supported versions v0.43, v0.46, v0.47)", func(_ string) {},
+			true, "unknown migration function for version: v0.10 (supported versions v0.43, v0.46, v0.47, v0.48)", func(_ string) {},
 		},
 	}
 

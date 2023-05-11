@@ -2,11 +2,11 @@ package sims
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
+	"cosmossdk.io/errors"
 	types2 "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
@@ -148,7 +148,7 @@ func SignCheckDeliver(
 	if finalizeSuccess {
 		err = nil
 	} else {
-		err = fmt.Errorf(txResult.Log)
+		err = errors.ABCIError(txResult.Codespace, txResult.Code, txResult.Log)
 	}
 
 	return gInfo, &txRes, err

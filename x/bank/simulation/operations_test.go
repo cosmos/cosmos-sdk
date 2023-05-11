@@ -1,9 +1,11 @@
 package simulation_test
 
 import (
+	"encoding/json"
 	"math/rand"
 	"testing"
 
+	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -17,6 +19,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/strings"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
@@ -113,14 +116,17 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgSend
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	msgWrapper := &struct {
+		Value *bankapi.MsgSend `json:"value"`
+	}{}
+	err = json.Unmarshal(operationMsg.Msg, msgWrapper)
+	suite.Require().NoError(err)
+	msg := msgWrapper.Value
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("65337742stake", msg.Amount.String())
+	suite.Require().Equal("65337742stake", strings.CoinsAsString(msg.Amount))
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.FromAddress)
 	suite.Require().Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.ToAddress)
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgSend{}), sdk.MsgTypeURL(&msg))
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -141,17 +147,20 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	require := suite.Require()
 	require.NoError(err)
 
-	var msg types.MsgMultiSend
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	msgWrapper := &struct {
+		Value *bankapi.MsgMultiSend `json:"value"`
+	}{}
+	err = json.Unmarshal(operationMsg.Msg, msgWrapper)
+	suite.Require().NoError(err)
+	msg := msgWrapper.Value
 
 	require.True(operationMsg.OK)
 	require.Len(msg.Inputs, 1)
 	require.Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Inputs[0].Address)
-	require.Equal("114949958stake", msg.Inputs[0].Coins.String())
+	require.Equal("114949958stake", strings.CoinsAsString(msg.Inputs[0].Coins))
 	require.Len(msg.Outputs, 2)
 	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Outputs[1].Address)
-	require.Equal("107287087stake", msg.Outputs[1].Coins.String())
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgMultiSend{}), sdk.MsgTypeURL(&msg))
+	require.Equal("107287087stake", strings.CoinsAsString(msg.Outputs[1].Coins))
 	require.Len(futureOperations, 0)
 }
 
@@ -176,13 +185,9 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)
-
-	var msg types.MsgSend
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	suite.Require().Nil(operationMsg.Msg)
 	suite.Require().False(operationMsg.OK)
 	suite.Require().Equal(operationMsg.Comment, "invalid transfers")
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgSend{}), sdk.MsgTypeURL(&msg))
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -204,13 +209,9 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)
-
-	var msg types.MsgMultiSend
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	suite.Require().Nil(operationMsg.Msg)
 	suite.Require().False(operationMsg.OK) // sending tokens to a module account should fail
 	suite.Require().Equal(operationMsg.Comment, "invalid transfers")
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgMultiSend{}), sdk.MsgTypeURL(&msg))
 	suite.Require().Len(futureOperations, 0)
 }
 

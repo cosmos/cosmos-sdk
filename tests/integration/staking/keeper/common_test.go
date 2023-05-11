@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -86,6 +87,7 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	assert.NilError(t, err)
 	_, err = f.stakingKeeper.Delegate(f.sdkCtx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, powers[2]), types.Unbonded, val2, true)
 	assert.NilError(t, err)
+
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, -1)
 
 	return addrs, valAddrs, vals
@@ -109,6 +111,7 @@ func initFixture(t testing.TB) *fixture {
 		types.ModuleName:        {authtypes.Minter},
 		types.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		types.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		distrtypes.ModuleName:   {authtypes.Minter},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(

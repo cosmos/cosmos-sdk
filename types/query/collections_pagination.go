@@ -53,9 +53,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	predicateFunc func(key K, value V) (include bool, err error),
 	opts ...func(opt *CollectionsPaginateOptions[K]),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
-	if pageReq == nil {
-		pageReq = &PageRequest{}
-	}
+	pageReq = cleanupPageRequest(pageReq)
 
 	offset := pageReq.Offset
 	key := pageReq.Key
@@ -65,11 +63,6 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 
 	if offset > 0 && key != nil {
 		return nil, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
-	}
-
-	if limit == 0 {
-		limit = DefaultLimit
-		countTotal = true
 	}
 
 	var (

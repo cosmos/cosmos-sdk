@@ -424,6 +424,16 @@ func (m *Manager) RestoreLocalSnapshot(height uint64, format uint32) error {
 	if err != nil {
 		return err
 	}
+
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
+	err = m.beginLocked(opRestore)
+	if err != nil {
+		return err
+	}
+	defer m.endLocked()
+
 	return m.restoreSnapshot(*snapshot, ch)
 }
 

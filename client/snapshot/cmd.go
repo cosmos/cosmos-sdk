@@ -15,6 +15,7 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 	cmd.AddCommand(
 		ListSnapshotsCmd,
 		RestoreSnapshotCmd(appCreator),
+		ExportSnapshotCmd(appCreator),
 		DumpArchiveCmd(),
 		LoadArchiveCmd(),
 		DeleteSnapshotCmd(),

@@ -102,7 +102,8 @@ func processResult(iterator types.Iterator, numHits uint64, onResult func(key, v
 }
 
 func genericProcessResult[T, F proto.Message](iterator types.Iterator, numHits uint64, onResult func(key []byte, value T) (F, error), accumulateFn func(numHits uint64) bool,
-	constructor func() T, cdc codec.BinaryCodec, results []F) ([]F, uint64, error) {
+	constructor func() T, cdc codec.BinaryCodec, results []F,
+) ([]F, uint64, error) {
 	if iterator.Error() != nil {
 		return results, numHits, iterator.Error()
 	}

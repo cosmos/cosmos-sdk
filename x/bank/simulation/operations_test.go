@@ -106,8 +106,10 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	// begin a new block
-	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
+	})
 
 	// execute operation
 	op := simulation.SimulateMsgSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
@@ -133,8 +135,10 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	// begin a new block
-	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
+	})
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
@@ -166,8 +170,10 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, accCount)
 
-	// begin a new block
-	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash},
+	)
 
 	// execute operation
 	op := simulation.SimulateMsgSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, moduleAccCount)
@@ -197,8 +203,10 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, accCount)
 
-	// begin a new block
-	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
+	})
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccCount)

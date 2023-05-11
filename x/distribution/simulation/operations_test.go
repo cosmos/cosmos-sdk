@@ -73,7 +73,6 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	// begin a new block
 	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
@@ -116,7 +115,6 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 
 	suite.setupValidatorRewards(validator0.GetOperator())
 
-	// begin a new block
 	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
@@ -176,7 +174,6 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, validator0.GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission})
 	suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission})
 
-	// begin a new block
 	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
@@ -208,7 +205,6 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	// begin a new block
 	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,

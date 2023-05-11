@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
@@ -130,12 +131,9 @@ func (suite *SimTestSuite) TestSimulateCreateGroup() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 1)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	acc := accounts[0]
@@ -159,12 +157,9 @@ func (suite *SimTestSuite) TestSimulateCreateGroupWithPolicy() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 1)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	acc := accounts[0]
@@ -203,12 +198,9 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -256,12 +248,9 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -322,12 +311,9 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	_, err = suite.groupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -389,12 +375,9 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	_, err = suite.groupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -464,12 +447,9 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	})
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -506,12 +486,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -548,12 +525,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 	)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -590,12 +564,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 	)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -643,12 +614,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -696,12 +664,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -749,12 +714,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation
@@ -815,12 +777,9 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	_, err = suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	require.NoError(err)
 
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation

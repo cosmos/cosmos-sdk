@@ -28,7 +28,7 @@ func NewQueryServer(k Keeper) v1.QueryServer {
 }
 
 func (q queryServer) Constitution(ctx context.Context, _ *v1.QueryConstitutionRequest) (*v1.QueryConstitutionResponse, error) {
-	constitution, err := q.k.GetConstitution(ctx)
+	constitution, err := q.k.Constitution.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

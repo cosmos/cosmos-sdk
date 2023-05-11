@@ -21,7 +21,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 		panic(err)
 	}
 
-	err = k.SetConstitution(ctx, data.Constitution)
+	err = k.Constitution.Set(ctx, data.Constitution)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +76,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		return nil, err
 	}
 
-	constitution, err := k.GetConstitution(ctx)
+	constitution, err := k.Constitution.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

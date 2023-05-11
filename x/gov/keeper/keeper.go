@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/collections"
 	"fmt"
 	"time"
 
@@ -47,6 +48,9 @@ type Keeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+
+	Schema       collections.Schema
+	Constitution collections.Item[string]
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -80,7 +84,8 @@ func NewKeeper(
 		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
 	}
 
-	return &Keeper{
+	sb := collections.NewSchemaBuilder(storeService)
+	k := &Keeper{
 		storeService: storeService,
 		authKeeper:   authKeeper,
 		bankKeeper:   bankKeeper,
@@ -90,7 +95,14 @@ func NewKeeper(
 		router:       router,
 		config:       config,
 		authority:    authority,
+		Constitution: collections.NewItem(sb, types.KeyConstitution, "constitution", collections.StringValue),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // Hooks gets the hooks for governance *Keeper {

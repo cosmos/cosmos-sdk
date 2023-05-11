@@ -177,7 +177,7 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	params, err := q.k.GetParams(ctx)
+	params, err := q.k.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

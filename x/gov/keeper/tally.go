@@ -99,7 +99,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		return false, false, tallyResults, err
 	}

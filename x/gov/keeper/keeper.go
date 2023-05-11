@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/collections"
 	"fmt"
 	"time"
+
+	"cosmossdk.io/collections"
 
 	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
@@ -51,6 +52,7 @@ type Keeper struct {
 
 	Schema       collections.Schema
 	Constitution collections.Item[string]
+	Params       collections.Item[v1.Params]
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -96,6 +98,7 @@ func NewKeeper(
 		config:       config,
 		authority:    authority,
 		Constitution: collections.NewItem(sb, types.KeyConstitution, "constitution", collections.StringValue),
+		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {

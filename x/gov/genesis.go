@@ -16,7 +16,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 		panic(err)
 	}
 
-	err = k.SetParams(ctx, *data.Params)
+	err = k.Params.Set(ctx, *data.Params)
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +81,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		return nil, err
 	}
 
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

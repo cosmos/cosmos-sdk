@@ -1,9 +1,10 @@
 package types
 
 import (
-	"cosmossdk.io/collections"
 	"encoding/binary"
 	"time"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -51,7 +52,7 @@ var (
 	VotesKeyPrefix = []byte{0x20}
 
 	// ParamsKey is the key to query all gov params
-	ParamsKey = []byte{0x30}
+	ParamsKey = collections.NewPrefix(30)
 
 	// KeyConstitution is the key string used to store the chain's constitution
 	KeyConstitution = collections.NewPrefix("constitution")

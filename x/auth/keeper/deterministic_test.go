@@ -98,7 +98,7 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 	// then we change account numbers in such a way that there cannot be accounts with the same account number
 	lane := atomic.AddUint64(&suite.accountNumberLanes, 1)
 	for i := range accNums {
-		accNums[i] = accNums[i] + (lane * 1000)
+		accNums[i] += lane * 1000
 	}
 
 	for i := 0; i < count; i++ {

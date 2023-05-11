@@ -99,6 +99,7 @@ type AccountKeeper struct {
 	authority string
 
 	// State
+	Schema        collections.Schema
 	Params        collections.Item[types.Params]
 	AccountNumber collections.Sequence
 	Accounts      *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
@@ -123,7 +124,7 @@ func NewAccountKeeper(
 
 	sb := collections.NewSchemaBuilder(storeService)
 
-	return AccountKeeper{
+	ak := AccountKeeper{
 		Codec:         authcodec.NewBech32Codec(bech32Prefix),
 		bech32Prefix:  bech32Prefix,
 		storeService:  storeService,
@@ -135,6 +136,12 @@ func NewAccountKeeper(
 		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	ak.Schema = schema
+	return ak
 }
 
 // GetAuthority returns the x/auth module's authority.

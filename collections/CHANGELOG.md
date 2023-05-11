@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* [#16074](https://github.com/cosmos/cosmos-sdk/pull/16074) – makes the generic Collection interface public, still highly unstable.
+
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.1.0)
 
 Collections `v0.1.0` is released! Check out the [docs](https://docs.cosmos.network/main/packages/collections) to know how to use the APIs. 

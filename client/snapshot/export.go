@@ -2,7 +2,6 @@ package snapshot
 
 import (
 	"fmt"
-	"strconv"
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -12,14 +11,14 @@ import (
 
 // ExportSnapshotCmd returns a command to take a snapshot of the application state
 func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
-	return &cobra.Command{
-		Use:   "export <height>",
+	cmd := &cobra.Command{
+		Use:   "export",
 		Short: "Export app state to snapshot store",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)
 
-			height, err := strconv.ParseUint(args[0], 10, 64)
+			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
 				return err
 			}
@@ -33,11 +32,11 @@ func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 			app := appCreator(logger, db, nil, ctx.Viper)
 
 			if height == 0 {
-				height = uint64(app.CommitMultiStore().LastCommitID().Version)
+				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
 			sm := app.SnapshotManager()
-			snapshot, err := sm.Create(height)
+			snapshot, err := sm.Create(uint64(height))
 			if err != nil {
 				return err
 			}
@@ -46,4 +45,8 @@ func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().Int64("height", 0, "Height to export, default to latest state height")
+
+	return cmd
 }

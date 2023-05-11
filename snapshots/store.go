@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -287,21 +286,21 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
 	chunkFile, err := os.Create(path)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
+		return sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 	}
 	defer chunkFile.Close()
 
 	chunkHasher.Reset()
 	if _, err := io.Copy(io.MultiWriter(chunkFile, chunkHasher, snapshotHasher), chunkBody); err != nil {
-		return errors.Wrapf(err, "failed to generate snapshot chunk %d", index)
+		return sdkerrors.Wrapf(err, "failed to generate snapshot chunk %d", index)
 	}
 
 	if err := chunkFile.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
+		return sdkerrors.Wrapf(err, "failed to close snapshot chunk file %d", index)
 	}
 
 	if err := chunkBody.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk body %d", index)
+		return sdkerrors.Wrapf(err, "failed to close snapshot chunk body %d", index)
 	}
 
 	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))

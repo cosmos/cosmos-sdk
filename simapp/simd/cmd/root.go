@@ -23,11 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-<<<<<<< HEAD
-=======
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
-	"github.com/cosmos/cosmos-sdk/codec"
->>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067))
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -173,14 +169,9 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
 		NewTestnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
-<<<<<<< HEAD
 		config.Cmd(),
 		pruning.PruningCmd(newApp),
-=======
-		confixcmd.ConfigCommand(),
-		pruning.Cmd(newApp),
 		snapshot.Cmd(newApp),
->>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067))
 	)
 
 	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)

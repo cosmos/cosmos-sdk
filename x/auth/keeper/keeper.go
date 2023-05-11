@@ -265,15 +265,6 @@ func (ak AccountKeeper) SetModuleAccount(ctx context.Context, macc sdk.ModuleAcc
 	ak.SetAccount(ctx, macc)
 }
 
-// UnmarshalAccount returns an Account interface from raw encoded account
-// bytes of a Proto-based Account type
-func (ak AccountKeeper) UnmarshalAccount(bz []byte) (sdk.AccountI, error) {
-	return ak.Accounts.ValueCodec().Decode(bz)
-}
-
-// GetCodec return codec.Codec object used by the keeper
-func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
-
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
 	return ak.bech32Prefix, nil

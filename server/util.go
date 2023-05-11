@@ -306,6 +306,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		VersionCmd(),
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
+		BootstrapStateCmd(appCreator),
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)

@@ -38,7 +38,12 @@ func TestInitApp(t *testing.T) {
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
 	}
-	app.InitChain(context.TODO(), &req)
+	res, err := app.InitChain(context.TODO(), &req)
+	require.NoError(t, err)
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Hash:   res.AppHash,
+		Height: 1,
+	})
 	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	// make sure we can query these values

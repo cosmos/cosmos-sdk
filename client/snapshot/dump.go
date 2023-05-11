@@ -82,6 +82,7 @@ func DumpArchiveCmd() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("failed to open chunk file %s: %w", path, err)
 				}
+				defer file.Close()
 
 				st, err := file.Stat()
 				if err != nil {

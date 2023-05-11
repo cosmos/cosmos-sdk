@@ -41,13 +41,13 @@ It is strongly recommended to upgrade to these releases as well.
 
 ## [v0.45.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.16) - 2023-05-11
 
-## Security Bug Fixes
+### Security Bug Fixes
 
 * (x/feegrant) [#16097](https://github.com/cosmos/cosmos-sdk/pull/16097) Fix infinite feegrant allowance bug.
 
 ## [v0.45.15](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.15) - 2023-03-22
 
-## Improvements
+### Improvements
 
 * (deps) Migrate to [CometBFT](https://github.com/cometbft/cometbft). Follow the instructions in the [release notes](./RELEASE_NOTES.md).
 * (deps) [#15127](https://github.com/cosmos/cosmos-sdk/pull/15127) Bump btcd.

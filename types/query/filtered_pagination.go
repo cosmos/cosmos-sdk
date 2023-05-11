@@ -44,11 +44,6 @@ func FilteredPaginate(
 		countTotal = true
 	}
 
-	var (
-		numHits uint64
-		nextKey []byte
-	)
-
 	if len(key) == 0 {
 		key = nil
 	}
@@ -57,24 +52,10 @@ func FilteredPaginate(
 	defer iterator.Close()
 
 	if len(key) != 0 {
-		for ; iterator.Valid(); iterator.Next() {
-			if numHits == limit {
-				nextKey = iterator.Key()
-				break
-			}
-
-			if iterator.Error() != nil {
-				return nil, iterator.Error()
-			}
-
-			hit, err := onResult(iterator.Key(), iterator.Value(), true)
-			if err != nil {
-				return nil, err
-			}
-
-			if hit {
-				numHits++
-			}
+		accumulateFn := func(_ uint64) bool { return true }
+		_, nextKey, err := iterateResults(iterator, limit, false, onResult, accumulateFn)
+		if err != nil {
+			return nil, err
 		}
 
 		return &PageResponse{
@@ -83,9 +64,23 @@ func FilteredPaginate(
 	}
 
 	end := offset + limit
+	accumalateFn := func(numHits uint64) bool { return numHits >= offset && numHits < end }
+	numHits, nextKey, err := iterateResults(iterator, end+1, countTotal, onResult, accumalateFn)
+	if err != nil {
+		return nil, err
+	}
 
+	res := &PageResponse{NextKey: nextKey}
+	if countTotal {
+		res.Total = numHits
+	}
+
+	return res, nil
+}
+
+func iterateResults(iterator types.Iterator, limit uint64, countTotal bool, onResult func(key, value []byte, shouldAccumulate bool) (bool, error), accumulateFn func(numHits uint64) bool) (numHits uint64, nextKey []byte, err error) {
 	for ; iterator.Valid(); iterator.Next() {
-		if numHits == end+1 {
+		if numHits == limit {
 			if nextKey == nil {
 				nextKey = iterator.Key()
 			}
@@ -96,13 +91,12 @@ func FilteredPaginate(
 		}
 
 		if iterator.Error() != nil {
-			return nil, iterator.Error()
+			return numHits, nil, iterator.Error()
 		}
 
-		accumulate := numHits >= offset && numHits < end
-		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
+		hit, err := onResult(iterator.Key(), iterator.Value(), accumulateFn(numHits))
 		if err != nil {
-			return nil, err
+			return numHits, nil, err
 		}
 
 		if hit {
@@ -110,12 +104,7 @@ func FilteredPaginate(
 		}
 	}
 
-	res := &PageResponse{NextKey: nextKey}
-	if countTotal {
-		res.Total = numHits
-	}
-
-	return res, nil
+	return numHits, nextKey, nil
 }
 
 // GenericFilteredPaginate does pagination of all the results in the PrefixStore based on the

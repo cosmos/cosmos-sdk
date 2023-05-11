@@ -1,4 +1,4 @@
-name: Tests / Code Coverage
+name: Long Tests
 on:
   pull_request:
   merge_group:

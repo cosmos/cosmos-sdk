@@ -3,6 +3,7 @@ package rosetta
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -344,7 +345,11 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	default:
 		return nil, false
 	case banktypes.EventTypeCoinSpent:
-		spender := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
+		addr, err := base64.StdEncoding.DecodeString(event.Attributes[0].Value)
+		if err != nil {
+			panic(err)
+		}
+		spender := sdk.MustAccAddressFromBech32(string(addr))
 		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)

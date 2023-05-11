@@ -44,7 +44,7 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	seconds, nanos := getTimestampSecondsAndNanos(value)
 	secondsInt := seconds.Int()
 	if secondsInt < TimestampSecondsMin || secondsInt > TimestampSecondsMax {
-		return fmt.Errorf("timestamp seconds is out of range %d, must be between %d and %d", secondsInt, TimestampSecondsMin, TimestampSecondsMax)
+		return fmt.Errorf("timestamp seconds is out of range %d, must be between %v and %v", secondsInt, TimestampSecondsMin, TimestampSecondsMax)
 	}
 	secondsInt -= TimestampSecondsMin
 	err := encodeSeconds(secondsInt, w)

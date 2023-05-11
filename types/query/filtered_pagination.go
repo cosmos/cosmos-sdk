@@ -31,6 +31,7 @@ func FilteredPaginate(
 	var (
 		numHits uint64
 		nextKey []byte
+		err     error
 	)
 
 	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
@@ -44,11 +45,10 @@ func FilteredPaginate(
 				break
 			}
 
-			newNumHits, err := processResult(iterator, numHits, onResult, accumulateFn)
+			numHits, err = processResult(iterator, numHits, onResult, accumulateFn)
 			if err != nil {
 				return nil, err
 			}
-			numHits = newNumHits
 		}
 
 		return &PageResponse{
@@ -60,11 +60,10 @@ func FilteredPaginate(
 	accumulateFn := func(numHits uint64) bool { return numHits >= pageRequest.Offset && numHits < end }
 
 	for ; iterator.Valid(); iterator.Next() {
-		newNumHits, err := processResult(iterator, numHits, onResult, accumulateFn)
+		numHits, err = processResult(iterator, numHits, onResult, accumulateFn)
 		if err != nil {
 			return nil, err
 		}
-		numHits = newNumHits
 		if numHits == end+1 {
 			if nextKey == nil {
 				nextKey = iterator.Key()
@@ -102,6 +101,35 @@ func processResult(iterator types.Iterator, numHits uint64, onResult func(key, v
 	return numHits, nil
 }
 
+func genericProcessResult[T, F proto.Message](iterator types.Iterator, numHits uint64, onResult func(key []byte, value T) (F, error), accumulateFn func(numHits uint64) bool,
+	constructor func() T, cdc codec.BinaryCodec, results []F) ([]F, uint64, error) {
+	if iterator.Error() != nil {
+		return results, numHits, iterator.Error()
+	}
+
+	protoMsg := constructor()
+
+	err := cdc.Unmarshal(iterator.Value(), protoMsg)
+	if err != nil {
+		return results, numHits, err
+	}
+
+	val, err := onResult(iterator.Key(), protoMsg)
+	if err != nil {
+		return results, numHits, err
+	}
+
+	if proto.Size(val) != 0 {
+		// Previously this was the "accumulate" flag
+		if accumulateFn(numHits) {
+			results = append(results, val)
+		}
+		numHits++
+	}
+
+	return results, numHits, nil
+}
+
 // GenericFilteredPaginate does pagination of all the results in the PrefixStore based on the
 // provided PageRequest. `onResult` should be used to filter or transform the results.
 // `c` is a constructor function that needs to return a new instance of the type T (this is to
@@ -118,7 +146,6 @@ func GenericFilteredPaginate[T, F proto.Message](
 	constructor func() T,
 ) ([]F, *PageResponse, error) {
 	pageRequest = cleanupPageRequest(pageRequest)
-
 	results := []F{}
 
 	if pageRequest.Offset > 0 && pageRequest.Key != nil {
@@ -128,37 +155,23 @@ func GenericFilteredPaginate[T, F proto.Message](
 	var (
 		numHits uint64
 		nextKey []byte
+		err     error
 	)
 
 	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
 	defer iterator.Close()
 
 	if len(pageRequest.Key) != 0 {
+		accumulateFn := func(_ uint64) bool { return true }
 		for ; iterator.Valid(); iterator.Next() {
 			if numHits == pageRequest.Limit {
 				nextKey = iterator.Key()
 				break
 			}
 
-			if iterator.Error() != nil {
-				return nil, nil, iterator.Error()
-			}
-
-			protoMsg := constructor()
-
-			err := cdc.Unmarshal(iterator.Value(), protoMsg)
+			results, numHits, err = genericProcessResult(iterator, numHits, onResult, accumulateFn, constructor, cdc, results)
 			if err != nil {
 				return nil, nil, err
-			}
-
-			val, err := onResult(iterator.Key(), protoMsg)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			if proto.Size(val) != 0 {
-				results = append(results, val)
-				numHits++
 			}
 		}
 
@@ -168,30 +181,12 @@ func GenericFilteredPaginate[T, F proto.Message](
 	}
 
 	end := pageRequest.Offset + pageRequest.Limit
+	accumulateFn := func(numHits uint64) bool { return numHits >= pageRequest.Offset && numHits < end }
 
 	for ; iterator.Valid(); iterator.Next() {
-		if iterator.Error() != nil {
-			return nil, nil, iterator.Error()
-		}
-
-		protoMsg := constructor()
-
-		err := cdc.Unmarshal(iterator.Value(), protoMsg)
+		results, numHits, err = genericProcessResult(iterator, numHits, onResult, accumulateFn, constructor, cdc, results)
 		if err != nil {
 			return nil, nil, err
-		}
-
-		val, err := onResult(iterator.Key(), protoMsg)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if proto.Size(val) != 0 {
-			// Previously this was the "accumulate" flag
-			if numHits >= pageRequest.Offset && numHits < end {
-				results = append(results, val)
-			}
-			numHits++
 		}
 
 		if numHits == end+1 {

@@ -85,16 +85,6 @@ func FilteredPaginate(
 	end := offset + limit
 
 	for ; iterator.Valid(); iterator.Next() {
-		if numHits == end+1 {
-			if nextKey == nil {
-				nextKey = iterator.Key()
-			}
-
-			if !countTotal {
-				break
-			}
-		}
-
 		if iterator.Error() != nil {
 			return nil, iterator.Error()
 		}
@@ -107,6 +97,16 @@ func FilteredPaginate(
 
 		if hit {
 			numHits++
+		}
+
+		if numHits == end+1 {
+			if nextKey == nil {
+				nextKey = iterator.Key()
+			}
+
+			if !countTotal {
+				break
+			}
 		}
 	}
 

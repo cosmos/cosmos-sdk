@@ -57,24 +57,18 @@ func FilteredPaginate(
 	defer iterator.Close()
 
 	if len(key) != 0 {
+		accumulateFn := func(_ uint64) bool { return true }
 		for ; iterator.Valid(); iterator.Next() {
 			if numHits == limit {
 				nextKey = iterator.Key()
 				break
 			}
 
-			if iterator.Error() != nil {
-				return nil, iterator.Error()
-			}
-
-			hit, err := onResult(iterator.Key(), iterator.Value(), true)
+			newNumHits, err := processResult(iterator, numHits, onResult, accumulateFn)
 			if err != nil {
 				return nil, err
 			}
-
-			if hit {
-				numHits++
-			}
+			numHits = newNumHits
 		}
 
 		return &PageResponse{
@@ -83,22 +77,14 @@ func FilteredPaginate(
 	}
 
 	end := offset + limit
+	accumulateFn := func(numHits uint64) bool { return numHits >= offset && numHits < end }
 
 	for ; iterator.Valid(); iterator.Next() {
-		if iterator.Error() != nil {
-			return nil, iterator.Error()
-		}
-
-		accumulate := numHits >= offset && numHits < end
-		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
+		newNumHits, err := processResult(iterator, numHits, onResult, accumulateFn)
 		if err != nil {
 			return nil, err
 		}
-
-		if hit {
-			numHits++
-		}
-
+		numHits = newNumHits
 		if numHits == end+1 {
 			if nextKey == nil {
 				nextKey = iterator.Key()
@@ -116,6 +102,24 @@ func FilteredPaginate(
 	}
 
 	return res, nil
+}
+
+func processResult(iterator types.Iterator, numHits uint64, onResult func(key, value []byte, accumulate bool) (bool, error), accumulateFn func(numHits uint64) bool) (uint64, error) {
+	if iterator.Error() != nil {
+		return numHits, iterator.Error()
+	}
+
+	accumulate := accumulateFn(numHits)
+	hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
+	if err != nil {
+		return numHits, err
+	}
+
+	if hit {
+		numHits++
+	}
+
+	return numHits, nil
 }
 
 // GenericFilteredPaginate does pagination of all the results in the PrefixStore based on the

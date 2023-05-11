@@ -114,13 +114,13 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.DeepEqual(t, selfDelegation, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
 	// handle a signature to set signing info
-	f.slashingKeeper.HandleValidatorSignature(ctx, val.Address(), selfDelegation.Int64(), true)
+	f.slashingKeeper.HandleValidatorSignature(ctx, val.Address(), selfDelegation.Int64(), comet.BlockIDFlagCommit)
 
 	// double sign less than max age
 	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
 
-	nci := NewCometInfo(abci.RequestBeginBlock{
-		ByzantineValidators: []abci.Misbehavior{{
+	nci := NewCometInfo(abci.RequestFinalizeBlock{
+		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      time.Unix(0, 0),
@@ -188,8 +188,8 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
-	nci := NewCometInfo(abci.RequestBeginBlock{
-		ByzantineValidators: []abci.Misbehavior{{
+	nci := NewCometInfo(abci.RequestFinalizeBlock{
+		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      ctx.BlockTime(),
@@ -254,9 +254,9 @@ type CometService struct {
 	Evidence []abci.Misbehavior
 }
 
-func NewCometInfo(bg abci.RequestBeginBlock) comet.BlockInfo {
+func NewCometInfo(bg abci.RequestFinalizeBlock) comet.BlockInfo {
 	return CometService{
-		Evidence: bg.ByzantineValidators,
+		Evidence: bg.Misbehavior,
 	}
 }
 

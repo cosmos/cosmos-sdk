@@ -19,9 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var (
-	_ v1.QueryServer = queryServer{}
-)
+var _ v1.QueryServer = queryServer{}
 
 type queryServer struct{ k Keeper }
 

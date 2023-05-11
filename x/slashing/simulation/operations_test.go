@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -180,7 +181,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: blockTime}})
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)

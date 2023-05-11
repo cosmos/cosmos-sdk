@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/errors"
 	types2 "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
@@ -133,10 +134,17 @@ func SignCheckDeliver(
 
 	if expPass {
 		require.NoError(t, err)
-		require.NotNil(t, res)
+		require.NotNil(t, resBlock)
 	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
+		// we should check for tx results, since FinalizeBlock doesn't return tx error
+		if err == nil {
+			txResult := resBlock.TxResults[0]
+			require.NotEqual(t, errors.SuccessABCICode, txResult.Code)
+			err = errors.ABCIError(txResult.Codespace, txResult.Code, txResult.Log)
+		} else {
+			require.Error(t, err)
+			require.Nil(t, resBlock)
+		}
 	}
 
 	app.Commit(context.TODO(), &types2.RequestCommit{})

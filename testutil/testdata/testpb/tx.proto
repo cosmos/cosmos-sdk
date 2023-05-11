@@ -19,8 +19,8 @@ service Msg {
 message MsgCreateDog {
   option (cosmos.msg.v1.signer) = "owner";
 
-  testpb.Dog dog = 1;
-  string owner   = 2;
+  testpb.Dog dog   = 1;
+  string     owner = 2;
 }
 
 message MsgCreateDogResponse {
@@ -31,7 +31,7 @@ message MsgCreateDogResponse {
 // https://github.com/cosmos/cosmos-sdk/issues/6213.
 message TestMsg {
   option (gogoproto.goproto_getters) = false;
-  option (cosmos.msg.v1.signer) = "signers";
-  option (amino.name) = "testpb/TestMsg";
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (amino.name)                = "testpb/TestMsg";
   repeated string signers            = 1;
 }

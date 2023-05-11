@@ -94,7 +94,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 
 // GetQueryCmd returns the cli query commands for the group module
 func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.QueryCmd(a.Name())
+	return nil
 }
 
 // GetTxCmd returns the transaction commands for the group module

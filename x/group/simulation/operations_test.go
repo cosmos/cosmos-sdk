@@ -273,7 +273,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	err = groupcdc.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(groupPolicyRes.Address, msg.GroupPolicyAddress)
+	suite.Require().Equal(groupPolicyRes.Address, msg.Proposal.GroupPolicyAddress)
 	suite.Require().Len(futureOperations, 0)
 }
 

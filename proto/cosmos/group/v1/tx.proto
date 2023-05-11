@@ -283,6 +283,15 @@ message MsgSubmitProposal {
   option (cosmos.msg.v1.signer) = "proposers";
   option (amino.name)           = "cosmos-sdk/group/MsgSubmitProposal";
 
+  MsgSubmitProposalData proposal = 1;
+  Exec                  exec     = 2;
+}
+
+// MsgSubmitProposalData is the Msg/SubmitProposal request type.
+message MsgSubmitProposalData {
+  option (cosmos.msg.v1.signer) = "proposers";
+  option (amino.name)           = "cosmos-sdk/group/MsgSubmitProposalData";
+
   option (gogoproto.goproto_getters) = false;
 
   // group_policy_address is the account address of group policy.
@@ -336,7 +345,7 @@ message MsgWithdrawProposal {
 message MsgWithdrawProposalResponse {}
 
 // MsgVote is the Msg/Vote request type.
-message MsgVote {
+message   MsgVote {
   option (cosmos.msg.v1.signer) = "voter";
   option (amino.name)           = "cosmos-sdk/group/MsgVote";
 

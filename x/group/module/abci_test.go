@@ -559,9 +559,12 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 }
 
 func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) { //nolint:revive // context-as-argument: context.Context should be the first parameter of a function
-	proposalReq := &group.MsgSubmitProposal{
+	proposal := &group.MsgSubmitProposalData{
 		GroupPolicyAddress: groupPolicyAddr.String(),
 		Proposers:          proposers,
+	}
+	proposalReq := &group.MsgSubmitProposal{
+		Proposal: proposal,
 	}
 	err := proposalReq.SetMsgs(msgs)
 	if err != nil {

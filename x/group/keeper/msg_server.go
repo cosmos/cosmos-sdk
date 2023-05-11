@@ -501,7 +501,9 @@ func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, msg *group.MsgU
 	return &group.MsgUpdateGroupPolicyMetadataResponse{}, nil
 }
 
-func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
+func (k Keeper) SubmitProposal(goCtx context.Context, proposalMsg *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
+	msg := proposalMsg.Proposal
+	msg.Exec = proposalMsg.Exec
 	if len(msg.Proposers) == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposers")
 	}
@@ -527,7 +529,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		return nil, err
 	}
 
-	msgs, err := msg.GetMsgs()
+	msgs, err := proposalMsg.GetMsgs()
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "request msgs")
 	}

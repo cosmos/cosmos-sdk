@@ -323,8 +323,10 @@ func (s *TestSuite) TestPruneProposals() {
 	s.Require().NoError(err)
 
 	req := &group.MsgSubmitProposal{
-		GroupPolicyAddress: accountAddr.String(),
-		Proposers:          []string{addrs[1].String()},
+		Proposal: &group.MsgSubmitProposalData{
+			GroupPolicyAddress: accountAddr.String(),
+			Proposers:          []string{addrs[1].String()},
+		},
 	}
 	err = req.SetMsgs([]sdk.Msg{msgSend})
 	s.Require().NoError(err)
@@ -351,8 +353,10 @@ func submitProposal(
 	proposers []string,
 ) uint64 {
 	proposalReq := &group.MsgSubmitProposal{
-		GroupPolicyAddress: s.groupPolicyAddr.String(),
-		Proposers:          proposers,
+		Proposal: &group.MsgSubmitProposalData{
+			GroupPolicyAddress: s.groupPolicyAddr.String(),
+			Proposers:          proposers,
+		},
 	}
 	err := proposalReq.SetMsgs(msgs)
 	s.Require().NoError(err)
@@ -439,9 +443,11 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().NotNil(groupPolicy)
 
 	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
-		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{addr1.String()},
-		Messages:           nil,
+		Proposal: &group.MsgSubmitProposalData{
+			GroupPolicyAddress: accountAddr,
+			Proposers:          []string{addr1.String()},
+			Messages:           nil,
+		},
 	})
 	s.Require().NoError(err)
 
@@ -499,9 +505,11 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NotNil(groupPolicy)
 
 	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
-		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{addr1.String()},
-		Messages:           nil,
+		Proposal: &group.MsgSubmitProposalData{
+			GroupPolicyAddress: accountAddr,
+			Proposers:          []string{addr1.String()},
+			Messages:           nil,
+		},
 	})
 	s.Require().NoError(err)
 

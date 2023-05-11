@@ -470,12 +470,15 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "fee error"), nil, err
 		}
 
-		msg := &group.MsgSubmitProposal{
+		proposal := group.MsgSubmitProposalData{
 			GroupPolicyAddress: groupPolicyAddr,
 			Proposers:          []string{acc.Address.String()},
 			Metadata:           simtypes.RandStringOfLength(r, 10),
 			Title:              "Test Proposal",
 			Summary:            "Summary of the proposal",
+		}
+		msg := &group.MsgSubmitProposal{
+			Proposal: &proposal,
 		}
 
 		tx, err := simtestutil.GenSignedMockTx(
@@ -569,7 +572,7 @@ func SimulateMsgUpdateGroupAdmin(
 
 // SimulateMsgUpdateGroupMetadata generates a MsgUpdateGroupMetadata with random values
 func SimulateMsgUpdateGroupMetadata(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -1001,7 +1004,7 @@ func SimulateMsgWithdrawProposal(
 
 // SimulateMsgVote generates a MsgVote with random values
 func SimulateMsgVote(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -1109,7 +1112,7 @@ func SimulateMsgVote(
 
 // // SimulateMsgExec generates a MsgExec with random values
 func SimulateMsgExec(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -1189,7 +1192,7 @@ func SimulateMsgExec(
 
 // SimulateMsgLeaveGroup generates a MsgLeaveGroup with random values
 func SimulateMsgLeaveGroup(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	k keeper.Keeper,
 	ak group.AccountKeeper,

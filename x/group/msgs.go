@@ -337,13 +337,17 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 func NewMsgSubmitProposal(address string, proposers []string, msgs []sdk.Msg, metadata string, exec Exec, title, summary string) (*MsgSubmitProposal, error) {
-	m := &MsgSubmitProposal{
+	mData := &MsgSubmitProposalData{
 		GroupPolicyAddress: address,
 		Proposers:          proposers,
 		Metadata:           metadata,
 		Exec:               exec,
 		Title:              title,
 		Summary:            summary,
+	}
+	m := &MsgSubmitProposal{
+		Proposal: mData,
+		Exec:     exec,
 	}
 	err := m.SetMsgs(msgs)
 	if err != nil {
@@ -369,8 +373,8 @@ func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 
 // getProposerAccAddresses returns the proposers as `[]sdk.AccAddress`.
 func (m *MsgSubmitProposal) getProposerAccAddresses() ([]sdk.AccAddress, error) {
-	addrs := make([]sdk.AccAddress, len(m.Proposers))
-	for i, proposer := range m.Proposers {
+	addrs := make([]sdk.AccAddress, len(m.Proposal.Proposers))
+	for i, proposer := range m.Proposal.Proposers {
 		addr, err := sdk.AccAddressFromBech32(proposer)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "proposers")
@@ -387,18 +391,18 @@ func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 	if err != nil {
 		return err
 	}
-	m.Messages = anys
+	m.Proposal.Messages = anys
 	return nil
 }
 
 // GetMsgs unpacks m.Messages Any's into sdk.Msg's
 func (m MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
-	return tx.GetMsgs(m.Messages, "proposal")
+	return tx.GetMsgs(m.Proposal.Messages, "proposal")
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	return tx.UnpackInterfaces(unpacker, m.Messages)
+	return tx.UnpackInterfaces(unpacker, m.Proposal.Messages)
 }
 
 var (

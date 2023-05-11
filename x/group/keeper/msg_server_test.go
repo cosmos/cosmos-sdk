@@ -1678,16 +1678,20 @@ func (s *TestSuite) TestSubmitProposal() {
 	}{
 		"all good with minimal fields set": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: accountAddr.String(),
+					Proposers:          []string{addr2.String()},
+				},
 			},
 			expProposal: defaultProposal,
 			postRun:     func(sdkCtx sdk.Context) {},
 		},
 		"all good with good msg payload": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: accountAddr.String(),
+					Proposers:          []string{addr2.String()},
+				},
 			},
 			msgs: []sdk.Msg{&banktypes.MsgSend{
 				FromAddress: accountAddr.String(),
@@ -1699,9 +1703,11 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"metadata too long": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
-				Metadata:           strings.Repeat("a", 256),
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: accountAddr.String(),
+					Proposers:          []string{addr2.String()},
+					Metadata:           strings.Repeat("a", 256),
+				},
 			},
 			expErr:    true,
 			expErrMsg: "limit exceeded",
@@ -1709,7 +1715,9 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"group policy required": {
 			req: &group.MsgSubmitProposal{
-				Proposers: []string{addr2.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					Proposers: []string{addr2.String()},
+				},
 			},
 			expErr:    true,
 			expErrMsg: "unable to decode",
@@ -1717,8 +1725,10 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"existing group policy required": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: addr1.String(),
-				Proposers:          []string{addr2.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: addr1.String(),
+					Proposers:          []string{addr2.String()},
+				},
 			},
 			expErr:    true,
 			expErrMsg: "not found",
@@ -1726,8 +1736,10 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: bigThresholdAddr,
-				Proposers:          []string{addr2.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: bigThresholdAddr,
+					Proposers:          []string{addr2.String()},
+				},
 			},
 			expErr: false,
 			expProposal: group.Proposal{
@@ -1740,8 +1752,10 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"only group members can create a proposal": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr4.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: accountAddr.String(),
+					Proposers:          []string{addr4.String()},
+				},
 			},
 			expErr:    true,
 			expErrMsg: "not in group",
@@ -1749,8 +1763,10 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"all proposers must be in group": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String(), addr4.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: accountAddr.String(),
+					Proposers:          []string{addr2.String(), addr4.String()},
+				},
 			},
 			expErr:    true,
 			expErrMsg: "not in group",
@@ -1758,8 +1774,10 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"admin that is not a group member can not create proposal": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr1.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: accountAddr.String(),
+					Proposers:          []string{addr1.String()},
+				},
 			},
 			expErr:    true,
 			expErrMsg: "not in group",
@@ -1767,8 +1785,10 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"reject msgs that are not authz by group policy": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: accountAddr.String(),
+					Proposers:          []string{addr2.String()},
+				},
 			},
 			msgs:      []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
 			expErr:    true,
@@ -1782,9 +1802,12 @@ func (s *TestSuite) TestSubmitProposal() {
 				}
 			},
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: res.Address,
-				Proposers:          []string{addr2.String()},
-				Exec:               group.Exec_EXEC_TRY,
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: res.Address,
+					Proposers:          []string{addr2.String()},
+					Exec:               group.Exec_EXEC_TRY,
+				},
+				Exec: group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
@@ -1810,9 +1833,12 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: res.Address,
-				Proposers:          []string{addr5.String()},
-				Exec:               group.Exec_EXEC_TRY,
+				Proposal: &group.MsgSubmitProposalData{
+					GroupPolicyAddress: res.Address,
+					Proposers:          []string{addr5.String()},
+					Exec:               group.Exec_EXEC_TRY,
+				},
+				Exec: group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
@@ -1855,8 +1881,8 @@ func (s *TestSuite) TestSubmitProposal() {
 				proposal := proposalRes.Proposal
 
 				s.Assert().Equal(spec.expProposal.GroupPolicyAddress, proposal.GroupPolicyAddress)
-				s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
-				s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
+				s.Assert().Equal(spec.req.Proposal.Metadata, proposal.Metadata)
+				s.Assert().Equal(spec.req.Proposal.Proposers, proposal.Proposers)
 				s.Assert().Equal(s.blockTime, proposal.SubmitTime)
 				s.Assert().Equal(uint64(1), proposal.GroupVersion)
 				s.Assert().Equal(uint64(1), proposal.GroupPolicyVersion)
@@ -2013,9 +2039,11 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	req := &group.MsgSubmitProposal{
-		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{addr4.String()},
-		Messages:           nil,
+		Proposal: &group.MsgSubmitProposalData{
+			GroupPolicyAddress: accountAddr,
+			Proposers:          []string{addr4.String()},
+			Messages:           nil,
+		},
 	}
 	msg := &banktypes.MsgSend{
 		FromAddress: accountAddr,
@@ -2036,9 +2064,9 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	proposals := proposalsRes.Proposals
 	s.Require().Equal(len(proposals), 1)
-	s.Assert().Equal(req.GroupPolicyAddress, proposals[0].GroupPolicyAddress)
-	s.Assert().Equal(req.Metadata, proposals[0].Metadata)
-	s.Assert().Equal(req.Proposers, proposals[0].Proposers)
+	s.Assert().Equal(req.Proposal.GroupPolicyAddress, proposals[0].GroupPolicyAddress)
+	s.Assert().Equal(req.Proposal.Metadata, proposals[0].Metadata)
+	s.Assert().Equal(req.Proposal.Proposers, proposals[0].Proposers)
 	s.Assert().Equal(s.blockTime, proposals[0].SubmitTime)
 	s.Assert().Equal(uint64(1), proposals[0].GroupVersion)
 	s.Assert().Equal(uint64(1), proposals[0].GroupPolicyVersion)
@@ -2426,8 +2454,10 @@ func (s *TestSuite) TestVote() {
 	policyAddr := result.GroupPolicyAddress
 	groupID := result.GroupId
 	reqProposal := &group.MsgSubmitProposal{
-		GroupPolicyAddress: policyAddr,
-		Proposers:          []string{addr4.String()},
+		Proposal: &group.MsgSubmitProposalData{
+			GroupPolicyAddress: policyAddr,
+			Proposers:          []string{addr4.String()},
+		},
 	}
 	s.Require().NoError(reqProposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: policyAddr,
@@ -3113,8 +3143,10 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 				msgs := []sdk.Msg{msgSend1}
 				proposalReq := &group.MsgSubmitProposal{
-					GroupPolicyAddress: groupPolicyAddr,
-					Proposers:          proposers,
+					Proposal: &group.MsgSubmitProposalData{
+						GroupPolicyAddress: groupPolicyAddr,
+						Proposers:          proposers,
+					},
 				}
 				err := proposalReq.SetMsgs(msgs)
 				s.Require().NoError(err)
@@ -3149,8 +3181,10 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
 
 				proposalReq := &group.MsgSubmitProposal{
-					GroupPolicyAddress: groupPolicyAddr,
-					Proposers:          proposers,
+					Proposal: &group.MsgSubmitProposalData{
+						GroupPolicyAddress: groupPolicyAddr,
+						Proposers:          proposers,
+					},
 				}
 				err := proposalReq.SetMsgs(msgs)
 				s.Require().NoError(err)
@@ -3185,8 +3219,10 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
 
 				proposalReq := &group.MsgSubmitProposal{
-					GroupPolicyAddress: addr,
-					Proposers:          proposers,
+					Proposal: &group.MsgSubmitProposalData{
+						GroupPolicyAddress: addr,
+						Proposers:          proposers,
+					},
 				}
 				err := proposalReq.SetMsgs(msgs)
 				s.Require().NoError(err)
@@ -3220,8 +3256,10 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				}
 				msgs := []sdk.Msg{msgSend1, msgSend1}
 				proposalReq := &group.MsgSubmitProposal{
-					GroupPolicyAddress: groupPolicyAddr,
-					Proposers:          proposers,
+					Proposal: &group.MsgSubmitProposalData{
+						GroupPolicyAddress: groupPolicyAddr,
+						Proposers:          proposers,
+					},
 				}
 				err := proposalReq.SetMsgs(msgs)
 				s.Require().NoError(err)

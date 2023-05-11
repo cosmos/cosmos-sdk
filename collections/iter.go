@@ -302,7 +302,7 @@ type KeyValue[K, V any] struct {
 
 // encodeRangeBound encodes a range bound, modifying the key bytes to adhere to bound semantics.
 func encodeRangeBound[T any](prefix []byte, keyCodec codec.KeyCodec[T], bound *RangeKey[T]) ([]byte, error) {
-	key, err := encodeKeyWithPrefix(prefix, keyCodec, bound.key)
+	key, err := EncodeKeyWithPrefix(prefix, keyCodec, bound.key)
 	if err != nil {
 		return nil, err
 	}

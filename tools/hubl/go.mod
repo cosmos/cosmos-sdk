@@ -120,3 +120,5 @@ require (
 	pgregory.net/rapid v0.5.7 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace cosmossdk.io/collections => ../../collections // TODO: remove me after collections v0.2.0 is released

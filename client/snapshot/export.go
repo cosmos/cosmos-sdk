@@ -35,6 +35,8 @@ func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
+			fmt.Printf("Exporting snapshot for height %d\n", height)
+
 			sm := app.SnapshotManager()
 			snapshot, err := sm.Create(uint64(height))
 			if err != nil {

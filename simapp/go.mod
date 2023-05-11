@@ -38,7 +38,7 @@ require (
 	cloud.google.com/go/storage v1.30.0 // indirect
 	cosmossdk.io/collections v0.1.0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230429155654-3ee8242364e4 // indirect
-	cosmossdk.io/orm v1.0.0-beta.2 // indirect
+	cosmossdk.io/orm v1.0.0-beta.3 // indirect
 	cosmossdk.io/x/tx v0.6.3 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -199,7 +199,6 @@ replace (
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/orm => cosmossdk.io/orm v1.0.0-beta.2.0.20230511133220-281ab2e6b426
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta

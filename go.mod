@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230429155654-3ee8242364e4
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.0
-	cosmossdk.io/orm v1.0.0-beta.2
+	cosmossdk.io/orm v1.0.0-beta.3
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	cosmossdk.io/x/tx v0.6.3
 	github.com/99designs/keyring v1.2.1

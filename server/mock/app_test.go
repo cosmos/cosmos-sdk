@@ -62,14 +62,13 @@ func TestDeliverTx(t *testing.T) {
 	randomAccounts := simtypes.RandomAccounts(r, 1)
 
 	tx := NewTx(key, value, randomAccounts[0].Address)
-	txBytes := tx.GetSignBytes()
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 		AppHash: []byte("apphash"),
 		Height:  1,
 	}})
 
-	dres := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	dres := app.DeliverTx(abci.RequestDeliverTx{Tx: tx.bytes})
 	require.Equal(t, uint32(0), dres.Code, dres.Log)
 
 	app.EndBlock(abci.RequestEndBlock{})

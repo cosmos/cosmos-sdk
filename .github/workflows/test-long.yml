@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}-tests
+  group: ci-${{ github.ref }}-test-long
   cancel-in-progress: true
 
 jobs:

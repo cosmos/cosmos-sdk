@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -54,6 +55,9 @@ type (
 
 		// CommitMultiStore return the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore
+
+		// Return the snapshot manager
+		SnapshotManager() *snapshots.Manager
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

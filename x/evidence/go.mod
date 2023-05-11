@@ -160,6 +160,8 @@ require (
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 
 replace (
+	// TODO: remove me when collections v0.2.0 is released
+	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../tx

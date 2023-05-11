@@ -155,6 +155,8 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+replace cosmossdk.io/collections => ../../collections
+
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(

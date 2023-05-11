@@ -119,7 +119,6 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 		return err
 	}
 
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &proposalInfo)"
 	for _, proposalInfo := range proposals {
 		// Mark all proposals still in the voting phase as aborted.
 		if proposalInfo.Status == groupv1.ProposalStatus_PROPOSAL_STATUS_SUBMITTED {

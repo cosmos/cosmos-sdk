@@ -7,7 +7,6 @@ import (
 
 // Migrate migrates exported state from v0.47 to a v0.48 genesis state.
 func Migrate(appState types.AppMap, clientCtx client.Context) (types.AppMap, error) {
-
 	// v0.47 group genesis
 	// "group": {
 	// 	"group_seq": "0",

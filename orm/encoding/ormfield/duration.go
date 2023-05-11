@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	DurationSecondsMin = -315576000000
-	DurationSecondsMax = 315576000000
-	DurationNanosMin   = -999999999
-	DurationNanosMax   = 999999999
+	DurationSecondsMin int64 = -315576000000
+	DurationSecondsMax int64 = 315576000000
+	DurationNanosMin         = -999999999
+	DurationNanosMax         = 999999999
 )
 
 // DurationCodec encodes google.protobuf.Duration values with the following
@@ -38,7 +38,7 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	seconds, nanos := getDurationSecondsAndNanos(value)
 	secondsInt := seconds.Int()
 	if secondsInt < DurationSecondsMin || secondsInt > DurationSecondsMax {
-		return fmt.Errorf("duration seconds is out of range %d, must be between %v and %v", secondsInt, DurationSecondsMin, DurationSecondsMax)
+		return fmt.Errorf("duration seconds is out of range %d, must be between %d and %d", secondsInt, DurationSecondsMin, DurationSecondsMax)
 	}
 	negative := secondsInt < 0
 	// we subtract the min duration value to make sure secondsInt is always non-negative and starts at 0

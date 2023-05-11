@@ -22,26 +22,10 @@ func FilteredPaginate(
 	pageRequest *PageRequest,
 	onResult func(key, value []byte, accumulate bool) (bool, error),
 ) (*PageResponse, error) {
-	// if the PageRequest is nil, use default PageRequest
-	if pageRequest == nil {
-		pageRequest = &PageRequest{}
-	}
+	pageRequest = cleanupPageRequest(pageRequest)
 
-	offset := pageRequest.Offset
-	key := pageRequest.Key
-	limit := pageRequest.Limit
-	countTotal := pageRequest.CountTotal
-	reverse := pageRequest.Reverse
-
-	if offset > 0 && key != nil {
+	if pageRequest.Offset > 0 && pageRequest.Key != nil {
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
-	}
-
-	if limit == 0 {
-		limit = DefaultLimit
-
-		// count total results when the limit is zero/not supplied
-		countTotal = true
 	}
 
 	var (
@@ -49,17 +33,13 @@ func FilteredPaginate(
 		nextKey []byte
 	)
 
-	if len(key) == 0 {
-		key = nil
-	}
-
-	iterator := getIterator(prefixStore, key, reverse)
+	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
 	defer iterator.Close()
 
-	if len(key) != 0 {
+	if len(pageRequest.Key) != 0 {
 		accumulateFn := func(_ uint64) bool { return true }
 		for ; iterator.Valid(); iterator.Next() {
-			if numHits == limit {
+			if numHits == pageRequest.Limit {
 				nextKey = iterator.Key()
 				break
 			}
@@ -76,8 +56,8 @@ func FilteredPaginate(
 		}, nil
 	}
 
-	end := offset + limit
-	accumulateFn := func(numHits uint64) bool { return numHits >= offset && numHits < end }
+	end := pageRequest.Offset + pageRequest.Limit
+	accumulateFn := func(numHits uint64) bool { return numHits >= pageRequest.Offset && numHits < end }
 
 	for ; iterator.Valid(); iterator.Next() {
 		newNumHits, err := processResult(iterator, numHits, onResult, accumulateFn)
@@ -90,14 +70,14 @@ func FilteredPaginate(
 				nextKey = iterator.Key()
 			}
 
-			if !countTotal {
+			if !pageRequest.CountTotal {
 				break
 			}
 		}
 	}
 
 	res := &PageResponse{NextKey: nextKey}
-	if countTotal {
+	if pageRequest.CountTotal {
 		res.Total = numHits
 	}
 
@@ -137,40 +117,25 @@ func GenericFilteredPaginate[T, F proto.Message](
 	onResult func(key []byte, value T) (F, error),
 	constructor func() T,
 ) ([]F, *PageResponse, error) {
-	// if the PageRequest is nil, use default PageRequest
-	if pageRequest == nil {
-		pageRequest = &PageRequest{}
-	}
+	pageRequest = cleanupPageRequest(pageRequest)
 
-	offset := pageRequest.Offset
-	key := pageRequest.Key
-	limit := pageRequest.Limit
-	countTotal := pageRequest.CountTotal
-	reverse := pageRequest.Reverse
 	results := []F{}
 
-	if offset > 0 && key != nil {
+	if pageRequest.Offset > 0 && pageRequest.Key != nil {
 		return results, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
 	}
 
-	if limit == 0 {
-		limit = DefaultLimit
+	var (
+		numHits uint64
+		nextKey []byte
+	)
 
-		// count total results when the limit is zero/not supplied
-		countTotal = true
-	}
+	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
+	defer iterator.Close()
 
-	if len(key) != 0 {
-		iterator := getIterator(prefixStore, key, reverse)
-		defer iterator.Close()
-
-		var (
-			numHits uint64
-			nextKey []byte
-		)
-
+	if len(pageRequest.Key) != 0 {
 		for ; iterator.Valid(); iterator.Next() {
-			if numHits == limit {
+			if numHits == pageRequest.Limit {
 				nextKey = iterator.Key()
 				break
 			}
@@ -202,15 +167,7 @@ func GenericFilteredPaginate[T, F proto.Message](
 		}, nil
 	}
 
-	iterator := getIterator(prefixStore, nil, reverse)
-	defer iterator.Close()
-
-	end := offset + limit
-
-	var (
-		numHits uint64
-		nextKey []byte
-	)
+	end := pageRequest.Offset + pageRequest.Limit
 
 	for ; iterator.Valid(); iterator.Next() {
 		if iterator.Error() != nil {
@@ -231,7 +188,7 @@ func GenericFilteredPaginate[T, F proto.Message](
 
 		if proto.Size(val) != 0 {
 			// Previously this was the "accumulate" flag
-			if numHits >= offset && numHits < end {
+			if numHits >= pageRequest.Offset && numHits < end {
 				results = append(results, val)
 			}
 			numHits++
@@ -242,16 +199,37 @@ func GenericFilteredPaginate[T, F proto.Message](
 				nextKey = iterator.Key()
 			}
 
-			if !countTotal {
+			if !pageRequest.CountTotal {
 				break
 			}
 		}
 	}
 
 	res := &PageResponse{NextKey: nextKey}
-	if countTotal {
+	if pageRequest.CountTotal {
 		res.Total = numHits
 	}
 
 	return results, res, nil
+}
+
+func cleanupPageRequest(pageRequest *PageRequest) *PageRequest {
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
+	}
+
+	pageRequestCopy := *pageRequest
+	if len(pageRequestCopy.Key) == 0 {
+		pageRequestCopy.Key = nil
+	}
+
+	if pageRequestCopy.Limit == 0 {
+		pageRequestCopy.Limit = DefaultLimit
+
+		// count total results when the limit is zero/not supplied
+		pageRequestCopy.CountTotal = true
+	}
+
+	return &pageRequestCopy
 }

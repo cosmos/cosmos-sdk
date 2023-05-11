@@ -4,12 +4,11 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"cosmossdk.io/log"
 	"github.com/spf13/cobra"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // RestoreSnapshotCmd returns a command to restore a snapshot
@@ -36,8 +35,7 @@ func RestoreSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, ctx.Viper)
+			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 
 			sm := app.SnapshotManager()
 			return sm.RestoreLocalSnapshot(height, uint32(format))

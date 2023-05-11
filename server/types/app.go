@@ -5,27 +5,17 @@ import (
 	"io"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/gogo/protobuf/grpc"
-=======
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/gogoproto/grpc"
->>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067))
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
+	log "github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -66,9 +56,11 @@ type (
 
 		// Return the multistore instance
 		CommitMultiStore() sdk.CommitMultiStore
+
+		// Return the snapshot manager
+		SnapshotManager() *snapshots.Manager
 	}
 
-<<<<<<< HEAD
 	// ApplicationQueryService defines an extension of the Application interface
 	// that facilitates gRPC query Services.
 	//
@@ -77,13 +69,6 @@ type (
 	ApplicationQueryService interface {
 		// RegisterNodeService registers the node gRPC Query service.
 		RegisterNodeService(client.Context)
-=======
-		// CommitMultiStore return the multistore instance
-		CommitMultiStore() storetypes.CommitMultiStore
-
-		// Return the snapshot manager
-		SnapshotManager() *snapshots.Manager
->>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067))
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

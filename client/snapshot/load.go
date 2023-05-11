@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
 
-	snapshottypes "cosmossdk.io/store/snapshots/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
 const SnapshotFileName = "_snapshot"

@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/collections/indexes"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections/indexes"
 
 	"cosmossdk.io/collections"
 

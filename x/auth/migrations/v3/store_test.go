@@ -1,10 +1,11 @@
 package v3_test
 
 import (
-	"cosmossdk.io/collections"
 	"math/rand"
 	"testing"
 	"time"
+
+	"cosmossdk.io/collections"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"

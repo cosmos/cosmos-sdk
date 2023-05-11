@@ -54,8 +54,8 @@ var (
 	// ParamsKey is the key to query all gov params
 	ParamsKey = collections.NewPrefix(30)
 
-	// KeyConstitution is the key string used to store the chain's constitution
-	KeyConstitution = collections.NewPrefix("constitution")
+	// ConstitutionKey is the key string used to store the chain's constitution
+	ConstitutionKey = collections.NewPrefix("constitution")
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))

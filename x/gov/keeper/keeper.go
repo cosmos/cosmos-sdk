@@ -97,7 +97,7 @@ func NewKeeper(
 		router:       router,
 		config:       config,
 		authority:    authority,
-		Constitution: collections.NewItem(sb, types.KeyConstitution, "constitution", collections.StringValue),
+		Constitution: collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
 	}
 	schema, err := sb.Build()

@@ -207,24 +207,3 @@ func GenericFilteredPaginate[T, F proto.Message](
 
 	return results, res, nil
 }
-
-func cleanupPageRequest(pageRequest *PageRequest) *PageRequest {
-	// if the PageRequest is nil, use default PageRequest
-	if pageRequest == nil {
-		pageRequest = &PageRequest{}
-	}
-
-	pageRequestCopy := *pageRequest
-	if len(pageRequestCopy.Key) == 0 {
-		pageRequestCopy.Key = nil
-	}
-
-	if pageRequestCopy.Limit == 0 {
-		pageRequestCopy.Limit = DefaultLimit
-
-		// count total results when the limit is zero/not supplied
-		pageRequestCopy.CountTotal = true
-	}
-
-	return &pageRequestCopy
-}

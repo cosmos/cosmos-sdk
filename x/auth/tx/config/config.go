@@ -134,7 +134,6 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  in.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			SigningContext:  txConfig.SigningContext(),
 		},
 	)
 	if err != nil {

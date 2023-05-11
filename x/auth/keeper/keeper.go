@@ -7,10 +7,11 @@ import (
 
 	"cosmossdk.io/collections"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -56,6 +57,8 @@ type AccountKeeperI interface {
 
 	// GetModulePermissions fetches per-module account permissions
 	GetModulePermissions() map[string]types.PermissionsForAddress
+
+	AddressCodec() address.Codec
 }
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
@@ -275,4 +278,8 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 		panic(err)
 	}
 	return params
+}
+
+func (ak AccountKeeper) AddressCodec() address.Codec {
+	return ak.Codec
 }

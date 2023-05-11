@@ -530,7 +530,6 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  app.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			SigningContext:  txConfig.SigningContext(),
 		},
 	)
 	if err != nil {

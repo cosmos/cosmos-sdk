@@ -50,14 +50,12 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 // PubKeys must be set in context for all signers before any other sigverify decorators run
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SetPubKeyDecorator struct {
-	ak         AccountKeeper
-	signingCtx *txsigning.Context
+	ak AccountKeeper
 }
 
-func NewSetPubKeyDecorator(ak AccountKeeper, signingCtx *txsigning.Context) SetPubKeyDecorator {
+func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
 	return SetPubKeyDecorator{
-		ak:         ak,
-		signingCtx: signingCtx,
+		ak: ak,
 	}
 }
 
@@ -88,14 +86,10 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		// Only make check if simulate=false
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
 			var signerStr string
-			if spkd.signingCtx != nil {
-				var err error
-				signerStr, err = spkd.signingCtx.AddressCodec().BytesToString(signers[i])
-				if err != nil {
-					return sdk.Context{}, err
-				}
-			} else {
-				signerStr = sdk.AccAddress(signers[i]).String()
+			var err error
+			signerStr, err = spkd.ak.AddressCodec().BytesToString(signers[i])
+			if err != nil {
+				return sdk.Context{}, err
 			}
 
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,

@@ -196,7 +196,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `sdk.Tx` now requires a new method `GetMsgsV2()`.
   * `types/tx.Tx` no longer implements `sdk.Tx`.
   * `TxConfig` has a new method `SigningContext() *signing.Context`.
-  * `ante.NewSetPubKeyDecorator` now requires `*signing.Context`.
+  * `AccountKeeper` now has an `AddressCodec() address.Codec` method and the expected `AccountKeeper` for `x/auth/ante` expects this method.
   * `SigVerifiableTx.GetSigners()` now returns `([][]byte, error)` instead of `[]sdk.AccAddress`.
 * (x/authx) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
 * (x/gov) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.

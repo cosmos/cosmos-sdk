@@ -5,7 +5,13 @@ import (
 	"io"
 	"time"
 
+<<<<<<< HEAD
 	dbm "github.com/cometbft/cometbft-db"
+=======
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/snapshots"
+	storetypes "cosmossdk.io/store/types"
+>>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067))
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -58,7 +64,14 @@ type (
 		RegisterNodeService(client.Context)
 
 		// CommitMultiStore return the multistore instance
+<<<<<<< HEAD
 		CommitMultiStore() sdk.CommitMultiStore
+=======
+		CommitMultiStore() storetypes.CommitMultiStore
+
+		// Return the snapshot manager
+		SnapshotManager() *snapshots.Manager
+>>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067))
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

@@ -203,6 +203,8 @@ replace (
 
 // Below are the long-lived replace for tests.
 replace (
+	// TODO: remove me after collections v0.2.0 is released
+	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp

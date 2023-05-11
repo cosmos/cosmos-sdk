@@ -141,6 +141,7 @@ require (
 
 // TODO: remove after merge of https://github.com/cosmos/cosmos-sdk/pull/15873 and tagging releases
 replace (
+	cosmossdk.io/collections => ../../collections // TODO: remove me after collections v0.2.0 is released
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx

@@ -3,7 +3,6 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"hash"
 	"io"
 	"math"
 	"os"
@@ -15,7 +14,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -293,36 +291,6 @@ func (s *Store) Save(
 	snapshot.Chunks = index
 	snapshot.Hash = snapshotHasher.Sum(nil)
 	return snapshot, s.saveSnapshot(snapshot)
-}
-
-// saveChunk saves the given chunkBody with the given index to its appropriate path on disk.
-// The hash of the chunk is appended to the snapshot's metadata,
-// and the overall snapshot hash is updated with the chunk content too.
-func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) error {
-	defer chunkBody.Close()
-
-	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
-	chunkFile, err := os.Create(path)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
-	}
-	defer chunkFile.Close()
-
-	chunkHasher.Reset()
-	if _, err := io.Copy(io.MultiWriter(chunkFile, chunkHasher, snapshotHasher), chunkBody); err != nil {
-		return errors.Wrapf(err, "failed to generate snapshot chunk %d", index)
-	}
-
-	if err := chunkFile.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
-	}
-
-	if err := chunkBody.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk body %d", index)
-	}
-
-	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
-	return nil
 }
 
 // saveSnapshot saves snapshot metadata to the database.

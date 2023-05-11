@@ -164,8 +164,13 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 
 // LoadChunk loads a chunk from disk, or returns nil if it does not exist. The caller must call
 // Close() on it when done.
+<<<<<<< HEAD:snapshots/store.go
 func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
 	path := s.pathChunk(height, format, chunk)
+=======
+func (s *Store) LoadChunk(height uint64, format, chunk uint32) (io.ReadCloser, error) {
+	path := s.PathChunk(height, format, chunk)
+>>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067)):store/snapshots/store.go
 	file, err := os.Open(path)
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -174,8 +179,13 @@ func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCl
 }
 
 // loadChunkFile loads a chunk from disk, and errors if it does not exist.
+<<<<<<< HEAD:snapshots/store.go
 func (s *Store) loadChunkFile(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
 	path := s.pathChunk(height, format, chunk)
+=======
+func (s *Store) loadChunkFile(height uint64, format, chunk uint32) (io.ReadCloser, error) {
+	path := s.PathChunk(height, format, chunk)
+>>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067)):store/snapshots/store.go
 	return os.Open(path)
 }
 
@@ -293,6 +303,39 @@ func (s *Store) Save(
 	return snapshot, s.saveSnapshot(snapshot)
 }
 
+<<<<<<< HEAD:snapshots/store.go
+=======
+// saveChunk saves the given chunkBody with the given index to its appropriate path on disk.
+// The hash of the chunk is appended to the snapshot's metadata,
+// and the overall snapshot hash is updated with the chunk content too.
+func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) error {
+	defer chunkBody.Close()
+
+	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
+	chunkFile, err := os.Create(path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
+	}
+	defer chunkFile.Close()
+
+	chunkHasher.Reset()
+	if _, err := io.Copy(io.MultiWriter(chunkFile, chunkHasher, snapshotHasher), chunkBody); err != nil {
+		return errors.Wrapf(err, "failed to generate snapshot chunk %d", index)
+	}
+
+	if err := chunkFile.Close(); err != nil {
+		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
+	}
+
+	if err := chunkBody.Close(); err != nil {
+		return errors.Wrapf(err, "failed to close snapshot chunk body %d", index)
+	}
+
+	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
+	return nil
+}
+
+>>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067)):store/snapshots/store.go
 // saveSnapshot saves snapshot metadata to the database.
 func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 	value, err := proto.Marshal(snapshot)
@@ -313,8 +356,13 @@ func (s *Store) pathSnapshot(height uint64, format uint32) string {
 	return filepath.Join(s.pathHeight(height), strconv.FormatUint(uint64(format), 10))
 }
 
+<<<<<<< HEAD:snapshots/store.go
 // pathChunk generates a snapshot chunk path.
 func (s *Store) pathChunk(height uint64, format uint32, chunk uint32) string {
+=======
+// PathChunk generates a snapshot chunk path.
+func (s *Store) PathChunk(height uint64, format, chunk uint32) string {
+>>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067)):store/snapshots/store.go
 	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
 }
 

@@ -431,6 +431,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		panic(err)
 	}
 
+<<<<<<< HEAD
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
 	if err = os.MkdirAll(snapshotDir, os.ModePerm); err != nil {
 		panic(fmt.Errorf("failed to create snapshots directory: %w", err))
@@ -441,6 +442,21 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		panic(err)
 	}
 	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
+=======
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// fallback to genesis chain-id
+		appGenesis, err := genutiltypes.AppGenesisFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		if err != nil {
+			panic(err)
+		}
+
+		chainID = appGenesis.ChainID
+	}
+
+	snapshotStore, err := GetSnapshotStore(appOpts)
+>>>>>>> c1ceb3bdd (feat: add local snapshots management commands (#16067))
 	if err != nil {
 		panic(err)
 	}
@@ -464,4 +480,23 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
 		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 	}
+}
+
+func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
+	if err := os.MkdirAll(snapshotDir, os.ModePerm); err != nil {
+		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
+	}
+
+	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
+	if err != nil {
+		return nil, err
+	}
+	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return snapshotStore, nil
 }

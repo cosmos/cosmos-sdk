@@ -44,15 +44,19 @@ func FilteredPaginate(
 		countTotal = true
 	}
 
+	var (
+		numHits uint64
+		nextKey []byte
+	)
+
+	if len(key) == 0 {
+		key = nil
+	}
+
+	iterator := getIterator(prefixStore, key, reverse)
+	defer iterator.Close()
+
 	if len(key) != 0 {
-		iterator := getIterator(prefixStore, key, reverse)
-		defer iterator.Close()
-
-		var (
-			numHits uint64
-			nextKey []byte
-		)
-
 		for ; iterator.Valid(); iterator.Next() {
 			if numHits == limit {
 				nextKey = iterator.Key()
@@ -78,15 +82,7 @@ func FilteredPaginate(
 		}, nil
 	}
 
-	iterator := getIterator(prefixStore, nil, reverse)
-	defer iterator.Close()
-
 	end := offset + limit
-
-	var (
-		numHits uint64
-		nextKey []byte
-	)
 
 	for ; iterator.Valid(); iterator.Next() {
 		if iterator.Error() != nil {

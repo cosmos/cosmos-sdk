@@ -1,7 +1,6 @@
 name: Long Tests
 on:
   pull_request:
-  merge_group:
   push:
     branches:
       - main

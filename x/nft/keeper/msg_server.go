@@ -28,6 +28,14 @@ func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespo
 		return nil, err
 	}
 
+	nftData, found := k.GetNFT(ctx, msg.ClassId, msg.Id)
+	if !found {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown NFT %s", msg.Id)
+	}
+	if !nftData.SendEnabled {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "sending of NFT %s is not enabled", msg.Id)
+	}
+
 	if err := k.Transfer(ctx, msg.ClassId, msg.Id, receiver); err != nil {
 		return nil, err
 	}

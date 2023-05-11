@@ -43,6 +43,9 @@ message NFT {
   // uri_hash is a hash of the document pointed by uri
   string uri_hash = 4;
 
+  // send_enabled is a flag that enables MsgSend
+  bool send_enabled = 5;
+
   // data is an app specific data of the NFT. Optional
   google.protobuf.Any data = 10;
 }

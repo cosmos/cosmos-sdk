@@ -117,10 +117,6 @@ func (app *BaseApp) InitChain(_ context.Context, req *abci.RequestInitChain) (*a
 		appHash = emptyHash[:]
 	}
 
-	// write the state writes to the underlying store and set the final commit.
-	// Commit should be called after initchain in order to commit changes to disk
-	app.finalizeBlockState.ms.Write()
-
 	// NOTE: We don't commit, since FinalizeBlock for a block at height
 	// initial_height starts from this state.
 	return &abci.ResponseInitChain{
@@ -730,7 +726,7 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 		rms.SetCommitHeader(header)
 	}
 
-	app.commit()
+	app.cms.Commit()
 
 	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,
@@ -781,20 +777,6 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 	go app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	return resp, nil
-}
-
-// commit commits all state transitions that occurred during FinalizeBlock.
-// These writes have been persisted to the root multi-store (app.cms) via workingHash and flushed to
-// disk. This means when the ABCI client requests Commit(), the application
-// state transitions are already flushed to disk and as a result, we already have
-// an application Merkle root.
-// CONTRACT: must be called after `app.finalizeBlockState.ms.Write()` is called
-func (app *BaseApp) commit() storetypes.CommitID {
-	// call commit to persist data to disk
-	commitID := app.cms.Commit()
-	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
-
-	return commitID
 }
 
 // workingHash gets the apphash that will be finalized in commit.

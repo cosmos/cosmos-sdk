@@ -132,13 +132,9 @@ func SignCheckDeliver(
 		Txs:    [][]byte{bz},
 	})
 
-	var finalizeSuccess bool
-	for _, result := range resBlock.TxResults {
-		if result.Code == 0 {
-			finalizeSuccess = true
-			break
-		}
-	}
+	require.Equal(t, 1, len(resBlock.TxResults))
+	txResult := resBlock.TxResults[0]
+	finalizeSuccess := txResult.Code == 0
 	if expPass {
 		require.True(t, finalizeSuccess)
 	} else {
@@ -147,12 +143,12 @@ func SignCheckDeliver(
 
 	app.Commit(context.TODO(), &types2.RequestCommit{})
 
-	gInfo := sdk.GasInfo{GasWanted: uint64(resBlock.TxResults[0].GasWanted), GasUsed: uint64(resBlock.TxResults[0].GasUsed)}
-	txRes := sdk.Result{Data: resBlock.TxResults[0].Data, Log: resBlock.TxResults[0].Log, Events: resBlock.TxResults[0].Events}
+	gInfo := sdk.GasInfo{GasWanted: uint64(txResult.GasWanted), GasUsed: uint64(txResult.GasUsed)}
+	txRes := sdk.Result{Data: txResult.Data, Log: txResult.Log, Events: txResult.Events}
 	if finalizeSuccess {
 		err = nil
 	} else {
-		err = fmt.Errorf(resBlock.TxResults[0].Log)
+		err = fmt.Errorf(txResult.Log)
 	}
 
 	return gInfo, &txRes, err

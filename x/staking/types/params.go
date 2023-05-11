@@ -47,8 +47,8 @@ var (
 func NewParams(unbondingTime time.Duration,
 	maxValidators, maxEntries, historicalEntries uint32,
 	bondDenom string, minCommissionRate sdk.Dec,
-	maxConsPubKeyRotations uint32, keyRotationFee sdk.Coin) Params {
-
+	maxConsPubKeyRotations uint32, keyRotationFee sdk.Coin,
+) Params {
 	return Params{
 		UnbondingTime:          unbondingTime,
 		MaxValidators:          maxValidators,

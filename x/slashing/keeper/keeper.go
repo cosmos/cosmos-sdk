@@ -61,7 +61,7 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 }
 
 // SetMappedConskey maps the old consensus key to rotated new consensus key
-func (k Keeper) SetMappedConskey(ctx sdk.Context, oldConsAddr sdk.ConsAddress, newConsAddr sdk.ConsAddress) {
+func (k Keeper) SetMappedConskey(ctx sdk.Context, oldConsAddr, newConsAddr sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetKeyRotatedConsKey(oldConsAddr.Bytes())
 	store.Set(key, newConsAddr.Bytes())

@@ -166,7 +166,7 @@ func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 	return nil
 }
 
-func (h Hooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, _ cryptotypes.PubKey, _ cryptotypes.PubKey, rotationFee sdk.Coin) error {
+func (h Hooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, _, _ cryptotypes.PubKey, rotationFee sdk.Coin) error {
 	feePool, err := h.k.GetFeePool(ctx)
 	if err != nil {
 		return err

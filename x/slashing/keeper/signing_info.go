@@ -189,7 +189,7 @@ func (k Keeper) removeValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddr
 	ctx.KVStore(k.storeKey).Delete(types.ValidatorSigningInfoKey(address))
 }
 
-func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey) error {
+func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubKey cryptotypes.PubKey) error {
 	// Connect new consensus address with PubKey
 	if err := k.AddPubkey(ctx, newPubKey); err != nil {
 		return err

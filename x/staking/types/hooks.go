@@ -116,7 +116,7 @@ func (h MultiStakingHooks) AfterUnbondingInitiated(ctx sdk.Context, id uint64) e
 	return nil
 }
 
-func (h MultiStakingHooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey, rotationFee sdk.Coin) error {
+func (h MultiStakingHooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubKey cryptotypes.PubKey, rotationFee sdk.Coin) error {
 	for i := range h {
 		if err := h[i].AfterConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey, rotationFee); err != nil {
 			return err

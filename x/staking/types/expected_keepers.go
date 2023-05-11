@@ -111,7 +111,7 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error
 	AfterUnbondingInitiated(ctx sdk.Context, id uint64) error
-	AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey, rotationFee sdk.Coin) error
+	AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubKey cryptotypes.PubKey, rotationFee sdk.Coin) error
 }
 
 // StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.

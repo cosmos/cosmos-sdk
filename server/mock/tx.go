@@ -100,10 +100,6 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
-func (msg *KVStoreTx) GetSignBytes() []byte {
-	return msg.bytes
-}
-
 // Should the app be calling this? Or only handlers?
 func (msg *KVStoreTx) ValidateBasic() error {
 	return nil

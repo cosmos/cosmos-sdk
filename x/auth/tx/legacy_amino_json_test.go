@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,6 +35,7 @@ func buildTx(t *testing.T, bldr *wrapper) {
 }
 
 func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
+	legacytx.RegressionTestingAminoCodec = codec.NewLegacyAmino()
 	var (
 		chainID        = "test-chain"
 		accNum  uint64 = 7

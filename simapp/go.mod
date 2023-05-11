@@ -199,7 +199,7 @@ replace (
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/orm => cosmossdk.io/orm v1.0.0-beta.2.0.20230511130728-b8f74d7a622a
+	cosmossdk.io/orm => cosmossdk.io/orm v1.0.0-beta.2.0.20230511133220-281ab2e6b426
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta

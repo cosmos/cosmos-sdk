@@ -74,7 +74,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(b, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
+	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
 	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
 	txGen := moduletestutil.MakeTestTxConfig()
@@ -126,7 +126,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
-	require.NoError(b, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
+	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
 	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 
 	txGen := moduletestutil.MakeTestTxConfig()

@@ -2,11 +2,11 @@ package sims
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
-	"cosmossdk.io/errors"
 	types2 "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
@@ -132,26 +132,24 @@ func SignCheckDeliver(
 		Txs:    [][]byte{bz},
 	})
 
+	require.Equal(t, 1, len(resBlock.TxResults))
+	txResult := resBlock.TxResults[0]
+	finalizeSuccess := txResult.Code == 0
 	if expPass {
-		require.NoError(t, err)
-		require.NotNil(t, resBlock)
+		require.True(t, finalizeSuccess)
 	} else {
-		// we should check for tx results, since FinalizeBlock doesn't return tx error
-		if err == nil {
-			txResult := resBlock.TxResults[0]
-			require.NotEqual(t, errors.SuccessABCICode, txResult.Code)
-			err = errors.ABCIError(txResult.Codespace, txResult.Code, txResult.Log)
-		} else {
-			require.Error(t, err)
-			require.Nil(t, resBlock)
-		}
+		require.False(t, finalizeSuccess)
 	}
 
 	app.Commit(context.TODO(), &types2.RequestCommit{})
 
-	gInfo := sdk.GasInfo{GasWanted: uint64(resBlock.TxResults[0].GasWanted), GasUsed: uint64(resBlock.TxResults[0].GasUsed)}
-
-	txRes := sdk.Result{Data: resBlock.TxResults[0].Data, Log: resBlock.TxResults[0].Log, Events: resBlock.TxResults[0].Events}
+	gInfo := sdk.GasInfo{GasWanted: uint64(txResult.GasWanted), GasUsed: uint64(txResult.GasUsed)}
+	txRes := sdk.Result{Data: txResult.Data, Log: txResult.Log, Events: txResult.Events}
+	if finalizeSuccess {
+		err = nil
+	} else {
+		err = fmt.Errorf(txResult.Log)
+	}
 
 	return gInfo, &txRes, err
 }

@@ -2,7 +2,6 @@ package gov_test
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/require"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -90,7 +89,7 @@ func TestImportExportQueues(t *testing.T) {
 	proposalID2 := proposal2.Id
 
 	params, err := s1.GovKeeper.Params.Get(ctx)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], params.MinDeposit)
 	assert.NilError(t, err)
 	assert.Assert(t, votingStarted)

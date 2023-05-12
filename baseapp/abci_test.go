@@ -437,7 +437,7 @@ func TestABCI_LoadSnapshotChunk(t *testing.T) {
 				Chunk:  tc.chunk,
 			})
 			if tc.expectEmpty {
-				require.Equal(t, abci.ResponseLoadSnapshotChunk{}, resp)
+				require.Equal(t, &abci.ResponseLoadSnapshotChunk{}, resp)
 				return
 			}
 
@@ -465,25 +465,30 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 	testCases := map[string]struct {
 		snapshot *abci.Snapshot
 		result   abci.ResponseOfferSnapshot_Result
+		isErr    bool
 	}{
-		"nil snapshot": {nil, abci.ResponseOfferSnapshot_REJECT},
+		"nil snapshot": {nil, abci.ResponseOfferSnapshot_REJECT, false},
 		"invalid format": {&abci.Snapshot{
 			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
+		}, abci.ResponseOfferSnapshot_REJECT_FORMAT, true},
 		"incorrect chunk count": {&abci.Snapshot{
 			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 2, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT},
+		}, abci.ResponseOfferSnapshot_REJECT, false},
 		"no chunks": {&abci.Snapshot{
 			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT},
+		}, abci.ResponseOfferSnapshot_REJECT, false},
 		"invalid metadata serialization": {&abci.Snapshot{
 			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
-		}, abci.ResponseOfferSnapshot_REJECT},
+		}, abci.ResponseOfferSnapshot_REJECT, false},
 	}
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			resp, err := suite.baseApp.OfferSnapshot(context.Background(), &abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
+			if tc.isErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			require.Equal(t, tc.result, resp.Result)
 		})
@@ -493,22 +498,22 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 	resp, err := suite.baseApp.OfferSnapshot(context.Background(), &abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:   1,
 		Format:   snapshottypes.CurrentFormat,
-		Chunks:   3,
+		Chunks:   2,
 		Hash:     []byte{1, 2, 3},
 		Metadata: metadata,
 	}})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, resp)
+	require.Equal(t, &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, resp)
 
 	resp, err = suite.baseApp.OfferSnapshot(context.Background(), &abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:   2,
 		Format:   snapshottypes.CurrentFormat,
-		Chunks:   3,
+		Chunks:   2,
 		Hash:     []byte{1, 2, 3},
 		Metadata: metadata,
 	}})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, resp)
+	require.Equal(t, &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, resp)
 }
 
 func TestABCI_ApplySnapshotChunk(t *testing.T) {

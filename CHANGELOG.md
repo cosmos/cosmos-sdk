@@ -67,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (core) [#14860](https://github.com/cosmos/cosmos-sdk/pull/14860) Add `Precommit` and `PrepareCheckState` AppModule callbacks.
 * (tx) [#15992](https://github.com/cosmos/cosmos-sdk/pull/15992) Add `WithExtensionOptions` in tx Factory to allow `SetExtensionOptions` with given extension options.
 * (types/simulation) [#16074](https://github.com/cosmos/cosmos-sdk/pull/16074) Add generic SimulationStoreDecoder for modules using collections.
+
 ### Improvements
 
 * (client) [#16075](https://github.com/cosmos/cosmos-sdk/pull/16075) Partly revert [#15953](https://github.com/cosmos/cosmos-sdk/issues/15953) and `factory.Prepare` does nothing in offline mode.
@@ -212,6 +213,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (cli) [#15299](https://github.com/cosmos/cosmos-sdk/pull/15299) remove `--amino` flag from `sign` and `multi-sign` commands. Amino `StdTx` has been deprecated for a while. Amino JSON signing still works as expected. 
 
 ### Bug Fixes
+
 * (x/staking) [#16043](https://github.com/cosmos/cosmos-sdk/pull/16043) Call `AfterUnbondingInitiated` hook for new unbonding entries only and fix `UnbondingDelegation` entries handling
 * (types) [#16010](https://github.com/cosmos/cosmos-sdk/pull/16010) Let `module.CoreAppModuleBasicAdaptor` fallback to legacy genesis handling.
 * (x/group) [#16017](https://github.com/cosmos/cosmos-sdk/pull/16017) Correctly apply account number in group v2 migration.
@@ -1025,6 +1027,20 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 * (x/upgrade) [#9906](https://github.com/cosmos/cosmos-sdk/pull/9906) Deprecate `UpgradeConsensusState` gRPC query since this functionality is only used for IBC, which now has its own [IBC replacement](https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
 * (types) [#10948](https://github.com/cosmos/cosmos-sdk/issues/10948) Deprecate the types.DBBackend variable and types.NewLevelDB function. They are replaced by a new entry in `app.toml`: `app-db-backend` and `tendermint/tm-db`s `NewDB` function. If `app-db-backend` is defined, then it is used. Otherwise, if `types.DBBackend` is defined, it is used (until removed: [#11241](https://github.com/cosmos/cosmos-sdk/issues/11241)). Otherwise, Tendermint config's `db-backend` is used.
+
+## [v0.45.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.16) - 2023-05-11
+
+### Security Bug Fixes
+
+* (x/feegrant) [#16097](https://github.com/cosmos/cosmos-sdk/pull/16097) Fix infinite feegrant allowance bug.
+
+## [v0.45.15](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.15) - 2023-03-22
+
+### Improvements
+
+* (deps) Migrate to [CometBFT](https://github.com/cometbft/cometbft). Follow the instructions in the [release notes](./RELEASE_NOTES.md).
+* (deps) [#15127](https://github.com/cosmos/cosmos-sdk/pull/15127) Bump btcd.
+* (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
 
 ## [v0.45.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.14) - 2023-02-16
 

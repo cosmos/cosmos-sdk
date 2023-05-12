@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -180,7 +181,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	_, err = f.app.RunMsg(
 		&msgUnjail,
 		integration.WithAutomaticBeginEndBlock(),
-		integration.WithAutomaticCommit(),
+		// integration.WithAutomaticCommit(),
 	)
 	assert.ErrorContains(t, err, "cannot be unjailed")
 
@@ -196,7 +197,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	_, err = f.app.RunMsg(
 		&msgUnjail,
 		integration.WithAutomaticBeginEndBlock(),
-		integration.WithAutomaticCommit(),
+		// integration.WithAutomaticCommit(),
 	)
 	assert.NilError(t, err)
 
@@ -231,9 +232,9 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(f.ctx, addr).GetBondedTokens())
 
 	// Now a validator, for two blocks
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, true)
+	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, comet.BlockIDFlagCommit)
 	f.ctx = f.ctx.WithBlockHeight(f.slashingKeeper.SignedBlocksWindow(f.ctx) + 2)
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, false)
+	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, comet.BlockIDFlagAbsent)
 
 	info, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()))
 	assert.Assert(t, found)
@@ -274,13 +275,13 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	height := int64(0)
 	for ; height < f.slashingKeeper.SignedBlocksWindow(f.ctx); height++ {
 		f.ctx = f.ctx.WithBlockHeight(height)
-		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, true)
+		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagCommit)
 	}
 
 	// 501 blocks missed
 	for ; height < f.slashingKeeper.SignedBlocksWindow(f.ctx)+(f.slashingKeeper.SignedBlocksWindow(f.ctx)-f.slashingKeeper.MinSignedPerWindow(f.ctx))+1; height++ {
 		f.ctx = f.ctx.WithBlockHeight(height)
-		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, false)
+		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagAbsent)
 	}
 
 	// end block
@@ -296,7 +297,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// another block missed
 	f.ctx = f.ctx.WithBlockHeight(height)
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, false)
+	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagNil)
 
 	// validator should not have been slashed twice
 	validator, _ = f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))
@@ -338,7 +339,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	height := int64(0)
 	for ; height < int64(100); height++ {
 		f.ctx = f.ctx.WithBlockHeight(height)
-		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, true)
+		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagCommit)
 	}
 
 	// kick first validator out of validator set
@@ -363,7 +364,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	newPower := power + 50
 
 	// validator misses a block
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, false)
+	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, comet.BlockIDFlagAbsent)
 	height++
 
 	// shouldn't be jailed/kicked yet
@@ -374,7 +375,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// misses 500 blocks + within the signing windows i.e. 700-1700
 	// validators misses all 1000 blocks of a SignedBlockWindows
 	for ; height < latest+1; height++ {
-		f.slashingKeeper.HandleValidatorSignature(f.ctx.WithBlockHeight(height), val.Address(), newPower, false)
+		f.slashingKeeper.HandleValidatorSignature(f.ctx.WithBlockHeight(height), val.Address(), newPower, comet.BlockIDFlagAbsent)
 	}
 
 	// should now be jailed & kicked
@@ -401,7 +402,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator rejoins and starts signing again
 	f.stakingKeeper.Unjail(f.ctx, consAddr)
 
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, true)
+	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, comet.BlockIDFlagCommit)
 
 	// validator should not be kicked since we reset counter/array when it was jailed
 	f.stakingKeeper.EndBlocker(f.ctx)
@@ -416,7 +417,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	latest = f.slashingKeeper.SignedBlocksWindow(f.ctx) + height
 	for ; height < latest+f.slashingKeeper.MinSignedPerWindow(f.ctx); height++ {
 		f.ctx = f.ctx.WithBlockHeight(height)
-		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, false)
+		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, comet.BlockIDFlagAbsent)
 	}
 
 	// validator should now be jailed & kicked

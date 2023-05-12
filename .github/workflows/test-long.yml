@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test-integration:
-    runs-on: ubuntu-latest
+    runs-on: cosmos-sdk-runner
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -46,7 +46,7 @@ jobs:
           path: ./tests/integration-profile.out
 
   test-e2e:
-    runs-on: ubuntu-latest
+    runs-on: cosmos-sdk-runner
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -77,7 +77,7 @@ jobs:
           path: ./tests/e2e-profile.out
 
   liveness-test:
-    runs-on: ubuntu-latest
+    runs-on: cosmos-sdk-runner
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
@@ -108,7 +108,7 @@ jobs:
           ./contrib/localnet_liveness.sh 100 5 50 localhost
 
   test-sim-nondeterminism:
-    runs-on: ubuntu-latest
+    runs-on: cosmos-sdk-runner
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4

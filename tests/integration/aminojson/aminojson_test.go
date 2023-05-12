@@ -30,6 +30,7 @@ import (
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -46,6 +47,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -91,7 +93,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
-	aj := aminojson.NewAminoJSON()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
 		name := string(tt.Pulsar.ProtoReflect().Descriptor().FullName())
@@ -142,6 +144,10 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 					AccNum:        1,
 					AccSeq:        2,
 					SignerAddress: "signerAddress",
+					Tip: &txv1beta1.Tip{
+						Tipper: "tipper",
+						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+					},
 					Fee: &txv1beta1.Fee{
 						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
 					},
@@ -159,6 +165,10 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				require.NoError(t, txBuilder.SetMsgs([]types.Msg{gogoMsg}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
 				txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
+				txBuilder.SetTip(&txtypes.Tip{
+					Amount: types.Coins{types.NewInt64Coin("uatom", 1000)},
+					Tipper: "tipper",
+				})
 				theTx := txBuilder.GetTx()
 
 				legacySigningData := signing.SignerData{
@@ -192,7 +202,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
 		vesting.AppModuleBasic{})
 
-	aj := aminojson.NewAminoJSON()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 	addr1 := types.AccAddress("addr1")
 	now := time.Now()
 
@@ -200,7 +210,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	genericAuthPulsar := newAny(t, &authzapi.GenericAuthorization{Msg: "foo"})
 	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
 	pubkeyAnyPulsar := newAny(t, &secp256k1.PubKey{Key: []byte("foo")})
-	dec10bz, _ := types.NewDec(10).Marshal()
+	dec10bz, _ := math.LegacyNewDec(10).Marshal()
 	int123bz, _ := types.NewInt(123).Marshal()
 
 	cases := map[string]struct {
@@ -251,7 +261,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &distapi.DelegatorStartingInfo{},
 		},
 		"distribution/delegator_starting_info/non_zero_dec": {
-			gogo:                &disttypes.DelegatorStartingInfo{Stake: types.NewDec(10)},
+			gogo:                &disttypes.DelegatorStartingInfo{Stake: math.LegacyNewDec(10)},
 			pulsar:              &distapi.DelegatorStartingInfo{Stake: "10.000000000000000000"},
 			protoUnmarshalFails: true,
 		},
@@ -331,7 +341,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"slashing/params/dec": {
 			gogo: &slashingtypes.Params{
 				DowntimeJailDuration: 1e9 + 7,
-				MinSignedPerWindow:   types.NewDec(10),
+				MinSignedPerWindow:   math.LegacyNewDec(10),
 			},
 			pulsar: &slashingapi.Params{
 				DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7},
@@ -480,7 +490,7 @@ func TestSendAuthorization(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		distribution.AppModuleBasic{}, bank.AppModuleBasic{})
 
-	aj := aminojson.NewAminoJSON()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	// beware, Coins has as custom MarshalJSON method which changes how nil is handled
 	// nil -> [] (empty list)

@@ -26,9 +26,9 @@ func ModuleAccountInvariant(keeper *Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var expectedDeposits sdk.Coins
 
-		keeper.IterateAllDeposits(ctx, func(deposit v1.Deposit) bool {
+		keeper.IterateAllDeposits(ctx, func(deposit v1.Deposit) error {
 			expectedDeposits = expectedDeposits.Add(deposit.Amount...)
-			return false
+			return nil
 		})
 
 		macc := keeper.GetGovernanceAccount(ctx)

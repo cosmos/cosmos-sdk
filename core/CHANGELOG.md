@@ -36,10 +36,32 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### API-Breaking Changes
+## [v0.7.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.7.0)
 
-* (store)[14635](https://github.com/cosmos/cosmos-sdk/pull/14635) Add error handling to all methods on the `KVStore` interface
+## [v0.6.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.6.1)
 
-### Features
+## [v0.6.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.6.0)
 
-* (genesis) [#15999](https://github.com/cosmos/cosmos-sdk/pull/15999) Add `GenesisTxHandler` interface
+## [v0.5.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.5.1)
+
+## [v0.5.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.5.0)
+
+## [v0.4.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.4.1)
+
+## [v0.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.4.0)
+
+## [v0.3.4](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.3.4)
+
+## [v0.3.3](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.3.3)
+
+## [v0.3.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.3.2)
+
+## [v0.3.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.3.1)
+
+## [v0.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.3.0)
+
+## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.2.0)
+
+## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.1.0)
+
+* [#11914](https://github.com/cosmos/cosmos-sdk/pull/11914) Add core module with app config support.

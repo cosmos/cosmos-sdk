@@ -77,7 +77,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 
 			sKey := []byte(fmt.Sprintf("distKey%d", i))
 			sVal := []byte(fmt.Sprintf("distVal%d", i))
-			store := getDeliverStateCtx(suite.baseApp).KVStore(distKey1)
+			store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(distKey1)
 			store.Set(sKey, sVal)
 
 			expectedChangeSet = append(expectedChangeSet, &storetypes.StoreKVPair{
@@ -119,7 +119,7 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 		ConsensusParams: &tmproto.ConsensusParams{},
 	})
 
-	ctx := getDeliverStateCtx(suite.baseApp)
+	ctx := getFinalizeBlockStateCtx(suite.baseApp)
 	sm := ctx.StreamingManager()
 	require.NotNil(t, sm, fmt.Sprintf("nil StreamingManager: %v", sm))
 	require.Equal(t, listeners, sm.ABCIListeners, fmt.Sprintf("should contain same listeners: %v", listeners))
@@ -131,7 +131,7 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 
 		suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
 
-		ctx := getDeliverStateCtx(suite.baseApp)
+		ctx := getFinalizeBlockStateCtx(suite.baseApp)
 		sm := ctx.StreamingManager()
 		require.NotNil(t, sm, fmt.Sprintf("nil StreamingManager: %v", sm))
 		require.Equal(t, listeners, sm.ABCIListeners, fmt.Sprintf("should contain same listeners: %v", listeners))

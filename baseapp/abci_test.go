@@ -69,16 +69,15 @@ func TestABCI_InitChain(t *testing.T) {
 		Data: key,
 	}
 
+	_, err := app.InitChain(context.TODO(), &abci.RequestInitChain{ChainId: "wrong-chain-id"})
 	// initChain is nil and chain ID is wrong - panics
-	require.Panics(t, func() {
-		app.InitChain(context.TODO(), &abci.RequestInitChain{ChainId: "wrong-chain-id"})
-	})
+	require.Error(t, err)
 
 	// initChain is nil - nothing happens
-	app.InitChain(context.TODO(), &abci.RequestInitChain{ChainId: "test-chain-id"})
-	res, err := app.Query(context.TODO(), &query)
+	_, err = app.InitChain(context.TODO(), &abci.RequestInitChain{ChainId: "test-chain-id"})
+	resQ, err := app.Query(context.TODO(), &query)
 	require.NoError(t, err)
-	require.Equal(t, 0, len(res.Value))
+	require.Equal(t, 0, len(resQ.Value))
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
@@ -101,17 +100,21 @@ func TestABCI_InitChain(t *testing.T) {
 	)
 
 	// assert that chainID is set correctly in InitChain
-	chainID := getDeliverStateCtx(app).ChainID()
+	chainID := getFinalizeBlockStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
 
 	chainID = getCheckStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Hash:   initChainRes.AppHash,
+		Height: 1,
+	})
 	app.Commit(context.TODO(), &abci.RequestCommit{})
-	res, err = app.Query(context.TODO(), &query)
+	resQ, err = app.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), app.LastBlockHeight())
-	require.Equal(t, value, res.Value)
+	require.Equal(t, value, resQ.Value)
 
 	// reload app
 	app = baseapp.NewBaseApp(name, logger, db, nil)
@@ -122,17 +125,17 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, int64(1), app.LastBlockHeight())
 
 	// ensure we can still query after reloading
-	res, err = app.Query(context.TODO(), &query)
+	resQ, err = app.Query(context.TODO(), &query)
 	require.NoError(t, err)
-	require.Equal(t, value, res.Value)
+	require.Equal(t, value, resQ.Value)
 
 	// commit and ensure we can still query
 	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	app.Commit(context.TODO(), &abci.RequestCommit{})
 
-	res, err = app.Query(context.TODO(), &query)
+	resQ, err = app.Query(context.TODO(), &query)
 	require.NoError(t, err)
-	require.Equal(t, value, res.Value)
+	require.Equal(t, value, resQ.Value)
 }
 
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
@@ -151,7 +154,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
-func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
+func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
@@ -163,9 +166,8 @@ func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
 		},
 	)
 
-	require.PanicsWithError(t, "invalid height: 4; expected: 3", func() {
-		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 4})
-	})
+	_, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 4})
+	require.Error(t, err, "invalid height: 4; expected: 3")
 
 	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 3})
 	app.Commit(context.TODO(), &abci.RequestCommit{})
@@ -269,7 +271,7 @@ func TestABCI_ListSnapshots(t *testing.T) {
 		s.Metadata = nil
 	}
 
-	require.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
+	require.Equal(t, &abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
 		{Height: 4, Format: snapshottypes.CurrentFormat, Chunks: 2},
 		{Height: 2, Format: snapshottypes.CurrentFormat, Chunks: 1},
 	}}, resp)
@@ -368,7 +370,7 @@ func TestABCI_SnapshotWithPruning(t *testing.T) {
 				s.Metadata = nil
 			}
 
-			require.Equal(t, abci.ResponseListSnapshots{Snapshots: tc.expectedSnapshots}, resp)
+			require.Equal(t, &abci.ResponseListSnapshots{Snapshots: tc.expectedSnapshots}, resp)
 
 			// Validate that heights were pruned correctly by querying the state at the last height that should be present relative to latest
 			// and the first height that should be pruned.
@@ -547,7 +549,7 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 	// begin a snapshot restoration in the target
 	respOffer, err := targetSuite.baseApp.OfferSnapshot(context.Background(), &abci.RequestOfferSnapshot{Snapshot: snapshot})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, respOffer)
+	require.Equal(t, &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, respOffer)
 
 	// We should be able to pass an invalid chunk and get a verify failure, before
 	// reapplying it.
@@ -586,37 +588,6 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 	// the target should now have the same hash as the source
 	require.Equal(t, srcSuite.baseApp.LastCommitID(), targetSuite.baseApp.LastCommitID())
 }
-
-// func TestABCI_EndBlock(t *testing.T) {
-// 	db := dbm.NewMemDB()
-// 	name := t.Name()
-
-// 	cp := &cmtproto.ConsensusParams{
-// 		Block: &cmtproto.BlockParams{
-// 			MaxGas: 5000000,
-// 		},
-// 	}
-
-// 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
-// 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-// 	app.InitChain(abci.RequestInitChain{
-// 		ConsensusParams: cp,
-// 	})
-
-// 	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
-// 		return abci.ResponseEndBlock{
-// 			ValidatorUpdates: []abci.ValidatorUpdate{
-// 				{Power: 100},
-// 			},
-// 		}, nil
-// 	})
-// 	app.Seal()
-
-// 	res := app.EndBlock(abci.RequestEndBlock{})
-// 	require.Len(t, res.GetValidatorUpdates(), 1)
-// 	require.Equal(t, int64(100), res.GetValidatorUpdates()[0].Power)
-// 	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
-// }
 
 func TestBaseApp_PrepareCheckState(t *testing.T) {
 	db := dbm.NewMemDB()
@@ -721,7 +692,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.Nil(t, storedBytes)
 }
 
-func TestABCI_DeliverTx(t *testing.T) {
+func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -769,7 +740,7 @@ func TestABCI_DeliverTx(t *testing.T) {
 	}
 }
 
-func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
+func TestABCI_FinalizeBlock_DeliverTx_MultiMsg(t *testing.T) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -795,7 +766,7 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 		Txs:    [][]byte{txBytes},
 	})
 
-	store := getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+	store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter := getIntFromStore(t, store, anteKey)
@@ -817,7 +788,7 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 	builder.SetMemo(tx.GetMemo())
 	setTxSignature(t, builder, 0)
 
-	store = getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+	store = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter = getIntFromStore(t, store, anteKey)
@@ -1173,7 +1144,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 
 		for j, tx := range res.TxResults {
 
-			ctx := getDeliverStateCtx(suite.baseApp)
+			ctx := getFinalizeBlockStateCtx(suite.baseApp)
 
 			// check for failed transactions
 			if tc.fail && (j+1) > tc.failAfterDeliver {
@@ -1296,12 +1267,8 @@ func TestABCI_Query(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 0, len(res.Value))
 
-	bz, err := suite.txConfig.TxEncoder()(tx)
+	suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
-	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
-		Height: suite.baseApp.LastBlockHeight() + 1,
-		Txs:    [][]byte{bz},
-	})
 	require.NoError(t, err)
 
 	res, err = suite.baseApp.Query(context.Background(), &query)

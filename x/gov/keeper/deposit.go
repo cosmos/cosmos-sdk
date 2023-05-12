@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	stderr "errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -82,7 +81,7 @@ func (keeper Keeper) IterateAllDeposits(ctx context.Context, cb func(deposit v1.
 func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb func(key collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) bool) error {
 	pair := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
 	err := keeper.Deposits.Walk(ctx, pair, cb)
-	if err != nil && !stderr.Is(err, collections.ErrInvalidIterator) {
+	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
 		return err
 	}
 	return nil

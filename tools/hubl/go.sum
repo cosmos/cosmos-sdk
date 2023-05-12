@@ -150,8 +150,8 @@ github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXy
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=
-github.com/cosmos/gogoproto v1.4.9 h1:MjVmV6F1yk1rJLWtKeYdGQcTbE880t+VlRcayEBqUKQ=
-github.com/cosmos/gogoproto v1.4.9/go.mod h1:c0ysUnwvnlR+RmCUvqqii7pp8kHBB/DBcp/5VLA/nQk=
+github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
+github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
 github.com/cosmos/iavl v0.21.0-beta.1 h1:fBQeBc8HLZ14plJNcmGfaOXSSMLVEHvEQXiTXSD76m0=
 github.com/cosmos/iavl v0.21.0-beta.1/go.mod h1:25YJYzilTErJ2mKfNB3xyWL9IsCwEQdNzdIutg2mh3U=
 github.com/cosmos/ledger-cosmos-go v0.13.0 h1:ex0CvCxToSR7j5WjrghPu2Bu9sSXKikjnVvUryNnx4s=

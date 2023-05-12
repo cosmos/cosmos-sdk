@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/collections"
 	"errors"
 	"fmt"
 	"time"
+
+	"cosmossdk.io/collections"
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"

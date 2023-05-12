@@ -2,10 +2,11 @@ package v2_test
 
 import (
 	"bytes"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"testing"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"

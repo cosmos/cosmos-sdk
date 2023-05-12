@@ -2,6 +2,7 @@ package flag
 
 import (
 	"context"
+
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/coins"
 	"google.golang.org/protobuf/reflect/protoreflect"

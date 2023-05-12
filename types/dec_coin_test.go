@@ -50,16 +50,16 @@ func (s *decCoinTestSuite) TestNewDecCoinFromDec() {
 
 func (s *decCoinTestSuite) TestNewDecCoinFromCoin() {
 	s.Require().NotPanics(func() {
-		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, sdk.NewInt(5)})
+		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, math.NewInt(5)})
 	})
 	s.Require().NotPanics(func() {
-		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, sdk.NewInt(0)})
+		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, math.NewInt(0)})
 	})
 	s.Require().NotPanics(func() {
-		sdk.NewDecCoinFromCoin(sdk.Coin{strings.ToUpper(testDenom1), sdk.NewInt(5)})
+		sdk.NewDecCoinFromCoin(sdk.Coin{strings.ToUpper(testDenom1), math.NewInt(5)})
 	})
 	s.Require().Panics(func() {
-		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, sdk.NewInt(-5)})
+		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, math.NewInt(-5)})
 	})
 }
 
@@ -188,7 +188,7 @@ func (s *decCoinTestSuite) TestIsValid() {
 		msg        string
 	}{
 		{
-			sdk.NewDecCoin("mytoken", sdk.NewInt(10)),
+			sdk.NewDecCoin("mytoken", math.NewInt(10)),
 			true,
 			"valid coins should have passed",
 		},
@@ -226,23 +226,23 @@ func (s *decCoinTestSuite) TestSubDecCoin() {
 		msg        string
 	}{
 		{
-			sdk.NewDecCoin("mytoken", sdk.NewInt(20)),
+			sdk.NewDecCoin("mytoken", math.NewInt(20)),
 			true,
 			"valid coins should have passed",
 		},
 		{
-			sdk.NewDecCoin("othertoken", sdk.NewInt(20)),
+			sdk.NewDecCoin("othertoken", math.NewInt(20)),
 			false,
 			"denom mismatch",
 		},
 		{
-			sdk.NewDecCoin("mytoken", sdk.NewInt(9)),
+			sdk.NewDecCoin("mytoken", math.NewInt(9)),
 			false,
 			"negative amount",
 		},
 	}
 
-	decCoin := sdk.NewDecCoin("mytoken", sdk.NewInt(10))
+	decCoin := sdk.NewDecCoin("mytoken", math.NewInt(10))
 
 	for _, tc := range tests {
 		tc := tc
@@ -262,23 +262,23 @@ func (s *decCoinTestSuite) TestSubDecCoins() {
 		msg        string
 	}{
 		{
-			sdk.NewDecCoinsFromCoins(sdk.NewCoin("mytoken", sdk.NewInt(10)), sdk.NewCoin("btc", sdk.NewInt(20)), sdk.NewCoin("eth", sdk.NewInt(30))),
+			sdk.NewDecCoinsFromCoins(sdk.NewCoin("mytoken", math.NewInt(10)), sdk.NewCoin("btc", math.NewInt(20)), sdk.NewCoin("eth", math.NewInt(30))),
 			true,
 			"sorted coins should have passed",
 		},
 		{
-			sdk.DecCoins{sdk.NewDecCoin("mytoken", sdk.NewInt(10)), sdk.NewDecCoin("btc", sdk.NewInt(20)), sdk.NewDecCoin("eth", sdk.NewInt(30))},
+			sdk.DecCoins{sdk.NewDecCoin("mytoken", math.NewInt(10)), sdk.NewDecCoin("btc", math.NewInt(20)), sdk.NewDecCoin("eth", math.NewInt(30))},
 			false,
 			"unorted coins should panic",
 		},
 		{
-			sdk.DecCoins{sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(10)}, sdk.NewDecCoin("eth", sdk.NewInt(15)), sdk.NewDecCoin("mytoken", sdk.NewInt(5))},
+			sdk.DecCoins{sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(10)}, sdk.NewDecCoin("eth", math.NewInt(15)), sdk.NewDecCoin("mytoken", math.NewInt(5))},
 			false,
 			"invalid denoms",
 		},
 	}
 
-	decCoins := sdk.NewDecCoinsFromCoins(sdk.NewCoin("btc", sdk.NewInt(10)), sdk.NewCoin("eth", sdk.NewInt(15)), sdk.NewCoin("mytoken", sdk.NewInt(5)))
+	decCoins := sdk.NewDecCoinsFromCoins(sdk.NewCoin("btc", math.NewInt(10)), sdk.NewCoin("eth", math.NewInt(15)), sdk.NewCoin("mytoken", math.NewInt(5)))
 
 	for _, tc := range tests {
 		tc := tc
@@ -375,36 +375,36 @@ func (s *decCoinTestSuite) TestParseDecCoins() {
 		expectedErr    bool
 	}{
 		{"", nil, false},
-		{"4stake", sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdk.NewDecFromInt(sdk.NewInt(4)))}, false},
+		{"4stake", sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdk.NewDecFromInt(math.NewInt(4)))}, false},
 		{"5.5atom,4stake", sdk.DecCoins{
-			sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5500000000000000000, sdk.Precision)),
+			sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5500000000000000000, math.LegacyPrecision)),
 			sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(4)),
 		}, false},
 		{"0.0stake", sdk.DecCoins{}, false}, // remove zero coins
 		{"10.0btc,1.0atom,20.0btc", nil, true},
 		{
 			"0.004STAKE",
-			sdk.DecCoins{sdk.NewDecCoinFromDec("STAKE", sdk.NewDecWithPrec(4000000000000000, sdk.Precision))},
+			sdk.DecCoins{sdk.NewDecCoinFromDec("STAKE", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision))},
 			false,
 		},
 		{
 			"0.004stake",
-			sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision))},
+			sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision))},
 			false,
 		},
 		{
 			"5.04atom,0.004stake",
 			sdk.DecCoins{
-				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, sdk.Precision)),
-				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision)),
+				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, math.LegacyPrecision)),
+				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision)),
 			},
 			false,
 		},
 		{
 			"0.0stake,0.004stake,5.04atom", // remove zero coins
 			sdk.DecCoins{
-				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, sdk.Precision)),
-				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision)),
+				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, math.LegacyPrecision)),
+				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision)),
 			},
 			false,
 		},
@@ -429,8 +429,8 @@ func (s *decCoinTestSuite) TestDecCoinsString() {
 		{sdk.DecCoins{}, ""},
 		{
 			sdk.DecCoins{
-				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, sdk.Precision)),
-				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision)),
+				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, math.LegacyPrecision)),
+				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision)),
 			},
 			"5.040000000000000000atom,0.004000000000000000stake",
 		},
@@ -513,7 +513,7 @@ func (s *decCoinTestSuite) TestDecCoinsQuoDecTruncate() {
 
 	testCases := []struct {
 		coins  sdk.DecCoins
-		input  sdk.Dec
+		input  math.LegacyDec
 		result sdk.DecCoins
 		panics bool
 	}{
@@ -534,8 +534,8 @@ func (s *decCoinTestSuite) TestDecCoinsQuoDecTruncate() {
 }
 
 func (s *decCoinTestSuite) TestNewDecCoinsWithIsValid() {
-	fake1 := append(sdk.NewDecCoins(sdk.NewDecCoin("mytoken", sdk.NewInt(10))), sdk.DecCoin{Denom: "10BTC", Amount: math.LegacyNewDec(10)})
-	fake2 := append(sdk.NewDecCoins(sdk.NewDecCoin("mytoken", sdk.NewInt(10))), sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(-10)})
+	fake1 := append(sdk.NewDecCoins(sdk.NewDecCoin("mytoken", math.NewInt(10))), sdk.DecCoin{Denom: "10BTC", Amount: math.LegacyNewDec(10)})
+	fake2 := append(sdk.NewDecCoins(sdk.NewDecCoin("mytoken", math.NewInt(10))), sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(-10)})
 
 	tests := []struct {
 		coin       sdk.DecCoins
@@ -543,7 +543,7 @@ func (s *decCoinTestSuite) TestNewDecCoinsWithIsValid() {
 		msg        string
 	}{
 		{
-			sdk.NewDecCoins(sdk.NewDecCoin("mytoken", sdk.NewInt(10))),
+			sdk.NewDecCoins(sdk.NewDecCoin("mytoken", math.NewInt(10))),
 			true,
 			"valid coins should have passed",
 		},
@@ -570,14 +570,14 @@ func (s *decCoinTestSuite) TestNewDecCoinsWithIsValid() {
 }
 
 func (s *decCoinTestSuite) TestNewDecCoinsWithZeroCoins() {
-	zeroCoins := append(sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(0))), sdk.Coin{Denom: "wbtc", Amount: sdk.NewInt(10)})
+	zeroCoins := append(sdk.NewCoins(sdk.NewCoin("mytoken", math.NewInt(0))), sdk.Coin{Denom: "wbtc", Amount: math.NewInt(10)})
 
 	tests := []struct {
 		coins        sdk.Coins
 		expectLength int
 	}{
 		{
-			sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(10)), sdk.NewCoin("wbtc", sdk.NewInt(10))),
+			sdk.NewCoins(sdk.NewCoin("mytoken", math.NewInt(10)), sdk.NewCoin("wbtc", math.NewInt(10))),
 			2,
 		},
 		{
@@ -593,7 +593,7 @@ func (s *decCoinTestSuite) TestNewDecCoinsWithZeroCoins() {
 }
 
 func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
-	lengthTestDecCoins := sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", sdk.NewInt(10))).Add(sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(10)})
+	lengthTestDecCoins := sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", math.NewInt(10))).Add(sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(10)})
 	s.Require().Equal(2, len(lengthTestDecCoins), "should be 2")
 
 	tests := []struct {
@@ -602,17 +602,17 @@ func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
 		msg        string
 	}{
 		{
-			sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", sdk.NewInt(10))),
+			sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", math.NewInt(10))),
 			true,
 			"valid coins should have passed",
 		},
 		{
-			sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", sdk.NewInt(10))).Add(sdk.DecCoin{Denom: "0BTC", Amount: math.LegacyNewDec(10)}),
+			sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", math.NewInt(10))).Add(sdk.DecCoin{Denom: "0BTC", Amount: math.LegacyNewDec(10)}),
 			false,
 			"invalid denoms",
 		},
 		{
-			sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", sdk.NewInt(10))).Add(sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(-10)}),
+			sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", math.NewInt(10))).Add(sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(-10)}),
 			false,
 			"negative amount",
 		},

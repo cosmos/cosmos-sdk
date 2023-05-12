@@ -136,9 +136,9 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
 
-	header1 := cmtproto.Header{ChainID: "HelloChain", Height: 10}
-	header2 := cmtproto.Header{ChainID: "HelloChain", Height: 11}
-	header3 := cmtproto.Header{ChainID: "HelloChain", Height: 12}
+	header1 := cmtproto.Header{ChainID: "HelloChain", Height: 9}
+	header2 := cmtproto.Header{ChainID: "HelloChain", Height: 10}
+	header3 := cmtproto.Header{ChainID: "HelloChain", Height: 11}
 
 	hist1 := stakingtypes.HistoricalInfo{Header: header1, Valset: valSet}
 	hist2 := stakingtypes.HistoricalInfo{Header: header2, Valset: valSet}
@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	expHistInfos := []stakingtypes.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
-		keeper.SetHistoricalInfo(ctx, int64(10+i), &hi) //nolint:gosec // G601: Implicit memory aliasing in for loop.
+		keeper.SetHistoricalInfo(ctx, int64(9+i), &hi) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 	}
 
 	infos := keeper.GetAllHistoricalInfo(ctx)

@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -76,25 +77,25 @@ func (s *IntegrationTestSuite) TestParams() {
 		expectErr bool
 	}{
 		{
-			name: "set invalid params",
+			name: "set invalid params (⚠️ not validated in keeper)",
 			input: types.Params{
 				MintDenom:           sdk.DefaultBondDenom,
-				InflationRateChange: sdk.NewDecWithPrec(-13, 2),
-				InflationMax:        sdk.NewDecWithPrec(20, 2),
-				InflationMin:        sdk.NewDecWithPrec(7, 2),
-				GoalBonded:          sdk.NewDecWithPrec(67, 2),
+				InflationRateChange: math.LegacyNewDecWithPrec(-13, 2),
+				InflationMax:        math.LegacyNewDecWithPrec(20, 2),
+				InflationMin:        math.LegacyNewDecWithPrec(7, 2),
+				GoalBonded:          math.LegacyNewDecWithPrec(67, 2),
 				BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
 			},
-			expectErr: true,
+			expectErr: false,
 		},
 		{
 			name: "set full valid params",
 			input: types.Params{
 				MintDenom:           sdk.DefaultBondDenom,
-				InflationRateChange: sdk.NewDecWithPrec(8, 2),
-				InflationMax:        sdk.NewDecWithPrec(20, 2),
-				InflationMin:        sdk.NewDecWithPrec(2, 2),
-				GoalBonded:          sdk.NewDecWithPrec(37, 2),
+				InflationRateChange: math.LegacyNewDecWithPrec(8, 2),
+				InflationMax:        math.LegacyNewDecWithPrec(20, 2),
+				InflationMin:        math.LegacyNewDecWithPrec(2, 2),
+				GoalBonded:          math.LegacyNewDecWithPrec(37, 2),
 				BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
 			},
 			expectErr: false,
@@ -121,20 +122,20 @@ func (s *IntegrationTestSuite) TestParams() {
 }
 
 func (s *IntegrationTestSuite) TestAliasFunctions() {
-	stakingTokenSupply := sdk.NewIntFromUint64(100000000000)
+	stakingTokenSupply := math.NewIntFromUint64(100000000000)
 	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply)
 	s.Require().Equal(s.mintKeeper.StakingTokenSupply(s.ctx), stakingTokenSupply)
 
-	bondedRatio := sdk.NewDecWithPrec(15, 2)
+	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio)
 	s.Require().Equal(s.mintKeeper.BondedRatio(s.ctx), bondedRatio)
 
-	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000)))
+	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)))
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, coins).Return(nil)
 	s.Require().Equal(s.mintKeeper.MintCoins(s.ctx, sdk.NewCoins()), nil)
 	s.Require().Nil(s.mintKeeper.MintCoins(s.ctx, coins))
 
-	fees := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
+	fees := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, fees).Return(nil)
 	s.Require().Nil(s.mintKeeper.AddCollectedFees(s.ctx, fees))
 }

@@ -38,7 +38,7 @@ type coreAppModuleBasicAdapator struct {
 }
 
 // DefaultGenesis implements HasGenesis
-func (c coreAppModuleBasicAdapator) DefaultGenesis(codec.JSONCodec) json.RawMessage {
+func (c coreAppModuleBasicAdapator) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	if mod, ok := c.module.(appmodule.HasGenesis); ok {
 		target := genesis.RawJSONTarget{}
 		err := mod.DefaultGenesis(target.Target())
@@ -53,6 +53,11 @@ func (c coreAppModuleBasicAdapator) DefaultGenesis(codec.JSONCodec) json.RawMess
 
 		return res
 	}
+
+	if mod, ok := c.module.(HasGenesisBasics); ok {
+		return mod.DefaultGenesis(cdc)
+	}
+
 	return nil
 }
 
@@ -67,6 +72,10 @@ func (c coreAppModuleBasicAdapator) ValidateGenesis(cdc codec.JSONCodec, txConfi
 		if err := mod.ValidateGenesis(source); err != nil {
 			return err
 		}
+	}
+
+	if mod, ok := c.module.(HasGenesisBasics); ok {
+		return mod.ValidateGenesis(cdc, txConfig, bz)
 	}
 
 	return nil
@@ -89,11 +98,16 @@ func (c coreAppModuleBasicAdapator) ExportGenesis(ctx sdk.Context, cdc codec.JSO
 
 		return rawJSON
 	}
+
+	if mod, ok := c.module.(HasGenesis); ok {
+		return mod.ExportGenesis(ctx, cdc)
+	}
+
 	return nil
 }
 
 // InitGenesis implements HasGenesis
-func (c coreAppModuleBasicAdapator) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (c coreAppModuleBasicAdapator) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
 	if module, ok := c.module.(appmodule.HasGenesis); ok {
 		// core API genesis
 		source, err := genesis.SourceFromRawJSON(bz)
@@ -106,6 +120,11 @@ func (c coreAppModuleBasicAdapator) InitGenesis(ctx sdk.Context, _ codec.JSONCod
 			panic(err)
 		}
 	}
+
+	if mod, ok := c.module.(HasGenesis); ok {
+		return mod.InitGenesis(ctx, cdc, bz)
+	}
+
 	return nil
 }
 

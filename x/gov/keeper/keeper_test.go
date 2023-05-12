@@ -6,8 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -17,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
+
+var address1 = "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -44,14 +49,14 @@ func (suite *KeeperTestSuite) reset() {
 
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
-	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
 	err := bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 	suite.NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
 	suite.NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	v1.RegisterQueryServer(queryHelper, govKeeper)
+	v1.RegisterQueryServer(queryHelper, keeper.NewQueryServer(*govKeeper))
 	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(govKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)
@@ -69,38 +74,55 @@ func (suite *KeeperTestSuite) reset() {
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.govKeeper)
 
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
-	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(30000000))
+	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdkmath.NewInt(30000000))
+
+	for _, addr := range suite.addrs {
+		suite.acctKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
+		suite.acctKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
+	}
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
+	govKeeper, authKeeper, _, _, _, _, ctx := setupGovKeeper(t)
+
+	ac := address.NewBech32Codec("cosmos")
+	addrBz, err := ac.StringToBytes(address1)
+	require.NoError(t, err)
+	authKeeper.EXPECT().StringToBytes(address1).Return(addrBz, nil).AnyTimes()
+	authKeeper.EXPECT().BytesToString(addrBz).Return(address1, nil).AnyTimes()
 
 	tp := TestProposal
-	_, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), true)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, true)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), true)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, true)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
 	require.NoError(t, err)
-	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
+	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.Id)
 }
 
 func TestProposalQueues(t *testing.T) {
-	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
+	govKeeper, authKeeper, _, _, _, _, ctx := setupGovKeeper(t)
+
+	ac := address.NewBech32Codec("cosmos")
+	addrBz, err := ac.StringToBytes(address1)
+	require.NoError(t, err)
+	authKeeper.EXPECT().StringToBytes(address1).Return(addrBz, nil).AnyTimes()
+	authKeeper.EXPECT().BytesToString(addrBz).Return(address1, nil).AnyTimes()
 
 	// create test proposals
 	tp := TestProposal
-	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
+	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
 	require.NoError(t, err)
 
-	inactiveIterator := govKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)
+	inactiveIterator, _ := govKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)
 	require.True(t, inactiveIterator.Valid())
 
 	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
@@ -109,10 +131,10 @@ func TestProposalQueues(t *testing.T) {
 
 	govKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	proposal, ok := govKeeper.GetProposal(ctx, proposal.Id)
-	require.True(t, ok)
+	proposal, err = govKeeper.GetProposal(ctx, proposal.Id)
+	require.Nil(t, err)
 
-	activeIterator := govKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)
+	activeIterator, _ := govKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 
 	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())

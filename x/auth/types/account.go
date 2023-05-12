@@ -23,9 +23,7 @@ var (
 	_ sdk.ModuleAccountI                 = (*ModuleAccount)(nil)
 )
 
-// NewBaseAccount creates a new BaseAccount object
-//
-//nolint:interfacer
+// NewBaseAccount creates a new BaseAccount object.
 func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
 		Address:       address.String(),

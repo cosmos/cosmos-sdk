@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -11,6 +12,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/client/v2/autocli/flag"
@@ -91,22 +94,22 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 
 		builder := &autocli.Builder{
 			Builder: flag.Builder{
+				AddressCodec: addresscodec.NewBech32Codec(chainConfig.Bech32Prefix),
 				TypeResolver: &dynamicTypeResolver{chainInfo},
 				FileResolver: chainInfo.ProtoFiles,
-				GetClientConn: func() (grpc.ClientConnInterface, error) {
-					return chainInfo.OpenClient()
-				},
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()
 			},
 			AddQueryConnFlags: func(command *cobra.Command) {},
 		}
+
 		var (
 			update   bool
 			reconfig bool
 			insecure bool
 		)
+
 		chainCmd := &cobra.Command{
 			Use:   chain,
 			Short: fmt.Sprintf("Commands for the %s chain", chain),
@@ -177,7 +180,19 @@ func reconfigure(cmd *cobra.Command, config *Config, configDir, chain string) er
 		return err
 	}
 
+	client, err := chainInfo.OpenClient()
+	if err != nil {
+		return err
+	}
+
+	addressPrefix, err := getAddressPrefix(context.Background(), client)
+	if err != nil {
+		return err
+	}
+
+	chainConfig.Bech32Prefix = addressPrefix
 	config.Chains[chain] = chainConfig
+
 	if err := SaveConfig(configDir, config); err != nil {
 		return err
 	}

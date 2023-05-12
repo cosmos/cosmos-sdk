@@ -8,7 +8,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -29,7 +28,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -58,7 +57,7 @@ func TestTallyNoQuorum(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, _, _ := app.GovKeeper.Tally(ctx, proposal)
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
 }
@@ -84,7 +83,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -111,7 +110,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, _, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -137,7 +136,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -165,7 +164,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits)
@@ -193,7 +192,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -221,7 +220,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -249,7 +248,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -271,7 +270,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	_, err := app.StakingKeeper.Delegate(ctx, addrs[4], delTokens, stakingtypes.Unbonded, val1, true)
 	assert.NilError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	app.StakingKeeper.EndBlocker(ctx)
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "", "test", "description", addrs[0], false)
@@ -287,7 +286,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -309,7 +308,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	assert.NilError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	app.StakingKeeper.EndBlocker(ctx)
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "", "test", "description", addrs[0], false)
@@ -324,7 +323,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -350,7 +349,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
 	assert.NilError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	app.StakingKeeper.EndBlocker(ctx)
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "", "test", "description", addrs[0], false)
@@ -366,7 +365,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -394,7 +393,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	assert.NilError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	app.StakingKeeper.EndBlocker(ctx)
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "", "test", "description", addrs[0], false)
@@ -409,7 +408,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -435,7 +434,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	assert.NilError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	app.StakingKeeper.EndBlocker(ctx)
 
 	consAddr, err := val2.GetConsAddr()
 	assert.NilError(t, err)
@@ -454,7 +453,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -489,7 +488,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	assert.Assert(t, ok)
-	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)

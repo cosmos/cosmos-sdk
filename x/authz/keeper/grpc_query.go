@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 
 	"google.golang.org/grpc/codes"
@@ -10,7 +11,7 @@ import (
 	"cosmossdk.io/store/prefix"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
@@ -19,22 +20,21 @@ var _ authz.QueryServer = Keeper{}
 
 // Grants implements the Query/Grants gRPC method.
 // It returns grants for a granter-grantee pair. If msg type URL is set, it returns grants only for that msg type.
-func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
+func (k Keeper) Grants(ctx context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	granter, err := sdk.AccAddressFromBech32(req.Granter)
+	granter, err := k.authKeeper.StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	grantee, err := sdk.AccAddressFromBech32(req.Grantee)
+	grantee, err := k.authKeeper.StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
 	if req.MsgTypeUrl != "" {
 		grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, req.MsgTypeUrl))
 		if !found {
@@ -58,7 +58,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 		}, nil
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	key := grantStoreKey(grantee, granter, "")
 	grantsStore := prefix.NewStore(store, key)
 
@@ -90,18 +90,17 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 }
 
 // GranterGrants implements the Query/GranterGrants gRPC method.
-func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRequest) (*authz.QueryGranterGrantsResponse, error) {
+func (k Keeper) GranterGrants(ctx context.Context, req *authz.QueryGranterGrantsRequest) (*authz.QueryGranterGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	granter, err := sdk.AccAddressFromBech32(req.Granter)
+	granter, err := k.authKeeper.StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
 	grants, pageRes, err := query.GenericFilteredPaginate(k.cdc, authzStore, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
@@ -117,7 +116,7 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 
 		grantee := firstAddressFromGrantStoreKey(key)
 		return &authz.GrantAuthorization{
-			Granter:       granter.String(),
+			Granter:       req.Granter,
 			Grantee:       grantee.String(),
 			Authorization: any,
 			Expiration:    auth.Expiration,
@@ -136,18 +135,17 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 }
 
 // GranteeGrants implements the Query/GranteeGrants gRPC method.
-func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRequest) (*authz.QueryGranteeGrantsResponse, error) {
+func (k Keeper) GranteeGrants(ctx context.Context, req *authz.QueryGranteeGrantsRequest) (*authz.QueryGranteeGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	grantee, err := sdk.AccAddressFromBech32(req.Grantee)
+	grantee, err := k.authKeeper.StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
+	store := prefix.NewStore(runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx)), GrantKey)
 
 	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, store, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
 		auth1, err := auth.GetAuthorization()
@@ -156,7 +154,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 		}
 
 		granter, g, _ := parseGrantStoreKey(append(GrantKey, key...))
-		if !g.Equals(grantee) {
+		if !bytes.Equal(g, grantee) {
 			return nil, nil
 		}
 
@@ -169,7 +167,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 			Authorization: authorizationAny,
 			Expiration:    auth.Expiration,
 			Granter:       granter.String(),
-			Grantee:       grantee.String(),
+			Grantee:       req.Grantee,
 		}, nil
 	}, func() *authz.Grant {
 		return &authz.Grant{}

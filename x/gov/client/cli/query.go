@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -17,7 +17,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd() *cobra.Command {
+func GetQueryCmd(ac address.Codec) *cobra.Command {
 	// Group gov queries under a subcommand
 	govQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -29,8 +29,8 @@ func GetQueryCmd() *cobra.Command {
 
 	govQueryCmd.AddCommand(
 		GetCmdQueryProposal(),
-		GetCmdQueryProposals(),
-		GetCmdQueryVote(),
+		GetCmdQueryProposals(ac),
+		GetCmdQueryVote(ac),
 		GetCmdQueryVotes(),
 		GetCmdQueryParams(),
 		GetCmdQueryParam(),
@@ -93,7 +93,7 @@ $ %s query gov proposal 1
 
 // GetCmdQueryProposals implements a query proposals command. Command to Get
 // Proposals Information.
-func GetCmdQueryProposals() *cobra.Command {
+func GetCmdQueryProposals(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proposals",
 		Short: "Query proposals with optional filters",
@@ -117,14 +117,14 @@ $ %s query gov proposals --page=2 --limit=100
 			var proposalStatus v1.ProposalStatus
 
 			if len(bechDepositorAddr) != 0 {
-				_, err := sdk.AccAddressFromBech32(bechDepositorAddr)
+				_, err := ac.StringToBytes(bechDepositorAddr)
 				if err != nil {
 					return err
 				}
 			}
 
 			if len(bechVoterAddr) != 0 {
-				_, err := sdk.AccAddressFromBech32(bechVoterAddr)
+				_, err := ac.StringToBytes(bechVoterAddr)
 				if err != nil {
 					return err
 				}
@@ -181,7 +181,7 @@ $ %s query gov proposals --page=2 --limit=100
 
 // GetCmdQueryVote implements the query proposal vote command. Command to Get a
 // Vote Information.
-func GetCmdQueryVote() *cobra.Command {
+func GetCmdQueryVote(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [voter-addr]",
 		Args:  cobra.ExactArgs(2),
@@ -218,7 +218,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			voterAddr, err := sdk.AccAddressFromBech32(args[1])
+			voterAddr, err := ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}

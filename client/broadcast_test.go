@@ -21,11 +21,11 @@ type MockClient struct {
 	err error
 }
 
-func (c MockClient) BroadcastTxAsync(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (c MockClient) BroadcastTxAsync(_ context.Context, _ cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 
-func (c MockClient) BroadcastTxSync(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (c MockClient) BroadcastTxSync(_ context.Context, _ cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 

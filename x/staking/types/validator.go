@@ -39,8 +39,6 @@ var (
 var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
-//
-//nolint:interfacer
 func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {
@@ -292,24 +290,24 @@ func (v Validator) InvalidExRate() bool {
 }
 
 // calculate the token worth of provided shares
-func (v Validator) TokensFromShares(shares sdk.Dec) math.LegacyDec {
+func (v Validator) TokensFromShares(shares math.LegacyDec) math.LegacyDec {
 	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
 }
 
 // calculate the token worth of provided shares, truncated
-func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) math.LegacyDec {
+func (v Validator) TokensFromSharesTruncated(shares math.LegacyDec) math.LegacyDec {
 	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
 }
 
 // TokensFromSharesRoundUp returns the token worth of provided shares, rounded
 // up.
-func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) math.LegacyDec {
+func (v Validator) TokensFromSharesRoundUp(shares math.LegacyDec) math.LegacyDec {
 	return (shares.MulInt(v.Tokens)).QuoRoundUp(v.DelegatorShares)
 }
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
 // returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokens(amt math.Int) (sdk.Dec, error) {
+func (v Validator) SharesFromTokens(amt math.Int) (math.LegacyDec, error) {
 	if v.Tokens.IsZero() {
 		return math.LegacyZeroDec(), ErrInsufficientShares
 	}
@@ -319,12 +317,12 @@ func (v Validator) SharesFromTokens(amt math.Int) (sdk.Dec, error) {
 
 // SharesFromTokensTruncated returns the truncated shares of a delegation given
 // a bond amount. It returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokensTruncated(amt math.Int) (sdk.Dec, error) {
+func (v Validator) SharesFromTokensTruncated(amt math.Int) (math.LegacyDec, error) {
 	if v.Tokens.IsZero() {
 		return math.LegacyZeroDec(), ErrInsufficientShares
 	}
 
-	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(sdk.NewDecFromInt(v.GetTokens())), nil
+	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(math.LegacyNewDecFromInt(v.GetTokens())), nil
 }
 
 // get the bonded tokens which the validator holds
@@ -359,12 +357,12 @@ func (v Validator) UpdateStatus(newStatus BondStatus) Validator {
 }
 
 // AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromDel(amount math.Int) (Validator, sdk.Dec) {
+func (v Validator) AddTokensFromDel(amount math.Int) (Validator, math.LegacyDec) {
 	// calculate the shares to issue
-	var issuedShares sdk.Dec
+	var issuedShares math.LegacyDec
 	if v.DelegatorShares.IsZero() {
 		// the first delegation to a validator sets the exchange rate to one
-		issuedShares = sdk.NewDecFromInt(amount)
+		issuedShares = math.LegacyNewDecFromInt(amount)
 	} else {
 		shares, err := v.SharesFromTokens(amount)
 		if err != nil {
@@ -399,7 +397,7 @@ func (v Validator) RemoveTokens(tokens math.Int) Validator {
 // NOTE: because token fractions are left in the valiadator,
 //
 //	the exchange rate of future shares of this validator can increase.
-func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, math.Int) {
+func (v Validator) RemoveDelShares(delShares math.LegacyDec) (Validator, math.Int) {
 	remainingShares := v.DelegatorShares.Sub(delShares)
 
 	var issuedTokens math.Int

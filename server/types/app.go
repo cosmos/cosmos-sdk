@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -50,10 +51,13 @@ type (
 		RegisterTendermintService(client.Context)
 
 		// RegisterNodeService registers the node gRPC Query service.
-		RegisterNodeService(client.Context)
+		RegisterNodeService(client.Context, config.Config)
 
 		// CommitMultiStore return the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore
+
+		// Return the snapshot manager
+		SnapshotManager() *snapshots.Manager
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

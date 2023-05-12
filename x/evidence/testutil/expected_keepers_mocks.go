@@ -9,6 +9,8 @@ import (
 	reflect "reflect"
 	time "time"
 
+	comet "cosmossdk.io/core/comet"
+	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -157,7 +159,7 @@ func (mr *MockSlashingKeeperMockRecorder) JailUntil(arg0, arg1, arg2 interface{}
 }
 
 // Slash mocks base method.
-func (m *MockSlashingKeeper) Slash(arg0 types0.Context, arg1 types0.ConsAddress, arg2 types0.Dec, arg3, arg4 int64) {
+func (m *MockSlashingKeeper) Slash(arg0 types0.Context, arg1 types0.ConsAddress, arg2 math.LegacyDec, arg3, arg4 int64) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
 }
@@ -169,10 +171,10 @@ func (mr *MockSlashingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 int
 }
 
 // SlashFractionDoubleSign mocks base method.
-func (m *MockSlashingKeeper) SlashFractionDoubleSign(arg0 types0.Context) types0.Dec {
+func (m *MockSlashingKeeper) SlashFractionDoubleSign(arg0 types0.Context) math.LegacyDec {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SlashFractionDoubleSign", arg0)
-	ret0, _ := ret[0].(types0.Dec)
+	ret0, _ := ret[0].(math.LegacyDec)
 	return ret0
 }
 
@@ -183,7 +185,7 @@ func (mr *MockSlashingKeeperMockRecorder) SlashFractionDoubleSign(arg0 interface
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 types0.Context, arg1 types0.ConsAddress, arg2 types0.Dec, arg3, arg4 int64, arg5 types1.Infraction) {
+func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 types0.Context, arg1 types0.ConsAddress, arg2 math.LegacyDec, arg3, arg4 int64, arg5 types1.Infraction) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
 }
@@ -304,4 +306,41 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types0.Context, sender
 func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
+}
+
+// MockCometinfo is a mock of Cometinfo interface.
+type MockCometinfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockCometinfoMockRecorder
+}
+
+// MockCometinfoMockRecorder is the mock recorder for MockCometinfo.
+type MockCometinfoMockRecorder struct {
+	mock *MockCometinfo
+}
+
+// NewMockCometinfo creates a new mock instance.
+func NewMockCometinfo(ctrl *gomock.Controller) *MockCometinfo {
+	mock := &MockCometinfo{ctrl: ctrl}
+	mock.recorder = &MockCometinfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCometinfo) EXPECT() *MockCometinfoMockRecorder {
+	return m.recorder
+}
+
+// GetCometBlockInfo mocks base method.
+func (m *MockCometinfo) GetCometBlockInfo(arg0 context.Context) comet.BlockInfo {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCometBlockInfo", arg0)
+	ret0, _ := ret[0].(comet.BlockInfo)
+	return ret0
+}
+
+// GetCometBlockInfo indicates an expected call of GetCometBlockInfo.
+func (mr *MockCometinfoMockRecorder) GetCometBlockInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometBlockInfo", reflect.TypeOf((*MockCometinfo)(nil).GetCometBlockInfo), arg0)
 }

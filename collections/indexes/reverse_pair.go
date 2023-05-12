@@ -26,7 +26,7 @@ type pairKeyCodec[K1, K2 any] interface {
 // NewReversePair instantiates a new ReversePair index.
 // NOTE: when using this function you will need to type hint: doing NewReversePair[Value]()
 // Example: if the value of the indexed map is string, you need to do NewReversePair[string](...)
-func NewReversePair[Value any, K1, K2 any](
+func NewReversePair[Value, K1, K2 any](
 	sb *collections.SchemaBuilder,
 	prefix collections.Prefix,
 	name string,

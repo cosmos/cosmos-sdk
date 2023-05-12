@@ -2,6 +2,7 @@ package flag
 
 import (
 	"context"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/pflag"
@@ -97,6 +98,8 @@ func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type 
 	}
 
 	switch field.Kind() {
+	case protoreflect.BytesKind:
+		return binaryType{}
 	case protoreflect.EnumKind:
 		return enumType{enum: field.Enum()}
 	case protoreflect.MessageKind:

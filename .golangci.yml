@@ -4,6 +4,8 @@ run:
   sort-results: true
   allow-parallel-runners: true
   exclude-dir: testutil/testdata
+  skip-files:
+    - server/grpc/gogoreflection/fix_registration.go
 
 linters:
   disable-all: true
@@ -43,6 +45,9 @@ issues:
         - stylecheck
     - path: "migrations"
       text: "SA1019:"
+      linters:
+        - staticcheck
+    - text: "SA1019: codec.NewAminoCodec is deprecated" # TODO remove once migration path is set out
       linters:
         - staticcheck
     - text: "leading space"
@@ -112,3 +117,4 @@ linters-settings:
     disabled-checks:
       - regexpMust
       - appendAssign
+      - ifElseChain

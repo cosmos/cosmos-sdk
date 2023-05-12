@@ -1,13 +1,16 @@
 package tx_test
 
 import (
+	"context"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -23,7 +26,7 @@ var (
 
 	msg     = testdata.NewTestMsg(tipperAddr, aux2Addr)
 	memo    = "test-memo"
-	tip     = &txtypes.Tip{Tipper: tipperAddr.String(), Amount: sdk.NewCoins(sdk.NewCoin("tip-denom", sdk.NewIntFromUint64(123)))}
+	tip     = &txtypes.Tip{Tipper: tipperAddr.String(), Amount: sdk.NewCoins(sdk.NewCoin("tip-denom", math.NewIntFromUint64(123)))}
 	chainID = "test-chain"
 	gas     = testdata.NewTestGasLimit()
 	fee     = testdata.NewTestFeeAmount()
@@ -130,17 +133,18 @@ func TestBuilderWithAux(t *testing.T) {
 		PubKey:   feepayerPk,
 		Sequence: 15,
 	})
-	signBz, err = txConfig.SignModeHandler().GetSignBytes(
-		signing.SignMode_SIGN_MODE_DIRECT,
-		authsigning.SignerData{
-			Address:       feepayerAddr.String(),
-			ChainID:       chainID,
-			AccountNumber: 11,
-			Sequence:      15,
-			PubKey:        feepayerPk,
-		},
-		w.GetTx(),
-	)
+	signerData := authsigning.SignerData{
+		Address:       feepayerAddr.String(),
+		ChainID:       chainID,
+		AccountNumber: 11,
+		Sequence:      15,
+		PubKey:        feepayerPk,
+	}
+
+	signBz, err = authsigning.GetSignBytesAdapter(
+		context.Background(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
+		signerData, w.GetTx())
+
 	require.NoError(t, err)
 	feepayerSig, err := feepayerPriv.Sign(signBz)
 	require.NoError(t, err)

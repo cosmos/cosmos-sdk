@@ -16,6 +16,7 @@ func TestGRPCQuery(t *testing.T) {
 }
 
 func (s *TestSuite) TestBalance() {
+	s.accountKeeper.EXPECT().StringToBytes("owner").Return(nil, fmt.Errorf("decoding bech32 failed")).AnyTimes()
 	var req *nft.QueryBalanceRequest
 	testCases := []struct {
 		msg      string

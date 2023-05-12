@@ -6,10 +6,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 
-	"cosmossdk.io/errors"
-
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -28,8 +28,10 @@ func NewQuerier(keeper Keeper) Querier {
 
 // Params queries params of distribution module
 func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	params := k.GetParams(ctx)
+	params, err := k.GetParams(c)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
@@ -64,11 +66,21 @@ func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryVa
 		return nil, types.ErrNoDelegationExists
 	}
 
-	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	endingPeriod, err := k.IncrementValidatorPeriod(ctx, val)
+	if err != nil {
+		return nil, err
+	}
+
+	rewards, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	if err != nil {
+		return nil, err
+	}
 
 	// validator's commission
-	validatorCommission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+	validatorCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryValidatorDistributionInfoResponse{
 		Commission:      validatorCommission.Commission,
@@ -93,7 +105,16 @@ func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.Query
 	if err != nil {
 		return nil, err
 	}
-	rewards := k.GetValidatorOutstandingRewards(ctx, valAdr)
+
+	validator := k.stakingKeeper.Validator(ctx, valAdr)
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
+	}
+
+	rewards, err := k.GetValidatorOutstandingRewards(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: rewards}, nil
 }
@@ -114,7 +135,15 @@ func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidato
 	if err != nil {
 		return nil, err
 	}
-	commission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+
+	validator := k.stakingKeeper.Validator(ctx, valAdr)
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
+	}
+	commission, err := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryValidatorCommissionResponse{Commission: commission}, nil
 }
@@ -133,12 +162,12 @@ func (k Querier) ValidatorSlashes(c context.Context, req *types.QueryValidatorSl
 		return nil, status.Errorf(codes.InvalidArgument, "starting height greater than ending height (%d > %d)", req.StartingHeight, req.EndingHeight)
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")
 	}
+
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(c))
 	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
 
 	events, pageRes, err := query.GenericFilteredPaginate(k.cdc, slashesStore, req.Pagination, func(key []byte, result *types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
@@ -188,7 +217,7 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
-	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -197,8 +226,15 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 		return nil, types.ErrNoDelegationExists
 	}
 
-	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	endingPeriod, err := k.IncrementValidatorPeriod(ctx, val)
+	if err != nil {
+		return nil, err
+	}
+
+	rewards, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
 }
@@ -218,7 +254,7 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 	total := sdk.DecCoins{}
 	var delRewards []types.DelegationDelegatorReward
 
-	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -228,8 +264,15 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
-			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-			delReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+			endingPeriod, err := k.IncrementValidatorPeriod(ctx, val)
+			if err != nil {
+				panic(err)
+			}
+
+			delReward, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+			if err != nil {
+				panic(err)
+			}
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
 			total = total.Add(delReward...)
@@ -251,7 +294,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -277,21 +320,25 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
-	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delAdr)
+	withdrawAddr, err := k.GetDelegatorWithdrawAddr(c, delAdr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr.String()}, nil
 }
 
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	pool := k.GetFeePoolCommunityCoins(ctx)
+	pool, err := k.GetFeePoolCommunityCoins(c)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
 }

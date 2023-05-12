@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -55,13 +55,13 @@ func GenExpeditedMinDeposit(r *rand.Rand, bondDenom string) sdk.Coins {
 }
 
 // GenDepositMinInitialRatio returns randomized DepositMinInitialRatio
-func GenDepositMinInitialDepositRatio(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
+func GenDepositMinInitialDepositRatio(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdkmath.LegacyNewDec(100))
 }
 
 // GenProposalCancelRate returns randomized ProposalCancelRate
-func GenProposalCancelRate(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
+func GenProposalCancelRate(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdkmath.LegacyNewDec(100))
 }
 
 // GenVotingPeriod returns randomized VotingPeriod
@@ -75,23 +75,23 @@ func GenExpeditedVotingPeriod(r *rand.Rand) time.Duration {
 }
 
 // GenQuorum returns randomized Quorum
-func GenQuorum(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
+func GenQuorum(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 }
 
 // GenThreshold returns randomized Threshold
-func GenThreshold(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, tallyNonExpeditedMax+1)), 3)
+func GenThreshold(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 450, tallyNonExpeditedMax+1)), 3)
 }
 
 // GenExpeditedThreshold randomized ExpeditedThreshold
-func GenExpeditedThreshold(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, tallyNonExpeditedMax, 550)), 3)
+func GenExpeditedThreshold(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, tallyNonExpeditedMax, 550)), 3)
 }
 
 // GenVeto returns randomized Veto
-func GenVeto(r *rand.Rand) math.LegacyDec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
+func GenVeto(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }
 
 // RandomizedGenState generates a random GenesisState for gov
@@ -116,13 +116,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { depositPeriod = GenDepositPeriod(r) },
 	)
 
-	var minInitialDepositRatio sdk.Dec
+	var minInitialDepositRatio sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, MinInitialRatio, &minInitialDepositRatio, simState.Rand,
 		func(r *rand.Rand) { minInitialDepositRatio = GenDepositMinInitialDepositRatio(r) },
 	)
 
-	var proposalCancelRate sdk.Dec
+	var proposalCancelRate sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, ProposalCancelRate, &proposalCancelRate, simState.Rand,
 		func(r *rand.Rand) { proposalCancelRate = GenProposalCancelRate(r) },
@@ -140,25 +140,25 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { expeditedVotingPeriod = GenExpeditedVotingPeriod(r) },
 	)
 
-	var quorum sdk.Dec
+	var quorum sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, Quorum, &quorum, simState.Rand,
 		func(r *rand.Rand) { quorum = GenQuorum(r) },
 	)
 
-	var threshold sdk.Dec
+	var threshold sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, Threshold, &threshold, simState.Rand,
 		func(r *rand.Rand) { threshold = GenThreshold(r) },
 	)
 
-	var expitedVotingThreshold sdk.Dec
+	var expitedVotingThreshold sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, ExpeditedThreshold, &expitedVotingThreshold, simState.Rand,
 		func(r *rand.Rand) { expitedVotingThreshold = GenExpeditedThreshold(r) },
 	)
 
-	var veto sdk.Dec
+	var veto sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, Veto, &veto, simState.Rand,
 		func(r *rand.Rand) { veto = GenVeto(r) },

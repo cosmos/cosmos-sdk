@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -92,8 +91,8 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // - client.Context field pre-populated & flag not set: uses pre-populated value
 // - client.Context field pre-populated & flag set: uses set flag value
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
-	if clientCtx.OutputFormat == "" || flagSet.Changed(cli.OutputFlag) {
-		output, _ := flagSet.GetString(cli.OutputFlag)
+	if clientCtx.OutputFormat == "" || flagSet.Changed(flags.FlagOutput) {
+		output, _ := flagSet.GetString(flags.FlagOutput)
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
@@ -305,8 +304,8 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		if isAux {
 			// If the user didn't explicitly set an --output flag, use JSON by
 			// default.
-			if clientCtx.OutputFormat == "" || !flagSet.Changed(cli.OutputFlag) {
-				clientCtx = clientCtx.WithOutputFormat("json")
+			if clientCtx.OutputFormat == "" || !flagSet.Changed(flags.FlagOutput) {
+				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
 			}
 
 			// If the user didn't explicitly set a --sign-mode flag, use
@@ -356,10 +355,11 @@ func GetClientContextFromCmd(cmd *cobra.Command) Context {
 }
 
 // SetCmdClientContext sets a command's Context value to the provided argument.
+// If the context has not been set, set the given context as the default.
 func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
 	v := cmd.Context().Value(ClientContextKey)
 	if v == nil {
-		return errors.New("client context not set")
+		v = &clientCtx
 	}
 
 	clientCtxPtr := v.(*Context)

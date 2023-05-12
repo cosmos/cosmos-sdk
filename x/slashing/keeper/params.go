@@ -3,6 +3,8 @@ package keeper
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -28,12 +30,12 @@ func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
 }
 
 // SlashFractionDoubleSign - fraction of power slashed in case of double sign
-func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	return k.GetParams(ctx).SlashFractionDoubleSign
 }
 
 // SlashFractionDowntime - fraction of power slashed for downtime
-func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	return k.GetParams(ctx).SlashFractionDowntime
 }
 
@@ -49,11 +51,8 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 }
 
 // SetParams sets the x/slashing module parameters.
+// CONTRACT: This method performs no validation of the parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	if err := params.Validate(); err != nil {
-		return err
-	}
-
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.ParamsKey, bz)

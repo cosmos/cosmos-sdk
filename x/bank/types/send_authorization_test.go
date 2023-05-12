@@ -7,6 +7,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -15,8 +16,8 @@ import (
 )
 
 var (
-	coins1000   = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
-	coins500    = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(500)))
+	coins1000   = sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
+	coins500    = sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(500)))
 	fromAddr    = sdk.AccAddress("_____from _____")
 	toAddr      = sdk.AccAddress("_______to________")
 	unknownAddr = sdk.AccAddress("_____unknown_____")

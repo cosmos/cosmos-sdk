@@ -2,14 +2,15 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // Deprecated: Use WeightedProposalMsg instead.
@@ -94,12 +95,15 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 	if moduleName == "" {
 		moduleName = msgType
 	}
-
-	if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
-		return NewOperationMsgBasic(moduleName, msgType, comment, ok, legacyMsg.GetSignBytes())
+	if cdc == nil {
+		cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
+	}
+	jsonBytes, err := cdc.MarshalAminoJSON(msg)
+	if err != nil {
+		panic(fmt.Errorf("failed to marshal aminon JSON: %w", err))
 	}
 
-	return NewOperationMsgBasic(moduleName, msgType, comment, ok, cdc.MustMarshalJSON(msg))
+	return NewOperationMsgBasic(moduleName, msgType, comment, ok, jsonBytes)
 }
 
 // NoOpMsg - create a no-operation message
@@ -174,11 +178,6 @@ type SelectOpFn func(r *rand.Rand) Operation
 
 // AppStateFn returns the app state json bytes and the genesis accounts
 type AppStateFn func(r *rand.Rand, accs []Account, config Config) (
-	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
-)
-
-// AppStateFnWithExtendedCb returns the app state json bytes and the genesis accounts
-type AppStateFnWithExtendedCb func(r *rand.Rand, accs []Account, config Config) (
 	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
 )
 

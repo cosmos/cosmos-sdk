@@ -9,6 +9,8 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -556,7 +558,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &v1beta1.QueryVoteResponse{Vote: v1beta1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []v1beta1.WeightedVoteOption{{Option: v1beta1.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0")}}}}
+				expRes = &v1beta1.QueryVoteResponse{Vote: v1beta1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []v1beta1.WeightedVoteOption{{Option: v1beta1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0")}}}}
 			},
 			true,
 		},
@@ -595,7 +597,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	suite.reset()
 	ctx, queryClient := suite.ctx, suite.queryClient
 
-	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(30000000))
+	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
 
 	var (
 		req      *v1.QueryVotesRequest
@@ -657,8 +659,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 					{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: v1.NewNonSplitVoteOption(v1.OptionAbstain)},
 					{ProposalId: proposal.Id, Voter: addrs[1].String(), Options: v1.NewNonSplitVoteOption(v1.OptionYes)},
 				}
-				accAddr1, err1 := sdk.AccAddressFromBech32(votes[0].Voter)
-				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)
+
+				codec := address.NewBech32Codec("cosmos")
+				accAddr1, err1 := codec.StringToBytes(votes[0].Voter)
+				accAddr2, err2 := codec.StringToBytes(votes[1].Voter)
 				suite.Require().NoError(err1)
 				suite.Require().NoError(err2)
 				suite.Require().NoError(suite.govKeeper.AddVote(ctx, proposal.Id, accAddr1, votes[0].Options, ""))
@@ -697,7 +701,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	suite.reset()
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
-	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(30000000))
+	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
 
 	var (
 		req      *v1beta1.QueryVotesRequest
@@ -759,8 +763,10 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 					{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionAbstain)},
 					{ProposalId: proposal.Id, Voter: addrs[1].String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes)},
 				}
-				accAddr1, err1 := sdk.AccAddressFromBech32(votes[0].Voter)
-				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)
+				codec := address.NewBech32Codec("cosmos")
+
+				accAddr1, err1 := codec.StringToBytes(votes[0].Voter)
+				accAddr2, err2 := codec.StringToBytes(votes[1].Voter)
 				suite.Require().NoError(err1)
 				suite.Require().NoError(err2)
 				suite.Require().NoError(suite.govKeeper.AddVote(ctx, proposal.Id, accAddr1, v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))

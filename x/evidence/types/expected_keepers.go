@@ -1,8 +1,11 @@
 package types
 
 import (
-	context "context"
+	"context"
 	"time"
+
+	"cosmossdk.io/core/comet"
+	sdkmath "cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,9 +27,9 @@ type (
 		IsTombstoned(sdk.Context, sdk.ConsAddress) bool
 		HasValidatorSigningInfo(sdk.Context, sdk.ConsAddress) bool
 		Tombstone(sdk.Context, sdk.ConsAddress)
-		Slash(sdk.Context, sdk.ConsAddress, sdk.Dec, int64, int64)
-		SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, sdk.Dec, int64, int64, stakingtypes.Infraction)
-		SlashFractionDoubleSign(sdk.Context) sdk.Dec
+		Slash(sdk.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64)
+		SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64, stakingtypes.Infraction)
+		SlashFractionDoubleSign(sdk.Context) sdkmath.LegacyDec
 		Jail(sdk.Context, sdk.ConsAddress)
 		JailUntil(sdk.Context, sdk.ConsAddress, time.Time)
 	}
@@ -41,5 +44,9 @@ type (
 		MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 		SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 		GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	}
+
+	Cometinfo interface {
+		comet.BlockInfoService
 	}
 )

@@ -40,7 +40,12 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 	// Right now, we're factorizing that call inside this function.
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/9236#discussion_r623803504
 	for _, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return err
 		}
 	}
@@ -167,7 +172,8 @@ func SignWithPrivKey(
 	var sigV2 signing.SignatureV2
 
 	// Generate the bytes to be signed.
-	signBytes, err := authsigning.GetSignBytesWithContext(txConfig.SignModeHandler(), ctx, signMode, signerData, txBuilder.GetTx())
+	signBytes, err := authsigning.GetSignBytesAdapter(
+		ctx, txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return sigV2, err
 	}
@@ -243,10 +249,14 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
 
+	var err error
 	signMode := txf.signMode
 	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode = txf.txConfig.SignModeHandler().DefaultMode()
+		signMode, err = authsigning.APISignModeToInternal(txf.txConfig.SignModeHandler().DefaultMode())
+		if err != nil {
+			return err
+		}
 	}
 
 	k, err := txf.keybase.Key(name)
@@ -308,8 +318,9 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return err
 	}
 
-	// Generate the bytes to be signed.
-	bytesToSign, err := authsigning.GetSignBytesWithContext(txf.txConfig.SignModeHandler(), ctx, signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesAdapter(
+		ctx, txf.txConfig.SignModeHandler(),
+		signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}

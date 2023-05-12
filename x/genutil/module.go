@@ -10,6 +10,7 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/genesis"
 
 	"cosmossdk.io/depinject"
 
@@ -80,13 +81,13 @@ type AppModule struct {
 
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
-	deliverTx        deliverTxfn
+	deliverTx        genesis.TxHandler
 	txEncodingConfig client.TxEncodingConfig
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper types.AccountKeeper,
-	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) module.GenesisOnlyAppModule {
 	return module.NewGenesisOnlyAppModule(AppModule{
@@ -132,19 +133,17 @@ func init() {
 	)
 }
 
-// GenutilInputs defines the inputs needed for the genutil module.
-//
-//nolint:revive
-type GenutilInputs struct {
+// ModuleInputs defines the inputs needed for the genutil module.
+type ModuleInputs struct {
 	depinject.In
 
 	AccountKeeper types.AccountKeeper
 	StakingKeeper types.StakingKeeper
-	DeliverTx     func(abci.RequestDeliverTx) abci.ResponseDeliverTx
+	DeliverTx     genesis.TxHandler
 	Config        client.TxConfig
 }
 
-func ProvideModule(in GenutilInputs) appmodule.AppModule {
+func ProvideModule(in ModuleInputs) appmodule.AppModule {
 	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
 	return m
 }

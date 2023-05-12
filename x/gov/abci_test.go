@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -33,7 +32,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
-	inactiveQueue := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -52,7 +51,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -60,21 +59,22 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
+	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*suite.GovKeeper.GetParams(ctx).MaxDepositPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
 	gov.EndBlocker(ctx, suite.GovKeeper)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 }
@@ -90,7 +90,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
-	inactiveQueue := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -109,7 +109,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -117,7 +117,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(2) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -137,16 +137,17 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NotNil(t, res)
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*suite.GovKeeper.GetParams(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
+	params, _ := suite.GovKeeper.Params.Get(ctx)
+	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
 	gov.EndBlocker(ctx, suite.GovKeeper)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -154,13 +155,13 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(5) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
 	gov.EndBlocker(ctx, suite.GovKeeper)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 }
@@ -176,10 +177,10 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
-	inactiveQueue := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	activeQueue := suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue, _ := suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
@@ -200,7 +201,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	proposalID := res.ProposalId
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -208,7 +209,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -218,7 +219,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res1)
 
-	activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 }
@@ -252,10 +253,10 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
-			inactiveQueue := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			inactiveQueue, _ := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, inactiveQueue.Valid())
 			inactiveQueue.Close()
-			activeQueue := suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			activeQueue, _ := suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, activeQueue.Valid())
 			activeQueue.Close()
 
@@ -279,33 +280,33 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, res1)
 
-			params := suite.GovKeeper.GetParams(ctx)
+			params, _ := suite.GovKeeper.Params.Get(ctx)
 			votingPeriod := params.VotingPeriod
 			if tc.expedited {
 				votingPeriod = params.ExpeditedVotingPeriod
 			}
 
 			newHeader = ctx.BlockHeader()
-			newHeader.Time = ctx.BlockHeader().Time.Add(*suite.GovKeeper.GetParams(ctx).MaxDepositPeriod).Add(*votingPeriod)
+			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*votingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, inactiveQueue.Valid())
 			inactiveQueue.Close()
 
-			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, ok := suite.GovKeeper.GetProposal(ctx, activeProposalID)
-			require.True(t, ok)
+			proposal, err := suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
 			activeQueue.Close()
 
 			gov.EndBlocker(ctx, suite.GovKeeper)
 
-			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			if !tc.expedited {
 				require.False(t, activeQueue.Valid())
 				activeQueue.Close()
@@ -316,8 +317,8 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID = types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, ok = suite.GovKeeper.GetProposal(ctx, activeProposalID)
-			require.True(t, ok)
+			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 			require.False(t, proposal.Expedited)
 			require.Equal(t, proposal.VotingStartTime.Add(*params.VotingPeriod), *proposal.VotingEndTime)
@@ -361,7 +362,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			proposer := addrs[0]
 
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-			staking.EndBlocker(ctx, suite.StakingKeeper)
+			suite.StakingKeeper.EndBlocker(ctx)
 
 			macc := suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -388,7 +389,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NoError(t, err)
 
 			newHeader := ctx.BlockHeader()
-			newHeader.Time = ctx.BlockHeader().Time.Add(*suite.GovKeeper.GetParams(ctx).MaxDepositPeriod).Add(*suite.GovKeeper.GetParams(ctx).VotingPeriod)
+			params, _ := suite.GovKeeper.Params.Get(ctx)
+			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
 			gov.EndBlocker(ctx, suite.GovKeeper)
@@ -416,7 +418,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	proposer := addrs[0]
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	staking.EndBlocker(ctx, suite.StakingKeeper)
+	suite.StakingKeeper.EndBlocker(ctx)
 
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
 	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false)
@@ -433,8 +435,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 	require.NoError(t, err)
 
+	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*suite.GovKeeper.GetParams(ctx).MaxDepositPeriod).Add(*suite.GovKeeper.GetParams(ctx).VotingPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	// validate that the proposal fails/has been rejected
@@ -446,8 +449,8 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.True(t, eventOk)
 	require.Contains(t, attr[0].Value, "failed on execution")
 
-	proposal, ok := suite.GovKeeper.GetProposal(ctx, proposal.Id)
-	require.True(t, ok)
+	proposal, err = suite.GovKeeper.GetProposal(ctx, proposal.Id)
+	require.Nil(t, err)
 	require.Equal(t, v1.StatusFailed, proposal.Status)
 }
 
@@ -482,7 +485,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(true)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
-			params := suite.GovKeeper.GetParams(ctx)
+			params, err := suite.GovKeeper.Params.Get(ctx)
+			require.NoError(t, err)
 
 			SortAddresses(addrs)
 
@@ -497,12 +501,12 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 			// Create a validator so that able to vote on proposal.
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-			staking.EndBlocker(ctx, suite.StakingKeeper)
+			suite.StakingKeeper.EndBlocker(ctx)
 
-			inactiveQueue := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			inactiveQueue, _ := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, inactiveQueue.Valid())
 			inactiveQueue.Close()
-			activeQueue := suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			activeQueue, _ := suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, activeQueue.Valid())
 			activeQueue.Close()
 
@@ -537,16 +541,16 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.ExpeditedVotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, inactiveQueue.Valid())
 			inactiveQueue.Close()
 
-			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, ok := suite.GovKeeper.GetProposal(ctx, activeProposalID)
-			require.True(t, ok)
+			proposal, err := suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
 			activeQueue.Close()
@@ -560,13 +564,13 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			// Here the expedited proposal is converted to regular after expiry.
 			gov.EndBlocker(ctx, suite.GovKeeper)
 
-			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 
 			if tc.expeditedPasses {
 				require.False(t, activeQueue.Valid())
 
-				proposal, ok = suite.GovKeeper.GetProposal(ctx, activeProposalID)
-				require.True(t, ok)
+				proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+				require.Nil(t, err)
 
 				require.Equal(t, v1.StatusPassed, proposal.Status)
 
@@ -589,8 +593,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			activeProposalID = types.GetProposalIDFromBytes(activeQueue.Value())
 			activeQueue.Close()
 
-			proposal, ok = suite.GovKeeper.GetProposal(ctx, activeProposalID)
-			require.True(t, ok)
+			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 			require.False(t, proposal.Expedited)
 			require.Equal(t, proposal.VotingStartTime.Add(*params.VotingPeriod), *proposal.VotingEndTime)
@@ -609,11 +613,11 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			inactiveQueue, _ = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, inactiveQueue.Valid())
 			inactiveQueue.Close()
 
-			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.True(t, activeQueue.Valid())
 
 			if tc.regularEventuallyPassing {
@@ -632,11 +636,11 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			submitterEventualBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[0])
 			depositorEventualBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[1])
 
-			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, activeQueue.Valid())
 
-			proposal, ok = suite.GovKeeper.GetProposal(ctx, activeProposalID)
-			require.True(t, ok)
+			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.Nil(t, err)
 
 			if tc.regularEventuallyPassing {
 				// Module account has refunded the deposit

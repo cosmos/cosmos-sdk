@@ -5,14 +5,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
-
+	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"github.com/spf13/cobra"
-	"gotest.tools/v3/assert"
-
 	"cosmossdk.io/client/v2/internal/testpb"
 )
 
@@ -225,18 +223,22 @@ func TestHelpMsg(t *testing.T) {
 	golden.Assert(t, conn.out.String(), "help-deprecated-msg.golden")
 }
 
-func TestBuildCustomMsgCommand(t *testing.T) {
+func TestBuildMsgCommand(t *testing.T) {
 	b := &Builder{}
 	customCommandCalled := false
-	cmd, err := b.BuildMsgCommand(map[string]*autocliv1.ModuleOptions{
-		"test": {
-			Tx: testCmdMsgDesc,
+	appOptions := AppOptions{
+		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+			"test": {
+				Tx: testCmdMsgDesc,
+			},
 		},
-	}, map[string]*cobra.Command{
+	}
+
+	cmd, err := b.BuildMsgCommand(appOptions, map[string]*cobra.Command{
 		"test": {Use: "test", Run: func(cmd *cobra.Command, args []string) {
 			customCommandCalled = true
 		}},
-	})
+	}, enhanceMsg)
 	assert.NilError(t, err)
 	cmd.SetArgs([]string{"test", "tx"})
 	assert.NilError(t, cmd.Execute())
@@ -260,21 +262,20 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 		},
 	}
 
-	opts := map[string]*autocliv1.ModuleOptions{
-		"test": {
-			Tx: commandDescriptor,
+	appOptions := AppOptions{
+		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+			"test": {
+				Tx: commandDescriptor,
+			},
 		},
 	}
-	_, err := b.BuildMsgCommand(opts, nil)
+
+	_, err := b.BuildMsgCommand(appOptions, nil, enhanceMsg)
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
 	nonExistentService := &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
-	opts = map[string]*autocliv1.ModuleOptions{
-		"test": {
-			Tx: nonExistentService,
-		},
-	}
-	_, err = b.BuildMsgCommand(opts, nil)
+	appOptions.ModuleOptions["test"].Tx = nonExistentService
+	_, err = b.BuildMsgCommand(appOptions, nil, enhanceMsg)
 	assert.ErrorContains(t, err, "can't find service un-existent-service")
 }
 
@@ -328,46 +329,35 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 
 func TestEnhanceMessageCommand(t *testing.T) {
 	b := &Builder{}
-	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
-		txCmdDesc := modOpts.Tx
-		if txCmdDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
-			err := b.AddMsgServiceCommands(cmd, txCmdDesc)
-			if err != nil {
-				return err
-			}
-
-			cmd.AddCommand(subCmd)
-		}
-		return nil
-	}
-
 	// Test that the command has a subcommand
 	cmd := &cobra.Command{Use: "test"}
 	cmd.AddCommand(&cobra.Command{Use: "test"})
-	options := map[string]*autocliv1.ModuleOptions{
-		"test": {},
+
+	appOptions := AppOptions{
+		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+			"test": {},
+		},
 	}
-	err := b.enhanceCommandCommon(cmd, options, map[string]*cobra.Command{}, enhanceMsg)
+
+	err := b.enhanceCommandCommon(cmd, appOptions, map[string]*cobra.Command{}, enhanceMsg)
 	assert.NilError(t, err)
 
 	cmd = &cobra.Command{Use: "test"}
-	options = map[string]*autocliv1.ModuleOptions{}
+
+	appOptions.ModuleOptions = map[string]*autocliv1.ModuleOptions{}
 	customCommands := map[string]*cobra.Command{
 		"test2": {Use: "test"},
 	}
-	err = b.enhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
+	err = b.enhanceCommandCommon(cmd, appOptions, customCommands, enhanceMsg)
 	assert.NilError(t, err)
 
 	cmd = &cobra.Command{Use: "test"}
-	options = map[string]*autocliv1.ModuleOptions{
-		"test": {Tx: nil},
+	appOptions = AppOptions{
+		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+			"test": {Tx: nil},
+		},
 	}
 	customCommands = map[string]*cobra.Command{}
-	err = b.enhanceCommandCommon(cmd, options, customCommands, enhanceMsg)
+	err = b.enhanceCommandCommon(cmd, appOptions, customCommands, enhanceMsg)
 	assert.NilError(t, err)
-}
-
-type testMessageServer struct {
-	testpb.UnimplementedMsgServer
 }

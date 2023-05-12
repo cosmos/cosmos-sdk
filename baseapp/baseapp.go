@@ -3,7 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"sort"
-	"strings"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -52,10 +52,10 @@ const (
 var _ abci.Application = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
-type BaseApp struct { //nolint: maligned
+type BaseApp struct {
 	// initialized on creation
 	logger            log.Logger
-	name              string                      // application name from abci.Info
+	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
@@ -66,17 +66,19 @@ type BaseApp struct { //nolint: maligned
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool         mempool.Mempool            // application side mempool
-	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
-	postHandler     sdk.PostHandler            // post handler, optional, e.g. for tips
-	initChainer     sdk.InitChainer            // initialize state with validators and state blob
-	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
-	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
-	prepareProposal sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
-	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
-	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
-	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
-	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	mempool            mempool.Mempool            // application side mempool
+	anteHandler        sdk.AnteHandler            // ante handler for fee and auth
+	postHandler        sdk.PostHandler            // post handler, optional, e.g. for tips
+	initChainer        sdk.InitChainer            // initialize state with validators and state blob
+	beginBlocker       sdk.BeginBlocker           // logic to run before any txs
+	processProposal    sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
+	prepareProposal    sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
+	endBlocker         sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
+	prepareCheckStater sdk.PrepareCheckStater     // logic to run during commit using the checkState
+	precommiter        sdk.Precommiter            // logic to run during commit using the deliverState
+	addrPeerFilter     sdk.PeerFilter             // filter peers by address and port
+	idPeerFilter       sdk.PeerFilter             // filter peers by node ID
+	fauxMerkleMode     bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -92,9 +94,6 @@ type BaseApp struct { //nolint: maligned
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache storetypes.MultiStorePersistentCache
-
-	// absent validators from begin block
-	voteInfos []abci.VoteInfo
 
 	// paramStore is used to query for ABCI consensus parameters from an
 	// application parameter store.
@@ -497,19 +496,21 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 		return fmt.Errorf("invalid height: %d", req.Header.Height)
 	}
 
-	// expectedHeight holds the expected height to validate.
+	lastBlockHeight := app.LastBlockHeight()
+
+	// expectedHeight holds the expected height to validate
 	var expectedHeight int64
-	if app.LastBlockHeight() == 0 && app.initialHeight > 1 {
-		// In this case, we're validating the first block of the chain (no
-		// previous commit). The height we're expecting is the initial height.
+	if lastBlockHeight == 0 && app.initialHeight > 1 {
+		// In this case, we're validating the first block of the chain, i.e no
+		// previous commit. The height we're expecting is the initial height.
 		expectedHeight = app.initialHeight
 	} else {
 		// This case can mean two things:
-		// - either there was already a previous commit in the store, in which
-		// case we increment the version from there,
-		// - or there was no previous commit, and initial version was not set,
-		// in which case we start at version 1.
-		expectedHeight = app.LastBlockHeight() + 1
+		//
+		// - Either there was already a previous commit in the store, in which
+		// case we increment the version from there.
+		// - Or there was no previous commit, in which case we start at version 1.
+		expectedHeight = lastBlockHeight + 1
 	}
 
 	if req.Header.Height != expectedHeight {
@@ -556,8 +557,12 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	}
 
 	for _, msg := range msgs {
-		err := msg.ValidateBasic()
-		if err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return err
 		}
 	}
@@ -599,8 +604,8 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 		panic(fmt.Sprintf("state is nil for mode %v", mode))
 	}
 	ctx := modeState.ctx.
-		WithTxBytes(txBytes).
-		WithVoteInfos(app.voteInfos)
+		WithTxBytes(txBytes)
+		// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
@@ -807,7 +812,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, isNonAtomic bool) (*sdk.Result, error) {
-	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 
@@ -856,10 +860,15 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, isN
 		// create message events
 		msgEvents := createEvents(msgResult.GetEvents(), msg)
 
-		// append message events, data and logs
+		// append message events and data
 		//
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
+		for j, event := range msgEvents {
+			// append message index to all events
+			msgEvents[j] = event.AppendAttributes(sdk.NewAttribute("msg_index", strconv.Itoa(i)))
+		}
+
 		events = events.AppendEvents(msgEvents)
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
@@ -875,7 +884,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, isN
 			msgResponses = append(msgResponses, msgResponse)
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
 	if (mode == runTxModeDeliver || mode == runTxModeSimulate) && !txSuccess {
@@ -889,7 +897,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, isN
 
 	return &sdk.Result{
 		Data:         data,
-		Log:          strings.TrimSpace(msgLogs.String()),
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil

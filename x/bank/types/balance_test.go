@@ -60,7 +60,7 @@ func TestBalanceValidate(t *testing.T) {
 			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 				Coins: sdk.Coins{
-					sdk.Coin{Denom: "uatom", Amount: sdk.NewInt(-1)},
+					sdk.Coin{Denom: "uatom", Amount: math.NewInt(-1)},
 				},
 			},
 			true,

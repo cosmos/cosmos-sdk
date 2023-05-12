@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -195,6 +197,51 @@ func TestQueryValidators(t *testing.T) {
 			Data: bz,
 		}
 		res, err := querier(ctx, []string{types.QueryValidator}, query)
+		require.NoError(t, err)
+
+		var queriedValidator types.Validator
+		err = cdc.UnmarshalJSON(res, &queriedValidator)
+		require.NoError(t, err)
+
+		require.True(t, validator.Equal(&queriedValidator))
+	}
+}
+
+func TestQueryValidatorByEVMAddres(t *testing.T) {
+	cdc, app, ctx := createTestInput(t)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
+
+	addrs := simapp.AddTestAddrs(app, ctx, 500, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
+
+	// Create Validators
+	amts := []sdk.Int{sdk.NewInt(8), sdk.NewInt(7)}
+	status := []types.BondStatus{types.Unbonded, types.Unbonding}
+	var validators [2]types.Validator
+	var evmAddresses [2]*common.Address
+	for i, amt := range amts {
+		randomEVMAddress, err := teststaking.RandomEVMAddress()
+		require.NoError(t, err)
+		evmAddresses[i] = randomEVMAddress
+		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i], *randomEVMAddress)
+		validators[i], _ = validators[i].AddTokensFromDel(amt)
+		validators[i] = validators[i].UpdateStatus(status[i])
+	}
+
+	app.StakingKeeper.SetValidator(ctx, validators[0])
+	app.StakingKeeper.SetValidator(ctx, validators[1])
+
+	// Query each validator
+	for i, validator := range validators {
+		queryParams := types.NewQueryValidatorByEVMAddressParams(*evmAddresses[i])
+		bz, err := cdc.MarshalJSON(queryParams)
+		require.NoError(t, err)
+
+		query := abci.RequestQuery{
+			Path: "/custom/staking/validatorByEVMAddress",
+			Data: bz,
+		}
+		res, err := querier(ctx, []string{types.QueryValidatorByEVMAddress}, query)
 		require.NoError(t, err)
 
 		var queriedValidator types.Validator

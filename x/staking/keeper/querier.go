@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/common"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -28,6 +31,9 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 
 		case types.QueryValidatorUnbondingDelegations:
 			return queryValidatorUnbondingDelegations(ctx, req, k, legacyQuerierCdc)
+
+		case types.QueryValidatorByEVMAddress:
+			return queryValidatorByEVMAddress(ctx, req, k, legacyQuerierCdc)
 
 		case types.QueryDelegation:
 			return queryDelegation(ctx, req, k, legacyQuerierCdc)
@@ -106,6 +112,31 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuer
 	}
 
 	validator, found := k.GetValidator(ctx, params.ValidatorAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, validator)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+}
+
+func queryValidatorByEVMAddress(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	var params types.QueryValidatorByEVMAddressParams
+
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	if !common.IsHexAddress(params.EVMAddress) {
+		return nil, fmt.Errorf("provided address is not an EVM address: %s", params.EVMAddress)
+	}
+
+	validator, found := k.GetValidatorByEVMAddress(ctx, common.HexToAddress(params.EVMAddress))
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}

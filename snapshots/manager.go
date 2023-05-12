@@ -400,6 +400,36 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	return false, nil
 }
 
+// RestoreLocalSnapshot restores app state from a local snapshot.
+func (m *Manager) RestoreLocalSnapshot(height uint64, format uint32) error {
+	snapshot, ch, err := m.store.Load(height, format)
+	if err != nil {
+		return err
+	}
+
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
+	err = m.beginLocked(opRestore)
+	if err != nil {
+		return err
+	}
+	defer m.endLocked()
+
+	return m.restoreSnapshot(*snapshot, ch)
+}
+
+// sortedExtensionNames sort extension names for deterministic iteration.
+func (m *Manager) sortedExtensionNames() []string {
+	names := make([]string, 0, len(m.extensions))
+	for name := range m.extensions {
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+	return names
+}
+
 // IsFormatSupported returns if the snapshotter supports restoration from given format.
 func IsFormatSupported(snapshotter types.ExtensionSnapshotter, format uint32) bool {
 	for _, i := range snapshotter.SupportedFormats() {

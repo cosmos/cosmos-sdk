@@ -3,7 +3,6 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"fmt"
 	"hash"
 	"io"
 	"math"
@@ -14,10 +13,9 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/errors"
-	"cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/snapshots/types"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -270,20 +268,11 @@ func (s *Store) Save(
 	snapshotHasher := sha256.New()
 	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
-		defer chunkBody.Close() //nolint: staticcheck
+		defer chunkBody.Close() //nolint:staticcheck
 		dir := s.pathSnapshot(height, format)
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
-		}
-		path := s.pathChunk(height, format, index)
-		file, err := os.Create(path)
-		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
-		}
-		defer file.Close() //nolint: staticcheck
-
-			dirCreated = true
 		}
 
 		if err := s.saveChunk(chunkBody, index, snapshot, chunkHasher, snapshotHasher); err != nil {
@@ -305,31 +294,25 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
 	chunkFile, err := os.Create(path)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
+		return sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 	}
 	defer chunkFile.Close()
 
 	chunkHasher.Reset()
 	if _, err := io.Copy(io.MultiWriter(chunkFile, chunkHasher, snapshotHasher), chunkBody); err != nil {
-		return errors.Wrapf(err, "failed to generate snapshot chunk %d", index)
+		return sdkerrors.Wrapf(err, "failed to generate snapshot chunk %d", index)
 	}
 
 	if err := chunkFile.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
+		return sdkerrors.Wrapf(err, "failed to close snapshot chunk file %d", index)
 	}
 
 	if err := chunkBody.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk body %d", index)
+		return sdkerrors.Wrapf(err, "failed to close snapshot chunk body %d", index)
 	}
 
 	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 	return nil
-}
-
-// saveChunkContent save the chunk to disk
-func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
-	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
-	return os.WriteFile(path, chunk, 0o600)
 }
 
 // saveSnapshot saves snapshot metadata to the database.

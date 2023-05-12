@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (simapp) [#15903](https://github.com/cosmos/cosmos-sdk/pull/15903) Add `AppStateFnWithExtendedCbs` with moduleStateCb callback function to allow access moduleState. Note, this function is present in simtestutil from `v0.47.2+`.
 * (gov) [#15979](https://github.com/cosmos/cosmos-sdk/pull/15979) Improve gov error message when failing to convert v1 proposal to v1beta1.
 * (server) [#16061](https://github.com/cosmos/cosmos-sdk/pull/16061) add comet bootstrap command
+* (store) [#16067](https://github.com/cosmos/cosmos-sdk/pull/16067) Add local snapshots management commands.
 
 ### Bug Fixes
 

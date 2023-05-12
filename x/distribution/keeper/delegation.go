@@ -144,7 +144,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 		// A small amount of this error is tolerated and corrected for,
 		// however any greater amount should be considered a breach in expected
 		// behavior.
-		marginOfErr := sdk.SmallestDec().MulInt64(3)
+		marginOfErr := math.LegacySmallestDec().MulInt64(3)
 		if stake.LTE(currentStake.Add(marginOfErr)) {
 			stake = currentStake
 		} else {

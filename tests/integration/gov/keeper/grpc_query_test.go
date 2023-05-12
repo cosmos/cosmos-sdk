@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -255,10 +256,10 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 }
 
 func v1TallyToV1Beta1Tally(t v1.TallyResult) v1beta1.TallyResult {
-	yes, _ := sdk.NewIntFromString(t.YesCount)
-	no, _ := sdk.NewIntFromString(t.NoCount)
-	noWithVeto, _ := sdk.NewIntFromString(t.NoWithVetoCount)
-	abstain, _ := sdk.NewIntFromString(t.AbstainCount)
+	yes, _ := math.NewIntFromString(t.YesCount)
+	no, _ := math.NewIntFromString(t.NoCount)
+	noWithVeto, _ := math.NewIntFromString(t.NoWithVetoCount)
+	abstain, _ := math.NewIntFromString(t.AbstainCount)
 	return v1beta1.TallyResult{
 		Yes:        yes,
 		No:         no,

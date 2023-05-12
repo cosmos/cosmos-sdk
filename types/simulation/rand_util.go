@@ -172,6 +172,6 @@ func (ms multiSource) Int63() (r int64) {
 	return r
 }
 
-func (ms multiSource) Seed(seed int64) {
+func (ms multiSource) Seed(_ int64) {
 	panic("multiSource Seed should not be called")
 }

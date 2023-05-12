@@ -17,7 +17,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Querier{}
+
+type Querier struct {
+	*Keeper
+}
+
+func NewQuerier(keeper *Keeper) Querier {
+	return Querier{Keeper: keeper}
+}
 
 // Evidence implements the Query/Evidence gRPC method
 func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {

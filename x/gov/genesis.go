@@ -11,9 +11,20 @@ import (
 
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
-	k.SetProposalID(ctx, data.StartingProposalId)
-	k.SetParams(ctx, *data.Params)
-	k.SetConstitution(ctx, data.Constitution)
+	err := k.SetProposalID(ctx, data.StartingProposalId)
+	if err != nil {
+		panic(err)
+	}
+
+	err = k.Params.Set(ctx, *data.Params)
+	if err != nil {
+		panic(err)
+	}
+
+	err = k.Constitution.Set(ctx, data.Constitution)
+	if err != nil {
+		panic(err)
+	}
 
 	// check if the deposits pool account exists
 	moduleAcc := k.GetGovernanceAccount(ctx)
@@ -54,19 +65,42 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
-func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
-	startingProposalID, _ := k.GetProposalID(ctx)
-	proposals := k.GetProposals(ctx)
-	constitution := k.GetConstitution(ctx)
-	params := k.GetParams(ctx)
+func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) {
+	startingProposalID, err := k.GetProposalID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	proposals, err := k.GetProposals(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	constitution, err := k.Constitution.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	var proposalsDeposits v1.Deposits
 	var proposalsVotes v1.Votes
 	for _, proposal := range proposals {
-		deposits := k.GetDeposits(ctx, proposal.Id)
+		deposits, err := k.GetDeposits(ctx, proposal.Id)
+		if err != nil {
+			return nil, err
+		}
+
 		proposalsDeposits = append(proposalsDeposits, deposits...)
 
-		votes := k.GetVotes(ctx, proposal.Id)
+		votes, err := k.GetVotes(ctx, proposal.Id)
+		if err != nil {
+			return nil, err
+		}
+
 		proposalsVotes = append(proposalsVotes, votes...)
 	}
 
@@ -77,5 +111,5 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 		Proposals:          proposals,
 		Params:             &params,
 		Constitution:       constitution,
-	}
+	}, nil
 }

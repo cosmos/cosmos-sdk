@@ -26,7 +26,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 
 	granter, err := k.authKeeper.StringToBytes(msg.Granter)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
 
 	if err := msg.Grant.ValidateBasic(); err != nil {

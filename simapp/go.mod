@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/api v0.4.1
 	cosmossdk.io/client/v2 v2.0.0-20230309163709-87da587416ba
-	cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4
+	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.0
@@ -198,29 +198,28 @@ replace (
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
+	// TODO: remove me after collections 0.2. is released.
+	cosmossdk.io/collections => ../collections
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
+	// TODO: remove after 0.7.0 release
+	cosmossdk.io/x/tx => ../x/tx
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 
 // Below are the long-lived replace of the SimApp
 replace (
-	// TODO: remove me after collections 0.2. is released.
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/core => ../core
-	// TODO: remove after 0.7.0 release
-	cosmossdk.io/x/tx => ../x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
-	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
+	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 	// Downgraded to avoid bugs in following commits which caused simulations to fail.
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )

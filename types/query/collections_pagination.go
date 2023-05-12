@@ -53,7 +53,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	predicateFunc func(key K, value V) (include bool, err error),
 	opts ...func(opt *CollectionsPaginateOptions[K]),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
-	pageReq = cleanupPageRequest(pageReq)
+	pageReq = initPageRequestDefaults(pageReq)
 
 	offset := pageReq.Offset
 	key := pageReq.Key

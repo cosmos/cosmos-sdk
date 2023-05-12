@@ -54,7 +54,7 @@ func Paginate(
 	pageRequest *PageRequest,
 	onResult func(key, value []byte) error,
 ) (*PageResponse, error) {
-	pageRequest = cleanupPageRequest(pageRequest)
+	pageRequest = initPageRequestDefaults(pageRequest)
 
 	if pageRequest.Offset > 0 && pageRequest.Key != nil {
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")

@@ -291,7 +291,8 @@ func simulateMsgSubmitProposal(
 
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
-		votingPeriod := k.GetParams(ctx).VotingPeriod
+		params, _ := k.Params.Get(ctx)
+		votingPeriod := params.VotingPeriod
 
 		fops := make([]simtypes.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
@@ -556,7 +557,7 @@ func randomDeposit(
 		return nil, true, nil // skip
 	}
 
-	params := k.GetParams(ctx)
+	params, _ := k.Params.Get(ctx)
 	minDeposit := params.MinDeposit
 	if expedited {
 		minDeposit = params.ExpeditedMinDeposit
@@ -596,7 +597,7 @@ func randomDeposit(
 
 // randomProposal
 func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposal {
-	proposals := k.GetProposals(ctx)
+	proposals, _ := k.GetProposals(ctx)
 	if len(proposals) == 0 {
 		return nil
 	}
@@ -622,8 +623,8 @@ func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1
 		initialProposalID = proposalID
 	}
 
-	proposal, ok := k.GetProposal(ctx, proposalID)
-	if !ok || proposal.Status != status {
+	proposal, err := k.GetProposal(ctx, proposalID)
+	if err != nil || proposal.Status != status {
 		return proposalID, false
 	}
 

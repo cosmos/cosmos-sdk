@@ -51,7 +51,7 @@ var _ abci.Application = (*BaseApp)(nil)
 type BaseApp struct {
 	// initialized on creation
 	logger            log.Logger
-	name              string                      // application name from abci.Info
+	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
@@ -90,9 +90,6 @@ type BaseApp struct {
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache storetypes.MultiStorePersistentCache
-
-	// absent validators from begin block
-	voteInfos []abci.VoteInfo
 
 	// paramStore is used to query for ABCI consensus parameters from an
 	// application parameter store.
@@ -579,8 +576,8 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 		panic(fmt.Sprintf("state is nil for mode %v", mode))
 	}
 	ctx := modeState.ctx.
-		WithTxBytes(txBytes).
-		WithVoteInfos(app.voteInfos)
+		WithTxBytes(txBytes)
+		// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 

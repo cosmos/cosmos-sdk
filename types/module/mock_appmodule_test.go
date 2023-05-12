@@ -25,4 +25,6 @@ type CoreAppModule interface {
 	appmodule.HasGenesis
 	appmodule.HasBeginBlocker
 	appmodule.HasEndBlocker
+	appmodule.HasPrecommit
+	appmodule.HasPrepareCheckState
 }

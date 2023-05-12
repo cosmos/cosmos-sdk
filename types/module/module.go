@@ -90,6 +90,30 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 	return moduleMap
 }
 
+// NewBasicManagerFromManager creates a new BasicManager from a Manager
+// The BasicManager will contain all AppModuleBasic from the AppModule Manager
+// Module's AppModuleBasic can be overridden by passing a custom AppModuleBasic map
+func NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic) BasicManager {
+	moduleMap := make(map[string]AppModuleBasic)
+	for name, module := range manager.Modules {
+		if customBasicMod, ok := customModuleBasics[name]; ok {
+			moduleMap[name] = customBasicMod
+			continue
+		}
+
+		if appModule, ok := module.(appmodule.AppModule); ok {
+			moduleMap[name] = CoreAppModuleBasicAdaptor(name, appModule)
+			continue
+		}
+
+		if basicMod, ok := module.(AppModuleBasic); ok {
+			moduleMap[name] = basicMod
+		}
+	}
+
+	return moduleMap
+}
+
 // RegisterLegacyAminoCodec registers all module codecs
 func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	for _, b := range bm {
@@ -206,20 +230,6 @@ type EndBlockAppModule interface {
 	AppModule
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
-
-// PrepareCheckStateAppModule is an extension interface that contains information about the AppModule
-// and PrepareCheckState.
-type PrepareCheckStateAppModule interface {
-	AppModule
-	PrepareCheckState(sdk.Context)
-}
-
-// PreommitAppModule is an extension interface that contains information about the AppModule and Precommit.
-type PrecommitAppModule interface {
-	AppModule
-	Precommit(sdk.Context)
-}
-
 type HasABCIEndblock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
@@ -375,7 +385,7 @@ func (m *Manager) SetOrderPrepareCheckStaters(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderPrepareCheckStaters", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasPrepareCheckState := module.(PrepareCheckStateAppModule)
+			_, hasPrepareCheckState := module.(appmodule.HasPrepareCheckState)
 			return !hasPrepareCheckState
 		})
 	m.OrderPrepareCheckStaters = moduleNames
@@ -386,7 +396,7 @@ func (m *Manager) SetOrderPrecommiters(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderPrecommiters", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasPrecommit := module.(PrecommitAppModule)
+			_, hasPrecommit := module.(appmodule.HasPrecommit)
 			return !hasPrecommit
 		})
 	m.OrderPrecommiters = moduleNames
@@ -764,25 +774,31 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 }
 
 // Precommit performs precommit functionality for all modules.
-func (m *Manager) Precommit(ctx sdk.Context) {
+func (m *Manager) Precommit(ctx sdk.Context) error {
 	for _, moduleName := range m.OrderPrecommiters {
-		module, ok := m.Modules[moduleName].(PrecommitAppModule)
+		module, ok := m.Modules[moduleName].(appmodule.HasPrecommit)
 		if !ok {
 			continue
 		}
-		module.Precommit(ctx)
+		if err := module.Precommit(ctx); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // PrepareCheckState performs functionality for preparing the check state for all modules.
-func (m *Manager) PrepareCheckState(ctx sdk.Context) {
+func (m *Manager) PrepareCheckState(ctx sdk.Context) error {
 	for _, moduleName := range m.OrderPrepareCheckStaters {
-		module, ok := m.Modules[moduleName].(PrepareCheckStateAppModule)
+		module, ok := m.Modules[moduleName].(appmodule.HasPrepareCheckState)
 		if !ok {
 			continue
 		}
-		module.PrepareCheckState(ctx)
+		if err := module.PrepareCheckState(ctx); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // GetVersionMap gets consensus version from all modules

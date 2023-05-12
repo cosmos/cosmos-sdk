@@ -102,16 +102,6 @@ func InactiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
 	return append(InactiveProposalByTimeKey(endTime), GetProposalIDBytes(proposalID)...)
 }
 
-// DepositsKey gets the first part of the deposits key based on the proposalID
-func DepositsKey(proposalID uint64) []byte {
-	return append(DepositsKeyPrefix, GetProposalIDBytes(proposalID)...)
-}
-
-// DepositKey key of a specific deposit from the store
-func DepositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
-	return append(DepositsKey(proposalID), address.MustLengthPrefix(depositorAddr.Bytes())...)
-}
-
 // VotesKey gets the first part of the votes key based on the proposalID
 func VotesKey(proposalID uint64) []byte {
 	return append(VotesKeyPrefix, GetProposalIDBytes(proposalID)...)

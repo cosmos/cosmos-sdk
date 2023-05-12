@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/collections"
 	"errors"
 	"fmt"
 	"time"
@@ -323,7 +324,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx context.Context, params v1.QueryPr
 
 		// match depositor (if supplied)
 		if len(params.Depositor) > 0 {
-			_, err = keeper.GetDeposit(ctx, p.Id, params.Depositor)
+			_, err = keeper.Deposits.Get(ctx, collections.Join(p.Id, params.Depositor))
 			// if no error, deposit found, matchDepositor = true
 			matchDepositor = err == nil
 		}

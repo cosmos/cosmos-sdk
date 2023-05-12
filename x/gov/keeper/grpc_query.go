@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/collections"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -91,9 +92,9 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 				if err != nil {
 					return nil, err
 				}
-				_, err = q.k.GetDeposit(ctx, p.Id, depositor)
+				has, err := q.k.Deposits.Has(ctx, collections.Join(p.Id, sdk.AccAddress(depositor)))
 				// if no error, deposit found, matchDepositor = true
-				matchDepositor = err == nil
+				matchDepositor = err == nil && has
 			}
 
 			if matchVoter && matchDepositor && matchStatus {
@@ -225,7 +226,7 @@ func (q queryServer) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (
 	if err != nil {
 		return nil, err
 	}
-	deposit, err := q.k.GetDeposit(ctx, req.ProposalId, depositor)
+	deposit, err := q.k.Deposits.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(depositor)))
 	if err != nil {
 		if errors.IsOf(err, types.ErrDepositNotFound) {
 			return nil, status.Errorf(codes.InvalidArgument,
@@ -248,19 +249,10 @@ func (q queryServer) Deposits(ctx context.Context, req *v1.QueryDepositsRequest)
 	}
 
 	var deposits []*v1.Deposit
-
-	store := q.k.storeService.OpenKVStore(ctx)
-	depositStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.DepositsKey(req.ProposalId))
-
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
-		var deposit v1.Deposit
-		if err := q.k.cdc.Unmarshal(value, &deposit); err != nil {
-			return err
-		}
-
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Deposits, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
 		deposits = append(deposits, &deposit)
-		return nil
-	})
+		return false, nil // we don't include results as they're being appended to the slice above.
+	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

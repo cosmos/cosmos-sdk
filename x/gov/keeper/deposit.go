@@ -17,26 +17,6 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-// GetDeposit gets the deposit of a specific depositor on a specific proposal
-func (keeper Keeper) GetDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit v1.Deposit, err error) {
-	store := keeper.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.DepositKey(proposalID, depositorAddr))
-	if err != nil {
-		return deposit, err
-	}
-
-	if bz == nil {
-		return deposit, types.ErrDepositNotFound
-	}
-
-	err = keeper.cdc.Unmarshal(bz, &deposit)
-	if err != nil {
-		return deposit, err
-	}
-
-	return deposit, nil
-}
-
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx context.Context, deposit v1.Deposit) error {
 	depositor, err := keeper.authKeeper.StringToBytes(deposit.Depositor)
@@ -155,12 +135,12 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	// Add or update deposit object
-	deposit, err := keeper.GetDeposit(ctx, proposalID, depositorAddr)
+	deposit, err := keeper.Deposits.Get(ctx, collections.Join(proposalID, depositorAddr))
 	switch {
 	case err == nil:
 		// deposit exists
 		deposit.Amount = sdk.NewCoins(deposit.Amount...).Add(depositAmount...)
-	case errors.IsOf(err, types.ErrDepositNotFound):
+	case errors.IsOf(err, collections.ErrNotFound):
 		// deposit doesn't exist
 		deposit = v1.NewDeposit(proposalID, depositorAddr, depositAmount)
 	default:
@@ -192,7 +172,6 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 // send to a destAddress if defined or burn otherwise.
 // Remaining funds are send back to the depositor.
 func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddress, proposalCancelRate string) error {
-	store := keeper.storeService.OpenKVStore(ctx)
 	rate := sdkmath.LegacyMustNewDecFromStr(proposalCancelRate)
 	var cancellationCharges sdk.Coins
 
@@ -234,11 +213,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 				return err
 			}
 		}
-
-		err = store.Delete(types.DepositKey(deposit.ProposalId, depositerAddress))
-		if err != nil {
-			return err
-		}
+		return keeper.Deposits.Remove(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositerAddress)))
 	}
 
 	// burn the cancellation fee or sent the cancellation charges to destination address.

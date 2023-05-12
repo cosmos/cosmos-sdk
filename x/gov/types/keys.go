@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"time"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -50,10 +52,10 @@ var (
 	VotesKeyPrefix = []byte{0x20}
 
 	// ParamsKey is the key to query all gov params
-	ParamsKey = []byte{0x30}
+	ParamsKey = collections.NewPrefix(48)
 
-	// KeyConstitution is the key string used to store the chain's constitution
-	KeyConstitution = []byte("constitution")
+	// ConstitutionKey is the key string used to store the chain's constitution
+	ConstitutionKey = collections.NewPrefix(49)
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))

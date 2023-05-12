@@ -21,12 +21,12 @@ import (
 type TimestampCodec struct{}
 
 const (
-	timestampDurationNilValue       = 0xFF
-	timestampDurationZeroNanosValue = 0x0
-	timestampDurationBufferSize     = 9
-	TimestampSecondsMin             = -62135596800
-	TimestampSecondsMax             = 253402300799
-	TimestampNanosMax               = 999999999
+	timestampDurationNilValue             = 0xFF
+	timestampDurationZeroNanosValue       = 0x0
+	timestampDurationBufferSize           = 9
+	TimestampSecondsMin             int64 = -62135596800
+	TimestampSecondsMax             int64 = 253402300799
+	TimestampNanosMax                     = 999999999
 )
 
 var (

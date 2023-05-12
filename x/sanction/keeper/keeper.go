@@ -49,7 +49,7 @@ func NewKeeper(
 		// using string(addr) here instead of addr.String() to cut down on the need to bech32 encode things.
 		rv.unsanctionableAddrs[string(addr)] = true
 	}
-	bankKeeper.SetSanctionKeeper(rv)
+	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
 }
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -106,21 +107,28 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	op := simulation.SimulateMsgMultiSend(suite.app.AccountKeeper, suite.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	require := suite.Require()
+	assert := suite.Assert()
 	require.NoError(err)
 
 	var msg types.MsgMultiSend
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Len(msg.Inputs, 3)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Inputs[1].Address)
-	require.Equal("185121068stake", msg.Inputs[1].Coins.String())
-	require.Len(msg.Outputs, 2)
-	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Outputs[1].Address)
-	require.Equal("260469617stake", msg.Outputs[1].Coins.String())
-	require.Equal(types.TypeMsgMultiSend, msg.Type())
-	require.Equal(types.ModuleName, msg.Route())
-	require.Len(futureOperations, 0)
+	if assert.Len(msg.Inputs, 1) {
+		assert.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Inputs[0].Address, "Inputs[0].Address")
+		assert.Equal("4896096stake", msg.Inputs[0].Coins.String(), "Inputs[0].Coins")
+	}
+	if assert.Len(msg.Outputs, 3) {
+		assert.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Outputs[0].Address, "Outputs[0].Address")
+		assert.Equal("600630stake", msg.Outputs[0].Coins.String(), "Outputs[0].Coins")
+		assert.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Outputs[1].Address, "Outputs[1].Address")
+		assert.Equal("891479stake", msg.Outputs[1].Coins.String(), "Outputs[1].Coins")
+		assert.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Outputs[2].Address, "Outputs[2].Address")
+		assert.Equal("3403987stake", msg.Outputs[2].Coins.String(), "Outputs[2].Coins")
+	}
+	assert.Equal(types.TypeMsgMultiSend, msg.Type())
+	assert.Equal(types.ModuleName, msg.Route())
+	assert.Len(futureOperations, 0)
 }
 
 func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {

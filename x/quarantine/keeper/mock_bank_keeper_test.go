@@ -39,7 +39,7 @@ func NewMockBankKeeper() *MockBankKeeper {
 	}
 }
 
-func (k *MockBankKeeper) SetQuarantineKeeper(_ banktypes.QuarantineKeeper) {
+func (k *MockBankKeeper) AppendSendRestriction(_ banktypes.SendRestrictionFn) {
 	// do nothing.
 }
 
@@ -47,7 +47,7 @@ func (k *MockBankKeeper) GetAllBalances(_ sdk.Context, addr sdk.AccAddress) sdk.
 	return k.AllBalances[string(addr)]
 }
 
-func (k *MockBankKeeper) SendCoinsBypassQuarantine(_ sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *MockBankKeeper) SendCoins(_ sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	if len(k.QueuedSendCoinsErrors) > 0 {
 		err := k.QueuedSendCoinsErrors[0]
 		k.QueuedSendCoinsErrors = k.QueuedSendCoinsErrors[1:]

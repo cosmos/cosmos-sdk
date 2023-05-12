@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -28,7 +31,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper q
 		bankKeeper:  bankKeeper,
 		fundsHolder: fundsHolder,
 	}
-	bankKeeper.SetQuarantineKeeper(rv)
+	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
 }
 
@@ -256,6 +259,14 @@ func (k Keeper) AddQuarantinedCoins(ctx sdk.Context, coins sdk.Coins, toAddr sdk
 			}
 		}
 	}
+	if qr.IsFullyAccepted() {
+		fromAddrStrs := make([]string, len(fromAddrs))
+		for i, addr := range fromAddrs {
+			fromAddrStrs[i] = addr.String()
+		}
+		return fmt.Errorf("cannot add quarantined funds %q to %s from %s: already fully accepted",
+			coins.String(), toAddr.String(), strings.Join(fromAddrStrs, ", "))
+	}
 	// Regardless of if its new or existing, set declined based on current auto-decline info.
 	qr.Declined = k.IsAutoDecline(ctx, toAddr, fromAddrs...)
 	k.SetQuarantineRecord(ctx, toAddr, qr)
@@ -273,7 +284,7 @@ func (k Keeper) AcceptQuarantinedFunds(ctx sdk.Context, toAddr sdk.AccAddress, f
 	for _, record := range k.GetQuarantineRecords(ctx, toAddr, fromAddrs...) {
 		if record.AcceptFrom(fromAddrs) {
 			if record.IsFullyAccepted() {
-				err := k.bankKeeper.SendCoinsBypassQuarantine(ctx, k.fundsHolder, toAddr, record.Coins)
+				err := k.bankKeeper.SendCoins(quarantine.WithBypass(ctx), k.fundsHolder, toAddr, record.Coins)
 				if err != nil {
 					return nil, err
 				}

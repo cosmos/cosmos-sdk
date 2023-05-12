@@ -16,7 +16,7 @@ type AccountKeeper interface {
 
 // BankKeeper defines the bank functionality needed from within the sanction module.
 type BankKeeper interface {
-	SetSanctionKeeper(keeper banktypes.SanctionKeeper)
+	AppendSendRestriction(restriction banktypes.SendRestrictionFn)
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 

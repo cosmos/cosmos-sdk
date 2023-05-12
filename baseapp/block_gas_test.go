@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
@@ -67,12 +68,11 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				&testdata.TestMsg{},
 			)
 			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{}, "", 0, encCfg, simapp.EmptyAppOptions{}, routerOpt)
-			// Disable the sanction and quarantine modules so that the sends (executed below) still consume the same amount of gas
+			// Disable the send restrictions so that the sends (executed below) still consume the same amount of gas
 			// as when this test was written. Without this, the expGasConsumed check fails due to an extra store lookup
 			// during a transfer (checking for sanction). I felt doing this was safer than trying to manually verify
 			// that the new gas numbers are correct so that the expected values could be updated with confidence.
-			app.BankKeeper.SetQuarantineKeeper(nil)
-			app.BankKeeper.SetSanctionKeeper(nil)
+			app.BankKeeper.ClearSendRestriction()
 			genState := simapp.GenesisStateWithSingleValidator(t, app)
 			stateBytes, err := tmjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)

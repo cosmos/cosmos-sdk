@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -17,12 +20,12 @@ import (
 type SendKeeper interface {
 	ViewKeeper
 
-	SetQuarantineKeeper(qk types.QuarantineKeeper)
-	SetSanctionKeeper(sk types.SanctionKeeper)
+	AppendSendRestriction(restriction types.SendRestrictionFn)
+	PrependSendRestriction(restriction types.SendRestrictionFn)
+	ClearSendRestriction()
 
-	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsBypassQuarantine(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
+	SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
@@ -37,9 +40,10 @@ type SendKeeper interface {
 
 	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
 	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
-	EnsureSendRestrictions(ctx sdk.Context, from, to string, coins ...sdk.Coin) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
+
+	GetAuthority() string
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -57,68 +61,60 @@ type BaseSendKeeper struct {
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
 
-	qk types.QuarantineKeeper
-	sk types.SanctionKeeper
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account.
+	authority string
 
-	sendRestrictionsFunc func(sdk.Context, string, string, string) error
+	sendRestriction *sendRestriction
 }
 
 func NewBaseSendKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
+	cdc codec.BinaryCodec,
+	storeKey storetypes.StoreKey,
+	ak types.AccountKeeper,
+	paramSpace paramtypes.Subspace,
+	blockedAddrs map[string]bool,
+	authority string,
 ) BaseSendKeeper {
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Errorf("invalid bank authority address: %w", err))
+	}
+
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
-		cdc:            cdc,
-		ak:             ak,
-		storeKey:       storeKey,
-		paramSpace:     paramSpace,
-		blockedAddrs:   blockedAddrs,
+		BaseViewKeeper:  NewBaseViewKeeper(cdc, storeKey, ak),
+		cdc:             cdc,
+		ak:              ak,
+		storeKey:        storeKey,
+		paramSpace:      paramSpace,
+		blockedAddrs:    blockedAddrs,
+		authority:       authority,
+		sendRestriction: newSendRestriction(),
 	}
 }
 
-// SetQuarantineKeeper sets the quarantine keeper to use in this bank keeper.
-//
-// This is done instead of providing it as an argument to NewBaseSendKeeper in order to prevent
-// circular dependencies, and fix the bootstrap problem of both keepers needing to know each other.
-// If no QuarantineKeeper is ever provided, quarantine functionality is disabled.
-func (k *BaseSendKeeper) SetQuarantineKeeper(qk types.QuarantineKeeper) {
-	// Allow setting it when it's currently not set. Also allow unsetting it.
-	// And if the provided one is the same as what's already set, that's okay too.
-	// But if it's already set, and is being changed, it's probably not on purpose, so panic.
-	if k.qk != nil && qk != nil && k.qk != qk {
-		panic("the quarantine keeper has already been set")
-	}
-	k.qk = qk
+// AppendSendRestriction adds the provided SendRestrictionFn to run after previously provided restrictions.
+func (k BaseSendKeeper) AppendSendRestriction(restriction types.SendRestrictionFn) {
+	k.sendRestriction.append(restriction)
 }
 
-// SetSanctionKeeper sets the sanction keeper to use in this bank keeper.
-//
-// This is done instead of providing it as an argument to NewBaseSendKeeper because the
-// SanctionKeeper is optional.
-// If no SanctionKeeper is ever provided, sanction functionality is disabled.
-func (k *BaseSendKeeper) SetSanctionKeeper(sk types.SanctionKeeper) {
-	// Allow setting it when it's currently not set. Also allow unsetting it.
-	// And if the provided one is the same as what's already set, that's okay too.
-	// But if it's already set, and is being changed, it's probably not on purpose, so panic.
-	if k.sk != nil && sk != nil && k.sk != sk {
-		panic("the sanction keeper has already been set")
-	}
-	k.sk = sk
+// PrependSendRestriction adds the provided SendRestrictionFn to run before previously provided restrictions.
+func (k BaseSendKeeper) PrependSendRestriction(restriction types.SendRestrictionFn) {
+	k.sendRestriction.prepend(restriction)
+}
+
+// ClearSendRestriction removes the send restriction (if there is one).
+func (k BaseSendKeeper) ClearSendRestriction() {
+	k.sendRestriction.clear()
+}
+
+func (k BaseSendKeeper) GetAuthority() string {
+	return k.authority
 }
 
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
-}
-
-// SetSendRestrictionsFunc set a function to be called before sends can occur
-// if not set, it is a no-op
-func (k *BaseSendKeeper) SetSendRestrictionsFunc(sendRestrictionsFunc func(sdk.Context, string, string, string) error) {
-	if k.sendRestrictionsFunc != nil {
-		panic("the send restrictions function has already been set")
-	}
-	k.sendRestrictionsFunc = sendRestrictionsFunc
 }
 
 // SetParams sets the total set of bank parameters.
@@ -130,83 +126,52 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &p)
 }
 
-// InputOutputCoins performs multi-send functionality. It accepts a series of
-// inputs that correspond to a series of outputs. It returns an error if the
-// inputs and outputs don't line up or if any single transfer of tokens fails.
-func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error {
+// InputOutputCoins performs multi-send functionality. It accepts an
+// input that corresponds to a series of outputs. It returns an error if the
+// input and outputs don't line up or if any single transfer of tokens fails.
+func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// Check supply invariant and validity of Coins.
-	if err := types.ValidateInputsOutputs(inputs, outputs); err != nil {
+	if err := types.ValidateInputsOutputs(input, outputs); err != nil {
 		return err
 	}
 
-	// ensure all inputs and outputs pass any restrictions
-	for _, input := range inputs {
-		for _, output := range outputs {
-			err := k.EnsureSendRestrictions(ctx, input.Address, output.Address, input.Coins...)
-			if err != nil {
-				return err
-			}
-		}
+	inAddress, err := sdk.AccAddressFromBech32(input.Address)
+	if err != nil {
+		return err
 	}
 
-	allInputAddrs := make([]sdk.AccAddress, len(inputs))
-
-	for i, in := range inputs {
-		inAddress, err := sdk.AccAddressFromBech32(in.Address)
-		if err != nil {
-			return err
-		}
-		allInputAddrs[i] = inAddress
-
-		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
-		if err != nil {
-			return err
-		}
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(types.AttributeKeySender, in.Address),
-			),
-		)
+	err = k.subUnlockedCoins(ctx, inAddress, input.Coins)
+	if err != nil {
+		return err
 	}
 
-	var qHolderAddrStr string
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(types.AttributeKeySender, input.Address),
+		),
+	)
 
 	for _, out := range outputs {
 		outAddress, err := sdk.AccAddressFromBech32(out.Address)
 		if err != nil {
 			return err
 		}
-		outAddressStr := out.Address
 
-		if k.qk != nil && k.qk.IsQuarantinedAddr(ctx, outAddress) && !k.qk.IsAutoAccept(ctx, outAddress, allInputAddrs...) {
-			qHolderAddr := k.qk.GetFundsHolder()
-			if len(qHolderAddr) == 0 {
-				return sdkerrors.ErrUnknownAddress.Wrapf("no quarantine holder account defined")
-			}
-
-			err = k.qk.AddQuarantinedCoins(ctx, out.Coins, outAddress, allInputAddrs...)
-			if err != nil {
-				return err
-			}
-
-			outAddress = qHolderAddr
-			if len(qHolderAddrStr) == 0 {
-				qHolderAddrStr = qHolderAddr.String()
-			}
-			outAddressStr = qHolderAddrStr
-		}
-
-		err = k.addCoins(ctx, outAddress, out.Coins)
+		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
+
+		if err = k.addCoins(ctx, outAddress, out.Coins); err != nil {
+			return err
+		}
+
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, outAddressStr),
+				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
@@ -231,27 +196,8 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 // Otherwise, the coins will be transferred from the fromAddr to the toAddr.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	if k.qk == nil || !k.qk.IsQuarantinedAddr(ctx, toAddr) || k.qk.IsAutoAccept(ctx, toAddr, fromAddr) {
-		return k.SendCoinsBypassQuarantine(ctx, fromAddr, toAddr, amt)
-	}
-
-	qHolderAddr := k.qk.GetFundsHolder()
-	if len(qHolderAddr) == 0 {
-		return sdkerrors.ErrUnknownAddress.Wrapf("no quarantine holder account defined")
-	}
-
-	if err := k.SendCoinsBypassQuarantine(ctx, fromAddr, qHolderAddr, amt); err != nil {
-		return err
-	}
-
-	return k.qk.AddQuarantinedCoins(ctx, amt, toAddr, fromAddr)
-}
-
-// SendCoinsBypassQuarantine transfers amt coins from a sending account to a receiving account without consideration
-// of possible quarantine on the toAddr.
-// An error is returned upon failure.
-func (k BaseSendKeeper) SendCoinsBypassQuarantine(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	err := k.EnsureSendRestrictions(ctx, fromAddr.String(), toAddr.String(), amt...)
+	var err error
+	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -298,9 +244,6 @@ func (k BaseSendKeeper) SendCoinsBypassQuarantine(ctx sdk.Context, fromAddr sdk.
 // returned if the resulting balance is negative or the initial amount is invalid.
 // A coin_spent event is emitted after.
 func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
-	if k.sk != nil && k.sk.IsSanctionedAddr(ctx, addr) {
-		return types.ErrSanctionedAccount.Wrap(addr.String())
-	}
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -310,25 +253,36 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
-		spendable := balance.Sub(locked)
 
-		_, hasNeg := sdk.Coins{spendable}.SafeSub(coin)
+		spendable, hasNeg := sdk.Coins{balance}.SafeSub(locked)
 		if hasNeg {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
+				"locked amount exceeds account balance funds: %s > %s", locked, balance)
+		}
+
+		if _, hasNeg = spendable.SafeSub(coin); hasNeg {
+			// If spendable is zero, .String() would just be "". So give it a zero coin entry for that message.
+			if spendable.IsZero() {
+				spendable = sdk.Coins{sdk.Coin{Denom: coin.Denom, Amount: sdk.ZeroInt()}}
+			}
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInsufficientFunds,
+				"spendable balance %s is smaller than %s",
+				spendable, coin,
+			)
 		}
 
 		newBalance := balance.Sub(coin)
 
-		err := k.setBalance(ctx, addr, newBalance)
-		if err != nil {
+		if err := k.setBalance(ctx, addr, newBalance); err != nil {
 			return err
 		}
 	}
 
-	// emit coin spent event
 	ctx.EventManager().EmitEvent(
 		types.NewCoinSpentEvent(addr, amt),
 	)
+
 	return nil
 }
 
@@ -446,21 +400,6 @@ func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) e
 	for _, coin := range coins {
 		if !k.getSendEnabledOrDefault(store, coin.Denom, getDefault) {
 			return types.ErrSendDisabled.Wrapf("%s transfers are currently disabled", coin.Denom)
-		}
-	}
-	return nil
-}
-
-// EnsureSendRestrictions applies the send restrictions function returns error if send restrictions do not pass
-// no-op if the send restrictions function is not set
-func (k *BaseSendKeeper) EnsureSendRestrictions(ctx sdk.Context, from, to string, coins ...sdk.Coin) error {
-	if k.sendRestrictionsFunc == nil {
-		return nil
-	}
-	for _, coin := range coins {
-		err := k.sendRestrictionsFunc(ctx, from, to, coin.Denom)
-		if err != nil {
-			return err
 		}
 	}
 	return nil
@@ -586,4 +525,42 @@ func (k BaseSendKeeper) getSendEnabledOrDefault(store sdk.KVStore, denom string,
 		return sendEnabled
 	}
 	return getDefault()
+}
+
+// sendRestriction is a struct that houses a SendRestrictionFn.
+// It exists so that the SendRestrictionFn can be updated in the SendKeeper without needing to have a pointer receiver.
+type sendRestriction struct {
+	fn types.SendRestrictionFn
+}
+
+// newSendRestriction creates a new sendRestriction with nil send restriction.
+func newSendRestriction() *sendRestriction {
+	return &sendRestriction{
+		fn: nil,
+	}
+}
+
+// append adds the provided restriction to this, to be run after the existing function.
+func (r *sendRestriction) append(restriction types.SendRestrictionFn) {
+	r.fn = r.fn.Then(restriction)
+}
+
+// prepend adds the provided restriction to this, to be run before the existing function.
+func (r *sendRestriction) prepend(restriction types.SendRestrictionFn) {
+	r.fn = restriction.Then(r.fn)
+}
+
+// clear removes the send restriction (sets it to nil).
+func (r *sendRestriction) clear() {
+	r.fn = nil
+}
+
+var _ types.SendRestrictionFn = sendRestriction{}.apply
+
+// apply applies the send restriction if there is one. If not, it's a no-op.
+func (r sendRestriction) apply(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+	if r.fn == nil {
+		return toAddr, nil
+	}
+	return r.fn(ctx, fromAddr, toAddr, amt)
 }

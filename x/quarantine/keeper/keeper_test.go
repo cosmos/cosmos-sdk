@@ -9,7 +9,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +20,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
 	"github.com/cosmos/cosmos-sdk/x/quarantine/keeper"
-	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
@@ -1333,6 +1335,8 @@ func (s *TestSuite) TestAddQuarantinedCoins() {
 		toAddr      int
 		fromAddrs   []int
 		expected    *quarantine.QuarantineRecord
+		expErrFmt   string
+		expErrAddrs []int
 	}{
 		{
 			name:      "new record is created",
@@ -1444,14 +1448,16 @@ func (s *TestSuite) TestAddQuarantinedCoins() {
 			},
 		},
 		{
-			name:       "new record from is auto-accept nothing stored",
-			addrBase:   "nrfa",
-			addrCount:  2,
-			autoAccept: []int{1},
-			coins:      s.cz("76trombones"),
-			toAddr:     0,
-			fromAddrs:  []int{1},
-			expected:   nil,
+			name:        "new record from is auto-accept nothing stored",
+			addrBase:    "nrfa",
+			addrCount:   2,
+			autoAccept:  []int{1},
+			coins:       s.cz("76trombones"),
+			toAddr:      0,
+			fromAddrs:   []int{1},
+			expected:    nil,
+			expErrFmt:   `cannot add quarantined funds "76trombones" to %s from %s: already fully accepted`,
+			expErrAddrs: []int{0, 1},
 		},
 		{
 			name:       "new record two froms first is auto-accept is marked as such",
@@ -1482,14 +1488,16 @@ func (s *TestSuite) TestAddQuarantinedCoins() {
 			},
 		},
 		{
-			name:       "new record two froms both auto-accept nothing stored",
-			addrBase:   "nr2ba",
-			addrCount:  3,
-			autoAccept: []int{1, 2},
-			coins:      s.cz("4moo"),
-			toAddr:     0,
-			fromAddrs:  []int{1, 2},
-			expected:   nil,
+			name:        "new record two froms both auto-accept nothing stored",
+			addrBase:    "nr2ba",
+			addrCount:   3,
+			autoAccept:  []int{1, 2},
+			coins:       s.cz("4moo"),
+			toAddr:      0,
+			fromAddrs:   []int{1, 2},
+			expected:    nil,
+			expErrFmt:   `cannot add quarantined funds "4moo" to %s from %s, %s: already fully accepted`,
+			expErrAddrs: []int{0, 1, 2},
 		},
 		{
 			name:      "existing record not declined not auto-decline result is not declined",
@@ -1751,6 +1759,15 @@ func (s *TestSuite) TestAddQuarantinedCoins() {
 			updateQR(addrs, tc.existing)
 			updateQR(addrs, tc.expected)
 
+			expErr := ""
+			if len(tc.expErrFmt) > 0 {
+				fmtArgs := make([]any, len(tc.expErrAddrs))
+				for i, addrsI := range tc.expErrAddrs {
+					fmtArgs[i] = addrs[addrsI]
+				}
+				expErr = fmt.Sprintf(tc.expErrFmt, fmtArgs...)
+			}
+
 			// Set the existing value
 			if tc.existing != nil {
 				testFuncSet := func() {
@@ -1772,24 +1789,32 @@ func (s *TestSuite) TestAddQuarantinedCoins() {
 				s.Require().NotPanics(testFuncAuto(fromAddr, quarantine.AUTO_RESPONSE_DECLINE), "SetAutoResponse %d decline", i+1)
 			}
 
-			// Create events expected to be emitted by AddQuarantinedCoins.
-			event, err := sdk.TypedEventToEvent(&quarantine.EventFundsQuarantined{
-				ToAddress: toAddr.String(),
-				Coins:     tc.coins,
-			})
-			s.Require().NoError(err, "TypedEventToEvent EventFundsQuarantined")
-			expectedEvents := sdk.Events{event}
+			expectedEvents := sdk.Events{}
+			if len(expErr) == 0 {
+				// Create events expected to be emitted by AddQuarantinedCoins.
+				event, err := sdk.TypedEventToEvent(&quarantine.EventFundsQuarantined{
+					ToAddress: toAddr.String(),
+					Coins:     tc.coins,
+				})
+				s.Require().NoError(err, "TypedEventToEvent EventFundsQuarantined")
+				expectedEvents = append(expectedEvents, event)
+			}
 
 			// Get a context with a fresh event manager and call AddQuarantinedCoins.
 			// Make sure it doesn't panic and make sure it doesn't return an error.
 			// Note: As of writing, the only error it could return is from emitting the events,
 			// and who knows how to actually trigger/test that.
 			ctx := s.sdkCtx.WithEventManager(sdk.NewEventManager())
+			var err error
 			testFuncAdd := func() {
 				err = s.keeper.AddQuarantinedCoins(ctx, tc.coins, toAddr, fromAddrs...)
 			}
 			s.Require().NotPanics(testFuncAdd, "AddQuarantinedCoins")
-			s.Require().NoError(err, "AddQuarantinedCoins")
+			if len(expErr) > 0 {
+				s.Require().EqualError(err, expErr, "AddQuarantinedCoins")
+			} else {
+				s.Require().NoError(err, "AddQuarantinedCoins")
+			}
 			actualEvents := ctx.EventManager().Events()
 			s.Assert().Equal(expectedEvents, actualEvents)
 

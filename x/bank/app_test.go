@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -257,32 +258,29 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 
 	app.Commit()
 
-	testCases := []appTestCase{
-		{
-			msgs:       []sdk.Msg{multiSendMsg3},
-			accNums:    []uint64{0, 2},
-			accSeqs:    []uint64{0, 0},
-			expSimPass: true,
-			expPass:    true,
-			privKeys:   []cryptotypes.PrivKey{priv1, priv4},
-			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr4, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 52)}},
-				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
-			},
+	tc := appTestCase{
+		msgs:       []sdk.Msg{multiSendMsg3},
+		accNums:    []uint64{0, 2},
+		accSeqs:    []uint64{0, 0},
+		expSimPass: false,
+		expPass:    false,
+		privKeys:   []cryptotypes.PrivKey{priv1, priv4},
+		expectedBalances: []expectedBalance{
+			{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
+			{addr4, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
+			{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
+			{addr3, sdk.Coins{}},
 		},
 	}
+	expErr := "multiple senders not allowed"
 
-	for _, tc := range testCases {
-		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-		txGen := simapp.MakeTestEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
-		require.NoError(t, err)
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	txGen := simapp.MakeTestEncodingConfig().TxConfig
+	_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+	require.EqualError(t, err, expErr, "SignCheckDeliver MsgMultiSend with two inputs")
 
-		for _, eb := range tc.expectedBalances {
-			simapp.CheckBalance(t, app, eb.addr, eb.coins)
-		}
+	for _, eb := range tc.expectedBalances {
+		simapp.CheckBalance(t, app, eb.addr, eb.coins)
 	}
 }
 

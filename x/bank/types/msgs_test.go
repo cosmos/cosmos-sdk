@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -213,9 +214,9 @@ func TestMsgMultiSendValidation(t *testing.T) {
 			},
 		},
 		{
-			true,
+			false,
 			MsgMultiSend{
-				Inputs:  []Input{input1, input2},
+				Inputs:  []Input{input1, input2}, // only 1 input allowed
 				Outputs: []Output{outputMulti},
 			},
 		},
@@ -229,12 +230,14 @@ func TestMsgMultiSendValidation(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		err := tc.tx.ValidateBasic()
-		if tc.valid {
-			require.Nil(t, err, "%d: %+v", i, err)
-		} else {
-			require.NotNil(t, err, "%d", i)
-		}
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			err := tc.tx.ValidateBasic()
+			if tc.valid {
+				require.NoError(t, err, "%d: %+v", i, err)
+			} else {
+				require.Error(t, err, "%d", i)
+			}
+		})
 	}
 }
 
@@ -280,9 +283,9 @@ func TestUpdateDenomMetadataGetSignBytes(t *testing.T) {
 	//from := sdk.AccAddress("input")
 	//coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
 	msg := MsgUpdateDenomMetadata{
-		Title: "title",
+		Title:       "title",
 		Description: "description",
-		Metadata: &Metadata {
+		Metadata: &Metadata{
 			Name:        "diamondback",
 			Symbol:      "DB",
 			Description: "The native staking token",

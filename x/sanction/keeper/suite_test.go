@@ -62,6 +62,11 @@ func (s *BaseTestSuite) BaseSetup() {
 	s.Keeper = s.App.SanctionKeeper.OnlyTestsWithGovKeeper(s.GovKeeper)
 }
 
+// AssertErrorContents calls testutil.AssertErrorContents using this suite's T.
+func (s *BaseTestSuite) AssertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
+	return testutil.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+}
+
 // GetStore gets the sanction module's store.
 func (s *BaseTestSuite) GetStore() sdk.KVStore {
 	return s.SdkCtx.KVStore(s.Keeper.OnlyTestsGetStoreKey())

@@ -176,7 +176,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		// random number of inputs/outputs between [1, 3]
-		inputs := make([]types.Input, r.Intn(3)+1)
+		inputs := make([]types.Input, 1)
 		outputs := make([]types.Output, r.Intn(3)+1)
 
 		// collect signer privKeys

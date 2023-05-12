@@ -55,7 +55,7 @@ var (
 	ParamsKey = collections.NewPrefix(30)
 
 	// ConstitutionKey is the key string used to store the chain's constitution
-	ConstitutionKey = collections.NewPrefix("constitution")
+	ConstitutionKey = collections.NewPrefix(31)
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))

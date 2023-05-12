@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/core/coins"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -19,7 +20,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/types/strings"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
@@ -124,7 +124,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	msg := msgWrapper.Value
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("65337742stake", strings.CoinsAsString(msg.Amount))
+	suite.Require().Equal("65337742stake", coins.LegacyFormatCoins(msg.Amount))
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.FromAddress)
 	suite.Require().Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.ToAddress)
 	suite.Require().Len(futureOperations, 0)
@@ -157,10 +157,10 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	require.True(operationMsg.OK)
 	require.Len(msg.Inputs, 1)
 	require.Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Inputs[0].Address)
-	require.Equal("114949958stake", strings.CoinsAsString(msg.Inputs[0].Coins))
+	require.Equal("114949958stake", coins.LegacyFormatCoins(msg.Inputs[0].Coins))
 	require.Len(msg.Outputs, 2)
 	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Outputs[1].Address)
-	require.Equal("107287087stake", strings.CoinsAsString(msg.Outputs[1].Coins))
+	require.Equal("107287087stake", coins.LegacyFormatCoins(msg.Outputs[1].Coins))
 	require.Len(futureOperations, 0)
 }
 

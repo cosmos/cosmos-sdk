@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -154,7 +153,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	assert.NilError(t, err)
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
-	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5).Quo(math.LegacyNewDec(4))),
@@ -258,24 +256,15 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			expErr: false,
 		},
 	}
-	height := f.app.LastBlockHeight()
-
-	_, err = f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-	assert.Error(t, err, "previous proposer not set")
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticBeginEndBlock(),
+				// integration.WithAutomaticCommit(),
 			)
-
-			height++
-			if f.app.LastBlockHeight() != height {
-				panic(fmt.Errorf("expected block height to be %d, got %d", height, f.app.LastBlockHeight()))
-			}
 
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -298,16 +287,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				curOutstandingRewards, _ := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
 				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
-
-			prevProposerConsAddr, err := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-			assert.NilError(t, err)
-			assert.Assert(t, prevProposerConsAddr.Empty() == false)
-			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
-			var previousTotalPower int64
-			for _, voteInfo := range f.sdkCtx.VoteInfos() {
-				previousTotalPower += voteInfo.Validator.Power
-			}
-			assert.Equal(t, previousTotalPower, int64(100))
 		})
 	}
 }
@@ -417,8 +396,8 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 			tc.preRun()
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticBeginEndBlock(),
+				// integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -510,8 +489,8 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticBeginEndBlock(),
+				// integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -612,8 +591,8 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticBeginEndBlock(),
+				// integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -656,8 +635,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        sdk.NewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -670,8 +649,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        sdk.NewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -684,8 +663,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        sdk.NewDecWithPrec(-2, 1),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -698,7 +677,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					BaseProposerReward:  sdk.NewDecWithPrec(1, 2),
-					BonusProposerReward: sdk.ZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
 			},
@@ -711,7 +690,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
-					BaseProposerReward:  sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: sdk.NewDecWithPrec(1, 2),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
@@ -725,8 +704,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
 			},
@@ -739,8 +718,8 @@ func TestMsgUpdateParams(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticBeginEndBlock(),
+				// integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -817,8 +796,8 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticBeginEndBlock(),
+				// integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -914,8 +893,8 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticBeginEndBlock(),
+				// integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)

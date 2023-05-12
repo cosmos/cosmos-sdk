@@ -33,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	cmtproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // DONTCOVER
@@ -43,9 +44,10 @@ const ServerContextKey = sdk.ContextKey("server.context")
 
 // server context
 type Context struct {
-	Viper  *viper.Viper
-	Config *tmcfg.Config
-	Logger tmlog.Logger
+	Viper                  *viper.Viper
+	Config                 *tmcfg.Config
+	Logger                 tmlog.Logger
+	DefaultConsensusParams *cmtproto.ConsensusParams
 }
 
 // ErrorCode contains the exit code for server exit.
@@ -66,7 +68,7 @@ func NewDefaultContext() *Context {
 }
 
 func NewContext(v *viper.Viper, config *tmcfg.Config, logger tmlog.Logger) *Context {
-	return &Context{v, config, logger}
+	return &Context{v, config, logger, nil}
 }
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {

@@ -53,6 +53,7 @@ type Keeper struct {
 	Schema       collections.Schema
 	Constitution collections.Item[string]
 	Params       collections.Item[v1.Params]
+	Deposits     collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -99,6 +100,7 @@ func NewKeeper(
 		authority:    authority,
 		Constitution: collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
+		Deposits:     collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {

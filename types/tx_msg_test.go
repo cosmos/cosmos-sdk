@@ -26,7 +26,6 @@ func (s *testMsgSuite) TestMsg() {
 	s.Require().NotNil(msg)
 	s.Require().True(accAddr.Equals(msg.GetSigners()[0]))
 	s.Require().Nil(msg.ValidateBasic())
-	s.Require().NotPanics(func() { msg.GetSignBytes() })
 }
 
 func (s *testMsgSuite) TestMsgTypeURL() {

@@ -52,10 +52,10 @@ var (
 	VotesKeyPrefix = []byte{0x20}
 
 	// ParamsKey is the key to query all gov params
-	ParamsKey = collections.NewPrefix(30)
+	ParamsKey = collections.NewPrefix(48)
 
 	// ConstitutionKey is the key string used to store the chain's constitution
-	ConstitutionKey = collections.NewPrefix(31)
+	ConstitutionKey = collections.NewPrefix(49)
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))

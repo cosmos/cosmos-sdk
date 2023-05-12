@@ -366,9 +366,13 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keepe
 				break
 			}
 		}
-		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. However, since smart contracts and module accounts can stake, we can ignore the error
 		if simAccount.PrivKey == nil {
+<<<<<<< HEAD
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
+=======
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "account private key is nil"), nil, nil
+>>>>>>> ddf51ccdd (fix: allow non-EOA accounts to stake in simulation (#16068))
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
@@ -543,9 +547,13 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 			}
 		}
 
-		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. However, since smart contracts and module accounts can stake, we can ignore the error
 		if simAccount.PrivKey == nil {
+<<<<<<< HEAD
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
+=======
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "account private key is nil"), nil, nil
+>>>>>>> ddf51ccdd (fix: allow non-EOA accounts to stake in simulation (#16068))
 		}
 
 		account := ak.GetAccount(ctx, delAddr)

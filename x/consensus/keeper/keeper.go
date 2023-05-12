@@ -81,13 +81,5 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	if err := k.event.EventManager(ctx).EmitKV(
-		ctx,
-		"update_consensus_params",
-		event.Attribute{Key: "authority", Value: req.Authority},
-		event.Attribute{Key: "parameters", Value: consensusParams.String()}); err != nil {
-		return nil, err
-	}
-
 	return &types.MsgUpdateParamsResponse{}, nil
 }

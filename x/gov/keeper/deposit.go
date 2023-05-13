@@ -8,9 +8,6 @@ import (
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -47,32 +44,6 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx context.Context, proposalID uint6
 	}
 
 	return keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, coinsToBurn)
-}
-
-// IterateAllDeposits iterates over all the stored deposits and performs a callback function.
-func (keeper Keeper) IterateAllDeposits(ctx context.Context, cb func(deposit v1.Deposit) error) error {
-	store := keeper.storeService.OpenKVStore(ctx)
-	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.DepositsKeyPrefix)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var deposit v1.Deposit
-
-		err := keeper.cdc.Unmarshal(iterator.Value(), &deposit)
-		if err != nil {
-			return err
-		}
-
-		err = cb(deposit)
-		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, errors.ErrStopIterating) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // IterateDeposits iterates over all the proposals deposits and performs a callback function

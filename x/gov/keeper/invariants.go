@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"cosmossdk.io/collections"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,10 +21,13 @@ func ModuleAccountInvariant(keeper *Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var expectedDeposits sdk.Coins
 
-		keeper.IterateAllDeposits(ctx, func(deposit v1.Deposit) error {
-			expectedDeposits = expectedDeposits.Add(deposit.Amount...)
-			return nil
+		err := keeper.Deposits.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (stop bool, err error) {
+			expectedDeposits = expectedDeposits.Add(value.Amount...)
+			return false, nil
 		})
+		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+			panic(err)
+		}
 
 		macc := keeper.GetGovernanceAccount(ctx)
 		balances := bk.GetAllBalances(ctx, macc.GetAddress())

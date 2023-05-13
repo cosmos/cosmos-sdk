@@ -160,7 +160,7 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx context.Context, addr sdk.Acc
 	err := k.Balances.Walk(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](addr), func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
 		return cb(sdk.NewCoin(key.K2(), value)), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) { // TODO(tip): is this the correct strategy
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		panic(err)
 	}
 }

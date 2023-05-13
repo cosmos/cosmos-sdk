@@ -381,7 +381,7 @@ func (k BaseSendKeeper) IterateSendEnabledEntries(ctx context.Context, cb func(d
 	err := k.SendEnabled.Walk(ctx, nil, func(key string, value bool) (stop bool, err error) {
 		return cb(key, value), nil
 	})
-	if err != nil && errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		panic(err)
 	}
 }

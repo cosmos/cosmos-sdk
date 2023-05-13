@@ -3,6 +3,7 @@ package snapshot
 import (
 	"archive/tar"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -46,6 +47,10 @@ func DumpArchiveCmd() *cobra.Command {
 			snapshot, err := snapshotStore.Get(height, uint32(format))
 			if err != nil {
 				return err
+			}
+
+			if snapshot == nil {
+				return errors.New("snapshot doesn't exist")
 			}
 
 			bz, err := snapshot.Marshal()

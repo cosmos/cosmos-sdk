@@ -43,7 +43,7 @@ Class is mainly composed of `id`, `name`, `symbol`, `description`, `uri`, `uri_h
 
 ### NFT
 
-NFT is mainly composed of `class_id`, `id`, `uri`, `uri_hash` and `data`. Among them, `class_id` and `id` are two-tuples that identify the uniqueness of nft, `uri` and `uri_hash` is optional, which identifies the off-chain storage location of the nft, and `data` is an Any type. Use Any chain of `x/nft` modules can be customized by extending this field
+NFT is mainly composed of `class_id`, `id`, `uri`, `uri_hash`, `send_enabled`, and `data`. Among them, `class_id` and `id` are two-tuples that identify the uniqueness of nft, `uri` and `uri_hash` is optional, which identifies the off-chain storage location of the nft, `send_enabled` is a flag that enables `MsgSend`, and `data` is an Any type. Use Any chain of `x/nft` modules can be customized by extending this field
 
 * NFT: `0x02 | classID | 0x00 | nftID |-> ProtocolBuffer(NFT)`
 

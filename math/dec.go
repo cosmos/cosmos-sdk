@@ -468,7 +468,13 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 		}
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)
-		delta.QuoInt64Mut(int64(root))
+		// delta = delta / root.
+		// We optimize for sqrt, where root=2 => delta = delta >> 1
+		if root == 2 {
+			delta.i.Rsh(delta.i, 1)
+		} else {
+			delta.QuoInt64Mut(int64(root))
+		}
 
 		guess.AddMut(delta)
 	}

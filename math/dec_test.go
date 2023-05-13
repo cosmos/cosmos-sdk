@@ -655,7 +655,7 @@ func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
 	sink = (interface{})(nil)
 }
 
-func BenchmarkLegacySqrt(b *testing.B) {
+func BenchmarkLegacySqrtOnMersennePrime(b *testing.B) {
 	b1 := math.LegacyNewDec(2).Power(127).Sub(math.LegacyOneDec())
 	b.ReportAllocs()
 	b.ResetTimer()

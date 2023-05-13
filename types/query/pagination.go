@@ -137,7 +137,7 @@ func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Itera
 	return prefixStore.Iterator(start, nil)
 }
 
-// initPageRequestDefaults initialises a PageRequest's defaults when those are not set.
+// initPageRequestDefaults initializes a PageRequest's defaults when those are not set.
 func initPageRequestDefaults(pageRequest *PageRequest) *PageRequest {
 	// if the PageRequest is nil, use default PageRequest
 	if pageRequest == nil {

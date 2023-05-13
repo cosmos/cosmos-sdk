@@ -157,8 +157,8 @@ func (k BaseViewKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress, den
 // provides the token balance to a callback. If true is returned from the
 // callback, iteration is halted.
 func (k BaseViewKeeper) IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
-	err := k.Balances.Walk(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](addr), func(key collections.Pair[sdk.AccAddress, string], value math.Int) bool {
-		return cb(sdk.NewCoin(key.K2(), value))
+	err := k.Balances.Walk(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](addr), func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
+		return cb(sdk.NewCoin(key.K2(), value)), nil
 	})
 	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) { // TODO(tip): is this the correct strategy
 		panic(err)
@@ -169,10 +169,10 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx context.Context, addr sdk.Acc
 // denominations that are provided to a callback. If true is returned from the
 // callback, iteration is halted.
 func (k BaseViewKeeper) IterateAllBalances(ctx context.Context, cb func(sdk.AccAddress, sdk.Coin) bool) {
-	err := k.Balances.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], value math.Int) bool {
-		return cb(key.K1(), sdk.NewCoin(key.K2(), value))
+	err := k.Balances.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
+		return cb(key.K1(), sdk.NewCoin(key.K2(), value)), nil
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		panic(err)
 	}
 }

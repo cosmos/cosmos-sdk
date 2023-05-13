@@ -28,9 +28,9 @@ func (keeper Keeper) SetDeposit(ctx context.Context, deposit v1.Deposit) error {
 
 // GetDeposits returns all the deposits of a proposal
 func (keeper Keeper) GetDeposits(ctx context.Context, proposalID uint64) (deposits v1.Deposits, err error) {
-	err = keeper.IterateDeposits(ctx, proposalID, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) bool {
+	err = keeper.IterateDeposits(ctx, proposalID, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
 		deposits = append(deposits, &deposit)
-		return false
+		return false, nil
 	})
 
 	return
@@ -39,10 +39,9 @@ func (keeper Keeper) GetDeposits(ctx context.Context, proposalID uint64) (deposi
 // DeleteAndBurnDeposits deletes and burns all the deposits on a specific proposal.
 func (keeper Keeper) DeleteAndBurnDeposits(ctx context.Context, proposalID uint64) error {
 	coinsToBurn := sdk.NewCoins()
-	err := keeper.IterateDeposits(ctx, proposalID, func(key collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) bool {
+	err := keeper.IterateDeposits(ctx, proposalID, func(key collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (stop bool, err error) {
 		coinsToBurn = coinsToBurn.Add(deposit.Amount...)
-		_ = keeper.Deposits.Remove(ctx, key) // can't error, otherwise the iterator wouldn't report it
-		return false
+		return false, keeper.Deposits.Remove(ctx, key)
 	})
 	if err != nil {
 		return err
@@ -78,9 +77,9 @@ func (keeper Keeper) IterateAllDeposits(ctx context.Context, cb func(deposit v1.
 }
 
 // IterateDeposits iterates over all the proposals deposits and performs a callback function
-func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb func(key collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) bool) error {
-	pair := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
-	err := keeper.Deposits.Walk(ctx, pair, cb)
+func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb func(key collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (bool, error)) error {
+	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
+	err := keeper.Deposits.Walk(ctx, rng, cb)
 	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
 		return err
 	}
@@ -213,7 +212,10 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 				return err
 			}
 		}
-		return keeper.Deposits.Remove(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositerAddress)))
+		err = keeper.Deposits.Remove(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositerAddress)))
+		if err != nil {
+			return err
+		}
 	}
 
 	// burn the cancellation fee or sent the cancellation charges to destination address.
@@ -251,21 +253,15 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
 func (keeper Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uint64) error {
-	var err error
-	iterErr := keeper.IterateDeposits(ctx, proposalID, func(key collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) bool {
+	return keeper.IterateDeposits(ctx, proposalID, func(key collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
 		depositor := key.K2()
-		err = keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
+		err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
 		if err != nil {
-			return true
+			return false, err
 		}
-		_ = keeper.Deposits.Remove(ctx, key) // cannot error
-		return false
+		err = keeper.Deposits.Remove(ctx, key)
+		return false, err
 	})
-	if iterErr != nil {
-		return iterErr
-	}
-
-	return err
 }
 
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum

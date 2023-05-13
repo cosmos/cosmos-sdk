@@ -175,14 +175,24 @@ func TestWalk(t *testing.T) {
 	}
 
 	u := uint64(0)
-	err = m.Walk(ctx, nil, func(key, value uint64) bool {
+	err = m.Walk(ctx, nil, func(key uint64, value uint64) (bool, error) {
 		if key == 5 {
-			return true
+			return true, nil
 		}
 		require.Equal(t, u, key)
 		require.Equal(t, u, value)
 		u++
-		return false
+		return false, nil
 	})
 	require.NoError(t, err)
+
+	sentinelErr := fmt.Errorf("sentinel error")
+	err = m.Walk(ctx, nil, func(key uint64, value uint64) (stop bool, err error) {
+		require.LessOrEqual(t, key, uint64(3)) // asserts that after the number three we stop
+		if key == 3 {
+			return false, sentinelErr
+		}
+		return false, nil
+	})
+	require.ErrorIs(t, err, sentinelErr) // asserts correct error propagation
 }

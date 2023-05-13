@@ -122,9 +122,9 @@ func TestDeposits(t *testing.T) {
 			// Test deposit iterator
 			// NOTE order of deposits is determined by the addresses
 			var deposits v1.Deposits
-			err = govKeeper.Deposits.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) bool {
+			err = govKeeper.Deposits.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
 				deposits = append(deposits, &deposit)
-				return false
+				return false, nil
 			})
 			require.NoError(t, err)
 			require.Len(t, deposits, 2)

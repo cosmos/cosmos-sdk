@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
 var _ nft.MsgServer = Keeper{}
@@ -44,7 +45,7 @@ func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespo
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unknown NFT %s", msg.Id)
 	}
 	if !nftData.SendEnabled {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sending of NFT %s is not enabled", msg.Id)
+		return nil, types.ErrSendDisabled.Wrapf("NFT %s of class %s is disabled", msg.Id, msg.ClassId)
 	}
 
 	if err := k.Transfer(ctx, msg.ClassId, msg.Id, receiver); err != nil {

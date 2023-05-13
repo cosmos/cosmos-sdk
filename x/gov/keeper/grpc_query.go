@@ -229,11 +229,7 @@ func (q queryServer) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (
 	}
 	deposit, err := q.k.Deposits.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(depositor)))
 	if err != nil {
-		if errors.IsOf(err, types.ErrDepositNotFound) {
-			return nil, status.Errorf(codes.InvalidArgument,
-				"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)
-		}
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
 	return &v1.QueryDepositResponse{Deposit: &deposit}, nil

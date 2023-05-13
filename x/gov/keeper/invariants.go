@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"cosmossdk.io/collections"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"

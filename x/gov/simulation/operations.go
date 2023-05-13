@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -47,7 +46,6 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -62,25 +60,25 @@ func WeightedOperations(
 		weightMsgCancelProposal int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeposit, &weightMsgDeposit, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeposit = DefaultWeightMsgDeposit
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgVote, &weightMsgVote, nil,
+	appParams.GetOrGenerate(OpWeightMsgVote, &weightMsgVote, nil,
 		func(_ *rand.Rand) {
 			weightMsgVote = DefaultWeightMsgVote
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgVoteWeighted, &weightMsgVoteWeighted, nil,
+	appParams.GetOrGenerate(OpWeightMsgVoteWeighted, &weightMsgVoteWeighted, nil,
 		func(_ *rand.Rand) {
 			weightMsgVoteWeighted = DefaultWeightMsgVoteWeighted
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCancelProposal, &weightMsgCancelProposal, nil,
+	appParams.GetOrGenerate(OpWeightMsgCancelProposal, &weightMsgCancelProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgCancelProposal = DefaultWeightMsgCancelProposal
 		},
@@ -91,7 +89,7 @@ func WeightedOperations(
 	for _, wMsg := range wMsgs {
 		wMsg := wMsg // pin variable
 		var weight int
-		appParams.GetOrGenerate(cdc, wMsg.AppParamsKey(), &weight, nil,
+		appParams.GetOrGenerate(wMsg.AppParamsKey(), &weight, nil,
 			func(_ *rand.Rand) { weight = wMsg.DefaultWeight() },
 		)
 
@@ -109,7 +107,7 @@ func WeightedOperations(
 	for _, wContent := range wContents {
 		wContent := wContent // pin variable
 		var weight int
-		appParams.GetOrGenerate(cdc, wContent.AppParamsKey(), &weight, nil,
+		appParams.GetOrGenerate(wContent.AppParamsKey(), &weight, nil,
 			func(_ *rand.Rand) { weight = wContent.DefaultWeight() },
 		)
 

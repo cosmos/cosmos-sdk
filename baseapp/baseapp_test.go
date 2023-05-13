@@ -500,13 +500,14 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	// res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	// require.Empty(t, res.Events)
-	// require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+	res, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	// ctx := getDeliverStateCtx(suite.baseApp)
-	// store := ctx.KVStore(capKey1)
-	// require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
+	ctx := getFinalizeBlockStateCtx(suite.baseApp)
+	store := ctx.KVStore(capKey1)
+	require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
 
 	// execute at tx that will pass the ante handler (the checkTx state should
 	// mutate) but will fail the message handler
@@ -516,14 +517,15 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes2, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	// res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes2})
-	// require.NotEmpty(t, res.Events)
-	// require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+	res, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	// ctx = getDeliverStateCtx(suite.baseApp)
-	// store = ctx.KVStore(capKey1)
-	// require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
-	// require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
+	ctx = getFinalizeBlockStateCtx(suite.baseApp)
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
+	require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
 
 	// Execute a successful ante handler and message execution where state is
 	// implicitly checked by previous tx executions.
@@ -532,14 +534,15 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes3, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	// res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes3})
-	// require.NotEmpty(t, res.Events)
-	// require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+	res, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	// ctx = getDeliverStateCtx(suite.baseApp)
-	// store = ctx.KVStore(capKey1)
-	// require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
-	// require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
+	ctx = getFinalizeBlockStateCtx(suite.baseApp)
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
+	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
 
 	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height: suite.baseApp.LastBlockHeight() + 1,
@@ -561,8 +564,10 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 2})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	testCases := []struct {
 		name   string
@@ -644,6 +649,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	for i := int64(1); i <= 7; i++ {
 		res, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: i})
 		require.NoError(t, err)
+		_, err = app.Commit(context.Background(), &abci.RequestCommit{})
 		lastCommitID = storetypes.CommitID{Version: i, Hash: res.AppHash}
 	}
 

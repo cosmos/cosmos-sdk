@@ -63,8 +63,8 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	nBlocks := 3
 	txPerHeight := 5
 
-	txs := [][]byte{}
 	for blockN := 0; blockN < nBlocks; blockN++ {
+		txs := [][]byte{}
 
 		var expectedChangeSet []*storetypes.StoreKVPair
 
@@ -104,6 +104,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 		require.Equal(t, expectedChangeSet, mockListener1.ChangeSet, "should contain the same changeSet")
 		require.Equal(t, expectedChangeSet, mockListener2.ChangeSet, "should contain the same changeSet")
 	}
+
 }
 
 func Test_Ctx_with_StreamingManager(t *testing.T) {

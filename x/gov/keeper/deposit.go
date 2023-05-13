@@ -32,8 +32,7 @@ func (keeper Keeper) GetDeposits(ctx context.Context, proposalID uint64) (deposi
 		deposits = append(deposits, &deposit)
 		return false, nil
 	})
-
-	return
+	return deposits, err
 }
 
 // DeleteAndBurnDeposits deletes and burns all the deposits on a specific proposal.

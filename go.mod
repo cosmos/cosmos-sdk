@@ -55,7 +55,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.9.0
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	golang.org/x/sync v0.2.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/grpc v1.55.0

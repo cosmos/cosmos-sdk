@@ -253,8 +253,7 @@ func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddre
 		CreatedAt: createdAt,
 	}
 
-	err := p.SetDecisionPolicy(decisionPolicy)
-	if err != nil {
+	if err := p.SetDecisionPolicy(decisionPolicy); err != nil {
 		return GroupPolicyInfo{}, err
 	}
 

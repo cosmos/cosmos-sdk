@@ -432,7 +432,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 // GetNextPolicyAccNum returns the next account number to be used for a group policy account.
 // It is aims to keep the logic of the previous orm, and keep the same derivation key.
 func (k Keeper) GetNextPolicyAccNum(ctx context.Context) (uint64, error) {
-	// at all time the value must be higher than the previous smallest group policy account number sequence
+	// at all time the value must be higher than the previous smallest group policy account number sequence before the migration // TODO
 	it, err := k.state.GroupPolicyInfoTable().List(ctx, &groupv1.GroupPolicyInfoAddressIndexKey{})
 	if err != nil {
 		return 0, err

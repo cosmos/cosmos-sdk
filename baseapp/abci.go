@@ -154,7 +154,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 	if req.Height == 0 {
 		req.Height = app.LastBlockHeight()
 	}
-	fmt.Println(req.Path, "req.Path")
+
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
 	defer telemetry.MeasureSince(time.Now(), req.Path)

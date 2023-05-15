@@ -59,15 +59,6 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 	return nil
 }
 
-// GetAllVotes returns all the votes from the store
-func (keeper Keeper) GetAllVotes(ctx context.Context) (votes v1.Votes, err error) {
-	err = keeper.IterateAllVotes(ctx, func(vote v1.Vote) error {
-		votes = append(votes, &vote)
-		return nil
-	})
-	return
-}
-
 // GetVotes returns all the votes from a proposal
 func (keeper Keeper) GetVotes(ctx context.Context, proposalID uint64) (votes v1.Votes, err error) {
 	err = keeper.IterateVotes(ctx, proposalID, func(vote v1.Vote) error {

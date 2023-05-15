@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/collections"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -77,7 +78,11 @@ func TestVotes(t *testing.T) {
 
 	// Test vote iterator
 	// NOTE order of deposits is determined by the addresses
-	votes, _ := govKeeper.GetAllVotes(ctx)
+	var votes v1.Votes
+	require.NoError(t, govKeeper.Votes.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (stop bool, err error) {
+		votes = append(votes, &value)
+		return false, nil
+	}))
 	require.Len(t, votes, 2)
 	propVotes, _ := govKeeper.GetVotes(ctx, proposalID)
 	require.Equal(t, votes, propVotes)

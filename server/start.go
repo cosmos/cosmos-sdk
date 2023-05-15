@@ -12,6 +12,7 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -283,20 +284,13 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 
+	// TODO: Move this to only be done if were launching the node. (So not in GRPC-only mode)
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
-	genDocProvider := func() (*cmttypes.GenesisDoc, error) {
-		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
-		if err != nil {
-			return nil, err
-		}
-
-		return appGenesis.ToGenesisDoc()
-	}
-
+	genDocProvider := getGenDocProvider(cfg)
 	var (
 		tmNode   *node.Node
 		gRPCOnly = svrCtx.Viper.GetBool(flagGRPCOnly)
@@ -420,6 +414,18 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 		return config, err
 	}
 	return config, nil
+}
+
+// returns a function which returns the genesis doc from the genesis file.
+func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
+	return func() (*cmttypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
+
+		return appGenesis.ToGenesisDoc()
+	}
 }
 
 func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func(), err error) {

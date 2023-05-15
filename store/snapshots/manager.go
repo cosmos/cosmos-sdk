@@ -481,7 +481,7 @@ func (m *Manager) RestoreLocalSnapshot(height uint64, format uint32) error {
 	}
 	defer m.endLocked()
 
-	return m.restoreSnapshot(*snapshot, ch)
+	return m.doRestoreSnapshot(*snapshot, ch)
 }
 
 // sortedExtensionNames sort extension names for deterministic iteration.

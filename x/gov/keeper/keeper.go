@@ -100,7 +100,7 @@ func NewKeeper(
 		authority:    authority,
 		Constitution: collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
-		Deposits:     collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)),
+		Deposits:     collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), // nolint: staticcheck,
 	}
 	schema, err := sb.Build()
 	if err != nil {

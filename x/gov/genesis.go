@@ -2,6 +2,7 @@ package gov
 
 import (
 	"cosmossdk.io/collections"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -98,21 +99,22 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 	}
 
 	var proposalsDeposits v1.Deposits
+	err = k.Deposits.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (stop bool, err error) {
+		proposalsDeposits = append(proposalsDeposits, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
+
+	// export proposals votes
 	var proposalsVotes v1.Votes
-	for _, proposal := range proposals {
-		deposits, err := k.GetDeposits(ctx, proposal.Id)
-		if err != nil {
-			return nil, err
-		}
-
-		proposalsDeposits = append(proposalsDeposits, deposits...)
-
-		votes, err := k.GetVotes(ctx, proposal.Id)
-		if err != nil {
-			return nil, err
-		}
-
-		proposalsVotes = append(proposalsVotes, votes...)
+	err = k.Votes.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (stop bool, err error) {
+		proposalsVotes = append(proposalsVotes, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
 	}
 
 	return &v1.GenesisState{

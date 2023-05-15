@@ -59,15 +59,6 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 	return nil
 }
 
-// GetVotes returns all the votes from a proposal
-func (keeper Keeper) GetVotes(ctx context.Context, proposalID uint64) (votes v1.Votes, err error) {
-	err = keeper.IterateVotes(ctx, proposalID, func(vote v1.Vote) error {
-		votes = append(votes, &vote)
-		return nil
-	})
-	return
-}
-
 // IterateAllVotes iterates over all the stored votes and performs a callback function
 func (keeper Keeper) IterateAllVotes(ctx context.Context, cb func(vote v1.Vote) error) error {
 	store := keeper.storeService.OpenKVStore(ctx)

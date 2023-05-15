@@ -83,7 +83,11 @@ func TestVotes(t *testing.T) {
 		return false, nil
 	}))
 	require.Len(t, votes, 2)
-	propVotes, _ := govKeeper.GetVotes(ctx, proposalID)
+	var propVotes v1.Votes
+	require.NoError(t, govKeeper.Votes.Walk(ctx, collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID), func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (stop bool, err error) {
+		propVotes = append(propVotes, &value)
+		return false, nil
+	}))
 	require.Equal(t, votes, propVotes)
 	require.Equal(t, addrs[0].String(), votes[0].Voter)
 	require.Equal(t, proposalID, votes[0].ProposalId)

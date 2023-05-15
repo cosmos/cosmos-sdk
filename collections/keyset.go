@@ -53,8 +53,8 @@ func (k KeySet[K]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 
 // Walk provides the same functionality as Map.Walk, but callbacks the walk
 // function only with the key.
-func (k KeySet[K]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key K) bool) error {
-	return (Map[K, NoValue])(k).Walk(ctx, ranger, func(key K, value NoValue) bool { return walkFunc(key) })
+func (k KeySet[K]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key K) (stop bool, err error)) error {
+	return (Map[K, NoValue])(k).Walk(ctx, ranger, func(key K, value NoValue) (bool, error) { return walkFunc(key) })
 }
 
 func (k KeySet[K]) KeyCodec() codec.KeyCodec[K]           { return (Map[K, NoValue])(k).KeyCodec() }

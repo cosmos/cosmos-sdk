@@ -36,17 +36,6 @@ func TestProposalKeys(t *testing.T) {
 	require.Panics(t, func() { SplitInactiveProposalQueueKey([]byte("test")) })
 }
 
-func TestDepositKeys(t *testing.T) {
-	key := DepositsKey(2)
-	proposalID := SplitProposalKey(key)
-	require.Equal(t, int(proposalID), 2)
-
-	key = DepositKey(2, addr)
-	proposalID, depositorAddr := SplitKeyDeposit(key)
-	require.Equal(t, int(proposalID), 2)
-	require.Equal(t, addr, depositorAddr)
-}
-
 func TestVoteKeys(t *testing.T) {
 	key := VotesKey(2)
 	proposalID := SplitProposalKey(key)

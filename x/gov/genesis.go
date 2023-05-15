@@ -34,7 +34,10 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 	var totalDeposits sdk.Coins
 	for _, deposit := range data.Deposits {
-		k.SetDeposit(ctx, *deposit)
+		err := k.SetDeposit(ctx, *deposit)
+		if err != nil {
+			panic(err)
+		}
 		totalDeposits = totalDeposits.Add(deposit.Amount...)
 	}
 

@@ -24,7 +24,7 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
-	DefaultWeightMsgRotateConsPubKey          int = 5
+	DefaultWeightMsgRotateConsPubKey          int = 100
 
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
@@ -640,21 +640,39 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to pick a validator"), nil, nil
 		}
 
-		address := val.GetOperator()
-		acc := simtypes.RandomAccounts(r, 1)[0]
-
-		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(address))
+		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
 		}
-		account := ak.GetAccount(ctx, simAccount.Address)
-		if account == nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("account %s not found", account)
+
+		cons, err := val.GetConsAddr()
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get conskey"), nil, err
 		}
 
+		acc, _ := simtypes.RandomAcc(r, accs)
+		if cons.String() == sdk.ConsAddress(acc.ConsKey.PubKey().Address()).String() {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "new pubkey and current pubkey should be different"), nil, nil
+		}
+
+		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg, err := types.NewMsgRotateConsPubKey(address, acc.PubKey)
+		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
+
+		valAddr := val.GetOperator()
+		isExceed, _ := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
+		if isExceed {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "rotations limit reached within unbondin period"), nil, nil
+
+		}
+
+		_, found = k.GetValidatorByConsAddr(ctx, newConsAddr)
+		if found {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used"), nil, nil
+		}
+
+		msg, err := types.NewMsgRotateConsPubKey(valAddr, acc.ConsKey.PubKey())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable build msg"), nil, err
 		}

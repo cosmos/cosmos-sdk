@@ -3,7 +3,7 @@
 ## Changelog
 
 * Nov, 23, 2021: Initial Draft
-* Feb 15, 2023: Remove `pre_run` and `post_run` fields for simplifying the ADR
+* May 15, 2023: Remove `pre_run` and `post_run` fields for simplifying the ADR
 
 ## Status
 

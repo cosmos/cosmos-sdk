@@ -40,7 +40,6 @@ func (m *MockABCIListener) ListenCommit(_ context.Context, _ abci.ResponseCommit
 var distKey1 = storetypes.NewKVStoreKey("distKey1")
 
 func TestABCI_MultiListener_StateChanges(t *testing.T) {
-	t.Skip()
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	distOpt := func(bapp *baseapp.BaseApp) { bapp.MountStores(distKey1) }
@@ -68,6 +67,10 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 		txs := [][]byte{}
 
 		var expectedChangeSet []*storetypes.StoreKVPair
+
+		// create final block context state
+		_, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: int64(blockN) + 1, Txs: txs})
+		require.NoError(t, err)
 
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)

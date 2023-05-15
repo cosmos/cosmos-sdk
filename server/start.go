@@ -347,8 +347,6 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 	emitServerInfoMetrics()
 
-	var apiSrv *api.Server
-
 	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -361,6 +359,8 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	}
 
 	if config.API.Enable {
+		// TODO: wtf, why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
+		// surely theres a better way.
 		genDoc, err := genDocProvider()
 		if err != nil {
 			return err
@@ -368,7 +368,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
 
-		apiSrv = api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
+		apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 		app.RegisterAPIRoutes(apiSrv, config.API)
 
 		if config.Telemetry.Enabled {

@@ -443,7 +443,8 @@ func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func
 }
 
 func startGrpcServer(ctx context.Context, g *errgroup.Group, config serverconfig.GRPCConfig, clientCtx client.Context, svrCtx *Context, app types.Application) (
-	*grpc.Server, client.Context, error) {
+	*grpc.Server, client.Context, error,
+) {
 	if !config.Enable {
 		// return grpcServer as nil if gRPC is disabled
 		return nil, clientCtx, nil
@@ -496,7 +497,8 @@ func startGrpcServer(ctx context.Context, g *errgroup.Group, config serverconfig
 }
 
 func startApiServer(ctx context.Context, g *errgroup.Group, cmtCfg *cmtcfg.Config, svrCfg serverconfig.Config,
-	clientCtx client.Context, svrCtx *Context, app types.Application, home string, grpcSrv *grpc.Server, metrics *telemetry.Metrics) error {
+	clientCtx client.Context, svrCtx *Context, app types.Application, home string, grpcSrv *grpc.Server, metrics *telemetry.Metrics,
+) error {
 	if !svrCfg.API.Enable {
 		return nil
 	}

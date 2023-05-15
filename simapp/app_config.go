@@ -29,6 +29,7 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject"
 
+	_ "cosmossdk.io/x/circuit"                        // import for side-effects
 	_ "cosmossdk.io/x/evidence"                       // import for side-effects
 	_ "cosmossdk.io/x/feegrant/module"                // import for side-effects
 	_ "cosmossdk.io/x/nft/module"                     // import for side-effects

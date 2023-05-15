@@ -107,7 +107,7 @@ by the `Handler` should be persisted.
 // for executing all corresponding business logic necessary for verifying the
 // evidence as valid. In addition, the Handler may execute any necessary
 // slashing and potential jailing.
-type Handler func(sdk.Context, Evidence) error
+type Handler func(context.Context, Evidence) error
 ```
 
 

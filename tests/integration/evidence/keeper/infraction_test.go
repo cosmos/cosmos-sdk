@@ -303,16 +303,8 @@ func newPubKey(pk string) (res cryptotypes.PubKey) {
 	return pubkey
 }
 
-<<<<<<< HEAD
 func testEquivocationHandler(_ interface{}) types.Handler {
 	return func(ctx context.Context, e exported.Evidence) error {
-||||||| 1705615ef
-func testEquivocationHandler(_ interface{}) types.Handler {
-	return func(ctx sdk.Context, e exported.Evidence) error {
-=======
-func testEquivocationHandler(_ interface{}) evidencetypes.Handler {
-	return func(ctx sdk.Context, e exported.Evidence) error {
->>>>>>> main
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}

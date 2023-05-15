@@ -426,7 +426,7 @@ func (m *Manager) RestoreLocalSnapshot(height uint64, format uint32) error {
 	}
 
 	if snapshot == nil {
-		return fmt.Errorf("snapshot don't exists, height: %d, format: %d", height, format)
+		return fmt.Errorf("snapshot doesn't exist, height: %d, format: %d", height, format)
 	}
 
 	m.mtx.Lock()

@@ -115,8 +115,7 @@ func ResetCircuitBreakerCmd() *cobra.Command {
 				return err
 			}
 
-			var msgTypeUrls []string
-			msgTypeUrls = strings.Split(args[0], ",")
+			msgTypeUrls := strings.Split(args[0], ",")
 
 			msg := types.NewMsgResetCircuitBreaker(clientCtx.GetFromAddress().String(), msgTypeUrls)
 

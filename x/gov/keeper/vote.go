@@ -58,6 +58,6 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 
 // deleteVotes deletes the all votes from a given proposalID.
 func (keeper Keeper) deleteVotes(ctx context.Context, proposalID uint64) error {
-	store := keeper.storeService.OpenKVStore(ctx)
-	return store.Delete(types.VotesKey(proposalID))
+	// TODO(tip): fix https://github.com/cosmos/cosmos-sdk/issues/16162
+	return nil
 }

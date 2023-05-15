@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -102,22 +101,11 @@ func InactiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
 	return append(InactiveProposalByTimeKey(endTime), GetProposalIDBytes(proposalID)...)
 }
 
-// VotesKey gets the first part of the votes key based on the proposalID
-func VotesKey(proposalID uint64) []byte {
-	return append(VotesKeyPrefix, GetProposalIDBytes(proposalID)...)
-}
-
-// VoteKey key of a specific vote from the store
-func VoteKey(proposalID uint64, voterAddr sdk.AccAddress) []byte {
-	return append(VotesKey(proposalID), address.MustLengthPrefix(voterAddr.Bytes())...)
-}
-
 // Split keys function; used for iterators
 
 // SplitProposalKey split the proposal key and returns the proposal id
 func SplitProposalKey(key []byte) (proposalID uint64) {
 	kv.AssertKeyLength(key[1:], 8)
-
 	return GetProposalIDFromBytes(key[1:])
 }
 

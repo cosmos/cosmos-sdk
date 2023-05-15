@@ -196,9 +196,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types/math) [#16040](https://github.com/cosmos/cosmos-sdk/pull/16040) Remove unused aliases in math.go
 * (x/gov) [#16106](https://github.com/cosmos/cosmos-sdk/pull/16106) Remove gRPC query methods from Keeper
 * (x/gov) [#16118](https://github.com/cosmos/cosmos-sdk/pull/16118/) Use collections for constituion and params state management.
-* (x/gov) [](https://github.com/cosmos/cosmos-sdk/pull/16127) Use collections for deposit management:
+* (x/gov) [#16127](https://github.com/cosmos/cosmos-sdk/pull/16127) Use collections for deposit state management:
   - The following methods are removed from the gov keeper: `GetDeposit`, `GetAllDeposits`, `IterateAllDeposits`.
   - The following functions are removed from the gov types: `DepositKey`, `DepositsKey`.
+- (x/gov) [#16164](https://github.com/cosmos/cosmos-sdk/pull/16164) Use collections for vote state management:
+  - Removed: types `VoteKey`, `VoteKeys`
+  - Removed: keeper `IterateVotes`, `IterateAllVotes`, `GetVotes`, `GetVote`, `SetVote`
 
 ### Client Breaking Changes
 

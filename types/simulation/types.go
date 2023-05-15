@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -91,14 +90,11 @@ func NewOperationMsgBasic(moduleName, msgType, comment string, ok bool, msg []by
 }
 
 // NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string, _ *codec.ProtoCodec) OperationMsg {
 	msgType := sdk.MsgTypeURL(msg)
 	moduleName := sdk.GetModuleNameFromTypeURL(msgType)
 	if moduleName == "" {
 		moduleName = msgType
-	}
-	if cdc == nil {
-		cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 	}
 	protoBz, err := proto.Marshal(msg)
 	if err != nil {

@@ -281,7 +281,6 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 }
 
 func TestABCI_ApplySnapshotChunk(t *testing.T) {
-	t.Skip()
 	srcCfg := SnapshotsConfig{
 		blocks:             4,
 		blockTxs:           10,

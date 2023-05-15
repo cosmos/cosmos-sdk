@@ -158,4 +158,6 @@ require (
 replace (
 	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../.
+	cosmossdk.io/store => ../../store
+	cosmossdk.io/collections => ../../collections
 )

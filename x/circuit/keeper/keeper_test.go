@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"testing"
 
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -12,7 +13,7 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"gotest.tools/v3/assert"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type fixture struct {
@@ -24,13 +25,17 @@ type fixture struct {
 }
 
 func initFixture(t *testing.T) *fixture {
+	ac := addresscodec.NewBech32Codec("cosmos")
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	k := keeper.NewKeeper(mockStoreKey, "mock_address", addresscodec.NewBech32Codec("cosmos"))
+	k := keeper.NewKeeper(mockStoreKey, authtypes.NewModuleAddress("gov").String(), ac)
+
+	bz, err := ac.StringToBytes(authtypes.NewModuleAddress("gov").String())
+	require.NoError(t, err)
 
 	return &fixture{
 		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),
 		keeper:   k,
-		mockAddr: []byte("mock_address"),
+		mockAddr: bz,
 		mockPerms: types.Permissions{
 			Level: 3,
 		},
@@ -42,7 +47,7 @@ func TestGetAuthority(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 	authority := f.keeper.GetAuthority()
-	assert.Equal(t, string(f.mockAddr), authority)
+	require.True(t, bytes.Equal(f.mockAddr, authority))
 }
 
 func TestGetAndSetPermissions(t *testing.T) {

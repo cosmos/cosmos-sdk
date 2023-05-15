@@ -6,9 +6,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -55,56 +52,6 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 		),
 	)
-
-	return nil
-}
-
-// IterateAllVotes iterates over all the stored votes and performs a callback function
-func (keeper Keeper) IterateAllVotes(ctx context.Context, cb func(vote v1.Vote) error) error {
-	store := keeper.storeService.OpenKVStore(ctx)
-	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.VotesKeyPrefix)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var vote v1.Vote
-		err := keeper.cdc.Unmarshal(iterator.Value(), &vote)
-		if err != nil {
-			return err
-		}
-
-		err = cb(vote)
-		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, errors.ErrStopIterating) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// IterateVotes iterates over all the proposals votes and performs a callback function
-func (keeper Keeper) IterateVotes(ctx context.Context, proposalID uint64, cb func(vote v1.Vote) error) error {
-	store := keeper.storeService.OpenKVStore(ctx)
-	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.VotesKey(proposalID))
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var vote v1.Vote
-		err := keeper.cdc.Unmarshal(iterator.Value(), &vote)
-		if err != nil {
-			return err
-		}
-
-		err = cb(vote)
-		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, errors.ErrStopIterating) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
 
 	return nil
 }

@@ -38,12 +38,12 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 		return false
 	})
-
-	err = keeper.IterateVotes(ctx, proposal.Id, func(vote v1.Vote) error {
+	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
+	err = keeper.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
 		voter, err := keeper.authKeeper.StringToBytes(vote.Voter)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		valAddrStr := sdk.ValAddress(voter).String()
@@ -76,7 +76,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 			return false
 		})
 
-		return keeper.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
+		return false, keeper.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
 	})
 
 	if err != nil {

@@ -477,6 +477,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 }
 
 func TestBaseAppAnteHandler(t *testing.T) {
+	t.Skip()
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))

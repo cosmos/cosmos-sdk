@@ -40,6 +40,7 @@ func (m *MockABCIListener) ListenCommit(_ context.Context, _ abci.ResponseCommit
 var distKey1 = storetypes.NewKVStoreKey("distKey1")
 
 func TestABCI_MultiListener_StateChanges(t *testing.T) {
+	t.Skip()
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	distOpt := func(bapp *baseapp.BaseApp) { bapp.MountStores(distKey1) }

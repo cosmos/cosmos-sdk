@@ -211,6 +211,8 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return err
 	}
 
+	// TODO: Should we be using startTraceServer, and defer closing the traceWriter?
+	// right now its left unclosed
 	traceWriterFile := svrCtx.Viper.GetString(flagTraceStore)
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
@@ -219,6 +221,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 
 	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 
+	// TODO: should config be getting validated here?
 	config, err := serverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
 		return err
@@ -272,12 +275,9 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	if err != nil {
 		return err
 	}
-	config, err := serverconfig.GetConfig(svrCtx.Viper)
+	// TODO: Should this be moved to the very top of the function?
+	config, err := getAndValidateConfig(svrCtx)
 	if err != nil {
-		return err
-	}
-
-	if err := config.ValidateBasic(); err != nil {
 		return err
 	}
 
@@ -347,9 +347,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 	emitServerInfoMetrics()
 
-	var (
-		apiSrv *api.Server
-	)
+	var apiSrv *api.Server
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
@@ -410,6 +408,18 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 	// wait for signal capture and gracefully return
 	return g.Wait()
+}
+
+func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
+	config, err := serverconfig.GetConfig(svrCtx.Viper)
+	if err != nil {
+		return config, err
+	}
+
+	if err := config.ValidateBasic(); err != nil {
+		return config, err
+	}
+	return config, nil
 }
 
 func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func(), err error) {

@@ -19,7 +19,6 @@ require (
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/grpc v1.55.0
-	gotest.tools/v3 v3.4.0
 )
 
 require (
@@ -43,7 +42,6 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230412222916-60cfeb46143b // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
-	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
@@ -150,14 +148,15 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gotest.tools/v3 v3.4.0 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v0.5.7 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
 replace (
+	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../.
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/collections => ../../collections
 )

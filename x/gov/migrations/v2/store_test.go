@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
@@ -64,7 +67,7 @@ func TestMigrateStore(t *testing.T) {
 		{
 			"DepositKey",
 			v1.DepositKey(proposalID, addr1), dummyValue,
-			types.DepositKey(proposalID, addr1), dummyValue,
+			depositKey(proposalID, addr1), dummyValue,
 		},
 		{
 			"VotesKeyPrefix",
@@ -93,4 +96,10 @@ func TestMigrateStore(t *testing.T) {
 			require.Equal(t, tc.newValue, store.Get(tc.newKey))
 		})
 	}
+}
+
+// depositKey key of a specific deposit from the store.
+// NOTE(tip): legacy, eventually remove me.
+func depositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
+	return append(append(types.DepositsKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), address.MustLengthPrefix(depositorAddr.Bytes())...)
 }

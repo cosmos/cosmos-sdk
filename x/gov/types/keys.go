@@ -47,7 +47,7 @@ var (
 	ProposalIDKey                 = []byte{0x03}
 	VotingPeriodProposalKeyPrefix = []byte{0x04}
 
-	DepositsKeyPrefix = []byte{0x10}
+	DepositsKeyPrefix = collections.NewPrefix(16)
 
 	VotesKeyPrefix = []byte{0x20}
 
@@ -100,16 +100,6 @@ func InactiveProposalByTimeKey(endTime time.Time) []byte {
 // InactiveProposalQueueKey returns the key for a proposalID in the inactiveProposalQueue
 func InactiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
 	return append(InactiveProposalByTimeKey(endTime), GetProposalIDBytes(proposalID)...)
-}
-
-// DepositsKey gets the first part of the deposits key based on the proposalID
-func DepositsKey(proposalID uint64) []byte {
-	return append(DepositsKeyPrefix, GetProposalIDBytes(proposalID)...)
-}
-
-// DepositKey key of a specific deposit from the store
-func DepositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
-	return append(DepositsKey(proposalID), address.MustLengthPrefix(depositorAddr.Bytes())...)
 }
 
 // VotesKey gets the first part of the votes key based on the proposalID

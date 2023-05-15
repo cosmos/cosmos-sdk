@@ -19,9 +19,9 @@
   },
   "dependencies": {
     "@docusaurus/core": "2.4.1",
-    "@docusaurus/plugin-client-redirects": "^2.4.0",
-    "@docusaurus/plugin-google-analytics": "^2.4.0",
-    "@docusaurus/preset-classic": "2.4.0",
+    "@docusaurus/plugin-client-redirects": "^2.4.1",
+    "@docusaurus/plugin-google-analytics": "^2.4.1",
+    "@docusaurus/preset-classic": "2.4.1",
     "@mdx-js/react": "^1.6.22",
     "@you54f/theme-github-codeblock": "^0.1.1",
     "autoprefixer": "^10.4.14",
@@ -34,7 +34,7 @@
     "tailwindcss": "^3.3.2"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "2.4.0"
+    "@docusaurus/module-type-aliases": "2.4.1"
   },
   "overrides": {
     "trim": "0.0.3"

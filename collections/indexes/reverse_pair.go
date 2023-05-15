@@ -67,9 +67,9 @@ func (i *ReversePair[K1, K2, Value]) Unreference(ctx context.Context, pk collect
 func (i *ReversePair[K1, K2, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[collections.Pair[K2, K1]],
-	walkFunc func(indexingKey K2, indexedKey K1) bool,
+	walkFunc func(indexingKey K2, indexedKey K1) (stop bool, err error),
 ) error {
-	return i.refKeys.Walk(ctx, ranger, func(key collections.Pair[K2, K1]) bool {
+	return i.refKeys.Walk(ctx, ranger, func(key collections.Pair[K2, K1]) (bool, error) {
 		return walkFunc(key.K1(), key.K2())
 	})
 }

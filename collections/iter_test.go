@@ -175,7 +175,7 @@ func TestWalk(t *testing.T) {
 	}
 
 	u := uint64(0)
-	err = m.Walk(ctx, nil, func(key uint64, value uint64) (bool, error) {
+	err = m.Walk(ctx, nil, func(key, value uint64) (bool, error) {
 		if key == 5 {
 			return true, nil
 		}
@@ -187,7 +187,7 @@ func TestWalk(t *testing.T) {
 	require.NoError(t, err)
 
 	sentinelErr := fmt.Errorf("sentinel error")
-	err = m.Walk(ctx, nil, func(key uint64, value uint64) (stop bool, err error) {
+	err = m.Walk(ctx, nil, func(key, value uint64) (stop bool, err error) {
 		require.LessOrEqual(t, key, uint64(3)) // asserts that after the number three we stop
 		if key == 3 {
 			return false, sentinelErr

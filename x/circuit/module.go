@@ -149,7 +149,7 @@ func init() {
 	)
 }
 
-type CircuitInputs struct {
+type Inputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -159,15 +159,14 @@ type CircuitInputs struct {
 	AddressCodec address.Codec
 }
 
-//nolint:revive
-type CircuitOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	CircuitKeeper keeper.Keeper
 	Module        appmodule.AppModule
 }
 
-func ProvideModule(in CircuitInputs) CircuitOutputs {
+func ProvideModule(in Inputs) Outputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress("gov")
 	if in.Config.Authority != "" {
@@ -181,5 +180,5 @@ func ProvideModule(in CircuitInputs) CircuitOutputs {
 	)
 	m := NewAppModule(in.Cdc, circuitkeeper)
 
-	return CircuitOutputs{CircuitKeeper: circuitkeeper, Module: m}
+	return Outputs{CircuitKeeper: circuitkeeper, Module: m}
 }

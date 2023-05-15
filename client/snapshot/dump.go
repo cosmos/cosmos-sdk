@@ -50,7 +50,7 @@ func DumpArchiveCmd() *cobra.Command {
 			}
 
 			if snapshot == nil {
-				return errors.New("snapshot don't exists")
+				return errors.New("snapshot doesn't exist")
 			}
 
 			bz, err := snapshot.Marshal()

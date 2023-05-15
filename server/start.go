@@ -290,7 +290,6 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	genDocProvider := getGenDocProvider(cfg)
 	var (
 		tmNode   *node.Node
 		gRPCOnly = svrCtx.Viper.GetBool(flagGRPCOnly)
@@ -301,22 +300,8 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		config.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-
-		tmNode, err = node.NewNode(
-			cfg,
-			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
-			nodeKey,
-			proxy.NewLocalClientCreator(app),
-			genDocProvider,
-			node.DefaultDBProvider,
-			node.DefaultMetricsProvider(cfg.Instrumentation),
-			servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
-		)
+		tmNode, err = startCmtNode(cfg, nodeKey, app, svrCtx)
 		if err != nil {
-			return err
-		}
-
-		if err := tmNode.Start(); err != nil {
 			return err
 		}
 	}
@@ -355,6 +340,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	if config.API.Enable {
 		// TODO: Why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
 		// surely theres a better way. This is likely a serious node start time overhead.
+		genDocProvider := getGenDocProvider(cfg)
 		genDoc, err := genDocProvider()
 		if err != nil {
 			return err
@@ -402,6 +388,28 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 	// wait for signal capture and gracefully return
 	return g.Wait()
+}
+
+// TODO: Move nodeKey into being created within the function.
+func startCmtNode(cfg *cmtcfg.Config, nodeKey *p2p.NodeKey, app types.Application, svrCtx *Context) (tmNode *node.Node, err error) {
+	tmNode, err = node.NewNode(
+		cfg,
+		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+		nodeKey,
+		proxy.NewLocalClientCreator(app),
+		getGenDocProvider(cfg),
+		node.DefaultDBProvider,
+		node.DefaultMetricsProvider(cfg.Instrumentation),
+		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
+	)
+	if err != nil {
+		return tmNode, err
+	}
+
+	if err := tmNode.Start(); err != nil {
+		return tmNode, err
+	}
+	return tmNode, nil
 }
 
 func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {

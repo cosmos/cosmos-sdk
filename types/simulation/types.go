@@ -90,7 +90,7 @@ func NewOperationMsgBasic(moduleName, msgType, comment string, ok bool, msg []by
 }
 
 // NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string, _ *codec.ProtoCodec) OperationMsg {
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
 	msgType := sdk.MsgTypeURL(msg)
 	moduleName := sdk.GetModuleNameFromTypeURL(msgType)
 	if moduleName == "" {

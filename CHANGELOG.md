@@ -201,7 +201,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   - The following functions are removed from the gov types: `DepositKey`, `DepositsKey`.
 * (sims) [#16155](https://github.com/cosmos/cosmos-sdk/pull/16155) 
   * `simulation.NewOperationMsg` now marshals the operation msg as proto bytes instead of legacy amino JSON bytes.
-  * Following this, the field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.
+  * `simulation.NewOperationMsg` is now 2-arity instead of 3-arity with the obsolete argument `codec.ProtoCodec` removed.
+  * The field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.
 
 ### Client Breaking Changes
 

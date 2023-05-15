@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.1
-	cosmossdk.io/core v0.6.2-0.20230323161322-ccd8d40119e4
+	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.9.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -43,7 +43,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogoproto v1.4.9 // indirect
+	github.com/cosmos/gogoproto v1.4.10 // indirect
 	github.com/cosmos/iavl v0.21.0-beta.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
@@ -104,10 +104,10 @@ require (
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
-	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/crypto v0.9.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

@@ -24,7 +24,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			return err
 		}
 
-		params, err := keeper.GetParams(ctx)
+		params, err := keeper.Params.Get(ctx)
 		if err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
 			proposal.Expedited = false
-			params, err := keeper.GetParams(ctx)
+			params, err := keeper.Params.Get(ctx)
 			if err != nil {
 				return err
 			}

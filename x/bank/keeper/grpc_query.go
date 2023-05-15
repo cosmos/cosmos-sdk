@@ -16,7 +16,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+type Querier struct {
+	BaseKeeper
+}
+
 var _ types.QueryServer = BaseKeeper{}
+
+func NewQuerier(keeper *BaseKeeper) Querier {
+	return Querier{BaseKeeper: *keeper}
+}
 
 // Balance implements the Query/Balance gRPC method
 func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {

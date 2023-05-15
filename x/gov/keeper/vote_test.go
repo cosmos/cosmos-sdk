@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/collections"
 	"testing"
+
+	"cosmossdk.io/collections"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"

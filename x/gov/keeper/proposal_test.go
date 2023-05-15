@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/collections"
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"cosmossdk.io/collections"
 
 	"github.com/stretchr/testify/require"
 

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/collections"
 	"fmt"
 
 	"cosmossdk.io/errors"
@@ -38,7 +39,7 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 	}
 
 	vote := v1.NewVote(proposalID, voterAddr, options, metadata)
-	err = keeper.SetVote(ctx, vote)
+	err = keeper.Votes.Set(ctx, collections.Join(proposalID, voterAddr), vote)
 	if err != nil {
 		return err
 	}
@@ -94,22 +95,6 @@ func (keeper Keeper) GetVote(ctx context.Context, proposalID uint64, voterAddr s
 	}
 
 	return vote, nil
-}
-
-// SetVote sets a Vote to the gov store
-func (keeper Keeper) SetVote(ctx context.Context, vote v1.Vote) error {
-	store := keeper.storeService.OpenKVStore(ctx)
-	bz, err := keeper.cdc.Marshal(&vote)
-	if err != nil {
-		return err
-	}
-
-	addr, err := keeper.authKeeper.StringToBytes(vote.Voter)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.VoteKey(vote.ProposalId, addr), bz)
 }
 
 // IterateAllVotes iterates over all the stored votes and performs a callback function

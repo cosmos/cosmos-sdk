@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"cosmossdk.io/collections"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +43,14 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	}
 
 	for _, vote := range data.Votes {
-		k.SetVote(ctx, *vote)
+		addr, err := ak.StringToBytes(vote.Voter)
+		if err != nil {
+			panic(err)
+		}
+		err = k.Votes.Set(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(addr)), *vote)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, proposal := range data.Proposals {

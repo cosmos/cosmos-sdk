@@ -49,7 +49,7 @@ var (
 
 	DepositsKeyPrefix = collections.NewPrefix(16)
 
-	VotesKeyPrefix = []byte{0x20}
+	VotesKeyPrefix = collections.NewPrefix(32)
 
 	// ParamsKey is the key to query all gov params
 	ParamsKey = collections.NewPrefix(48)

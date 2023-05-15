@@ -34,7 +34,7 @@
     "tailwindcss": "^3.3.2"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "2.4.0"
+    "@docusaurus/module-type-aliases": "2.4.1"
   },
   "overrides": {
     "trim": "0.0.3"

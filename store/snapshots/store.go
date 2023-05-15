@@ -317,7 +317,7 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 
 // saveChunkContent save the chunk to disk
 func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
-	path := s.pathChunk(snapshot.Height, snapshot.Format, index)
+	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
 	return os.WriteFile(path, chunk, 0o600)
 }
 

@@ -196,6 +196,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types/math) [#16040](https://github.com/cosmos/cosmos-sdk/pull/16040) Remove unused aliases in math.go
 * (x/gov) [#16106](https://github.com/cosmos/cosmos-sdk/pull/16106) Remove gRPC query methods from Keeper
 * (x/gov) [#16118](https://github.com/cosmos/cosmos-sdk/pull/16118/) Use collections for constituion and params state management.
+* (sims) [#16155](https://github.com/cosmos/cosmos-sdk/pull/16155) 
+  * `simulation.NewOperationMsg` now marshals the operation msg as proto bytes instead of legacy amino JSON bytes.
+  * Following this, the field `OperationMsg` is now of type `[]byte` instead of `json.RawMessage`.
 
 ### Client Breaking Changes
 

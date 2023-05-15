@@ -337,27 +337,9 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	if svrCfg.API.Enable {
-		// TODO: Why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
-		// surely theres a better way. This is likely a serious node start time overhead.
-		genDocProvider := getGenDocProvider(cmtCfg)
-		genDoc, err := genDocProvider()
-		if err != nil {
-			return err
-		}
-
-		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
-
-		apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
-		app.RegisterAPIRoutes(apiSrv, svrCfg.API)
-
-		if svrCfg.Telemetry.Enabled {
-			apiSrv.SetTelemetry(metrics)
-		}
-
-		g.Go(func() error {
-			return apiSrv.Start(ctx, svrCfg)
-		})
+	err = startApiServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	if err != nil {
+		return err
 	}
 
 	// At this point it is safe to block the process if we're in gRPC-only mode as
@@ -511,6 +493,34 @@ func startGrpcServer(ctx context.Context, g *errgroup.Group, config serverconfig
 		return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config, grpcSrv)
 	})
 	return grpcSrv, clientCtx, nil
+}
+
+func startApiServer(ctx context.Context, g *errgroup.Group, cmtCfg *cmtcfg.Config, svrCfg serverconfig.Config,
+	clientCtx client.Context, svrCtx *Context, app types.Application, home string, grpcSrv *grpc.Server, metrics *telemetry.Metrics) error {
+	if !svrCfg.API.Enable {
+		return nil
+	}
+	// TODO: Why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
+	// surely theres a better way. This is likely a serious node start time overhead.
+	genDocProvider := getGenDocProvider(cmtCfg)
+	genDoc, err := genDocProvider()
+	if err != nil {
+		return err
+	}
+
+	clientCtx = clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
+
+	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
+	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
+
+	if svrCfg.Telemetry.Enabled {
+		apiSrv.SetTelemetry(metrics)
+	}
+
+	g.Go(func() error {
+		return apiSrv.Start(ctx, svrCfg)
+	})
+	return nil
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {

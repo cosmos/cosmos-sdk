@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -152,8 +153,8 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 
 	var msg v1.MsgSubmitProposal
 	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(t, err)
-
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Proposer)
 	require.NotEqual(t, len(msg.InitialDeposit), 0)
@@ -181,9 +182,8 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgSubmitProposal
-	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(t, err)
-
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Proposer)
 	require.NotEqual(t, len(msg.InitialDeposit), 0)
@@ -229,9 +229,9 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgCancelProposal
-	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(t, err)
-
+	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
 	require.Equal(t, proposer.String(), msg.Proposer)
@@ -274,9 +274,8 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgDeposit
-	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(t, err)
-
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor)
@@ -321,8 +320,8 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgVote
-	govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Voter)
@@ -365,8 +364,8 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgVoteWeighted
-	govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Voter)

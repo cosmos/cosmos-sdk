@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -70,11 +72,11 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 
 // OperationMsg - structure for operation output
 type OperationMsg struct {
-	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
-	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
-	Comment string          `json:"comment" yaml:"comment"` // additional comment
-	OK      bool            `json:"ok" yaml:"ok"`           // success
-	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg
+	Route   string `json:"route" yaml:"route"`     // msg route (i.e module name)
+	Name    string `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
+	Comment string `json:"comment" yaml:"comment"` // additional comment
+	OK      bool   `json:"ok" yaml:"ok"`           // success
+	Msg     []byte `json:"msg" yaml:"msg"`         // protobuf encoded msg
 }
 
 // NewOperationMsgBasic creates a new operation message from raw input.
@@ -98,12 +100,12 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 	if cdc == nil {
 		cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 	}
-	jsonBytes, err := cdc.MarshalAminoJSON(msg)
+	protoBz, err := proto.Marshal(msg)
 	if err != nil {
-		panic(fmt.Errorf("failed to marshal aminon JSON: %w", err))
+		panic(fmt.Errorf("failed to marshal proto message: %w", err))
 	}
 
-	return NewOperationMsgBasic(moduleName, msgType, comment, ok, jsonBytes)
+	return NewOperationMsgBasic(moduleName, msgType, comment, ok, protoBz)
 }
 
 // NoOpMsg - create a no-operation message

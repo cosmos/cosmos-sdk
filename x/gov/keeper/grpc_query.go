@@ -82,9 +82,9 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 					return nil, err
 				}
 
-				_, err = q.k.GetVote(ctx, p.Id, voter)
+				has, err := q.k.Votes.Has(ctx, collections.Join(p.Id, sdk.AccAddress(voter)))
 				// if no error, vote found, matchVoter = true
-				matchVoter = err == nil
+				matchVoter = err == nil && has
 			}
 
 			// match depositor (if supplied)
@@ -131,9 +131,9 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 	if err != nil {
 		return nil, err
 	}
-	vote, err := q.k.GetVote(ctx, req.ProposalId, voter)
+	vote, err := q.k.Votes.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(voter)))
 	if err != nil {
-		if errors.IsOf(err, types.ErrVoteNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.InvalidArgument,
 				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
 		}

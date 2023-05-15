@@ -9,7 +9,6 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
@@ -39,7 +38,7 @@ func TestVotes(t *testing.T) {
 
 	// Test first vote
 	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), metadata))
-	vote, err := govKeeper.GetVote(ctx, proposalID, addrs[0])
+	vote, err := govKeeper.Votes.Get(ctx, collections.Join(proposalID, addrs[0]))
 	require.Nil(t, err)
 	require.Equal(t, addrs[0].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
@@ -48,7 +47,7 @@ func TestVotes(t *testing.T) {
 
 	// Test change of vote
 	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
-	vote, err = govKeeper.GetVote(ctx, proposalID, addrs[0])
+	vote, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID, addrs[0]))
 	require.Nil(t, err)
 	require.Equal(t, addrs[0].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
@@ -62,7 +61,7 @@ func TestVotes(t *testing.T) {
 		v1.NewWeightedVoteOption(v1.OptionAbstain, sdkmath.LegacyNewDecWithPrec(5, 2)),
 		v1.NewWeightedVoteOption(v1.OptionNoWithVeto, sdkmath.LegacyNewDecWithPrec(5, 2)),
 	}, ""))
-	vote, err = govKeeper.GetVote(ctx, proposalID, addrs[1])
+	vote, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID, addrs[1]))
 	require.Nil(t, err)
 	require.Equal(t, addrs[1].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
@@ -99,6 +98,6 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, votes[1].Options[3].Weight, sdkmath.LegacyNewDecWithPrec(5, 2).String())
 
 	// non existent vote
-	_, err = govKeeper.GetVote(ctx, proposalID+100, addrs[1])
-	require.ErrorIs(t, err, types.ErrVoteNotFound)
+	_, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID+100, addrs[1]))
+	require.ErrorIs(t, err, collections.ErrNotFound)
 }

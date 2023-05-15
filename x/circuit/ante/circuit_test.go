@@ -88,5 +88,4 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 			require.Equal(t, "tx type not allowed", err.Error())
 		}
 	}
-
 }

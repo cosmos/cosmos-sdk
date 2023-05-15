@@ -19,7 +19,7 @@ require (
 	cloud.google.com/go/storage v1.30.0 // indirect
 	cosmossdk.io/api v0.4.1 // indirect
 	cosmossdk.io/collections v0.1.0 // indirect
-	cosmossdk.io/core v0.6.1 // indirect
+	cosmossdk.io/core v0.7.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/math v1.0.0 // indirect
@@ -50,7 +50,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230424095137-b73c17cb9cc8 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.4.9 // indirect
+	github.com/cosmos/gogoproto v1.4.10 // indirect
 	github.com/cosmos/iavl v0.21.0-beta.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect

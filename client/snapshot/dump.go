@@ -3,6 +3,7 @@ package snapshot
 import (
 	"archive/tar"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -48,6 +49,10 @@ func DumpArchiveCmd() *cobra.Command {
 				return err
 			}
 
+			if snapshot == nil {
+				return errors.New("snapshot doesn't exist")
+			}
+
 			bz, err := snapshot.Marshal()
 			if err != nil {
 				return err
@@ -82,6 +87,7 @@ func DumpArchiveCmd() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("failed to open chunk file %s: %w", path, err)
 				}
+				defer file.Close()
 
 				st, err := file.Stat()
 				if err != nil {

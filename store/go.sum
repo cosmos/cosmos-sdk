@@ -63,8 +63,8 @@ github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3Ee
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cosmos/cosmos-db v1.0.0-rc.1 h1:SjnT8B6WKMW9WEIX32qMhnEEKcI7ZP0+G1Sa9HD3nmY=
 github.com/cosmos/cosmos-db v1.0.0-rc.1/go.mod h1:Dnmk3flSf5lkwCqvvjNpoxjpXzhxnCAFzKHlbaForso=
-github.com/cosmos/gogoproto v1.4.9 h1:MjVmV6F1yk1rJLWtKeYdGQcTbE880t+VlRcayEBqUKQ=
-github.com/cosmos/gogoproto v1.4.9/go.mod h1:c0ysUnwvnlR+RmCUvqqii7pp8kHBB/DBcp/5VLA/nQk=
+github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
+github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
 github.com/cosmos/iavl v0.21.0 h1:E39qwHl45PaQUe/mRA8lY4kOqaunOorVQufpv5JPgXk=
 github.com/cosmos/iavl v0.21.0/go.mod h1:ejCWRfxvfmQTcligmeRcoQeB8VgHGxkVlIqKSKG7YaI=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=

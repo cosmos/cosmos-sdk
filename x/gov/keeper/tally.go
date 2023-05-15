@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"cosmossdk.io/collections"
+	"errors"
 
 	"cosmossdk.io/math"
 
@@ -79,7 +80,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 		return false, keeper.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
 	})
 
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return false, false, tallyResults, err
 	}
 

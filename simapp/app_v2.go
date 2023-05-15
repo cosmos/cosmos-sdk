@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	storetypes "cosmossdk.io/store/types"
+	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
@@ -81,6 +82,7 @@ type SimApp struct {
 	GroupKeeper           groupkeeper.Keeper
 	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
+	CircuitBreakerKeeper  circuitkeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -165,6 +167,7 @@ func NewSimApp(
 		&app.GroupKeeper,
 		&app.NFTKeeper,
 		&app.ConsensusParamsKeeper,
+		&app.CircuitBreakerKeeper,
 	); err != nil {
 		panic(err)
 	}

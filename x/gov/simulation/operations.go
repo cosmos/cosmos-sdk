@@ -271,7 +271,7 @@ func simulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		opMsg := simtypes.NewOperationMsg(msg, true, "", nil)
+		opMsg := simtypes.NewOperationMsg(msg, true, "")
 
 		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)

@@ -1,17 +1,15 @@
 package simulation_test
 
 import (
-	"encoding/json"
 	"math/rand"
 	"testing"
 
-	distributionv1beta1 "cosmossdk.io/api/cosmos/distribution/v1beta1"
-	"cosmossdk.io/core/coins"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -83,15 +81,13 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msgWrapper struct {
-		Value distributionv1beta1.MsgSetWithdrawAddress `json:"value"`
-	}
-	err = json.Unmarshal(operationMsg.Msg, &msgWrapper)
-	msg := &msgWrapper.Value
+	var msg types.MsgSetWithdrawAddress
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
 	suite.Require().Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.WithdrawAddress)
+	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgSetWithdrawAddress{}), sdk.MsgTypeURL(&msg))
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -125,15 +121,13 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msgWrapper struct {
-		Value distributionv1beta1.MsgWithdrawDelegatorReward `json:"value"`
-	}
-	err = json.Unmarshal(operationMsg.Msg, &msgWrapper)
-	msg := &msgWrapper.Value
-
+	var msg types.MsgWithdrawDelegatorReward
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmosvaloper1l4s054098kk9hmr5753c6k3m2kw65h686d3mhr", msg.ValidatorAddress)
 	suite.Require().Equal("cosmos1d6u7zhjwmsucs678d7qn95uqajd4ucl9jcjt26", msg.DelegatorAddress)
+	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), sdk.MsgTypeURL(&msg))
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -187,14 +181,12 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	} else {
 		suite.Require().NoError(err)
 
-		var msgWrapper struct {
-			Value distributionv1beta1.MsgWithdrawValidatorCommission `json:"value"`
-		}
-		err = json.Unmarshal(operationMsg.Msg, &msgWrapper)
-		msg := &msgWrapper.Value
-
+		var msg types.MsgWithdrawValidatorCommission
+		err = proto.Unmarshal(operationMsg.Msg, &msg)
+		suite.Require().NoError(err)
 		suite.Require().True(operationMsg.OK)
 		suite.Require().Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
+		suite.Require().Equal(sdk.MsgTypeURL(&types.MsgWithdrawValidatorCommission{}), sdk.MsgTypeURL(&msg))
 		suite.Require().Len(futureOperations, 0)
 	}
 }
@@ -215,16 +207,13 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msgWrapper struct {
-		Value distributionv1beta1.MsgFundCommunityPool `json:"value"`
-	}
-	err = json.Unmarshal(operationMsg.Msg, &msgWrapper)
-	msg := &msgWrapper.Value
-
+	var msg types.MsgFundCommunityPool
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("4896096stake", coins.LegacyFormatCoins(msg.Amount))
+	suite.Require().Equal("4896096stake", msg.Amount.String())
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor)
+	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgFundCommunityPool{}), sdk.MsgTypeURL(&msg))
 	suite.Require().Len(futureOperations, 0)
 }
 

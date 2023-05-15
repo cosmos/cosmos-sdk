@@ -277,7 +277,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 	// TODO: Should this be moved to the very top of the function?
-	config, err := getAndValidateConfig(svrCtx)
+	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
 		return err
 	}
@@ -297,7 +297,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 	if gRPCOnly {
 		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
-		config.GRPC.Enable = true
+		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
 		tmNode, err = startCmtNode(cfg, nodeKey, app, svrCtx)
@@ -309,17 +309,17 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	// Add the tx service to the gRPC router. We only need to register this
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local CometBFT RPC client.
-	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
+	if (svrCfg.API.Enable || svrCfg.GRPC.Enable) && tmNode != nil {
 		// Re-assign for making the client available below do not use := to avoid
 		// shadowing the clientCtx variable.
 		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
-		app.RegisterNodeService(clientCtx, config)
+		app.RegisterNodeService(clientCtx, svrCfg)
 	}
 
-	metrics, err := startTelemetry(config)
+	metrics, err := startTelemetry(svrCfg)
 	if err != nil {
 		return err
 	}
@@ -332,12 +332,12 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	// listen for quit signals so the calling parent process can gracefully exit
 	ListenForQuitSignals(cancelFn, svrCtx.Logger)
 
-	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, config.GRPC, clientCtx, svrCtx, app)
+	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
 		return err
 	}
 
-	if config.API.Enable {
+	if svrCfg.API.Enable {
 		// TODO: Why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
 		// surely theres a better way. This is likely a serious node start time overhead.
 		genDocProvider := getGenDocProvider(cfg)
@@ -349,14 +349,14 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
 
 		apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
-		app.RegisterAPIRoutes(apiSrv, config.API)
+		app.RegisterAPIRoutes(apiSrv, svrCfg.API)
 
-		if config.Telemetry.Enabled {
+		if svrCfg.Telemetry.Enabled {
 			apiSrv.SetTelemetry(metrics)
 		}
 
 		g.Go(func() error {
-			return apiSrv.Start(ctx, config)
+			return apiSrv.Start(ctx, svrCfg)
 		})
 	}
 
@@ -376,6 +376,8 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	})
 
 	// deferred cleanup function
+	// TODO: Make a generic cleanup function that takes in several func(), and runs them all.
+	// then we defer that.
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()

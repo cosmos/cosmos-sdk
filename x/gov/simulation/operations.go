@@ -289,7 +289,7 @@ func simulateMsgSubmitProposal(
 
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
-		params, _ := k.GetParams(ctx)
+		params, _ := k.Params.Get(ctx)
 		votingPeriod := params.VotingPeriod
 
 		fops := make([]simtypes.FutureOperation, numVotes+1)
@@ -555,7 +555,7 @@ func randomDeposit(
 		return nil, true, nil // skip
 	}
 
-	params, _ := k.GetParams(ctx)
+	params, _ := k.Params.Get(ctx)
 	minDeposit := params.MinDeposit
 	if expedited {
 		minDeposit = params.ExpeditedMinDeposit

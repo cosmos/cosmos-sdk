@@ -63,7 +63,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	params, _ := suite.GovKeeper.GetParams(ctx)
+	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
@@ -137,7 +137,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NotNil(t, res)
 
 	newHeader = ctx.BlockHeader()
-	params, _ := suite.GovKeeper.GetParams(ctx)
+	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
@@ -280,7 +280,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, res1)
 
-			params, _ := suite.GovKeeper.GetParams(ctx)
+			params, _ := suite.GovKeeper.Params.Get(ctx)
 			votingPeriod := params.VotingPeriod
 			if tc.expedited {
 				votingPeriod = params.ExpeditedVotingPeriod
@@ -389,7 +389,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NoError(t, err)
 
 			newHeader := ctx.BlockHeader()
-			params, _ := suite.GovKeeper.GetParams(ctx)
+			params, _ := suite.GovKeeper.Params.Get(ctx)
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
@@ -435,7 +435,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 	require.NoError(t, err)
 
-	params, _ := suite.GovKeeper.GetParams(ctx)
+	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
@@ -485,7 +485,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(true)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
-			params, err := suite.GovKeeper.GetParams(ctx)
+			params, err := suite.GovKeeper.Params.Get(ctx)
 			require.NoError(t, err)
 
 			SortAddresses(addrs)

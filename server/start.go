@@ -337,7 +337,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	err = startApiServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
@@ -496,7 +496,7 @@ func startGrpcServer(ctx context.Context, g *errgroup.Group, config serverconfig
 	return grpcSrv, clientCtx, nil
 }
 
-func startApiServer(ctx context.Context, g *errgroup.Group, cmtCfg *cmtcfg.Config, svrCfg serverconfig.Config,
+func startAPIServer(ctx context.Context, g *errgroup.Group, cmtCfg *cmtcfg.Config, svrCfg serverconfig.Config,
 	clientCtx client.Context, svrCtx *Context, app types.Application, home string, grpcSrv *grpc.Server, metrics *telemetry.Metrics,
 ) error {
 	if !svrCfg.API.Enable {

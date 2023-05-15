@@ -15,7 +15,7 @@ require (
 require (
 	cosmossdk.io/api v0.4.1 // indirect
 	cosmossdk.io/collections v0.1.0 // indirect
-	cosmossdk.io/core v0.6.1 // indirect
+	cosmossdk.io/core v0.7.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/log v1.1.0 // indirect
@@ -157,7 +157,7 @@ require (
 
 replace cosmossdk.io/collections => ../../collections
 
-// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
+// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(
-replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0

@@ -152,7 +152,6 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgSubmitProposal
-	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
@@ -186,8 +185,10 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	require.NoError(t, err)
 	var msgLegacyContent v1.MsgExecLegacyContent
 	err = proto.Unmarshal(msg.Messages[0].Value, &msgLegacyContent)
+	require.NoError(t, err)
 	var textProposal v1beta1.TextProposal
 	err = proto.Unmarshal(msgLegacyContent.Content.Value, &textProposal)
+	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Proposer)

@@ -355,6 +355,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 
 	var msg types.MsgBeginRedelegate
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
 	require.Equal("cosmos1ua0fwyws7vzjrry3pqkklvf8mny93l9s9zg0h4", msg.DelegatorAddress)
 	require.Equal("stake", msg.Amount.Denom)

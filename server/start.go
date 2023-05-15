@@ -353,14 +353,14 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	// listen for quit signals so the calling parent process can gracefully exit
 	ListenForQuitSignals(cancelFn, svrCtx.Logger)
 
-	grpcSrv, clientCtx, err := startGrpcServer(g, config.GRPC, ctx, clientCtx, svrCtx, app)
+	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, config.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
 		return err
 	}
 
 	if config.API.Enable {
-		// TODO: wtf, why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
-		// surely theres a better way.
+		// TODO: Why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
+		// surely theres a better way. This is likely a serious node start time overhead.
 		genDoc, err := genDocProvider()
 		if err != nil {
 			return err
@@ -444,7 +444,7 @@ func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func
 	return traceWriter, cleanup, nil
 }
 
-func startGrpcServer(g *errgroup.Group, config serverconfig.GRPCConfig, ctx context.Context, clientCtx client.Context, svrCtx *Context, app types.Application) (
+func startGrpcServer(ctx context.Context, g *errgroup.Group, config serverconfig.GRPCConfig, clientCtx client.Context, svrCtx *Context, app types.Application) (
 	*grpc.Server, client.Context, error) {
 	if !config.Enable {
 		// return grpcServer as nil if gRPC is disabled

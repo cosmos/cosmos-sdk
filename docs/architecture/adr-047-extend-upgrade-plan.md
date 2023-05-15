@@ -129,7 +129,7 @@ Downloading of an `Artifact` will happen the same way that URLs from `info` are 
 
 ### Cosmovisor Updates
 
-If the `upgrade-info.json` file does not contain any `Artifacts`, existing functionality are maintained.
+If the `upgrade-info.json` file does not contain any `Artifacts`, existing functionality is maintained.
 
 Cosmovisor is to be updated to look for and handle the new `Artifacts` in `upgrade-info.json`.
 If the `Artifacts` are provided, the following should be done:

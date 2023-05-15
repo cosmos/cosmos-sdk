@@ -137,14 +137,14 @@ func (any *Any) String() string {
 
 func AnyV2ToGogoAny(any *anypb.Any) *Any {
 	return &Any{
-		TypeUrl: any.TypeUrl,
-		Value:   any.Value,
+		TypeUrl: any.GetTypeUrl(),
+		Value:   any.GetValue(),
 	}
 }
 
 func GogoAnyToAnyV2(any *Any) *anypb.Any {
 	return &anypb.Any{
-		TypeUrl: any.TypeUrl,
-		Value:   any.Value,
+		TypeUrl: any.GetTypeUrl(),
+		Value:   any.GetValue(),
 	}
 }

@@ -374,9 +374,12 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 	// loop here in the rare case where a ADR-028-derived address creates a
 	// collision with an existing address.
 	for {
-		// nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key)) // TODO: find a way to repliate the previous behavior
+		nextAccVal, err := k.GetNextPolicyAccNum(ctx)
+		if err != nil {
+			return nil, err
+		}
 		derivationKey := make([]byte, 8)
-		binary.BigEndian.PutUint64(derivationKey, 69420) // TODO see above
+		binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
 		// The first derivation key is 0x20 and represents the value that had GroupPolicyTablePrefix in the previous orm.
 		ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{0x20}, derivationKey)
@@ -424,6 +427,23 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 	}
 
 	return &group.MsgCreateGroupPolicyResponse{Address: accountAddr.String()}, nil
+}
+
+// GetNextPolicyAccNum returns the next account number to be used for a group policy account.
+// It is aims to keep the logic of the previous orm, and keep the same derivation key.
+func (k Keeper) GetNextPolicyAccNum(ctx context.Context) (uint64, error) {
+	// at all time the value must be higher than the previous smallest group policy account number sequence
+	it, err := k.state.GroupPolicyInfoTable().List(ctx, &groupv1.GroupPolicyInfoAddressIndexKey{})
+	if err != nil {
+		return 0, err
+	}
+
+	var total uint64
+	for it.Next() {
+		total++
+	}
+
+	return total + 1, nil
 }
 
 func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {

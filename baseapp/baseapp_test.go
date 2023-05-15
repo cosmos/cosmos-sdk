@@ -509,6 +509,8 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	store := ctx.KVStore(capKey1)
 	require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
 
+	suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+
 	// execute at tx that will pass the ante handler (the checkTx state should
 	// mutate) but will fail the message handler
 	tx = newTxCounter(t, suite.txConfig, 0, 0)
@@ -517,7 +519,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes2, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	res, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	res, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 2, Txs: [][]byte{txBytes2}})
 	require.NoError(t, err)
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
@@ -527,6 +529,8 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
 
+	suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+
 	// Execute a successful ante handler and message execution where state is
 	// implicitly checked by previous tx executions.
 	tx = newTxCounter(t, suite.txConfig, 1, 0)
@@ -534,15 +538,15 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes3, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	res, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	res, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 3, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = getFinalizeBlockStateCtx(suite.baseApp)
 	store = ctx.KVStore(capKey1)
-	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
-	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
+	require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
+	require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
 
 	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height: suite.baseApp.LastBlockHeight() + 1,

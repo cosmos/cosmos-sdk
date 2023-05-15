@@ -154,7 +154,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 	if req.Height == 0 {
 		req.Height = app.LastBlockHeight()
 	}
-
+	fmt.Println(req.Path, "req.Path")
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
 	defer telemetry.MeasureSince(time.Now(), req.Path)
@@ -180,7 +180,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 		resp = handleQueryApp(app, path, req)
 
 	case QueryPathStore:
-		resp = handleQueryStore(app, path, req)
+		resp = handleQueryStore(app, path, *req)
 
 	case QueryPathP2P:
 		resp = handleQueryP2P(app, path)
@@ -865,7 +865,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 		), app.trace)
 }
 
-func handleQueryStore(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {
+func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.ResponseQuery {
 	// "/store" prefix for store queries
 	queryable, ok := app.cms.(storetypes.Queryable)
 	if !ok {
@@ -885,7 +885,7 @@ func handleQueryStore(app *BaseApp, path []string, req *abci.RequestQuery) *abci
 	// TODO: Update Query interface method accept a pointer to RequestQuery.
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-	resp := queryable.Query(req)
+	resp := queryable.Query(&req)
 	resp.Height = req.Height
 
 	return resp

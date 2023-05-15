@@ -24,7 +24,7 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
-	DefaultWeightMsgRotateConsPubKey          int = 100
+	DefaultWeightMsgRotateConsPubKey          int = 5
 
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
@@ -656,6 +656,10 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
+		if account == nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, nil
+		}
+
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())

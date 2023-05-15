@@ -252,7 +252,7 @@ func TestValidateInitialDeposit(t *testing.T) {
 			}
 			params.MinInitialDepositRatio = sdkmath.LegacyNewDec(tc.minInitialDepositPercent).Quo(sdkmath.LegacyNewDec(100)).String()
 
-			govKeeper.SetParams(ctx, params)
+			govKeeper.Params.Set(ctx, params)
 
 			err := govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, tc.expedited)
 
@@ -325,7 +325,7 @@ func TestChargeDeposit(t *testing.T) {
 					params.ProposalCancelDest = authtypes.NewModuleAddress(disttypes.ModuleName).String()
 				}
 
-				err := govKeeper.SetParams(ctx, params)
+				err := govKeeper.Params.Set(ctx, params)
 				require.NoError(t, err)
 
 				tp := TestProposal

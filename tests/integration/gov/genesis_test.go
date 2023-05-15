@@ -88,7 +88,8 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID2 := proposal2.Id
 
-	params, _ := s1.GovKeeper.GetParams(ctx)
+	params, err := s1.GovKeeper.Params.Get(ctx)
+	assert.NilError(t, err)
 	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], params.MinDeposit)
 	assert.NilError(t, err)
 	assert.Assert(t, votingStarted)
@@ -145,7 +146,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	ctx2 := s2.app.BaseApp.NewContext(false, cmtproto.Header{})
 
-	params, err = s2.GovKeeper.GetParams(ctx2)
+	params, err = s2.GovKeeper.Params.Get(ctx2)
 	assert.NilError(t, err)
 	// Jump the time forward past the DepositPeriod and VotingPeriod
 	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))

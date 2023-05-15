@@ -335,21 +335,25 @@ func (k Keeper) SetUnbondingDelegationEntry(
 ) types.UnbondingDelegation {
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	id := k.IncrementUnbondingID(ctx)
+	isNewUbdEntry := true
 	if found {
-		ubd.AddEntry(creationHeight, minTime, balance, id)
+		isNewUbdEntry = ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else {
 		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
 	}
 
 	k.SetUnbondingDelegation(ctx, ubd)
 
-	// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
-	k.SetUnbondingDelegationByUnbondingID(ctx, ubd, id)
+	// only call the hook for new entries since
+	// calls to AfterUnbondingInitiated are not idempotent
+	if isNewUbdEntry {
+		// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
+		k.SetUnbondingDelegationByUnbondingID(ctx, ubd, id)
 
-	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-		k.Logger(ctx).Error("failed to call after unbonding initiated hook", "error", err)
+		if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
+			k.Logger(ctx).Error("failed to call after unbonding initiated hook", "error", err)
+		}
 	}
-
 	return ubd
 }
 

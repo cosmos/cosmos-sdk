@@ -159,7 +159,7 @@ require (
 
 // Below are the short-lived replace of the Cosmos SDK
 replace (
-	comsossdk.io/core => ./core
+	cosmossdk.io/core => ./core
 	// TODO: remove me after collections 0.2. is released.
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/store => ./store

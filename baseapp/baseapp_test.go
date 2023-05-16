@@ -131,12 +131,14 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 			txs = append(txs, txBytes)
 		}
 
-		suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		_, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height: height,
 			Txs:    txs,
 		})
+		require.NoError(t, err)
 
-		suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+		_, err = suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+		require.NoError(t, err)
 
 		// wait for snapshot to be taken, since it happens asynchronously
 		if cfg.snapshotInterval > 0 && uint64(height)%cfg.snapshotInterval == 0 {
@@ -500,51 +502,49 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	// res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	// require.Empty(t, res.Events)
-	// require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+	res, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	// ctx := getDeliverStateCtx(suite.baseApp)
-	// store := ctx.KVStore(capKey1)
-	// require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
+	ctx := getFinalizeBlockStateCtx(suite.baseApp)
+	store := ctx.KVStore(capKey1)
+	require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
 
 	// execute at tx that will pass the ante handler (the checkTx state should
 	// mutate) but will fail the message handler
 	tx = newTxCounter(t, suite.txConfig, 0, 0)
 	tx = setFailOnHandler(suite.txConfig, tx, true)
 
-	txBytes2, err := suite.txConfig.TxEncoder()(tx)
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	// res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes2})
-	// require.NotEmpty(t, res.Events)
-	// require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+	res, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	// ctx = getDeliverStateCtx(suite.baseApp)
-	// store = ctx.KVStore(capKey1)
-	// require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
-	// require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
+	ctx = getFinalizeBlockStateCtx(suite.baseApp)
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
+	require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
 
 	// Execute a successful ante handler and message execution where state is
 	// implicitly checked by previous tx executions.
 	tx = newTxCounter(t, suite.txConfig, 1, 0)
 
-	txBytes3, err := suite.txConfig.TxEncoder()(tx)
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	// res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes3})
-	// require.NotEmpty(t, res.Events)
-	// require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+	res, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.NotEmpty(t, res.TxResults[0].Events)
+	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	// ctx = getDeliverStateCtx(suite.baseApp)
-	// store = ctx.KVStore(capKey1)
-	// require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
-	// require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
-
-	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
-		Height: suite.baseApp.LastBlockHeight() + 1,
-		Txs:    [][]byte{txBytes, txBytes2, txBytes3},
-	})
+	ctx = getFinalizeBlockStateCtx(suite.baseApp)
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
+	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
 
 	suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
 }
@@ -561,8 +561,10 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 2})
+	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	testCases := []struct {
 		name   string
@@ -644,6 +646,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	for i := int64(1); i <= 7; i++ {
 		res, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: i})
 		require.NoError(t, err)
+		_, err = app.Commit(context.Background(), &abci.RequestCommit{})
 		lastCommitID = storetypes.CommitID{Version: i, Hash: res.AppHash}
 	}
 

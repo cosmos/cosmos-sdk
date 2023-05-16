@@ -180,7 +180,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 		resp = handleQueryApp(app, path, req)
 
 	case QueryPathStore:
-		resp = handleQueryStore(app, path, req)
+		resp = handleQueryStore(app, path, *req)
 
 	case QueryPathP2P:
 		resp = handleQueryP2P(app, path)
@@ -318,7 +318,7 @@ func (app *BaseApp) ApplySnapshotChunk(_ context.Context, req *abci.RequestApply
 			Result:        abci.ResponseApplySnapshotChunk_RETRY,
 			RefetchChunks: []uint32{req.Index},
 			RejectSenders: []string{req.Sender},
-		}, err
+		}, nil
 
 	default:
 		app.logger.Error("failed to restore snapshot", "err", err)
@@ -865,7 +865,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 		), app.trace)
 }
 
-func handleQueryStore(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {
+func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.ResponseQuery {
 	// "/store" prefix for store queries
 	queryable, ok := app.cms.(storetypes.Queryable)
 	if !ok {
@@ -885,7 +885,7 @@ func handleQueryStore(app *BaseApp, path []string, req *abci.RequestQuery) *abci
 	// TODO: Update Query interface method accept a pointer to RequestQuery.
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-	resp := queryable.Query(req)
+	resp := queryable.Query(&req)
 	resp.Height = req.Height
 
 	return resp

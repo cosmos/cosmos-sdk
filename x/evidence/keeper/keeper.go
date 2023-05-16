@@ -122,7 +122,7 @@ func (k Keeper) SetEvidence(ctx context.Context, evidence exported.Evidence) err
 }
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
-// the given hash, (nil, false) is returned.
+// the given hash, (nil, types.ErrNoEvidenceExists) is returned.
 func (k Keeper) GetEvidence(ctx context.Context, hash []byte) (exported.Evidence, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.EvidenceKey(hash))

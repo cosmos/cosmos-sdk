@@ -152,7 +152,7 @@ as follows:
 
 ```go
 func SubmitEvidence(ctx Context, evidence Evidence) error {
-  if _, ok := GetEvidence(ctx, evidence.Hash()); ok {
+  if _, err := GetEvidence(ctx, evidence.Hash()); err == nil {
     return errorsmod.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
   }
   if !router.HasRoute(evidence.Route()) {

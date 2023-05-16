@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
+
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
@@ -316,14 +318,14 @@ func (keeper Keeper) GetProposalsFiltered(ctx context.Context, params v1.QueryPr
 
 		// match voter address (if supplied)
 		if len(params.Voter) > 0 {
-			_, err = keeper.GetVote(ctx, p.Id, params.Voter)
+			has, err := keeper.Votes.Has(ctx, collections.Join(p.Id, params.Voter))
 			// if no error, vote found, matchVoter = true
-			matchVoter = err == nil
+			matchVoter = err == nil && has
 		}
 
 		// match depositor (if supplied)
 		if len(params.Depositor) > 0 {
-			_, err = keeper.GetDeposit(ctx, p.Id, params.Depositor)
+			_, err = keeper.Deposits.Get(ctx, collections.Join(p.Id, params.Depositor))
 			// if no error, deposit found, matchDepositor = true
 			matchDepositor = err == nil
 		}

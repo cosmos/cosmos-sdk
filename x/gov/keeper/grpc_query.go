@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -80,9 +82,9 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 					return nil, err
 				}
 
-				_, err = q.k.GetVote(ctx, p.Id, voter)
+				has, err := q.k.Votes.Has(ctx, collections.Join(p.Id, sdk.AccAddress(voter)))
 				// if no error, vote found, matchVoter = true
-				matchVoter = err == nil
+				matchVoter = err == nil && has
 			}
 
 			// match depositor (if supplied)
@@ -91,9 +93,9 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 				if err != nil {
 					return nil, err
 				}
-				_, err = q.k.GetDeposit(ctx, p.Id, depositor)
+				has, err := q.k.Deposits.Has(ctx, collections.Join(p.Id, sdk.AccAddress(depositor)))
 				// if no error, deposit found, matchDepositor = true
-				matchDepositor = err == nil
+				matchDepositor = err == nil && has
 			}
 
 			if matchVoter && matchDepositor && matchStatus {
@@ -129,9 +131,9 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 	if err != nil {
 		return nil, err
 	}
-	vote, err := q.k.GetVote(ctx, req.ProposalId, voter)
+	vote, err := q.k.Votes.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(voter)))
 	if err != nil {
-		if errors.IsOf(err, types.ErrVoteNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.InvalidArgument,
 				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
 		}
@@ -152,18 +154,10 @@ func (q queryServer) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.
 	}
 
 	var votes v1.Votes
-	store := q.k.storeService.OpenKVStore(ctx)
-	votesStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.VotesKey(req.ProposalId))
-
-	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key, value []byte) error {
-		var vote v1.Vote
-		if err := q.k.cdc.Unmarshal(value, &vote); err != nil {
-			return err
-		}
-
-		votes = append(votes, &vote)
-		return nil
-	})
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (include bool, err error) {
+		votes = append(votes, &value)
+		return false, nil // not including results because they're being appended.
+	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -225,13 +219,9 @@ func (q queryServer) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (
 	if err != nil {
 		return nil, err
 	}
-	deposit, err := q.k.GetDeposit(ctx, req.ProposalId, depositor)
+	deposit, err := q.k.Deposits.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(depositor)))
 	if err != nil {
-		if errors.IsOf(err, types.ErrDepositNotFound) {
-			return nil, status.Errorf(codes.InvalidArgument,
-				"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)
-		}
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
 	return &v1.QueryDepositResponse{Deposit: &deposit}, nil
@@ -248,19 +238,10 @@ func (q queryServer) Deposits(ctx context.Context, req *v1.QueryDepositsRequest)
 	}
 
 	var deposits []*v1.Deposit
-
-	store := q.k.storeService.OpenKVStore(ctx)
-	depositStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.DepositsKey(req.ProposalId))
-
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
-		var deposit v1.Deposit
-		if err := q.k.cdc.Unmarshal(value, &deposit); err != nil {
-			return err
-		}
-
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Deposits, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
 		deposits = append(deposits, &deposit)
-		return nil
-	})
+		return false, nil // we don't include results as they're being appended to the slice above.
+	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

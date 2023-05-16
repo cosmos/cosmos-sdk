@@ -199,26 +199,21 @@ func (keeper Keeper) GetProposal(ctx context.Context, proposalID uint64) (propos
 
 // SetProposal sets a proposal to store.
 func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) error {
-	bz, err := keeper.MarshalProposal(proposal)
-	if err != nil {
-		return err
-	}
-
 	store := keeper.storeService.OpenKVStore(ctx)
 
 	if proposal.Status == v1.StatusVotingPeriod {
-		err = store.Set(types.VotingPeriodProposalKey(proposal.Id), []byte{1})
+		err := store.Set(types.VotingPeriodProposalKey(proposal.Id), []byte{1})
 		if err != nil {
 			return err
 		}
 	} else {
-		err = store.Delete(types.VotingPeriodProposalKey(proposal.Id))
+		err := store.Delete(types.VotingPeriodProposalKey(proposal.Id))
 		if err != nil {
 			return err
 		}
 	}
 
-	return store.Set(types.ProposalKey(proposal.Id), bz)
+	return keeper.Proposals.Set(ctx, proposal.Id, proposal)
 }
 
 // DeleteProposal deletes a proposal from store.
@@ -280,15 +275,6 @@ func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Propo
 	}
 
 	return keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
-}
-
-// MarshalProposal marshals the proposal and returns binary encoded bytes.
-func (keeper Keeper) MarshalProposal(proposal v1.Proposal) ([]byte, error) {
-	bz, err := keeper.cdc.Marshal(&proposal)
-	if err != nil {
-		return nil, err
-	}
-	return bz, nil
 }
 
 // UnmarshalProposal unmarshals the proposal.

@@ -578,6 +578,15 @@ The group module emits the following events:
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
 
+### EventProposalTallyFinalized
+
+| Type                                        | Attribute Key | Attribute Value                 |
+|---------------------------------------------|---------------| ------------------------------- |
+| message                                     | action        | /cosmos.group.v1.Msg/LeaveGroup |
+| cosmos.group.v1.EventProposalTallyFinalized | proposal_id   | {proposalId}                    |
+| cosmos.group.v1.EventProposalTallyFinalized | status        | {ProposalStatus}                       |
+| cosmos.group.v1.EventProposalTallyFinalized | tally_result  | {TallyResult}                       |
+
 
 ## Client
 

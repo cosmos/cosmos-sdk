@@ -30,6 +30,10 @@ func (cdsa commitDBStoreAdapter) Commit() types.CommitID {
 	}
 }
 
+func (cdsa commitDBStoreAdapter) WaitAsyncCommit() error {
+	return nil
+}
+
 func (cdsa commitDBStoreAdapter) LastCommitID() types.CommitID {
 	return types.CommitID{
 		Version: -1,

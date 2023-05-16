@@ -177,10 +177,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Key          *store.KVStoreKey
-	Cdc          codec.Codec
-	AddressCodec address.Codec
+	Config           *modulev1.Module
+	Key              *store.KVStoreKey
+	Cdc              codec.Codec
+	AddressCodec     address.Codec
+	CommitMultiStore store.CommitMultiStore
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
@@ -215,7 +216,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String(), in.CommitMultiStore)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		k.SetVersionSetter(app)
 	}

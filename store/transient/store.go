@@ -30,6 +30,10 @@ func (ts *Store) Commit() (id types.CommitID) {
 	return
 }
 
+func (ts *Store) WaitAsyncCommit() error {
+	return nil
+}
+
 func (ts *Store) SetPruning(_ pruningtypes.PruningOptions) {}
 
 // GetPruning is a no-op as pruning options cannot be directly set on this store.

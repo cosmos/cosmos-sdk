@@ -497,6 +497,15 @@ func (rs *Store) Commit() types.CommitID {
 	}
 }
 
+// WaitAsyncCommit waits for the async commits to finish
+func (rs *Store) WaitAsyncCommit() error {
+	errs := make([]error, 0, len(rs.stores))
+	for _, store := range rs.stores {
+		errs = append(errs, store.WaitAsyncCommit())
+	}
+	return errors.Join(errs...)
+}
+
 // WorkingHash returns the current hash of the store.
 // it will be used to get the current app hash before commit.
 func (rs *Store) WorkingHash() []byte {

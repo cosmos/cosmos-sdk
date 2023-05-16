@@ -40,6 +40,7 @@ type Keeper struct {
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     module.VersionMap               // the module version map at init genesis
+	cms                storetypes.CommitMultiStore     // wait for async commit to finish before trigger restart
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -48,7 +49,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string, cms storetypes.CommitMultiStore) *Keeper {
 	k := &Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -57,6 +58,7 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
 		authority:          authority,
+		cms:                cms,
 	}
 
 	if upgradePlan, err := k.ReadUpgradeInfoFromDisk(); err == nil && upgradePlan.Height > 0 {
@@ -467,4 +469,8 @@ func (k *Keeper) SetDowngradeVerified(v bool) {
 // DowngradeVerified returns downgradeVerified.
 func (k Keeper) DowngradeVerified() bool {
 	return k.downgradeVerified
+}
+
+func (k Keeper) WaitAsyncCommit() error {
+	return k.cms.WaitAsyncCommit()
 }

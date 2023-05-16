@@ -73,6 +73,10 @@ func BeginBlocker(k *keeper.Keeper, ctx sdk.Context) {
 				panic(fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error()))
 			}
 
+			if err := k.WaitAsyncCommit(); err != nil {
+				panic(fmt.Errorf("async commit failed: %w", err))
+			}
+
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
 			logger.Error(upgradeMsg)
 			panic(upgradeMsg)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -23,6 +24,7 @@ import (
 
 const (
 	DefaultIAVLCacheSize = 500000
+	CommitQueueBuffer    = 10 // TODO configurable
 )
 
 var (
@@ -35,9 +37,14 @@ var (
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
-	tree    Tree
-	logger  log.Logger
-	metrics metrics.StoreMetrics
+	tree           Tree
+	logger         log.Logger
+	metrics        metrics.StoreMetrics
+	initialVersion int64
+
+	mtx         sync.Mutex
+	commitQueue chan<- int64
+	commitQuit  <-chan error
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
@@ -132,15 +139,56 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 func (st *Store) Commit() types.CommitID {
 	defer st.metrics.MeasureSince("store", "iavl", "commit")
 
-	hash, version, err := st.tree.SaveVersion()
-	if err != nil {
-		panic(err)
-	}
+	commitId := st.workingCommitID()
 
-	return types.CommitID{
-		Version: version,
-		Hash:    hash,
+	st.mtx.Lock()
+	defer st.mtx.Unlock()
+
+	if st.commitQueue == nil {
+		st.initAsyncCommit()
 	}
+	st.commitQueue <- commitId.Version
+
+	return commitId
+}
+
+func (st *Store) initAsyncCommit() {
+	commitQueue := make(chan int64, CommitQueueBuffer)
+	quitChan := make(chan error)
+
+	go func() {
+		defer close(quitChan)
+
+		for expVersion := range commitQueue {
+			_, version, err := st.tree.SaveVersion()
+			if err != nil {
+				quitChan <- err
+				break
+			}
+
+			if version != expVersion {
+				quitChan <- fmt.Errorf("version sanity check failed: %d != %d", expVersion, version)
+				break
+			}
+		}
+	}()
+
+	st.commitQueue = commitQueue
+	st.commitQuit = quitChan
+}
+
+// WaitAsyncCommit waits for the async commits to finish
+func (st *Store) WaitAsyncCommit() error {
+	st.mtx.Lock()
+	defer st.mtx.Unlock()
+
+	close(st.commitQueue)
+	err := <-st.commitQuit
+
+	st.commitQueue = nil
+	st.commitQuit = nil
+
+	return err
 }
 
 // WorkingHash returns the hash of the current working tree.
@@ -276,9 +324,25 @@ func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
 }
 
 // SetInitialVersion sets the initial version of the IAVL tree. It is used when
-// starting a new chain at an arbitrary height.
+// starting a new chain at an arbitrary height, or adding a new store in an upgrade.
 func (st *Store) SetInitialVersion(version int64) {
+	st.initialVersion = version
 	st.tree.SetInitialVersion(uint64(version))
+}
+
+// workingCommitID returns the commit id without actual commit.
+//
+// FIXME should be done in iavl library.
+func (st *Store) workingCommitID() types.CommitID {
+	version := st.tree.Version() + 1
+	if version == 1 && st.initialVersion > 0 {
+		version = st.initialVersion
+	}
+	return types.CommitID{
+		Hash:    st.WorkingHash(),
+		Version: version,
+	}
+
 }
 
 // Exports the IAVL store at the given version, returning an iavl.Exporter for the tree.

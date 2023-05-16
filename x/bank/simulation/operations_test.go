@@ -173,7 +173,8 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 
 	suite.app.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash},
+		Hash:   suite.app.LastCommitID().Hash,
+	},
 	)
 
 	// execute operation

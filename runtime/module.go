@@ -87,7 +87,7 @@ func ProvideApp() (
 	protoregistry.MessageTypeResolver,
 	error,
 ) {
-	//protoFiles, err := proto.MergedRegistry()
+	// protoFiles, err := proto.MergedRegistry()
 	protoFiles := proto.HybridResolver
 	//if err != nil {
 	//	return nil, nil, nil, nil, nil, nil, nil, nil, nil, err

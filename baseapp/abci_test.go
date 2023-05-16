@@ -1400,5 +1400,4 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 	}
-
 }

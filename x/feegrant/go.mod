@@ -27,7 +27,7 @@ require (
 
 require (
 	cosmossdk.io/collections v0.1.0 // indirect
-	cosmossdk.io/x/tx v0.6.3 // indirect
+	cosmossdk.io/x/tx v0.7.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -46,7 +46,6 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230412222916-60cfeb46143b // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
-	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -157,4 +156,8 @@ require (
 )
 
 // TODO remove after merge of https://github.com/cosmos/cosmos-sdk/pull/16062
-replace github.com/cosmos/cosmos-sdk => ../..
+replace (
+	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/store => ../../store
+	github.com/cosmos/cosmos-sdk => ../..
+)

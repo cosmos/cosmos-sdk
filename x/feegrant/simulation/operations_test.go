@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/feegrant/module"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
@@ -160,8 +161,8 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	require.NoError(err)
 
 	var msg feegrant.MsgGrantAllowance
-	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
 	require.Equal(accounts[2].Address.String(), msg.Granter)
 	require.Equal(accounts[1].Address.String(), msg.Grantee)
@@ -202,8 +203,8 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	require.NoError(err)
 
 	var msg feegrant.MsgRevokeAllowance
-	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
 	require.Equal(granter.Address.String(), msg.Granter)
 	require.Equal(grantee.Address.String(), msg.Grantee)

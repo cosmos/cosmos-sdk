@@ -6,6 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -64,7 +65,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var feegrants []feegrant.Grant
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, "feegrant", &feegrants, simState.Rand,
+		"feegrant", &feegrants, simState.Rand,
 		func(r *rand.Rand) { feegrants = genFeeGrants(r, simState.Accounts) },
 	)
 

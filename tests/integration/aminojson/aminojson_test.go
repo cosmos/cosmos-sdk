@@ -36,6 +36,7 @@ import (
 	"cosmossdk.io/x/tx/signing/aminojson"
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -50,6 +51,7 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -93,6 +95,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
+	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
@@ -101,13 +104,13 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
 			fmt.Printf("testing %s\n", tt.Pulsar.ProtoReflect().Descriptor().FullName())
 			rapid.Check(t, func(t *rapid.T) {
-				// uncomment to debug; catch a panic and inspect application state
-				// defer func() {
-				//	if r := recover(); r != nil {
-				//		//fmt.Printf("Panic: %+v\n", r)
-				//		t.FailNow()
-				//	}
-				// }()
+				//uncomment to debug; catch a panic and inspect application state
+				defer func() {
+					if r := recover(); r != nil {
+						//fmt.Printf("Panic: %+v\n", r)
+						t.FailNow()
+					}
+				}()
 
 				msg := gen.Draw(t, "msg")
 				postFixPulsarMessage(msg)
@@ -201,6 +204,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
 		vesting.AppModuleBasic{})
+	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 	addr1 := types.AccAddress("addr1")

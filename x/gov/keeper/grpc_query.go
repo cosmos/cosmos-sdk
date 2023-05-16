@@ -10,13 +10,9 @@ import (
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/store/prefix"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -47,9 +43,9 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	proposal, err := q.k.GetProposal(ctx, req.ProposalId)
+	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
 	if err != nil {
-		if errors.IsOf(err, types.ErrProposalNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 		}
 		return nil, status.Error(codes.Internal, err.Error())
@@ -60,53 +56,46 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 
 // Proposals implements the Query/Proposals gRPC method
 func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
-	store := q.k.storeService.OpenKVStore(ctx)
-	proposalStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.ProposalsKeyPrefix)
+	var filteredProposals []*v1.Proposal
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (bool, error) {
+		matchVoter, matchDepositor, matchStatus := true, true, true
 
-	filteredProposals, pageRes, err := query.GenericFilteredPaginate(
-		q.k.cdc,
-		proposalStore,
-		req.Pagination,
-		func(key []byte, p *v1.Proposal) (*v1.Proposal, error) {
-			matchVoter, matchDepositor, matchStatus := true, true, true
+		// match status (if supplied/valid)
+		if v1.ValidProposalStatus(req.ProposalStatus) {
+			matchStatus = p.Status == req.ProposalStatus
+		}
 
-			// match status (if supplied/valid)
-			if v1.ValidProposalStatus(req.ProposalStatus) {
-				matchStatus = p.Status == req.ProposalStatus
+		// match voter address (if supplied)
+		if len(req.Voter) > 0 {
+			voter, err := q.k.authKeeper.StringToBytes(req.Voter)
+			if err != nil {
+				return false, err
 			}
 
-			// match voter address (if supplied)
-			if len(req.Voter) > 0 {
-				voter, err := q.k.authKeeper.StringToBytes(req.Voter)
-				if err != nil {
-					return nil, err
-				}
+			has, err := q.k.Votes.Has(ctx, collections.Join(p.Id, sdk.AccAddress(voter)))
+			// if no error, vote found, matchVoter = true
+			matchVoter = err == nil && has
+		}
 
-				_, err = q.k.GetVote(ctx, p.Id, voter)
-				// if no error, vote found, matchVoter = true
-				matchVoter = err == nil
+		// match depositor (if supplied)
+		if len(req.Depositor) > 0 {
+			depositor, err := q.k.authKeeper.StringToBytes(req.Depositor)
+			if err != nil {
+				return false, err
 			}
+			has, err := q.k.Deposits.Has(ctx, collections.Join(p.Id, sdk.AccAddress(depositor)))
+			// if no error, deposit found, matchDepositor = true
+			matchDepositor = err == nil && has
+		}
 
-			// match depositor (if supplied)
-			if len(req.Depositor) > 0 {
-				depositor, err := q.k.authKeeper.StringToBytes(req.Depositor)
-				if err != nil {
-					return nil, err
-				}
-				has, err := q.k.Deposits.Has(ctx, collections.Join(p.Id, sdk.AccAddress(depositor)))
-				// if no error, deposit found, matchDepositor = true
-				matchDepositor = err == nil && has
-			}
-
-			if matchVoter && matchDepositor && matchStatus {
-				return p, nil
-			}
-
-			return nil, nil
-		}, func() *v1.Proposal {
-			return &v1.Proposal{}
-		})
-	if err != nil {
+		// if all match, append to results
+		if matchVoter && matchDepositor && matchStatus {
+			filteredProposals = append(filteredProposals, &p)
+		}
+		// continue to next item, do not include because we're appending results above.
+		return false, nil
+	})
+	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -131,9 +120,9 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 	if err != nil {
 		return nil, err
 	}
-	vote, err := q.k.GetVote(ctx, req.ProposalId, voter)
+	vote, err := q.k.Votes.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(voter)))
 	if err != nil {
-		if errors.IsOf(err, types.ErrVoteNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.InvalidArgument,
 				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
 		}
@@ -154,18 +143,10 @@ func (q queryServer) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.
 	}
 
 	var votes v1.Votes
-	store := q.k.storeService.OpenKVStore(ctx)
-	votesStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.VotesKey(req.ProposalId))
-
-	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key, value []byte) error {
-		var vote v1.Vote
-		if err := q.k.cdc.Unmarshal(value, &vote); err != nil {
-			return err
-		}
-
-		votes = append(votes, &vote)
-		return nil
-	})
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (include bool, err error) {
+		votes = append(votes, &value)
+		return false, nil // not including results because they're being appended.
+	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -267,9 +248,9 @@ func (q queryServer) TallyResult(ctx context.Context, req *v1.QueryTallyResultRe
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	proposal, err := q.k.GetProposal(ctx, req.ProposalId)
+	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
 	if err != nil {
-		if errors.IsOf(err, types.ErrProposalNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 		}
 		return nil, status.Error(codes.Internal, err.Error())

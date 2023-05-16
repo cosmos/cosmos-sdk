@@ -1,9 +1,12 @@
 package simulation
 
 import (
+	"errors"
 	"math"
 	"math/rand"
 	"time"
+
+	"cosmossdk.io/collections"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -274,7 +277,7 @@ func simulateMsgSubmitProposal(
 		opMsg := simtypes.NewOperationMsg(msg, true, "")
 
 		// get the submitted proposal ID
-		proposalID, err := k.GetProposalID(ctx)
+		proposalID, err := k.ProposalID.Peek(ctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate proposalID"), nil, err
 		}
@@ -593,9 +596,16 @@ func randomDeposit(
 	return sdk.Coins{sdk.NewCoin(denom, amount)}, false, nil
 }
 
-// randomProposal
+// randomProposal returns a random proposal stored in state
 func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposal {
-	proposals, _ := k.GetProposals(ctx)
+	var proposals []*v1.Proposal
+	err := k.Proposals.Walk(ctx, nil, func(key uint64, value v1.Proposal) (stop bool, err error) {
+		proposals = append(proposals, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 	if len(proposals) == 0 {
 		return nil
 	}
@@ -608,7 +618,7 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 // that matches a given Status.
 // It does not provide a default ID.
 func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus) (proposalID uint64, found bool) {
-	proposalID, _ = k.GetProposalID(ctx)
+	proposalID, _ = k.ProposalID.Peek(ctx)
 
 	switch {
 	case proposalID > initialProposalID:
@@ -621,7 +631,7 @@ func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1
 		initialProposalID = proposalID
 	}
 
-	proposal, err := k.GetProposal(ctx, proposalID)
+	proposal, err := k.Proposals.Get(ctx, proposalID)
 	if err != nil || proposal.Status != status {
 		return proposalID, false
 	}

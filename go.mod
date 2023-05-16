@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230429155654-3ee8242364e4
 	cosmossdk.io/log v1.1.0
-	cosmossdk.io/math v1.0.0
+	cosmossdk.io/math v1.0.1
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	cosmossdk.io/x/tx v0.6.3
 	github.com/99designs/keyring v1.2.1
@@ -48,14 +48,14 @@ require (
 	github.com/prometheus/client_golang v1.15.1
 	github.com/prometheus/common v0.43.0
 	github.com/rs/zerolog v1.29.1
-	github.com/spf13/cast v1.5.0
+	github.com/spf13/cast v1.5.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.9.0
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	golang.org/x/sync v0.2.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/grpc v1.55.0

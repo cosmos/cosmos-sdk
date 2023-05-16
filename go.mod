@@ -5,11 +5,11 @@ module github.com/cosmos/cosmos-sdk
 require (
 	cosmossdk.io/api v0.4.1
 	cosmossdk.io/collections v0.1.0
-	cosmossdk.io/core v0.6.1
+	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230429155654-3ee8242364e4
 	cosmossdk.io/log v1.1.0
-	cosmossdk.io/math v1.0.0
+	cosmossdk.io/math v1.0.1
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	cosmossdk.io/x/tx v0.6.3
 	github.com/99designs/keyring v1.2.1
@@ -26,7 +26,7 @@ require (
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
-	github.com/cosmos/gogoproto v1.4.9
+	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/ledger-cosmos-go v0.13.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0
 	github.com/golang/mock v1.6.0
@@ -48,14 +48,14 @@ require (
 	github.com/prometheus/client_golang v1.15.1
 	github.com/prometheus/common v0.43.0
 	github.com/rs/zerolog v1.29.1
-	github.com/spf13/cast v1.5.0
+	github.com/spf13/cast v1.5.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.9.0
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	golang.org/x/sync v0.2.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/grpc v1.55.0
@@ -161,22 +161,25 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
-// Below are the long-lived replace of the Cosmos SDK
+// Below are the short-lived replace of the Cosmos SDK
 replace (
 	// TODO: remove me after collections 0.2. is released.
 	cosmossdk.io/collections => ./collections
-	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
 	// TODO: remove after 0.7.0 release
 	cosmossdk.io/x/tx => ./x/tx
+)
+
+// Below are the long-lived replace of the Cosmos SDK
+replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
-	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
+	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 	// Downgraded to avoid bugs in following commits which caused simulations to fail.
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )

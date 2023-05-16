@@ -63,7 +63,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	params, _ := suite.GovKeeper.GetParams(ctx)
+	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
@@ -137,7 +137,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NotNil(t, res)
 
 	newHeader = ctx.BlockHeader()
-	params, _ := suite.GovKeeper.GetParams(ctx)
+	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
@@ -280,7 +280,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, res1)
 
-			params, _ := suite.GovKeeper.GetParams(ctx)
+			params, _ := suite.GovKeeper.Params.Get(ctx)
 			votingPeriod := params.VotingPeriod
 			if tc.expedited {
 				votingPeriod = params.ExpeditedVotingPeriod
@@ -298,7 +298,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, err := suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err := suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
@@ -317,7 +317,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID = types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err = suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 			require.False(t, proposal.Expedited)
@@ -389,7 +389,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NoError(t, err)
 
 			newHeader := ctx.BlockHeader()
-			params, _ := suite.GovKeeper.GetParams(ctx)
+			params, _ := suite.GovKeeper.Params.Get(ctx)
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
@@ -435,7 +435,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 	require.NoError(t, err)
 
-	params, _ := suite.GovKeeper.GetParams(ctx)
+	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
@@ -449,7 +449,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.True(t, eventOk)
 	require.Contains(t, attr[0].Value, "failed on execution")
 
-	proposal, err = suite.GovKeeper.GetProposal(ctx, proposal.Id)
+	proposal, err = suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
 	require.Nil(t, err)
 	require.Equal(t, v1.StatusFailed, proposal.Status)
 }
@@ -485,7 +485,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 			depositMultiplier := getDepositMultiplier(true)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
-			params, err := suite.GovKeeper.GetParams(ctx)
+			params, err := suite.GovKeeper.Params.Get(ctx)
 			require.NoError(t, err)
 
 			SortAddresses(addrs)
@@ -549,7 +549,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, err := suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err := suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
@@ -569,7 +569,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			if tc.expeditedPasses {
 				require.False(t, activeQueue.Valid())
 
-				proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+				proposal, err = suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 				require.Nil(t, err)
 
 				require.Equal(t, v1.StatusPassed, proposal.Status)
@@ -593,7 +593,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			activeProposalID = types.GetProposalIDFromBytes(activeQueue.Value())
 			activeQueue.Close()
 
-			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err = suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 			require.False(t, proposal.Expedited)
@@ -639,7 +639,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, activeQueue.Valid())
 
-			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err = suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 
 			if tc.regularEventuallyPassing {

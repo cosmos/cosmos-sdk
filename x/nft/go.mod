@@ -4,16 +4,16 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.1
-	cosmossdk.io/core v0.6.1
+	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/errors v1.0.0-beta.7
+	cosmossdk.io/errors v1.0.0-beta.7.0.20230429155654-3ee8242364e4
 	cosmossdk.io/log v1.1.0
-	cosmossdk.io/math v1.0.0
+	cosmossdk.io/math v1.0.1
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230328185921-37ba88872dbc
 	github.com/cometbft/cometbft v0.37.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230426101247-6dfe7351a5c2
-	github.com/cosmos/gogoproto v1.4.9
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230515163438-fa95ee2e666b
+	github.com/cosmos/gogoproto v1.4.10
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -25,7 +25,7 @@ require (
 
 require (
 	cosmossdk.io/collections v0.1.0 // indirect
-	cosmossdk.io/x/tx v0.5.5 // indirect
+	cosmossdk.io/x/tx v0.7.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -43,12 +43,12 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230412222916-60cfeb46143b // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
-	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v0.21.0-beta.1 // indirect
+	github.com/cosmos/iavl v0.21.0 // indirect
+	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
@@ -124,7 +124,7 @@ require (
 	github.com/rs/zerolog v1.29.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
-	github.com/spf13/cast v1.5.0 // indirect
+	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.15.0 // indirect
@@ -137,7 +137,7 @@ require (
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
@@ -153,7 +153,13 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Below are the long-lived replace of the Cosmos SDK
-// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
+// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+replace (
+	// TODO: remove me after collections 0.2. is released.
+	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/store => ../../store
+	// TODO remove once https://github.com/cosmos/cosmos-sdk/pull/16155 is merged
+	github.com/cosmos/cosmos-sdk => ../..
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
+)

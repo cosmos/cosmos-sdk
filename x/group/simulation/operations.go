@@ -287,7 +287,7 @@ func SimulateMsgCreateGroup(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -351,7 +351,7 @@ func SimulateMsgCreateGroupWithPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -417,7 +417,7 @@ func SimulateMsgCreateGroupPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -498,7 +498,7 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -563,7 +563,7 @@ func SimulateMsgUpdateGroupAdmin(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -619,7 +619,7 @@ func SimulateMsgUpdateGroupMetadata(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -702,7 +702,7 @@ func SimulateMsgUpdateGroupMembers(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -767,7 +767,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -831,7 +831,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -887,7 +887,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -995,7 +995,7 @@ func SimulateMsgWithdrawProposal(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -1103,7 +1103,7 @@ func SimulateMsgVote(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -1183,7 +1183,7 @@ func SimulateMsgExec(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -1247,7 +1247,7 @@ func SimulateMsgLeaveGroup(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 

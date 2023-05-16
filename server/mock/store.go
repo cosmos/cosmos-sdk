@@ -146,6 +146,10 @@ func (ms multiStore) SetLazyLoading(bool) {
 	panic("not implemented")
 }
 
+func (ms multiStore) SetCommitBufferSize(size int) {
+	panic("not implemented")
+}
+
 func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")
 }

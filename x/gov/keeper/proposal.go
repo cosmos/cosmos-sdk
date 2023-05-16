@@ -227,7 +227,7 @@ func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) erro
 		}
 	}
 
-	return store.Delete(types.ProposalKey(proposalID))
+	return keeper.Proposals.Remove(ctx, proposalID)
 }
 
 // ActivateVotingPeriod activates the voting period of a proposal

@@ -155,3 +155,19 @@ func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValA
 
 	return count >= k.MaxConsPubKeyRotations(ctx), count
 }
+
+// SetMappedConskey maps the old consensus key to rotated new consensus key
+func (k Keeper) SetMappedConskey(ctx sdk.Context, oldConsAddr, newConsAddr sdk.ConsAddress) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetKeyRotatedConsKey(oldConsAddr.Bytes())
+	store.Set(key, newConsAddr.Bytes())
+}
+
+// SetMappedConskey gets the rotated consensus key with the old consensus key
+func (k Keeper) GetMappedConsKey(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.ConsAddress {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetKeyRotatedConsKey(consAddr.Bytes())
+	bz := store.Get(key)
+
+	return sdk.ConsAddress(bz)
+}

@@ -59,6 +59,7 @@ var (
 	BlockConsPubKeyRotationHistoryKey           = []byte{0x71} // prefix for consPubkey rotation history by height
 	ValidatorConsensusKeyRotationRecordQueueKey = []byte{0x72} // this key is used to set the unbonding period time on each rotation
 	ValidatorConsensusKeyRotationRecordIndexKey = []byte{0x73} // this key is used to restrict the validator next rotation within waiting (unbonding) period
+	RotatedConsKeyMapIndex                      = []byte{0x74} // prefix for rotated cons address to new cons address
 )
 
 // UnbondingType defines the type of unbonding operation
@@ -466,4 +467,8 @@ func GetConsKeyRotationTimeKey(timestamp time.Time) []byte {
 func GetConsKeyIndexKey(valAddr sdk.ValAddress, timestamp time.Time) []byte {
 	key := append(ValidatorConsensusKeyRotationRecordIndexKey, address.MustLengthPrefix(valAddr)...)
 	return append(key, sdk.FormatTimeBytes(timestamp)...)
+}
+
+func GetKeyRotatedConsKey(addr []byte) []byte {
+	return append(RotatedConsKeyMapIndex, addr...)
 }

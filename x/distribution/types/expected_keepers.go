@@ -54,6 +54,8 @@ type StakingKeeper interface {
 	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
 	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
 	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
+
+	GetMappedConsKey(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.ConsAddress
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

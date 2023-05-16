@@ -27,7 +27,13 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	// fetch signing info
 	signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
 	if !found {
-		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
+		newConsKey := k.sk.GetMappedConsKey(ctx, consAddr)
+		si, found := k.GetValidatorSigningInfo(ctx, newConsKey)
+		if !found {
+			panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
+		}
+
+		signInfo = si
 	}
 
 	// Compute the relative index, so we count the blocks the validator *should*

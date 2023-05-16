@@ -281,6 +281,20 @@ func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
 }
 
+// GetMappedConsKey mocks base method.
+func (m *MockStakingKeeper) GetMappedConsKey(ctx types.Context, consAddr types.ConsAddress) types.ConsAddress {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMappedConsKey", ctx, consAddr)
+	ret0, _ := ret[0].(types.ConsAddress)
+	return ret0
+}
+
+// GetMappedConsKey indicates an expected call of GetMappedConsKey.
+func (mr *MockStakingKeeperMockRecorder) GetMappedConsKey(ctx, consAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMappedConsKey", reflect.TypeOf((*MockStakingKeeper)(nil).GetMappedConsKey), ctx, consAddr)
+}
+
 // IsValidatorJailed mocks base method.
 func (m *MockStakingKeeper) IsValidatorJailed(ctx types.Context, addr types.ConsAddress) bool {
 	m.ctrl.T.Helper()
@@ -331,6 +345,18 @@ func (m *MockStakingKeeper) MaxValidators(arg0 types.Context) uint32 {
 func (mr *MockStakingKeeperMockRecorder) MaxValidators(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaxValidators", reflect.TypeOf((*MockStakingKeeper)(nil).MaxValidators), arg0)
+}
+
+// SetMappedConskey mocks base method.
+func (m *MockStakingKeeper) SetMappedConskey(ctx types.Context, oldConsAddr, newConsAddr types.ConsAddress) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMappedConskey", ctx, oldConsAddr, newConsAddr)
+}
+
+// SetMappedConskey indicates an expected call of SetMappedConskey.
+func (mr *MockStakingKeeperMockRecorder) SetMappedConskey(ctx, oldConsAddr, newConsAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMappedConskey", reflect.TypeOf((*MockStakingKeeper)(nil).SetMappedConskey), ctx, oldConsAddr, newConsAddr)
 }
 
 // Slash mocks base method.

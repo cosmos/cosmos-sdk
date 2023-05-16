@@ -60,22 +60,6 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 	return nil
 }
 
-// SetMappedConskey maps the old consensus key to rotated new consensus key
-func (k Keeper) SetMappedConskey(ctx sdk.Context, oldConsAddr, newConsAddr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetKeyRotatedConsKey(oldConsAddr.Bytes())
-	store.Set(key, newConsAddr.Bytes())
-}
-
-// SetMappedConskey gets the rotated consensus key with the old consensus key
-func (k Keeper) GetMappedConsKey(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.ConsAddress {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetKeyRotatedConsKey(consAddr.Bytes())
-	bz := store.Get(key)
-
-	return sdk.ConsAddress(bz)
-}
-
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
@@ -89,7 +73,7 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 
 // GetMappedPubkey returns the pubkey from the adddress-pubkey relation of rotated consensus key
 func (k Keeper) GetMappedPubkey(ctx sdk.Context, a cryptotypes.Address) (sdk.ConsAddress, cryptotypes.PubKey, error) {
-	newConsAddr := k.GetMappedConsKey(ctx, a.Bytes())
+	newConsAddr := k.sk.GetMappedConsKey(ctx, a.Bytes())
 	pk, err := k.GetPubkey(ctx, newConsAddr.Bytes())
 	return newConsAddr, pk, err
 }

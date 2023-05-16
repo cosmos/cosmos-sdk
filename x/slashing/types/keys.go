@@ -52,7 +52,6 @@ var (
 	ValidatorSigningInfoKeyPrefix       = []byte{0x01} // Prefix for signing info
 	ValidatorMissedBlockBitmapKeyPrefix = []byte{0x02} // Prefix for missed block bit array
 	AddrPubkeyRelationKeyPrefix         = []byte{0x03} // Prefix for address-pubkey relation
-	RotatedConsKeyIndex                 = []byte{0x04} // prefix for rotated cons address to new cons address
 )
 
 // ValidatorSigningInfoKey - stored by *Consensus* address (not operator address)
@@ -87,8 +86,4 @@ func ValidatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
 // AddrPubkeyRelationKey gets pubkey relation key used to get the pubkey from the address
 func AddrPubkeyRelationKey(addr []byte) []byte {
 	return append(AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(addr)...)
-}
-
-func GetKeyRotatedConsKey(addr []byte) []byte {
-	return append(RotatedConsKeyIndex, addr...)
 }

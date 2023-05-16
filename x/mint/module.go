@@ -14,7 +14,7 @@ import (
 
 	"cosmossdk.io/depinject"
 
-	store "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -221,7 +221,7 @@ type ModuleInputs struct {
 
 	ModuleKey              depinject.OwnModuleKey
 	Config                 *modulev1.Module
-	Key                    *store.KVStoreKey
+	StoreService           store.KVStoreService
 	Cdc                    codec.Codec
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
@@ -254,7 +254,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		in.StakingKeeper,
 		in.AccountKeeper,
 		in.BankKeeper,

@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	initialDeposit := coins
-	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 			},
 			depositor: proposer,
 			expErr:    true,
-			expErrMsg: "proposal is not found",
+			expErrMsg: "not found",
 		},
 		"valid proposal but invalid proposer": {
 			preRun: func() uint64 {
@@ -319,7 +319,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
@@ -465,7 +465,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
@@ -711,7 +711,7 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
@@ -752,7 +752,7 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 			depositor: proposer,
 			deposit:   coins,
 			expErr:    true,
-			expErrMsg: "0: unknown proposal",
+			expErrMsg: "not found",
 		},
 		"empty depositor": {
 			preRun: func() uint64 {
@@ -793,7 +793,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	initialDeposit := coins
-	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
 
 	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
@@ -907,7 +907,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
@@ -1043,7 +1043,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
@@ -1297,7 +1297,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	params, _ := suite.govKeeper.GetParams(suite.ctx)
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
@@ -1338,7 +1338,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 			depositor: proposer,
 			deposit:   coins,
 			expErr:    true,
-			expErrMsg: "unknown proposal",
+			expErrMsg: "not found",
 		},
 		"empty depositer": {
 			preRun: func() uint64 {
@@ -1699,7 +1699,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
-			govKeeper.SetParams(ctx, params)
+			govKeeper.Params.Set(ctx, params)
 
 			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
 			suite.Require().NoError(err)

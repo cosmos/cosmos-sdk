@@ -50,7 +50,7 @@ func TestMap_IterateRaw(t *testing.T) {
 	require.NoError(t, m.Set(ctx, 2, 2))
 
 	// test non nil end in ascending order
-	twoBigEndian, err := encodeKeyWithPrefix(nil, Uint64Key, 2)
+	twoBigEndian, err := EncodeKeyWithPrefix(nil, Uint64Key, 2)
 	require.NoError(t, err)
 	iter, err := m.IterateRaw(ctx, nil, twoBigEndian, OrderAscending)
 	require.NoError(t, err)
@@ -76,7 +76,7 @@ func Test_encodeKey(t *testing.T) {
 	number := []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 	expectedKey := append([]byte(prefix), number...)
 
-	gotKey, err := encodeKeyWithPrefix(NewPrefix(prefix).Bytes(), Uint64Key, 0)
+	gotKey, err := EncodeKeyWithPrefix(NewPrefix(prefix).Bytes(), Uint64Key, 0)
 	require.NoError(t, err)
 	require.Equal(t, expectedKey, gotKey)
 }

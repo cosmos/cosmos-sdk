@@ -195,6 +195,9 @@ type CommitMultiStore interface {
 	// SetIAVLLazyLoading enable/disable lazy loading on iavl.
 	SetLazyLoading(lazyLoading bool)
 
+	// SetCommitBufferSize sets the size of the buffer for the async commit, 0 means synchronous commit.
+	SetCommitBufferSize(size int)
+
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
 
@@ -488,6 +491,12 @@ type StoreWithInitialVersion interface {
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64)
+}
+
+// StoreWithCommitBufferSize is a store that can have an arbitrary initial
+// version.
+type StoreWithCommitBufferSize interface {
+	SetCommitBufferSize(size int)
 }
 
 // NewTransientStoreKeys constructs a new map of TransientStoreKey's

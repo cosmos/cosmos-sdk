@@ -81,6 +81,10 @@ iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 # Default is false.
 iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}
 
+# CommitBufferSize defines the size of the async commit channel (in number of blocks),
+# 0 means synchronous commitment.
+commit-buffer-size = {{ .BaseConfig.CommitBufferSize }}
+
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
 # First fallback is the deprecated compile-time types.DBBackend value.

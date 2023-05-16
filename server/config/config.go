@@ -88,6 +88,10 @@ type BaseConfig struct {
 	// IAVLLazyLoading enable/disable the lazy loading of iavl store.
 	IAVLLazyLoading bool `mapstructure:"iavl-lazy-loading"`
 
+	// CommitBufferSize defines the size of the async commit channel (in number of blocks),
+	// 0 means synchronous commitment.
+	CommitBufferSize int `mapstructure:"commit-buffer-size"`
+
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
 	// An empty string indicates that the CometBFT config's DBBackend value should be used.
 	AppDBBackend string `mapstructure:"app-db-backend"`
@@ -237,6 +241,7 @@ func DefaultConfig() *Config {
 			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
 			IAVLLazyLoading:     false,
+			CommitBufferSize:    0,
 			AppDBBackend:        "",
 		},
 		Telemetry: telemetry.Config{

@@ -76,6 +76,11 @@ func SetIAVLLazyLoading(lazyLoading bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetLazyLoading(lazyLoading) }
 }
 
+// SetCommitBufferSize sets the size of the buffer for concurrent commit calls.
+func SetCommitBufferSize(size int) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetCommitBufferSize(size) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache storetypes.MultiStorePersistentCache) func(*BaseApp) {

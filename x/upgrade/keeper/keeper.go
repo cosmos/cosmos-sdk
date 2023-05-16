@@ -49,7 +49,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string, cms storetypes.CommitMultiStore) *Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
 	k := &Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -58,7 +58,6 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
 		authority:          authority,
-		cms:                cms,
 	}
 
 	if upgradePlan, err := k.ReadUpgradeInfoFromDisk(); err == nil && upgradePlan.Height > 0 {
@@ -66,6 +65,10 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 	}
 
 	return k
+}
+
+func (k *Keeper) SetCommitMultiStore(cms storetypes.CommitMultiStore) {
+	k.cms = cms
 }
 
 // SetVersionSetter sets the interface implemented by baseapp which allows setting baseapp's protocol version field
@@ -472,5 +475,9 @@ func (k Keeper) DowngradeVerified() bool {
 }
 
 func (k Keeper) WaitAsyncCommit() error {
-	return k.cms.WaitAsyncCommit()
+	if k.cms != nil {
+		return k.cms.WaitAsyncCommit()
+	}
+
+	return nil
 }

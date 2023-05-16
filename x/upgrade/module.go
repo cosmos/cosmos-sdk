@@ -171,17 +171,17 @@ func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
 		appmodule.Invoke(PopulateVersionMap),
+		appmodule.Invoke(PopulateCommitMultiStore),
 	)
 }
 
 type ModuleInputs struct {
 	depinject.In
 
-	Config           *modulev1.Module
-	Key              *store.KVStoreKey
-	Cdc              codec.Codec
-	AddressCodec     address.Codec
-	CommitMultiStore store.CommitMultiStore
+	Config       *modulev1.Module
+	Key          *store.KVStoreKey
+	Cdc          codec.Codec
+	AddressCodec address.Codec
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
@@ -216,7 +216,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String(), in.CommitMultiStore)
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
 	baseappOpt := func(app *baseapp.BaseApp) {
 		k.SetVersionSetter(app)
 	}
@@ -232,4 +232,12 @@ func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodu
 	}
 
 	upgradeKeeper.SetInitVersionMap(module.NewManagerFromMap(modules).GetVersionMap())
+}
+
+func PopulateCommitMultiStore(upgradeKeeper *keeper.Keeper, cms store.CommitMultiStore) {
+	if upgradeKeeper == nil {
+		return
+	}
+
+	upgradeKeeper.SetCommitMultiStore(cms)
 }

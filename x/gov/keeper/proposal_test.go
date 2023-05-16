@@ -2,14 +2,9 @@ package keeper_test
 
 import (
 	"errors"
-	"fmt"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
-	"time"
-
-	"cosmossdk.io/collections"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -182,63 +177,6 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		suite.Require().NoError(err)
 		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata, "title", "", suite.addrs[0], tc.expedited)
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
-	}
-}
-
-func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
-	proposalID := uint64(1)
-	status := []v1.ProposalStatus{v1.StatusDepositPeriod, v1.StatusVotingPeriod}
-
-	addr1 := suite.addrs[1]
-
-	for _, s := range status {
-		for i := 0; i < 50; i++ {
-			p, err := v1.NewProposal(TestProposal, proposalID, time.Now(), time.Now(), "metadata", "title", "summary", suite.addrs[0], false)
-			suite.Require().NoError(err)
-
-			p.Status = s
-
-			if i%2 == 0 {
-				d := v1.NewDeposit(proposalID, addr1, nil)
-				v := v1.NewVote(proposalID, addr1, v1.NewNonSplitVoteOption(v1.OptionYes), "")
-				suite.govKeeper.SetDeposit(suite.ctx, d)
-				require.NoError(suite.T(), suite.govKeeper.Votes.Set(suite.ctx, collections.Join(proposalID, addr1), v))
-			}
-
-			suite.govKeeper.SetProposal(suite.ctx, p)
-			proposalID++
-		}
-	}
-
-	testCases := []struct {
-		params             v1.QueryProposalsParams
-		expectedNumResults int
-	}{
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusNil, nil, nil), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusDepositPeriod, nil, nil), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusVotingPeriod, nil, nil), 50},
-		{v1.NewQueryProposalsParams(1, 25, v1.StatusNil, nil, nil), 25},
-		{v1.NewQueryProposalsParams(2, 25, v1.StatusNil, nil, nil), 25},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusRejected, nil, nil), 0},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusNil, addr1, nil), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusNil, nil, addr1), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusNil, addr1, addr1), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusDepositPeriod, addr1, addr1), 25},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusDepositPeriod, nil, nil), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusVotingPeriod, nil, nil), 50},
-	}
-
-	for i, tc := range testCases {
-		suite.Run(fmt.Sprintf("Test Case %d", i), func() {
-			proposals, _ := suite.govKeeper.GetProposalsFiltered(suite.ctx, tc.params)
-			suite.Require().Len(proposals, tc.expectedNumResults)
-
-			for _, p := range proposals {
-				if v1.ValidProposalStatus(tc.params.ProposalStatus) {
-					suite.Require().Equal(tc.params.ProposalStatus, p.Status)
-				}
-			}
-		})
 	}
 }
 

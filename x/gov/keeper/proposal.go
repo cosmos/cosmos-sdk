@@ -7,9 +7,6 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -251,40 +248,6 @@ func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) erro
 	}
 
 	return store.Delete(types.ProposalKey(proposalID))
-}
-
-// IterateProposals iterates over all the proposals and performs a callback function.
-func (keeper Keeper) IterateProposals(ctx context.Context, cb func(proposal v1.Proposal) error) error {
-	store := keeper.storeService.OpenKVStore(ctx)
-	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.ProposalsKeyPrefix)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var proposal v1.Proposal
-		err := keeper.UnmarshalProposal(iterator.Value(), &proposal)
-		if err != nil {
-			return err
-		}
-
-		err = cb(proposal)
-		// exit early without error if cb returns ErrStopIterating
-		if errorsmod.IsOf(err, errorsmod.ErrStopIterating) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// GetProposals returns all the proposals from store
-func (keeper Keeper) GetProposals(ctx context.Context) (proposals v1.Proposals, err error) {
-	err = keeper.IterateProposals(ctx, func(proposal v1.Proposal) error {
-		proposals = append(proposals, &proposal)
-		return nil
-	})
-	return
 }
 
 // ActivateVotingPeriod activates the voting period of a proposal

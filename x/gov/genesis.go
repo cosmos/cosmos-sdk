@@ -84,8 +84,12 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		return nil, err
 	}
 
-	proposals, err := k.GetProposals(ctx)
-	if err != nil {
+	var proposals v1.Proposals
+	err = k.Proposals.Walk(ctx, nil, func(_ uint64, value v1.Proposal) (stop bool, err error) {
+		proposals = append(proposals, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return nil, err
 	}
 

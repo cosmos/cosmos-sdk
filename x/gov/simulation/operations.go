@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"cosmossdk.io/collections"
+	"errors"
 	"math"
 	"math/rand"
 	"time"
@@ -595,9 +597,16 @@ func randomDeposit(
 	return sdk.Coins{sdk.NewCoin(denom, amount)}, false, nil
 }
 
-// randomProposal
+// randomProposal returns a random proposal stored in state
 func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposal {
-	proposals, _ := k.GetProposals(ctx)
+	var proposals []*v1.Proposal
+	err := k.Proposals.Walk(ctx, nil, func(key uint64, value v1.Proposal) (stop bool, err error) {
+		proposals = append(proposals, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 	if len(proposals) == 0 {
 		return nil
 	}

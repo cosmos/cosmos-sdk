@@ -49,6 +49,7 @@ This module allows the creation and management of on-chain multisig accounts and
     * [EventVote](#eventvote)
     * [EventExec](#eventexec)
     * [EventLeaveGroup](#eventleavegroup)
+    * [EventProposalTallyFinalized](#eventproposaltallyfinalized)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)

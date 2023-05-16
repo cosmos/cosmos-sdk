@@ -20,6 +20,8 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+var EventTallyResult = "cosmos.group.v1.EventProposalTallyFinalized"
+
 func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
 	for i := 50; i < 70; i++ {
 		membersResp := s.createGroupAndGetMembers(i)
@@ -1806,6 +1808,15 @@ func (s *TestSuite) TestSubmitProposal() {
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
+				events := sdkCtx.EventManager().ABCIEvents()
+				tallyEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						tallyEventFound = true
+						break
+					}
+				}
+				s.Require().True(tallyEventFound)
 			},
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
@@ -2866,6 +2877,15 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				res, err := s.groupKeeper.VotesByProposal(sdkCtx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
+				events := sdkCtx.EventManager().ABCIEvents()
+				tallyEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						tallyEventFound = true
+						break
+					}
+				}
+				s.Require().True(tallyEventFound)
 
 			} else {
 				// Check that proposal and votes exists

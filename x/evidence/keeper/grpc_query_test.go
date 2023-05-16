@@ -48,6 +48,17 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			},
 		},
 		{
+			"non-existent evidence",
+			func() {
+				reqHash := "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
+				req = types.NewQueryEvidenceRequest(reqHash)
+			},
+			false,
+			"evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660 not found",
+			func(res *types.QueryEvidenceResponse) {
+			},
+		},
+		{
 			"success",
 			func() {
 				numEvidence := 100

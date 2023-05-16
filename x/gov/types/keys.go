@@ -4,8 +4,9 @@ import (
 	"encoding/binary"
 	"time"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -39,21 +40,21 @@ const (
 //
 // - 0x30: Params
 var (
-	ProposalsKeyPrefix            = []byte{0x00}
+	ProposalsKeyPrefix            = collections.NewPrefix(0)
 	ActiveProposalQueuePrefix     = []byte{0x01}
 	InactiveProposalQueuePrefix   = []byte{0x02}
-	ProposalIDKey                 = []byte{0x03}
+	ProposalIDKey                 = collections.NewPrefix(3)
 	VotingPeriodProposalKeyPrefix = []byte{0x04}
 
-	DepositsKeyPrefix = []byte{0x10}
+	DepositsKeyPrefix = collections.NewPrefix(16)
 
-	VotesKeyPrefix = []byte{0x20}
+	VotesKeyPrefix = collections.NewPrefix(32)
 
 	// ParamsKey is the key to query all gov params
-	ParamsKey = []byte{0x30}
+	ParamsKey = collections.NewPrefix(48)
 
-	// KeyConstitution is the key string used to store the chain's constitution
-	KeyConstitution = []byte("constitution")
+	// ConstitutionKey is the key string used to store the chain's constitution
+	ConstitutionKey = collections.NewPrefix(49)
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
@@ -100,34 +101,7 @@ func InactiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
 	return append(InactiveProposalByTimeKey(endTime), GetProposalIDBytes(proposalID)...)
 }
 
-// DepositsKey gets the first part of the deposits key based on the proposalID
-func DepositsKey(proposalID uint64) []byte {
-	return append(DepositsKeyPrefix, GetProposalIDBytes(proposalID)...)
-}
-
-// DepositKey key of a specific deposit from the store
-func DepositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
-	return append(DepositsKey(proposalID), address.MustLengthPrefix(depositorAddr.Bytes())...)
-}
-
-// VotesKey gets the first part of the votes key based on the proposalID
-func VotesKey(proposalID uint64) []byte {
-	return append(VotesKeyPrefix, GetProposalIDBytes(proposalID)...)
-}
-
-// VoteKey key of a specific vote from the store
-func VoteKey(proposalID uint64, voterAddr sdk.AccAddress) []byte {
-	return append(VotesKey(proposalID), address.MustLengthPrefix(voterAddr.Bytes())...)
-}
-
 // Split keys function; used for iterators
-
-// SplitProposalKey split the proposal key and returns the proposal id
-func SplitProposalKey(key []byte) (proposalID uint64) {
-	kv.AssertKeyLength(key[1:], 8)
-
-	return GetProposalIDFromBytes(key[1:])
-}
 
 // SplitActiveProposalQueueKey split the active proposal key and returns the proposal id and endTime
 func SplitActiveProposalQueueKey(key []byte) (proposalID uint64, endTime time.Time) {
@@ -137,16 +111,6 @@ func SplitActiveProposalQueueKey(key []byte) (proposalID uint64, endTime time.Ti
 // SplitInactiveProposalQueueKey split the inactive proposal key and returns the proposal id and endTime
 func SplitInactiveProposalQueueKey(key []byte) (proposalID uint64, endTime time.Time) {
 	return splitKeyWithTime(key)
-}
-
-// SplitKeyDeposit split the deposits key and returns the proposal id and depositor address
-func SplitKeyDeposit(key []byte) (proposalID uint64, depositorAddr sdk.AccAddress) {
-	return splitKeyWithAddress(key)
-}
-
-// SplitKeyVote split the votes key and returns the proposal id and voter address
-func SplitKeyVote(key []byte) (proposalID uint64, voterAddr sdk.AccAddress) {
-	return splitKeyWithAddress(key)
 }
 
 // private functions
@@ -160,15 +124,5 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 	}
 
 	proposalID = GetProposalIDFromBytes(key[1+lenTime:])
-	return
-}
-
-func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
-	// Both Vote and Deposit store keys are of format:
-	// <prefix (1 Byte)><proposalID (8 bytes)><addrLen (1 Byte)><addr_Bytes>
-	kv.AssertKeyAtLeastLength(key, 10)
-	proposalID = GetProposalIDFromBytes(key[1:9])
-	kv.AssertKeyAtLeastLength(key, 11)
-	addr = sdk.AccAddress(key[10:])
 	return
 }

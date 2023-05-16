@@ -656,8 +656,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        sdk.NewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -670,8 +670,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        sdk.NewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -684,8 +684,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        sdk.NewDecWithPrec(-2, 1),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -698,7 +698,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					BaseProposerReward:  sdk.NewDecWithPrec(1, 2),
-					BonusProposerReward: sdk.ZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
 			},
@@ -711,7 +711,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
-					BaseProposerReward:  sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: sdk.NewDecWithPrec(1, 2),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
@@ -725,8 +725,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
 			},

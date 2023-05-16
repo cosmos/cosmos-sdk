@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -136,7 +137,8 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 	suite.Require().NoError(err)
 
 	var msg authz.MsgGrant
-	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
@@ -171,8 +173,8 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 	suite.Require().NoError(err)
 
 	var msg authz.MsgRevoke
-	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
@@ -205,9 +207,8 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	suite.Require().NoError(err)
 
 	var msg authz.MsgExec
-
-	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
 	suite.Require().Len(futureOperations, 0)

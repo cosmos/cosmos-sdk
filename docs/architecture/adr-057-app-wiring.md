@@ -149,7 +149,7 @@ to decode the app config in separate phases:
 3. decode the app config as proto JSON using the protobuf type registry
 
 Because in [ADR 054: Protobuf Semver Compatible Codegen](https://github.com/cosmos/cosmos-sdk/pull/11802), each module
-should use `internal` generated code which is not registered with the global protobuf registry, this code should provide
+might use `internal` generated code which is not registered with the global protobuf registry, this code should provide
 an alternate way to register protobuf types with a type registry. In the same way that `.pb.go` files currently have a
 `var File_foo_proto protoreflect.FileDescriptor` for the file `foo.proto`, generated code should have a new member
 `var Types_foo_proto TypeInfo` where `TypeInfo` is an interface or struct with all the necessary info to register both
@@ -216,7 +216,7 @@ In cases where required modules are not loaded at runtime, it may be possible to
 through a global Cosmos SDK module registry.
 
 The `*appmodule.Handler` type referenced above is a replacement for the legacy `AppModule` framework, and
-described in [ADR 061: Core Module API](./adr-061-core-module-api.md).
+described in [ADR 063: Core Module API](./adr-063-core-module-api.md).
 
 ### New `app.go`
 
@@ -246,7 +246,7 @@ func main() {
 
 So far we have described a system which is largely agnostic to the specifics of the SDK such as store keys, `AppModule`,
 `BaseApp`, etc. Improvements to these parts of the framework that integrate with the general app wiring framework
-defined here are described in [ADR 061: Core Module API](./adr-061-core-module-api.md).
+defined here are described in [ADR 063: Core Module API](./adr-063-core-module-api.md).
 
 ### Registration of Inter-Module Hooks
 
@@ -299,6 +299,35 @@ generated. This will allow:
 
 Code generation requires that all providers and invokers and their parameters are exported and in non-internal packages.
 
+### Module Semantic Versioning
+
+When we start creating semantically versioned SDK modules that are in standalone go modules, a state machine breaking
+change to a module should be handled as follows:
+- the semantic major version should be incremented, and
+- a new semantically versioned module config protobuf type should be created.
+
+For instance, if we have the SDK module for bank in the go module `cosmossdk.io/x/bank` with the module config type
+`cosmos.bank.module.v1.Module`, and we want to make a state machine breaking change to the module, we would:
+- create a new go module `cosmossdk.io/x/bank/v2`,
+- with the module config protobuf type `cosmos.bank.module.v2.Module`.
+
+This _does not_ mean that we need to increment the protobuf API version for bank. Both modules can support
+`cosmos.bank.v1`, but `cosmossdk.io/x/bank/v2` will be a separate go module with a separate module config type.
+
+This practice will eventually allow us to use appconfig to load new versions of a module via a configuration change.
+
+Effectively, there should be a 1:1 correspondence between a semantically versioned go module and a 
+versioned module config protobuf type, and major versioning bumps should occur whenever state machine breaking changes
+are made to a module.
+
+NOTE: SDK modules that are standalone go modules _should not_ adopt semantic versioning until the concerns described in
+[ADR 054: Module Semantic Versioning](./adr-054-semver-compatible-modules.md) are
+addressed. The short-term solution for this issue was left somewhat unresolved. However, the easiest tactic is
+likely to use a standalone API go module and follow the guidelines described in this comment: https://github.com/cosmos/cosmos-sdk/pull/11802#issuecomment-1406815181. For the time-being, it is recommended that
+Cosmos SDK modules continue to follow tried and true [0-based versioning](https://0ver.org) until an officially
+recommended solution is provided. This section of the ADR will be updated when that happens and for now, this section
+should be considered as a design recommendation for future adoption of semantic versioning.
+
 ## Consequences
 
 ### Backwards Compatibility
@@ -337,4 +366,4 @@ light of code generation. It may be better to do this type registration with a D
 * https://github.com/google/wire
 * https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container
 * https://github.com/cosmos/cosmos-sdk/pull/11802
-* [ADR 061](./adr-061-core-module-api.md)
+* [ADR 063: Core Module API](./adr-063-core-module-api.md)

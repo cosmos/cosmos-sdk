@@ -41,24 +41,24 @@ type Store struct {
 	metrics        metrics.StoreMetrics
 	initialVersion int64
 
-	mtx              sync.Mutex
-	commitBufferSize int // 0 means synchronized commit
-	commitQueue      chan<- int64
-	commitQuit       <-chan error
+	mtx                   sync.Mutex
+	iavlAsyncCommitBuffer int // -1 means synchronized commit
+	commitQueue           chan<- int64
+	commitQuit            <-chan error
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
-func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics, commitBufferSize int) (types.CommitKVStore, error) {
-	return LoadStoreWithInitialVersion(db, logger, key, id, lazyLoading, 0, cacheSize, disableFastNode, metrics, commitBufferSize)
+func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics, iavlAsyncCommitBuffer int) (types.CommitKVStore, error) {
+	return LoadStoreWithInitialVersion(db, logger, key, id, lazyLoading, 0, cacheSize, disableFastNode, metrics, iavlAsyncCommitBuffer)
 }
 
 // LoadStoreWithInitialVersion returns an IAVL Store as a CommitKVStore setting its initialVersion
 // to the one given. Internally, it will load the store's version (id) from the
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
-func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics, commitBufferSize int) (types.CommitKVStore, error) {
+func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics, iavlAsyncCommitBuffer int) (types.CommitKVStore, error) {
 	tree, err := iavl.NewMutableTreeWithOpts(db, cacheSize, &iavl.Options{InitialVersion: initialVersion}, disableFastNode)
 	if err != nil {
 		return nil, err
@@ -94,11 +94,11 @@ func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKe
 	}
 
 	return &Store{
-		tree:             tree,
-		logger:           logger,
-		metrics:          metrics,
-		initialVersion:   int64(initialVersion),
-		commitBufferSize: commitBufferSize,
+		tree:                  tree,
+		logger:                logger,
+		metrics:               metrics,
+		initialVersion:        int64(initialVersion),
+		iavlAsyncCommitBuffer: iavlAsyncCommitBuffer,
 	}, nil
 }
 
@@ -141,7 +141,7 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 func (st *Store) Commit() types.CommitID {
 	defer st.metrics.MeasureSince("store", "iavl", "commit")
 
-	if st.commitBufferSize > 0 {
+	if st.iavlAsyncCommitBuffer >= 0 {
 		commitID := st.workingCommitID()
 
 		st.mtx.Lock()
@@ -172,7 +172,7 @@ func (st *Store) Commit() types.CommitID {
 }
 
 func (st *Store) initAsyncCommit() {
-	commitQueue := make(chan int64, st.commitBufferSize)
+	commitQueue := make(chan int64, st.iavlAsyncCommitBuffer)
 	quitChan := make(chan error)
 
 	go func() {

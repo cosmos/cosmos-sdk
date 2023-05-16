@@ -88,9 +88,9 @@ type BaseConfig struct {
 	// IAVLLazyLoading enable/disable the lazy loading of iavl store.
 	IAVLLazyLoading bool `mapstructure:"iavl-lazy-loading"`
 
-	// CommitBufferSize defines the size of the async commit channel (in number of blocks),
-	// 0 means synchronous commitment.
-	CommitBufferSize int `mapstructure:"commit-buffer-size"`
+	// IAVLAsyncCommitBuffer defines the size of the async commit channel (in number of blocks),
+	// -1 means synchronous commitment.
+	IAVLAsyncCommitBuffer int `mapstructure:"iavl-async-commit-buffer"`
 
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
 	// An empty string indicates that the CometBFT config's DBBackend value should be used.
@@ -231,18 +231,18 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:        defaultMinGasPrices,
-			InterBlockCache:     true,
-			Pruning:             pruningtypes.PruningOptionDefault,
-			PruningKeepRecent:   "0",
-			PruningInterval:     "0",
-			MinRetainBlocks:     0,
-			IndexEvents:         make([]string, 0),
-			IAVLCacheSize:       781250,
-			IAVLDisableFastNode: false,
-			IAVLLazyLoading:     false,
-			CommitBufferSize:    0,
-			AppDBBackend:        "",
+			MinGasPrices:          defaultMinGasPrices,
+			InterBlockCache:       true,
+			Pruning:               pruningtypes.PruningOptionDefault,
+			PruningKeepRecent:     "0",
+			PruningInterval:       "0",
+			MinRetainBlocks:       0,
+			IndexEvents:           make([]string, 0),
+			IAVLCacheSize:         781250,
+			IAVLDisableFastNode:   false,
+			IAVLLazyLoading:       false,
+			IAVLAsyncCommitBuffer: -1,
+			AppDBBackend:          "",
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,

@@ -56,26 +56,26 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
-	db                  dbm.DB
-	logger              log.Logger
-	lastCommitInfo      *types.CommitInfo
-	pruningManager      *pruning.Manager
-	iavlCacheSize       int
-	iavlDisableFastNode bool
-	storesParams        map[types.StoreKey]storeParams
-	stores              map[types.StoreKey]types.CommitKVStore
-	keysByName          map[string]types.StoreKey
-	lazyLoading         bool
-	initialVersion      int64
-	removalMap          map[types.StoreKey]bool
-	traceWriter         io.Writer
-	traceContext        types.TraceContext
-	traceContextMutex   sync.Mutex
-	interBlockCache     types.MultiStorePersistentCache
-	listeners           map[types.StoreKey]*types.MemoryListener
-	metrics             metrics.StoreMetrics
-	commitHeader        cmtproto.Header
-	commitBufferSize    int // 0 means synchronous commit
+	db                    dbm.DB
+	logger                log.Logger
+	lastCommitInfo        *types.CommitInfo
+	pruningManager        *pruning.Manager
+	iavlCacheSize         int
+	iavlDisableFastNode   bool
+	storesParams          map[types.StoreKey]storeParams
+	stores                map[types.StoreKey]types.CommitKVStore
+	keysByName            map[string]types.StoreKey
+	lazyLoading           bool
+	initialVersion        int64
+	removalMap            map[types.StoreKey]bool
+	traceWriter           io.Writer
+	traceContext          types.TraceContext
+	traceContextMutex     sync.Mutex
+	interBlockCache       types.MultiStorePersistentCache
+	listeners             map[types.StoreKey]*types.MemoryListener
+	metrics               metrics.StoreMetrics
+	commitHeader          cmtproto.Header
+	iavlAsyncCommitBuffer int // 0 means synchronous commit
 }
 
 var (
@@ -804,19 +804,10 @@ func (rs *Store) SetInitialVersion(version int64) error {
 	return nil
 }
 
-// SetCommitBufferSize sets the buffer size for the commit channel,
-// 0 means synchronous commit.
-func (rs *Store) SetCommitBufferSize(size int) {
-	rs.commitBufferSize = size
-
-	for key, store := range rs.stores {
-		if store.GetStoreType() == types.StoreTypeIAVL {
-			// If the store is wrapped with an inter-block cache, we must first unwrap
-			// it to get the underlying IAVL store.
-			store = rs.GetCommitKVStore(key)
-			store.(types.StoreWithCommitBufferSize).SetCommitBufferSize(size)
-		}
-	}
+// SetIAVLAsyncCommitBuffer sets the buffer size for the commit channel,
+// -1 means synchronous commit.
+func (rs *Store) SetIAVLAsyncCommitBuffer(size int) {
+	rs.iavlAsyncCommitBuffer = size
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]
@@ -1042,9 +1033,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics, rs.commitBufferSize)
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics, rs.iavlAsyncCommitBuffer)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics, rs.commitBufferSize)
+			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics, rs.iavlAsyncCommitBuffer)
 		}
 
 		if err != nil {

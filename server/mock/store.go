@@ -150,7 +150,7 @@ func (ms multiStore) SetLazyLoading(bool) {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetCommitBufferSize(size int) {
+func (ms multiStore) SetIAVLAsyncCommitBuffer(size int) {
 	panic("not implemented")
 }
 

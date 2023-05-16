@@ -76,9 +76,9 @@ func SetIAVLLazyLoading(lazyLoading bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetLazyLoading(lazyLoading) }
 }
 
-// SetCommitBufferSize sets the size of the async commit channel, 0 means synchronous commitment.
-func SetCommitBufferSize(size int) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetCommitBufferSize(size) }
+// SetIAVLAsyncCommitBuffer sets the size of the async commit channel, -1 means synchronous commitment.
+func SetIAVLAsyncCommitBuffer(size int) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLAsyncCommitBuffer(size) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the

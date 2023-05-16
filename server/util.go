@@ -503,7 +503,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		defaultMempool,
 		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 		baseapp.SetChainID(chainID),
-		baseapp.SetCommitBufferSize(cast.ToInt(appOpts.Get(FlagCommitBufferSize))),
+		baseapp.SetIAVLAsyncCommitBuffer(cast.ToInt(appOpts.Get(FlagCommitBufferSize))),
 	}
 }
 

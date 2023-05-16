@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -200,7 +202,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 				d := v1.NewDeposit(proposalID, addr1, nil)
 				v := v1.NewVote(proposalID, addr1, v1.NewNonSplitVoteOption(v1.OptionYes), "")
 				suite.govKeeper.SetDeposit(suite.ctx, d)
-				suite.govKeeper.SetVote(suite.ctx, v)
+				require.NoError(suite.T(), suite.govKeeper.Votes.Set(suite.ctx, collections.Join(proposalID, addr1), v))
 			}
 
 			suite.govKeeper.SetProposal(suite.ctx, p)

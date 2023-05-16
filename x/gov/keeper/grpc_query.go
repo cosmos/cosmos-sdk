@@ -82,9 +82,9 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 					return nil, err
 				}
 
-				_, err = q.k.GetVote(ctx, p.Id, voter)
+				has, err := q.k.Votes.Has(ctx, collections.Join(p.Id, sdk.AccAddress(voter)))
 				// if no error, vote found, matchVoter = true
-				matchVoter = err == nil
+				matchVoter = err == nil && has
 			}
 
 			// match depositor (if supplied)
@@ -131,9 +131,9 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 	if err != nil {
 		return nil, err
 	}
-	vote, err := q.k.GetVote(ctx, req.ProposalId, voter)
+	vote, err := q.k.Votes.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(voter)))
 	if err != nil {
-		if errors.IsOf(err, types.ErrVoteNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.InvalidArgument,
 				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
 		}
@@ -154,18 +154,10 @@ func (q queryServer) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.
 	}
 
 	var votes v1.Votes
-	store := q.k.storeService.OpenKVStore(ctx)
-	votesStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.VotesKey(req.ProposalId))
-
-	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key, value []byte) error {
-		var vote v1.Vote
-		if err := q.k.cdc.Unmarshal(value, &vote); err != nil {
-			return err
-		}
-
-		votes = append(votes, &vote)
-		return nil
-	})
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (include bool, err error) {
+		votes = append(votes, &value)
+		return false, nil // not including results because they're being appended.
+	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

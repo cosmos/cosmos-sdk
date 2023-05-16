@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/collections"
 	"errors"
 	"github.com/stretchr/testify/require"
 	"strings"
@@ -50,7 +51,7 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 
 	for _, tc := range testCases {
 		// delete non-existing proposal
-		suite.Require().ErrorIs(suite.govKeeper.DeleteProposal(suite.ctx, 10), types.ErrProposalNotFound.Wrapf("proposal_id %d", 10))
+		suite.Require().ErrorIs(suite.govKeeper.DeleteProposal(suite.ctx, 10), collections.ErrNotFound)
 
 		tp := TestProposal
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)

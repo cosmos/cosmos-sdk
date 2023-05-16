@@ -62,9 +62,6 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	// Checks to see if proposal exists
 	proposal, err := keeper.GetProposal(ctx, proposalID)
 	if err != nil {
-		if errors.IsOf(err, types.ErrProposalNotFound) {
-			return false, errors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
-		}
 		return false, err
 	}
 

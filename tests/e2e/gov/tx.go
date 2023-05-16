@@ -339,7 +339,7 @@ func (s *E2ETestSuite) TestNewCmdCancelProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 17,
+			false, 1,
 		},
 	}
 
@@ -430,7 +430,7 @@ func (s *E2ETestSuite) TestNewCmdDeposit() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 2,
+			false, 1,
 		},
 		{
 			"deposit on existing proposal",

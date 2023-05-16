@@ -70,6 +70,10 @@ func (ms multiStore) Commit() storetypes.CommitID {
 	panic("not implemented")
 }
 
+func (ms multiStore) WaitAsyncCommit() error {
+	return nil
+}
+
 func (ms multiStore) LastCommitID() storetypes.CommitID {
 	panic("not implemented")
 }

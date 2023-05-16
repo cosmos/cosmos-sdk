@@ -142,7 +142,7 @@ func (st *Store) Commit() types.CommitID {
 	defer st.metrics.MeasureSince("store", "iavl", "commit")
 
 	if st.commitBufferSize > 0 {
-		commitId := st.workingCommitID()
+		commitID := st.workingCommitID()
 
 		st.mtx.Lock()
 		defer st.mtx.Unlock()
@@ -157,8 +157,8 @@ func (st *Store) Commit() types.CommitID {
 			default:
 			}
 		}
-		st.commitQueue <- commitId.Version
-		return commitId
+		st.commitQueue <- commitID.Version
+		return commitID
 	}
 
 	hash, version, err := st.tree.SaveVersion()

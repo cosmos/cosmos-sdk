@@ -71,7 +71,7 @@ func TestDeposits(t *testing.T) {
 			// Check no deposits at beginning
 			_, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[1]))
 			require.ErrorIs(t, err, collections.ErrNotFound)
-			proposal, err = govKeeper.GetProposal(ctx, proposalID)
+			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
 			require.Nil(t, proposal.VotingStartTime)
 
@@ -83,7 +83,7 @@ func TestDeposits(t *testing.T) {
 			require.Nil(t, err)
 			require.Equal(t, fourStake, sdk.NewCoins(deposit.Amount...))
 			require.Equal(t, TestAddrs[0].String(), deposit.Depositor)
-			proposal, err = govKeeper.GetProposal(ctx, proposalID)
+			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
 			require.Equal(t, fourStake, sdk.NewCoins(proposal.TotalDeposit...))
 			require.Equal(t, addr0Initial.Sub(fourStake...), bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
@@ -96,7 +96,7 @@ func TestDeposits(t *testing.T) {
 			require.Nil(t, err)
 			require.Equal(t, fourStake.Add(fiveStake...), sdk.NewCoins(deposit.Amount...))
 			require.Equal(t, TestAddrs[0].String(), deposit.Depositor)
-			proposal, err = govKeeper.GetProposal(ctx, proposalID)
+			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
 			require.Equal(t, fourStake.Add(fiveStake...), sdk.NewCoins(proposal.TotalDeposit...))
 			require.Equal(t, addr0Initial.Sub(fourStake...).Sub(fiveStake...), bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
@@ -109,13 +109,13 @@ func TestDeposits(t *testing.T) {
 			require.Nil(t, err)
 			require.Equal(t, TestAddrs[1].String(), deposit.Depositor)
 			require.Equal(t, fourStake, sdk.NewCoins(deposit.Amount...))
-			proposal, err = govKeeper.GetProposal(ctx, proposalID)
+			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
 			require.Equal(t, fourStake.Add(fiveStake...).Add(fourStake...), sdk.NewCoins(proposal.TotalDeposit...))
 			require.Equal(t, addr1Initial.Sub(fourStake...), bankKeeper.GetAllBalances(ctx, TestAddrs[1]))
 
 			// Check that proposal moved to voting period
-			proposal, err = govKeeper.GetProposal(ctx, proposalID)
+			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
 			require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 

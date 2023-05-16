@@ -14,7 +14,7 @@ import (
 
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
-	err := k.SetProposalID(ctx, data.StartingProposalId)
+	err := k.ProposalID.Set(ctx, data.StartingProposalId)
 	if err != nil {
 		panic(err)
 	}
@@ -79,13 +79,17 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 // ExportGenesis - output genesis parameters
 func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) {
-	startingProposalID, err := k.GetProposalID(ctx)
+	startingProposalID, err := k.ProposalID.Peek(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	proposals, err := k.GetProposals(ctx)
-	if err != nil {
+	var proposals v1.Proposals
+	err = k.Proposals.Walk(ctx, nil, func(_ uint64, value v1.Proposal) (stop bool, err error) {
+		proposals = append(proposals, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return nil, err
 	}
 

@@ -40,10 +40,10 @@ const (
 //
 // - 0x30: Params
 var (
-	ProposalsKeyPrefix            = []byte{0x00}
+	ProposalsKeyPrefix            = collections.NewPrefix(0)
 	ActiveProposalQueuePrefix     = []byte{0x01}
 	InactiveProposalQueuePrefix   = []byte{0x02}
-	ProposalIDKey                 = []byte{0x03}
+	ProposalIDKey                 = collections.NewPrefix(3)
 	VotingPeriodProposalKeyPrefix = []byte{0x04}
 
 	DepositsKeyPrefix = collections.NewPrefix(16)
@@ -102,12 +102,6 @@ func InactiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
 }
 
 // Split keys function; used for iterators
-
-// SplitProposalKey split the proposal key and returns the proposal id
-func SplitProposalKey(key []byte) (proposalID uint64) {
-	kv.AssertKeyLength(key[1:], 8)
-	return GetProposalIDFromBytes(key[1:])
-}
 
 // SplitActiveProposalQueueKey split the active proposal key and returns the proposal id and endTime
 func SplitActiveProposalQueueKey(key []byte) (proposalID uint64, endTime time.Time) {

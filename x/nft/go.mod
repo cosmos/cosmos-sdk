@@ -158,4 +158,5 @@ replace (
 	// TODO remove once https://github.com/cosmos/cosmos-sdk/pull/16155 is merged
 	github.com/cosmos/cosmos-sdk => ../..
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
+	cosmossdk.io/core => ../../core
 )

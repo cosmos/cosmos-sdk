@@ -76,7 +76,7 @@ func SetIAVLLazyLoading(lazyLoading bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetLazyLoading(lazyLoading) }
 }
 
-// SetCommitBufferSize sets the size of the buffer for concurrent commit calls.
+// SetCommitBufferSize sets the size of the async commit channel, 0 means synchronous commitment.
 func SetCommitBufferSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetCommitBufferSize(size) }
 }

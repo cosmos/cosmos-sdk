@@ -118,7 +118,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 // CancelProposal will cancel proposal before the voting period ends
 func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, proposer string) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	proposal, err := keeper.GetProposal(ctx, proposalID)
+	proposal, err := keeper.Proposals.Get(ctx, proposalID)
 	if err != nil {
 		return err
 	}
@@ -177,11 +177,6 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 	return nil
 }
 
-// GetProposal gets a proposal from store by ProposalID.
-func (keeper Keeper) GetProposal(ctx context.Context, proposalID uint64) (proposal v1.Proposal, err error) {
-	return keeper.Proposals.Get(ctx, proposalID)
-}
-
 // SetProposal sets a proposal to store.
 func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) error {
 	store := keeper.storeService.OpenKVStore(ctx)
@@ -204,7 +199,7 @@ func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) erro
 // DeleteProposal deletes a proposal from store.
 func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) error {
 	store := keeper.storeService.OpenKVStore(ctx)
-	proposal, err := keeper.GetProposal(ctx, proposalID)
+	proposal, err := keeper.Proposals.Get(ctx, proposalID)
 	if err != nil {
 		return err
 	}

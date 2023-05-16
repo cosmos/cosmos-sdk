@@ -104,7 +104,7 @@ func TestGRPCQueryTally(t *testing.T) {
 			func() {
 				proposal.Status = v1.StatusPassed
 				app.GovKeeper.SetProposal(ctx, proposal)
-				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id)
+				proposal, _ = app.GovKeeper.Proposals.Get(ctx, proposal.Id)
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -225,7 +225,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 			func() {
 				proposal.Status = v1.StatusPassed
 				app.GovKeeper.SetProposal(ctx, proposal)
-				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id)
+				proposal, _ = app.GovKeeper.Proposals.Get(ctx, proposal.Id)
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 

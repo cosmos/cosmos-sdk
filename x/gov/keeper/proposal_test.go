@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 		proposalID := proposal.Id
 		suite.govKeeper.SetProposal(suite.ctx, proposal)
 
-		gotProposal, err := suite.govKeeper.GetProposal(suite.ctx, proposalID)
+		gotProposal, err := suite.govKeeper.Proposals.Get(suite.ctx, proposalID)
 		suite.Require().Nil(err)
 		suite.Require().Equal(proposal, gotProposal)
 	}
@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 
 		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-		proposal, err = suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
+		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
 		suite.Require().Nil(err)
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 
 		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-		proposal, err = suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
+		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
 		suite.Require().Nil(err)
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
@@ -195,7 +195,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	proposal2Resp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true)
 	proposal2ID := proposal2Resp.Id
 	makeProposalPass := func() {
-		proposal2, err := suite.govKeeper.GetProposal(suite.ctx, proposal2ID)
+		proposal2, err := suite.govKeeper.Proposals.Get(suite.ctx, proposal2ID)
 		suite.Require().Nil(err)
 
 		proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED

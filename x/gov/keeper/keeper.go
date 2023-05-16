@@ -208,7 +208,7 @@ func (k Keeper) IterateActiveProposalsQueue(ctx context.Context, endTime time.Ti
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitActiveProposalQueueKey(iterator.Key())
-		proposal, err := k.GetProposal(ctx, proposalID)
+		proposal, err := k.Proposals.Get(ctx, proposalID)
 		if err != nil {
 			return err
 		}
@@ -236,7 +236,7 @@ func (k Keeper) IterateInactiveProposalsQueue(ctx context.Context, endTime time.
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitInactiveProposalQueueKey(iterator.Key())
-		proposal, err := k.GetProposal(ctx, proposalID)
+		proposal, err := k.Proposals.Get(ctx, proposalID)
 		if err != nil {
 			return err
 		}

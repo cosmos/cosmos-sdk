@@ -298,7 +298,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, err := suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err := suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
@@ -317,7 +317,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID = types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err = suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 			require.False(t, proposal.Expedited)
@@ -449,7 +449,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.True(t, eventOk)
 	require.Contains(t, attr[0].Value, "failed on execution")
 
-	proposal, err = suite.GovKeeper.GetProposal(ctx, proposal.Id)
+	proposal, err = suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
 	require.Nil(t, err)
 	require.Equal(t, v1.StatusFailed, proposal.Status)
 }
@@ -549,7 +549,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.True(t, activeQueue.Valid())
 
 			activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
-			proposal, err := suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err := suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
@@ -569,7 +569,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			if tc.expeditedPasses {
 				require.False(t, activeQueue.Valid())
 
-				proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+				proposal, err = suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 				require.Nil(t, err)
 
 				require.Equal(t, v1.StatusPassed, proposal.Status)
@@ -593,7 +593,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			activeProposalID = types.GetProposalIDFromBytes(activeQueue.Value())
 			activeQueue.Close()
 
-			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err = suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 			require.False(t, proposal.Expedited)
@@ -639,7 +639,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			activeQueue, _ = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, activeQueue.Valid())
 
-			proposal, err = suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			proposal, err = suite.GovKeeper.Proposals.Get(ctx, activeProposalID)
 			require.Nil(t, err)
 
 			if tc.regularEventuallyPassing {

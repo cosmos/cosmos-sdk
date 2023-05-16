@@ -43,7 +43,7 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	proposal, err := q.k.GetProposal(ctx, req.ProposalId)
+	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
 	if err != nil {
 		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
@@ -248,7 +248,7 @@ func (q queryServer) TallyResult(ctx context.Context, req *v1.QueryTallyResultRe
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	proposal, err := q.k.GetProposal(ctx, req.ProposalId)
+	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
 	if err != nil {
 		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)

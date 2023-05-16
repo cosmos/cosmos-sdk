@@ -632,7 +632,7 @@ func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1
 		initialProposalID = proposalID
 	}
 
-	proposal, err := k.GetProposal(ctx, proposalID)
+	proposal, err := k.Proposals.Get(ctx, proposalID)
 	if err != nil || proposal.Status != status {
 		return proposalID, false
 	}

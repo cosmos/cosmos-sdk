@@ -167,7 +167,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 
 	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)
-	assert.ErrorContains(t, err, "proposal 1 doesn't exist")
+	assert.ErrorContains(t, err, "not found")
 
 	proposal2, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID2)
 	assert.NilError(t, err)

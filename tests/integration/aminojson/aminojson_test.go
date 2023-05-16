@@ -107,12 +107,12 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 			fmt.Printf("testing %s\n", tt.Pulsar.ProtoReflect().Descriptor().FullName())
 			rapid.Check(t, func(t *rapid.T) {
 				//uncomment to debug; catch a panic and inspect application state
-				defer func() {
-					if r := recover(); r != nil {
-						//fmt.Printf("Panic: %+v\n", r)
-						t.FailNow()
-					}
-				}()
+				//defer func() {
+				//	if r := recover(); r != nil {
+				//		//fmt.Printf("Panic: %+v\n", r)
+				//		t.FailNow()
+				//	}
+				//}()
 
 				msg := gen.Draw(t, "msg")
 				postFixPulsarMessage(msg)

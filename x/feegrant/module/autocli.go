@@ -100,7 +100,7 @@ Examples:
 							Name:  FlagAllowedMsgs,
 							Usage: "Set of allowed messages for fee allowance",
 						},
-						//	These flags are used in client side logic
+						//	TODO: These flags are used in client side logic
 						FlagExpiration: {
 							Name:  FlagExpiration,
 							Usage: "The RFC 3339 timestamp after which the grant expires for the user",

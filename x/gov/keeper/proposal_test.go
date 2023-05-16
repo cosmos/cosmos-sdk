@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/collections"
 	"errors"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"cosmossdk.io/collections"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

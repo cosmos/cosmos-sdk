@@ -1,11 +1,12 @@
 package simulation
 
 import (
-	"cosmossdk.io/collections"
 	"errors"
 	"math"
 	"math/rand"
 	"time"
+
+	"cosmossdk.io/collections"
 
 	sdkmath "cosmossdk.io/math"
 

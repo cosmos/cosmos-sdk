@@ -10,8 +10,6 @@ import (
 func TestProposalKeys(t *testing.T) {
 	// key proposal
 	key := ProposalKey(1)
-	proposalID := SplitProposalKey(key)
-	require.Equal(t, int(proposalID), 1)
 
 	// key active proposal queue
 	now := time.Now()
@@ -27,6 +25,5 @@ func TestProposalKeys(t *testing.T) {
 	require.True(t, now.Equal(expTime))
 
 	// invalid key
-	require.Panics(t, func() { SplitProposalKey([]byte("test")) })
 	require.Panics(t, func() { SplitInactiveProposalQueueKey([]byte("test")) })
 }

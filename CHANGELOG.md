@@ -202,6 +202,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#16164](https://github.com/cosmos/cosmos-sdk/pull/16164) Use collections for vote state management:
   - Removed: types `VoteKey`, `VoteKeys`
   - Removed: keeper `IterateVotes`, `IterateAllVotes`, `GetVotes`, `GetVote`, `SetVote`
+* (x/gov) [#16171](https://github.com/cosmos/cosmos-sdk/pull/16171) Use collections for proposal state management (part 1):
+  - Removed: keeper: `GetProposal`, `UnmarshalProposal`, `MarshalProposal`, `IterateProposal`, `GetProposal`, `GetProposalFiltered`, `GetProposals`, `GetProposalID`, `SetProposalID`
+  - Remove: errors unused errors
 
 * (sims) [#16155](https://github.com/cosmos/cosmos-sdk/pull/16155) 
   * `simulation.NewOperationMsg` now marshals the operation msg as proto bytes instead of legacy amino JSON bytes.

@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	"cosmossdk.io/math"
 )
 
 // denomUnits contains a mapping of denomination mapped to their respective unit
@@ -34,12 +36,12 @@ func RegisterDenom(denom string, unit Dec) error {
 // is returned if the denomination is registered.
 func GetDenomUnit(denom string) (Dec, bool) {
 	if err := ValidateDenom(denom); err != nil {
-		return ZeroDec(), false
+		return math.LegacyZeroDec(), false
 	}
 
 	unit, ok := denomUnits[denom]
 	if !ok {
-		return ZeroDec(), false
+		return math.LegacyZeroDec(), false
 	}
 
 	return unit, true

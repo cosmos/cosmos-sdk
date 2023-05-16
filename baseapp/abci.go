@@ -194,12 +194,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx)).
-		WithVoteInfos(req.LastCommitInfo.GetVotes())
+		WithVoteInfos(req.LastCommitInfo.GetVotes()).
+		WithCometInfo(cometInfo{Misbehavior: req.ByzantineValidators, ValidatorsHash: req.Header.ValidatorsHash, ProposerAddress: req.Header.ProposerAddress, LastCommit: req.LastCommitInfo})
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
 			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
+			WithHeaderHash(req.Hash).
+			WithCometInfo(cometInfo{Misbehavior: req.ByzantineValidators, ValidatorsHash: req.Header.ValidatorsHash, ProposerAddress: req.Header.ProposerAddress, LastCommit: req.LastCommitInfo})
 	}
 
 	if app.beginBlocker != nil {
@@ -210,8 +212,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		}
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
-	// set the signed validators for addition to context in deliverTx
-	app.voteInfos = req.LastCommitInfo.GetVotes()
 
 	// call the streaming service hook with the BeginBlock messages
 	for _, abciListener := range app.streamingManager.ABCIListeners {
@@ -284,10 +284,11 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 	}
 
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
-		WithVoteInfos(app.voteInfos).
+		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithCometInfo(prepareProposalInfo{req})
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -341,11 +342,12 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 	app.setState(runTxProcessProposal, emptyHeader)
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
-		WithVoteInfos(app.voteInfos).
+		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit})
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
@@ -457,6 +459,10 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
+	if app.precommiter != nil {
+		app.precommiter(app.deliverState.ctx)
+	}
+
 	rms, ok := app.cms.(*rootmulti.Store)
 	if ok {
 		rms.SetCommitHeader(header)
@@ -464,7 +470,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	// Write the DeliverTx state into branched storage and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
-	// MultiStore (app.cms) so when Commit() is called is persists those values.
+	// MultiStore (app.cms) so when Commit() is called it persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
 
@@ -496,6 +502,10 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	// empty/reset the deliver state
 	app.deliverState = nil
+
+	if app.prepareCheckStater != nil {
+		app.prepareCheckStater(app.checkState.ctx)
+	}
 
 	var halt bool
 
@@ -1027,4 +1037,20 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 	}
 
 	return ctx
+}
+
+// toVoteInfo converts the new ExtendedVoteInfo to VoteInfo.
+func toVoteInfo(votes []abci.ExtendedVoteInfo) []abci.VoteInfo {
+	legacyVotes := make([]abci.VoteInfo, len(votes))
+	for i, vote := range votes {
+		legacyVotes[i] = abci.VoteInfo{
+			Validator: abci.Validator{
+				Address: vote.Validator.Address,
+				Power:   vote.Validator.Power,
+			},
+			SignedLastBlock: vote.SignedLastBlock,
+		}
+	}
+
+	return legacyVotes
 }

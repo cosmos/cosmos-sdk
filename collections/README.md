@@ -1063,3 +1063,57 @@ func (k Keeper) getNextAccountNumber() uint64 {
 	return 0
 }
 ```
+
+## Collections with interfaces as values
+
+Although cosmos-sdk is shifting away from the usage of interface registry, there are still some places where it is used.
+In order to support old code, we have to support collections with interface values.
+
+The generic `codec.CollValue` is not able to handle interface values, so we need to use a special type `codec.CollValueInterface`.
+`codec.CollValueInterface` takes a `codec.BinaryCodec` as an argument, and uses it to marshal and unmarshal values as interfaces.
+The `codec.CollValueInterface` lives in the `codec` package, whose import path is `github.com/cosmos/cosmos-sdk/codec`.
+
+### Instantiating Collections with interface values
+
+In order to instantiate a collection with interface values, we need to use `codec.CollValueInterface` instead of `codec.CollValue`.
+
+```go
+package example
+
+import (
+    "cosmossdk.io/collections"
+    storetypes "cosmossdk.io/store/types"
+    "github.com/cosmos/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+var AccountsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+    Schema   collections.Schema
+    Accounts *collections.Map[sdk.AccAddress, sdk.AccountI]
+}
+
+func NewKeeper(cdc codec.BinaryCodec, storeKey *storetypes.KVStoreKey) Keeper {
+    sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+    return Keeper{
+        Accounts: collections.NewMap(
+            sb, AccountsPrefix, "accounts",
+            sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc),
+        ),
+    }
+}
+
+func (k Keeper) SaveBaseAccount(ctx sdk.Context, account authtypes.BaseAccount) error {
+    return k.Accounts.Set(ctx, account.GetAddress(), account)
+}
+
+func (k Keeper) SaveModuleAccount(ctx sdk.Context, account authtypes.ModuleAccount) error {
+    return k.Accounts.Set(ctx, account.GetAddress(), account)
+}
+
+func (k Keeper) GetAccount(ctx sdk.context, addr sdk.AccAddress) (sdk.AccountI, error) {
+    return k.Accounts.Get(ctx, addr)
+}
+```

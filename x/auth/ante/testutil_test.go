@@ -117,7 +117,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	for i := 0; i < numAccs; i++ {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		acc.SetAccountNumber(uint64(i))
+		acc.SetAccountNumber(uint64(i + 1000))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		accounts = append(accounts, TestAccount{acc, priv})
 	}
@@ -142,6 +142,16 @@ type TestCaseArgs struct {
 	gasLimit  uint64
 	msgs      []sdk.Msg
 	privs     []cryptotypes.PrivKey
+}
+
+func (t TestCaseArgs) WithAccountsInfo(accs []TestAccount) TestCaseArgs {
+	newT := t
+	for _, acc := range accs {
+		newT.accNums = append(newT.accNums, acc.acc.GetAccountNumber())
+		newT.accSeqs = append(newT.accSeqs, acc.acc.GetSequence())
+		newT.privs = append(newT.privs, acc.priv)
+	}
+	return newT
 }
 
 // DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a test case, for

@@ -166,6 +166,34 @@ the block or app hash is left to the runtime to specify).
 Events emitted by `EmitKVEvent` and `EmitProtoEventNonConsensus` are not considered to be part of consensus and cannot be observed
 by other modules. If there is a client-side need to add events in patch releases, these methods can be used.
 
+#### Logger
+
+A logger (`cosmossdk.io/log`) must be supplied using `depinject`, and will
+be made available for modules to use via `depinject.In`.
+Modules using it should follow the current pattern in the SDK by adding the module name before using it.
+
+```go
+type ModuleInputs struct {
+  depinject.In
+
+  Logger log.Logger
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+  keeper := keeper.NewKeeper(
+    in.logger,
+  )
+}
+
+func NewKeeper(logger log.Logger) Keeper {
+  return Keeper{
+    logger: logger.With(log.ModuleKey, "x/"+types.ModuleName),
+  }
+}
+```
+
+```
+
 ### Core `AppModule` extension interfaces
 
 
@@ -284,16 +312,46 @@ block headers, the runtime module for a specific version of Comet could provide 
 type ValidatorUpdateService interface {
     SetValidatorUpdates(context.Context, []abci.ValidatorUpdate)
 }
+```
 
-type BlockInfoService interface {
-	GetHeight() int64                // GetHeight returns the height of the block
-	Misbehavior() []abci.Misbehavior // Misbehavior returns the misbehavior of the block
-	GetHeaderHash() []byte           // GetHeaderHash returns the hash of the block header
-	// GetValidatorsHash returns the hash of the validators
+Header Service defines a way to get header information about a block. This information is generalized for all implementations: 
+
+```go 
+
+type Service interface {
+	GetHeaderInfo(context.Context) Info
+}
+
+type Info struct {
+	Height int64      // Height returns the height of the block
+	Hash []byte       // Hash returns the hash of the block header
+	Time time.Time    // Time returns the time of the block
+	ChainID string    // ChainId returns the chain ID of the block
+}
+```
+
+Comet Service provides a way to get comet specific information: 
+
+```go
+type Service interface {
+	GetCometInfo(context.Context) Info
+}
+
+type CometInfo struct {
+  Evidence []abci.Misbehavior // Misbehavior returns the misbehavior of the block
+	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validators
-	GetValidatorsHash() []byte
-	GetProposerAddress() []byte            // GetProposerAddress returns the address of the block proposer
-	GetDecidedLastCommit() abci.CommitInfo // GetDecidedLastCommit returns the last commit info
+	ValidatorsHash []byte
+	ProposerAddress []byte            // ProposerAddress returns the address of the block proposer
+	DecidedLastCommit abci.CommitInfo // DecidedLastCommit returns the last commit info
+}
+```
+
+If a user would like to provide a module other information they would need to implement another service like:
+
+```go
+type RollKit Interface {
+  ...
 }
 ```
 
@@ -385,6 +443,51 @@ a minor version indicator of the core module that is accessible at runtime. Corr
 should check this compatibility version and return an error if the current `RuntimeCompatibilityVersion` is higher
 than the version of the core API that this runtime version can support. When new features are adding to the `core`
 module API that runtime modules are required to support, this version should be incremented.
+
+### Runtime Modules
+
+The initial `runtime` module will simply be created within the existing `github.com/cosmos/cosmos-sdk` go module
+under the `runtime` package. This module will be a small wrapper around the existing `BaseApp`, `sdk.Context` and
+module manager and follow the Cosmos SDK's existing [0-based versioning](https://0ver.org). To move to semantic
+versioning as well as runtime modularity, new officially supported runtime modules will be created under the
+`cosmossdk.io/runtime` prefix. For each supported consensus engine a semantically-versioned go module should be created
+with a runtime implementation for that consensus engine. For example:
+- `cosmossdk.io/runtime/comet`
+- `cosmossdk.io/runtime/comet/v2`
+- `cosmossdk.io/runtime/rollkit`
+- etc.
+
+These runtime modules should attempt to be semantically versioned even if the underlying consensus engine is not. Also,
+because a runtime module is also a first class Cosmos SDK module, it should have a protobuf module config type.
+A new semantically versioned module config type should be created for each of these runtime module such that there is a
+1:1 correspondence between the go module and module config type. This is the same practice should be followed for every 
+semantically versioned Cosmos SDK module as described in [ADR 057: App Wiring](./adr-057-app-wiring.md).
+
+Currently, `github.com/cosmos/cosmos-sdk/runtime` uses the protobuf config type `cosmos.app.runtime.v1alpha1.Module`.
+When we have a standalone v1 comet runtime, we should use a dedicated protobuf module config type such as
+`cosmos.runtime.comet.v1.Module1`. When we release v2 of the comet runtime (`cosmossdk.io/runtime/comet/v2`) we should
+have a corresponding `cosmos.runtime.comet.v2.Module` protobuf type.
+
+In order to make it easier to support different consensus engines that support the same core module functionality as
+described in this ADR, a common go module should be created with shared runtime components. The easiest runtime components
+to share initially are probably the message/query router, inter-module client, service register, and event router.
+This common runtime module should be created initially as the `cosmossdk.io/runtime/common` go module.
+
+When this new architecture has been implemented, the main dependency for a Cosmos SDK module would be
+`cosmossdk.io/core` and that module should be able to be used with any supported consensus engine (to the extent
+that it does not explicitly depend on consensus engine specific functionality such as Comet's block headers). An
+app developer would then be able to choose which consensus engine they want to use by importing the corresponding
+runtime module. The current `BaseApp` would be refactored into the `cosmossdk.io/runtime/comet` module, the router
+infrastructure in `baseapp/` would be refactored into `cosmossdk.io/runtime/common` and support ADR 033, and eventually
+a dependency on `github.com/cosmos/cosmos-sdk` would no longer be required.
+
+In short, modules would depend primarily on `cosmossdk.io/core`, and each `cosmossdk.io/runtime/{consensus-engine}`
+would implement the `cosmossdk.io/core` functionality for that consensus engine.
+
+On additional piece that would need to be resolved as part of this architecture is how runtimes relate to the server.
+Likely it would make sense to modularize the current server architecture so that it can be used with any runtime even
+if that is based on a consensus engine besides Comet. This means that eventually the Comet runtime would need to
+encapsulate the logic for starting Comet and the ABCI app.
 
 ### Testing
 

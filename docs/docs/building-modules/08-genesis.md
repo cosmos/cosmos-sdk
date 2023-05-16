@@ -70,3 +70,11 @@ See an example of `ExportGenesis` from the `auth` module.
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/keeper/genesis.go#L37-L49
 ```
+
+### GenesisTxHandler
+
+`GenesisTxHandler` is a way for modules to submit state transitions prior to the first block. This is used by `x/genutil` to submit the genesis transactions for the validators to be added to staking. 
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/core/genesis/txhandler.go#L3-L6
+```

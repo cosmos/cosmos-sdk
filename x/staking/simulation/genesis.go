@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -41,7 +43,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		unbondTime        time.Duration
 		maxVals           uint32
 		histEntries       uint32
-		minCommissionRate sdk.Dec
+		minCommissionRate sdkmath.LegacyDec
 	)
 
 	simState.AppParams.GetOrGenerate(
@@ -76,7 +78,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		valAddr := sdk.ValAddress(simState.Accounts[i].Address)
 		valAddrs[i] = valAddr
 
-		maxCommission := sdk.NewDecWithPrec(int64(simulation.RandIntBetween(simState.Rand, 1, 100)), 2)
+		maxCommission := sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(simState.Rand, 1, 100)), 2)
 		commission := types.NewCommission(
 			simulation.RandomDecAmount(simState.Rand, maxCommission),
 			maxCommission,
@@ -88,10 +90,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 			panic(err)
 		}
 		validator.Tokens = simState.InitialStake
-		validator.DelegatorShares = sdk.NewDecFromInt(simState.InitialStake)
+		validator.DelegatorShares = sdkmath.LegacyNewDecFromInt(simState.InitialStake)
 		validator.Commission = commission
 
-		delegation := types.NewDelegation(simState.Accounts[i].Address, valAddr, sdk.NewDecFromInt(simState.InitialStake))
+		delegation := types.NewDelegation(simState.Accounts[i].Address, valAddr, sdkmath.LegacyNewDecFromInt(simState.InitialStake))
 
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)

@@ -10,12 +10,21 @@ import (
 
 	"cosmossdk.io/store/prefix"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+type Querier struct {
+	BaseKeeper
+}
+
 var _ types.QueryServer = BaseKeeper{}
+
+func NewQuerier(keeper *BaseKeeper) Querier {
+	return Querier{BaseKeeper: *keeper}
+}
 
 // Balance implements the Query/Balance gRPC method
 func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
@@ -172,9 +181,8 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomMetadataPrefix)
+	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(c))
+	store := prefix.NewStore(kvStore, types.DenomMetadataPrefix)
 
 	metadatas := []types.Metadata{}
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {

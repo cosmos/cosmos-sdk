@@ -3,7 +3,7 @@
 ## Changelog
 
 * Nov, 23, 2021: Initial Draft
-* May, 16, 2023: Proposal ABANDONED. `pre_run` and `post_run` are not necessary anymore and adding the `artifacts` bring minor benefits.
+* May, 16, 2023: Proposal ABANDONED. `pre_run` and `post_run` are not necessary anymore and adding the `artifacts` brings minor benefits.
 
 ## Status
 

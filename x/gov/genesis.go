@@ -14,7 +14,7 @@ import (
 
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
-	err := k.SetProposalID(ctx, data.StartingProposalId)
+	err := k.ProposalID.Set(ctx, data.StartingProposalId)
 	if err != nil {
 		panic(err)
 	}

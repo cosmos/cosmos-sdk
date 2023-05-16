@@ -43,7 +43,7 @@ var (
 	ProposalsKeyPrefix            = []byte{0x00}
 	ActiveProposalQueuePrefix     = []byte{0x01}
 	InactiveProposalQueuePrefix   = []byte{0x02}
-	ProposalIDKey                 = []byte{0x03}
+	ProposalIDKey                 = collections.NewPrefix(3)
 	VotingPeriodProposalKeyPrefix = []byte{0x04}
 
 	DepositsKeyPrefix = collections.NewPrefix(16)

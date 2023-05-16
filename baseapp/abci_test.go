@@ -115,7 +115,6 @@ func TestABCI_InitChain(t *testing.T) {
 	resQ, err = app.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), app.LastBlockHeight())
-	fmt.Println(resQ)
 	require.Equal(t, value, resQ.Value)
 
 	// reload app

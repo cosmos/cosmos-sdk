@@ -303,7 +303,6 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 	respList, err := srcSuite.baseApp.ListSnapshots(context.Background(), &abci.RequestListSnapshots{})
 	require.NoError(t, err)
 	require.NotEmpty(t, respList.Snapshots)
-	fmt.Println(respList)
 	snapshot := respList.Snapshots[0]
 
 	// make sure the snapshot has at least 3 chunks

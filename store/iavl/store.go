@@ -146,8 +146,16 @@ func (st *Store) Commit() types.CommitID {
 
 		st.mtx.Lock()
 		defer st.mtx.Unlock()
+
 		if st.commitQueue == nil {
 			st.initAsyncCommit()
+		} else {
+			// check if the async commit task has failed
+			select {
+			case err := <-st.commitQuit:
+				panic(fmt.Errorf("async commit failed: %v", err))
+			default:
+			}
 		}
 		st.commitQueue <- commitId.Version
 		return commitId

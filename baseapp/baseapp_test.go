@@ -131,12 +131,14 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 			txs = append(txs, txBytes)
 		}
 
-		suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		_, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height: height,
 			Txs:    txs,
 		})
+		require.NoError(t, err)
 
-		suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+		_, err = suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+		require.NoError(t, err)
 
 		// wait for snapshot to be taken, since it happens asynchronously
 		if cfg.snapshotInterval > 0 && uint64(height)%cfg.snapshotInterval == 0 {

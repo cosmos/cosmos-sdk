@@ -318,7 +318,7 @@ func (app *BaseApp) ApplySnapshotChunk(_ context.Context, req *abci.RequestApply
 			Result:        abci.ResponseApplySnapshotChunk_RETRY,
 			RefetchChunks: []uint32{req.Index},
 			RejectSenders: []string{req.Sender},
-		}, err
+		}, nil
 
 	default:
 		app.logger.Error("failed to restore snapshot", "err", err)

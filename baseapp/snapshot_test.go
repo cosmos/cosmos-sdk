@@ -321,7 +321,7 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 		Sender: "sender",
 	})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseApplySnapshotChunk{
+	require.Equal(t, &abci.ResponseApplySnapshotChunk{
 		Result:        abci.ResponseApplySnapshotChunk_RETRY,
 		RefetchChunks: []uint32{0},
 		RejectSenders: []string{"sender"},
@@ -342,7 +342,7 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 			Chunk: respChunk.Chunk,
 		})
 		require.NoError(t, err)
-		require.Equal(t, abci.ResponseApplySnapshotChunk{
+		require.Equal(t, &abci.ResponseApplySnapshotChunk{
 			Result: abci.ResponseApplySnapshotChunk_ACCEPT,
 		}, respApply)
 	}

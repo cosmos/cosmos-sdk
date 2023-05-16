@@ -121,28 +121,3 @@ func ParseCoin(input string) (*basev1beta1.Coin, error) {
 		Denom:  matches[3],
 	}, nil
 }
-
-// LegacyFormatCoins formats Coins into a value-rendered string, replicating the same behavior as types.Coins.String()
-// https://github.com/cosmos/cosmos-sdk/blob/a7e2df2a4641232b7f166bc61cbf4aa44603a8e7/types/coin.go#L212
-func LegacyFormatCoins(coins []*basev1beta1.Coin) string {
-	if len(coins) == 0 {
-		return ""
-	} else if len(coins) == 1 {
-		return LegacyFormatCoin(coins[0])
-	}
-
-	// Build the string with a string builder
-	var out strings.Builder
-	for _, coin := range coins[:len(coins)-1] {
-		out.WriteString(coin.String())
-		out.WriteByte(',')
-	}
-	out.WriteString(LegacyFormatCoin(coins[len(coins)-1]))
-	return out.String()
-}
-
-// LegacyFormatCoin formats a coin into a value-rendered string, replicating the same behavior as types.Coin.String()
-// https://github.com/cosmos/cosmos-sdk/blob/a7e2df2a4641232b7f166bc61cbf4aa44603a8e7/types/coin.go#L37
-func LegacyFormatCoin(coin *basev1beta1.Coin) string {
-	return fmt.Sprintf("%v%s", coin.Amount, coin.Denom)
-}

@@ -117,3 +117,4 @@ linters-settings:
     disabled-checks:
       - regexpMust
       - appendAssign
+      - ifElseChain

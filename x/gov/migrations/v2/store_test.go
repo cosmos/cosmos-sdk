@@ -5,11 +5,15 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -63,12 +67,12 @@ func TestMigrateStore(t *testing.T) {
 		{
 			"DepositKey",
 			v1.DepositKey(proposalID, addr1), dummyValue,
-			types.DepositKey(proposalID, addr1), dummyValue,
+			depositKey(proposalID, addr1), dummyValue,
 		},
 		{
 			"VotesKeyPrefix",
 			v1.VoteKey(proposalID, addr1), oldVoteValue,
-			types.VoteKey(proposalID, addr1), newVoteValue,
+			voteKey(proposalID, addr1), newVoteValue,
 		},
 	}
 
@@ -78,7 +82,8 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	// Run migratio
-	err := v2.MigrateStore(ctx, govKey, cdc)
+	storeService := runtime.NewKVStoreService(govKey)
+	err := v2.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.
@@ -91,4 +96,14 @@ func TestMigrateStore(t *testing.T) {
 			require.Equal(t, tc.newValue, store.Get(tc.newKey))
 		})
 	}
+}
+
+// depositKey key of a specific deposit from the store.
+// NOTE(tip): legacy, eventually remove me.
+func depositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
+	return append(append(types.DepositsKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), address.MustLengthPrefix(depositorAddr.Bytes())...)
+}
+
+func voteKey(proposalID uint64, addr sdk.AccAddress) []byte {
+	return append(append(types.VotesKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), address.MustLengthPrefix(addr.Bytes())...)
 }

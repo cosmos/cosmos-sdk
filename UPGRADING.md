@@ -55,6 +55,10 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 
 With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
 
+For core SDK types equivalence is asserting by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
+
+TODO: summarize proto annotation requirements.
+
 #### Stringer
 
 The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
@@ -173,9 +177,7 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
-Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted.  Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  For core SDK types equivalence is asserting by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
-
-TODO: summarize proto annotation requirements.
+Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted.  Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
 
 #### `x/auth`
 

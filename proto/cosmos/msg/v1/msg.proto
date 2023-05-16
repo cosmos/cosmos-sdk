@@ -27,4 +27,10 @@ extend google.protobuf.MessageOptions {
   // kind in case the signer information is contained within
   // a message inside the cosmos message.
   repeated string signer = 11110000;
+
+  // custom_signer indicates that a message does not define signers in the
+  // standard way using the signer option but instead defines its own custom
+  // way of defining signers. Frameworks and clients will need to provide
+  // custom logic to handle these messages.
+  bool custom_signer = 57938276;
 }

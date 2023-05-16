@@ -10,8 +10,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/address"
+
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 )
 
 // Context is a context for retrieving the list of signers from a
@@ -123,6 +124,16 @@ func (c *Context) Validate() error {
 }
 
 func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+	isCustom := proto.GetExtension(descriptor.Options(), msgv1.E_CustomSigner).(bool)
+	if isCustom {
+		return func(message proto.Message) ([][]byte, error) {
+			if custom, ok := message.(HasCustomSigners); ok {
+				return custom.GetCustomSigners()
+			}
+			return nil, fmt.Errorf("message %s does not implement HasCustomSigners", descriptor.FullName())
+		}, nil
+	}
+
 	signersFields, err := getSignersFieldNames(descriptor)
 	if err != nil {
 		return nil, err
@@ -323,4 +334,8 @@ func (c *Context) FileResolver() ProtoFileResolver {
 
 func (c *Context) TypeResolver() protoregistry.MessageTypeResolver {
 	return c.typeResolver
+}
+
+func (c *Context) DefineCustomGetSigners() {
+
 }

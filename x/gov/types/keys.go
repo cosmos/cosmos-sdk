@@ -40,7 +40,7 @@ const (
 //
 // - 0x30: Params
 var (
-	ProposalsKeyPrefix            = []byte{0x00}
+	ProposalsKeyPrefix            = collections.NewPrefix(0)
 	ActiveProposalQueuePrefix     = []byte{0x01}
 	InactiveProposalQueuePrefix   = []byte{0x02}
 	ProposalIDKey                 = collections.NewPrefix(3)

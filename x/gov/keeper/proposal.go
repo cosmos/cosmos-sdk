@@ -6,12 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/collections"
-
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -288,60 +285,6 @@ func (keeper Keeper) GetProposals(ctx context.Context) (proposals v1.Proposals, 
 		return nil
 	})
 	return
-}
-
-// GetProposalsFiltered retrieves proposals filtered by a given set of params which
-// include pagination parameters along with voter and depositor addresses and a
-// proposal status. The voter address will filter proposals by whether or not
-// that address has voted on proposals. The depositor address will filter proposals
-// by whether or not that address has deposited to them. Finally, status will filter
-// proposals by status.
-//
-// NOTE: If no filters are provided, all proposals will be returned in paginated
-// form.
-func (keeper Keeper) GetProposalsFiltered(ctx context.Context, params v1.QueryProposalsParams) (v1.Proposals, error) {
-	proposals, err := keeper.GetProposals(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	filteredProposals := make([]*v1.Proposal, 0, len(proposals))
-
-	for _, p := range proposals {
-		matchVoter, matchDepositor, matchStatus := true, true, true
-
-		// match status (if supplied/valid)
-		if v1.ValidProposalStatus(params.ProposalStatus) {
-			matchStatus = p.Status == params.ProposalStatus
-		}
-
-		// match voter address (if supplied)
-		if len(params.Voter) > 0 {
-			has, err := keeper.Votes.Has(ctx, collections.Join(p.Id, params.Voter))
-			// if no error, vote found, matchVoter = true
-			matchVoter = err == nil && has
-		}
-
-		// match depositor (if supplied)
-		if len(params.Depositor) > 0 {
-			_, err = keeper.Deposits.Get(ctx, collections.Join(p.Id, params.Depositor))
-			// if no error, deposit found, matchDepositor = true
-			matchDepositor = err == nil
-		}
-
-		if matchVoter && matchDepositor && matchStatus {
-			filteredProposals = append(filteredProposals, p)
-		}
-	}
-
-	start, end := client.Paginate(len(filteredProposals), params.Page, params.Limit, 100)
-	if start < 0 || end < 0 {
-		filteredProposals = []*v1.Proposal{}
-	} else {
-		filteredProposals = filteredProposals[start:end]
-	}
-
-	return filteredProposals, nil
 }
 
 // ActivateVotingPeriod activates the voting period of a proposal

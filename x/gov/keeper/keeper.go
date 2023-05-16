@@ -56,6 +56,7 @@ type Keeper struct {
 	Deposits     collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
 	Votes        collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
 	ProposalID   collections.Sequence
+	Proposals    collections.Map[uint64, v1.Proposal]
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -105,6 +106,7 @@ func NewKeeper(
 		Deposits:     collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), //nolint: staticcheck // Needed to retain state compatibility
 		Votes:        collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          //nolint: staticcheck // Needed to retain state compatibility
 		ProposalID:   collections.NewSequence(sb, types.ProposalIDKey, "proposal_id"),
+		Proposals:    collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {

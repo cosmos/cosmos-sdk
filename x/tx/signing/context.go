@@ -3,6 +3,7 @@ package signing
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
@@ -24,7 +25,8 @@ type Context struct {
 	typeResolver          protoregistry.MessageTypeResolver
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
-	getSignersFuncs       map[protoreflect.FullName]getSignersFunc
+	getSignersFuncsByName map[protoreflect.FullName]getSignersFunc
+	getSignersFuncsByType map[reflect.Type]getSignersFunc
 }
 
 // Options are options for creating Context which will be used for signing operations.
@@ -75,7 +77,7 @@ func NewContext(options Options) (*Context, error) {
 		typeResolver:          protoTypes,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
-		getSignersFuncs:       map[protoreflect.FullName]getSignersFunc{},
+		getSignersFuncsByName: map[protoreflect.FullName]getSignersFunc{},
 	}
 
 	return c, nil
@@ -95,8 +97,7 @@ func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, 
 // Validate performs a dry run of getting all msg's signers. This has 2 benefits:
 // - it will error if any Msg has forgotten the "cosmos.msg.v1.signer"
 // annotation
-// - it will pre-populate the context's internal cache for getSignersFuncs
-// so that calling it in antehandlers will be faster.
+// - it will pre-populate the context's internal cache so that calling it in antehandlers will be faster.
 func (c *Context) Validate() error {
 	var errs []error
 	c.fileResolver.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
@@ -110,7 +111,7 @@ func (c *Context) Validate() error {
 
 			for j := 0; j < sd.Methods().Len(); j++ {
 				md := sd.Methods().Get(j).Input()
-				_, err := c.getGetSignersFn(md)
+				_, err := c.getGetSignersFnByMd(md)
 				if err != nil {
 					errs = append(errs, err)
 				}
@@ -126,12 +127,6 @@ func (c *Context) Validate() error {
 func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
 	isCustom := proto.GetExtension(descriptor.Options(), msgv1.E_CustomSigner).(bool)
 	if isCustom {
-		return func(message proto.Message) ([][]byte, error) {
-			if custom, ok := message.(HasCustomSigners); ok {
-				return custom.GetCustomSigners()
-			}
-			return nil, fmt.Errorf("message %s does not implement HasCustomSigners", descriptor.FullName())
-		}, nil
 	}
 
 	signersFields, err := getSignersFieldNames(descriptor)
@@ -293,15 +288,32 @@ func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Co
 	return addrCdc
 }
 
-func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
-	f, ok := c.getSignersFuncs[messageDescriptor.FullName()]
+func (c *Context) getGetSignersFnByMd(messageDescriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+	msgType, err := c.typeResolver.FindMessageByName(messageDescriptor.FullName())
+
+	f, ok := c.getSignersFuncsByName[]
 	if !ok {
 		var err error
 		f, err = c.makeGetSignersFunc(messageDescriptor)
 		if err != nil {
 			return nil, err
 		}
-		c.getSignersFuncs[messageDescriptor.FullName()] = f
+		c.getSignersFuncsByName[messageDescriptor.FullName()] = f
+	}
+
+	return f, nil
+}
+
+func (c *Context) getGetSignersFn(m proto.Message) (getSignersFunc, error) {
+	typ := reflect.TypeOf(m)
+	f, ok := c.getSignersFuncsByType[typ]
+	if !ok {
+		var err error
+		f, err = c.makeGetSignersFunc(m.ProtoReflect().Descriptor())
+		if err != nil {
+			return nil, err
+		}
+		c.getSignersFuncsByType[typ] = f
 	}
 
 	return f, nil
@@ -309,7 +321,7 @@ func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescript
 
 // GetSigners returns the signers for a given message.
 func (c *Context) GetSigners(msg proto.Message) ([][]byte, error) {
-	f, err := c.getGetSignersFn(msg.ProtoReflect().Descriptor())
+	f, err := c.getGetSignersFn(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -332,10 +344,15 @@ func (c *Context) FileResolver() ProtoFileResolver {
 	return c.fileResolver
 }
 
+// TypeResolver returns the proto type resolver used by the context.
 func (c *Context) TypeResolver() protoregistry.MessageTypeResolver {
 	return c.typeResolver
 }
 
-func (c *Context) DefineCustomGetSigners() {
-
+// DefineCustomGetSigners defines a custom GetSigners function for a given message type.
+// It is defined as a function rather than a method on Context because of how go generics work.
+func DefineCustomGetSigners[T proto.Message](ctx *Context, getSigners func(T) ([][]byte, error)) {
+	ctx.getSignersFuncsByType[reflect.TypeOf((*T)(nil)).Elem()] = func(msg proto.Message) ([][]byte, error) {
+		return getSigners(msg.(T))
+	}
 }

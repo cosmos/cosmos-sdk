@@ -13,6 +13,25 @@ import (
 
 var (
 	_ sdk.Msg = &MsgCreateGroup{}
+	_ sdk.Msg = &MsgUpdateGroupAdmin{}
+	_ sdk.Msg = &MsgUpdateGroupMetadata{}
+	_ sdk.Msg = &MsgUpdateGroupMembers{}
+	_ sdk.Msg = &MsgUpdateGroupMembers{}
+	_ sdk.Msg = &MsgCreateGroupWithPolicy{}
+	_ sdk.Msg = &MsgCreateGroupPolicy{}
+	_ sdk.Msg = &MsgUpdateGroupPolicyAdmin{}
+	_ sdk.Msg = &MsgUpdateGroupPolicyDecisionPolicy{}
+	_ sdk.Msg = &MsgUpdateGroupPolicyMetadata{}
+	_ sdk.Msg = &MsgLeaveGroup{}
+	_ sdk.Msg = &MsgExec{}
+	_ sdk.Msg = &MsgVote{}
+	_ sdk.Msg = &MsgWithdrawProposal{}
+	_ sdk.Msg = &MsgSubmitProposal{}
+	_ sdk.Msg = &MsgCreateGroupPolicy{}
+
+	_ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
+	_ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
+	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 )
 
 // GetSigners returns the expected signers for a MsgCreateGroup.
@@ -21,10 +40,6 @@ func (m MsgCreateGroup) GetSigners() []sdk.AccAddress {
 
 	return []sdk.AccAddress{admin}
 }
-
-var (
-	_ sdk.Msg = &MsgUpdateGroupAdmin{}
-)
 
 // GetSigners returns the expected signers for a MsgUpdateGroupAdmin.
 func (m MsgUpdateGroupAdmin) GetSigners() []sdk.AccAddress {
@@ -38,10 +53,6 @@ func (m *MsgUpdateGroupAdmin) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var (
-	_ sdk.Msg = &MsgUpdateGroupMetadata{}
-)
-
 // GetSigners returns the expected signers for a MsgUpdateGroupMetadata.
 func (m MsgUpdateGroupMetadata) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
@@ -54,12 +65,6 @@ func (m *MsgUpdateGroupMetadata) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var (
-	_ sdk.Msg = &MsgUpdateGroupMembers{}
-)
-
-var _ sdk.Msg = &MsgUpdateGroupMembers{}
-
 // GetSigners returns the expected signers for a MsgUpdateGroupMembers.
 func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
@@ -71,12 +76,6 @@ func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
 func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 	return m.GroupId
 }
-
-var (
-	_ sdk.Msg = &MsgCreateGroupWithPolicy{}
-
-	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
-)
 
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
 func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMetadata, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
@@ -125,19 +124,11 @@ func (m MsgCreateGroupWithPolicy) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{admin}
 }
 
-var (
-	_ sdk.Msg = &MsgCreateGroupPolicy{}
-)
-
 // GetSigners returns the expected signers for a MsgCreateGroupPolicy.
 func (m MsgCreateGroupPolicy) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{admin}
 }
-
-var (
-	_ sdk.Msg = &MsgUpdateGroupPolicyAdmin{}
-)
 
 // GetSigners returns the expected signers for a MsgUpdateGroupPolicyAdmin.
 func (m MsgUpdateGroupPolicyAdmin) GetSigners() []sdk.AccAddress {
@@ -145,12 +136,6 @@ func (m MsgUpdateGroupPolicyAdmin) GetSigners() []sdk.AccAddress {
 
 	return []sdk.AccAddress{admin}
 }
-
-var (
-	_ sdk.Msg = &MsgUpdateGroupPolicyDecisionPolicy{}
-
-	_ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
-)
 
 // NewMsgUpdateGroupPolicyDecisionPolicy creates a new MsgUpdateGroupPolicyDecisionPolicy.
 func NewMsgUpdateGroupPolicyDecisionPolicy(admin, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
@@ -202,22 +187,12 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyU
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-var (
-	_ sdk.Msg = &MsgUpdateGroupPolicyMetadata{}
-)
-
 // GetSigners returns the expected signers for a MsgUpdateGroupPolicyMetadata.
 func (m MsgUpdateGroupPolicyMetadata) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Admin)
 
 	return []sdk.AccAddress{admin}
 }
-
-var (
-	_ sdk.Msg = &MsgCreateGroupPolicy{}
-
-	_ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
-)
 
 // NewMsgCreateGroupPolicy creates a new MsgCreateGroupPolicy.
 func NewMsgCreateGroupPolicy(admin sdk.AccAddress, group uint64, metadata string, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
@@ -272,10 +247,6 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
-
-var (
-	_ sdk.Msg = &MsgSubmitProposal{}
-)
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 func NewMsgSubmitProposal(address string, proposers []string, msgs []sdk.Msg, metadata string, exec Exec, title, summary string) (*MsgSubmitProposal, error) {
@@ -338,20 +309,12 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, m.Messages)
 }
 
-var (
-	_ sdk.Msg = &MsgWithdrawProposal{}
-)
-
 // GetSigners returns the expected signers for a MsgWithdrawProposal.
 func (m MsgWithdrawProposal) GetSigners() []sdk.AccAddress {
 	admin := sdk.MustAccAddressFromBech32(m.Address)
 
 	return []sdk.AccAddress{admin}
 }
-
-var (
-	_ sdk.Msg = &MsgVote{}
-)
 
 // GetSigners returns the expected signers for a MsgVote.
 func (m MsgVote) GetSigners() []sdk.AccAddress {
@@ -360,20 +323,12 @@ func (m MsgVote) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-var (
-	_ sdk.Msg = &MsgExec{}
-)
-
 // GetSigners returns the expected signers for a MsgExec.
 func (m MsgExec) GetSigners() []sdk.AccAddress {
 	signer := sdk.MustAccAddressFromBech32(m.Executor)
 
 	return []sdk.AccAddress{signer}
 }
-
-var (
-	_ sdk.Msg = &MsgLeaveGroup{}
-)
 
 // GetSigners returns the expected signers for a MsgLeaveGroup
 func (m MsgLeaveGroup) GetSigners() []sdk.AccAddress {

@@ -4,9 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	_, _ sdk.Msg = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
-)
+var _, _ sdk.Msg = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
 
 // GetSigners returns the expected signers for MsgSoftwareUpgrade.
 func (m *MsgSoftwareUpgrade) GetSigners() []sdk.AccAddress {

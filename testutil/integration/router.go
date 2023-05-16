@@ -88,13 +88,13 @@ func NewIntegrationApp(
 		if err := bApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("failed to load application version from store: %w", err))
 		}
-		bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams})
+		bApp.InitChain(context.TODO(), &cmtabcitypes.RequestInitChain{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams})
 
 	} else {
 		if err := bApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("failed to load application version from store: %w", err))
 		}
-		bApp.InitChain(cmtabcitypes.RequestInitChain{ChainId: appName})
+		bApp.InitChain(context.TODO(), &cmtabcitypes.RequestInitChain{ChainId: appName})
 	}
 
 	bApp.InitChain(context.Background(), &cmtabcitypes.RequestInitChain{ChainId: appName})

@@ -276,7 +276,7 @@ func simulateMsgSubmitProposal(
 		opMsg := simtypes.NewOperationMsg(msg, true, "")
 
 		// get the submitted proposal ID
-		proposalID, err := k.GetProposalID(ctx)
+		proposalID, err := k.ProposalID.Peek(ctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate proposalID"), nil, err
 		}
@@ -610,7 +610,7 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 // that matches a given Status.
 // It does not provide a default ID.
 func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus) (proposalID uint64, found bool) {
-	proposalID, _ = k.GetProposalID(ctx)
+	proposalID, _ = k.ProposalID.Peek(ctx)
 
 	switch {
 	case proposalID > initialProposalID:

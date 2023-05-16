@@ -79,7 +79,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 // ExportGenesis - output genesis parameters
 func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) {
-	startingProposalID, err := k.GetProposalID(ctx)
+	startingProposalID, err := k.ProposalID.Peek(ctx)
 	if err != nil {
 		return nil, err
 	}

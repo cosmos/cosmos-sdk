@@ -86,7 +86,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 
 	}
 
-	proposalID, err := keeper.GetProposalID(ctx)
+	proposalID, err := keeper.ProposalID.Next(ctx)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -106,7 +106,6 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
-	keeper.ProposalID.Set(ctx, proposalID+1)
 
 	// called right after a proposal is submitted
 	keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
@@ -343,21 +342,6 @@ func (keeper Keeper) GetProposalsFiltered(ctx context.Context, params v1.QueryPr
 	}
 
 	return filteredProposals, nil
-}
-
-// GetProposalID gets the highest proposal ID
-func (keeper Keeper) GetProposalID(ctx context.Context) (proposalID uint64, err error) {
-	store := keeper.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ProposalIDKey)
-	if err != nil {
-		return 0, err
-	}
-	if bz == nil {
-		return 0, errorsmod.Wrap(types.ErrInvalidGenesis, "initial proposal ID hasn't been set")
-	}
-
-	proposalID = types.GetProposalIDFromBytes(bz)
-	return proposalID, nil
 }
 
 // ActivateVotingPeriod activates the voting period of a proposal

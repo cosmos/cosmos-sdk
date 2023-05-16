@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -65,6 +66,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -203,7 +205,7 @@ func newAny(t *testing.T, msg proto.Message) *anypb.Any {
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
-		vesting.AppModuleBasic{})
+		vesting.AppModuleBasic{}, gov.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
@@ -334,6 +336,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"bank/msg_multi_send/nil_everything": {
 			gogo:   &banktypes.MsgMultiSend{},
 			pulsar: &bankapi.MsgMultiSend{},
+		},
+		"gov/v1_msg_submit_proposal": {
+			gogo:   &gov_v1_types.MsgSubmitProposal{},
+			pulsar: &gov_v1_api.MsgSubmitProposal{},
 		},
 		"slashing/params/empty_dec": {
 			gogo:   &slashingtypes.Params{DowntimeJailDuration: 1e9 + 7},

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
+// TODO(tip): remove this
 func (suite *KeeperTestSuite) TestGetSetProposal() {
 	testCases := map[string]struct {
 		expedited bool
@@ -36,6 +37,7 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 	}
 }
 
+// TODO(tip): remove this
 func (suite *KeeperTestSuite) TestDeleteProposal() {
 	testCases := map[string]struct {
 		expedited bool

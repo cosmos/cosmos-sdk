@@ -179,22 +179,7 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 
 // GetProposal gets a proposal from store by ProposalID.
 func (keeper Keeper) GetProposal(ctx context.Context, proposalID uint64) (proposal v1.Proposal, err error) {
-	store := keeper.storeService.OpenKVStore(ctx)
-
-	bz, err := store.Get(types.ProposalKey(proposalID))
-	if err != nil {
-		return
-	}
-
-	if bz == nil {
-		return proposal, types.ErrProposalNotFound.Wrapf("proposal %d doesn't exist", proposalID)
-	}
-
-	if err = keeper.UnmarshalProposal(bz, &proposal); err != nil {
-		return
-	}
-
-	return proposal, nil
+	return keeper.Proposals.Get(ctx, proposalID)
 }
 
 // SetProposal sets a proposal to store.
@@ -275,13 +260,4 @@ func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Propo
 	}
 
 	return keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
-}
-
-// UnmarshalProposal unmarshals the proposal.
-func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *v1.Proposal) error {
-	err := keeper.cdc.Unmarshal(bz, proposal)
-	if err != nil {
-		return err
-	}
-	return nil
 }

@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 			},
 			depositor: proposer,
 			expErr:    true,
-			expErrMsg: "proposal is not found",
+			expErrMsg: "not found",
 		},
 		"valid proposal but invalid proposer": {
 			preRun: func() uint64 {
@@ -752,7 +752,7 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 			depositor: proposer,
 			deposit:   coins,
 			expErr:    true,
-			expErrMsg: "0: unknown proposal",
+			expErrMsg: "not found",
 		},
 		"empty depositor": {
 			preRun: func() uint64 {
@@ -1338,7 +1338,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 			depositor: proposer,
 			deposit:   coins,
 			expErr:    true,
-			expErrMsg: "unknown proposal",
+			expErrMsg: "not found",
 		},
 		"empty depositer": {
 			preRun: func() uint64 {

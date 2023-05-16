@@ -3,10 +3,11 @@
 ## Changelog
 
 * Nov, 23, 2021: Initial Draft
+* May, 16, 2023: Proposal ABANDONED. `pre_run` and `post_run` are not necessary anymore and adding the `artifacts` brings minor benefits.
 
 ## Status
 
-PROPOSED Not Implemented
+ABANDONED
 
 ## Abstract
 
@@ -19,6 +20,7 @@ The `upgrade` module in conjunction with Cosmovisor are designed to facilitate a
 
 Users submit a software upgrade governance proposal containing an upgrade `Plan`.
 The [Plan](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto#L12) currently contains the following fields:
+
 * `name`: A short string identifying the new version.
 * `height`: The chain height at which the upgrade is to be performed.
 * `info`: A string containing information about the upgrade.
@@ -79,6 +81,7 @@ message UpgradeInstructions {
 ```
 
 All fields in the `UpgradeInstructions` are optional.
+
 * `pre_run` is a command to run prior to the upgraded chain restarting.
   If defined, it will be executed after halting and downloading the new artifact but before restarting the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.

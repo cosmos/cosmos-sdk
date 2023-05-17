@@ -470,7 +470,6 @@ func startGrpcServer(
 		// return grpcServer as nil if gRPC is disabled
 		return nil, clientCtx, nil
 	}
-
 	_, port, err := net.SplitHostPort(config.Address)
 	if err != nil {
 		return nil, clientCtx, err
@@ -546,7 +545,6 @@ func startAPIServer(
 	g.Go(func() error {
 		return apiSrv.Start(ctx, svrCfg)
 	})
-
 	return nil
 }
 

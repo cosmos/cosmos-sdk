@@ -640,6 +640,10 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to pick a validator"), nil, nil
 		}
 
+		if val.Status != types.Bonded {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator not bonded"), nil, nil
+		}
+
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
@@ -661,7 +665,6 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		}
 
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
 		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
 
 		valAddr := val.GetOperator()

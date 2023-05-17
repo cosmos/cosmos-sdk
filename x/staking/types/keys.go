@@ -40,7 +40,6 @@ var (
 	RedelegationKey                  = []byte{0x34} // key for a redelegation
 	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
-	DelegationByValIndexKey          = []byte{0x37} // key for delegations by a validator
 
 	UnbondingIDKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingOperations
 	UnbondingIndexKey = []byte{0x38} // prefix for an index for looking up unbonding operations by their IDs
@@ -54,6 +53,8 @@ var (
 	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
+
+	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
 )
 
 // UnbondingType defines the type of unbonding operation

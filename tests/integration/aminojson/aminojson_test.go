@@ -47,6 +47,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -92,7 +93,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
-	aj := aminojson.NewEncoder()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
 		name := string(tt.Pulsar.ProtoReflect().Descriptor().FullName())
@@ -143,6 +144,10 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 					AccNum:        1,
 					AccSeq:        2,
 					SignerAddress: "signerAddress",
+					Tip: &txv1beta1.Tip{
+						Tipper: "tipper",
+						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+					},
 					Fee: &txv1beta1.Fee{
 						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
 					},
@@ -160,6 +165,10 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				require.NoError(t, txBuilder.SetMsgs([]types.Msg{gogoMsg}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
 				txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
+				txBuilder.SetTip(&txtypes.Tip{
+					Amount: types.Coins{types.NewInt64Coin("uatom", 1000)},
+					Tipper: "tipper",
+				})
 				theTx := txBuilder.GetTx()
 
 				legacySigningData := signing.SignerData{
@@ -193,7 +202,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
 		vesting.AppModuleBasic{})
 
-	aj := aminojson.NewEncoder()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 	addr1 := types.AccAddress("addr1")
 	now := time.Now()
 
@@ -481,7 +490,7 @@ func TestSendAuthorization(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		distribution.AppModuleBasic{}, bank.AppModuleBasic{})
 
-	aj := aminojson.NewEncoder()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	// beware, Coins has as custom MarshalJSON method which changes how nil is handled
 	// nil -> [] (empty list)

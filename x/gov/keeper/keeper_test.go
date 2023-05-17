@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) reset() {
 	suite.NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	v1.RegisterQueryServer(queryHelper, govKeeper)
+	v1.RegisterQueryServer(queryHelper, keeper.NewQueryServer(*govKeeper))
 	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(govKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)
@@ -131,7 +131,7 @@ func TestProposalQueues(t *testing.T) {
 
 	govKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	proposal, err = govKeeper.GetProposal(ctx, proposal.Id)
+	proposal, err = govKeeper.Proposals.Get(ctx, proposal.Id)
 	require.Nil(t, err)
 
 	activeIterator, _ := govKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)

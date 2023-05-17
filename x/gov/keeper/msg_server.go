@@ -57,10 +57,6 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	if err := validateMsgs(proposalMsgs); err != nil {
-		return nil, err
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	initialDeposit := msg.GetInitialDeposit()
 
@@ -287,7 +283,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *v1.MsgUpdateParams) 
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.SetParams(ctx, msg.Params); err != nil {
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 
@@ -408,22 +404,6 @@ func validateDeposit(deposit sdk.Coins) error {
 
 	if deposit.IsAnyNegative() {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
-	}
-
-	return nil
-}
-
-func validateMsgs(msgs []sdk.Msg) error {
-	for idx, msg := range msgs {
-		m, ok := msg.(sdk.HasValidateBasic)
-		if !ok {
-			continue
-		}
-
-		if err := m.ValidateBasic(); err != nil {
-			return errors.Wrap(govtypes.ErrInvalidProposalMsg,
-				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
-		}
 	}
 
 	return nil

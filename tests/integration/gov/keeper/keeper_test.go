@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -111,11 +112,13 @@ func initFixture(t testing.TB) *fixture {
 		types.DefaultConfig(),
 		authority.String(),
 	)
-	govKeeper.SetProposalID(newCtx, 1)
+	err := govKeeper.ProposalID.Set(newCtx, 1)
+	assert.NilError(t, err)
 	govRouter := v1beta1.NewRouter()
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)
-	govKeeper.SetParams(newCtx, v1.DefaultParams())
+	err = govKeeper.Params.Set(newCtx, v1.DefaultParams())
+	assert.NilError(t, err)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
@@ -134,7 +137,7 @@ func initFixture(t testing.TB) *fixture {
 	v1.RegisterMsgServer(router, msgSrvr)
 	v1beta1.RegisterMsgServer(router, legacyMsgSrvr)
 
-	v1.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQuerier(govKeeper))
+	v1.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQueryServer(govKeeper))
 	v1beta1.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewLegacyQueryServer(govKeeper))
 
 	queryClient := v1.NewQueryClient(integrationApp.QueryHelper())

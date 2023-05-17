@@ -41,7 +41,7 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 	}
 
 	handlerChain := make([]AnteHandler, len(chain)+1)
-	// Install the terminal AnteHandler.
+	// set the terminal AnteHandler decorator 
 	handlerChain[len(chain)] = func(ctx Context, tx Tx, simulate bool) (Context, error) {
 		return ctx, nil
 	}

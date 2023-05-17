@@ -222,9 +222,12 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 
 	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 
-	// TODO: should config be getting validated here?
 	config, err := serverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
+		return err
+	}
+
+	if err := config.ValidateBasic(); err != nil {
 		return err
 	}
 
@@ -272,12 +275,12 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	traceWriter, traceWriterCleanup, err := setupTraceWriter(svrCtx)
+	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
 		return err
 	}
-	// TODO: Should this be moved to the very top of the function?
-	svrCfg, err := getAndValidateConfig(svrCtx)
+
+	traceWriter, traceWriterCleanup, err := setupTraceWriter(svrCtx)
 	if err != nil {
 		return err
 	}

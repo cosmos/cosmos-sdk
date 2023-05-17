@@ -183,7 +183,7 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (r TxResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if r.Tx != nil {
-		var tx Tx
+		var tx HasMsgs
 		return unpacker.UnpackAny(r.Tx, &tx)
 	}
 	return nil

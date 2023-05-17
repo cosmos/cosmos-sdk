@@ -2629,17 +2629,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(time.Second), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			checkEvents: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
-				tallyEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						tallyEventFound = true
-						break
-					}
-				}
-				s.Require().True(tallyEventFound)
-			},
+			checkEvents:       func(sdkCtx sdk.Context) {},
 		},
 		"Decision policy also applied after voting period end": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2649,6 +2639,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			checkEvents:       func(sdkCtx sdk.Context) {},
 		},
 		"exec proposal before MinExecutionPeriod should fail": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2658,6 +2649,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(4 * time.Second), // min execution date is 5s later after s.blockTime
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE, // Because MinExecutionPeriod has not passed
+			checkEvents:       func(sdkCtx sdk.Context) {},
 		},
 		"exec proposal at exactly MinExecutionPeriod should pass": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2668,6 +2660,17 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(5 * time.Second), // min execution date is 5s later after s.blockTime
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			checkEvents: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				execEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						execEventFound = true
+						break
+					}
+				}
+				s.Require().True(execEventFound)
+			},
 		},
 		"prevent double execution when successful": {
 			setupProposal: func(ctx context.Context) uint64 {

@@ -665,8 +665,7 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
 
 		valAddr := val.GetOperator()
-		isExceed, _ := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
-		if isExceed {
+		if k.CheckLimitOfMaxRotationsExceed(ctx, valAddr) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "rotations limit reached within unbondin period"), nil, nil
 		}
 

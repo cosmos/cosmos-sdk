@@ -43,21 +43,15 @@ func getKeyRotationFee(r *rand.Rand) sdk.Coin {
 	return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(r.Int63n(types.DefaultKeyRotationFee.Amount.Int64()-10000)+10000))
 }
 
-// getMaxConsPubKeyRotations returns randomized maxConsPubKeyRotations between 1-10.
-func getMaxConsPubKeyRotations(r *rand.Rand) uint32 {
-	return uint32(r.Intn(int(types.DefaultMaxConsPubKeyRotations)) + 1)
-}
-
 // RandomizedGenState generates a random GenesisState for staking
 func RandomizedGenState(simState *module.SimulationState) {
 	// params
 	var (
-		unbondTime          time.Duration
-		maxVals             uint32
-		histEntries         uint32
-		minCommissionRate   sdk.Dec
-		maxConsKeyRotations uint32
-		rotationFee         sdk.Coin
+		unbondTime        time.Duration
+		maxVals           uint32
+		histEntries       uint32
+		minCommissionRate sdk.Dec
+		rotationFee       sdk.Coin
 	)
 
 	simState.AppParams.GetOrGenerate(
@@ -76,11 +70,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, maxConsPubkeyRotations, &histEntries, simState.Rand,
-		func(r *rand.Rand) { maxConsKeyRotations = getMaxConsPubKeyRotations(r) },
-	)
-
-	simState.AppParams.GetOrGenerate(
 		simState.Cdc, keyRotationFee, &histEntries, simState.Rand,
 		func(r *rand.Rand) { rotationFee = getKeyRotationFee(r) },
 	)
@@ -88,7 +77,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, simState.BondDenom, minCommissionRate, maxConsKeyRotations, rotationFee)
+	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, simState.BondDenom, minCommissionRate, rotationFee)
 
 	// validators & delegations
 	var (

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"math/big"
 	"strconv"
 	"time"
 
@@ -589,14 +588,15 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	isExceedingLimit, rotationsMade := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
+	isExceedingLimit := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
+
 	if isExceedingLimit {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
 	// Check if the signing account has enough balance to pay KeyRotationFee
 	// KeyRotationFees are sent to the community fund.
-	rotationFee := k.getRotationFee(ctx, validator.GetBondedTokens(), rotationsMade)
+	rotationFee := k.KeyRotationFee(ctx)
 	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), distrtypes.ModuleName, sdk.NewCoins(rotationFee))
 	if err != nil {
 		return nil, err
@@ -639,22 +639,4 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	)
 
 	return res, err
-}
-
-// getRotationFee calculates and returns the fee for rotation based on the previous rotations
-// KeyRotationFee = (max(VotingPowerPercentage, 1) * InitialKeyRotationFee) * 2^(number of rotations in ConsPubKeyRotationHistory in recent unbonding period)
-func (k msgServer) getRotationFee(ctx sdk.Context, valBondedTokens math.Int, rotationsMade uint32) sdk.Coin {
-	totalBondedTokens := k.TotalBondedTokens(ctx)
-
-	valBondedPercent := (valBondedTokens.Quo(totalBondedTokens)).Mul(math.NewInt(100))
-
-	defaultMultiplier := sdk.NewInt(1)
-	if valBondedPercent.GT(defaultMultiplier) {
-		defaultMultiplier = valBondedPercent
-	}
-	fee := defaultMultiplier.Mul(k.KeyRotationFee(ctx).Amount)
-	rotationsMultiplier := math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(rotationsMade)), nil))
-	fee = fee.Mul(rotationsMultiplier)
-
-	return sdk.NewCoin(sdk.DefaultBondDenom, fee)
 }

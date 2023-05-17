@@ -248,7 +248,8 @@ func (s *SimTestSuite) TestSimulateRotateConsPubKey() {
 	require.NoError(err)
 
 	var msg types.MsgRotateConsPubKey
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 
 	require.True(operationMsg.OK)
 	require.Equal(sdk.MsgTypeURL(&types.MsgRotateConsPubKey{}), sdk.MsgTypeURL(&msg))

@@ -188,7 +188,6 @@ func TestRotateConsPubKey(t *testing.T) {
 
 	params := stakingKeeper.GetParams(ctx)
 	params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
-	params.MaxConsPubkeyRotations = types.DefaultMaxConsPubKeyRotations
 	err := stakingKeeper.SetParams(ctx, params)
 	assert.NilError(t, err)
 
@@ -261,7 +260,6 @@ func TestRotateConsPubKey(t *testing.T) {
 			malleate: func() sdk.Context {
 				params := stakingKeeper.GetParams(ctx)
 				params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
-				params.MaxConsPubkeyRotations = 1
 				err := stakingKeeper.SetParams(ctx, params)
 				require.NoError(t, err)
 
@@ -281,37 +279,10 @@ func TestRotateConsPubKey(t *testing.T) {
 			expErrMsg: "exceeding maximum consensus pubkey rotations within unbonding period",
 		},
 		{
-			name: "two rotations within unbonding period",
-			malleate: func() sdk.Context {
-				params := stakingKeeper.GetParams(ctx)
-				params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
-				params.MaxConsPubkeyRotations = 2
-				err := stakingKeeper.SetParams(ctx, params)
-				require.NoError(t, err)
-
-				msg, err := types.NewMsgRotateConsPubKey(
-					validators[2].GetOperator(),
-					PKs[497],
-				)
-				require.NoError(t, err)
-				_, err = msgServer.RotateConsPubKey(ctx, msg)
-				require.NoError(t, err)
-				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-
-				return ctx
-			},
-			validator:      validators[2].GetOperator(),
-			newPubKey:      PKs[496],
-			pass:           true,
-			fees:           calculateFee(keyRotationFee, 1),
-			expHistoryObjs: 2,
-		},
-		{
 			name: "limit reached, but should rotate after the unbonding period",
 			malleate: func() sdk.Context {
 				params := stakingKeeper.GetParams(ctx)
 				params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
-				params.MaxConsPubkeyRotations = 1
 				err := stakingKeeper.SetParams(ctx, params)
 				require.NoError(t, err)
 

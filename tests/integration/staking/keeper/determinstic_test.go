@@ -402,7 +402,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14655, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14637, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -481,7 +481,7 @@ func TestGRPCDelegation(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Delegation, 4695, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Delegation, 4689, false)
 }
 
 func TestGRPCUnbondingDelegation(t *testing.T) {
@@ -554,7 +554,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4298, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4292, false)
 }
 
 func TestGRPCDelegatorValidator(t *testing.T) {
@@ -733,7 +733,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(f, t)
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6302, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6296, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {
@@ -807,14 +807,13 @@ func TestGRPCParams(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		params := stakingtypes.Params{
-			BondDenom:              rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(rt, "bond-denom"),
-			UnbondingTime:          durationGenerator().Draw(rt, "duration"),
-			MaxValidators:          rapid.Uint32Min(1).Draw(rt, "max-validators"),
-			MaxEntries:             rapid.Uint32Min(1).Draw(rt, "max-entries"),
-			HistoricalEntries:      rapid.Uint32Min(1).Draw(rt, "historical-entries"),
-			MinCommissionRate:      sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
-			MaxConsPubkeyRotations: rapid.Uint32Range(1, 10).Draw(rt, "max-pubkey-rotations"),
-			KeyRotationFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(rapid.Uint64Range(1000, 1000000).Draw(rt, "cons-pubkey-rotation-fee"))),
+			BondDenom:         rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(rt, "bond-denom"),
+			UnbondingTime:     durationGenerator().Draw(rt, "duration"),
+			MaxValidators:     rapid.Uint32Min(1).Draw(rt, "max-validators"),
+			MaxEntries:        rapid.Uint32Min(1).Draw(rt, "max-entries"),
+			HistoricalEntries: rapid.Uint32Min(1).Draw(rt, "historical-entries"),
+			MinCommissionRate: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
+			KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(rapid.Uint64Range(1000, 1000000).Draw(rt, "cons-pubkey-rotation-fee"))),
 		}
 
 		err := f.stakingKeeper.SetParams(f.ctx, params)
@@ -824,18 +823,17 @@ func TestGRPCParams(t *testing.T) {
 	})
 
 	params := stakingtypes.Params{
-		BondDenom:              "denom",
-		UnbondingTime:          time.Hour,
-		MaxValidators:          85,
-		MaxEntries:             5,
-		HistoricalEntries:      5,
-		MinCommissionRate:      sdk.NewDecWithPrec(5, 2),
-		MaxConsPubkeyRotations: 5,
-		KeyRotationFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)),
+		BondDenom:         "denom",
+		UnbondingTime:     time.Hour,
+		MaxValidators:     85,
+		MaxEntries:        5,
+		HistoricalEntries: 5,
+		MinCommissionRate: sdk.NewDecWithPrec(5, 2),
+		KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)),
 	}
 
 	err := f.stakingKeeper.SetParams(f.ctx, params)
 	assert.NilError(t, err)
 
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1165, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1159, false)
 }

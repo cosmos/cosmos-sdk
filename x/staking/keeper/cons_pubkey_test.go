@@ -131,32 +131,8 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			validator: sdk.ValAddress("non_existing_val"),
 		},
 		{
-			name: "two continuous rotations",
-			malleate: func() sdk.Context {
-				params := stakingKeeper.GetParams(ctx)
-				params.MaxConsPubkeyRotations = 2
-				stakingKeeper.SetParams(ctx, params)
-				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(validators[1].GetOperator()), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-
-				req, err := types.NewMsgRotateConsPubKey(validators[1].GetOperator(), PKs[497])
-				s.Require().NoError(err)
-				_, err = msgServer.RotateConsPubKey(ctx, req)
-				s.Require().NoError(err)
-
-				return ctx
-			},
-			isErr:     false,
-			errMsg:    "validator does not exist",
-			newPubKey: PKs[496],
-			validator: validators[1].GetOperator(),
-		},
-		{
 			name: "limit exceeding",
 			malleate: func() sdk.Context {
-				params := stakingKeeper.GetParams(ctx)
-				params.MaxConsPubkeyRotations = 1
-				stakingKeeper.SetParams(ctx, params)
-
 				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(validators[2].GetOperator()), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 				req, err := types.NewMsgRotateConsPubKey(validators[2].GetOperator(), PKs[495])
@@ -175,9 +151,6 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			name: "limit exceeding, but it should rotate after unbonding period",
 			malleate: func() sdk.Context {
 				params := stakingKeeper.GetParams(ctx)
-				params.MaxConsPubkeyRotations = 1
-				stakingKeeper.SetParams(ctx, params)
-
 				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(validators[3].GetOperator()), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 				// 1st rotation should pass, since limit is 1

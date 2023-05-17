@@ -74,11 +74,6 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return params
 }
 
-// MaxConsPubKeyRotations - Maximum consensus pubkey rotations
-func (k Keeper) MaxConsPubKeyRotations(ctx sdk.Context) (res uint32) {
-	return k.GetParams(ctx).MaxConsPubkeyRotations
-}
-
 func (k Keeper) KeyRotationFee(ctx sdk.Context) (res sdk.Coin) {
 	return k.GetParams(ctx).KeyRotationFee
 }

@@ -142,18 +142,17 @@ func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, t
 }
 
 // CheckLimitOfMaxRotationsExceed returns bool, count of iterations made within the unbonding period.
-func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) (bool, uint32) {
+func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := append(types.ValidatorConsensusKeyRotationRecordIndexKey, address.MustLengthPrefix(valAddr)...)
 	prefixIterator := storetypes.KVStorePrefixIterator(store, key)
 	defer prefixIterator.Close()
 
-	count := uint32(0)
 	for ; prefixIterator.Valid(); prefixIterator.Next() {
-		count++
+		return true
 	}
 
-	return count >= k.MaxConsPubKeyRotations(ctx), count
+	return false
 }
 
 // SetMappedConskey maps the old consensus key to rotated new consensus key

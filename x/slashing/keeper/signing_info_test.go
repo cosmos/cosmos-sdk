@@ -5,6 +5,7 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -105,6 +106,8 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 
 	oldConsAddr := sdk.ConsAddress(pks[0].Address())
 	newConsAddr := sdk.ConsAddress(pks[1].Address())
+	s.stakingKeeper.EXPECT().SetMappedConskey(gomock.Any(), oldConsAddr, newConsAddr).Return().AnyTimes()
+
 	newInfo := slashingtypes.NewValidatorSigningInfo(
 		oldConsAddr,
 		int64(4),

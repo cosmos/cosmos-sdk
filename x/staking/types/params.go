@@ -29,10 +29,6 @@ const (
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
-
-	// DefaultMaxConsPubKeyRotations is param to set validators can rotate their
-	// keys only for 1 times
-	DefaultMaxConsPubKeyRotations uint32 = 1
 )
 
 var (
@@ -47,17 +43,16 @@ var (
 func NewParams(unbondingTime time.Duration,
 	maxValidators, maxEntries, historicalEntries uint32,
 	bondDenom string, minCommissionRate sdk.Dec,
-	maxConsPubKeyRotations uint32, keyRotationFee sdk.Coin,
+	keyRotationFee sdk.Coin,
 ) Params {
 	return Params{
-		UnbondingTime:          unbondingTime,
-		MaxValidators:          maxValidators,
-		MaxEntries:             maxEntries,
-		HistoricalEntries:      historicalEntries,
-		BondDenom:              bondDenom,
-		MinCommissionRate:      minCommissionRate,
-		MaxConsPubkeyRotations: maxConsPubKeyRotations,
-		KeyRotationFee:         keyRotationFee,
+		UnbondingTime:     unbondingTime,
+		MaxValidators:     maxValidators,
+		MaxEntries:        maxEntries,
+		HistoricalEntries: historicalEntries,
+		BondDenom:         bondDenom,
+		MinCommissionRate: minCommissionRate,
+		KeyRotationFee:    keyRotationFee,
 	}
 }
 
@@ -70,7 +65,6 @@ func DefaultParams() Params {
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
-		DefaultMaxConsPubKeyRotations,
 		DefaultKeyRotationFee,
 	)
 }
@@ -118,10 +112,6 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateHistoricalEntries(p.HistoricalEntries); err != nil {
-		return err
-	}
-
-	if err := validateMaxConsPubkeyRotations(p.MaxConsPubkeyRotations); err != nil {
 		return err
 	}
 
@@ -224,19 +214,6 @@ func validateMinCommissionRate(i interface{}) error {
 	}
 	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
-	}
-
-	return nil
-}
-
-func validateMaxConsPubkeyRotations(i interface{}) error {
-	v, ok := i.(uint32)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v == 0 {
-		return fmt.Errorf("max cons pubkey rotations must be positive: %d", v)
 	}
 
 	return nil

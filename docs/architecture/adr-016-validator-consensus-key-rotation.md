@@ -34,9 +34,7 @@ Also, it should be noted that this ADR includes only the simplest form of consen
     * In current Tendermint design, consensus key rotations are seen as power changes from LCD or IBC perspective
     * Therefore, to minimize unnecessary frequent key rotation behavior, we limited maximum number of rotation in recent unbonding period and also applied exponentially increasing rotation fee
 * limits
-    * a validator cannot rotate its consensus key more than `MaxConsPubKeyRotations` time for any unbonding period, to prevent spam. 
-    (Note: For now we are limiting the rotations to 1 time, in the upcoming staking refactor the full feature will be released)
-    * parameters can be decided by governance and stored in genesis file.
+    * rotations are limited to 1 time in an unbonding window. In future rewrites of the staking module it could be made to happen more times than 1
 * key rotation fee
     * a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
     * `KeyRotationFee` = (max(`VotingPowerPercentage`, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)

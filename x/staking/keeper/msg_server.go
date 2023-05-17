@@ -595,7 +595,7 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	}
 
 	// Check if the signing account has enough balance to pay KeyRotationFee
-	// pays KeyRotationFee to community fund.
+	// KeyRotationFees are sent to the community fund.
 	rotationFee := k.getRotationFee(ctx, validator.GetBondedTokens(), rotationsMade)
 	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), distrtypes.ModuleName, sdk.NewCoins(rotationFee))
 	if err != nil {
@@ -642,7 +642,7 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 }
 
 // getRotationFee calculates and returns the fee for rotation based on the previous rotations
-// KeyRotationFee = (max(VotingPowerPercentage, 1) * InitialKeyRotationFee) * 2^(number ofrotations in ConsPubKeyRotationHistory in recent unbonding period)
+// KeyRotationFee = (max(VotingPowerPercentage, 1) * InitialKeyRotationFee) * 2^(number of rotations in ConsPubKeyRotationHistory in recent unbonding period)
 func (k msgServer) getRotationFee(ctx sdk.Context, valBondedTokens math.Int, rotationsMade uint32) sdk.Coin {
 	totalBondedTokens := k.TotalBondedTokens(ctx)
 

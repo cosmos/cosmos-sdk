@@ -111,17 +111,22 @@ func updateValidators(
 	return current
 }
 
-// RandomRequestBeginBlock generates a list of signing validators according to
+// RandomRequestFinalizeBlock generates a list of signing validators according to
 // the provided list of validators, signing fraction, and evidence fraction
-func RandomRequestBeginBlock(r *rand.Rand, params Params,
-	validators mockValidators, pastTimes []time.Time,
+func RandomRequestFinalizeBlock(
+	r *rand.Rand,
+	params Params,
+	validators mockValidators,
+	pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
 	event func(route, op, evResult string),
-	height int64, time time.Time, proposer []byte,
-) abci.RequestFinalizeBlock {
+	blockHeight int64,
+	time time.Time,
+	proposer []byte,
+) *abci.RequestFinalizeBlock {
 	if len(validators) == 0 {
-		return abci.RequestFinalizeBlock{
-			Height:          height,
+		return &abci.RequestFinalizeBlock{
+			Height:          blockHeight,
 			Time:            time,
 			ProposerAddress: proposer,
 		}
@@ -166,8 +171,8 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 	// return if no past times
 	if len(pastTimes) == 0 {
-		return abci.RequestFinalizeBlock{
-			Height:          height,
+		return &abci.RequestFinalizeBlock{
+			Height:          blockHeight,
 			Time:            time,
 			ProposerAddress: proposer,
 			DecidedLastCommit: abci.CommitInfo{
@@ -181,6 +186,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 	for r.Float64() < params.EvidenceFraction() {
 		vals := voteInfos
+		height := blockHeight
 
 		if r.Float64() < params.PastEvidenceFraction() && height > 1 {
 			height = int64(r.Intn(int(height)-1)) + 1 // CometBFT starts at height 1
@@ -209,8 +215,8 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		event("begin_block", "evidence", "ok")
 	}
 
-	return abci.RequestFinalizeBlock{
-		Height:          height,
+	return &abci.RequestFinalizeBlock{
+		Height:          blockHeight,
 		Time:            time,
 		ProposerAddress: proposer,
 		DecidedLastCommit: abci.CommitInfo{

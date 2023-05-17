@@ -40,7 +40,6 @@ var (
 	RedelegationKey                  = []byte{0x34} // key for a redelegation
 	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
-	DelegationByValIndexKey          = []byte{0x37} // key for delegations by a validator
 
 	UnbondingIDKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingOperations
 	UnbondingIndexKey = []byte{0x38} // prefix for an index for looking up unbonding operations by their IDs
@@ -60,6 +59,8 @@ var (
 	ValidatorConsensusKeyRotationRecordQueueKey = []byte{0x72} // this key is used to set the unbonding period time on each rotation
 	ValidatorConsensusKeyRotationRecordIndexKey = []byte{0x73} // this key is used to restrict the validator next rotation within waiting (unbonding) period
 	RotatedConsKeyMapIndex                      = []byte{0x74} // prefix for rotated cons address to new cons address
+
+	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
 )
 
 // UnbondingType defines the type of unbonding operation

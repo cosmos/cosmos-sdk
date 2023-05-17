@@ -152,10 +152,10 @@ func Example_oneModule() {
 		Authority: authority,
 		Params:    params,
 	},
-	// // this allows to the begin and end blocker of the module before and after the message
-	// integration.WithAutomaticBeginEndBlock(),
-	// // this allows to commit the state after the message
-	// integration.WithAutomaticCommit(),
+		// this allows to the begin and end blocker of the module before and after the message
+		integration.WithAutomaticFinalizeBlock(),
+		// this allows to commit the state after the message
+		integration.WithAutomaticCommit(),
 	)
 	if err != nil {
 		panic(err)
@@ -164,7 +164,7 @@ func Example_oneModule() {
 	// verify that the begin and end blocker were called
 	// NOTE: in this example, we are testing auth, which doesn't have any begin or end blocker
 	// so verifying the block height is enough
-	if integrationApp.LastBlockHeight() != 1 {
+	if integrationApp.LastBlockHeight() != 2 {
 		panic(fmt.Errorf("expected block height to be 2, got %d", integrationApp.LastBlockHeight()))
 	}
 

@@ -297,8 +297,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// another block missed
 	f.ctx = f.ctx.WithBlockHeight(height)
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagNil)
-	// f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagAbsent)
+	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagAbsent)
 
 	// validator should not have been slashed twice
 	validator, _ = f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))

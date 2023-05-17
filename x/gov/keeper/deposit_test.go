@@ -50,10 +50,7 @@ func TestDeposits(t *testing.T) {
 			}
 
 			TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000*depositMultiplier))
-			for _, addr := range TestAddrs {
-				authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-				authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-			}
+			authKeeper.EXPECT().GetAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 			tp := TestProposal
 			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], tc.expedited)
@@ -314,10 +311,7 @@ func TestChargeDeposit(t *testing.T) {
 				params := v1.DefaultParams()
 				params.ProposalCancelRatio = tc.proposalCancelRatio
 				TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000000))
-				for _, addr := range TestAddrs {
-					authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-					authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-				}
+				authKeeper.EXPECT().GetAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 				switch i {
 				case 0:

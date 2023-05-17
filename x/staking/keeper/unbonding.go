@@ -128,7 +128,7 @@ func (k Keeper) GetValidatorByUnbondingID(ctx sdk.Context, id uint64) (val types
 // Note, it does not set the unbonding delegation itself, use SetUnbondingDelegation(ctx, ubd) for that
 func (k Keeper) SetUnbondingDelegationByUnbondingID(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	delAddr, err := k.authKeeper.StringToBytes(ubd.DelegatorAddress)
+	delAddr, err := k.authKeeper.GetAddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -149,7 +149,7 @@ func (k Keeper) SetUnbondingDelegationByUnbondingID(ctx sdk.Context, ubd types.U
 func (k Keeper) SetRedelegationByUnbondingID(ctx sdk.Context, red types.Redelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	delAddr, err := k.authKeeper.StringToBytes(red.DelegatorAddress)
+	delAddr, err := k.authKeeper.GetAddressCodec().StringToBytes(red.DelegatorAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -266,7 +266,7 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 	// Check if entry is matured.
 	if !ubd.Entries[i].OnHold() && ubd.Entries[i].IsMature(ctx.BlockHeader().Time) {
 		// If matured, complete it.
-		delegatorAddress, err := k.authKeeper.StringToBytes(ubd.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.GetAddressCodec().StringToBytes(ubd.DelegatorAddress)
 		if err != nil {
 			return err
 		}

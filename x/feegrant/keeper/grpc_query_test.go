@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
-
 	"cosmossdk.io/x/feegrant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,8 +11,6 @@ const (
 )
 
 func (suite *KeeperTestSuite) TestFeeAllowance() {
-	suite.accountKeeper.EXPECT().StringToBytes(invalidGranter).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
-	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
 
 	testCases := []struct {
 		name      string
@@ -92,7 +88,6 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestFeeAllowances() {
-	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowancesRequest
@@ -159,7 +154,6 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 }
 
 func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
-	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowancesByGranterRequest

@@ -95,7 +95,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd returns no root query command for the staking module.
 func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ak)
+	return cli.GetQueryCmd(ab.ak.GetAddressCodec())
 }
 
 // AppModule implements an application module for the staking module.

@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -16,10 +17,7 @@ import (
 func TestVotes(t *testing.T) {
 	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
 	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000))
-	for _, addr := range addrs {
-		authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-		authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-	}
+	authKeeper.EXPECT().GetAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	tp := TestProposal
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)

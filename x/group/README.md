@@ -49,7 +49,7 @@ This module allows the creation and management of on-chain multisig accounts and
     * [EventVote](#eventvote)
     * [EventExec](#eventexec)
     * [EventLeaveGroup](#eventleavegroup)
-    * [EventProposalTallyFinalized](#eventproposaltallyfinalized)
+    * [EventProposalFinalized](#eventProposalFinalized)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -579,14 +579,14 @@ The group module emits the following events:
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
 
-### EventProposalTallyFinalized
+### EventProposalFinalized
 
-| Type                                        | Attribute Key | Attribute Value                 |
-|---------------------------------------------|---------------| ------------------------------- |
-| message                                     | action        | /cosmos.group.v1.Msg/LeaveGroup |
-| cosmos.group.v1.EventProposalTallyFinalized | proposal_id   | {proposalId}                    |
-| cosmos.group.v1.EventProposalTallyFinalized | status        | {ProposalStatus}                       |
-| cosmos.group.v1.EventProposalTallyFinalized | tally_result  | {TallyResult}                       |
+| Type                                   | Attribute Key | Attribute Value                 |
+|----------------------------------------|---------------| ------------------------------- |
+| message                                | action        | /cosmos.group.v1.Msg/LeaveGroup |
+| cosmos.group.v1.EventProposalFinalized | proposal_id   | {proposalId}                    |
+| cosmos.group.v1.EventProposalFinalized | status        | {ProposalStatus}                       |
+| cosmos.group.v1.EventProposalFinalized | tally_result  | {TallyResult}                       |
 
 
 ## Client

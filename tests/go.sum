@@ -190,8 +190,6 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/client/v2 v2.0.0-20230309163709-87da587416ba h1:LuPHCncU2KLMNPItFECs709uo46I9wSu2fAWYVCx+/U=
 cosmossdk.io/client/v2 v2.0.0-20230309163709-87da587416ba/go.mod h1:SXdwqO7cN5htalh/lhXWP8V4zKtBrhhcSTU+ytuEtmM=
-cosmossdk.io/core v0.7.0 h1:GFss3qt2P9p23Cz24NnqLkslzb8n+B75A24x1JgJJp0=
-cosmossdk.io/core v0.7.0/go.mod h1:36hP0ZH/8ipsjzfcp0yKU4bqQXUGhS0/m1krWFCtwCc=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0-beta.7.0.20230429155654-3ee8242364e4 h1:rOy7iw7HlwKc5Af5qIHLXdBx/F98o6du/I/WGwOW6eA=

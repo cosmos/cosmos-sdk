@@ -192,6 +192,7 @@ replace (
 	cosmossdk.io/api => ../api
 	// TODO: remove me after collections v0.2.0 is released
 	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence

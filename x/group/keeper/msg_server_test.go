@@ -2692,6 +2692,7 @@ func (s *TestSuite) TestExecProposal() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
+			checkEvents:       func(sdkCtx sdk.Context) {},
 		},
 		"rollback all msg updates on failure": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2704,6 +2705,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
+			checkEvents:       func(sdkCtx sdk.Context) {},
 		},
 		"executable when failed before": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2725,6 +2727,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			checkEvents:       func(sdkCtx sdk.Context) {},
 		},
 	}
 	for msg, spec := range specs {

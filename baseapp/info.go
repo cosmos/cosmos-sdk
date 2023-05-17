@@ -83,7 +83,7 @@ type voteInfoWrapper struct {
 
 var _ comet.VoteInfo = (*voteInfoWrapper)(nil)
 
-func (v voteInfoWrapper) GetBlockIdFlag() comet.BlockIDFlag {
+func (v voteInfoWrapper) GetBlockIDFlag() comet.BlockIDFlag {
 	return comet.BlockIDFlag(v.VoteInfo.BlockIdFlag)
 }
 
@@ -188,7 +188,7 @@ type extendedVoteInfoWrapper struct {
 
 var _ comet.VoteInfo = (*extendedVoteInfoWrapper)(nil)
 
-func (e extendedVoteInfoWrapper) GetBlockIdFlag() comet.BlockIDFlag {
+func (e extendedVoteInfoWrapper) GetBlockIDFlag() comet.BlockIDFlag {
 	return comet.BlockIDFlag(e.ExtendedVoteInfo.BlockIdFlag)
 }
 

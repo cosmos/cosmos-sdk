@@ -132,7 +132,7 @@ func TestSetLoader(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			require.Equal(t, int64(upgradeHeight-1), oldApp.LastBlockHeight())
+			require.Equal(t, upgradeHeight-1, oldApp.LastBlockHeight())
 
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
@@ -145,13 +145,13 @@ func TestSetLoader(t *testing.T) {
 			err = newApp.LoadLatestVersion()
 			require.Nil(t, err)
 
-			require.Equal(t, int64(upgradeHeight-1), newApp.LastBlockHeight())
+			require.Equal(t, upgradeHeight-1, newApp.LastBlockHeight())
 
 			// "execute" one block
 			newApp.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: upgradeHeight})
 			_, err = newApp.Commit(context.Background(), &abci.RequestCommit{})
-
-			require.Equal(t, int64(upgradeHeight), newApp.LastBlockHeight())
+			require.NoError(t, err)
+			require.Equal(t, upgradeHeight, newApp.LastBlockHeight())
 
 			// check db is properly updated
 			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)

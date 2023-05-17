@@ -126,11 +126,13 @@ func SignCheckDeliver(
 	// gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
 
 	bz, err := txCfg.TxEncoder()(tx)
+	require.NoError(t, err)
 
 	resBlock, err := app.FinalizeBlock(context.TODO(), &types2.RequestFinalizeBlock{
 		Height: header.Height,
 		Txs:    [][]byte{bz},
 	})
+	require.NoError(t, err)
 
 	require.Equal(t, 1, len(resBlock.TxResults))
 	txResult := resBlock.TxResults[0]

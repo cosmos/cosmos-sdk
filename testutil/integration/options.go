@@ -2,7 +2,7 @@ package integration
 
 // Config is the configuration for the integration app.
 type Config struct {
-	AutomaticBeginEndBlock bool
+	AutomaticFinalizeBlock bool
 	AutomaticCommit        bool
 }
 
@@ -10,9 +10,9 @@ type Config struct {
 type Option func(*Config)
 
 // WithAutomaticBlockCreation enables begin/end block calls.
-func WithAutomaticBeginEndBlock() Option {
+func WithAutomaticFinalizeBlock() Option {
 	return func(cfg *Config) {
-		cfg.AutomaticBeginEndBlock = true
+		cfg.AutomaticFinalizeBlock = true
 	}
 }
 

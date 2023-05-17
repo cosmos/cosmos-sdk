@@ -128,9 +128,11 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		defer app.Commit(context.TODO(), &cmtabcitypes.RequestCommit{})
 	}
 
-	if cfg.AutomaticBeginEndBlock {
+	if cfg.AutomaticFinalizeBlock {
 		height := app.LastBlockHeight() + 1
 		ctx := app.ctx.WithBlockHeight(height).WithChainID(appName)
+
+		app.FinalizeBlock(context.TODO(), &cmtabcitypes.RequestFinalizeBlock{Height: height})
 
 		app.logger.Info("Running BeginBlock", "height", height)
 		app.moduleManager.BeginBlock(ctx)

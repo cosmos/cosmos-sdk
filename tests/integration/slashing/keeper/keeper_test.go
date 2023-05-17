@@ -180,8 +180,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	}
 	_, err = f.app.RunMsg(
 		&msgUnjail,
-		integration.WithAutomaticBeginEndBlock(),
-		// integration.WithAutomaticCommit(),
+		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticCommit(),
 	)
 	assert.ErrorContains(t, err, "cannot be unjailed")
 
@@ -196,8 +196,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	// verify we can immediately unjail
 	_, err = f.app.RunMsg(
 		&msgUnjail,
-		integration.WithAutomaticBeginEndBlock(),
-		// integration.WithAutomaticCommit(),
+		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticCommit(),
 	)
 	assert.NilError(t, err)
 
@@ -298,6 +298,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	// another block missed
 	f.ctx = f.ctx.WithBlockHeight(height)
 	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagNil)
+	// f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagAbsent)
 
 	// validator should not have been slashed twice
 	validator, _ = f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))

@@ -262,8 +262,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				// integration.WithAutomaticBeginEndBlock(),
-				// integration.WithAutomaticCommit(),
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
 			)
 
 			if tc.expErr {
@@ -396,8 +396,8 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 			tc.preRun()
 			res, err := f.app.RunMsg(
 				tc.msg,
-				// integration.WithAutomaticBeginEndBlock(),
-				// integration.WithAutomaticCommit(),
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -489,8 +489,8 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				// integration.WithAutomaticBeginEndBlock(),
-				// integration.WithAutomaticCommit(),
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -591,8 +591,8 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				// integration.WithAutomaticBeginEndBlock(),
-				// integration.WithAutomaticCommit(),
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -718,8 +718,8 @@ func TestMsgUpdateParams(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				// integration.WithAutomaticBeginEndBlock(),
-				// integration.WithAutomaticCommit(),
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -796,8 +796,8 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				// integration.WithAutomaticBeginEndBlock(),
-				// integration.WithAutomaticCommit(),
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -893,8 +893,8 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				// integration.WithAutomaticBeginEndBlock(),
-				// integration.WithAutomaticCommit(),
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)

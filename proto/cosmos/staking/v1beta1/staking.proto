@@ -326,8 +326,6 @@ message Params {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
-  // max_cons_pubkey_rotations is maximum number of consensus pubkey rotations
-  uint32 max_cons_pubkey_rotations = 8;
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

@@ -151,7 +151,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 
 	// initialize some validators into the state
 	amts := []math.Int{
-		sdk.NewIntFromUint64(0),
+		math.NewIntFromUint64(0),
 		f.stakingKeeper.PowerReduction(f.sdkCtx).MulRaw(100),
 		f.stakingKeeper.PowerReduction(f.sdkCtx),
 		f.stakingKeeper.PowerReduction(f.sdkCtx).MulRaw(400),
@@ -245,7 +245,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 
 	// initialize some validators into the state
 	amts := []math.Int{
-		sdk.NewIntFromUint64(0),
+		math.NewIntFromUint64(0),
 		f.stakingKeeper.PowerReduction(f.sdkCtx).MulRaw(100),
 		f.stakingKeeper.PowerReduction(f.sdkCtx),
 		f.stakingKeeper.PowerReduction(f.sdkCtx).MulRaw(400),

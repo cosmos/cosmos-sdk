@@ -83,12 +83,12 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 		require.NoError(t, err)
 
 		// Initialize the chain
-		app.InitChain(context.TODO(), &abci.RequestInitChain{
+		_, err = app.InitChain(context.TODO(), &abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
-		},
-		)
+		})
+		require.NoError(t, err)
 	}
 
 	return app

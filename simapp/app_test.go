@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -15,9 +18,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -65,11 +65,18 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		)
 	}
 
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	// finalize block so we have CheckTx state set
+	_, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = app.Commit(context.TODO(), &abci.RequestCommit{})
+	require.NoError(t, err)
 
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger.With("instance", "second"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
-	_, err := app2.ExportAppStateAndValidators(false, []string{}, []string{})
+	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
 

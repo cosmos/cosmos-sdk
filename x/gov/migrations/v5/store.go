@@ -1,7 +1,7 @@
 package v5
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	corestoretypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,12 +13,18 @@ import (
 // migration includes:
 //
 // Addition of the new proposal expedited parameters that are set to 0 by default.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
-	store := ctx.KVStore(storeKey)
-	paramsBz := store.Get(v4.ParamsKey)
+func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec) error {
+	store := storeService.OpenKVStore(ctx)
+	paramsBz, err := store.Get(v4.ParamsKey)
+	if err != nil {
+		return err
+	}
 
 	var params govv1.Params
-	cdc.MustUnmarshal(paramsBz, &params)
+	err = cdc.Unmarshal(paramsBz, &params)
+	if err != nil {
+		return err
+	}
 
 	defaultParams := govv1.DefaultParams()
 	params.ExpeditedMinDeposit = defaultParams.ExpeditedMinDeposit

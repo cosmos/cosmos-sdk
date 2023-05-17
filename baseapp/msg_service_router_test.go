@@ -156,6 +156,7 @@ func TestMsgService(t *testing.T) {
 	// Send the tx to the app
 	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	res, _ := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Txs: [][]byte{txBytes}})
+	res, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
 	require.Equal(t, abci.CodeTypeOK, res.TxResults[0].Code, "res=%+v", res)
 }

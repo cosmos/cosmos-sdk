@@ -151,7 +151,7 @@ func SimulateMsgGrant(
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -229,7 +229,7 @@ func SimulateMsgRevoke(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to execute tx: "+err.Error()), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, nil
+		return simtypes.NewOperationMsg(&msg, true, ""), nil, nil
 	}
 }
 
@@ -333,6 +333,6 @@ func SimulateMsgExec(
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "unmarshal error"), nil, err
 		}
-		return simtypes.NewOperationMsg(&msgExec, true, "success", nil), nil, nil
+		return simtypes.NewOperationMsg(&msgExec, true, "success"), nil, nil
 	}
 }

@@ -50,7 +50,7 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	v1.RegisterQueryServer(queryHelper, app.GovKeeper)
+	v1.RegisterQueryServer(queryHelper, keeper.NewQueryServer(*app.GovKeeper))
 	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(app.GovKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)

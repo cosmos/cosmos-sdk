@@ -30,7 +30,7 @@ import (
 )
 
 // Converter is a utility that can be used to convert
-// back and forth from rosetta to sdk and CometBFT types
+// back and forth from rosetta to sdk and CometBFT types.
 // IMPORTANT NOTES:
 //   - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
 //     IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY

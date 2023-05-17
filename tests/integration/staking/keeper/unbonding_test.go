@@ -97,7 +97,7 @@ func doUnbondingDelegation(
 	notBondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	var err error
-	undelegateAmount := sdk.NewDec(1)
+	undelegateAmount := math.LegacyNewDec(1)
 	completionTime, undelegatedAmount, err := stakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], undelegateAmount)
 	assert.NilError(t, err)
 	assert.Assert(t, undelegateAmount.Equal(math.LegacyNewDecFromInt(undelegatedAmount)))
@@ -128,13 +128,13 @@ func doRedelegation(
 	hookCalled *bool,
 ) (completionTime time.Time) {
 	var err error
-	completionTime, err = stakingKeeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(1))
+	completionTime, err = stakingKeeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], math.LegacyNewDec(1))
 	assert.NilError(t, err)
 
 	// Check that the redelegation happened- we look up the entry and see that it has the correct number of shares
 	redelegations := stakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	assert.Equal(t, 1, len(redelegations))
-	assert.DeepEqual(t, sdk.NewDec(1), redelegations[0].Entries[0].SharesDst)
+	assert.DeepEqual(t, math.LegacyNewDec(1), redelegations[0].Entries[0].SharesDst)
 
 	// check that our hook was called
 	assert.Assert(t, *hookCalled)

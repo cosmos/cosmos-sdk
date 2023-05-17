@@ -198,7 +198,8 @@ func SimulateFromSeed(
 			Height:          Height,
 			Time:            genesisTimestamp,
 			ProposerAddress: ProposerAddress,
-			ChainID:         config.ChainID})
+			ChainID:         config.ChainID,
+		})
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 
 		// res := app.EndBlock(abci.RequestEndBlock{}) // TODO redefine how this works

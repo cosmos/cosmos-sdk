@@ -20,7 +20,7 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
-var EventTallyResult = "cosmos.group.v1.EventProposalTallyFinalized"
+var EventTallyResult = "cosmos.group.v1.EventProposalFinalized"
 
 func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
 	for i := 50; i < 70; i++ {

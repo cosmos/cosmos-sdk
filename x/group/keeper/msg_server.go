@@ -561,12 +561,12 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	policyAcc, err := k.getGroupPolicyInfo(ctx, msg.GroupPolicyAddress)
+	groupPolicyInfo, err := k.getGroupPolicyInfo(ctx, msg.GroupPolicyAddress)
 	if err != nil {
 		return nil, errorsmod.Wrapf(err, "load group policy: %s", msg.GroupPolicyAddress)
 	}
 
-	groupInfo, err := k.getGroupInfo(ctx, policyAcc.GroupId)
+	groupInfo, err := k.getGroupInfo(ctx, groupPolicyInfo.GroupId)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "get group by groupId of group policy")
 	}
@@ -585,7 +585,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		return nil, err
 	}
 
-	policy, err := policyAcc.GetDecisionPolicy()
+	policy, err := groupPolicyInfo.GetDecisionPolicy()
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "proposal group policy decision policy")
 	}
@@ -601,7 +601,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		Proposers:          msg.Proposers,
 		SubmitTime:         ctx.BlockTime(),
 		GroupVersion:       groupInfo.Version,
-		GroupPolicyVersion: policyAcc.Version,
+		GroupPolicyVersion: groupPolicyInfo.Version,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
@@ -863,7 +863,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 		}
 
 		decisionPolicy := policyInfo.DecisionPolicy.GetCachedValue().(group.DecisionPolicy)
-		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy); err != nil {
+		if results, err := k.doExecuteMsgs(cacheCtx, proposal, addr, decisionPolicy); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", proposal.Id, err.Error())
 			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", proposal.Id)

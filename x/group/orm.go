@@ -89,24 +89,28 @@ func GroupInfoToPulsar(groupInfo GroupInfo) *groupv1.GroupInfo { //nolint:revive
 }
 
 func GroupPolicyInfoFromPulsar(groupPolicyInfo *groupv1.GroupPolicyInfo) GroupPolicyInfo { //nolint:revive // naming is ok
-	return GroupPolicyInfo{
-		Address:        groupPolicyInfo.Address,
-		GroupId:        groupPolicyInfo.GroupId,
-		Admin:          groupPolicyInfo.Admin,
-		Metadata:       groupPolicyInfo.Metadata,
-		Version:        groupPolicyInfo.Version,
-		DecisionPolicy: codectypes.AnyV2ToGogoAny(groupPolicyInfo.DecisionPolicy),
+	groupPolicy := GroupPolicyInfo{
+		Address:             groupPolicyInfo.Address,
+		GroupId:             groupPolicyInfo.GroupId,
+		Admin:               groupPolicyInfo.Admin,
+		Metadata:            groupPolicyInfo.Metadata,
+		Version:             groupPolicyInfo.Version,
+		GroupPolicySequence: groupPolicyInfo.GroupPolicySequence,
+		DecisionPolicy:      codectypes.AnyV2ToGogoAny(groupPolicyInfo.DecisionPolicy),
 	}
+
+	return groupPolicy
 }
 
 func GroupPolicyInfoToPulsar(groupPolicyInfo GroupPolicyInfo) *groupv1.GroupPolicyInfo { //nolint:revive // naming is ok
 	return &groupv1.GroupPolicyInfo{
-		Address:        groupPolicyInfo.Address,
-		GroupId:        groupPolicyInfo.GroupId,
-		Admin:          groupPolicyInfo.Admin,
-		Metadata:       groupPolicyInfo.Metadata,
-		Version:        groupPolicyInfo.Version,
-		DecisionPolicy: codectypes.GogoAnyToAnyV2(groupPolicyInfo.DecisionPolicy),
+		Address:             groupPolicyInfo.Address,
+		GroupId:             groupPolicyInfo.GroupId,
+		Admin:               groupPolicyInfo.Admin,
+		Metadata:            groupPolicyInfo.Metadata,
+		Version:             groupPolicyInfo.Version,
+		DecisionPolicy:      codectypes.GogoAnyToAnyV2(groupPolicyInfo.DecisionPolicy),
+		GroupPolicySequence: groupPolicyInfo.GroupPolicySequence,
 	}
 }
 

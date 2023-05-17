@@ -5,7 +5,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -14,7 +13,7 @@ import (
 
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the account of group policy only. Otherwise this gives access to other peoples accounts as the sdk middlewares are bypassed
-func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, proposal group.Proposal, groupPolicyAcc sdk.AccAddress, decisionPolicy group.DecisionPolicy) ([]sdk.Result, error) {
+func (s Keeper) doExecuteMsgs(ctx sdk.Context, proposal group.Proposal, groupPolicyAcc sdk.AccAddress, decisionPolicy group.DecisionPolicy) ([]sdk.Result, error) {
 	// Ensure it's not too early to execute the messages.
 	minExecutionDate := proposal.SubmitTime.Add(decisionPolicy.GetMinExecutionPeriod())
 	if ctx.BlockTime().Before(minExecutionDate) {

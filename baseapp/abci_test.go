@@ -75,6 +75,7 @@ func TestABCI_InitChain(t *testing.T) {
 
 	// initChain is nil - nothing happens
 	_, err = app.InitChain(context.TODO(), &abci.RequestInitChain{ChainId: "test-chain-id"})
+	require.NoError(t, err)
 	resQ, err := app.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resQ.Value))
@@ -517,6 +518,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 			Data: txBytes,
 		}
 		queryResult, err := suite.baseApp.Query(context.Background(), &query)
+		require.NoError(t, err)
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var simRes sdk.SimulationResponse
@@ -554,6 +556,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	{
 		emptyTx := suite.txConfig.NewTxBuilder().GetTx()
 		bz, err := suite.txConfig.TxEncoder()(emptyTx)
+		require.NoError(t, err)
 		result, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height: 1,
 			Txs:    [][]byte{bz},
@@ -937,6 +940,7 @@ func TestABCI_Query(t *testing.T) {
 	suite.baseApp.Commit(context.Background(), &abci.RequestCommit{})
 
 	res, err = suite.baseApp.Query(context.Background(), &query)
+	require.NoError(t, err)
 	require.Equal(t, value, res.Value)
 }
 

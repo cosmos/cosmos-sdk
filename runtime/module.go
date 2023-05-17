@@ -87,11 +87,7 @@ func ProvideApp() (
 	protoregistry.MessageTypeResolver,
 	error,
 ) {
-	// protoFiles, err := proto.MergedRegistry()
 	protoFiles := proto.HybridResolver
-	//if err != nil {
-	//	return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
-	//}
 	protoTypes := protoregistry.GlobalTypes
 
 	// At startup, check that all proto annotations are correct.

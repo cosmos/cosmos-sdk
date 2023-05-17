@@ -300,6 +300,7 @@ func TestSetLoader(t *testing.T) {
 
 			// "execute" one block
 			res, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 2})
+			require.NoError(t, err)
 			require.NotNil(t, res.AppHash)
 			_, err = app.Commit(context.TODO(), &abci.RequestCommit{})
 			require.NoError(t, err)
@@ -348,8 +349,10 @@ func TestLoadVersionInvalid(t *testing.T) {
 	require.Error(t, err)
 
 	res, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
 	_, err = app.Commit(context.TODO(), &abci.RequestCommit{})
+	require.NoError(t, err)
 
 	// create a new app with the stores mounted under the same cap key
 	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -647,6 +650,7 @@ func TestLoadVersionPruning(t *testing.T) {
 		res, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: i})
 		require.NoError(t, err)
 		_, err = app.Commit(context.Background(), &abci.RequestCommit{})
+		require.NoError(t, err)
 		lastCommitID = storetypes.CommitID{Version: i, Hash: res.AppHash}
 	}
 

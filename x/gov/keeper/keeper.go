@@ -53,6 +53,10 @@ type Keeper struct {
 	Schema       collections.Schema
 	Constitution collections.Item[string]
 	Params       collections.Item[v1.Params]
+	Deposits     collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
+	Votes        collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
+	ProposalID   collections.Sequence
+	Proposals    collections.Map[uint64, v1.Proposal]
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -99,6 +103,10 @@ func NewKeeper(
 		authority:    authority,
 		Constitution: collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
+		Deposits:     collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), //nolint: staticcheck // Needed to retain state compatibility
+		Votes:        collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          //nolint: staticcheck // Needed to retain state compatibility
+		ProposalID:   collections.NewSequence(sb, types.ProposalIDKey, "proposal_id"),
+		Proposals:    collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -200,7 +208,7 @@ func (k Keeper) IterateActiveProposalsQueue(ctx context.Context, endTime time.Ti
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitActiveProposalQueueKey(iterator.Key())
-		proposal, err := k.GetProposal(ctx, proposalID)
+		proposal, err := k.Proposals.Get(ctx, proposalID)
 		if err != nil {
 			return err
 		}
@@ -228,7 +236,7 @@ func (k Keeper) IterateInactiveProposalsQueue(ctx context.Context, endTime time.
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitInactiveProposalQueueKey(iterator.Key())
-		proposal, err := k.GetProposal(ctx, proposalID)
+		proposal, err := k.Proposals.Get(ctx, proposalID)
 		if err != nil {
 			return err
 		}

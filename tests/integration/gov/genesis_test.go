@@ -94,9 +94,9 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, votingStarted)
 
-	proposal1, err = s1.GovKeeper.GetProposal(ctx, proposalID1)
+	proposal1, err = s1.GovKeeper.Proposals.Get(ctx, proposalID1)
 	assert.NilError(t, err)
-	proposal2, err = s1.GovKeeper.GetProposal(ctx, proposalID2)
+	proposal2, err = s1.GovKeeper.Proposals.Get(ctx, proposalID2)
 	assert.NilError(t, err)
 	assert.Assert(t, proposal1.Status == v1.StatusDepositPeriod)
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
@@ -152,9 +152,9 @@ func TestImportExportQueues(t *testing.T) {
 	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
-	proposal1, err = s2.GovKeeper.GetProposal(ctx2, proposalID1)
+	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)
 	assert.NilError(t, err)
-	proposal2, err = s2.GovKeeper.GetProposal(ctx2, proposalID2)
+	proposal2, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID2)
 	assert.NilError(t, err)
 	assert.Assert(t, proposal1.Status == v1.StatusDepositPeriod)
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
@@ -166,10 +166,10 @@ func TestImportExportQueues(t *testing.T) {
 	err = gov.EndBlocker(ctx2, s2.GovKeeper)
 	assert.NilError(t, err)
 
-	proposal1, err = s2.GovKeeper.GetProposal(ctx2, proposalID1)
-	assert.ErrorContains(t, err, "proposal 1 doesn't exist")
+	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)
+	assert.ErrorContains(t, err, "not found")
 
-	proposal2, err = s2.GovKeeper.GetProposal(ctx2, proposalID2)
+	proposal2, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID2)
 	assert.NilError(t, err)
 	assert.Assert(t, proposal2.Status == v1.StatusRejected)
 }

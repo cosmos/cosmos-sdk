@@ -1,7 +1,10 @@
 package gov
 
 import (
+	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -11,7 +14,7 @@ import (
 
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
-	err := k.SetProposalID(ctx, data.StartingProposalId)
+	err := k.ProposalID.Set(ctx, data.StartingProposalId)
 	if err != nil {
 		panic(err)
 	}
@@ -34,12 +37,22 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 	var totalDeposits sdk.Coins
 	for _, deposit := range data.Deposits {
-		k.SetDeposit(ctx, *deposit)
+		err := k.SetDeposit(ctx, *deposit)
+		if err != nil {
+			panic(err)
+		}
 		totalDeposits = totalDeposits.Add(deposit.Amount...)
 	}
 
 	for _, vote := range data.Votes {
-		k.SetVote(ctx, *vote)
+		addr, err := ak.StringToBytes(vote.Voter)
+		if err != nil {
+			panic(err)
+		}
+		err = k.Votes.Set(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(addr)), *vote)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, proposal := range data.Proposals {
@@ -66,13 +79,17 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 // ExportGenesis - output genesis parameters
 func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) {
-	startingProposalID, err := k.GetProposalID(ctx)
+	startingProposalID, err := k.ProposalID.Peek(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	proposals, err := k.GetProposals(ctx)
-	if err != nil {
+	var proposals v1.Proposals
+	err = k.Proposals.Walk(ctx, nil, func(_ uint64, value v1.Proposal) (stop bool, err error) {
+		proposals = append(proposals, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return nil, err
 	}
 
@@ -87,21 +104,22 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 	}
 
 	var proposalsDeposits v1.Deposits
+	err = k.Deposits.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (stop bool, err error) {
+		proposalsDeposits = append(proposalsDeposits, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
+
+	// export proposals votes
 	var proposalsVotes v1.Votes
-	for _, proposal := range proposals {
-		deposits, err := k.GetDeposits(ctx, proposal.Id)
-		if err != nil {
-			return nil, err
-		}
-
-		proposalsDeposits = append(proposalsDeposits, deposits...)
-
-		votes, err := k.GetVotes(ctx, proposal.Id)
-		if err != nil {
-			return nil, err
-		}
-
-		proposalsVotes = append(proposalsVotes, votes...)
+	err = k.Votes.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (stop bool, err error) {
+		proposalsVotes = append(proposalsVotes, &value)
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
 	}
 
 	return &v1.GenesisState{

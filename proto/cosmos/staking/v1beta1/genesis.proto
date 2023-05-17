@@ -25,7 +25,7 @@ message GenesisState {
   // of the last-block's bonded validators.
   repeated LastValidatorPower last_validator_powers = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
-  // delegations defines the validator set at genesis.
+  // validators defines the validator set at genesis.
   repeated Validator validators = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // delegations defines the delegations active at genesis.

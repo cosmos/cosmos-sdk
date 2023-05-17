@@ -284,7 +284,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	legacyQueryServer := keeper.NewLegacyQueryServer(am.keeper)
 	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
-	v1.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	v1.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(*am.keeper))
 
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 	if err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -353,7 +353,7 @@ func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Weight
 
 // RegisterStoreDecoder registers a decoder for gov module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[govtypes.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[govtypes.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

@@ -376,7 +376,12 @@ func (k BaseSendKeeper) DeleteSendEnabled(ctx context.Context, denoms ...string)
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (k BaseSendKeeper) IterateSendEnabledEntries(ctx context.Context, cb func(denom string, sendEnabled bool) bool) {
-	_ = k.SendEnabled.Walk(ctx, nil, cb)
+	err := k.SendEnabled.Walk(ctx, nil, func(key string, value bool) (stop bool, err error) {
+		return cb(key, value), nil
+	})
+	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 }
 
 // GetAllSendEnabledEntries gets all the SendEnabled entries that are stored.

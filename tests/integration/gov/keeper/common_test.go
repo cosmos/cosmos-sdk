@@ -6,35 +6,34 @@ import (
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var (
-	_, _, addr   = testdata.KeyTestPubAddr()
-	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
-	TestProposal = getTestProposal()
-)
+var TestProposal = getTestProposal()
 
 func getTestProposal() []sdk.Msg {
 	legacyProposalMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), authtypes.NewModuleAddress(types.ModuleName).String())
 	if err != nil {
 		panic(err)
 	}
+	testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
+	legacyProposalMsg2, err := v1.NewLegacyContent(testProposal, authtypes.NewModuleAddress(types.ModuleName).String())
+	if err != nil {
+		panic(err)
+	}
 
 	return []sdk.Msg{
-		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))),
 		legacyProposalMsg,
+		legacyProposalMsg2,
 	}
 }
 
-func createValidators(t *testing.T, f *newFixture, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 5, sdk.NewInt(30000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(5)

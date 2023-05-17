@@ -15,7 +15,7 @@ import (
 
 func TestGRPCQueryTally(t *testing.T) {
 	t.Parallel()
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx, queryClient := f.ctx, f.queryClient
 
@@ -137,7 +137,7 @@ func TestGRPCQueryTally(t *testing.T) {
 func TestLegacyGRPCQueryTally(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx, queryClient := f.ctx, f.legacyQueryClient
 

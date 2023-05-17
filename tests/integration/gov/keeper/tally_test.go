@@ -13,7 +13,7 @@ import (
 
 func TestTallyNoOneVotes(t *testing.T) {
 	t.Parallel()
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -38,7 +38,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 func TestTallyNoQuorum(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -66,7 +66,7 @@ func TestTallyNoQuorum(t *testing.T) {
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -95,7 +95,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 func TestTallyOnlyValidators51No(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -122,7 +122,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 func TestTallyOnlyValidators51Yes(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -150,7 +150,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -179,7 +179,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -208,7 +208,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -237,7 +237,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -266,7 +266,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 func TestTallyDelgatorOverride(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -305,7 +305,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 func TestTallyDelgatorInherit(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -343,7 +343,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -386,7 +386,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -430,7 +430,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 func TestTallyJailedValidator(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 
@@ -476,7 +476,7 @@ func TestTallyJailedValidator(t *testing.T) {
 func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	t.Parallel()
 
-	f := initNewFixture(t)
+	f := initFixture(t)
 
 	ctx := f.ctx
 

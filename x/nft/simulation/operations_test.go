@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
@@ -126,11 +127,9 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	ctx := suite.ctx.WithBlockTime(blockTime)
 
 	// begin new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
+	suite.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
 	})
 
 	// execute operation

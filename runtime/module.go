@@ -100,7 +100,7 @@ func ProvideApp() (
 	}
 
 	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles:            protoFiles,
+		ProtoFiles:            proto.HybridResolver,
 		AddressCodec:          globalAccAddressCodec{},
 		ValidatorAddressCodec: globalValAddressCodec{},
 	})

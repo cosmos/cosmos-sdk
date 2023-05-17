@@ -3,6 +3,10 @@ package server
 // DONTCOVER
 
 import (
+<<<<<<< HEAD
+=======
+	"context"
+>>>>>>> 09ca393a1 (feat: add Close method for resource cleanup in graceful shutdown (#16193))
 	"errors"
 	"fmt"
 	"net"
@@ -295,7 +299,64 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
+<<<<<<< HEAD
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+=======
+	emitServerInfoMetrics()
+
+	svr, err := server.NewServer(addr, transport, app)
+	if err != nil {
+		return fmt.Errorf("error creating listener: %v", err)
+	}
+
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
+
+	// listen for quit signals so the calling parent process can gracefully exit
+	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+
+	g.Go(func() error {
+		if err := svr.Start(); err != nil {
+			svrCtx.Logger.Error("failed to start out-of-process ABCI server", "err", err)
+			return err
+		}
+
+		// Wait for the calling process to be canceled or close the provided context,
+		// so we can gracefully stop the ABCI server.
+		<-ctx.Done()
+		svrCtx.Logger.Info("stopping the ABCI server...")
+		return errors.Join(svr.Stop(), app.Close())
+	})
+
+	return g.Wait()
+}
+
+func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
+	cmtCfg := svrCtx.Config
+	home := cmtCfg.RootDir
+
+	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
+	if err != nil {
+		return err
+	}
+
+	svrCfg, err := getAndValidateConfig(svrCtx)
+	if err != nil {
+		return err
+	}
+
+	traceWriter, traceWriterCleanup, err := setupTraceWriter(svrCtx)
+	if err != nil {
+		return err
+	}
+
+	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+
+	// TODO: Move this to only be done if were launching the node. (So not in GRPC-only mode)
+	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
+>>>>>>> 09ca393a1 (feat: add Close method for resource cleanup in graceful shutdown (#16193))
 	if err != nil {
 		return err
 	}
@@ -500,6 +561,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
+			_ = app.Close()
 		}
 
 		if traceWriterCleanup != nil {

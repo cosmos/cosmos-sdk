@@ -2,33 +2,24 @@ package keeper
 
 import (
 	"context"
-
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // GetParams returns the total set of distribution parameters.
-func (k Keeper) GetParams(ctx context.Context) (params types.Params, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ParamsKey)
-	if bz == nil || err != nil {
+func (k Keeper) GetParams(ctx context.Context) (types.Params, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
 		return params, err
 	}
-
-	err = k.cdc.Unmarshal(bz, &params)
-	return params, err
+	return params, nil
 }
 
 // SetParams sets the distribution parameters.
 // CONTRACT: This method performs no validation of the parameters.
 func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&params)
-	if err != nil {
-		return err
-	}
-	return store.Set(types.ParamsKey, bz)
+	return k.Params.Set(ctx, params)
 }
 
 // GetCommunityTax returns the current distribution community tax.

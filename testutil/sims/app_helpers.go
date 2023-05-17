@@ -169,6 +169,11 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
+		_, err = app.Commit(context.TODO(), nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to commit genesis changes: %w", err)
+		}
+
 		_, err = app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
 			NextValidatorsHash: valSet.Hash(),

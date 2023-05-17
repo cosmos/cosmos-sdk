@@ -3,7 +3,6 @@ package rootmulti_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -19,7 +18,7 @@ import (
 func TestRollback(t *testing.T) {
 	db := dbm.NewMemDB()
 	options := simapp.SetupOptions{
-		Logger:  log.NewLogger(os.Stdout, log.ColorOption(false)),
+		Logger:  log.NewNopLogger(),
 		DB:      db,
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}

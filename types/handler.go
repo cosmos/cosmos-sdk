@@ -51,6 +51,7 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 			return chain[ii].AnteHandle(ctx, tx, simulate, handlerChain[ii+1])
 		}
 	}
+
 	return handlerChain[0]
 }
 

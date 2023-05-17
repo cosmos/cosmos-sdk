@@ -1909,6 +1909,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 		proposalID uint64
 		admin      string
 		expErrMsg  string
+		postRun    func(sdkCtx sdk.Context)
 	}{
 		"wrong admin": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1916,6 +1917,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			admin:     addr5.String(),
 			expErrMsg: "unauthorized",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"wrong proposal id": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1923,6 +1925,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			admin:     proposers[0],
 			expErrMsg: "not found",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"happy case with proposer": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1930,6 +1933,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			proposalID: proposalID,
 			admin:      proposers[0],
+			postRun:    func(sdkCtx sdk.Context) {},
 		},
 		"already closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1944,6 +1948,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			proposalID: proposalID,
 			admin:      proposers[0],
 			expErrMsg:  "cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
+			postRun:    func(sdkCtx sdk.Context) {},
 		},
 		"happy case with group admin address": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1951,6 +1956,17 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			proposalID: proposalID,
 			admin:      proposers[0],
+			postRun: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				tallyEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						tallyEventFound = true
+						break
+					}
+				}
+				s.Require().True(tallyEventFound)
+			},
 		},
 	}
 	for msg, spec := range specs {
@@ -1974,6 +1990,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			s.Require().NoError(err)
 			s.Require().Equal(resp.GetProposal().Status, group.PROPOSAL_STATUS_WITHDRAWN)
 		})
+		spec.postRun(s.sdkCtx)
 	}
 }
 
@@ -2501,6 +2518,7 @@ func (s *TestSuite) TestExecProposal() {
 		expBalance        bool
 		expFromBalances   sdk.Coin
 		expToBalances     sdk.Coin
+		checkEvents       func(sdkCtx sdk.Context)
 	}{
 		"proposal executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2514,6 +2532,17 @@ func (s *TestSuite) TestExecProposal() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
+			checkEvents: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				tallyEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						tallyEventFound = true
+						break
+					}
+				}
+				s.Require().True(tallyEventFound)
+			},
 		},
 		"proposal with multiple messages executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2528,6 +2557,17 @@ func (s *TestSuite) TestExecProposal() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9800),
 			expToBalances:     sdk.NewInt64Coin("test", 200),
+			checkEvents: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				tallyEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						tallyEventFound = true
+						break
+					}
+				}
+				s.Require().True(tallyEventFound)
+			},
 		},
 		"proposal not executed when rejected": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2537,6 +2577,17 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			checkEvents: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				tallyEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						tallyEventFound = true
+						break
+					}
+				}
+				s.Require().False(tallyEventFound)
+			},
 		},
 		"open proposal must not fail": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2544,6 +2595,17 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			checkEvents: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				tallyEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						tallyEventFound = true
+						break
+					}
+				}
+				s.Require().False(tallyEventFound)
+			},
 		},
 		"invalid proposal id": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2567,6 +2629,17 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(time.Second), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			checkEvents: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				tallyEventFound := false
+				for _, e := range events {
+					if e.Type == EventTallyResult {
+						tallyEventFound = true
+						break
+					}
+				}
+				s.Require().True(tallyEventFound)
+			},
 		},
 		"Decision policy also applied after voting period end": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2694,7 +2767,9 @@ func (s *TestSuite) TestExecProposal() {
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, spec.expToBalances)
 			}
+			spec.checkEvents(sdkCtx)
 		})
+
 	}
 }
 

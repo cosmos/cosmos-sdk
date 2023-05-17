@@ -5,6 +5,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,7 +27,7 @@ func (suite *TestSuite) TestGrant() {
 	addrs := suite.createAccounts(2)
 	curBlockTime := ctx.BlockTime()
 
-	suite.accountKeeper.EXPECT().StringToBytes(sdk.AccAddress("valid").String()).Return(sdk.AccAddress("valid"), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().GetAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	oneHour := curBlockTime.Add(time.Hour)
 	oneYear := curBlockTime.AddDate(1, 0, 0)

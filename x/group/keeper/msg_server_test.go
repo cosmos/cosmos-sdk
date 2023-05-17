@@ -35,8 +35,7 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 			Address: addressPool[i].String(),
 			Weight:  "1",
 		}
-		s.accountKeeper.EXPECT().StringToBytes(addressPool[i].String()).Return(addressPool[i].Bytes(), nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addressPool[i].Bytes()).Return(addressPool[i].String(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().GetAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	}
 
 	g, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -1634,8 +1633,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
-	s.accountKeeper.EXPECT().StringToBytes(res.Address).Return(sdk.MustAccAddressFromBech32(res.Address).Bytes(), nil).AnyTimes()
-	noMinExecPeriodPolicyAddr, err := s.accountKeeper.StringToBytes(res.Address)
+	noMinExecPeriodPolicyAddr, err := s.accountKeeper.GetAddressCodec().StringToBytes(res.Address)
 	s.Require().NoError(err)
 
 	// Create a new group policy with super high threshold
@@ -2002,10 +2000,7 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	accountAddr := policyRes.Address
 	// module account will be created and returned
-	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(accountAddr)
-	s.Require().NoError(err)
-	s.accountKeeper.EXPECT().StringToBytes(accountAddr).Return(addrbz, nil).AnyTimes()
-	groupPolicy, err := s.accountKeeper.StringToBytes(accountAddr)
+	groupPolicy, err := s.accountKeeper.GetAddressCodec().StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
@@ -2893,11 +2888,6 @@ func (s *TestSuite) TestLeaveGroup() {
 	member4 := addrs[4]
 	admin2 := addrs[5]
 	admin3 := addrs[6]
-
-	for _, addr := range addrs {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr.Bytes(), nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	members := []group.MemberRequest{
 		{

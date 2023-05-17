@@ -13,6 +13,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -51,11 +52,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
-
-	suite.accountKeeper.EXPECT().StringToBytes(granteeAddr.String()).Return(granteeAddr, nil).AnyTimes()
-	suite.accountKeeper.EXPECT().BytesToString(granterAddr).Return(granterAddr.String(), nil).AnyTimes()
-	suite.accountKeeper.EXPECT().StringToBytes(granterAddr.String()).Return(granterAddr, nil).AnyTimes()
-	suite.accountKeeper.EXPECT().BytesToString(granterAddr).Return(granterAddr.String(), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().GetAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",

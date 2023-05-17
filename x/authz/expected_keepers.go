@@ -10,8 +10,7 @@ import (
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	address.Codec
-
+	GetAddressCodec() address.Codec
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	SetAccount(ctx context.Context, acc sdk.AccountI)

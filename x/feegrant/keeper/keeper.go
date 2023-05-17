@@ -270,11 +270,11 @@ func emitUseGrantEvent(ctx context.Context, granter, grantee string) {
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) error {
 	for _, f := range data.Allowances {
-		granter, err := k.authKeeper.StringToBytes(f.Granter)
+		granter, err := k.authKeeper.GetAddressCodec().StringToBytes(f.Granter)
 		if err != nil {
 			return err
 		}
-		grantee, err := k.authKeeper.StringToBytes(f.Grantee)
+		grantee, err := k.authKeeper.GetAddressCodec().StringToBytes(f.Grantee)
 		if err != nil {
 			return err
 		}

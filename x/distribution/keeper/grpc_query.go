@@ -217,7 +217,7 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
-	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.GetAddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 	total := sdk.DecCoins{}
 	var delRewards []types.DelegationDelegatorReward
 
-	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.GetAddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.GetAddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +320,7 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
-	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.GetAddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}

@@ -94,7 +94,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		panic(err.Error())
 	}
 	k.groupByAdminIndex, err = orm.NewIndex(groupTable, GroupByAdminIndexPrefix, func(val interface{}) ([]interface{}, error) {
-		addr, err := accKeeper.StringToBytes(val.(*group.GroupInfo).Admin)
+		addr, err := accKeeper.GetAddressCodec().StringToBytes(val.(*group.GroupInfo).Admin)
 		if err != nil {
 			return nil, err
 		}

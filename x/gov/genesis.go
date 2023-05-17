@@ -45,7 +45,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	}
 
 	for _, vote := range data.Votes {
-		addr, err := ak.StringToBytes(vote.Voter)
+		addr, err := ak.GetAddressCodec().StringToBytes(vote.Voter)
 		if err != nil {
 			panic(err)
 		}

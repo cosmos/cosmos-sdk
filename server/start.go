@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -252,7 +253,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
 		svrCtx.Logger.Info("stopping the ABCI server...")
-		return svr.Stop()
+		return errors.Join(svr.Stop(), app.Close())
 	})
 
 	return g.Wait()
@@ -457,6 +458,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
+			_ = app.Close()
 		}
 
 		if traceWriterCleanup != nil {

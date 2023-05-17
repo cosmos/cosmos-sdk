@@ -149,6 +149,12 @@ func SimulateMsgCreateValidator(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator already exists"), nil, nil
 		}
 
+		consPubKey := sdk.GetConsAddress(simAccount.ConsKey.PubKey())
+		_, found = k.GetValidatorByConsAddr(ctx, consPubKey)
+		if found {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used"), nil, nil
+		}
+
 		denom := k.GetParams(ctx).BondDenom
 
 		balance := bk.GetBalance(ctx, simAccount.Address, denom).Amount

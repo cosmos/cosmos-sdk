@@ -237,7 +237,7 @@ func (s *SimTestSuite) TestSimulateRotateConsPubKey() {
 	blockTime := time.Now().UTC()
 	ctx := s.ctx.WithBlockTime(blockTime)
 
-	_ = s.getTestingValidator0(ctx)
+	_ = s.getTestingValidator2(ctx)
 
 	// begin a new block
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
@@ -399,6 +399,13 @@ func (s *SimTestSuite) getTestingValidator0(ctx sdk.Context) types.Validator {
 func (s *SimTestSuite) getTestingValidator1(ctx sdk.Context) types.Validator {
 	commission1 := types.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
 	return s.getTestingValidator(ctx, commission1, 2)
+}
+
+func (s *SimTestSuite) getTestingValidator2(ctx sdk.Context) types.Validator {
+	val := s.getTestingValidator0(ctx)
+	val.Status = types.Bonded
+	s.stakingKeeper.SetValidator(ctx, val)
+	return val
 }
 
 func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Commission, n int) types.Validator {

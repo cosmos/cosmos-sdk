@@ -647,7 +647,7 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		}
 
 		if val.Status != types.Bonded {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator not bonded"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator not bonded."), nil, nil
 		}
 
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(val.GetOperator()))

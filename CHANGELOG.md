@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated fmt.Errorf errors + using errors.New where appropriate.
 * (all) [#16497](https://github.com/cosmos/cosmos-sdk/pull/16497) Removed all exported vestiges of `sdk.MustSortJSON` and `sdk.SortJSON`.
 * (x/distribution) [#16218](https://github.com/cosmos/cosmos-sdk/pull/16218) Add Autocli config to distribution module.
+* (cli) [#16206](https://github.com/cosmos/cosmos-sdk/pull/16206) Make ABCI handshake profileable.
 
 ### API Breaking Changes
 

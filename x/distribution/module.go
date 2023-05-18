@@ -86,7 +86,7 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd returns the root query command for the distribution module.
 func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
+	return nil
 }
 
 // RegisterInterfaces implements InterfaceModule

@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -34,6 +35,7 @@ func TestGenesisTestSuite(t *testing.T) {
 
 func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 
@@ -44,7 +46,7 @@ func (s *GenesisTestSuite) SetupTest() {
 
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	s.keeper = *keeper.NewKeeper(s.cdc, key, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
+	s.keeper = *keeper.NewKeeper(s.cdc, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {
@@ -69,6 +71,7 @@ func (s *GenesisTestSuite) TestInitGenesis() {
 	genesisState.ConstantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 	s.keeper.InitGenesis(s.sdkCtx, genesisState)
 
-	constantFee := s.keeper.GetConstantFee(s.sdkCtx)
+	constantFee, err := s.keeper.GetConstantFee(s.sdkCtx)
+	s.Require().NoError(err)
 	s.Require().Equal(genesisState.ConstantFee, constantFee)
 }

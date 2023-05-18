@@ -14,9 +14,8 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -195,10 +194,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config  *modulev1.Module
-	Key     *store.KVStoreKey
-	Cdc     codec.Codec
-	AppOpts servertypes.AppOptions `optional:"true"`
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	AppOpts      servertypes.AppOptions `optional:"true"`
 
 	BankKeeper   types.SupplyKeeper
 	AddressCodec address.Codec
@@ -233,7 +232,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		invalidCheckPeriod,
 		in.BankKeeper,
 		feeCollectorName,

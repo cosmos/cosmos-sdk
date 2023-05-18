@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +18,7 @@ import (
 type Keeper struct {
 	routes         []types.InvarRoute
 	invCheckPeriod uint
-	storeKey       storetypes.StoreKey
+	storeService   storetypes.KVStoreService
 	cdc            codec.BinaryCodec
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -34,11 +34,11 @@ type Keeper struct {
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, invCheckPeriod uint,
+	cdc codec.BinaryCodec, storeService storetypes.KVStoreService, invCheckPeriod uint,
 	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,
 ) *Keeper {
 	return &Keeper{
-		storeKey:         storeKey,
+		storeService:     storeService,
 		cdc:              cdc,
 		routes:           make([]types.InvarRoute, 0),
 		invCheckPeriod:   invCheckPeriod,

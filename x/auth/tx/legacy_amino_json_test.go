@@ -144,8 +144,8 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 
 func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 	var (
-		chainID        = "test-chain"
-		accNum  uint64 = 0
+		chainID = "test-chain"
+		accNum  uint64
 		seqNum  uint64 = 7
 		tip            = &tx.Tip{Tipper: addr1.String(), Amount: coins}
 	)

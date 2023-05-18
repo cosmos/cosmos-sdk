@@ -24,7 +24,7 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
-	DefaultWeightMsgRotateConsPubKey          int = 5
+	DefaultWeightMsgRotateConsPubKey          int = 100
 
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
@@ -646,7 +646,7 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to pick a validator"), nil, nil
 		}
 
-		if val.Status != types.Bonded {
+		if val.Status != types.Bonded || val.ConsensusPower(sdk.DefaultPowerReduction) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator not bonded."), nil, nil
 		}
 
@@ -671,6 +671,10 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		}
 
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+		fee := k.KeyRotationFee(ctx)
+		if !spendable.IsAllGTE(sdk.NewCoins(fee)) {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "not enough balance to pay fee"), nil, nil
+		}
 		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
 
 		valAddr := val.GetOperator()

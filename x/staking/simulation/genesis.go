@@ -16,11 +16,10 @@ import (
 
 // Simulation parameter constants
 const (
-	unbondingTime          = "unbonding_time"
-	maxValidators          = "max_validators"
-	historicalEntries      = "historical_entries"
-	maxConsPubkeyRotations = "max_cons_pubkey_rotations"
-	keyRotationFee         = "cons_pubkey_rotation_fee"
+	unbondingTime     = "unbonding_time"
+	maxValidators     = "max_validators"
+	historicalEntries = "historical_entries"
+	keyRotationFee    = "cons_pubkey_rotation_fee"
 )
 
 // genUnbondingTime returns randomized UnbondingTime

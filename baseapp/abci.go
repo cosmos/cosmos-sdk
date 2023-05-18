@@ -726,12 +726,6 @@ func (app *BaseApp) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.Resp
 		rms.SetCommitHeader(header)
 	}
 
-	// when calling commit after INIT_CHAIN, the header height will be 0
-	// TODO: should we keep this, it replicates previous logic for testing
-	if header.Height == 0 {
-		app.finalizeBlockState.ms.Write()
-	}
-
 	app.cms.Commit()
 
 	resp := &abci.ResponseCommit{

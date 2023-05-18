@@ -121,10 +121,6 @@ func SignCheckDeliver(
 		require.Nil(t, res)
 	}
 
-	// Simulate a sending a transaction and committing a block
-	// app.BeginBlock(types2.RequestBeginBlock{Header: header})
-	// gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
-
 	bz, err := txCfg.TxEncoder()(tx)
 	require.NoError(t, err)
 

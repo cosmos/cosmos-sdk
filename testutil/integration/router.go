@@ -80,7 +80,6 @@ func NewIntegrationApp(
 	bApp.SetMsgServiceRouter(router)
 
 	if keys[consensusparamtypes.StoreKey] != nil {
-
 		// set baseApp param store
 		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
@@ -88,17 +87,21 @@ func NewIntegrationApp(
 		if err := bApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("failed to load application version from store: %w", err))
 		}
-		bApp.InitChain(context.TODO(), &cmtabcitypes.RequestInitChain{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams})
 
+		if _, err := bApp.InitChain(context.TODO(), &cmtabcitypes.RequestInitChain{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams}); err != nil {
+			panic(fmt.Errorf("failed to initialize application: %w", err))
+		}
 	} else {
 		if err := bApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("failed to load application version from store: %w", err))
 		}
-		bApp.InitChain(context.TODO(), &cmtabcitypes.RequestInitChain{ChainId: appName})
+
+		if _, err := bApp.InitChain(context.TODO(), &cmtabcitypes.RequestInitChain{ChainId: appName}); err != nil {
+			panic(fmt.Errorf("failed to initialize application: %w", err))
+		}
 	}
 
-	bApp.InitChain(context.Background(), &cmtabcitypes.RequestInitChain{ChainId: appName})
-	bApp.Commit(context.TODO(), &cmtabcitypes.RequestCommit{})
+	bApp.Commit(context.TODO(), nil)
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
@@ -125,22 +128,15 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	}
 
 	if cfg.AutomaticCommit {
-		defer app.Commit(context.TODO(), &cmtabcitypes.RequestCommit{})
+		defer app.Commit(context.TODO(), nil)
 	}
 
 	if cfg.AutomaticFinalizeBlock {
 		height := app.LastBlockHeight() + 1
 		ctx := app.ctx.WithBlockHeight(height).WithChainID(appName)
-
-		app.FinalizeBlock(context.TODO(), &cmtabcitypes.RequestFinalizeBlock{Height: height})
-
-		app.logger.Info("Running BeginBlock", "height", height)
-		app.moduleManager.BeginBlock(ctx)
-
-		defer func() {
-			app.logger.Info("Running EndBlock", "height", height)
-			app.moduleManager.EndBlock(ctx)
-		}()
+		if _, err := app.FinalizeBlock(ctx, &cmtabcitypes.RequestFinalizeBlock{Height: height}); err != nil {
+			return nil, fmt.Errorf("failed to run finalize block: %w", err)
+		}
 	}
 
 	app.logger.Info("Running msg", "msg", msg.String())

@@ -134,21 +134,21 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(context.TODO(), &abci.RequestInitChain{
+	_, err = app.InitChain(context.TODO(), &abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
 	},
 	)
+	require.NoError(t, err)
 
-	// commit genesis changes
-	app.Commit(context.TODO(), &abci.RequestCommit{})
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
-	// 	Height:             app.LastBlockHeight() + 1,
-	// 	AppHash:            app.LastCommitID().Hash,
-	// 	ValidatorsHash:     valSet.Hash(),
-	// 	NextValidatorsHash: valSet.Hash(),
-	// }})
+	require.NoError(t, err)
+	_, err = app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		Hash:               app.LastCommitID().Hash,
+		NextValidatorsHash: valSet.Hash(),
+	})
+	require.NoError(t, err)
 
 	return app
 }

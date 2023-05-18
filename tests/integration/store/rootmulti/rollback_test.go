@@ -23,7 +23,6 @@ func TestRollback(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := simapp.NewSimappWithCustomOptions(t, false, options)
-	app.Commit(context.TODO(), &abci.RequestCommit{})
 	ver0 := app.LastBlockHeight()
 	// commit 10 blocks
 	for i := int64(1); i <= 10; i++ {
@@ -38,7 +37,10 @@ func TestRollback(t *testing.T) {
 		ctx := app.NewContext(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
-		app.Commit(context.TODO(), &abci.RequestCommit{})
+		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+			Height: header.Height,
+		})
+		app.Commit(context.TODO(), nil)
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
@@ -61,13 +63,14 @@ func TestRollback(t *testing.T) {
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
-		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
-			Height: ver0 + i,
-		})
+		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: header.Height})
 		ctx := app.NewContext(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("VALUE%d", i)))
-		app.Commit(context.TODO(), &abci.RequestCommit{})
+		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+			Height: header.Height,
+		})
+		app.Commit(context.TODO(), nil)
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())

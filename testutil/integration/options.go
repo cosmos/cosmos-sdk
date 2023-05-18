@@ -9,7 +9,7 @@ type Config struct {
 // Option is a function that can be used to configure the integration app.
 type Option func(*Config)
 
-// WithAutomaticBlockCreation enables begin/end block calls.
+// WithAutomaticFinalizeBlock calls ABCI finalize block.
 func WithAutomaticFinalizeBlock() Option {
 	return func(cfg *Config) {
 		cfg.AutomaticFinalizeBlock = true

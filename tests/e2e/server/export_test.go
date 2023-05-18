@@ -189,6 +189,9 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 			AppStateBytes:   appGenesis.AppState,
 		},
 	)
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: 1,
+	})
 	app.Commit(context.TODO(), &abci.RequestCommit{})
 
 	cmd := server.ExportCmd(

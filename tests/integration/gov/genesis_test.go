@@ -140,7 +140,6 @@ func TestImportExportQueues(t *testing.T) {
 		},
 	)
 
-	s2.app.Commit(context.TODO(), &abci.RequestCommit{})
 	s2.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height: s2.app.LastBlockHeight() + 1,
 	})

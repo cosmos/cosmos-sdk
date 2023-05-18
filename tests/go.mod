@@ -16,7 +16,7 @@ require (
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
 	cosmossdk.io/x/tx v0.7.0
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
-	github.com/cometbft/cometbft v0.38.0-alpha.1
+	github.com/cometbft/cometbft v0.38.0-alpha.2
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
@@ -192,12 +192,12 @@ replace (
 	cosmossdk.io/api => ../api
 	// TODO: remove me after collections v0.2.0 is released
 	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/core => ../core
 	cosmossdk.io/x/tx => ../x/tx
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )

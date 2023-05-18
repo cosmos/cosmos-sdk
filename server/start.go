@@ -3,11 +3,7 @@ package server
 // DONTCOVER
 
 import (
-<<<<<<< HEAD
-=======
-	"context"
 	"errors"
->>>>>>> 09ca393a1 (feat: add Close method for resource cleanup in graceful shutdown (#16193))
 	"fmt"
 	"net"
 	"net/http"
@@ -246,24 +242,13 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	}
 
 	defer func() {
-		if err = svr.Stop(); err != nil {
+		if err = errors.Join(svr.Stop(), app.Close()); err != nil {
 			tmos.Exit(err.Error())
 		}
 	}()
 
-<<<<<<< HEAD
 	// Wait for SIGINT or SIGTERM signal
 	return WaitForQuitSignals()
-=======
-		// Wait for the calling process to be canceled or close the provided context,
-		// so we can gracefully stop the ABCI server.
-		<-ctx.Done()
-		svrCtx.Logger.Info("stopping the ABCI server...")
-		return errors.Join(svr.Stop(), app.Close())
-	})
-
-	return g.Wait()
->>>>>>> 09ca393a1 (feat: add Close method for resource cleanup in graceful shutdown (#16193))
 }
 
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {

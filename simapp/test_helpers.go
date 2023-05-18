@@ -142,13 +142,19 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 	)
 
 	// commit genesis changes
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	// app.Commit(context.TODO(), &abci.RequestCommit{})
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 	// 	Height:             app.LastBlockHeight() + 1,
 	// 	AppHash:            app.LastCommitID().Hash,
 	// 	ValidatorsHash:     valSet.Hash(),
 	// 	NextValidatorsHash: valSet.Hash(),
 	// }})
+	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		DecidedLastCommit:  abci.CommitInfo{},
+		Hash:               app.LastCommitID().Hash,
+		Height:             app.LastBlockHeight() + 1,
+		NextValidatorsHash: valSet.Hash(),
+	})
 
 	return app
 }

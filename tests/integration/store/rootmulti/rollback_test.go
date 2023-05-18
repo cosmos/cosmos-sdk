@@ -23,7 +23,6 @@ func TestRollback(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := simapp.NewSimappWithCustomOptions(t, false, options)
-	app.Commit(context.TODO(), &abci.RequestCommit{})
 	ver0 := app.LastBlockHeight()
 	// commit 10 blocks
 	for i := int64(1); i <= 10; i++ {
@@ -40,7 +39,6 @@ func TestRollback(t *testing.T) {
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
 		app.Commit(context.TODO(), &abci.RequestCommit{})
 	}
-
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
 	store := app.NewContext(true, cmtproto.Header{}).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("value10"), store.Get([]byte("key")))

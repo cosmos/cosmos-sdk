@@ -18,13 +18,13 @@ type (
 	StakingKeeper interface {
 		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
 		GetParams(ctx sdk.Context) (params stakingtypes.Params)
+		GetMappedConsKey(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.ConsAddress
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the
 	// evidence module.
 	SlashingKeeper interface {
 		GetPubkey(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
-		GetMappedPubkey(sdk.Context, cryptotypes.Address) (sdk.ConsAddress, cryptotypes.PubKey, error)
 		IsTombstoned(sdk.Context, sdk.ConsAddress) bool
 		HasValidatorSigningInfo(sdk.Context, sdk.ConsAddress) bool
 		Tombstone(sdk.Context, sdk.ConsAddress)

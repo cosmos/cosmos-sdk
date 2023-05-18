@@ -40,6 +40,20 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 	return m.recorder
 }
 
+// GetMappedConsKey mocks base method.
+func (m *MockStakingKeeper) GetMappedConsKey(ctx types0.Context, consAddr types0.ConsAddress) types0.ConsAddress {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMappedConsKey", ctx, consAddr)
+	ret0, _ := ret[0].(types0.ConsAddress)
+	return ret0
+}
+
+// GetMappedConsKey indicates an expected call of GetMappedConsKey.
+func (mr *MockStakingKeeperMockRecorder) GetMappedConsKey(ctx, consAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMappedConsKey", reflect.TypeOf((*MockStakingKeeper)(nil).GetMappedConsKey), ctx, consAddr)
+}
+
 // GetParams mocks base method.
 func (m *MockStakingKeeper) GetParams(ctx types0.Context) types1.Params {
 	m.ctrl.T.Helper()
@@ -89,22 +103,6 @@ func NewMockSlashingKeeper(ctrl *gomock.Controller) *MockSlashingKeeper {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockSlashingKeeper) EXPECT() *MockSlashingKeeperMockRecorder {
 	return m.recorder
-}
-
-// GetMappedPubkey mocks base method.
-func (m *MockSlashingKeeper) GetMappedPubkey(arg0 types0.Context, arg1 types.Address) (types0.ConsAddress, types.PubKey, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMappedPubkey", arg0, arg1)
-	ret0, _ := ret[0].(types0.ConsAddress)
-	ret1, _ := ret[1].(types.PubKey)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetMappedPubkey indicates an expected call of GetMappedPubkey.
-func (mr *MockSlashingKeeperMockRecorder) GetMappedPubkey(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMappedPubkey", reflect.TypeOf((*MockSlashingKeeper)(nil).GetMappedPubkey), arg0, arg1)
 }
 
 // GetPubkey mocks base method.

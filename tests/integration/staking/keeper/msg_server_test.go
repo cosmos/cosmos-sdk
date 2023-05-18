@@ -365,9 +365,3 @@ func TestRotateConsPubKey(t *testing.T) {
 		})
 	}
 }
-
-func calculateFee(fee sdk.Coin, rotationsMade int64) sdk.Coin {
-	fees := math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(2), big.NewInt(rotationsMade), nil))
-	fees = fee.Amount.Mul(fees)
-	return sdk.NewCoin(fee.Denom, fees)
-}

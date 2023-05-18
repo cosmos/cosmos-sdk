@@ -15,7 +15,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
-	store "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -124,13 +124,21 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMe
 	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
 		// chains can still use a custom init chainer for setting the version map
 		// this means that we need to combine the manually wired modules version map with app wiring enabled modules version map
-		for name, version := range am.keeper.GetModuleVersionMap(ctx) {
+		moduleVM, err := am.keeper.GetModuleVersionMap(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		for name, version := range moduleVM {
 			if _, ok := versionMap[name]; !ok {
 				versionMap[name] = version
 			}
 		}
 
-		am.keeper.SetModuleVersionMap(ctx, versionMap)
+		err = am.keeper.SetModuleVersionMap(ctx, versionMap)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return []abci.ValidatorUpdate{}
@@ -158,9 +166,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	BeginBlocker(am.keeper, c)
-	return nil
+	return BeginBlocker(am.keeper, ctx)
 }
 
 //
@@ -178,7 +184,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config       *modulev1.Module
-	Key          *store.KVStoreKey
+	StoreService store.KVStoreService
 	Cdc          codec.Codec
 	AddressCodec address.Codec
 
@@ -215,7 +221,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.StoreService, in.Cdc, homePath, nil, authority.String())
 	baseappOpt := func(app *baseapp.BaseApp) {
 		k.SetVersionSetter(app)
 	}

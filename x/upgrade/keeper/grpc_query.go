@@ -16,7 +16,11 @@ var _ types.QueryServer = Keeper{}
 func (k Keeper) CurrentPlan(c context.Context, req *types.QueryCurrentPlanRequest) (*types.QueryCurrentPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	plan, found := k.GetUpgradePlan(ctx)
+	plan, found, err := k.GetUpgradePlan(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if !found {
 		return &types.QueryCurrentPlanResponse{}, nil
 	}
@@ -28,19 +32,20 @@ func (k Keeper) CurrentPlan(c context.Context, req *types.QueryCurrentPlanReques
 func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanRequest) (*types.QueryAppliedPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	applied := k.GetDoneHeight(ctx, req.Name)
-	if applied == 0 {
-		return &types.QueryAppliedPlanResponse{}, nil
-	}
+	applied, err := k.GetDoneHeight(ctx, req.Name)
 
-	return &types.QueryAppliedPlanResponse{Height: applied}, nil
+	return &types.QueryAppliedPlanResponse{Height: applied}, err
 }
 
 // UpgradedConsensusState implements the Query/UpgradedConsensusState gRPC method
 func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	ctx := sdk.UnwrapSDKContext(c)
 
-	consState, found := k.GetUpgradedConsensusState(ctx, req.LastHeight)
+	consState, found, err := k.GetUpgradedConsensusState(ctx, req.LastHeight)
+	if err != nil {
+		return nil, err
+	}
+
 	if !found {
 		return &types.QueryUpgradedConsensusStateResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 	}
@@ -56,7 +61,12 @@ func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersions
 
 	// check if a specific module was requested
 	if len(req.ModuleName) > 0 {
-		if version, ok := k.getModuleVersion(ctx, req.ModuleName); ok {
+		version, ok, err := k.getModuleVersion(ctx, req.ModuleName)
+		if err != nil {
+			return nil, err
+		}
+
+		if ok {
 			// return the requested module
 			res := []*types.ModuleVersion{{Name: req.ModuleName, Version: version}}
 			return &types.QueryModuleVersionsResponse{ModuleVersions: res}, nil
@@ -66,7 +76,11 @@ func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersions
 	}
 
 	// if no module requested return all module versions from state
-	mv := k.GetModuleVersions(ctx)
+	mv, err := k.GetModuleVersions(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.QueryModuleVersionsResponse{
 		ModuleVersions: mv,
 	}, nil

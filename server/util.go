@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -373,16 +374,17 @@ func ExternalIP() (string, error) {
 //
 // Note, this performs a non-blocking process so the caller must ensure the
 // corresponding context derived from the cancelFn is used correctly.
-func ListenForQuitSignals(cancelFn context.CancelFunc, logger log.Logger) {
+func ListenForQuitSignals(g *errgroup.Group, cancelFn context.CancelFunc, logger log.Logger) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
+	g.Go(func() error {
 		sig := <-sigCh
 		cancelFn()
 
 		logger.Info("caught signal", "signal", sig.String())
-	}()
+		return nil
+	})
 }
 
 // GetAppDBBackend gets the backend type to use for the application DBs.

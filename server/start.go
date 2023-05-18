@@ -249,7 +249,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+	ListenForQuitSignals(g, cancelFn, svrCtx.Logger)
 
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
@@ -285,14 +285,14 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	if err != nil {
 		return err
 	}
+	defer traceWriterCleanup()
 
 	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-
-	// TODO: Move this to only be done if were launching the node. (So not in GRPC-only mode)
-	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
-	if err != nil {
-		return err
-	}
+	defer func() {
+		if err := app.Close(); err != nil {
+			svrCtx.Logger.Error("error closing application", "err", err)
+		}
+	}()
 
 	var (
 		tmNode   *node.Node
@@ -304,10 +304,16 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, err = startCmtNode(cmtCfg, nodeKey, app, svrCtx)
+		tmNode, err = startCmtNode(cmtCfg, app, svrCtx)
 		if err != nil {
 			return err
 		}
+
+		defer func() {
+			if err := tmNode.Stop(); err != nil {
+				svrCtx.Logger.Error("error stopping CometBFT node", "err", err)
+			}
+		}()
 
 		// Add the tx service to the gRPC router. We only need to register this
 		// service if API or gRPC is enabled, and avoid doing so in the general
@@ -334,7 +340,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	g, ctx := errgroup.WithContext(ctx)
 
 	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+	ListenForQuitSignals(g, cancelFn, svrCtx.Logger)
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
@@ -353,34 +359,21 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return g.Wait()
 	}
 
-	// In case the operator has both gRPC and API servers disabled, there is
-	// nothing blocking this root process, so we need to block manually, so we'll
-	// create an empty blocking loop.
-	g.Go(func() error {
-		<-ctx.Done()
-		return nil
-	})
-
 	// deferred cleanup function
 	// TODO: Make a generic cleanup function that takes in several func(), and runs them all.
 	// then we defer that.
-	defer func() {
-		if tmNode != nil && tmNode.IsRunning() {
-			_ = tmNode.Stop()
-			_ = app.Close()
-		}
-
-		if traceWriterCleanup != nil {
-			traceWriterCleanup()
-		}
-	}()
 
 	// wait for signal capture and gracefully return
 	return g.Wait()
 }
 
 // TODO: Move nodeKey into being created within the function.
-func startCmtNode(cfg *cmtcfg.Config, nodeKey *p2p.NodeKey, app types.Application, svrCtx *Context) (tmNode *node.Node, err error) {
+func startCmtNode(cfg *cmtcfg.Config, app types.Application, svrCtx *Context) (tmNode *node.Node, err error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	if err != nil {
+		return nil, err
+	}
+
 	tmNode, err = node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
@@ -566,12 +559,7 @@ func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
 		}()
 	}
 
-	errCh := make(chan error)
-	go func() {
-		errCh <- callbackFn()
-	}()
-
-	return <-errCh
+	return callbackFn()
 }
 
 // emitServerInfoMetrics emits server info related metrics using application telemetry.

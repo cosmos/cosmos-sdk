@@ -359,15 +359,10 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return g.Wait()
 	}
 
-	// deferred cleanup function
-	// TODO: Make a generic cleanup function that takes in several func(), and runs them all.
-	// then we defer that.
-
 	// wait for signal capture and gracefully return
 	return g.Wait()
 }
 
-// TODO: Move nodeKey into being created within the function.
 func startCmtNode(cfg *cmtcfg.Config, app types.Application, svrCtx *Context) (tmNode *node.Node, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {

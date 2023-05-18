@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -51,7 +53,7 @@ func newPubKey(pk string) (res cryptotypes.PubKey) {
 }
 
 func testEquivocationHandler(_ interface{}) types.Handler {
-	return func(ctx sdk.Context, e exported.Evidence) error {
+	return func(ctx context.Context, e exported.Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}
@@ -87,6 +89,7 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
 	suite.ctx = testCtx.Ctx
@@ -101,7 +104,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	evidenceKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		stakingKeeper,
 		slashingKeeper,
 		address.NewBech32Codec("cosmos"),
@@ -164,8 +167,8 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
-	suite.True(ok)
+	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	suite.NoError(err)
 	suite.Equal(e, res)
 }
 
@@ -183,8 +186,8 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 	suite.Error(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
-	suite.True(ok)
+	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	suite.NoError(err)
 	suite.Equal(e, res)
 }
 
@@ -198,10 +201,11 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	suite.Error(suite.evidenceKeeper.SubmitEvidence(ctx, e))
+	err := suite.evidenceKeeper.SubmitEvidence(ctx, e)
+	suite.ErrorIs(err, types.ErrInvalidEvidence)
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
-	suite.False(ok)
+	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	suite.ErrorIs(err, types.ErrNoEvidenceExists)
 	suite.Nil(res)
 }
 

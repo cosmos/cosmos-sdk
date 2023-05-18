@@ -19,7 +19,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/golang/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"

@@ -124,7 +124,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 
 func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	val := s.network.Validators[0]
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50)))
 
 	// submit proposal with an initial deposit
 	id := s.submitProposal(val, depositAmount, "TestQueryProposalAfterVotingPeriod")

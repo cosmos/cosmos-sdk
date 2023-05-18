@@ -89,7 +89,8 @@ const (
 	FlagMempoolMaxTxs = "mempool.max-txs"
 )
 
-// StartCmdOptions defines options that can be customized in `StartCmd`
+// StartCmdOptions defines options that can be customized in `StartCmd`,
+// only `AppCreator` and `DefaultNodeHome` are required, the other fields are optional.
 type StartCmdOptions struct {
 	AppCreator      types.AppCreator
 	DefaultNodeHome string

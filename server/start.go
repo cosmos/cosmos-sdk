@@ -28,8 +28,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -138,9 +141,17 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				})
 			}
 
-			return wrapCPUProfile(serverCtx, func() error {
+			// amino is needed here for backwards compatibility of REST routes
+			err = wrapCPUProfile(serverCtx, func() error {
 				return startInProcess(serverCtx, clientCtx, appCreator)
 			})
+			errCode, ok := err.(ErrorCode)
+			if !ok {
+				return err
+			}
+
+			serverCtx.Logger.Debug(fmt.Sprintf("received quit signal: %d", errCode.Code))
+			return nil
 		},
 	}
 
@@ -211,7 +222,8 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return err
 	}
 
-	if _, err := startTelemetry(config); err != nil {
+	_, err = startTelemetry(config)
+	if err != nil {
 		return err
 	}
 
@@ -234,7 +246,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 			return err
 		}
 
-		// Wait for the calling process to be cancelled or close the provided context,
+		// Wait for the calling process to be canceled or close the provided context,
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
 		svrCtx.Logger.Info("stopping the ABCI server...")
@@ -339,52 +351,71 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	var (
-		apiSrv  *api.Server
-		grpcSrv *grpc.Server
-	)
-
 	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
 	// listen for quit signals so the calling parent process can gracefully exit
 	ListenForQuitSignals(cancelFn, svrCtx.Logger)
 
+	var apiSrv *api.Server
+	if config.API.Enable {
+		genDoc, err := genDocProvider()
+		if err != nil {
+			return err
+		}
+
+		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
+
+		if config.GRPC.Enable {
+			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			if err != nil {
+				return err
+			}
+
+			maxSendMsgSize := config.GRPC.MaxSendMsgSize
+			if maxSendMsgSize == 0 {
+				maxSendMsgSize = serverconfig.DefaultGRPCMaxSendMsgSize
+			}
+
+			maxRecvMsgSize := config.GRPC.MaxRecvMsgSize
+			if maxRecvMsgSize == 0 {
+				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
+			}
+
+			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
+
+			// If grpc is enabled, configure grpc client for grpc gateway.
+			grpcClient, err := grpc.Dial(
+				grpcAddress,
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithDefaultCallOptions(
+					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+					grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
+					grpc.MaxCallSendMsgSize(maxSendMsgSize),
+				),
+			)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
+			svrCtx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+		}
+
+		apiSrv = api.New(clientCtx, svrCtx.Logger.With("module", "api-server"))
+		app.RegisterAPIRoutes(apiSrv, config.API)
+		if config.Telemetry.Enabled {
+			apiSrv.SetTelemetry(metrics)
+		}
+
+		g.Go(func() error {
+			return apiSrv.Start(ctx, config)
+		})
+	}
+
+	var grpcSrv *grpc.Server
+
 	if config.GRPC.Enable {
-		_, port, err := net.SplitHostPort(config.GRPC.Address)
-		if err != nil {
-			return err
-		}
-
-		maxSendMsgSize := config.GRPC.MaxSendMsgSize
-		if maxSendMsgSize == 0 {
-			maxSendMsgSize = serverconfig.DefaultGRPCMaxSendMsgSize
-		}
-
-		maxRecvMsgSize := config.GRPC.MaxRecvMsgSize
-		if maxRecvMsgSize == 0 {
-			maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
-		}
-
-		grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
-		// if gRPC is enabled, configure gRPC client for gRPC gateway
-		grpcClient, err := grpc.Dial(
-			grpcAddress,
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithDefaultCallOptions(
-				grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
-				grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
-				grpc.MaxCallSendMsgSize(maxSendMsgSize),
-			),
-		)
-		if err != nil {
-			return err
-		}
-
-		clientCtx = clientCtx.WithGRPCClient(grpcClient)
-		svrCtx.Logger.Debug("gRPC client assigned to client context", "target", grpcAddress)
-
 		grpcSrv, err = servergrpc.NewGRPCServer(clientCtx, app, config.GRPC)
 		if err != nil {
 			return err
@@ -403,31 +434,67 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		}
 	}
 
-	if config.API.Enable {
-		genDoc, err := genDocProvider()
-		if err != nil {
-			return err
-		}
-
-		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
-
-		apiSrv = api.New(clientCtx, svrCtx.Logger.With("module", "api-server"))
-		app.RegisterAPIRoutes(apiSrv, config.API)
-
-		if config.Telemetry.Enabled {
-			apiSrv.SetTelemetry(metrics)
-		}
-
-		g.Go(func() error {
-			return apiSrv.Start(ctx, config)
-		})
-	}
-
 	// At this point it is safe to block the process if we're in gRPC-only mode as
 	// we do not need to handle any CometBFT related processes.
 	if gRPCOnly {
 		// wait for signal capture and gracefully return
 		return g.Wait()
+	}
+
+	var rosettaSrv crgserver.Server
+	if config.Rosetta.Enable {
+		offlineMode := config.Rosetta.Offline
+
+		// If GRPC is not enabled rosetta cannot work in online mode, so it works in
+		// offline mode.
+		if !config.GRPC.Enable {
+			offlineMode = true
+		}
+
+		minGasPrices, err := sdktypes.ParseDecCoins(config.MinGasPrices)
+		if err != nil {
+			svrCtx.Logger.Error("failed to parse minimum-gas-prices: ", err)
+			return err
+		}
+
+		conf := &rosetta.Config{
+			Blockchain:          config.Rosetta.Blockchain,
+			Network:             config.Rosetta.Network,
+			TendermintRPC:       svrCtx.Config.RPC.ListenAddress,
+			GRPCEndpoint:        config.GRPC.Address,
+			Addr:                config.Rosetta.Address,
+			Retries:             config.Rosetta.Retries,
+			Offline:             offlineMode,
+			GasToSuggest:        config.Rosetta.GasToSuggest,
+			EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
+			GasPrices:           minGasPrices.Sort(),
+			Codec:               clientCtx.Codec.(*codec.ProtoCodec),
+			InterfaceRegistry:   clientCtx.InterfaceRegistry,
+		}
+
+		rosettaSrv, err = rosetta.ServerFromConfig(conf)
+		if err != nil {
+			return err
+		}
+
+		g.Go(func() error {
+			errCh := make(chan error)
+			go func() {
+				svrCtx.Logger.Info("starting rosetta server...", "address", config.Rosetta.Address)
+				if err := rosettaSrv.Start(); err != nil {
+					errCh <- err
+				}
+			}()
+
+			select {
+			case <-ctx.Done():
+				return nil
+
+			case err := <-errCh:
+				svrCtx.Logger.Error("failed to start rosetta server", "err", err)
+				return err
+			}
+		})
 	}
 
 	// In case the operator has both gRPC and API servers disabled, there is
@@ -457,7 +524,6 @@ func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
 	if !cfg.Telemetry.Enabled {
 		return nil, nil
 	}
-
 	return telemetry.New(cfg.Telemetry)
 }
 

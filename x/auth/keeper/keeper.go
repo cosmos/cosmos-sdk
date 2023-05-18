@@ -25,25 +25,25 @@ type AccountKeeperI interface {
 	address.Codec
 
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
-	NewAccountWithAddress(context.Context, sdk.AccAddress) sdk.AccountI
+	NewAccountWithAddress(context.Context, sdk.AccAddress) (sdk.AccountI,error)
 
 	// Return a new account with the next account number. Does not save the new account to the store.
-	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
+	NewAccount(context.Context, sdk.AccountI) (sdk.AccountI,error)
 
 	// Check if an account exists in the store.
-	HasAccount(context.Context, sdk.AccAddress) bool
+	HasAccount(context.Context, sdk.AccAddress) (bool,error)
 
 	// Retrieve an account from the store.
-	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
+	GetAccount(context.Context, sdk.AccAddress) (sdk.AccountI,error)
 
 	// Set an account in the store.
-	SetAccount(context.Context, sdk.AccountI)
+	SetAccount(context.Context, sdk.AccountI) error
 
 	// Remove an account from the store.
-	RemoveAccount(context.Context, sdk.AccountI)
+	RemoveAccount(context.Context, sdk.AccountI) error
 
 	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
-	IterateAccounts(context.Context, func(sdk.AccountI) bool)
+	IterateAccounts(context.Context, func(sdk.AccountI) bool) error
 
 	// Fetch the public key of an account at a specified address
 	GetPubKey(context.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
@@ -52,7 +52,7 @@ type AccountKeeperI interface {
 	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	NextAccountNumber(context.Context) uint64
+	NextAccountNumber(context.Context) (uint64,error)
 
 	// GetModulePermissions fetches per-module account permissions
 	GetModulePermissions() map[string]types.PermissionsForAddress
@@ -130,7 +130,7 @@ func (ak AccountKeeper) Logger(ctx context.Context) log.Logger {
 
 // GetPubKey Returns the PubKey of the account at address
 func (ak AccountKeeper) GetPubKey(ctx context.Context, addr sdk.AccAddress) (cryptotypes.PubKey, error) {
-	acc := ak.GetAccount(ctx, addr)
+	acc ,_:= ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
@@ -140,7 +140,7 @@ func (ak AccountKeeper) GetPubKey(ctx context.Context, addr sdk.AccAddress) (cry
 
 // GetSequence Returns the Sequence of the account at address
 func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (uint64, error) {
-	acc := ak.GetAccount(ctx, addr)
+	acc,_ := ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return 0, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
@@ -150,12 +150,12 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
-func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
+func (ak AccountKeeper) NextAccountNumber(ctx context.Context) (uint64,error) {
 	n, err := ak.AccountNumber.Next(ctx)
 	if err != nil {
-		panic(err)
+		return 0,err
 	}
-	return n
+	return n,nil
 }
 
 // GetModulePermissions fetches per-module account permissions.
@@ -204,7 +204,7 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, modu
 		return nil, []string{}
 	}
 
-	acc := ak.GetAccount(ctx, addr)
+	acc ,_:= ak.GetAccount(ctx, addr)
 	if acc != nil {
 		macc, ok := acc.(sdk.ModuleAccountI)
 		if !ok {
@@ -215,7 +215,8 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, modu
 
 	// create a new module account
 	macc := types.NewEmptyModuleAccount(moduleName, perms...)
-	maccI := (ak.NewAccount(ctx, macc)).(sdk.ModuleAccountI) // set the account number
+	newAcc, _ := ak.NewAccount(ctx, macc)
+	maccI := (newAcc).(sdk.ModuleAccountI) // set the account number
 	ak.SetModuleAccount(ctx, maccI)
 
 	return maccI, perms

@@ -10,72 +10,72 @@ import (
 )
 
 // NewAccountWithAddress implements AccountKeeperI.
-func (ak AccountKeeper) NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
+func (ak AccountKeeper) NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error) {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
-		panic(err)
+		return nil,err
 	}
 
 	return ak.NewAccount(ctx, acc)
 }
 
 // NewAccount sets the next account number to a given account interface
-func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) sdk.AccountI {
+func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) (sdk.AccountI,error) {
 	if err := acc.SetAccountNumber(ak.NextAccountNumber(ctx)); err != nil {
-		panic(err)
+		return nil,err
 	}
 
-	return acc
+	return acc,nil
 }
 
 // HasAccount implements AccountKeeperI.
-func (ak AccountKeeper) HasAccount(ctx context.Context, addr sdk.AccAddress) bool {
+func (ak AccountKeeper) HasAccount(ctx context.Context, addr sdk.AccAddress) (bool,error) {
 	store := ak.storeService.OpenKVStore(ctx)
 	has, err := store.Has(types.AddressStoreKey(addr))
 	if err != nil {
-		panic(err)
+		return false,err
 	}
-	return has
+	return has,nil
 }
 
 // HasAccountAddressByID checks account address exists by id.
-func (ak AccountKeeper) HasAccountAddressByID(ctx context.Context, id uint64) bool {
+func (ak AccountKeeper) HasAccountAddressByID(ctx context.Context, id uint64) (bool,error) {
 	store := ak.storeService.OpenKVStore(ctx)
 	has, err := store.Has(types.AccountNumberStoreKey(id))
 	if err != nil {
-		panic(err)
+		return false,err
 	}
-	return has
+	return has,nil
 }
 
 // GetAccount implements AccountKeeperI.
-func (ak AccountKeeper) GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
+func (ak AccountKeeper) GetAccount(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error) {
 	store := ak.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.AddressStoreKey(addr))
 	if err != nil {
-		panic(err)
+		return nil,err
 	}
 
 	if bz == nil {
-		return nil
+		return nil,nil
 	}
 
-	return ak.decodeAccount(bz)
+	return ak.decodeAccount(bz),nil
 }
 
 // GetAccountAddressById returns account address by id.
-func (ak AccountKeeper) GetAccountAddressByID(ctx context.Context, id uint64) string {
+func (ak AccountKeeper) GetAccountAddressByID(ctx context.Context, id uint64) (string,error) {
 	store := ak.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.AccountNumberStoreKey(id))
 	if err != nil {
-		panic(err)
+		return "",err
 	}
 
 	if bz == nil {
-		return ""
+		return "",nil
 	}
-	return sdk.AccAddress(bz).String()
+	return sdk.AccAddress(bz).String(),nil
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
@@ -89,42 +89,44 @@ func (ak AccountKeeper) GetAllAccounts(ctx context.Context) (accounts []sdk.Acco
 }
 
 // SetAccount implements AccountKeeperI.
-func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
+func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) error {
 	addr := acc.GetAddress()
 	store := ak.storeService.OpenKVStore(ctx)
 
 	bz, err := ak.MarshalAccount(acc)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	store.Set(types.AddressStoreKey(addr), bz)
 	store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), addr.Bytes())
+	return nil
 }
 
 // RemoveAccount removes an account for the account mapper store.
 // NOTE: this will cause supply invariant violation if called
-func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
+func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) error {
 	addr := acc.GetAddress()
 	store := ak.storeService.OpenKVStore(ctx)
 	err := store.Delete(types.AddressStoreKey(addr))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = store.Delete(types.AccountNumberStoreKey(acc.GetAccountNumber()))
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 // IterateAccounts iterates over all the stored accounts and performs a callback function.
 // Stops iteration when callback returns true.
-func (ak AccountKeeper) IterateAccounts(ctx context.Context, cb func(account sdk.AccountI) (stop bool)) {
+func (ak AccountKeeper) IterateAccounts(ctx context.Context, cb func(account sdk.AccountI) (stop bool)) error {
 	store := ak.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.AddressStoreKeyPrefix, storetypes.PrefixEndBytes(types.AddressStoreKeyPrefix))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	defer iterator.Close()
@@ -135,4 +137,5 @@ func (ak AccountKeeper) IterateAccounts(ctx context.Context, cb func(account sdk
 			break
 		}
 	}
+	return nil
 }

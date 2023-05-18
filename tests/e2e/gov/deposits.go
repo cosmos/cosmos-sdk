@@ -124,7 +124,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 
 func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	val := s.network.Validators[0]
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50)))
 
 	// submit proposal with an initial deposit
 	id := s.submitProposal(val, depositAmount, "TestQueryProposalAfterVotingPeriod")
@@ -146,8 +146,8 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 
 	// query proposal
 	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	// s.Require().Error(err)
-	// s.Require().Contains(err.Error(), fmt.Sprintf("proposal %s doesn't exist", proposalID))
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), fmt.Sprintf("proposal %s doesn't exist", proposalID))
 
 	// query deposits
 	deposits := s.queryDeposits(val, proposalID, true, "proposal 3 doesn't exist")

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -55,8 +56,9 @@ func (k *Keeper) GetAuthority() string {
 }
 
 // Logger returns a module-specific logger.
-func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+func (k *Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := ctx.(sdk.Context)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // RegisterRoute register the routes for each of the invariants
@@ -108,6 +110,6 @@ func (k *Keeper) AssertInvariants(ctx sdk.Context) {
 func (k *Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 
 // SendCoinsFromAccountToFeeCollector transfers amt to the fee collector account.
-func (k *Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *Keeper) SendCoinsFromAccountToFeeCollector(ctx context.Context, senderAddr sdk.AccAddress, amt sdk.Coins) error {
 	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, k.feeCollectorName, amt)
 }

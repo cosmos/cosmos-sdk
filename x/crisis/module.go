@@ -177,8 +177,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // EndBlock returns the end blocker for the crisis module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	EndBlocker(c, *am.keeper)
+	EndBlocker(ctx, *am.keeper)
 	return nil
 }
 

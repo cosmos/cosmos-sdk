@@ -1,6 +1,8 @@
 package v2
 
 import (
+	"context"
+
 	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,10 +24,11 @@ var (
 // version 2. Specifically, it takes the `ConstantFee` parameter that is currently stored
 // and managed by the x/params module and stores it directly into the x/crisis
 // module state.
-func MigrateStore(ctx sdk.Context, storeService storetypes.KVStoreService, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx context.Context, storeService storetypes.KVStoreService, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
 	store := storeService.OpenKVStore(ctx)
 	var currConstantFee sdk.Coin
-	legacySubspace.Get(ctx, ConstantFee, &currConstantFee)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	legacySubspace.Get(sdkCtx, ConstantFee, &currConstantFee)
 
 	if !currConstantFee.IsValid() {
 		return errors.ErrInvalidCoins.Wrap("constant fee")

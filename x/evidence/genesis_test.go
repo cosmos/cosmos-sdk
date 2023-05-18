@@ -73,8 +73,8 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			true,
 			func() {
 				for _, e := range testEvidence {
-					_, ok := suite.keeper.GetEvidence(suite.ctx, e.Hash())
-					suite.True(ok)
+					_, err := suite.keeper.GetEvidence(suite.ctx, e.Hash())
+					suite.NoError(err)
 				}
 			},
 		},

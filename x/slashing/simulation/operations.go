@@ -94,7 +94,7 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "self delegation is nil"), nil, nil // skip
 		}
 
-		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
+		account,_ := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)

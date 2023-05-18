@@ -141,7 +141,7 @@ func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKee
 // address to a ModuleAccount address. If any of the delegation amounts are negative,
 // an error is returned.
 func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error {
-	moduleAcc := k.ak.GetAccount(ctx, moduleAccAddr)
+	moduleAcc,_ := k.ak.GetAccount(ctx, moduleAccAddr)
 	if moduleAcc == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
 	}
@@ -190,7 +190,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 // address to the delegator address. If any of the undelegation amounts are
 // negative, an error is returned.
 func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error {
-	moduleAcc := k.ak.GetAccount(ctx, moduleAccAddr)
+	moduleAcc,_ := k.ak.GetAccount(ctx, moduleAccAddr)
 	if moduleAcc == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
 	}
@@ -443,7 +443,7 @@ func (k BaseKeeper) setSupply(ctx context.Context, coin sdk.Coin) {
 
 // trackDelegation tracks the delegation of the given account if it is a vesting account
 func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
-	acc := k.ak.GetAccount(ctx, addr)
+	acc ,_:= k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
@@ -461,7 +461,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 
 // trackUndelegation trakcs undelegation of the given account if it is a vesting account
 func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
-	acc := k.ak.GetAccount(ctx, addr)
+	acc ,_:= k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}

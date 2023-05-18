@@ -49,7 +49,7 @@ func Migrate(
 
 	for _, policy := range groupPolicies {
 		// get the account address by acc id
-		oldAcc := accountKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(policy.Address))
+		oldAcc, _ := accountKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(policy.Address))
 		// remove the old account
 		accountKeeper.RemoveAccount(ctx, oldAcc)
 

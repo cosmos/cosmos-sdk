@@ -103,7 +103,7 @@ func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKee
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simToAccount, _ := simtypes.RandomAcc(r, accs)
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
@@ -116,7 +116,7 @@ func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKee
 			Msg:             msg,
 			Context:         ctx,
 			SimAccount:      simAccount,
-			AccountKeeper:   ak,
+			AccountKeeper:   nil,
 			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
@@ -144,7 +144,7 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "validator is nil"), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
@@ -157,7 +157,7 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 			Msg:             msg,
 			Context:         ctx,
 			SimAccount:      simAccount,
-			AccountKeeper:   ak,
+			AccountKeeper:   nil,
 			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
@@ -193,7 +193,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "could not find account"), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account ,_:= ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
@@ -206,7 +206,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			Msg:             msg,
 			Context:         ctx,
 			SimAccount:      simAccount,
-			AccountKeeper:   ak,
+			AccountKeeper:   nil,
 			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
@@ -224,7 +224,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		funder, _ := simtypes.RandomAcc(r, accs)
 
-		account := ak.GetAccount(ctx, funder.Address)
+		account,_ := ak.GetAccount(ctx, funder.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fundAmount := simtypes.RandSubsetCoins(r, spendable)
@@ -255,7 +255,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 			Msg:           msg,
 			Context:       ctx,
 			SimAccount:    funder,
-			AccountKeeper: ak,
+			AccountKeeper: nil,
 			ModuleName:    types.ModuleName,
 		}
 

@@ -56,12 +56,13 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	if acc := s.AccountKeeper.GetAccount(ctx, to); acc != nil {
+	if acc,_ := s.AccountKeeper.GetAccount(ctx, to); acc != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
-	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	baseAcc,_:= s.AccountKeeper.NewAccount(ctx, baseAccount)
+	baseAccount = (baseAcc).(*authtypes.BaseAccount)
 	baseVestingAccount := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
 
 	var vestingAccount sdk.AccountI
@@ -118,12 +119,13 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	if acc := s.AccountKeeper.GetAccount(ctx, to); acc != nil {
+	if acc,_ := s.AccountKeeper.GetAccount(ctx, to); acc != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
-	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	baseAcc,_:=s.AccountKeeper.NewAccount(ctx, baseAccount)
+	baseAccount = (baseAcc).(*authtypes.BaseAccount)
 	vestingAccount := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)
@@ -174,7 +176,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if acc := s.AccountKeeper.GetAccount(ctx, to); acc != nil {
+	if acc,_ := s.AccountKeeper.GetAccount(ctx, to); acc != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
@@ -183,7 +185,8 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
-	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	baseAcc,_:=s.AccountKeeper.NewAccount(ctx, baseAccount)
+	baseAccount =(baseAcc) .(*authtypes.BaseAccount)
 	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)

@@ -78,7 +78,7 @@ type OperationInput struct {
 
 // GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
 func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
+	account,_ := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
 	spendable := txCtx.Bankkeeper.SpendableCoins(txCtx.Context, account.GetAddress())
 
 	var fees sdk.Coins
@@ -98,7 +98,7 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 
 // GenAndDeliverTx generates a transactions and delivers it.
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
+	account,_ := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
 	tx, err := simtestutil.GenSignedMockTx(
 		txCtx.R,
 		txCtx.TxGen,

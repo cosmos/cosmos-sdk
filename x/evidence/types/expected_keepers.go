@@ -36,7 +36,7 @@ type (
 
 	// AccountKeeper define the account keeper interface contracted needed by the evidence module
 	AccountKeeper interface {
-		SetAccount(ctx context.Context, acc sdk.AccountI)
+		SetAccount(ctx context.Context, acc sdk.AccountI) error
 	}
 
 	// BankKeeper define the account keeper interface contracted needed by the evidence module

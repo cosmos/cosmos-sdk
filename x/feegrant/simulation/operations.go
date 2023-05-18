@@ -90,7 +90,7 @@ func SimulateMsgGrantAllowance(
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "fee allowance exists"), nil, nil
 		}
 
-		account := ak.GetAccount(ctx, granter.Address)
+		account ,_:= ak.GetAccount(ctx, granter.Address)
 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 		if spendableCoins.Empty() {
@@ -114,7 +114,7 @@ func SimulateMsgGrantAllowance(
 			Msg:             msg,
 			Context:         ctx,
 			SimAccount:      granter,
-			AccountKeeper:   ak,
+			AccountKeeper:   nil,
 			Bankkeeper:      bk,
 			ModuleName:      feegrant.ModuleName,
 			CoinsSpentInMsg: spendableCoins,
@@ -163,7 +163,7 @@ func SimulateMsgRevokeAllowance(
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, "Account not found"), nil, nil
 		}
 
-		account := ak.GetAccount(ctx, granter.Address)
+		account,_ := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg := feegrant.NewMsgRevokeAllowance(granterAddr, granteeAddr)
@@ -176,7 +176,7 @@ func SimulateMsgRevokeAllowance(
 			Msg:             &msg,
 			Context:         ctx,
 			SimAccount:      granter,
-			AccountKeeper:   ak,
+			AccountKeeper:   nil,
 			Bankkeeper:      bk,
 			ModuleName:      feegrant.ModuleName,
 			CoinsSpentInMsg: spendableCoins,

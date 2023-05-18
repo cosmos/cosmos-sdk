@@ -150,7 +150,7 @@ func SimulateMsgCreateValidator(
 
 		selfDelegation := sdk.NewCoin(denom, amount)
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
@@ -233,7 +233,7 @@ func SimulateMsgEditValidator(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
 		}
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		description := types.NewDescription(
@@ -303,7 +303,7 @@ func SimulateMsgDelegate(
 
 		bondAmt := sdk.NewCoin(denom, amount)
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
@@ -397,7 +397,7 @@ func SimulateMsgUndelegate(
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "account private key is nil"), nil, nil
 		}
 
-		account := ak.GetAccount(ctx, delAddr)
+		account,_ := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		txCtx := simulation.OperationInput{
@@ -586,7 +586,7 @@ func SimulateMsgBeginRedelegate(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "account private key is nil"), nil, nil
 		}
 
-		account := ak.GetAccount(ctx, delAddr)
+		account,_ := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg := types.NewMsgBeginRedelegate(

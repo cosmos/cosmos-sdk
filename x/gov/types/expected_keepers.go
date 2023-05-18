@@ -39,7 +39,7 @@ type DistributionKeeper interface {
 type AccountKeeper interface {
 	addresscodec.Codec
 
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error)
 
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI

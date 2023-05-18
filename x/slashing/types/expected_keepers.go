@@ -12,8 +12,8 @@ import (
 
 // AccountKeeper expected account keeper
 type AccountKeeper interface {
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
+	GetAccount(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error)
+	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool)) error
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

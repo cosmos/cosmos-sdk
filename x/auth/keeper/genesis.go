@@ -25,7 +25,7 @@ func (ak AccountKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	for _, acc := range accounts {
 		accNum := acc.GetAccountNumber()
 		for lastAccNum == nil || *lastAccNum < accNum {
-			n := ak.NextAccountNumber(ctx)
+			n ,_:= ak.NextAccountNumber(ctx)
 			lastAccNum = &n
 		}
 		ak.SetAccount(ctx, acc)

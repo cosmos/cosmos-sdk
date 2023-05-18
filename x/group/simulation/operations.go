@@ -255,7 +255,7 @@ func SimulateMsgCreateGroup(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc, _ := simtypes.RandomAcc(r, accounts)
-		account := ak.GetAccount(ctx, acc.Address)
+		account,_ := ak.GetAccount(ctx, acc.Address)
 		accAddr := acc.Address.String()
 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
@@ -302,7 +302,7 @@ func SimulateMsgCreateGroupWithPolicy(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc, _ := simtypes.RandomAcc(r, accounts)
-		account := ak.GetAccount(ctx, acc.Address)
+		account,_ := ak.GetAccount(ctx, acc.Address)
 		accAddr := acc.Address.String()
 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
@@ -958,7 +958,7 @@ func SimulateMsgWithdrawProposal(
 		n := randIntInRange(r, len(proposers))
 		proposerIdx := findAccount(accounts, proposers[n])
 		proposer := accounts[proposerIdx]
-		proposerAcc := ak.GetAccount(sdkCtx, proposer.Address)
+		proposerAcc,_ := ak.GetAccount(sdkCtx, proposer.Address)
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, proposer.Address)
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
@@ -1285,7 +1285,7 @@ func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 		return nil, simtypes.Account{}, nil, nil
 	}
 	acc = accounts[found]
-	account = ak.GetAccount(ctx, acc.Address)
+	account,_ = ak.GetAccount(ctx, acc.Address)
 	return groupInfo, acc, account, nil
 }
 
@@ -1317,7 +1317,7 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 		return groupInfo, nil, simtypes.Account{}, nil, nil
 	}
 	acc = accounts[idx]
-	account = ak.GetAccount(ctx, acc.Address)
+	account,_ = ak.GetAccount(ctx, acc.Address)
 	return groupInfo, groupPolicyInfo, acc, account, nil
 }
 
@@ -1339,7 +1339,7 @@ func randomMember(ctx context.Context, r *rand.Rand, k keeper.Keeper, ak group.A
 		return simtypes.Account{}, nil, err
 	}
 	acc = accounts[idx]
-	account = ak.GetAccount(sdk.UnwrapSDKContext(ctx), acc.Address)
+	account,_ = ak.GetAccount(sdk.UnwrapSDKContext(ctx), acc.Address)
 	return acc, account, nil
 }
 

@@ -19,8 +19,8 @@ type DistributionKeeper interface {
 type AccountKeeper interface {
 	address.Codec
 
-	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI // only used for simulation
+	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool)) error
+	GetAccount(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error) // only used for simulation
 
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI

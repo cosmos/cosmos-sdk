@@ -255,7 +255,7 @@ func simulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
 		}
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
@@ -337,7 +337,7 @@ func SimulateMsgDeposit(
 
 		msg := v1.NewMsgDeposit(simAccount.Address, proposalID, deposit)
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
@@ -357,7 +357,7 @@ func SimulateMsgDeposit(
 			Msg:           msg,
 			Context:       ctx,
 			SimAccount:    simAccount,
-			AccountKeeper: ak,
+			AccountKeeper: nil,
 			ModuleName:    types.ModuleName,
 		}
 
@@ -407,7 +407,7 @@ func operationSimulateMsgVote(
 		option := randomVotingOption(r)
 		msg := v1.NewMsgVote(simAccount.Address, proposalID, option, "")
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		txCtx := simulation.OperationInput{
@@ -418,7 +418,7 @@ func operationSimulateMsgVote(
 			Msg:             msg,
 			Context:         ctx,
 			SimAccount:      simAccount,
-			AccountKeeper:   ak,
+			AccountKeeper:   nil,
 			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
@@ -470,7 +470,7 @@ func operationSimulateMsgVoteWeighted(
 		options := randomWeightedVotingOptions(r)
 		msg := v1.NewMsgVoteWeighted(simAccount.Address, proposalID, options, "")
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account,_ := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		txCtx := simulation.OperationInput{
@@ -481,7 +481,7 @@ func operationSimulateMsgVoteWeighted(
 			Msg:             msg,
 			Context:         ctx,
 			SimAccount:      simAccount,
-			AccountKeeper:   ak,
+			AccountKeeper:   nil,
 			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
@@ -516,7 +516,7 @@ func SimulateMsgCancelProposal(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "invalid proposal status"), nil, nil
 		}
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		account ,_:= ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg := v1.NewMsgCancelProposal(proposal.Id, account.GetAddress().String())
@@ -529,7 +529,7 @@ func SimulateMsgCancelProposal(
 			Msg:             msg,
 			Context:         ctx,
 			SimAccount:      simAccount,
-			AccountKeeper:   ak,
+			AccountKeeper:   nil,
 			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
@@ -553,7 +553,7 @@ func randomDeposit(
 	useMinAmount bool,
 	expedited bool,
 ) (deposit sdk.Coins, skip bool, err error) {
-	account := ak.GetAccount(ctx, addr)
+	account,_ := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	if spendable.Empty() {

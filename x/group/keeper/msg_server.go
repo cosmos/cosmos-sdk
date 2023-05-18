@@ -380,7 +380,8 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 			return nil, err
 		}
 		accountAddr = sdk.AccAddress(ac.Address())
-		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
+		getAccount,_:=k.accKeeper.GetAccount(ctx, accountAddr)
+		if getAccount  != nil {
 			// handle a rare collision, in which case we just go on to the
 			// next sequence value and derive a new address.
 			continue
@@ -392,7 +393,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 			return nil, errorsmod.Wrap(err, "could not create group policy account")
 		}
 
-		acc := k.accKeeper.NewAccount(ctx, account)
+		acc,_ := k.accKeeper.NewAccount(ctx, account)
 		k.accKeeper.SetAccount(ctx, acc)
 
 		break

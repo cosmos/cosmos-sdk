@@ -51,9 +51,9 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 	}
 
 	// create the account if it is not in account state
-	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
+	granteeAcc, _ := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
-		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
+		granteeAcc, _ = k.authKeeper.NewAccountWithAddress(ctx, grantee)
 		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 

@@ -182,7 +182,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx context.Context, cb func(sdk.AccA
 // For vesting accounts, LockedCoins is delegated to the concrete vesting account
 // type.
 func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
-	acc := k.ak.GetAccount(ctx, addr)
+	acc,_ := k.ak.GetAccount(ctx, addr)
 	if acc != nil {
 		vacc, ok := acc.(types.VestingAccount)
 		if ok {
@@ -234,7 +234,7 @@ func (k BaseViewKeeper) spendableCoins(ctx context.Context, addr sdk.AccAddress)
 // case of vesting accounts, balances may change in a valid manner that would
 // otherwise yield an error from this call.
 func (k BaseViewKeeper) ValidateBalance(ctx context.Context, addr sdk.AccAddress) error {
-	acc := k.ak.GetAccount(ctx, addr)
+	acc,_ := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}

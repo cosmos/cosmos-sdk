@@ -39,7 +39,7 @@ func (s queryServer) AccountAddressByID(c context.Context, req *types.QueryAccou
 	accID := req.AccountId
 
 	ctx := sdk.UnwrapSDKContext(c)
-	address := s.k.GetAccountAddressByID(ctx, accID)
+	address,_ := s.k.GetAccountAddressByID(ctx, accID)
 	if len(address) == 0 {
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
@@ -88,7 +88,7 @@ func (s queryServer) Account(c context.Context, req *types.QueryAccountRequest) 
 	if err != nil {
 		return nil, err
 	}
-	account := s.k.GetAccount(ctx, addr)
+	account,_ := s.k.GetAccount(ctx, addr)
 	if account == nil {
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
@@ -233,7 +233,7 @@ func (s queryServer) AccountInfo(goCtx context.Context, req *types.QueryAccountI
 		return nil, err
 	}
 
-	account := s.k.GetAccount(ctx, addr)
+	account ,_:= s.k.GetAccount(ctx, addr)
 	if account == nil {
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}

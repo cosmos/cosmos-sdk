@@ -12,9 +12,9 @@ import (
 type AccountKeeper interface {
 	address.Codec
 
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	SetAccount(ctx context.Context, acc sdk.AccountI)
+	GetAccount(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error)
+	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error)
+	SetAccount(ctx context.Context, acc sdk.AccountI)error
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

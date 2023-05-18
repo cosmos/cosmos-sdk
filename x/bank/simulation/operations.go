@@ -152,7 +152,7 @@ func sendMsgSend(
 		return err
 	}
 
-	account := ak.GetAccount(ctx, from)
+	account, _ := ak.GetAccount(ctx, from)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	coins, hasNeg := spendable.SafeSub(msg.Amount...)
@@ -352,7 +352,7 @@ func sendMsgMultiSend(
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
 	for i := 0; i < len(msg.Inputs); i++ {
 		addr := sdk.MustAccAddressFromBech32(msg.Inputs[i].Address)
-		acc := ak.GetAccount(ctx, addr)
+		acc, _ := ak.GetAccount(ctx, addr)
 		accountNumbers[i] = acc.GetAccountNumber()
 		sequenceNumbers[i] = acc.GetSequence()
 	}
@@ -362,7 +362,7 @@ func sendMsgMultiSend(
 	)
 	addr := sdk.MustAccAddressFromBech32(msg.Inputs[0].Address)
 	// feePayer is the first signer, i.e. first input address
-	feePayer := ak.GetAccount(ctx, addr)
+	feePayer, _ := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
 	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins...)
 	if !hasNeg {
@@ -405,7 +405,7 @@ func randomSendFields(
 		to, _ = simtypes.RandomAcc(r, accs)
 	}
 
-	acc := ak.GetAccount(ctx, from.Address)
+	acc, _ := ak.GetAccount(ctx, from.Address)
 	if acc == nil {
 		return from, to, nil, true
 	}

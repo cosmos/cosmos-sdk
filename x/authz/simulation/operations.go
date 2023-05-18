@@ -109,7 +109,7 @@ func SimulateMsgGrant(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "granter and grantee are same"), nil, nil
 		}
 
-		granterAcc := ak.GetAccount(ctx, granter.Address)
+		granterAcc,_ := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, granter.Address)
 		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
 		if err != nil {
@@ -208,7 +208,7 @@ func SimulateMsgRevoke(
 		}
 
 		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, a.MsgTypeURL())
-		account := ak.GetAccount(ctx, granterAddr)
+		account ,_:= ak.GetAccount(ctx, granterAddr)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txCfg,
@@ -308,7 +308,7 @@ func SimulateMsgExec(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
 
-		granteeAcc := ak.GetAccount(ctx, granteeAddr)
+		granteeAcc,_ := ak.GetAccount(ctx, granteeAddr)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txCfg,

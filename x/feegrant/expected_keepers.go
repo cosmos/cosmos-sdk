@@ -15,9 +15,9 @@ type AccountKeeper interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 
-	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	SetAccount(ctx context.Context, acc sdk.AccountI)
+	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error)
+	GetAccount(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error)
+	SetAccount(ctx context.Context, acc sdk.AccountI) error
 }
 
 // BankKeeper defines the expected supply Keeper (noalias)

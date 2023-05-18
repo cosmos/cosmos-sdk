@@ -15,3 +15,10 @@ const (
 var (
 	KeyPrefixEvidence = []byte{0x00}
 )
+
+func EvidenceKey(hash []byte) (key []byte) {
+	key = make([]byte, len(KeyPrefixEvidence)+len(hash))
+	copy(key, KeyPrefixEvidence)
+	copy(key[len(KeyPrefixEvidence):], hash)
+	return
+}

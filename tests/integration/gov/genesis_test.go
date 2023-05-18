@@ -140,12 +140,16 @@ func TestImportExportQueues(t *testing.T) {
 		},
 	)
 
-	ctx2 := s2.app.BaseApp.NewContext(false, cmtproto.Header{})
-
 	s2.app.Commit(context.TODO(), &abci.RequestCommit{})
 	s2.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
 		Height: s2.app.LastBlockHeight() + 1,
 	})
+
+	s2.app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		Height: s2.app.LastBlockHeight() + 1,
+	})
+
+	ctx2 := s2.app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	params, err = s2.GovKeeper.Params.Get(ctx2)
 	assert.NilError(t, err)

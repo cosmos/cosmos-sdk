@@ -675,11 +675,20 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		if !spendable.IsAllGTE(sdk.NewCoins(fee)) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "not enough balance to pay fee"), nil, nil
 		}
+
 		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
+		if addr := k.GetMappedConsKey(ctx, newConsAddr); addr != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "can't be rotated to a consAddr already rotated"), nil, nil
+		}
 
 		valAddr := val.GetOperator()
 		if k.CheckLimitOfMaxRotationsExceed(ctx, valAddr) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "rotations limit reached within unbondin period"), nil, nil
+		}
+
+		_, found = k.GetValidatorByConsAddr(ctx, cons)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator not found"), nil, nil
 		}
 
 		_, found = k.GetValidatorByConsAddr(ctx, newConsAddr)
@@ -689,7 +698,7 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 
 		msg, err := types.NewMsgRotateConsPubKey(valAddr, acc.ConsKey.PubKey())
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable build msg"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to build msg"), nil, err
 		}
 
 		txCtx := simulation.OperationInput{

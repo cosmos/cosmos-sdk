@@ -240,10 +240,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			PubKey: oldTmPk,
 			Power:  0,
 		})
-		updates = append(updates, abci.ValidatorUpdate{
-			PubKey: newTmPk,
-			Power:  validator.ConsensusPower(powerReduction),
-		})
+
+		if validator.ConsensusPower(powerReduction) != 0 {
+			updates = append(updates, abci.ValidatorUpdate{
+				PubKey: newTmPk,
+				Power:  validator.ConsensusPower(powerReduction),
+			})
+		}
 
 		err = k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, history.Fee)
 		if err != nil {

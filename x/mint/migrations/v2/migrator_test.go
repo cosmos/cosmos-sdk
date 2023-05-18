@@ -1,7 +1,6 @@
 package v2_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,7 +36,8 @@ func TestMigrate(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(v2.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	store := runtime.NewKVStoreService(storeKey).OpenKVStore(context.Background())
+	kvStoreService := runtime.NewKVStoreService(storeKey)
+	store := kvStoreService.OpenKVStore(ctx)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
 	require.NoError(t, v2.Migrate(ctx, store, legacySubspace, cdc))

@@ -15,6 +15,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -23,7 +24,7 @@ var (
 
 	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	gas     = uint64(10000)
-	msg     = testdata.NewTestMsg(addr1, addr2)
+	msg     = banktypes.NewMsgSend(addr1, addr2, coins)
 	memo    = "foo"
 	timeout = uint64(10)
 )

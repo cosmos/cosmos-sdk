@@ -323,10 +323,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		BootstrapStateCmd(appCreator),
 	)
 
-	startCmd := StartCmd(StartCmdOptions{
-		AppCreator:      appCreator,
-		DefaultNodeHome: defaultNodeHome,
-	})
+	startCmd := StartCmd(appCreator, defaultNodeHome)
 	addStartFlags(startCmd)
 
 	rootCmd.AddCommand(

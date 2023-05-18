@@ -213,8 +213,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `simulation.NewOperationMsg` now marshals the operation msg as proto bytes instead of legacy amino JSON bytes.
   * `simulation.NewOperationMsg` is now 2-arity instead of 3-arity with the obsolete argument `codec.ProtoCodec` removed.
   * The field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.
-* (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) `StartCmd` now accepts struct `StartCmdOptions` as
-  parameter.
+* (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) Add API `StartCmdWithOptions` to create customized start command.
 
 
 ### Client Breaking Changes

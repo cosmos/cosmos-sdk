@@ -23,7 +23,6 @@ func TestRollback(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := simapp.NewSimappWithCustomOptions(t, false, options)
-	app.Commit(context.TODO(), nil)
 	ver0 := app.LastBlockHeight()
 	// commit 10 blocks
 	for i := int64(1); i <= 10; i++ {

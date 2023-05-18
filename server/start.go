@@ -20,6 +20,7 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
@@ -88,9 +89,26 @@ const (
 	FlagMempoolMaxTxs = "mempool.max-txs"
 )
 
+// StartCmdOptions defines options that can be customized in `StartCmd`
+type StartCmdOptions struct {
+	AppCreator      types.AppCreator
+	DefaultNodeHome string
+	// DBOpener can be used to customize db opening, for example customize db options or support different db backends.
+	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
+	// PostSetup can be used to setup extra services under the same cancellable context,
+	// it's not called in stand-alone mode, only for in-process mode.
+	PostSetup func(svrCtx *Context, ctx context.Context, g *errgroup.Group) error
+	// AddFlags add custom flags to start cmd
+	AddFlags func(cmd *cobra.Command)
+}
+
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // CometBFT.
-func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
+func StartCmd(opts StartCmdOptions) *cobra.Command {
+	if opts.DBOpener == nil {
+		opts.DBOpener = openDB
+	}
+
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -145,17 +163,17 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
 
 				return wrapCPUProfile(serverCtx, func() error {
-					return startStandAlone(serverCtx, appCreator)
+					return startStandAlone(serverCtx, opts)
 				})
 			}
 
 			return wrapCPUProfile(serverCtx, func() error {
-				return startInProcess(serverCtx, clientCtx, appCreator)
+				return startInProcess(serverCtx, clientCtx, opts)
 			})
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().String(flags.FlagHome, opts.DefaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
@@ -200,15 +218,19 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 	// add support for all CometBFT-specific command line options
 	cmtcmd.AddNodeFlags(cmd)
+
+	if opts.AddFlags != nil {
+		opts.AddFlags(cmd)
+	}
 	return cmd
 }
 
-func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
+func startStandAlone(svrCtx *Context, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 	home := svrCtx.Viper.GetString(flags.FlagHome)
 
-	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return err
 	}
@@ -221,7 +243,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 		return err
 	}
 
-	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+	app := opts.AppCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 
 	config, err := serverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
@@ -267,11 +289,11 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 	return g.Wait()
 }
 
-func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
+func startInProcess(svrCtx *Context, clientCtx client.Context, opts StartCmdOptions) error {
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
 
-	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return err
 	}
@@ -286,7 +308,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+	app := opts.AppCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 
 	// TODO: Move this to only be done if were launching the node. (So not in GRPC-only mode)
 	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
@@ -344,6 +366,12 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
+	}
+
+	if opts.PostSetup != nil {
+		if err := opts.PostSetup(svrCtx, ctx, g); err != nil {
+			return err
+		}
 	}
 
 	// At this point it is safe to block the process if we're in gRPC-only mode as

@@ -248,7 +248,12 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	}
 
 	defer func() {
-		if err = errors.Join(svr.Stop(), app.Close()); err != nil {
+		if err = svr.Stop(); err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+
+		if err = app.Close(); err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}

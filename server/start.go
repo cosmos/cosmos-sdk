@@ -409,7 +409,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		}
 
 		g.Go(func() error {
-			return apiSrv.Start(ctx, config)
+			return apiSrv.Start(ctx, config.API)
 		})
 	}
 

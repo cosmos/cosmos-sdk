@@ -83,8 +83,16 @@ func startInProcess(cfg Config, val *Validator) error {
 	ctx, val.cancelFn = context.WithCancel(ctx)
 	val.errGroup, ctx = errgroup.WithContext(ctx)
 
-	grpcCfg := val.AppConfig.GRPC
+	if val.APIAddress != "" {
+		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
+		val.errGroup.Go(func() error {
+			return apiSrv.Start(ctx, val.AppConfig.API)
+		})
+	}
+
+	grpcCfg := val.AppConfig.GRPC
 	if grpcCfg.Enable {
 		grpcSrv, err := servergrpc.NewGRPCServer(val.ClientCtx, app, grpcCfg)
 		if err != nil {
@@ -103,15 +111,6 @@ func startInProcess(cfg Config, val *Validator) error {
 				return servergrpc.StartGRPCWeb(ctx, logger.With("module", "grpc-web"), grpcSrv, grpcWebCfg)
 			})
 		}
-	}
-
-	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
-		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
-
-		val.errGroup.Go(func() error {
-			return apiSrv.Start(ctx, *val.AppConfig)
-		})
 	}
 
 	return nil

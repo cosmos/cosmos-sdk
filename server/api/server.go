@@ -93,16 +93,16 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 // Note, this creates a blocking process if the server is started successfully.
 // Otherwise, an error is returned. The caller is expected to provide a Context
 // that is properly canceled or closed to indicate the server should be stopped.
-func (s *Server) Start(ctx context.Context, cfg config.Config) error {
+func (s *Server) Start(ctx context.Context, cfg config.APIConfig) error {
 	s.mtx.Lock()
 
 	tmCfg := tmrpcserver.DefaultConfig()
-	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
-	tmCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
-	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
-	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
+	tmCfg.MaxOpenConnections = int(cfg.MaxOpenConnections)
+	tmCfg.ReadTimeout = time.Duration(cfg.RPCReadTimeout) * time.Second
+	tmCfg.WriteTimeout = time.Duration(cfg.RPCWriteTimeout) * time.Second
+	tmCfg.MaxBodyBytes = int64(cfg.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
+	listener, err := tmrpcserver.Listen(cfg.Address, tmCfg)
 	if err != nil {
 		s.mtx.Unlock()
 		return err
@@ -119,7 +119,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	// an error upon failure, which we'll send on the error channel that will be
 	// consumed by the for block below.
 	go func(enableUnsafeCORS bool) {
-		s.logger.Info("starting API server...", "address", cfg.API.Address)
+		s.logger.Info("starting API server...", "address", cfg.Address)
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
@@ -127,7 +127,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 		} else {
 			errCh <- tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
 		}
-	}(cfg.API.EnableUnsafeCORS)
+	}(cfg.EnableUnsafeCORS)
 
 	// Start a blocking select to wait for an indication to stop the server or that
 	// the server failed to start properly.
@@ -135,7 +135,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	case <-ctx.Done():
 		// The calling process cancelled or closed the provided context, so we must
 		// gracefully stop the API server.
-		s.logger.Info("stopping API server...", "address", cfg.API.Address)
+		s.logger.Info("stopping API server...", "address", cfg.Address)
 		return s.Close()
 
 	case err := <-errCh:

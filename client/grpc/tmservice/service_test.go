@@ -334,7 +334,7 @@ func (s *IntegrationTestSuite) TestABCIQuery() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotNil(res)
-				s.Require().Equal(res.Code, tc.expectedCode)
+				s.Require().Equal(tc.expectedCode, res.Code)
 			}
 
 			if tc.validQuery {

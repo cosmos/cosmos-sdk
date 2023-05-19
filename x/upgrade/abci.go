@@ -86,15 +86,16 @@ func BeginBlocker(k *keeper.Keeper, ctx context.Context) error {
 
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
 			logger.Error(upgradeMsg)
-			// TODO: figure out if I can convert this message into an error (will it panic the same way?)
-			panic(upgradeMsg)
+
+			// Returning an error will end up in a panic
+			return fmt.Errorf(upgradeMsg)
 		}
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
 		logger.Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
 		sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 		// TODO: figure out how to pass a block gas meter to the ApplyUpgradeFunction
-		return k.ApplyUpgrade(sdk.WrapSDKContext(sdkCtx), plan)
+		return k.ApplyUpgrade(sdkCtx, plan)
 	}
 
 	// if we have a pending upgrade, but it is not yet time, make sure we did not
@@ -102,8 +103,9 @@ func BeginBlocker(k *keeper.Keeper, ctx context.Context) error {
 	if k.HasHandler(plan.Name) {
 		downgradeMsg := fmt.Sprintf("BINARY UPDATED BEFORE TRIGGER! UPGRADE \"%s\" - in binary but not executed on chain. Downgrade your binary", plan.Name)
 		logger.Error(downgradeMsg)
-		// TODO: figure out if I can convert this message into an error (will it panic the same way?)
-		panic(downgradeMsg)
+
+		// Returning an error will end up in a panic
+		return fmt.Errorf(downgradeMsg)
 	}
 
 	return nil

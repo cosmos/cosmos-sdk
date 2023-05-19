@@ -106,34 +106,33 @@ func VerifyDoUpgrade(t *testing.T) {
 	t.Log("Verify that a panic happens at the upgrade height")
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	err := s.module.BeginBlock(newCtx)
+	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
 	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		return vm, nil
 	})
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	VerifyCleared(t, newCtx)
 }
 
 func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
 	t.Log("Verify that a panic happens at the upgrade height")
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+
+	err := s.module.BeginBlock(newCtx)
+	require.ErrorContains(t, err, "UPGRADE \""+proposalName+"\" NEEDED at height: ")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
 	s.keeper.SetUpgradeHandler(proposalName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		return vm, nil
 	})
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	VerifyCleared(t, newCtx)
 }
@@ -148,25 +147,24 @@ func TestHaltIfTooNew(t *testing.T) {
 	})
 
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+
+	err := s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we panic if we have a registered handler ahead of time")
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}}) //nolint:staticcheck // we're testing deprecated code
+	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+
+	err = s.module.BeginBlock(newCtx)
+	require.EqualError(t, err, "BINARY UPDATED BEFORE TRIGGER! UPGRADE \"future\" - in binary but not executed on chain. Downgrade your binary")
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we no longer panic if the plan is on time")
 
 	futCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 3).WithBlockTime(time.Now())
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(futCtx)
-	})
+	err = s.module.BeginBlock(futCtx)
+	require.NoError(t, err)
 	require.Equal(t, 1, called)
 
 	VerifyCleared(t, futCtx)
@@ -369,9 +367,9 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 	t.Log("Verify if upgrade happens without skip upgrade")
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+
+	err = s.module.BeginBlock(newCtx)
+	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height:")
 
 	VerifyDoUpgrade(t)
 	VerifyDone(t, s.ctx, "test")
@@ -416,7 +414,7 @@ func TestBinaryVersion(t *testing.T) {
 	testCases := []struct {
 		name        string
 		preRun      func() sdk.Context
-		expectPanic bool
+		expectError bool
 	}{
 		{
 			"test not panic: no scheduled upgrade or applied upgrade is present",
@@ -460,14 +458,11 @@ func TestBinaryVersion(t *testing.T) {
 
 	for _, tc := range testCases {
 		ctx := tc.preRun()
-		if tc.expectPanic {
-			require.Panics(t, func() {
-				s.module.BeginBlock(ctx)
-			})
+		err := s.module.BeginBlock(ctx)
+		if tc.expectError {
+			require.Error(t, err)
 		} else {
-			require.NotPanics(t, func() {
-				s.module.BeginBlock(ctx)
-			})
+			require.NoError(t, err)
 		}
 	}
 }

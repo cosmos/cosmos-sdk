@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/core v0.7.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	pgregory.net/rapid v0.5.7
 )
 

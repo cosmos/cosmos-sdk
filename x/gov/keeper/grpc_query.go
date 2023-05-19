@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
@@ -19,9 +20,9 @@ import (
 
 var _ v1.QueryServer = queryServer{}
 
-type queryServer struct{ k Keeper }
+type queryServer struct{ k *Keeper }
 
-func NewQueryServer(k Keeper) v1.QueryServer {
+func NewQueryServer(k *Keeper) v1.QueryServer {
 	return queryServer{k: k}
 }
 
@@ -283,7 +284,7 @@ type legacyQueryServer struct{ qs v1.QueryServer }
 
 // NewLegacyQueryServer returns an implementation of the v1beta1 legacy QueryServer interface.
 func NewLegacyQueryServer(k *Keeper) v1beta1.QueryServer {
-	return &legacyQueryServer{qs: NewQueryServer(*k)}
+	return &legacyQueryServer{qs: NewQueryServer(k)}
 }
 
 func (q legacyQueryServer) Proposal(ctx context.Context, req *v1beta1.QueryProposalRequest) (*v1beta1.QueryProposalResponse, error) {

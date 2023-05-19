@@ -57,6 +57,9 @@ type (
 
 		// Return the snapshot manager
 		SnapshotManager() *snapshots.Manager
+
+		// Close is called in start cmd to gracefully cleanup resources.
+		Close() error
 	}
 
 	// ApplicationQueryService defines an extension of the Application interface

@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (gov) [#15979](https://github.com/cosmos/cosmos-sdk/pull/15979) Improve gov error message when failing to convert v1 proposal to v1beta1.
 * (server) [#16061](https://github.com/cosmos/cosmos-sdk/pull/16061) add comet bootstrap command
 * (store) [#16067](https://github.com/cosmos/cosmos-sdk/pull/16067) Add local snapshots management commands.
+* (baseapp) [#16193](https://github.com/cosmos/cosmos-sdk/pull/16193) Add `Close` method to `BaseApp` for custom app to cleanup resource in graceful shutdown.
 
 ### Bug Fixes
 

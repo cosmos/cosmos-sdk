@@ -261,9 +261,11 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 		if err != nil {
 			return err
 		}
-		// re-assign for making the client available below
-		// do not use := to avoid shadowing clientCtx
-		clientCtx = clientCtx.WithClient(rpcclient)
+
+		if err = app.Close(); err != nil {
+			tmos.Exit(err.Error())
+		}
+	}()
 
 		// use the provided clientCtx to register the services
 		app.RegisterTxService(clientCtx)
@@ -555,6 +557,7 @@ func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
+			_ = app.Close()
 		}
 
 		if apiSrv != nil {

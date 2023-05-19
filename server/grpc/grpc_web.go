@@ -14,9 +14,9 @@ import (
 )
 
 // StartGRPCWeb starts a gRPC-Web server on the given address.
-func StartGRPCWeb(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, config config.Config) error {
+func StartGRPCWeb(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, config config.GRPCWebConfig) error {
 	var options []grpcweb.Option
-	if config.GRPCWeb.EnableUnsafeCORS {
+	if config.EnableUnsafeCORS {
 		options = append(options,
 			grpcweb.WithOriginFunc(func(origin string) bool {
 				return true
@@ -26,14 +26,14 @@ func StartGRPCWeb(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, 
 
 	wrappedServer := grpcweb.WrapServer(grpcSrv, options...)
 	grpcWebSrv := &http.Server{
-		Addr:              config.GRPCWeb.Address,
+		Addr:              config.Address,
 		Handler:           wrappedServer,
 		ReadHeaderTimeout: 500 * time.Millisecond,
 	}
 
 	errCh := make(chan error)
 	go func() {
-		logger.Info("starting gRPC web server...", "address", config.GRPCWeb.Address)
+		logger.Info("starting gRPC web server...", "address", config.Address)
 		if err := grpcWebSrv.ListenAndServe(); err != nil {
 			errCh <- fmt.Errorf("[grpc] failed to serve: %w", err)
 		}
@@ -45,7 +45,7 @@ func StartGRPCWeb(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, 
 	case <-ctx.Done():
 		// The calling process cancelled or closed the provided context, so we must
 		// gracefully stop the gRPC-web server.
-		logger.Info("stopping gRPC web server...", "address", config.GRPCWeb.Address)
+		logger.Info("stopping gRPC web server...", "address", config.Address)
 		grpcWebSrv.Close()
 		return nil
 

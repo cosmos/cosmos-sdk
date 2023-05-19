@@ -429,7 +429,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 
 		if config.GRPCWeb.Enable {
 			g.Go(func() error {
-				return servergrpc.StartGRPCWeb(ctx, svrCtx.Logger.With("module", "grpc-web"), grpcSrv, config)
+				return servergrpc.StartGRPCWeb(ctx, svrCtx.Logger.With("module", "grpc-web"), grpcSrv, config.GRPCWeb)
 			})
 		}
 	}

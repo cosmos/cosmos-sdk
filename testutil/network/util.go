@@ -97,7 +97,12 @@ func startInProcess(cfg Config, val *Validator) error {
 			return servergrpc.StartGRPCServer(ctx, logger.With("module", "grpc-server"), grpcCfg, grpcSrv)
 		})
 
-		val.grpc = grpcSrv
+		grpcWebCfg := val.AppConfig.GRPCWeb
+		if grpcWebCfg.Enable {
+			val.errGroup.Go(func() error {
+				return servergrpc.StartGRPCWeb(ctx, logger.With("module", "grpc-web"), grpcSrv, grpcWebCfg)
+			})
+		}
 	}
 
 	if val.APIAddress != "" {
@@ -107,8 +112,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.errGroup.Go(func() error {
 			return apiSrv.Start(ctx, *val.AppConfig)
 		})
-
-		val.api = apiSrv
 	}
 
 	return nil

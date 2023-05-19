@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -23,7 +22,6 @@ import (
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,7 +33,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -166,9 +163,6 @@ type (
 		RPCClient  tmclient.Client
 
 		tmNode   *node.Node
-		api      *api.Server
-		grpc     *grpc.Server
-		grpcWeb  *http.Server
 		errGroup *errgroup.Group
 		cancelFn context.CancelFunc
 	}
@@ -608,10 +602,6 @@ func (n *Network) Cleanup() {
 			if err := v.tmNode.Stop(); err != nil {
 				n.Logger.Log("failed to stop validator CometBFT node", "err", err)
 			}
-		}
-
-		if v.grpcWeb != nil {
-			_ = v.grpcWeb.Close()
 		}
 	}
 

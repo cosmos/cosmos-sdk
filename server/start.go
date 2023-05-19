@@ -3,7 +3,6 @@ package server
 // DONTCOVER
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -242,7 +241,11 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	}
 
 	defer func() {
-		if err = errors.Join(svr.Stop(), app.Close()); err != nil {
+		if err = svr.Stop(); err != nil {
+			tmos.Exit(err.Error())
+		}
+
+		if err = app.Close(); err != nil {
 			tmos.Exit(err.Error())
 		}
 	}()

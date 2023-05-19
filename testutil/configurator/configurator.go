@@ -6,6 +6,7 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
@@ -43,6 +44,7 @@ var beginBlockOrder = []string{
 	"params",
 	"consensus",
 	"vesting",
+	"circuit",
 }
 
 var endBlockersOrder = []string{
@@ -64,6 +66,7 @@ var endBlockersOrder = []string{
 	"consensus",
 	"upgrade",
 	"vesting",
+	"circuit",
 }
 
 var initGenesisOrder = []string{
@@ -85,6 +88,7 @@ var initGenesisOrder = []string{
 	"consensus",
 	"upgrade",
 	"vesting",
+	"circuit",
 }
 
 type appConfig struct {
@@ -260,6 +264,15 @@ func NFTModule() ModuleOption {
 		config.moduleConfigs["nft"] = &appv1alpha1.ModuleConfig{
 			Name:   "nft",
 			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
+		}
+	}
+}
+
+func CircuitModule() ModuleOption {
+	return func(config *appConfig) {
+		config.moduleConfigs["circuit"] = &appv1alpha1.ModuleConfig{
+			Name:   "circuit",
+			Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
 		}
 	}
 }

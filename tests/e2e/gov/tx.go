@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -339,7 +340,7 @@ func (s *E2ETestSuite) TestNewCmdCancelProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 17,
+			false, 1,
 		},
 	}
 
@@ -374,7 +375,7 @@ func (s *E2ETestSuite) TestNewCmdCancelProposal() {
 					s.Require().NoError(err)
 					remainingAmount := v1.DefaultMinDepositTokens.Mul(
 						v1.DefaultProposalCancelRatio.Mul(sdk.MustNewDecFromStr("100")).TruncateInt(),
-					).Quo(sdk.NewIntFromUint64(100))
+					).Quo(math.NewIntFromUint64(100))
 
 					// new balance = old balance + remaining amount from proposal deposit - txFee (cancel proposal)
 					txFee := sdk.NewInt(10)
@@ -430,7 +431,7 @@ func (s *E2ETestSuite) TestNewCmdDeposit() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 2,
+			false, 1,
 		},
 		{
 			"deposit on existing proposal",

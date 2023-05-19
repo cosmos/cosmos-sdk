@@ -242,6 +242,9 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
+	_, err := s.network.WaitForHeight(2)
+	s.Require().NoError(err)
+
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 

@@ -262,6 +262,10 @@ func (s *IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
 }
 
 func (s *IntegrationTestSuite) TestABCIQuery() {
+	// proof query don't work on height 1
+	_, err := s.network.WaitForHeight(2)
+	s.Require().NoError(err)
+
 	testCases := []struct {
 		name         string
 		req          *tmservice.ABCIQueryRequest
@@ -332,6 +336,7 @@ func (s *IntegrationTestSuite) TestABCIQuery() {
 				s.Require().Error(err)
 				s.Require().Nil(res)
 			} else {
+				fmt.Println("res", res)
 				s.Require().NoError(err)
 				s.Require().NotNil(res)
 				s.Require().Equal(tc.expectedCode, res.Code)

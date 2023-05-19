@@ -35,7 +35,7 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 			Address: addressPool[i].String(),
 			Weight:  "1",
 		}
-		s.accountKeeper.EXPECT().GetAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+		s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	}
 
 	g, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -1633,7 +1633,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
-	noMinExecPeriodPolicyAddr, err := s.accountKeeper.GetAddressCodec().StringToBytes(res.Address)
+	noMinExecPeriodPolicyAddr, err := s.accountKeeper.AddressCodec().StringToBytes(res.Address)
 	s.Require().NoError(err)
 
 	// Create a new group policy with super high threshold
@@ -2000,7 +2000,7 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	accountAddr := policyRes.Address
 	// module account will be created and returned
-	groupPolicy, err := s.accountKeeper.GetAddressCodec().StringToBytes(accountAddr)
+	groupPolicy, err := s.accountKeeper.AddressCodec().StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 

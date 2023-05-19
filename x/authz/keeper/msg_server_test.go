@@ -27,7 +27,7 @@ func (suite *TestSuite) TestGrant() {
 	addrs := suite.createAccounts(2)
 	curBlockTime := ctx.BlockTime()
 
-	suite.accountKeeper.EXPECT().GetAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	suite.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	oneHour := curBlockTime.Add(time.Hour)
 	oneYear := curBlockTime.AddDate(1, 0, 0)

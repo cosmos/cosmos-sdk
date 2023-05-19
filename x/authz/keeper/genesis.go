@@ -14,11 +14,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 			continue
 		}
 
-		grantee, err := k.authKeeper.GetAddressCodec().StringToBytes(entry.Grantee)
+		grantee, err := k.authKeeper.AddressCodec().StringToBytes(entry.Grantee)
 		if err != nil {
 			panic(err)
 		}
-		granter, err := k.authKeeper.GetAddressCodec().StringToBytes(entry.Granter)
+		granter, err := k.authKeeper.AddressCodec().StringToBytes(entry.Granter)
 		if err != nil {
 			panic(err)
 		}

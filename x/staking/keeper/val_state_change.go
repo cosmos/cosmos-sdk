@@ -41,7 +41,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress, err := k.authKeeper.GetAddressCodec().StringToBytes(dvPair.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dvPair.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -72,7 +72,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress, err := k.authKeeper.GetAddressCodec().StringToBytes(dvvTriplet.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dvvTriplet.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}

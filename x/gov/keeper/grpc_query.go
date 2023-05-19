@@ -67,7 +67,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 
 		// match voter address (if supplied)
 		if len(req.Voter) > 0 {
-			voter, err := q.k.authKeeper.GetAddressCodec().StringToBytes(req.Voter)
+			voter, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Voter)
 			if err != nil {
 				return false, err
 			}
@@ -79,7 +79,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 
 		// match depositor (if supplied)
 		if len(req.Depositor) > 0 {
-			depositor, err := q.k.authKeeper.GetAddressCodec().StringToBytes(req.Depositor)
+			depositor, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Depositor)
 			if err != nil {
 				return false, err
 			}
@@ -116,7 +116,7 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty voter address")
 	}
 
-	voter, err := q.k.authKeeper.GetAddressCodec().StringToBytes(req.Voter)
+	voter, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (q queryServer) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (
 		return nil, status.Error(codes.InvalidArgument, "empty depositor address")
 	}
 
-	depositor, err := q.k.authKeeper.GetAddressCodec().StringToBytes(req.Depositor)
+	depositor, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Depositor)
 	if err != nil {
 		return nil, err
 	}

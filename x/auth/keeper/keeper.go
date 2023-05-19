@@ -55,7 +55,7 @@ type AccountKeeperI interface {
 	// GetModulePermissions fetches per-module account permissions
 	GetModulePermissions() map[string]types.PermissionsForAddress
 
-	GetAddressCodec() address.Codec
+	AddressCodec() address.Codec
 }
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
@@ -117,9 +117,9 @@ func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
 
-// GetAddressCodec returns the x/auth module's address.
+// AddressCodec returns the x/auth module's address.
 // x/auth is tied to bech32 encoded user accounts
-func (ak AccountKeeper) GetAddressCodec() address.Codec {
+func (ak AccountKeeper) AddressCodec() address.Codec {
 	return ak.addressCodec
 }
 

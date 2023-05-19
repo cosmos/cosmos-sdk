@@ -271,7 +271,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 			panic(err)
 		}
 
-		delegatorAddress, err := k.authKeeper.GetAddressCodec().StringToBytes(redelegation.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redelegation.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}

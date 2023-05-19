@@ -72,7 +72,7 @@ func TestMigrateStore(t *testing.T) {
 		{
 			"VotesKeyPrefix",
 			v1.VoteKey(proposalID, addr1), oldVoteValue,
-			types.VoteKey(proposalID, addr1), newVoteValue,
+			voteKey(proposalID, addr1), newVoteValue,
 		},
 	}
 
@@ -102,4 +102,8 @@ func TestMigrateStore(t *testing.T) {
 // NOTE(tip): legacy, eventually remove me.
 func depositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
 	return append(append(types.DepositsKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), address.MustLengthPrefix(depositorAddr.Bytes())...)
+}
+
+func voteKey(proposalID uint64, addr sdk.AccAddress) []byte {
+	return append(append(types.VotesKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), address.MustLengthPrefix(addr.Bytes())...)
 }

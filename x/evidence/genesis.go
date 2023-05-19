@@ -24,7 +24,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
 		if !ok {
 			panic("expected evidence")
 		}
-		if _, ok := k.GetEvidence(ctx, evi.Hash()); ok {
+		if _, err := k.GetEvidence(ctx, evi.Hash()); err == nil {
 			panic(fmt.Sprintf("evidence with hash %s already exists", evi.Hash()))
 		}
 

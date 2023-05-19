@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
@@ -120,14 +122,21 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 
 	s2 := suite{}
+	db := dbm.NewMemDB()
+	conf2 := simtestutil.DefaultStartUpConfig()
+	conf2.DB = db
 	s2.app, err = simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			appConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		simtestutil.DefaultStartUpConfig(),
+		conf2,
 		&s2.AccountKeeper, &s2.BankKeeper, &s2.DistrKeeper, &s2.GovKeeper, &s2.StakingKeeper, &s2.cdc, &s2.appBuilder,
 	)
+	assert.NilError(t, err)
+
+	clearDB(t, db)
+	err = s2.app.CommitMultiStore().LoadLatestVersion()
 	assert.NilError(t, err)
 
 	s2.app.InitChain(
@@ -172,4 +181,19 @@ func TestImportExportQueues(t *testing.T) {
 	proposal2, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID2)
 	assert.NilError(t, err)
 	assert.Assert(t, proposal2.Status == v1.StatusRejected)
+}
+
+func clearDB(t *testing.T, db *dbm.MemDB) {
+	iter, err := db.Iterator(nil, nil)
+	assert.NilError(t, err)
+	defer iter.Close()
+
+	var keys [][]byte
+	for ; iter.Valid(); iter.Next() {
+		keys = append(keys, iter.Key())
+	}
+
+	for _, k := range keys {
+		assert.NilError(t, db.Delete(k))
+	}
 }

@@ -1,6 +1,8 @@
 package group
 
 import (
+	"fmt"
+
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -23,7 +25,11 @@ var ORMSchema = &ormv1alpha1.ModuleSchemaDescriptor{
 func ProposalToPulsar(proposal Proposal) *groupv1.Proposal {
 	var messages []*anypb.Any
 	for _, msg := range proposal.Messages {
-		messages = append(messages, codectypes.GogoAnyToAnyV2(msg))
+		m := new(anypb.Any)
+		if err := codectypes.GogoToPulsarSlow(msg, m); err != nil {
+			panic(fmt.Sprintf("failed to transform proposal msg: %s", err))
+		}
+		messages = append(messages, m)
 	}
 
 	return &groupv1.Proposal{
@@ -46,7 +52,11 @@ func ProposalToPulsar(proposal Proposal) *groupv1.Proposal {
 func ProposalFromPulsar(proposal *groupv1.Proposal) Proposal {
 	var messages []*codectypes.Any
 	for _, msg := range proposal.Messages {
-		messages = append(messages, codectypes.AnyV2ToGogoAny(msg))
+		m := new(codectypes.Any)
+		if err := codectypes.PulsarToGogoSlow(msg, proposal); err != nil {
+			panic(fmt.Sprintf("failed to transform proposal msg: %s", err))
+		}
+		messages = append(messages, m)
 	}
 
 	return Proposal{
@@ -89,29 +99,45 @@ func GroupInfoToPulsar(groupInfo GroupInfo) *groupv1.GroupInfo { //nolint:revive
 }
 
 func GroupPolicyInfoFromPulsar(groupPolicyInfo *groupv1.GroupPolicyInfo) GroupPolicyInfo { //nolint:revive // naming is ok
-	groupPolicy := GroupPolicyInfo{
+	result := GroupPolicyInfo{
 		Address:             groupPolicyInfo.Address,
 		GroupId:             groupPolicyInfo.GroupId,
 		Admin:               groupPolicyInfo.Admin,
 		Metadata:            groupPolicyInfo.Metadata,
 		Version:             groupPolicyInfo.Version,
 		GroupPolicySequence: groupPolicyInfo.GroupPolicySequence,
-		DecisionPolicy:      codectypes.AnyV2ToGogoAny(groupPolicyInfo.DecisionPolicy),
 	}
 
-	return groupPolicy
+	if groupPolicyInfo.DecisionPolicy != nil {
+		decisionPolicy := new(codectypes.Any)
+		if err := codectypes.PulsarToGogoSlow(groupPolicyInfo.DecisionPolicy, decisionPolicy); err != nil {
+			panic(fmt.Sprintf("failed to transform decision policy: %s", err))
+		}
+		result.DecisionPolicy = decisionPolicy
+	}
+
+	return result
 }
 
 func GroupPolicyInfoToPulsar(groupPolicyInfo GroupPolicyInfo) *groupv1.GroupPolicyInfo { //nolint:revive // naming is ok
-	return &groupv1.GroupPolicyInfo{
+	result := &groupv1.GroupPolicyInfo{
 		Address:             groupPolicyInfo.Address,
 		GroupId:             groupPolicyInfo.GroupId,
 		Admin:               groupPolicyInfo.Admin,
 		Metadata:            groupPolicyInfo.Metadata,
 		Version:             groupPolicyInfo.Version,
-		DecisionPolicy:      codectypes.GogoAnyToAnyV2(groupPolicyInfo.DecisionPolicy),
 		GroupPolicySequence: groupPolicyInfo.GroupPolicySequence,
 	}
+
+	if groupPolicyInfo.DecisionPolicy != nil {
+		decisionPolicy := new(anypb.Any)
+		if err := codectypes.GogoToPulsarSlow(groupPolicyInfo.DecisionPolicy, decisionPolicy); err != nil {
+			panic(fmt.Sprintf("failed to transform decision policy: %s", err))
+		}
+		result.DecisionPolicy = decisionPolicy
+	}
+
+	return result
 }
 
 func GroupMemberFromPulsar(groupMember *groupv1.GroupMember) GroupMember { //nolint:revive // naming is ok

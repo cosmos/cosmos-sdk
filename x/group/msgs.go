@@ -125,7 +125,7 @@ func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMet
 func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected DecisionPolicy interface, got %T", m.DecisionPolicy.GetCachedValue())
 	}
 	return decisionPolicy, nil
 }
@@ -240,7 +240,7 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) GetSigners() []sdk.AccAddress {
 func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected DecisionPolicy interface, got %T", m.DecisionPolicy.GetCachedValue())
 	}
 
 	return decisionPolicy, nil
@@ -309,7 +309,7 @@ func (m *MsgCreateGroupPolicy) GetMetadata() string {
 func (m *MsgCreateGroupPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected DecisionPolicy interface, got %T", m.DecisionPolicy.GetCachedValue())
 	}
 	return decisionPolicy, nil
 }

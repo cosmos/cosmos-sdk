@@ -20,6 +20,7 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
@@ -88,9 +89,31 @@ const (
 	FlagMempoolMaxTxs = "mempool.max-txs"
 )
 
+// StartCmdOptions defines options that can be customized in `StartCmdWithOptions`,
+type StartCmdOptions struct {
+	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
+	// default to the builtin db opener.
+	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
+	// PostSetup can be used to setup extra services under the same cancellable context,
+	// it's not called in stand-alone mode, only for in-process mode.
+	PostSetup func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
+	// AddFlags add custom flags to start cmd
+	AddFlags func(cmd *cobra.Command)
+}
+
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // CometBFT.
 func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
+	return StartCmdWithOptions(appCreator, defaultNodeHome, StartCmdOptions{})
+}
+
+// StartCmdWithOptions runs the service passed in, either stand-alone or in-process with
+// CometBFT.
+func StartCmdWithOptions(appCreator types.AppCreator, defaultNodeHome string, opts StartCmdOptions) *cobra.Command {
+	if opts.DBOpener == nil {
+		opts.DBOpener = openDB
+	}
+
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -145,12 +168,12 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
 
 				return wrapCPUProfile(serverCtx, func() error {
-					return startStandAlone(serverCtx, appCreator)
+					return startStandAlone(serverCtx, appCreator, opts)
 				})
 			}
 
 			return wrapCPUProfile(serverCtx, func() error {
-				return startInProcess(serverCtx, clientCtx, appCreator)
+				return startInProcess(serverCtx, clientCtx, appCreator, opts)
 			})
 		},
 	}
@@ -200,15 +223,19 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 	// add support for all CometBFT-specific command line options
 	cmtcmd.AddNodeFlags(cmd)
+
+	if opts.AddFlags != nil {
+		opts.AddFlags(cmd)
+	}
 	return cmd
 }
 
-func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
+func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 	home := svrCtx.Viper.GetString(flags.FlagHome)
 
-	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return err
 	}
@@ -267,11 +294,11 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 	return g.Wait()
 }
 
-func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
+func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, opts StartCmdOptions) error {
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
 
-	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return err
 	}
@@ -344,6 +371,12 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
+	}
+
+	if opts.PostSetup != nil {
+		if err := opts.PostSetup(svrCtx, clientCtx, ctx, g); err != nil {
+			return err
+		}
 	}
 
 	// At this point it is safe to block the process if we're in gRPC-only mode as

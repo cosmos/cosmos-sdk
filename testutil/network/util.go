@@ -94,7 +94,7 @@ func startInProcess(cfg Config, val *Validator) error {
 
 		grpcWebCfg := val.AppConfig.GRPCWeb
 		if grpcWebCfg.Enable {
-			g.Go(func() error {
+			val.errGroup.Go(func() error {
 				return servergrpc.StartGRPCWeb(ctx, logger.With("module", "grpc-web"), grpcSrv, grpcWebCfg)
 			})
 		}

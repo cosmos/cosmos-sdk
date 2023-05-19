@@ -10,6 +10,21 @@ import (
 	"runtime/pprof"
 	"time"
 
+<<<<<<< HEAD
+=======
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"github.com/armon/go-metrics"
+	"github.com/cometbft/cometbft/abci/server"
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	"github.com/cometbft/cometbft/proxy"
+	"github.com/cometbft/cometbft/rpc/client/local"
+	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
+>>>>>>> de75e568b (feat: make StartCmd more customizable (#16209))
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/cometbft/commands"
@@ -82,9 +97,31 @@ const (
 	flagGRPCWebAddress = "grpc-web.address"
 )
 
+// StartCmdOptions defines options that can be customized in `StartCmdWithOptions`,
+type StartCmdOptions struct {
+	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
+	// default to the builtin db opener.
+	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
+	// PostSetup can be used to setup extra services under the same cancellable context,
+	// it's not called in stand-alone mode, only for in-process mode.
+	PostSetup func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
+	// AddFlags add custom flags to start cmd
+	AddFlags func(cmd *cobra.Command)
+}
+
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
 func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
+	return StartCmdWithOptions(appCreator, defaultNodeHome, StartCmdOptions{})
+}
+
+// StartCmdWithOptions runs the service passed in, either stand-alone or in-process with
+// CometBFT.
+func StartCmdWithOptions(appCreator types.AppCreator, defaultNodeHome string, opts StartCmdOptions) *cobra.Command {
+	if opts.DBOpener == nil {
+		opts.DBOpener = openDB
+	}
+
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -138,13 +175,18 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			if !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
 				return wrapCPUProfile(serverCtx, func() error {
-					return startStandAlone(serverCtx, appCreator)
+					return startStandAlone(serverCtx, appCreator, opts)
 				})
 			}
 
+<<<<<<< HEAD
 			// amino is needed here for backwards compatibility of REST routes
 			err = wrapCPUProfile(serverCtx, func() error {
 				return startInProcess(serverCtx, clientCtx, appCreator)
+=======
+			return wrapCPUProfile(serverCtx, func() error {
+				return startInProcess(serverCtx, clientCtx, appCreator, opts)
+>>>>>>> de75e568b (feat: make StartCmd more customizable (#16209))
 			})
 			errCode, ok := err.(ErrorCode)
 			if !ok {
@@ -195,6 +237,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 
+<<<<<<< HEAD
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
@@ -206,6 +249,32 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	home := ctx.Viper.GetString(flags.FlagHome)
 
 	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+=======
+	// support old flags name for backwards compatibility
+	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+		if name == "with-tendermint" {
+			name = flagWithComet
+		}
+
+		return pflag.NormalizedName(name)
+	})
+
+	// add support for all CometBFT-specific command line options
+	cmtcmd.AddNodeFlags(cmd)
+
+	if opts.AddFlags != nil {
+		opts.AddFlags(cmd)
+	}
+	return cmd
+}
+
+func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) error {
+	addr := svrCtx.Viper.GetString(flagAddress)
+	transport := svrCtx.Viper.GetString(flagTransport)
+	home := svrCtx.Viper.GetString(flags.FlagHome)
+
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
+>>>>>>> de75e568b (feat: make StartCmd more customizable (#16209))
 	if err != nil {
 		return err
 	}
@@ -235,11 +304,138 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
 
+<<<<<<< HEAD
 	err = svr.Start()
+=======
+	ctx, cancelFn := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
+
+	// listen for quit signals so the calling parent process can gracefully exit
+	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+
+	g.Go(func() error {
+		if err := svr.Start(); err != nil {
+			svrCtx.Logger.Error("failed to start out-of-process ABCI server", "err", err)
+			return err
+		}
+
+		// Wait for the calling process to be canceled or close the provided context,
+		// so we can gracefully stop the ABCI server.
+		<-ctx.Done()
+		svrCtx.Logger.Info("stopping the ABCI server...")
+		return errors.Join(svr.Stop(), app.Close())
+	})
+
+	return g.Wait()
+}
+
+func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, opts StartCmdOptions) error {
+	cmtCfg := svrCtx.Config
+	home := cmtCfg.RootDir
+
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
+>>>>>>> de75e568b (feat: make StartCmd more customizable (#16209))
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
 
+<<<<<<< HEAD
+=======
+	svrCfg, err := getAndValidateConfig(svrCtx)
+	if err != nil {
+		return err
+	}
+
+	traceWriter, traceWriterCleanup, err := setupTraceWriter(svrCtx)
+	if err != nil {
+		return err
+	}
+
+	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+
+	// TODO: Move this to only be done if were launching the node. (So not in GRPC-only mode)
+	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
+	if err != nil {
+		return err
+	}
+
+	var (
+		tmNode   *node.Node
+		gRPCOnly = svrCtx.Viper.GetBool(flagGRPCOnly)
+	)
+
+	if gRPCOnly {
+		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
+		svrCfg.GRPC.Enable = true
+	} else {
+		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
+		tmNode, err = startCmtNode(cmtCfg, nodeKey, app, svrCtx)
+		if err != nil {
+			return err
+		}
+
+		// Add the tx service to the gRPC router. We only need to register this
+		// service if API or gRPC is enabled, and avoid doing so in the general
+		// case, because it spawns a new local CometBFT RPC client.
+		if svrCfg.API.Enable || svrCfg.GRPC.Enable {
+			// Re-assign for making the client available below do not use := to avoid
+			// shadowing the clientCtx variable.
+			clientCtx = clientCtx.WithClient(local.New(tmNode))
+
+			app.RegisterTxService(clientCtx)
+			app.RegisterTendermintService(clientCtx)
+			app.RegisterNodeService(clientCtx, svrCfg)
+		}
+	}
+
+	metrics, err := startTelemetry(svrCfg)
+	if err != nil {
+		return err
+	}
+
+	emitServerInfoMetrics()
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
+
+	// listen for quit signals so the calling parent process can gracefully exit
+	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+
+	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	if err != nil {
+		return err
+	}
+
+	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	if err != nil {
+		return err
+	}
+
+	if opts.PostSetup != nil {
+		if err := opts.PostSetup(svrCtx, clientCtx, ctx, g); err != nil {
+			return err
+		}
+	}
+
+	// At this point it is safe to block the process if we're in gRPC-only mode as
+	// we do not need to handle any CometBFT related processes.
+	if gRPCOnly {
+		// wait for signal capture and gracefully return
+		return g.Wait()
+	}
+
+	// In case the operator has both gRPC and API servers disabled, there is
+	// nothing blocking this root process, so we need to block manually, so we'll
+	// create an empty blocking loop.
+	g.Go(func() error {
+		<-ctx.Done()
+		return nil
+	})
+
+	// deferred cleanup function
+	// TODO: Make a generic cleanup function that takes in several func(), and runs them all.
+	// then we defer that.
+>>>>>>> de75e568b (feat: make StartCmd more customizable (#16209))
 	defer func() {
 		if err = svr.Stop(); err != nil {
 			tmos.Exit(err.Error())

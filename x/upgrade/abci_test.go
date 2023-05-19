@@ -488,7 +488,7 @@ func TestDowngradeVerification(t *testing.T) {
 	})
 
 	// successful upgrade.
-	err = s.module.BeginBlock(ctx)
+	err = m.BeginBlock(ctx)
 	require.NoError(t, err)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 

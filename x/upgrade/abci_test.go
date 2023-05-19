@@ -205,9 +205,8 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 func TestNoSpuriousUpgrades(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(s.ctx)
-	})
+	err := s.module.BeginBlock(s.ctx)
+	require.NoError(t, err)
 }
 
 func TestPlanStringer(t *testing.T) {
@@ -265,18 +264,16 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
 
 	newCtx = newCtx.WithBlockHeight(skipOne)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	t.Log("Verify a second proposal also is being cleared")
 	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop2", Plan: types.Plan{Name: "test2", Height: skipTwo}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 
 	newCtx = newCtx.WithBlockHeight(skipTwo)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	// To ensure verification is being done only after both upgrades are cleared
 	t.Log("Verify if both proposals are cleared")
@@ -302,9 +299,8 @@ func TestUpgradeSkippingOne(t *testing.T) {
 
 	// Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	t.Log("Verify the second proposal is not skipped")
 	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop2", Plan: types.Plan{Name: "test2", Height: skipTwo}}) //nolint:staticcheck // we're testing deprecated code
@@ -336,18 +332,16 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 
 	// Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	// A new proposal with height in skipUpgradeHeights
 	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop2", Plan: types.Plan{Name: "test2", Height: skipTwo}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 	// Setting block height of proposal test2
 	newCtx = newCtx.WithBlockHeight(skipTwo)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	t.Log("Verify a new proposal is not skipped")
 	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop3", Plan: types.Plan{Name: "test3", Height: skipThree}}) //nolint:staticcheck // we're testing deprecated code
@@ -494,9 +488,8 @@ func TestDowngradeVerification(t *testing.T) {
 	})
 
 	// successful upgrade.
-	require.NotPanics(t, func() {
-		m.BeginBlock(ctx)
-	})
+	err = s.module.BeginBlock(ctx)
+	require.NoError(t, err)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	testCases := map[string]struct {

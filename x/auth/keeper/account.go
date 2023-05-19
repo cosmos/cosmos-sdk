@@ -74,8 +74,8 @@ func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
 // IterateAccounts iterates over all the stored accounts and performs a callback function.
 // Stops iteration when callback returns true.
 func (ak AccountKeeper) IterateAccounts(ctx context.Context, cb func(account sdk.AccountI) (stop bool)) {
-	err := ak.Accounts.Walk(ctx, nil, func(_ sdk.AccAddress, value sdk.AccountI) bool {
-		return cb(value)
+	err := ak.Accounts.Walk(ctx, nil, func(_ sdk.AccAddress, value sdk.AccountI) (bool, error) {
+		return cb(value), nil
 	})
 	if err != nil {
 		panic(err)

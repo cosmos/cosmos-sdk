@@ -22,7 +22,7 @@ import (
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
-func BeginBlocker(k *keeper.Keeper, ctx context.Context) error {
+func BeginBlocker(ctx context.Context, k *keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -53,7 +53,7 @@ func BeginBlocker(k *keeper.Keeper, ctx context.Context) error {
 					appVersion = cp.Version.App
 				}
 
-				return fmt.Errorf("Wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)
+				return fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)
 			}
 		}
 	}

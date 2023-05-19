@@ -44,6 +44,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
 	val := s.network.Validators[0]
 	s.grantee = make([]sdk.AccAddress, 3)
 

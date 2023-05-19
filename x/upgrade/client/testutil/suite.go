@@ -41,6 +41,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

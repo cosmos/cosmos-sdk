@@ -649,7 +649,7 @@ type VersionMap map[string]uint64
 //	})
 //
 // Please also refer to docs/core/upgrade.md for more information.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
+func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(*configurator)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", &configurator{}, cfg)
@@ -659,6 +659,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	updatedVM := VersionMap{}
 	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
@@ -677,14 +678,14 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 		// 2. An existing chain is upgrading from version < 0.43 to v0.43+ for the first time.
 		// In this case, all modules have yet to be added to x/upgrade's VersionMap store.
 		if exists {
-			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)
+			err := c.runModuleMigrations(sdkCtx, moduleName, fromVersion, toVersion)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
+			sdkCtx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
 			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
-				moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+				moduleValUpdates := module.InitGenesis(sdkCtx, c.cdc, module.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {

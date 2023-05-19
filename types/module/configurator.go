@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"fmt"
 
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
@@ -127,7 +128,7 @@ func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, 
 
 // runModuleMigrations runs all in-place store migrations for one given module from a
 // version to another version.
-func (c *configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
+func (c *configurator) runModuleMigrations(ctx context.Context, moduleName string, fromVersion, toVersion uint64) error {
 	// No-op if toVersion is the initial version or if the version is unchanged.
 	if toVersion <= 1 || fromVersion == toVersion {
 		return nil
@@ -144,9 +145,11 @@ func (c *configurator) runModuleMigrations(ctx sdk.Context, moduleName string, f
 		if !found {
 			return errorsmod.Wrapf(sdkerrors.ErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)
 		}
-		ctx.Logger().Info(fmt.Sprintf("migrating module %s from version %d to version %d", moduleName, i, i+1))
 
-		err := migrateFn(ctx)
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx.Logger().Info(fmt.Sprintf("migrating module %s from version %d to version %d", moduleName, i, i+1))
+
+		err := migrateFn(sdkCtx)
 		if err != nil {
 			return err
 		}

@@ -31,8 +31,12 @@ type AccountKeeper interface {
 }
 
 type SendCoinsHooks interface {
-	BeforeSendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amount sdk.Coins) error
-	AfterSendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amount sdk.Coins) error
+	AfterSendCoins(
+		ctx context.Context,
+		fromAddr sdk.AccAddress,
+		toAddr sdk.AccAddress,
+		amount sdk.Coins,
+	) error
 }
 
 type SendCoinsHooksWrapper struct{ SendCoinsHooks }

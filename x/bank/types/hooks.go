@@ -14,17 +14,12 @@ func NewMultiSendCoinsHooks(hooks ...SendCoinsHooks) MultiSendCoinsHooks {
 	return hooks
 }
 
-func (h MultiSendCoinsHooks) BeforeSendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amount sdk.Coins) error {
-	for i := range h {
-		if err := h[i].BeforeSendCoins(ctx, fromAddr, toAddr, amount); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (h MultiSendCoinsHooks) AfterSendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amount sdk.Coins) error {
+func (h MultiSendCoinsHooks) AfterSendCoins(
+	ctx context.Context,
+	fromAddr sdk.AccAddress,
+	toAddr sdk.AccAddress,
+	amount sdk.Coins,
+) error {
 	for i := range h {
 		if err := h[i].AfterSendCoins(ctx, fromAddr, toAddr, amount); err != nil {
 			return err

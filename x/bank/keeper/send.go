@@ -152,18 +152,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	// Run send hooks if present.
-	for _, out := range outputs {
-		outAddress, err := sdk.AccAddressFromBech32(out.Address)
-		if err != nil {
-			return err
-		}
-
-		if err := k.Hooks().BeforeSendCoins(ctx, inAddress, outAddress, out.Coins); err != nil {
-			return err
-		}
-	}
-
 	err = k.subUnlockedCoins(ctx, inAddress, input.Coins)
 	if err != nil {
 		return err
@@ -217,10 +205,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	// Run send hooks if present.
-	if err := k.Hooks().BeforeSendCoins(ctx, fromAddr, toAddr, amt); err != nil {
-		return err
-	}
 	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err

@@ -28,7 +28,7 @@ func NewQuerier(keeper Keeper) Querier {
 
 // Params queries params of distribution module
 func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := k.GetParams(c)
+	params, err := k.Keeper.Params.Get(c)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -36,7 +35,7 @@ func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 
 	reqInfo := abci.RequestInfo{}
-	res, err := suite.baseApp.Info(context.TODO(), &reqInfo)
+	res, err := suite.baseApp.Info(&reqInfo)
 	require.NoError(t, err)
 
 	require.Equal(t, "", res.Version)
@@ -69,14 +68,14 @@ func TestABCI_InitChain(t *testing.T) {
 		Data: key,
 	}
 
-	_, err := app.InitChain(context.TODO(), &abci.RequestInitChain{ChainId: "wrong-chain-id"})
+	_, err := app.InitChain(&abci.RequestInitChain{ChainId: "wrong-chain-id"})
 	// initChain is nil and chain ID is wrong - panics
 	require.Error(t, err)
 
 	// initChain is nil - nothing happens
-	_, err = app.InitChain(context.TODO(), &abci.RequestInitChain{ChainId: "test-chain-id"})
+	_, err = app.InitChain(&abci.RequestInitChain{ChainId: "test-chain-id"})
 	require.NoError(t, err)
-	resQ, err := app.Query(context.TODO(), &query)
+	resQ, err := app.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resQ.Value))
 
@@ -88,7 +87,7 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, int64(0), app.LastBlockHeight())
 
-	initChainRes, err := app.InitChain(context.TODO(), &abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
+	initChainRes, err := app.InitChain(&abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
 	require.NoError(t, err)
 
 	// The AppHash returned by a new chain is the sha256 hash of "".
@@ -107,13 +106,13 @@ func TestABCI_InitChain(t *testing.T) {
 	chainID = getCheckStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Hash:   initChainRes.AppHash,
 		Height: 1,
 	})
 
-	app.Commit(context.TODO(), &abci.RequestCommit{})
-	resQ, err = app.Query(context.TODO(), &query)
+	app.Commit()
+	resQ, err = app.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), app.LastBlockHeight())
 	require.Equal(t, value, resQ.Value)
@@ -127,15 +126,15 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, int64(1), app.LastBlockHeight())
 
 	// ensure we can still query after reloading
-	resQ, err = app.Query(context.TODO(), &query)
+	resQ, err = app.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, value, resQ.Value)
 
 	// commit and ensure we can still query
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	app.Commit()
 
-	resQ, err = app.Query(context.TODO(), &query)
+	resQ, err = app.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, value, resQ.Value)
 }
@@ -146,12 +145,11 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
-		context.TODO(),
 		&abci.RequestInitChain{
 			InitialHeight: 3,
 		},
 	)
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.Commit()
 
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
@@ -162,17 +160,16 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.InitChain(
-		context.TODO(),
 		&abci.RequestInitChain{
 			InitialHeight: 3,
 		},
 	)
 
-	_, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 4})
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 4})
 	require.Error(t, err, "invalid height: 4; expected: 3")
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 3})
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 3})
+	app.Commit()
 
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
@@ -187,7 +184,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, grpcQueryOpt)
 
-	suite.baseApp.InitChain(context.TODO(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -195,7 +192,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	reqBz, err := req.Marshal()
 	require.NoError(t, err)
 
-	resQuery, err := suite.baseApp.Query(context.TODO(), &abci.RequestQuery{
+	resQuery, err := suite.baseApp.Query(&abci.RequestQuery{
 		Data: reqBz,
 		Path: "/testpb.Query/SayHello",
 	})
@@ -203,15 +200,15 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	require.Equal(t, sdkerrors.ErrInvalidHeight.ABCICode(), resQuery.Code, resQuery)
 	require.Contains(t, resQuery.Log, "TestABCI_GRPCQuery is not ready; please wait for first block")
 
-	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
-	suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
+	suite.baseApp.Commit()
 
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
 		Path: "/testpb.Query/SayHello",
 	}
 
-	resQuery, err = suite.baseApp.Query(context.TODO(), &reqQuery)
+	resQuery, err = suite.baseApp.Query(&reqQuery)
 	require.NoError(t, err)
 	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
 
@@ -240,14 +237,14 @@ func TestABCI_P2PQuery(t *testing.T) {
 	addrQuery := abci.RequestQuery{
 		Path: "/p2p/filter/addr/1.1.1.1:8000",
 	}
-	res, err := suite.baseApp.Query(context.TODO(), &addrQuery)
+	res, err := suite.baseApp.Query(&addrQuery)
 	require.NoError(t, err)
 	require.Equal(t, uint32(3), res.Code)
 
 	idQuery := abci.RequestQuery{
 		Path: "/p2p/filter/id/testid",
 	}
-	res, err = suite.baseApp.Query(context.TODO(), &idQuery)
+	res, err = suite.baseApp.Query(&idQuery)
 	require.NoError(t, err)
 	require.Equal(t, uint32(4), res.Code)
 }
@@ -265,7 +262,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	app.InitChain(context.TODO(), &abci.RequestInitChain{
+	app.InitChain(&abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
 
@@ -275,7 +272,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 	})
 	app.Seal()
 
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.Commit()
 	require.Equal(t, true, wasPrepareCheckStateCalled)
 }
 
@@ -292,7 +289,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	app.InitChain(context.TODO(), &abci.RequestInitChain{
+	app.InitChain(&abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
 
@@ -302,7 +299,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 	})
 	app.Seal()
 
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.Commit()
 	require.Equal(t, true, wasPrecommiterCalled)
 }
 
@@ -317,7 +314,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
 
 	nTxs := int64(5)
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -326,7 +323,7 @@ func TestABCI_CheckTx(t *testing.T) {
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
-		r, err := suite.baseApp.CheckTx(context.Background(), &abci.RequestCheckTx{Tx: txBytes})
+		r, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: txBytes})
 		require.NoError(t, err)
 		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 		require.Empty(t, r.GetEvents())
@@ -339,7 +336,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.Equal(t, nTxs, storedCounter)
 
 	// if a block is committed, CheckTx state should be reset
-	_, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 		Hash:   []byte("hash"),
 	})
@@ -348,7 +345,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.NotNil(t, getCheckStateCtx(suite.baseApp).BlockGasMeter(), "block gas meter should have been set to checkState")
 	require.NotEmpty(t, getCheckStateCtx(suite.baseApp).HeaderHash())
 
-	suite.baseApp.Commit(context.Background(), &abci.RequestCommit{})
+	suite.baseApp.Commit()
 
 	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
@@ -360,7 +357,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	suite.baseApp.InitChain(context.TODO(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -383,7 +380,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 			txs = append(txs, txBytes)
 		}
 
-		res, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: int64(blockN) + 1,
 			Txs:    txs,
 		})
@@ -399,7 +396,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0].Attributes[0], events[2].Attributes[0], "msg handler update counter event")
 		}
 
-		suite.baseApp.Commit(context.Background(), &abci.RequestCommit{})
+		suite.baseApp.Commit()
 	}
 }
 
@@ -408,7 +405,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -424,7 +421,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 		Txs:    [][]byte{txBytes},
 	})
@@ -454,7 +451,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	txBytes, err = suite.txConfig.TxEncoder()(builder.GetTx())
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 		Txs:    [][]byte{txBytes},
 	})
@@ -485,7 +482,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -517,7 +514,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 			Path: "/app/simulate",
 			Data: txBytes,
 		}
-		queryResult, err := suite.baseApp.Query(context.Background(), &query)
+		queryResult, err := suite.baseApp.Query(&query)
 		require.NoError(t, err)
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
@@ -529,8 +526,8 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		require.Equal(t, result.Events, simRes.Result.Events)
 		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
 
-		suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: count})
-		suite.baseApp.Commit(context.Background(), &abci.RequestCommit{})
+		suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
+		suite.baseApp.Commit()
 	}
 }
 
@@ -544,11 +541,11 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	suite.baseApp.InitChain(context.TODO(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
 
@@ -557,7 +554,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		emptyTx := suite.txConfig.NewTxBuilder().GetTx()
 		bz, err := suite.txConfig.TxEncoder()(emptyTx)
 		require.NoError(t, err)
-		result, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		result, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: 1,
 			Txs:    [][]byte{bz},
 		})
@@ -671,15 +668,15 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
-	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
 
-	suite.baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	suite.baseApp.Commit()
 
 	testCases := []struct {
 		tx      signing.Tx
@@ -710,7 +707,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	}
 
 	// Deliver the txs
-	res, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 2,
 		Txs:    txs,
 	})
@@ -760,7 +757,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	suite.baseApp.InitChain(context.TODO(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxGas: 100,
@@ -768,7 +765,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		},
 	})
 
-	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
+	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 
 	testCases := []struct {
 		tx                signing.Tx
@@ -793,7 +790,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		tx := tc.tx
 
 		// reset block gas
-		suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
+		suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
 
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
@@ -858,7 +855,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	suite.baseApp.InitChain(context.TODO(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxGas: 9,
@@ -876,7 +873,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	txBytes2, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.baseApp.LastBlockHeight() + 1,
 		Txs:    [][]byte{txBytes, txBytes2},
 	})
@@ -896,7 +893,7 @@ func TestABCI_Query(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -910,7 +907,7 @@ func TestABCI_Query(t *testing.T) {
 	tx := newTxCounter(t, suite.txConfig, 0, 0)
 
 	// query is empty before we do anything
-	res, err := suite.baseApp.Query(context.Background(), &query)
+	res, err := suite.baseApp.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(res.Value))
 
@@ -919,27 +916,27 @@ func TestABCI_Query(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 
-	res, err = suite.baseApp.Query(context.Background(), &query)
+	res, err = suite.baseApp.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(res.Value))
 
 	bz, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 		Txs:    [][]byte{bz},
 	})
 	require.NoError(t, err)
 
-	res, err = suite.baseApp.Query(context.Background(), &query)
+	res, err = suite.baseApp.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(res.Value))
 
 	// query returns correct value after Commit
-	suite.baseApp.Commit(context.Background(), &abci.RequestCommit{})
+	suite.baseApp.Commit()
 
-	res, err = suite.baseApp.Query(context.Background(), &query)
+	res, err = suite.baseApp.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, value, res.Value)
 }
@@ -1039,7 +1036,7 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 		tc := tc
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-		tc.bapp.InitChain(context.TODO(), &abci.RequestInitChain{
+		tc.bapp.InitChain(&abci.RequestInitChain{
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Evidence: &cmtproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
@@ -1068,8 +1065,8 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 		wasPrepareCheckStateCalled = true
 	})
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	app.Commit()
 
 	require.Equal(t, true, wasPrepareCheckStateCalled)
 }
@@ -1090,8 +1087,8 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 		wasPrecommiterCalled = true
 	})
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: 1})
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	app.Commit()
 
 	require.Equal(t, true, wasPrecommiterCalled)
 }
@@ -1107,7 +1104,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1119,7 +1116,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 		Tx:   txBytes,
 		Type: abci.CheckTxType_New,
 	}
-	_, err = suite.baseApp.CheckTx(context.Background(), &reqCheckTx)
+	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
 
 	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
@@ -1134,7 +1131,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
-	resPrepareProposal, err := suite.baseApp.PrepareProposal(context.Background(), &reqPrepareProposal)
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(resPrepareProposal.Txs))
 
@@ -1147,11 +1144,11 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 		Height: reqPrepareProposal.Height,
 	}
 
-	resProcessProposal, err := suite.baseApp.ProcessProposal(context.Background(), &reqProcessProposal)
+	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 
-	res, err := suite.baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.baseApp.LastBlockHeight() + 1,
 		Txs:    [][]byte{txBytes},
 	})
@@ -1184,7 +1181,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		InitialHeight:   1,
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
@@ -1193,7 +1190,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 		MaxTxBytes: 1000,
 		Height:     1, // this value can't be 0
 	}
-	resPrepareProposal, err := suite.baseApp.PrepareProposal(context.Background(), &reqPrepareProposal)
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resPrepareProposal.Txs))
 
@@ -1203,7 +1200,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 		Height: reqPrepareProposal.Height,
 	}
 
-	resProcessProposal, err := suite.baseApp.ProcessProposal(context.Background(), &reqProcessProposal)
+	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 
@@ -1220,7 +1217,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1234,7 +1231,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 		MaxTxBytes: 1500,
 		Height:     1,
 	}
-	resPrepareProposal, err := suite.baseApp.PrepareProposal(context.Background(), &reqPrepareProposal)
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 11, len(resPrepareProposal.Txs))
 }
@@ -1247,7 +1244,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1259,7 +1256,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
-	resPrepareProposal, err := suite.baseApp.PrepareProposal(context.Background(), &reqPrepareProposal)
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 }
@@ -1272,7 +1269,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1284,7 +1281,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 		Tx:   txBytes,
 		Type: abci.CheckTxType_New,
 	}
-	checkTxRes, err := suite.baseApp.CheckTx(context.Background(), &reqCheckTx)
+	checkTxRes, err := suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
 	require.True(t, checkTxRes.IsOK())
 
@@ -1299,7 +1296,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
-	res, err := suite.baseApp.PrepareProposal(context.Background(), &req)
+	res, err := suite.baseApp.PrepareProposal(&req)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(res.Txs))
 }
@@ -1312,7 +1309,7 @@ func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, prepareOpt)
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1322,7 +1319,7 @@ func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 	}
 
 	require.NotPanics(t, func() {
-		res, err := suite.baseApp.PrepareProposal(context.Background(), &req)
+		res, err := suite.baseApp.PrepareProposal(&req)
 		require.NoError(t, err)
 		require.Equal(t, req.Txs, res.Txs)
 	})
@@ -1336,12 +1333,12 @@ func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, processOpt)
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
 	require.NotPanics(t, func() {
-		res, err := suite.baseApp.ProcessProposal(context.Background(), &abci.RequestProcessProposal{Height: 1})
+		res, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
 		require.NoError(t, err)
 		require.Equal(t, res.Status, abci.ResponseProcessProposal_REJECT)
 	})
@@ -1374,7 +1371,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, prepareOpt, processOpt)
 
-	suite.baseApp.InitChain(context.Background(), &abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -1386,7 +1383,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	// Let's pretend something happened and PrepareProposal gets called many
 	// times, this must be safe to do.
 	for i := 0; i < 5; i++ {
-		resPrepareProposal, err := suite.baseApp.PrepareProposal(context.Background(), &reqPrepareProposal)
+		resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 		require.NoError(t, err)
 		require.Equal(t, 0, len(resPrepareProposal.Txs))
 	}
@@ -1400,7 +1397,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	// Let's pretend something happened and ProcessProposal gets called many
 	// times, this must be safe to do.
 	for i := 0; i < 5; i++ {
-		resProcessProposal, err := suite.baseApp.ProcessProposal(context.Background(), &reqProcessProposal)
+		resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 		require.NoError(t, err)
 		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 	}

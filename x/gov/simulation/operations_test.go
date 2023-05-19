@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -145,7 +144,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -176,7 +175,7 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -234,7 +233,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 
 	suite.GovKeeper.SetProposal(ctx, proposal)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -281,7 +280,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 
 	suite.GovKeeper.SetProposal(ctx, proposal)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -329,7 +328,7 @@ func TestSimulateMsgVote(t *testing.T) {
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -375,7 +374,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})

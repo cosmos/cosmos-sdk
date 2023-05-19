@@ -1,7 +1,6 @@
 package baseapp_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -23,7 +22,7 @@ func TestABCI_ListSnapshots(t *testing.T) {
 
 	suite := NewBaseAppSuiteWithSnapshots(t, ssCfg)
 
-	resp, err := suite.baseApp.ListSnapshots(context.TODO(), &abci.RequestListSnapshots{})
+	resp, err := suite.baseApp.ListSnapshots(&abci.RequestListSnapshots{})
 	require.NoError(t, err)
 	for _, s := range resp.Snapshots {
 		require.NotEmpty(t, s.Hash)
@@ -122,7 +121,7 @@ func TestABCI_SnapshotWithPruning(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			suite := NewBaseAppSuiteWithSnapshots(t, tc.ssCfg)
 
-			resp, err := suite.baseApp.ListSnapshots(context.Background(), &abci.RequestListSnapshots{})
+			resp, err := suite.baseApp.ListSnapshots(&abci.RequestListSnapshots{})
 			require.NoError(t, err)
 			for _, s := range resp.Snapshots {
 				require.NotEmpty(t, s.Hash)
@@ -150,13 +149,13 @@ func TestABCI_SnapshotWithPruning(t *testing.T) {
 			}
 
 			// Query 1
-			res, err := suite.baseApp.Query(context.Background(), &abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight})
+			res, err := suite.baseApp.Query(&abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight})
 			require.NoError(t, err)
 			require.NotNil(t, res, "height: %d", lastExistingHeight)
 			require.NotNil(t, res.Value, "height: %d", lastExistingHeight)
 
 			// Query 2
-			res, err = suite.baseApp.Query(context.Background(), &abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight - 1})
+			res, err = suite.baseApp.Query(&abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight - 1})
 			require.NoError(t, err)
 			require.NotNil(t, res, "height: %d", lastExistingHeight-1)
 
@@ -195,7 +194,7 @@ func TestABCI_LoadSnapshotChunk(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			resp, _ := suite.baseApp.LoadSnapshotChunk(context.Background(), &abci.RequestLoadSnapshotChunk{
+			resp, _ := suite.baseApp.LoadSnapshotChunk(&abci.RequestLoadSnapshotChunk{
 				Height: tc.height,
 				Format: tc.format,
 				Chunk:  tc.chunk,
@@ -248,7 +247,7 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			resp, err := suite.baseApp.OfferSnapshot(context.Background(), &abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
+			resp, err := suite.baseApp.OfferSnapshot(&abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
 			if tc.isErr {
 				require.Error(t, err)
 				return
@@ -259,7 +258,7 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 	}
 
 	// Offering a snapshot after one has been accepted should error
-	resp, err := suite.baseApp.OfferSnapshot(context.Background(), &abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+	resp, err := suite.baseApp.OfferSnapshot(&abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:   1,
 		Format:   snapshottypes.CurrentFormat,
 		Chunks:   3,
@@ -269,7 +268,7 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, resp)
 
-	resp, err = suite.baseApp.OfferSnapshot(context.Background(), &abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+	resp, err = suite.baseApp.OfferSnapshot(&abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:   2,
 		Format:   snapshottypes.CurrentFormat,
 		Chunks:   3,
@@ -300,7 +299,7 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 	targetSuite := NewBaseAppSuiteWithSnapshots(t, targetCfg)
 
 	// fetch latest snapshot to restore
-	respList, err := srcSuite.baseApp.ListSnapshots(context.Background(), &abci.RequestListSnapshots{})
+	respList, err := srcSuite.baseApp.ListSnapshots(&abci.RequestListSnapshots{})
 	require.NoError(t, err)
 	require.NotEmpty(t, respList.Snapshots)
 	snapshot := respList.Snapshots[0]
@@ -309,13 +308,13 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 	require.GreaterOrEqual(t, snapshot.Chunks, uint32(3), "Not enough snapshot chunks")
 
 	// begin a snapshot restoration in the target
-	respOffer, err := targetSuite.baseApp.OfferSnapshot(context.Background(), &abci.RequestOfferSnapshot{Snapshot: snapshot})
+	respOffer, err := targetSuite.baseApp.OfferSnapshot(&abci.RequestOfferSnapshot{Snapshot: snapshot})
 	require.NoError(t, err)
 	require.Equal(t, &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, respOffer)
 
 	// We should be able to pass an invalid chunk and get a verify failure, before
 	// reapplying it.
-	respApply, err := targetSuite.baseApp.ApplySnapshotChunk(context.Background(), &abci.RequestApplySnapshotChunk{
+	respApply, err := targetSuite.baseApp.ApplySnapshotChunk(&abci.RequestApplySnapshotChunk{
 		Index:  0,
 		Chunk:  []byte{9},
 		Sender: "sender",
@@ -329,7 +328,7 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 
 	// fetch each chunk from the source and apply it to the target
 	for index := uint32(0); index < snapshot.Chunks; index++ {
-		respChunk, err := srcSuite.baseApp.LoadSnapshotChunk(context.Background(), &abci.RequestLoadSnapshotChunk{
+		respChunk, err := srcSuite.baseApp.LoadSnapshotChunk(&abci.RequestLoadSnapshotChunk{
 			Height: snapshot.Height,
 			Format: snapshot.Format,
 			Chunk:  index,
@@ -337,7 +336,7 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, respChunk.Chunk)
 
-		respApply, err := targetSuite.baseApp.ApplySnapshotChunk(context.Background(), &abci.RequestApplySnapshotChunk{
+		respApply, err := targetSuite.baseApp.ApplySnapshotChunk(&abci.RequestApplySnapshotChunk{
 			Index: index,
 			Chunk: respChunk.Chunk,
 		})

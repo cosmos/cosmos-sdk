@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -66,12 +65,12 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	// finalize block so we have CheckTx state set
-	_, err := app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
 	require.NoError(t, err)
 
-	_, err = app.Commit(context.TODO(), &abci.RequestCommit{})
+	_, err = app.Commit()
 	require.NoError(t, err)
 
 	// Making a new app object with the db, so that initchain hasn't been called
@@ -115,8 +114,8 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	app.InitChain(context.TODO(), &abci.RequestInitChain{})
-	app.Commit(context.TODO(), &abci.RequestCommit{})
+	app.InitChain(&abci.RequestInitChain{})
+	app.Commit()
 
 	testCases := []struct {
 		name         string

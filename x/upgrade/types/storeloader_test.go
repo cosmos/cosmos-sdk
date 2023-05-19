@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -127,8 +126,8 @@ func TestSetLoader(t *testing.T) {
 			require.Equal(t, int64(1), oldApp.LastBlockHeight())
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
-				oldApp.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: i})
-				_, err := oldApp.Commit(context.Background(), &abci.RequestCommit{})
+				oldApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
+				_, err := oldApp.Commit()
 				require.NoError(t, err)
 			}
 
@@ -148,8 +147,8 @@ func TestSetLoader(t *testing.T) {
 			require.Equal(t, upgradeHeight-1, newApp.LastBlockHeight())
 
 			// "execute" one block
-			newApp.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{Height: upgradeHeight})
-			_, err = newApp.Commit(context.Background(), &abci.RequestCommit{})
+			newApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: upgradeHeight})
+			_, err = newApp.Commit()
 			require.NoError(t, err)
 			require.Equal(t, upgradeHeight, newApp.LastBlockHeight())
 

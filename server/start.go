@@ -237,7 +237,8 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 
 	emitServerInfoMetrics()
 
-	svr, err := server.NewServer(addr, transport, app)
+	cmtApp := NewCometABCIWrapper(app)
+	svr, err := server.NewServer(addr, transport, cmtApp)
 	if err != nil {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
@@ -392,11 +393,12 @@ func startCmtNode(
 	app types.Application,
 	svrCtx *Context,
 ) (tmNode *node.Node, err error) {
+	cmtApp := NewCometABCIWrapper(app)
 	tmNode, err = node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(app),
+		proxy.NewLocalClientCreator(cmtApp),
 		genDocProvider,
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),

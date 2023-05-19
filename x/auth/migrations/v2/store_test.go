@@ -100,7 +100,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
-				err := accountKeeper.SetParams(ctx, authtypes.DefaultParams())
+				err := accountKeeper.Params.Set(ctx, authtypes.DefaultParams())
 				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
@@ -605,7 +605,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := accountKeeper.SetParams(ctx, authtypes.DefaultParams())
+			err := accountKeeper.Params.Set(ctx, authtypes.DefaultParams())
 			require.NoError(t, err)
 
 			addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(tc.tokenAmount))

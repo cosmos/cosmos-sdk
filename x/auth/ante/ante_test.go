@@ -1416,7 +1416,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	for _, tc := range testCases {
 
 		// set testcase parameters
-		err := suite.accountKeeper.SetParams(suite.ctx, tc.params)
+		err := suite.accountKeeper.Params.Set(suite.ctx, tc.params)
 		require.NoError(t, err)
 
 		_, err = suite.anteHandler(suite.ctx, tx, false)
@@ -1424,7 +1424,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 		require.NotNil(t, err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
 		// reset parameters to default values
-		err = suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
+		err = suite.accountKeeper.Params.Set(suite.ctx, authtypes.DefaultParams())
 		require.NoError(t, err)
 	}
 

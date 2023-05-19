@@ -215,7 +215,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * The field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.
 * (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) Add API `StartCmdWithOptions` to create customized start command.
 * (x/auth) [#16016](https://github.com/cosmos/cosmos-sdk/pull/16016) Use collections for accounts state management:
-  - removed: keeper `HasAccountByID`, `AccountAddressByID`
+  - removed: keeper `HasAccountByID`, `AccountAddressByID`, `SetParams
 
 
 ### Client Breaking Changes

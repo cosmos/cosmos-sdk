@@ -267,7 +267,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 
 	// Make block-height non-zero to include accNum in SignBytes
 	suite.ctx = suite.ctx.WithBlockHeight(1)
-	err := suite.accountKeeper.SetParams(suite.ctx, params)
+	err := suite.accountKeeper.Params.Set(suite.ctx, params)
 	require.NoError(t, err)
 
 	msgs := make([]sdk.Msg, len(privs))

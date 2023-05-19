@@ -11,7 +11,6 @@ const (
 )
 
 func (suite *KeeperTestSuite) TestFeeAllowance() {
-
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowanceRequest

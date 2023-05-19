@@ -210,9 +210,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `simulation.NewOperationMsg` now marshals the operation msg as proto bytes instead of legacy amino JSON bytes.
   * `simulation.NewOperationMsg` is now 2-arity instead of 3-arity with the obsolete argument `codec.ProtoCodec` removed.
   * The field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.
-
-* (x/distribution)[#16211](https://github.com/cosmos/cosmos-sdk/pull/16211) Use collections for params state management.
-
+* (x/distribution) [#16211](https://github.com/cosmos/cosmos-sdk/pull/16211) Use collections for params state management.
 
 ### Client Breaking Changes
 

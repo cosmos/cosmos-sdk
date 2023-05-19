@@ -290,7 +290,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "unable to decode",
+			expErrMsg: "empty address string is not allowed",
 		},
 		"invalid member metadata too long": {
 			req: &group.MsgUpdateGroupMembers{
@@ -887,7 +887,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "unable to decode",
+			expErrMsg: "decoding bech32 failed",
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -1710,7 +1710,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				Proposers: []string{addr2.String()},
 			},
 			expErr:    true,
-			expErrMsg: "unable to decode",
+			expErrMsg: "empty address string is not allowed",
 			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"existing group policy required": {
@@ -2971,7 +2971,7 @@ func (s *TestSuite) TestLeaveGroup() {
 				Address: "invalid",
 			},
 			true,
-			"unable to decode",
+			"decoding bech32 failed",
 			0,
 			math.NewDecFromInt64(0),
 		},

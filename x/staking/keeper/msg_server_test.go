@@ -467,7 +467,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "validator does not exist",
@@ -608,7 +608,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 				Amount:              sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
 			name: "invalid destination validator",
@@ -759,7 +759,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: shares.RoundInt()},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "validator does not exist",
@@ -894,7 +894,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 				CreationHeight:   10,
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "entry not found at height",

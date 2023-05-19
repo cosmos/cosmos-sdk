@@ -431,7 +431,7 @@ func getTestingAccounts(
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
+		acc ,_:= accountKeeper.NewAccountWithAddress(ctx, account.Address)
 		accountKeeper.SetAccount(ctx, acc)
 		require.NoError(t, testutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
 	}

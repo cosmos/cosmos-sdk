@@ -43,7 +43,7 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, v2.Migrate(ctx, storeKey, accountKeeper, groupPolicySeq, groupPolicyTable))
 	for i, policyAddr := range policies {
 		oldAcc := oldAccs[i]
-		newAcc := accountKeeper.GetAccount(ctx, policyAddr)
+		newAcc,_ := accountKeeper.GetAccount(ctx, policyAddr)
 		require.NotEqual(t, oldAcc, newAcc)
 		require.True(t, func() bool { _, ok := newAcc.(*authtypes.BaseAccount); return ok }())
 		require.Equal(t, oldAcc.GetAddress(), newAcc.GetAddress())
@@ -82,7 +82,7 @@ func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc c
 
 	oldPolicyAccounts := make([]*authtypes.ModuleAccount, len(policies))
 	for i, policyAddr := range policies {
-		acc := accountKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
+		acc,_ := accountKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
 			BaseAccount: &authtypes.BaseAccount{
 				Address: policyAddr.String(),
 			},

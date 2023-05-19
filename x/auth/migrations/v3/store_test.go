@@ -99,7 +99,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 			}
 
 			//  get the account address by acc id
-			accAddr := accountKeeper.GetAccountAddressByID(ctx, tc.accNum)
+			accAddr,_ := accountKeeper.GetAccountAddressByID(ctx, tc.accNum)
 
 			if tc.doMigration {
 				require.Equal(t, accAddr, acc.Address)

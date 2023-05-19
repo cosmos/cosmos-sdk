@@ -107,7 +107,7 @@ func (s *VestingTestSuite) TestCreateVestingAccount() {
 		},
 		"create for existing account": {
 			preRun: func() {
-				toAcc := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
+				toAcc,_ := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
 				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), fooCoin).Return(nil)
 				s.accountKeeper.SetAccount(s.ctx, toAcc)
 				s.bankKeeper.EXPECT().BlockedAddr(to1Addr).Return(false)
@@ -199,7 +199,7 @@ func (s *VestingTestSuite) TestCreatePermanentLockedAccount() {
 		},
 		"create for existing account": {
 			preRun: func() {
-				toAcc := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
+				toAcc,_ := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
 				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), fooCoin).Return(nil)
 				s.bankKeeper.EXPECT().BlockedAddr(to1Addr).Return(false)
 				s.accountKeeper.SetAccount(s.ctx, toAcc)
@@ -320,7 +320,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 		{
 			name: "create for existing account",
 			preRun: func() {
-				toAcc := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
+				toAcc,_ := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
 				s.accountKeeper.SetAccount(s.ctx, toAcc)
 			},
 			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(

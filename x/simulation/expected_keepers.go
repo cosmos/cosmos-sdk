@@ -8,7 +8,7 @@ import (
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI,error)
+	GetAccount(ctx context.Context, addr sdk.AccAddress) (sdk.AccountI, error)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

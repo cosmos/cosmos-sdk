@@ -153,7 +153,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	baseApp.Commit()
 
-	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
+	res1,_ := s.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
 	require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 
@@ -169,7 +169,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	checkBalance(t, baseApp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
 
 	ctx2 := baseApp.NewContext(true, cmtproto.Header{})
-	res2 := s.AccountKeeper.GetAccount(ctx2, addr1)
+	res2,_ := s.AccountKeeper.GetAccount(ctx2, addr1)
 	require.NotNil(t, res2)
 
 	require.Equal(t, origAccNum, res2.GetAccountNumber())
@@ -190,7 +190,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	baseApp.Commit()
 
-	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
+	res1,_ := s.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
 	require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 

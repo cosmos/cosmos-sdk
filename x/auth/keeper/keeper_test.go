@@ -84,11 +84,11 @@ func (suite *KeeperTestSuite) TestAccountMapperGetSet() {
 	addr := sdk.AccAddress([]byte("some---------address"))
 
 	// no account before its created
-	acc := suite.accountKeeper.GetAccount(ctx, addr)
+	acc,_ := suite.accountKeeper.GetAccount(ctx, addr)
 	suite.Require().Nil(acc)
 
 	// create account and check default values
-	acc = suite.accountKeeper.NewAccountWithAddress(ctx, addr)
+	acc ,_= suite.accountKeeper.NewAccountWithAddress(ctx, addr)
 	suite.Require().NotNil(acc)
 	suite.Require().Equal(addr, acc.GetAddress())
 	suite.Require().EqualValues(nil, acc.GetPubKey())
@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestAccountMapperGetSet() {
 	suite.accountKeeper.SetAccount(ctx, acc)
 
 	// check the new values
-	acc = suite.accountKeeper.GetAccount(ctx, addr)
+	acc,_ = suite.accountKeeper.GetAccount(ctx, addr)
 	suite.Require().NotNil(acc)
 	suite.Require().Equal(newSequence, acc.GetSequence())
 }
@@ -115,8 +115,8 @@ func (suite *KeeperTestSuite) TestAccountMapperRemoveAccount() {
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
 	// create accounts
-	acc1 := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc2 := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc1,_ := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	acc2,_ := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
 
 	accSeq1 := uint64(20)
 	accSeq2 := uint64(40)
@@ -128,16 +128,16 @@ func (suite *KeeperTestSuite) TestAccountMapperRemoveAccount() {
 	suite.accountKeeper.SetAccount(ctx, acc1)
 	suite.accountKeeper.SetAccount(ctx, acc2)
 
-	acc1 = suite.accountKeeper.GetAccount(ctx, addr1)
+	acc1,_ = suite.accountKeeper.GetAccount(ctx, addr1)
 	suite.Require().NotNil(acc1)
 	suite.Require().Equal(accSeq1, acc1.GetSequence())
 
 	// remove one account
 	suite.accountKeeper.RemoveAccount(ctx, acc1)
-	acc1 = suite.accountKeeper.GetAccount(ctx, addr1)
+	acc1 ,_= suite.accountKeeper.GetAccount(ctx, addr1)
 	suite.Require().Nil(acc1)
 
-	acc2 = suite.accountKeeper.GetAccount(ctx, addr2)
+	acc2,_ = suite.accountKeeper.GetAccount(ctx, addr2)
 	suite.Require().NotNil(acc2)
 	suite.Require().Equal(accSeq2, acc2.GetSequence())
 }
@@ -281,7 +281,8 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().Equal(len(keeperAccts), len(genState.Accounts)+1, "number of accounts in the keeper vs in genesis state")
 
 	// Check both accounts account numbers
-	suite.Require().Equal(0, int(suite.accountKeeper.GetAccount(ctx, sdk.AccAddress(pubKey1.Address())).GetAccountNumber()))
+	getAcc,_:=suite.accountKeeper.GetAccount(ctx, sdk.AccAddress(pubKey1.Address()))
+	suite.Require().Equal(0, int(getAcc).GetAccountNumber())
 	feeCollector = suite.accountKeeper.GetModuleAccount(ctx, "fee_collector")
 	suite.Require().Equal(1, int(feeCollector.GetAccountNumber()))
 

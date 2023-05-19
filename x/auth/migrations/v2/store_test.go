@@ -615,7 +615,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			}
 
 			// We introduce the bug
-			savedAccount := accountKeeper.GetAccount(ctx, delegatorAddr)
+			savedAccount,_ := accountKeeper.GetAccount(ctx, delegatorAddr)
 			vestingAccount, ok := savedAccount.(exported.VestingAccount)
 			require.True(t, ok)
 			require.NoError(t, tc.garbageFunc(ctx, vestingAccount, accountKeeper))
@@ -648,7 +648,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 
 func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, addr sdk.AccAddress, expDelVesting, expDelFree sdk.Coins) {
 	t.Helper()
-	baseAccount := ak.GetAccount(ctx, addr)
+	baseAccount,_ := ak.GetAccount(ctx, addr)
 	vDA, ok := baseAccount.(exported.VestingAccount)
 	require.True(t, ok)
 

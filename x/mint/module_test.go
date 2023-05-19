@@ -26,6 +26,6 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
-	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
+	acc,_ := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	require.NotNil(t, acc)
 }

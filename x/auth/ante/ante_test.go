@@ -168,7 +168,8 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 		{
 			"save the first account, but second is still unrecognized",
 			func(suite *AnteTestSuite) TestCaseArgs {
-				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0))
+				newAcc,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+				suite.accountKeeper.SetAccount(suite.ctx, newAcc)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
@@ -187,9 +188,13 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 		{
 			"save all the accounts, should pass",
 			func(suite *AnteTestSuite) TestCaseArgs {
-				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0))
-				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1))
-				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr2))
+				newAcc1,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+				newAcc2,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+				newAcc3,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr2)
+
+				suite.accountKeeper.SetAccount(suite.ctx,newAcc1 )
+				suite.accountKeeper.SetAccount(suite.ctx, newAcc2)
+				suite.accountKeeper.SetAccount(suite.ctx, newAcc3)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{1, 2, 3}, []uint64{0, 0, 0}
@@ -1046,7 +1051,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				require.NoError(t, err)
 
 				// Make sure public key has been set from previous test.
-				acc0 := suite.accountKeeper.GetAccount(suite.ctx, accs[0].acc.GetAddress())
+				acc0,_ := suite.accountKeeper.GetAccount(suite.ctx, accs[0].acc.GetAddress())
 				require.Equal(t, acc0.GetPubKey(), accs[0].priv.PubKey())
 
 				return TestCaseArgs{
@@ -1080,7 +1085,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				// Make sure public key has not been set from previous test.
-				acc1 := suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
+				acc1,_ := suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
 				require.Nil(t, acc1.GetPubKey())
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{accs[1].acc.GetSequence()}
@@ -1102,7 +1107,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				require.True(t, errors.Is(err, sdkerrors.ErrNoSignatures))
 
 				// Make sure public key has not been set.
-				acc1 = suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
+				acc1,_ = suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
 				require.Nil(t, acc1.GetPubKey())
 
 				// Set incorrect accSeq, to generate incorrect signature.
@@ -1126,7 +1131,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				// Make sure public key has not been set from previous test.
-				acc1 := suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
+				acc1,_ := suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
 				require.Nil(t, acc1.GetPubKey())
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{accs[1].acc.GetSequence()}
@@ -1148,7 +1153,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				require.True(t, errors.Is(err, sdkerrors.ErrNoSignatures))
 
 				// Make sure public key has not been set.
-				acc1 = suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
+				acc1,_ = suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
 				require.Nil(t, acc1.GetPubKey())
 
 				// Set incorrect accSeq, to generate incorrect signature.
@@ -1159,7 +1164,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 				// Make sure public key has been set, as SetPubKeyDecorator
 				// is called before all signature verification decorators.
-				acc1 = suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
+				acc1,_ = suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
 				require.Equal(t, acc1.GetPubKey(), accs[1].priv.PubKey())
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 

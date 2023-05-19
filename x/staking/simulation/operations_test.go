@@ -111,7 +111,7 @@ func (s *SimTestSuite) SetupTest() {
 	// remove genesis validator account
 	// add coins to the accounts
 	for _, account := range accounts[1:] {
-		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
+		acc,_ := accountKeeper.NewAccountWithAddress(ctx, account.Address)
 		accountKeeper.SetAccount(ctx, acc)
 		s.Require().NoError(banktestutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
 	}

@@ -104,11 +104,12 @@ func (mr *MockAccountKeeperMockRecorder) BytesToString(bz interface{}) *gomock.C
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) (types.AccountI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetAccount indicates an expected call of GetAccount.
@@ -146,9 +147,11 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gom
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types.AccountI) bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateAccounts", ctx, process)
+	ret := m.ctrl.Call(m, "IterateAccounts", ctx, process)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // IterateAccounts indicates an expected call of IterateAccounts.

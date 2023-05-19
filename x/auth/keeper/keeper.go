@@ -34,7 +34,7 @@ type AccountKeeperI interface {
 	HasAccount(context.Context, sdk.AccAddress) (bool,error)
 
 	// Retrieve an account from the store.
-	GetAccount(context.Context, sdk.AccAddress) (sdk.AccountI,error)
+	GetAccount(context.Context, sdk.AccAddress) (sdk.AccountI, error)
 
 	// Set an account in the store.
 	SetAccount(context.Context, sdk.AccountI) error

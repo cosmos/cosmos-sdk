@@ -31,7 +31,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 
 	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
-	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	acc1,_ := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
@@ -104,7 +104,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 
 	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
-	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	acc1,_ := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
@@ -182,7 +182,7 @@ func (s *paginationTestSuite) TestFilteredPaginate() {
 
 	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
-	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	acc1 ,_:= s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	err := testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances)
 	if err != nil { // should return no error
@@ -258,7 +258,7 @@ func (s *paginationTestSuite) TestFilteredPaginationsNextKey() {
 
 	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
-	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	acc1,_ := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))

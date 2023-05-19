@@ -51,11 +51,12 @@ func (mr *MockAccountKeeperMockRecorder) BytesToString(bz interface{}) *gomock.C
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) (types.AccountI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetAccount indicates an expected call of GetAccount.
@@ -93,11 +94,12 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(moduleName interface{}
 }
 
 // NewAccountWithAddress mocks base method.
-func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) (types.AccountI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // NewAccountWithAddress indicates an expected call of NewAccountWithAddress.
@@ -107,9 +109,11 @@ func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr interfa
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetAccount", ctx, acc)
+	ret := m.ctrl.Call(m, "SetAccount", ctx, acc)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetAccount indicates an expected call of SetAccount.

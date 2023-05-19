@@ -119,7 +119,7 @@ func (s *paginationTestSuite) TestPagination() {
 
 	balances = balances.Sort()
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	acc1,_ := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 
@@ -227,7 +227,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 
 	balances = balances.Sort()
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	acc1 ,_:= s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 
@@ -346,7 +346,7 @@ func (s *paginationTestSuite) TestPaginate() {
 
 	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
-	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	acc1,_ := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	err := testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances)
 	if err != nil { // should return no error

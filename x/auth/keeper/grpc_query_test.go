@@ -32,10 +32,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 		{
 			"success",
 			func() {
-				suite.accountKeeper.SetAccount(suite.ctx,
-					suite.accountKeeper.NewAccountWithAddress(suite.ctx, first))
-				suite.accountKeeper.SetAccount(suite.ctx,
-					suite.accountKeeper.NewAccountWithAddress(suite.ctx, second))
+				newAcc1,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, first)
+				newAcc2,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, second)
+				suite.accountKeeper.SetAccount(suite.ctx,newAcc1)
+				suite.accountKeeper.SetAccount(suite.ctx,newAcc2)
 				req = &types.QueryAccountsRequest{}
 			},
 			true,
@@ -117,8 +117,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 		{
 			"success",
 			func() {
-				suite.accountKeeper.SetAccount(suite.ctx,
-					suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr))
+				newAcc1,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				suite.accountKeeper.SetAccount(suite.ctx,newAcc1)
+					
 				req = &types.QueryAccountRequest{Address: addr.String()}
 			},
 			true,
@@ -181,7 +182,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 		{
 			"valid account-id",
 			func() {
-				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				account,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 				suite.accountKeeper.SetAccount(suite.ctx, account)
 				req = &types.QueryAccountAddressByIDRequest{AccountId: account.GetAccountNumber()}
 			},
@@ -193,7 +194,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 		{
 			"invalid request",
 			func() {
-				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				account,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 				suite.accountKeeper.SetAccount(suite.ctx, account)
 				req = &types.QueryAccountAddressByIDRequest{Id: 1}
 			},
@@ -502,7 +503,7 @@ func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 
 func (suite *KeeperTestSuite) TestQueryAccountInfo() {
 	_, pk, addr := testdata.KeyTestPubAddr()
-	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	acc,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.Require().NoError(acc.SetPubKey(pk))
 	suite.Require().NoError(acc.SetSequence(10))
 	suite.accountKeeper.SetAccount(suite.ctx, acc)

@@ -37,11 +37,12 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) (types.AccountI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetAccount indicates an expected call of GetAccount.
@@ -137,11 +138,12 @@ func (mr *MockAccountKeeperMockRecorder) GetModulePermissions() *gomock.Call {
 }
 
 // HasAccount mocks base method.
-func (m *MockAccountKeeper) HasAccount(ctx context.Context, addr types.AccAddress) bool {
+func (m *MockAccountKeeper) HasAccount(ctx context.Context, addr types.AccAddress) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasAccount", ctx, addr)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // HasAccount indicates an expected call of HasAccount.
@@ -151,9 +153,11 @@ func (mr *MockAccountKeeperMockRecorder) HasAccount(ctx, addr interface{}) *gomo
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types.AccountI) bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateAccounts", ctx, process)
+	ret := m.ctrl.Call(m, "IterateAccounts", ctx, process)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // IterateAccounts indicates an expected call of IterateAccounts.
@@ -163,11 +167,12 @@ func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, process interface{
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountKeeper) NewAccount(arg0 context.Context, arg1 types.AccountI) types.AccountI {
+func (m *MockAccountKeeper) NewAccount(arg0 context.Context, arg1 types.AccountI) (types.AccountI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
 	ret0, _ := ret[0].(types.AccountI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // NewAccount indicates an expected call of NewAccount.
@@ -177,11 +182,12 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 }
 
 // NewAccountWithAddress mocks base method.
-func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) (types.AccountI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // NewAccountWithAddress indicates an expected call of NewAccountWithAddress.
@@ -191,9 +197,11 @@ func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr interfa
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetAccount", ctx, acc)
+	ret := m.ctrl.Call(m, "SetAccount", ctx, acc)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetAccount indicates an expected call of SetAccount.

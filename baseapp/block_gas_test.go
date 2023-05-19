@@ -137,7 +137,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr1, feeAmount)
 			require.NoError(t, err)
 			require.Equal(t, feeCoin.Amount, bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount)
-			seq := accountKeeper.GetAccount(ctx, addr1).GetSequence()
+			getAccount,_:=accountKeeper.GetAccount(ctx,addr1)
+			seq := getAccount.GetSequence()
 			require.Equal(t, uint64(0), seq)
 
 			// msg and signatures
@@ -153,7 +154,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			txBuilder.SetFeeAmount(feeAmount)
 			txBuilder.SetGasLimit(txtypes.MaxGasWanted) // tx validation checks that gasLimit can't be bigger than this
 
-			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
+			getAcc,_:=accountKeeper.GetAccount(ctx, addr1)
+			senderAccountNumber := getAcc.GetAccountNumber()
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
@@ -187,7 +189,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			// tx fee is always deducted
 			require.Equal(t, int64(0), bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
 			// sender's sequence is always increased
-			seq = accountKeeper.GetAccount(ctx, addr1).GetSequence()
+			getAccc,_:=accountKeeper.GetAccount(ctx, addr1)
+			seq = getAccc.GetSequence()
 			require.NoError(t, err)
 			require.Equal(t, uint64(1), seq)
 		})

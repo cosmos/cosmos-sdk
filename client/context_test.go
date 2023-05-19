@@ -152,6 +152,9 @@ func TestCLIQueryConn(t *testing.T) {
 	require.NoError(t, err)
 	defer n.Cleanup()
 
+	_, err = n.WaitForHeight(1)
+	require.NoError(t, err)
+
 	testClient := testdata.NewQueryClient(n.Validators[0].ClientCtx)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	require.NoError(t, err)

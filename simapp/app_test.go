@@ -263,7 +263,8 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 
 	// make sure the upgrade keeper has version map in state
 	ctx := app.NewContext(false, cmtproto.Header{})
-	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+	vm, err := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+	require.NoError(t, err)
 	for v, i := range app.ModuleManager.Modules {
 		if i, ok := i.(module.HasConsensusVersion); ok {
 			require.Equal(t, vm[v], i.ConsensusVersion())

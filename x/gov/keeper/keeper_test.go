@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) reset() {
 	suite.NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	v1.RegisterQueryServer(queryHelper, keeper.NewQueryServer(*govKeeper))
+	v1.RegisterQueryServer(queryHelper, keeper.NewQueryServer(govKeeper))
 	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(govKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)

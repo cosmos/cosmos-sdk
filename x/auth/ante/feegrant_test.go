@@ -160,7 +160,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(signer.acc.GetAddress())}
 
-			acc := suite.accountKeeper.GetAccount(suite.ctx, signer.acc.GetAddress())
+			acc,_ := suite.accountKeeper.GetAccount(suite.ctx, signer.acc.GetAddress())
 			privs, accNums, seqs := []cryptotypes.PrivKey{signer.priv}, []uint64{0}, []uint64{0}
 			if acc != nil {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}

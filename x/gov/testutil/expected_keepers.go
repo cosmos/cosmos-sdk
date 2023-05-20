@@ -17,7 +17,7 @@ import (
 type AccountKeeper interface {
 	types.AccountKeeper
 
-	IterateAccounts(ctx context.Context, cb func(account sdk.AccountI) (stop bool))
+	IterateAccounts(ctx context.Context, cb func(account sdk.AccountI) (stop bool)) error
 }
 
 // BankKeeper extends gov's actual expected BankKeeper with additional

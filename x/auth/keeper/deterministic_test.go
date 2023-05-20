@@ -96,7 +96,8 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 		seq := rapid.Uint64().Draw(t, "sequence")
 
 		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
-		suite.accountKeeper.SetAccount(suite.ctx, acc1)
+		err:=suite.accountKeeper.SetAccount(suite.ctx, acc1)
+		suite.Require().NoError(err)
 		accs = append(accs, acc1)
 	}
 
@@ -116,7 +117,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	seq := uint64(98)
 
 	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
-	suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	err:=suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	suite.Require().NoError(err)
 
 	req := &types.QueryAccountRequest{Address: acc1.GetAddress().String()}
 
@@ -158,8 +160,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub1}, accNum1, seq1)
 	acc2 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum2, seq2)
 
-	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.accountKeeper.SetAccount(suite.ctx, acc2)
+	err:=suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	suite.Require().NoError(err)
+	err:=suite.accountKeeper.SetAccount(suite.ctx, acc2)
+	suite.Require().NoError(err)
 
 	req := &types.QueryAccountsRequest{}
 	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.Accounts, 1716, false)
@@ -174,7 +178,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 		seq := rapid.Uint64().Draw(t, "sequence")
 
 		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
-		suite.accountKeeper.SetAccount(suite.ctx, acc1)
+		err:=suite.accountKeeper.SetAccount(suite.ctx, acc1)
+		suite.Require().NoError(err)
 
 		req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.AccountAddressByID, 0, true)
@@ -186,7 +191,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 
 	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
-	suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	err:=suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	suite.Require().NoError(err)
 	req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
 	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.AccountAddressByID, 1123, false)
 }
@@ -232,7 +238,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 
 	acc := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
-	suite.accountKeeper.SetAccount(suite.ctx, acc)
+	err:=suite.accountKeeper.SetAccount(suite.ctx, acc)
+	suite.Require().NoError(err)
 	req := &types.QueryAccountInfoRequest{Address: acc.GetAddress().String()}
 	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.AccountInfo, 1543, false)
 }

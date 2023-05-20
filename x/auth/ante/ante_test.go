@@ -170,6 +170,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				newAcc,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0)
 				suite.accountKeeper.SetAccount(suite.ctx, newAcc)
+			
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{0, 1, 2}, []uint64{0, 0, 0}

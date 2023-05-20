@@ -34,8 +34,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 			func() {
 				newAcc1,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, first)
 				newAcc2,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, second)
-				suite.accountKeeper.SetAccount(suite.ctx,newAcc1)
-				suite.accountKeeper.SetAccount(suite.ctx,newAcc2)
+				err:=suite.accountKeeper.SetAccount(suite.ctx,newAcc1)
+				suite.Require().NoError(err)
+				err=suite.accountKeeper.SetAccount(suite.ctx,newAcc2)
+				suite.Require().NoError(err)
 				req = &types.QueryAccountsRequest{}
 			},
 			true,
@@ -118,7 +120,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			"success",
 			func() {
 				newAcc1,_:=suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-				suite.accountKeeper.SetAccount(suite.ctx,newAcc1)
+				err:=suite.accountKeeper.SetAccount(suite.ctx,newAcc1)
+				suite.Require().NoError(err)
 					
 				req = &types.QueryAccountRequest{Address: addr.String()}
 			},
@@ -183,7 +186,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			"valid account-id",
 			func() {
 				account,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-				suite.accountKeeper.SetAccount(suite.ctx, account)
+				err:=suite.accountKeeper.SetAccount(suite.ctx, account)
+				suite.Require().NoError(err)
 				req = &types.QueryAccountAddressByIDRequest{AccountId: account.GetAccountNumber()}
 			},
 			true,
@@ -195,7 +199,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			"invalid request",
 			func() {
 				account,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-				suite.accountKeeper.SetAccount(suite.ctx, account)
+				err:=suite.accountKeeper.SetAccount(suite.ctx, account)
+				suite.Require().NoError(err)
 				req = &types.QueryAccountAddressByIDRequest{Id: 1}
 			},
 			false,
@@ -506,7 +511,8 @@ func (suite *KeeperTestSuite) TestQueryAccountInfo() {
 	acc,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.Require().NoError(acc.SetPubKey(pk))
 	suite.Require().NoError(acc.SetSequence(10))
-	suite.accountKeeper.SetAccount(suite.ctx, acc)
+	err:=suite.accountKeeper.SetAccount(suite.ctx, acc)
+	suite.Require().NoError(err)
 
 	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
 		Address: addr.String(),

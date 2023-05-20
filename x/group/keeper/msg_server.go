@@ -394,7 +394,10 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 		}
 
 		acc,_ := k.accKeeper.NewAccount(ctx, account)
-		k.accKeeper.SetAccount(ctx, acc)
+		err:=k.accKeeper.SetAccount(ctx, acc)
+		if err != nil {
+			return nil, errorsmod.Wrap(err, "could not create group policy account")
+		}
 
 		break
 	}

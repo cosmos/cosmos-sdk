@@ -28,7 +28,10 @@ func (ak AccountKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			n ,_:= ak.NextAccountNumber(ctx)
 			lastAccNum = &n
 		}
-		ak.SetAccount(ctx, acc)
+		err:=ak.SetAccount(ctx, acc)
+		if err!=nil{
+			panic(err)
+		}
 	}
 
 	ak.GetModuleAccount(ctx, types.FeeCollectorName)

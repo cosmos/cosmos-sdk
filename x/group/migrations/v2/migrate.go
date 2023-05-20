@@ -51,7 +51,10 @@ func Migrate(
 		// get the account address by acc id
 		oldAcc, _ := accountKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(policy.Address))
 		// remove the old account
-		accountKeeper.RemoveAccount(ctx, oldAcc)
+		err:=accountKeeper.RemoveAccount(ctx, oldAcc)
+		if err!=nil{
+			return err
+		}
 
 		// create the group policy account
 		derivationKey, ok := groupPolicyAccountDerivationKey[policy.Address]
@@ -81,7 +84,10 @@ func Migrate(
 		// because we have only changed the account type, so we can use:
 		//   - the same account number
 		//   - the same address
-		accountKeeper.SetAccount(ctx, baseAccount)
+		err=accountKeeper.SetAccount(ctx, baseAccount)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -37,7 +37,10 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
     // load the accounts
     for _, a := range data.Accounts {
         acc := ak.NewAccount(ctx, a) // set account number
-        ak.SetAccount(ctx, acc)
+        err:=ak.SetAccount(ctx, acc)
+        if err!=nil{
+            panic(err)
+        }
     }
 }
 

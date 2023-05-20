@@ -12,7 +12,7 @@ import (
 type AccountKeeper interface {
 	GetParams(ctx context.Context) (params types.Params)
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	SetAccount(ctx context.Context, acc sdk.AccountI)
+	SetAccount(ctx context.Context, acc sdk.AccountI) error
 	GetModuleAddress(moduleName string) sdk.AccAddress
 }
 

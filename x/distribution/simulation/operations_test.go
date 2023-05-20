@@ -3,7 +3,7 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
-
+	"fmt"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -269,7 +269,10 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
-		suite.accountKeeper.SetAccount(suite.ctx, acc)
+		err:=suite.accountKeeper.SetAccount(suite.ctx, acc)
+		if err!=nil{
+			fmt.Println(err)
+		}
 		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 

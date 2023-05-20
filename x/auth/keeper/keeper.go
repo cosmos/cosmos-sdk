@@ -231,7 +231,10 @@ func (ak AccountKeeper) GetModuleAccount(ctx context.Context, moduleName string)
 
 // SetModuleAccount sets the module account to the auth account store
 func (ak AccountKeeper) SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI) {
-	ak.SetAccount(ctx, macc)
+	err:=ak.SetAccount(ctx, macc)
+	if err!=nil{
+		panic(err)
+	}
 }
 
 func (ak AccountKeeper) decodeAccount(bz []byte) sdk.AccountI {

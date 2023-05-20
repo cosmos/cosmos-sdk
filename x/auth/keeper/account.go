@@ -14,7 +14,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx context.Context, addr sdk.AccA
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	return ak.NewAccount(ctx, acc)
@@ -24,7 +24,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx context.Context, addr sdk.AccA
 func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) (sdk.AccountI,error) {
 	nextAccNo,_:=ak.NextAccountNumber(ctx)
 	if err := acc.SetAccountNumber(nextAccNo); err != nil {
-		return nil,err
+		return nil, err
 	}
 	
 	return acc,nil
@@ -55,7 +55,7 @@ func (ak AccountKeeper) GetAccount(ctx context.Context, addr sdk.AccAddress) (sd
 	store := ak.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.AddressStoreKey(addr))
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	if bz == nil {

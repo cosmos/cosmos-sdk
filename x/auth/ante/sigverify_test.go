@@ -43,7 +43,7 @@ func TestSetPubKey(t *testing.T) {
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		acc,_:= suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
@@ -155,7 +155,7 @@ func TestSigVerification(t *testing.T) {
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		acc ,_:= suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
@@ -274,7 +274,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	// set accounts and create msg for each address
 	for i, priv := range privs {
 		addr := sdk.AccAddress(priv.PubKey().Address())
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		acc,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
@@ -313,7 +313,7 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	priv, _, addr := testdata.KeyTestPubAddr()
-	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	acc ,_:= suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	require.NoError(t, acc.SetAccountNumber(uint64(50)))
 	suite.accountKeeper.SetAccount(suite.ctx, acc)
 

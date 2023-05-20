@@ -39,7 +39,10 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 			return false
 		}
 
-		m.keeper.SetAccount(ctx, wb)
+		err=m.keeper.SetAccount(ctx, wb)
+		if err!=nil{
+			return false
+		}
 		return false
 	})
 

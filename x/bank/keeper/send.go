@@ -165,11 +165,14 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		//
 		// NOTE: This should ultimately be removed in favor a more flexible approach
 		// such as delegated fee messages.
-		accExists,_ := k.ak.HasAccount(ctx, outAddress)
+		accExists, _ := k.ak.HasAccount(ctx, outAddress)
 		if !accExists {
 			defer telemetry.IncrCounter(1, "new", "account")
-			newAcc,_:= k.ak.NewAccountWithAddress(ctx, outAddress)
-			k.ak.SetAccount(ctx,newAcc)
+			newAcc, _ := k.ak.NewAccountWithAddress(ctx, outAddress)
+			err:=k.ak.SetAccount(ctx, newAcc)
+			if err!=nil{
+				return err
+			}
 		}
 	}
 
@@ -193,11 +196,14 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	//
 	// NOTE: This should ultimately be removed in favor a more flexible approach
 	// such as delegated fee messages.
-	accExists,_ := k.ak.HasAccount(ctx, toAddr)
+	accExists, _ := k.ak.HasAccount(ctx, toAddr)
 	if !accExists {
 		defer telemetry.IncrCounter(1, "new", "account")
-		newAcc,_:= k.ak.NewAccountWithAddress(ctx, toAddr)
-		k.ak.SetAccount(ctx,newAcc)
+		newAcc, _ := k.ak.NewAccountWithAddress(ctx, toAddr)
+		err := k.ak.SetAccount(ctx, newAcc)
+		if err != nil {
+			return err
+		}
 	}
 
 	// bech32 encoding is expensive! Only do it once for fromAddr

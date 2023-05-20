@@ -96,7 +96,10 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if err != nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 		}
-		spkd.ak.SetAccount(ctx, acc)
+		err1:=spkd.ak.SetAccount(ctx, acc)
+		if err1!=nil{
+			return ctx,err1
+		}
 	}
 
 	// Also emit the following events, so that txs can be indexed by these
@@ -354,7 +357,10 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			panic(err)
 		}
 
-		isd.ak.SetAccount(ctx, acc)
+		err:=isd.ak.SetAccount(ctx, acc)
+		if err!=nil{
+			panic(err)
+		}
 	}
 
 	return next(ctx, tx, simulate)

@@ -65,7 +65,10 @@ func FuzzPagination(f *testing.F) {
 	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1,_ := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	err1:=suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	if err1!=nil{
+		f.Fatal(err1)
+	}
 	err := testutil.FundAccount(suite.ctx, suite.bankKeeper, addr1, balances)
 	if err != nil { // should return no error
 		f.Fatal(err)

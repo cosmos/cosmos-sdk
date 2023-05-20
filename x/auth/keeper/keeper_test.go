@@ -101,7 +101,8 @@ func (suite *KeeperTestSuite) TestAccountMapperGetSet() {
 	newSequence := uint64(20)
 	err := acc.SetSequence(newSequence)
 	suite.Require().NoError(err)
-	suite.accountKeeper.SetAccount(ctx, acc)
+	err=suite.accountKeeper.SetAccount(ctx, acc)
+	suite.Require().NoError(err)
 
 	// check the new values
 	acc,_ = suite.accountKeeper.GetAccount(ctx, addr)
@@ -125,8 +126,10 @@ func (suite *KeeperTestSuite) TestAccountMapperRemoveAccount() {
 	suite.Require().NoError(err)
 	err = acc2.SetSequence(accSeq2)
 	suite.Require().NoError(err)
-	suite.accountKeeper.SetAccount(ctx, acc1)
-	suite.accountKeeper.SetAccount(ctx, acc2)
+	err=suite.accountKeeper.SetAccount(ctx, acc1)
+	suite.Require().NoError(err)
+	err=suite.accountKeeper.SetAccount(ctx, acc2)
+	suite.Require().NoError(err)
 
 	acc1,_ = suite.accountKeeper.GetAccount(ctx, addr1)
 	suite.Require().NotNil(acc1)

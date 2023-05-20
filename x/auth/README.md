@@ -190,25 +190,25 @@ all fields of all accounts, and to iterate over all stored accounts.
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
 type AccountKeeperI interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
-	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.AccountI
+	NewAccountWithAddress(sdk.Context, sdk.AccAddress) (types.AccountI,error)
 
 	// Return a new account with the next account number. Does not save the new account to the store.
-	NewAccount(sdk.Context, types.AccountI) types.AccountI
+	NewAccount(sdk.Context, types.AccountI) (types.AccountI,error)
 
 	// Check if an account exists in the store.
-	HasAccount(sdk.Context, sdk.AccAddress) bool
+	HasAccount(sdk.Context, sdk.AccAddress) (bool,error)
 
 	// Retrieve an account from the store.
-	GetAccount(sdk.Context, sdk.AccAddress) types.AccountI
+	GetAccount(sdk.Context, sdk.AccAddress) (types.AccountI,error)
 
 	// Set an account in the store.
-	SetAccount(sdk.Context, types.AccountI)
+	SetAccount(sdk.Context, types.AccountI) error
 
 	// Remove an account from the store.
-	RemoveAccount(sdk.Context, types.AccountI)
+	RemoveAccount(sdk.Context, types.AccountI) error
 
 	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
-	IterateAccounts(sdk.Context, func(types.AccountI) bool)
+	IterateAccounts(sdk.Context, func(types.AccountI) bool) error
 
 	// Fetch the public key of an account at a specified address
 	GetPubKey(sdk.Context, sdk.AccAddress) (crypto.PubKey, error)
@@ -217,7 +217,7 @@ type AccountKeeperI interface {
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	NextAccountNumber(sdk.Context) uint64
+	NextAccountNumber(sdk.Context) (uint64,error)
 }
 ```
 

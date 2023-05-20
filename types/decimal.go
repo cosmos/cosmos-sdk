@@ -213,6 +213,7 @@ func (d Dec) LTE(d2 Dec) bool   { return (d.i).Cmp(d2.i) <= 0 }       // less th
 func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
 func (d Dec) NegMut() Dec       { d.i.Neg(d.i); return d }            // reverse the decimal sign, mutable
 func (d Dec) Abs() Dec          { return Dec{new(big.Int).Abs(d.i)} } // absolute value
+func (d Dec) AbsMut() Dec       { d.i.Abs(d.i); return d }            // absolute value, mutable
 func (d Dec) Set(d2 Dec) Dec    { d.i.Set(d2.i); return d }           // set to existing dec value
 func (d Dec) Clone() Dec        { return Dec{new(big.Int).Set(d.i)} } // clone new dec
 
@@ -460,15 +461,28 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	}
 
 	guess, delta := OneDec(), OneDec()
+	smallestDec := SmallestDec()
+	var prev Dec
 
-	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < maxApproxRootIterations; iter++ {
-		prev := guess.Power(root - 1)
-		if prev.IsZero() {
-			prev = SmallestDec()
+	for iter := 0; delta.AbsMut().GT(smallestDec) && iter < maxApproxRootIterations; iter++ {
+		// prev = guess^(root-1)
+		// optimize for root == 2, to take no exponent.
+		prev = guess
+		if root != 2 {
+			prev = guess.Power(root - 1)
 		}
+		if prev.IsZero() {
+			prev = smallestDec
+		}
+		// delta = ((d/prev) - guess)/root
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)
-		delta.QuoInt64Mut(int64(root))
+		// optimize for root = 2
+		if root == 2 {
+			delta.i = delta.i.Rsh(delta.i, 1)
+		} else {
+			delta.QuoInt64Mut(int64(root))
+		}
 
 		guess.AddMut(delta)
 	}
@@ -485,7 +499,10 @@ func (d Dec) Power(power uint64) Dec {
 func (d Dec) PowerMut(power uint64) Dec {
 	// TODO: use mutable functions here
 	if power == 0 {
-		return OneDec()
+		d.i.SetInt64(1)
+		return d
+	} else if power == 1 {
+		return d
 	}
 	tmp := OneDec()
 

@@ -235,10 +235,10 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmd
 	transport := svrCtx.Viper.GetString(flagTransport)
 
 	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
+	defer appCleanupFn()
 	if err != nil {
 		return err
 	}
-	defer appCleanupFn()
 
 	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
@@ -388,13 +388,13 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
 	traceWriter, traceWriterCleanup, err := setupTraceWriter(svrCtx)
 	if err != nil {
-		return app, cleanupFn, err
+		return app, traceWriterCleanup, err
 	}
 
 	home := svrCtx.Config.RootDir
 	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
-		return app, cleanupFn, err
+		return app, traceWriterCleanup, err
 	}
 
 	app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)

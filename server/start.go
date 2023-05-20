@@ -282,7 +282,8 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 }
 
 func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application,
-	metrics *telemetry.Metrics, opts StartCmdOptions) error {
+	metrics *telemetry.Metrics, opts StartCmdOptions,
+) error {
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
 

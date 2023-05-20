@@ -233,33 +233,19 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
-	home := svrCtx.Viper.GetString(flags.FlagHome)
 
-	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
+	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
+	if err != nil {
+		return err
+	}
+	defer appCleanupFn()
+
+	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Should we be using startTraceServer, and defer closing the traceWriter?
-	// right now its left unclosed
-	traceWriterFile := svrCtx.Viper.GetString(flagTraceStore)
-	traceWriter, err := openTraceWriter(traceWriterFile)
-	if err != nil {
-		return err
-	}
-
-	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-
-	config, err := serverconfig.GetConfig(svrCtx.Viper)
-	if err != nil {
-		return err
-	}
-
-	if err := config.ValidateBasic(); err != nil {
-		return err
-	}
-
-	if _, err := startTelemetry(config); err != nil {
+	if _, err := startTelemetry(svrCfg); err != nil {
 		return err
 	}
 
@@ -295,28 +281,15 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmd
 }
 
 func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, opts StartCmdOptions) error {
-	cmtCfg := svrCtx.Config
-	home := cmtCfg.RootDir
-
-	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
-	if err != nil {
-		return err
-	}
-
 	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
 		return err
 	}
 
-	traceWriter, traceWriterCleanup, err := setupTraceWriter(svrCtx)
-	if err != nil {
-		return err
-	}
+	cmtCfg := svrCtx.Config
+	home := cmtCfg.RootDir
 
-	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-
-	// TODO: Move this to only be done if were launching the node. (So not in GRPC-only mode)
-	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
+	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
 	if err != nil {
 		return err
 	}
@@ -331,7 +304,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, err = startCmtNode(cmtCfg, nodeKey, app, svrCtx)
+		tmNode, err = startCmtNode(cmtCfg, app, svrCtx)
 		if err != nil {
 			return err
 		}
@@ -403,8 +376,8 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 			_ = app.Close()
 		}
 
-		if traceWriterCleanup != nil {
-			traceWriterCleanup()
+		if appCleanupFn != nil {
+			appCleanupFn()
 		}
 	}()
 
@@ -412,8 +385,28 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	return g.Wait()
 }
 
-// TODO: Move nodeKey into being created within the function.
-func startCmtNode(cfg *cmtcfg.Config, nodeKey *p2p.NodeKey, app types.Application, svrCtx *Context) (tmNode *node.Node, err error) {
+func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
+	traceWriter, traceWriterCleanup, err := setupTraceWriter(svrCtx)
+	if err != nil {
+		return app, cleanupFn, err
+	}
+
+	home := svrCtx.Config.RootDir
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
+	if err != nil {
+		return app, cleanupFn, err
+	}
+
+	app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+	return app, traceWriterCleanup, nil
+}
+
+func startCmtNode(cfg *cmtcfg.Config, app types.Application, svrCtx *Context) (tmNode *node.Node, err error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	if err != nil {
+		return nil, err
+	}
+
 	tmNode, err = node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
@@ -542,6 +535,7 @@ func startAPIServer(ctx context.Context, g *errgroup.Group, cmtCfg *cmtcfg.Confi
 	}
 	// TODO: Why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
 	// surely theres a better way. This is likely a serious node start time overhead.
+	// Shouldn't it be in cmtCfg.ChainID() ?
 	genDocProvider := getGenDocProvider(cmtCfg)
 	genDoc, err := genDocProvider()
 	if err != nil {

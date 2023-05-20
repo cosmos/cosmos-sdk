@@ -77,6 +77,7 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/authz`
 * `x/bank`
 * `x/consensus`
+* `x/crisis`
 * `x/distribution`
 * `x/evidence`
 * `x/feegrant`
@@ -99,6 +100,7 @@ The following modules' `Keeper` methods now take in a `context.Context` instead 
 
 * `x/authz`
 * `x/bank`
+* `x/crisis`
 * `x/distribution`
 * `x/evidence`
 * `x/gov`

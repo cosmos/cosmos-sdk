@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 
@@ -167,6 +168,7 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
+		queryGasLimit:    math.MaxUint64,
 	}
 
 	for _, option := range options {

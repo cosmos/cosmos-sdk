@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -47,9 +48,26 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	// Check that either metadata or Msgs length is non nil.
+	// check that either metadata or Msgs length is non nil.
 	if len(msg.Messages) == 0 && len(msg.Metadata) == 0 {
 		return nil, errors.Wrap(govtypes.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+	}
+
+	// verify that if present, the metadata title and summary equals the proposal title and summary
+	if len(msg.Metadata) != 0 {
+		proposalMetadata := govtypes.ProposalMetadata{}
+		if err := json.Unmarshal([]byte(msg.Metadata), &proposalMetadata); err == nil {
+			if proposalMetadata.Title != msg.Title {
+				return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "metadata title '%s' must equal proposal title '%s'", proposalMetadata.Title, msg.Title)
+			}
+
+			if proposalMetadata.Summary != msg.Summary {
+				return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "metadata summary '%s' must equal proposal summary '%s'", proposalMetadata.Summary, msg.Summary)
+			}
+		}
+
+		// if we can't unmarshal the metadata, this means the client didn't use the recommended metadata format
+		// nothing can be done here, and this is still a valid case, so we ignore the error
 	}
 
 	proposalMsgs, err := msg.GetMsgs()

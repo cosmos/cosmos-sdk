@@ -1697,6 +1697,30 @@ func (s *TestSuite) TestSubmitProposal() {
 			expProposal: defaultProposal,
 			postRun:     func(sdkCtx sdk.Context) {},
 		},
+		"title != metadata.title": {
+			req: &group.MsgSubmitProposal{
+				GroupPolicyAddress: accountAddr.String(),
+				Proposers:          []string{addr2.String()},
+				Metadata:           "{\"title\":\"title\",\"summary\":\"description\"}",
+				Title:              "title2",
+				Summary:            "description",
+			},
+			expErr:    true,
+			expErrMsg: "metadata title 'title' must equal proposal title 'title2'",
+			postRun:   func(sdkCtx sdk.Context) {},
+		},
+		"summary != metadata.summary": {
+			req: &group.MsgSubmitProposal{
+				GroupPolicyAddress: accountAddr.String(),
+				Proposers:          []string{addr2.String()},
+				Metadata:           "{\"title\":\"title\",\"summary\":\"description of proposal\"}",
+				Title:              "title",
+				Summary:            "description",
+			},
+			expErr:    true,
+			expErrMsg: "metadata summary 'description of proposal' must equal proposal summary 'description'",
+			postRun:   func(sdkCtx sdk.Context) {},
+		},
 		"metadata too long": {
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: accountAddr.String(),

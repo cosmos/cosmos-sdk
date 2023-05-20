@@ -262,11 +262,8 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
-	ctx, cancelFn := context.WithCancel(context.Background())
+	ctx := getCtx(svrCtx)
 	g, ctx := errgroup.WithContext(ctx)
-
-	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(cancelFn, svrCtx.Logger)
 
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
@@ -289,7 +286,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
 
-	var tmNode *node.Node
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
 	if gRPCOnly {
@@ -298,10 +294,11 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, err := startCmtNode(cmtCfg, app, svrCtx)
+		tmNode, cleanupFn, err := startCmtNode(cmtCfg, app, svrCtx)
 		if err != nil {
 			return err
 		}
+		defer cleanupFn()
 
 		// Add the tx service to the gRPC router. We only need to register this
 		// service if API or gRPC is enabled, and avoid doing so in the general
@@ -317,11 +314,8 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		}
 	}
 
-	ctx, cancelFn := context.WithCancel(context.Background())
+	ctx := getCtx(svrCtx)
 	g, ctx := errgroup.WithContext(ctx)
-
-	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(cancelFn, svrCtx.Logger)
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
@@ -354,16 +348,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		return nil
 	})
 
-	// deferred cleanup function
-	// TODO: Make a generic cleanup function that takes in several func(), and runs them all.
-	// then we defer that.
-	defer func() {
-		if tmNode != nil && tmNode.IsRunning() {
-			_ = tmNode.Stop()
-			_ = app.Close()
-		}
-	}()
-
 	// wait for signal capture and gracefully return
 	return g.Wait()
 }
@@ -384,10 +368,18 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	return app, cleanupFn, nil
 }
 
-func startCmtNode(cfg *cmtcfg.Config, app types.Application, svrCtx *Context) (tmNode *node.Node, err error) {
+func getCtx(svrCtx *Context) context.Context {
+	ctx, cancelFn := context.WithCancel(context.Background())
+	// listen for quit signals so the calling parent process can gracefully exit
+	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+	return ctx
+}
+
+func startCmtNode(cfg *cmtcfg.Config, app types.Application, svrCtx *Context) (tmNode *node.Node, cleanupFn func(), err error) {
+	cleanupFn = func() {}
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
-		return nil, err
+		return nil, cleanupFn, err
 	}
 
 	tmNode, err = node.NewNode(
@@ -401,13 +393,21 @@ func startCmtNode(cfg *cmtcfg.Config, app types.Application, svrCtx *Context) (t
 		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
 	)
 	if err != nil {
-		return tmNode, err
+		return tmNode, cleanupFn, err
 	}
 
 	if err := tmNode.Start(); err != nil {
-		return tmNode, err
+		return tmNode, cleanupFn, err
 	}
-	return tmNode, nil
+
+	cleanupFn = func() {
+		if tmNode != nil && tmNode.IsRunning() {
+			_ = tmNode.Stop()
+			_ = app.Close()
+		}
+	}
+
+	return tmNode, cleanupFn, nil
 }
 
 func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
@@ -435,14 +435,14 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) 
 }
 
 func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func(), err error) {
+	// clean up the traceWriter when the server is shutting down
+	cleanup = func() {}
+
 	traceWriterFile := svrCtx.Viper.GetString(flagTraceStore)
 	traceWriter, err = openTraceWriter(traceWriterFile)
 	if err != nil {
 		return traceWriter, cleanup, err
 	}
-
-	// clean up the traceWriter when the server is shutting down
-	cleanup = func() {}
 
 	// if flagTraceStore is not used then traceWriter is nil
 	if traceWriter != nil {

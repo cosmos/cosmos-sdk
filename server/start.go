@@ -166,14 +166,10 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
 			if !withCMT {
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
-
-				return wrapCPUProfile(serverCtx, func() error {
-					return startStandAlone(serverCtx, appCreator, opts)
-				})
 			}
 
 			return wrapCPUProfile(serverCtx, func() error {
-				return startInProcess(serverCtx, clientCtx, appCreator, opts)
+				return start(serverCtx, clientCtx, appCreator, withCMT, opts)
 			})
 		},
 	}
@@ -230,9 +226,11 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	return cmd
 }
 
-func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) error {
-	addr := svrCtx.Viper.GetString(flagAddress)
-	transport := svrCtx.Viper.GetString(flagTransport)
+func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, withCmt bool, opts StartCmdOptions) error {
+	svrCfg, err := getAndValidateConfig(svrCtx)
+	if err != nil {
+		return err
+	}
 
 	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
 	if err != nil {
@@ -240,16 +238,22 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmd
 	}
 	defer appCleanupFn()
 
-	svrCfg, err := getAndValidateConfig(svrCtx)
+	metrics, err := startTelemetry(svrCfg)
 	if err != nil {
 		return err
 	}
 
-	if _, err := startTelemetry(svrCfg); err != nil {
-		return err
-	}
-
 	emitServerInfoMetrics()
+
+	if !withCmt {
+		return startStandAlone(svrCtx, app, opts)
+	}
+	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
+}
+
+func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOptions) error {
+	addr := svrCtx.Viper.GetString(flagAddress)
+	transport := svrCtx.Viper.GetString(flagTransport)
 
 	svr, err := server.NewServer(addr, transport, app)
 	if err != nil {
@@ -280,31 +284,21 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmd
 	return g.Wait()
 }
 
-func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, opts StartCmdOptions) error {
-	svrCfg, err := getAndValidateConfig(svrCtx)
-	if err != nil {
-		return err
-	}
-
+func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application,
+	metrics *telemetry.Metrics, opts StartCmdOptions) error {
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
 
-	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
-	if err != nil {
-		return err
-	}
-
-	var (
-		tmNode   *node.Node
-		gRPCOnly = svrCtx.Viper.GetBool(flagGRPCOnly)
-	)
+	var tmNode *node.Node
+	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
 	if gRPCOnly {
+		// TODO: Generalize logic so that gRPC only is really in startStandAlone
 		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, err = startCmtNode(cmtCfg, app, svrCtx)
+		tmNode, err := startCmtNode(cmtCfg, app, svrCtx)
 		if err != nil {
 			return err
 		}
@@ -322,13 +316,6 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 			app.RegisterNodeService(clientCtx, svrCfg)
 		}
 	}
-
-	metrics, err := startTelemetry(svrCfg)
-	if err != nil {
-		return err
-	}
-
-	emitServerInfoMetrics()
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
@@ -374,10 +361,6 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
 			_ = app.Close()
-		}
-
-		if appCleanupFn != nil {
-			appCleanupFn()
 		}
 	}()
 

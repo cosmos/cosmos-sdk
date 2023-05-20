@@ -3,6 +3,9 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"math"
+	"strconv"
+	"strings"
 
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -32,6 +35,25 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 	}
 
 	return func(bapp *BaseApp) { bapp.setMinGasPrices(gasPrices) }
+}
+
+// SetQueryGasLimit returns an option that sets a gas limit for queries.
+func SetQueryGasLimit(queryGasLimitStr string) func(*BaseApp) {
+	queryGasLimitStr = strings.TrimSpace(queryGasLimitStr)
+	queryGasLimit := uint64(0)
+	var err error
+	if queryGasLimitStr != "" {
+		queryGasLimit, err = strconv.ParseUint(queryGasLimitStr, 10, 64)
+		if err != nil {
+			panic(fmt.Sprintf("invalid query gas limit: %v", err))
+		}
+
+	}
+	if queryGasLimit == 0 {
+		queryGasLimit = math.MaxUint64
+	}
+
+	return func(bapp *BaseApp) { bapp.queryGasLimit = queryGasLimit }
 }
 
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.

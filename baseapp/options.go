@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"strconv"
-	"strings"
 
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -38,17 +36,7 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 }
 
 // SetQueryGasLimit returns an option that sets a gas limit for queries.
-func SetQueryGasLimit(queryGasLimitStr string) func(*BaseApp) {
-	queryGasLimitStr = strings.TrimSpace(queryGasLimitStr)
-	queryGasLimit := uint64(0)
-	var err error
-	if queryGasLimitStr != "" {
-		queryGasLimit, err = strconv.ParseUint(queryGasLimitStr, 10, 64)
-		if err != nil {
-			panic(fmt.Sprintf("invalid query gas limit: %v", err))
-		}
-
-	}
+func SetQueryGasLimit(queryGasLimit uint64) func(*BaseApp) {
 	if queryGasLimit == 0 {
 		queryGasLimit = math.MaxUint64
 	}

@@ -503,7 +503,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		defaultMempool,
 		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 		baseapp.SetChainID(chainID),
-		baseapp.SetQueryGasLimit(cast.ToString(appOpts.Get(FlagQueryGasLimit))),
+		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 	}
 }
 

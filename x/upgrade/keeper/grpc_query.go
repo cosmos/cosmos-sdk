@@ -44,7 +44,7 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 	consState, err := k.GetUpgradedConsensusState(ctx, req.LastHeight)
 	if err != nil {
 		if errors.Is(err, types.ErrNoUpgradedConsensusStateFound) {
-			return &types.QueryUpgradedConsensusStateResponse{}, nil
+			return &types.QueryUpgradedConsensusStateResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 		}
 
 		return nil, err

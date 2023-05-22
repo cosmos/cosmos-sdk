@@ -67,12 +67,12 @@ func (s *errorsTestSuite) TestErrorIs() {
 		},
 		"successful comparison to a wrapped error": {
 			a:      ErrUnauthorized,
-			b:      errors.Wrap(ErrUnauthorized, "gone"),
+			b:      errorsmod.wrap(ErrUnauthorized, "gone"),
 			wantIs: true,
 		},
 		"unsuccessful comparison to a wrapped error": {
 			a:      ErrUnauthorized,
-			b:      errors.Wrap(ErrInsufficientFee, "too big"),
+			b:      errorsmod.wrap(ErrInsufficientFee, "too big"),
 			wantIs: false,
 		},
 		"not equal to stdlib error": {
@@ -82,7 +82,7 @@ func (s *errorsTestSuite) TestErrorIs() {
 		},
 		"not equal to a wrapped stdlib error": {
 			a:      ErrUnauthorized,
-			b:      errors.Wrap(fmt.Errorf("stdlib error"), "wrapped"),
+			b:      errorsmod.wrap(fmt.Errorf("stdlib error"), "wrapped"),
 			wantIs: false,
 		},
 		"nil is nil": {
@@ -226,7 +226,7 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 
 func ExampleWrap() {
 	err1 := Wrap(ErrInsufficientFunds, "90 is smaller than 100")
-	err2 := errors.Wrap(ErrInsufficientFunds, "90 is smaller than 100")
+	err2 := errorsmod.wrap(ErrInsufficientFunds, "90 is smaller than 100")
 	fmt.Println(err1.Error())
 	fmt.Println(err2.Error())
 	// Output:
@@ -236,7 +236,7 @@ func ExampleWrap() {
 
 func ExampleWrapf() {
 	err1 := Wrap(ErrInsufficientFunds, "90 is smaller than 100")
-	err2 := errors.Wrap(ErrInsufficientFunds, "90 is smaller than 100")
+	err2 := errorsmod.wrap(ErrInsufficientFunds, "90 is smaller than 100")
 	fmt.Println(err1.Error())
 	fmt.Println(err2.Error())
 	// Output:

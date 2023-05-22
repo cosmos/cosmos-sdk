@@ -57,7 +57,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	// If we didn't find any grant, we don't return any error.
 	// All other kinds of errors are returned.
-	if err != nil && !sdkerrors.IsOf(err, sdkerrors.ErrNotFound) {
+	if err != nil && !errorsmod.IsOf(err, sdkerrors.ErrNotFound) {
 		return err
 	}
 

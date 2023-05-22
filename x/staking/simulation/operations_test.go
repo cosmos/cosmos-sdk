@@ -137,6 +137,10 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
 		{simulation.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
 		{simulation.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, types.TypeMsgCancelUnbondingDelegation},
+
+		{simulation.DefaultWeightMsgTokenizeShares, types.ModuleName, types.TypeMsgTokenizeShares},
+		{simulation.DefaultWeightMsgRedeemTokensForShares, types.ModuleName, types.TypeMsgRedeemTokensForShares},
+		{simulation.DefaultWeightMsgTransferTokenizeShareRecord, types.ModuleName, types.TypeMsgTransferTokenizeShareRecord},
 	}
 
 	for i, w := range weightesOps {
@@ -188,7 +192,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
-	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
+	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares, false)
 	s.stakingKeeper.SetDelegation(ctx, delegation)
 	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
@@ -282,7 +286,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
-	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
+	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares, false)
 	s.stakingKeeper.SetDelegation(ctx, delegation)
 	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
@@ -324,7 +328,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 
 	// setup accounts[3] as delegator
 	delegator := s.accounts[3]
-	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
+	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares, false)
 	s.stakingKeeper.SetDelegation(ctx, delegation)
 	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 

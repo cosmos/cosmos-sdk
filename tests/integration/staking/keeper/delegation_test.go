@@ -40,7 +40,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.True(math.IntEq(t, startTokens, validator.BondedTokens()))
 	require.True(t, validator.IsBonded())
 
-	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
+	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	maxEntries := app.StakingKeeper.MaxEntries(ctx)

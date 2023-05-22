@@ -99,7 +99,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
 		desc := tt.Pulsar.ProtoReflect().Descriptor()
@@ -209,7 +209,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		vesting.AppModuleBasic{}, gov.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 	addr1 := types.AccAddress("addr1")
 	now := time.Now()
 

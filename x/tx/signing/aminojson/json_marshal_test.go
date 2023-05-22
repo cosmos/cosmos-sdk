@@ -1,6 +1,7 @@
 package aminojson_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
@@ -96,18 +97,42 @@ func TestAminoJSON(t *testing.T) {
 		Si64:     -59268425823934,
 		Sf64:     -659101379604211154,
 	}
-	bz, err := aminojson.NewEncoder(aminojson.EncoderOptions{}).Marshal(msg)
+
+	unsortedBz, err := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true}).Marshal(msg)
 	assert.NilError(t, err)
 	legacyBz, err := cdc.MarshalJSON(msg)
 	assert.NilError(t, err)
-	require.Equal(t, string(legacyBz), string(bz))
+	require.Equal(t, string(legacyBz), string(unsortedBz))
+
+	// Now ensure that the default encoder behavior sorts fields and that they match
+	// as we'd have them from encoding/json.Marshal.
+	// Please see https://github.com/cosmos/cosmos-sdk/issues/2350
+	encodedDefaultBz, err := aminojson.NewEncoder(aminojson.EncoderOptions{}).Marshal(msg)
+	assert.NilError(t, err)
+
+	// Ensure that it is NOT equal to the legacy JSON but that it is equal to the sorted JSON.
+	require.NotEqual(t, string(legacyBz), string(encodedDefaultBz))
+
+	// Now ensure that the legacy's sortedJSON is as the aminojson.Encoder would produce.
+	// This proves that we can eliminate the use of sdk.*SortJSON(encoderBz)
+	sortedBz := naiveSortedJSON(t, unsortedBz)
+	require.Equal(t, string(sortedBz), string(encodedDefaultBz))
+}
+
+func naiveSortedJSON(t testing.TB, jsonToSort []byte) []byte {
+	var c interface{}
+	err := json.Unmarshal(jsonToSort, &c)
+	assert.NilError(t, err)
+	sortedBz, err := json.Marshal(c)
+	assert.NilError(t, err)
+	return sortedBz
 }
 
 func TestRapid(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&testpb.ABitOfEverything{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
-		bz, err := aminojson.NewEncoder(aminojson.EncoderOptions{}).Marshal(msg)
+		bz, err := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true}).Marshal(msg)
 		assert.NilError(t, err)
 		checkInvariants(t, msg, bz)
 	})

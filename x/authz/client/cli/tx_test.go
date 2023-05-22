@@ -70,6 +70,8 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
+	s.ac = addresscodec.NewBech32Codec("cosmos")
+
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -156,8 +158,6 @@ func (s *CLITestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-
-	s.ac = addresscodec.NewBech32Codec("cosmos")
 }
 
 func (s *CLITestSuite) createAccount(uid string) sdk.AccAddress {
@@ -174,11 +174,14 @@ func (s *CLITestSuite) createAccount(uid string) sdk.AccAddress {
 func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	// Send some funds to the new account.
+	s.ac.StringToBytes("cosmos16zex22087zs656t0vedytv5wqhm6axxd5679ry")
 	out, err := clitestutil.MsgSendExec(
 		s.clientCtx,
 		val[0].Address,
 		grantee,
-		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200))), s.ac, fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200))),
+		s.ac,
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 	)

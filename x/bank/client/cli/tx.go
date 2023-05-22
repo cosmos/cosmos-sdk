@@ -50,7 +50,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 			if err != nil {
 				return err
 			}
-
+			fmt.Println(args[1])
 			toAddr, err := ac.StringToBytes(args[1])
 			if err != nil {
 				return err

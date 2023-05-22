@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -280,6 +281,7 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	_, err = clitestutil.MsgSendExec(clientCtx, val.Address, addr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
 		s.commonFlags...,
+		address.NewBech32Codec("cosmos"),
 	)
 	s.Require().NoError(err)
 	return groupPolicyAddress

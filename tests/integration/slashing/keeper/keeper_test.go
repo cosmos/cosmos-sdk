@@ -89,7 +89,7 @@ func initFixture(t testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
 
-	slashingKeeper := slashingkeeper.NewKeeper(cdc, &codec.LegacyAmino{}, keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
+	slashingKeeper := slashingkeeper.NewKeeper(cdc, &codec.LegacyAmino{}, runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
 
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
@@ -213,17 +213,21 @@ func TestHandleNewValidator(t *testing.T) {
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := f.valAddrs[0], pks[0]
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
-	f.ctx = f.ctx.WithBlockHeight(f.slashingKeeper.SignedBlocksWindow(f.ctx) + 1)
+	signedBlocksWindow, err := f.slashingKeeper.SignedBlocksWindow(f.ctx)
+	assert.NilError(t, err)
+	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 1)
 
 	f.slashingKeeper.AddPubkey(f.ctx, pks[0])
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info)
+	err = f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info)
+	assert.NilError(t, err)
 
 	// Validator created
 	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	assert.DeepEqual(
 		t, f.bankKeeper.GetAllBalances(f.ctx, sdk.AccAddress(addr)),
 		sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.GetParams(f.ctx).BondDenom, testutil.InitTokens.Sub(amt))),
@@ -232,12 +236,12 @@ func TestHandleNewValidator(t *testing.T) {
 
 	// Now a validator, for two blocks
 	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, true)
-	f.ctx = f.ctx.WithBlockHeight(f.slashingKeeper.SignedBlocksWindow(f.ctx) + 2)
+	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 2)
 	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, false)
 
 	info, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()))
 	assert.Assert(t, found)
-	assert.Equal(t, f.slashingKeeper.SignedBlocksWindow(f.ctx)+1, info.StartHeight)
+	assert.Equal(t, signedBlocksWindow+1, info.StartHeight)
 	assert.Equal(t, int64(2), info.IndexOffset)
 	assert.Equal(t, int64(1), info.MissedBlocksCounter)
 	assert.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
@@ -261,30 +265,41 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	power := int64(100)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 
-	f.slashingKeeper.AddPubkey(f.ctx, pks[0])
+	err := f.slashingKeeper.AddPubkey(f.ctx, pks[0])
+	assert.NilError(t, err)
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
 	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info)
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
+
+	signedBlocksWindow, err := f.slashingKeeper.SignedBlocksWindow(f.ctx)
+	assert.NilError(t, err)
 
 	// 1000 first blocks OK
 	height := int64(0)
-	for ; height < f.slashingKeeper.SignedBlocksWindow(f.ctx); height++ {
+	for ; height < signedBlocksWindow; height++ {
 		f.ctx = f.ctx.WithBlockHeight(height)
-		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, true)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, true)
+		assert.NilError(t, err)
 	}
 
+	minSignedPerWindow, err := f.slashingKeeper.MinSignedPerWindow(f.ctx)
+	assert.NilError(t, err)
+
 	// 501 blocks missed
-	for ; height < f.slashingKeeper.SignedBlocksWindow(f.ctx)+(f.slashingKeeper.SignedBlocksWindow(f.ctx)-f.slashingKeeper.MinSignedPerWindow(f.ctx))+1; height++ {
+	for ; height < signedBlocksWindow+(signedBlocksWindow-minSignedPerWindow)+1; height++ {
 		f.ctx = f.ctx.WithBlockHeight(height)
-		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, false)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, false)
+		assert.NilError(t, err)
 	}
 
 	// end block
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 
 	// validator should have been jailed and slashed
 	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))
@@ -369,20 +384,26 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// shouldn't be jailed/kicked yet
 	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
+	signedBlocksWindow, err := f.slashingKeeper.SignedBlocksWindow(f.ctx)
+	assert.NilError(t, err)
+
 	// validator misses an additional 500 more blocks within the SignedBlockWindow (here 1000 blocks).
-	latest := f.slashingKeeper.SignedBlocksWindow(f.ctx) + height
+	latest := signedBlocksWindow + height
 	// misses 500 blocks + within the signing windows i.e. 700-1700
 	// validators misses all 1000 blocks of a SignedBlockWindows
 	for ; height < latest+1; height++ {
-		f.slashingKeeper.HandleValidatorSignature(f.ctx.WithBlockHeight(height), val.Address(), newPower, false)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx.WithBlockHeight(height), val.Address(), newPower, false)
+		assert.NilError(t, err)
 	}
 
 	// should now be jailed & kicked
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
 
 	info = slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
+	err = f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
+	assert.NilError(t, err)
 
 	// check all the signing information
 	signInfo, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, consAddr)
@@ -396,15 +417,18 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	f.ctx = f.ctx.WithBlockHeight(height)
 
 	info = slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
+	err = f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
+	assert.NilError(t, err)
 
 	// validator rejoins and starts signing again
 	f.stakingKeeper.Unjail(f.ctx, consAddr)
 
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, true)
+	err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, true)
+	assert.NilError(t, err)
 
 	// validator should not be kicked since we reset counter/array when it was jailed
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
 	// check start height is correctly set
@@ -412,14 +436,20 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	assert.Assert(t, found)
 	assert.Equal(t, height, signInfo.StartHeight)
 
+	minSignedPerWindow, err := f.slashingKeeper.MinSignedPerWindow(f.ctx)
+	assert.NilError(t, err)
+
 	// validator misses 501 blocks after SignedBlockWindow period (1000 blocks)
-	latest = f.slashingKeeper.SignedBlocksWindow(f.ctx) + height
-	for ; height < latest+f.slashingKeeper.MinSignedPerWindow(f.ctx); height++ {
+	latest = signedBlocksWindow + height
+	for ; height < latest+minSignedPerWindow; height++ {
 		f.ctx = f.ctx.WithBlockHeight(height)
-		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, false)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, false)
+		assert.NilError(t, err)
 	}
 
 	// validator should now be jailed & kicked
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
+
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
 }

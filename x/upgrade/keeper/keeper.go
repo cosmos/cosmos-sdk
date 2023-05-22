@@ -201,7 +201,8 @@ func (k Keeper) GetModuleVersions(ctx context.Context) ([]*types.ModuleVersion, 
 	return mv, it.Close()
 }
 
-// getModuleVersion gets the version for a given module, and returns true if it exists, false otherwise
+// getModuleVersion gets the version for a given module. If it doesn't exist it returns ErrNoModuleVersionFound, other
+// errors may be returned if there is an error reading from the store.
 func (k Keeper) getModuleVersion(ctx context.Context, name string) (uint64, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := []byte{types.VersionMapByte}
@@ -256,10 +257,8 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 	// clear any old IBC state stored by previous plan
 	oldPlan, err := k.GetUpgradePlan(ctx)
 	// if there's an error but it's not ErrNoUpgradePlanFound, return error
-	if err != nil {
-		if !errors.Is(err, types.ErrNoUpgradePlanFound) {
-			return err
-		}
+	if err != nil && !errors.Is(err, types.ErrNoUpgradePlanFound) {
+		return err
 	}
 
 	if err == nil {
@@ -290,7 +289,8 @@ func (k Keeper) SetUpgradedClient(ctx context.Context, planHeight int64, bz []by
 	return store.Set(types.UpgradedClientKey(planHeight), bz)
 }
 
-// GetUpgradedClient gets the expected upgraded client for the next version of this chain
+// GetUpgradedClient gets the expected upgraded client for the next version of this chain. If not found it returns
+// ErrNoUpgradedClientFound, but other errors may be returned if there is an error reading from the store.
 func (k Keeper) GetUpgradedClient(ctx context.Context, height int64) ([]byte, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.UpgradedClientKey(height))
@@ -312,7 +312,8 @@ func (k Keeper) SetUpgradedConsensusState(ctx context.Context, planHeight int64,
 	return store.Set(types.UpgradedConsStateKey(planHeight), bz)
 }
 
-// GetUpgradedConsensusState gets the expected upgraded consensus state for the next version of this chain.
+// GetUpgradedConsensusState gets the expected upgraded consensus state for the next version of this chain. If not found
+// it returns ErrNoUpgradedConsensusStateFound, but other errors may be returned if there is an error reading from the store.
 func (k Keeper) GetUpgradedConsensusState(ctx context.Context, lastHeight int64) ([]byte, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.UpgradedConsStateKey(lastHeight))
@@ -419,8 +420,8 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// GetUpgradePlan returns the currently scheduled Plan if any, setting err to nil if there is a scheduled
-// upgrade or to ErrNoUpgradePlanFound if there is none. If err is any other than ErrNoUpgradePlanFound, an error occurred.
+// GetUpgradePlan returns the currently scheduled Plan if any. If not found it returns
+// ErrNoUpgradePlanFound, but other errors may be returned if there is an error reading from the store.
 func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.PlanKey())

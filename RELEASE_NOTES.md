@@ -1,6 +1,8 @@
 # Cosmos SDK v0.46.13 Release Notes
 
-<!-- TODO -->
+This release includes a few improvements and bug fixes.
+Notably, a bump to [CometBFT v0.34.28](https://github.com/cometbft/cometbft/blob/v0.34.28/CHANGELOG.md#v03428).
+Additionally, it includes new commands for snapshots management and bootstrapping from a local snapshot.
 
 Note, from `v0.46.11`+, the following replace is *mandatory* in the `go.mod` of your application:
 

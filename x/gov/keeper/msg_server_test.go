@@ -102,6 +102,36 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			expErr:    true,
 			expErrMsg: "proposal summary cannot be empty",
 		},
+		"title != metadata.title": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"{\"title\":\"Proposal\", \"description\":\"description of proposal\"}",
+					"Proposal2",
+					"description of proposal",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "metadata title 'Proposal' must equal proposal title 'Proposal2",
+		},
+		"summary != metadata.summary": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"{\"title\":\"Proposal\", \"description\":\"description of proposal\"}",
+					"Proposal",
+					"description",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "metadata summary '' must equal proposal summary 'description'",
+		},
 		"metadata too long": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(

@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -135,7 +136,7 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	return abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,
-		AppVersion:       app.appVersion,
+		AppVersion:       app.AppVersion(context.Background()),
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}

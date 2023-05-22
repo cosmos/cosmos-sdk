@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 	"time"
@@ -53,11 +54,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	skipUpgradeHeights := make(map[int64]bool)
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
-	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, s.encCfg.Codec, homeDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	s.upgradeKeeper.SetVersionSetter(s.baseApp)
-
-	vs := s.upgradeKeeper.GetVersionSetter()
-	s.Require().Equal(vs, s.baseApp)
+	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, s.encCfg.Codec, homeDir, s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
@@ -228,8 +225,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	ok := s.upgradeKeeper.IsSkipHeight(11)
 	s.Require().False(ok)
 	skip := map[int64]bool{skipOne: true}
-	upgradeKeeper := keeper.NewKeeper(skip, s.key, s.encCfg.Codec, s.T().TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	upgradeKeeper.SetVersionSetter(s.baseApp)
+	upgradeKeeper := keeper.NewKeeper(skip, s.key, s.encCfg.Codec, s.T().TempDir(), s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
 }
@@ -251,7 +247,7 @@ func (s *KeeperTestSuite) TestDowngradeVerified() {
 // Test that the protocol version successfully increments after an
 // upgrade and is successfully set on BaseApp's appVersion.
 func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
-	oldProtocolVersion := s.baseApp.AppVersion()
+	oldProtocolVersion := s.baseApp.AppVersion(context.Background())
 	res := s.upgradeKeeper.HasHandler("dummy")
 	s.Require().False(res)
 	dummyPlan := types.Plan{
@@ -267,7 +263,7 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 
 	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
 	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	upgradedProtocolVersion := s.baseApp.AppVersion()
+	upgradedProtocolVersion := s.baseApp.AppVersion(context.Background())
 
 	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
 }

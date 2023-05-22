@@ -17,15 +17,14 @@ import (
 
 	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/client/cli"
+	xp "cosmossdk.io/x/upgrade/exported"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -177,10 +176,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Key          *store.KVStoreKey
-	Cdc          codec.Codec
-	AddressCodec address.Codec
+	Config             *modulev1.Module
+	Key                *store.KVStoreKey
+	Cdc                codec.Codec
+	AddressCodec       address.Codec
+	AppVersionModifier xp.AppVersionModifier
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
@@ -191,7 +191,6 @@ type ModuleOutputs struct {
 	UpgradeKeeper *keeper.Keeper
 	Module        appmodule.AppModule
 	GovHandler    govv1beta1.HandlerRoute
-	BaseAppOption runtime.BaseAppOption
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -215,14 +214,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
-	baseappOpt := func(app *baseapp.BaseApp) {
-		k.SetVersionSetter(app)
-	}
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, in.AppVersionModifier, authority.String())
 	m := NewAppModule(k, in.AddressCodec)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return ModuleOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
+	return ModuleOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh}
 }
 
 func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {

@@ -53,8 +53,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 
-	s.keeper = keeper.NewKeeper(skip, key, s.encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	s.keeper.SetVersionSetter(s.baseApp)
+	s.keeper = keeper.NewKeeper(skip, key, s.encCfg.Codec, t.TempDir(), s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: height})
 

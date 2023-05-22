@@ -23,8 +23,7 @@ const (
 	// VersionMapByte is a prefix to look up module names (key) and versions (value)
 	VersionMapByte = 0x2
 
-	// ProtocolVersionByte is a prefix to look up Protocol Version
-	ProtocolVersionByte = 0x3
+	// 0x3 is reserved. It was previously used to set and get the app version
 
 	// KeyUpgradedIBCState is the key under which upgraded ibc state is stored in the upgrade store
 	KeyUpgradedIBCState = "upgradedIBCState"

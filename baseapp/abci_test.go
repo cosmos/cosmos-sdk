@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -41,7 +42,7 @@ func TestABCI_Info(t *testing.T) {
 	require.Equal(t, t.Name(), res.GetData())
 	require.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
-	require.Equal(t, suite.baseApp.AppVersion(), res.AppVersion)
+	require.Equal(t, suite.baseApp.AppVersion(context.Background()), res.AppVersion)
 }
 
 func TestABCI_InitChain(t *testing.T) {

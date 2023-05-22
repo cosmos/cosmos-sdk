@@ -844,3 +844,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
+
+// Close is called in start cmd to gracefully cleanup resources.
+func (app *BaseApp) Close() error {
+	return nil
+}

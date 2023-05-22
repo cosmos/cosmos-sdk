@@ -246,6 +246,11 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator) error {
 			return err
 		}
 
+		if err = app.Close(); err != nil {
+      svrCtx.Logger.Error("failed to close application", "err", err)
+			return err
+		}
+
 		// Wait for the calling process to be canceled or close the provided context,
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
@@ -509,6 +514,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
+			_ = app.Close()
 		}
 
 		if traceWriterCleanup != nil {

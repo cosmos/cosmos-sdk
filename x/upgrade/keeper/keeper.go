@@ -163,6 +163,7 @@ func (k Keeper) GetModuleVersionMap(ctx context.Context) (module.VersionMap, err
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
+		_ = it.Close()
 		return nil, err
 	}
 
@@ -184,6 +185,7 @@ func (k Keeper) GetModuleVersions(ctx context.Context) ([]*types.ModuleVersion, 
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
+		_ = it.Close()
 		return nil, err
 	}
 
@@ -208,6 +210,7 @@ func (k Keeper) getModuleVersion(ctx context.Context, name string) (uint64, erro
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
+		_ = it.Close()
 		return 0, err
 	}
 
@@ -215,7 +218,8 @@ func (k Keeper) getModuleVersion(ctx context.Context, name string) (uint64, erro
 		moduleName := string(it.Key()[1:])
 		if moduleName == name {
 			version := binary.BigEndian.Uint64(it.Value())
-			return version, nil
+			err = it.Close()
+			return version, err
 		}
 	}
 
@@ -334,6 +338,7 @@ func (k Keeper) GetLastCompletedUpgrade(ctx context.Context) (string, int64, err
 	prefix := []byte{types.DoneByte}
 	it, err := store.ReverseIterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
+		_ = it.Close()
 		return "", 0, err
 	}
 
@@ -368,6 +373,7 @@ func (k Keeper) GetDoneHeight(ctx context.Context, name string) (int64, error) {
 	prefix := []byte{types.DoneByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
+		_ = it.Close()
 		return 0, err
 	}
 

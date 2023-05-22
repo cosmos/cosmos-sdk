@@ -3,9 +3,8 @@ package keeper
 import (
 	"encoding/binary"
 
-	"cosmossdk.io/store/prefix"
-	// storetypes "cosmossdk.io/store/types"
 	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"

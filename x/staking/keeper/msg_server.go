@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/armon/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,7 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -105,7 +109,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	validator.MinSelfDelegation = msg.MinSelfDelegation
+	validator.MinSelfDelegation = math.ZeroInt()
 
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
@@ -170,25 +174,12 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		validator.Commission = commission
 	}
 
-	if msg.MinSelfDelegation != nil {
-		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, types.ErrMinSelfDelegationDecreased
-		}
-
-		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, types.ErrSelfDelegationBelowMinimum
-		}
-
-		validator.MinSelfDelegation = *msg.MinSelfDelegation
-	}
-
 	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeEditValidator,
 			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
-			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
 		),
 	})
 
@@ -220,18 +211,35 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		)
 	}
 
-	// NOTE: source funds are always unbonded
-	newShares, err := k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
+	tokens := msg.Amount.Amount
+	shares, err := validator.SharesFromTokens(tokens)
 	if err != nil {
 		return nil, err
 	}
 
-	if msg.Amount.Amount.IsInt64() {
+	// if this delegation is from a liquid staking provider, it cannot exceed
+	// the global or validator bond cap
+	if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
+		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
+			return nil, err
+		}
+		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, validator, shares); err != nil {
+			return nil, err
+		}
+	}
+
+	// NOTE: source funds are always unbonded
+	newShares, err := k.Keeper.Delegate(ctx, delegatorAddress, tokens, types.Unbonded, validator, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if tokens.IsInt64() {
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "delegate")
 			telemetry.SetGaugeWithLabels(
 				[]string{"tx", "msg", msg.Type()},
-				float32(msg.Amount.Amount.Int64()),
+				float32(tokens.Int64()),
 				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
 		}()
@@ -256,10 +264,34 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	if err != nil {
 		return nil, err
 	}
+	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	srcValidator, found := k.GetValidator(ctx, valSrcAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+	dstValidator, found := k.GetValidator(ctx, valDstAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorSrcAddress,
+		)
+	}
+
 	shares, err := k.ValidateUnbondAmount(
 		ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount,
 	)
@@ -267,16 +299,28 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, err
 	}
 
+	// if this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
+	if delegation.ValidatorBond {
+		if err := k.SafelyDecreaseValidatorBond(ctx, srcValidator, shares); err != nil {
+			return nil, err
+		}
+	}
+
+	// If this delegation is from a liquid staking provider, the delegation on the new validator
+	// cannot exceed that validator's self-bond cap
+	// The liquid shares from the source validator should get moved to the destination validator
+	if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
+		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, dstValidator, shares); err != nil {
+			return nil, err
+		}
+		k.DecreaseValidatorTotalLiquidShares(ctx, srcValidator, shares)
+	}
+
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
 		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
 		)
-	}
-
-	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
-	if err != nil {
-		return nil, err
 	}
 
 	completionTime, err := k.BeginRedelegation(
@@ -324,11 +368,41 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	if err != nil {
 		return nil, err
 	}
+
+	tokens := msg.Amount.Amount
 	shares, err := k.ValidateUnbondAmount(
-		ctx, delegatorAddress, addr, msg.Amount.Amount,
+		ctx, delegatorAddress, addr, tokens,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	validator, found := k.GetValidator(ctx, addr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, addr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorAddress,
+		)
+	}
+
+	// if this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
+	if delegation.ValidatorBond {
+		if err := k.SafelyDecreaseValidatorBond(ctx, validator, shares); err != nil {
+			return nil, err
+		}
+	}
+
+	// if this undelegation is from a liquid staking provider, the global and validator
+	// liquid counts should be decremented
+	if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
+		k.DecreaseTotalLiquidStakedTokens(ctx, tokens)
+		k.DecreaseValidatorTotalLiquidShares(ctx, validator, shares)
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -343,12 +417,12 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		return nil, err
 	}
 
-	if msg.Amount.Amount.IsInt64() {
+	if tokens.IsInt64() {
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
 			telemetry.SetGaugeWithLabels(
 				[]string{"tx", "msg", msg.Type()},
-				float32(msg.Amount.Amount.Int64()),
+				float32(tokens.Int64()),
 				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
 		}()
@@ -488,4 +562,363 @@ func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdatePara
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// UnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonded
+func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// validator must already be registered
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// jail the validator.
+	k.jailValidator(ctx, validator)
+	return &types.MsgUnbondValidatorResponse{}, nil
+}
+
+func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if valErr != nil {
+		return nil, valErr
+	}
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, types.ErrNoDelegatorForAddress
+	}
+
+	if delegation.ValidatorBond {
+		return nil, types.ErrValidatorBondNotAllowedForTokenizeShare
+	}
+
+	if msg.Amount.Denom != k.BondDenom(ctx) {
+		return nil, types.ErrOnlyBondDenomAllowdForTokenize
+	}
+
+	delegationAmount := sdk.NewDecFromInt(validator.Tokens).Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
+	if sdk.NewDecFromInt(msg.Amount.Amount).GT(delegationAmount) {
+		return nil, types.ErrNotEnoughDelegationShares
+	}
+
+	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
+	if acc != nil {
+		acc, ok := acc.(vesting.VestingAccount)
+		if ok {
+			// if account is a vesting account, it checks if free delegation (non-vesting delegation) is not exceeding
+			// the tokenize share amount and execute further tokenize share process
+			// tokenize share is reducing unlocked tokens delegation from the vesting account and further process
+			// is not causing issues
+			delFree := acc.GetDelegatedFree().AmountOf(msg.Amount.Denom)
+			if delFree.LT(msg.Amount.Amount) {
+				return nil, types.ErrExceedingFreeVestingDelegations
+			}
+		}
+	}
+
+	shares, err := k.ValidateUnbondAmount(
+		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// If this tokenization is NOT from a liquid staking provider,
+	//   confirm it does not exceed the global and validator liquid staking cap
+	// If the tokenization is from a liquid staking provider,
+	//   the shares are already considered liquid and there's no need to increment the totals
+	if !k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
+		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount); err != nil {
+			return nil, err
+		}
+		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, validator, shares); err != nil {
+			return nil, err
+		}
+	}
+
+	recordID := k.GetLastTokenizeShareRecordId(ctx) + 1
+	k.SetLastTokenizeShareRecordId(ctx, recordID)
+
+	record := types.TokenizeShareRecord{
+		Id:            recordID,
+		Owner:         msg.TokenizedShareOwner,
+		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordID),
+		Validator:     msg.ValidatorAddress,
+	}
+
+	shareToken := sdk.NewCoin(record.GetShareTokenDenom(), msg.Amount.Amount)
+
+	err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{shareToken})
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delegatorAddress, sdk.Coins{shareToken})
+	if err != nil {
+		return nil, err
+	}
+
+	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, shares)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator.IsBonded() {
+		k.bondedTokensToNotBonded(ctx, returnAmount)
+	}
+
+	// Note: UndelegateCoinsFromModuleToAccount is internally calling TrackUndelegation for vesting account
+	err = k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	// create reward ownership record
+	k.AddTokenizeShareRecord(ctx, record)
+
+	// send coins to module account
+	err = k.bankKeeper.SendCoins(ctx, delegatorAddress, record.GetModuleAddress(), sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
+	validator, found = k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// delegate from module account
+	_, err = k.Keeper.Delegate(ctx, record.GetModuleAddress(), msg.Amount.Amount, types.Unbonded, validator, true)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTokenizeShares,
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.TokenizedShareOwner),
+			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", record.Id)),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+		),
+	)
+
+	return &types.MsgTokenizeSharesResponse{
+		Amount: shareToken,
+	}, nil
+}
+
+func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemTokensForShares) (*types.MsgRedeemTokensForSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	balance := k.bankKeeper.GetBalance(ctx, delegatorAddress, msg.Amount.Denom)
+	if balance.Amount.LT(msg.Amount.Amount) {
+		return nil, types.ErrNotEnoughBalance
+	}
+
+	record, err := k.GetTokenizeShareRecordByDenom(ctx, msg.Amount.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, valErr := sdk.ValAddressFromBech32(record.Validator)
+	if valErr != nil {
+		return nil, valErr
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// calculate the ratio between shares and redeem amount
+	// moduleAccountTotalDelegation * redeemAmount / totalIssue
+	delegation, found := k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
+	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
+	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
+
+	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked
+	// If the redemption was from a liquid staking provider, the shares are still considered
+	// liquid, even in their non-tokenized form (since they are owned by a liquid staking provider)
+	if !k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
+		k.DecreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount)
+		k.DecreaseValidatorTotalLiquidShares(ctx, validator, shares)
+	}
+
+	returnAmount, err := k.Unbond(ctx, record.GetModuleAddress(), valAddr, shares)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator.IsBonded() {
+		k.bondedTokensToNotBonded(ctx, returnAmount)
+	}
+
+	// Note: since delegation object has been changed from unbond call, it gets latest delegation
+	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
+	if !found {
+		if k.hooks != nil {
+			k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
+		}
+
+		err = k.DeleteTokenizeShareRecord(ctx, record.Id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// send share tokens to NotBondedPool and burn
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, types.NotBondedPoolName, sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+	err = k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	// send equivalent amount of tokens to the delegator
+	returnCoin := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{returnCoin})
+	if err != nil {
+		return nil, err
+	}
+
+	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
+	validator, found = k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// convert the share tokens to delegated status
+	// Note: Delegate(substractAccount => true) -> DelegateCoinsFromAccountToModule -> TrackDelegation for vesting account
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, returnAmount, types.Unbonded, validator, true)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRedeemShares,
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+		),
+	)
+
+	return &types.MsgRedeemTokensForSharesResponse{
+		Amount: returnCoin,
+	}, nil
+}
+
+func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types.MsgTransferTokenizeShareRecord) (*types.MsgTransferTokenizeShareRecordResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	record, err := k.GetTokenizeShareRecord(ctx, msg.TokenizeShareRecordId)
+	if err != nil {
+		return nil, types.ErrTokenizeShareRecordNotExists
+	}
+
+	if record.Owner != msg.Sender {
+		return nil, types.ErrNotTokenizeShareRecordOwner
+	}
+
+	// Remove old account reference
+	oldOwner, err := sdk.AccAddressFromBech32(record.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
+	k.deleteTokenizeShareRecordWithOwner(ctx, oldOwner, record.Id)
+
+	record.Owner = msg.NewOwner
+	k.setTokenizeShareRecord(ctx, record)
+
+	// Set new account reference
+	newOwner, err := sdk.AccAddressFromBech32(record.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
+	k.setTokenizeShareRecordWithOwner(ctx, newOwner, record.Id)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTransferTokenizeShareRecord,
+			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", msg.TokenizeShareRecordId)),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.NewOwner),
+		),
+	)
+
+	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
+}
+
+func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorBond) (*types.MsgValidatorBondResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if valErr != nil {
+		return nil, valErr
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
+	if !found {
+		return nil, types.ErrNoDelegation
+	}
+
+	// liquid staking providers should not be able to validator bond
+	if k.AccountIsLiquidStakingProvider(ctx, delAddr) {
+		return nil, types.ErrValidatorBondNotAllowedFromModuleAccount
+	}
+
+	if !delegation.ValidatorBond {
+		delegation.ValidatorBond = true
+		k.SetDelegation(ctx, delegation)
+		validator.TotalValidatorBondShares = validator.TotalValidatorBondShares.Add(delegation.Shares)
+		k.SetValidator(ctx, validator)
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeValidatorBondDelegation,
+				sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+				sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			),
+		)
+	}
+
+	return &types.MsgValidatorBondResponse{}, nil
 }

@@ -30,11 +30,12 @@ func (dvv DVVTriplet) String() string {
 // NewDelegation creates a new delegation object
 //
 //nolint:interfacer
-func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
+func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, validatorBond bool) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Shares:           shares,
+		ValidatorBond:    validatorBond,
 	}
 }
 
@@ -100,6 +101,8 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 		Balance:                 balance,
 		UnbondingId:             unbondingID,
 		UnbondingOnHoldRefCount: 0,
+		ValidatorBondFactor:     math.LegacyZeroDec(), // TODO: figure out
+		GlobalLiquidStakingCap:  math.LegacyZeroDec(), // TODO: figure out
 	}
 }
 
@@ -351,10 +354,10 @@ func (d Redelegations) String() (out string) {
 
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, balance sdk.Coin,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, validatorBond bool, balance sdk.Coin,
 ) DelegationResponse {
 	return DelegationResponse{
-		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares),
+		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares, validatorBond),
 		Balance:    balance,
 	}
 }

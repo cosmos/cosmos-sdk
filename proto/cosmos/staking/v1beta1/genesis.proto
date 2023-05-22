@@ -38,6 +38,16 @@ message GenesisState {
   repeated Redelegation redelegations = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   bool exported = 8;
+
+  // store tokenize share records to provide reward to record owners
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  repeated TokenizeShareRecord tokenize_share_records = 9 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // last tokenize share record id, used for next share record id calculation
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  uint64 last_tokenize_share_record_id = 10;
 }
 
 // LastValidatorPower required for validator set update logic.

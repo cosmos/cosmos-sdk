@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.staking.v1beta1;
 
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -127,6 +128,58 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/params";
+  }
+
+  // Query for individual tokenize share record information by share by id
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShareRecordById(QueryTokenizeShareRecordByIdRequest) returns (QueryTokenizeShareRecordByIdResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/tokenize_share_record_by_id/{id}";
+  }
+
+  // Query for individual tokenize share record information by share denom
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShareRecordByDenom(QueryTokenizeShareRecordByDenomRequest)
+      returns (QueryTokenizeShareRecordByDenomResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/tokenize_share_record_by_denom/{denom}";
+  }
+
+  // Query tokenize share records by address
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShareRecordsOwned(QueryTokenizeShareRecordsOwnedRequest)
+      returns (QueryTokenizeShareRecordsOwnedResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/tokenize_share_records_owned/{owner}";
+  }
+
+  // Query for all tokenize share records
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc AllTokenizeShareRecords(QueryAllTokenizeShareRecordsRequest) returns (QueryAllTokenizeShareRecordsResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/all_tokenize_share_records";
+  }
+
+  // Query for last tokenize share record id
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc LastTokenizeShareRecordId(QueryLastTokenizeShareRecordIdRequest)
+      returns (QueryLastTokenizeShareRecordIdResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/last_tokenize_share_record_id";
+  }
+
+  // Query for total tokenized staked assets
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TotalTokenizeSharedAssets(QueryTotalTokenizeSharedAssetsRequest)
+      returns (QueryTotalTokenizeSharedAssetsResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/total_tokenize_shared_assets";
   }
 }
 
@@ -384,4 +437,82 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryTokenizeShareRecordByIdRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordByIdRequest {
+  uint64 id = 1;
+}
+
+// QueryTokenizeShareRecordByIdResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordByIdResponse {
+  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTokenizeShareRecordByDenomRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordByDenomRequest {
+  string denom = 1;
+}
+
+// QueryTokenizeShareRecordByDenomResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordByDenomResponse {
+  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTokenizeShareRecordsOwnedRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordsOwnedRequest {
+  string owner = 1;
+}
+
+// QueryTokenizeShareRecordsOwnedResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordsOwnedResponse {
+  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAllTokenizeShareRecordsRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryAllTokenizeShareRecordsRequest {}
+
+// QueryAllTokenizeShareRecordsResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryAllTokenizeShareRecordsResponse {
+  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryLastTokenizeShareRecordIdRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryLastTokenizeShareRecordIdRequest {}
+
+// QueryLastTokenizeShareRecordIdResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryLastTokenizeShareRecordIdResponse {
+  uint64 id = 1;
+}
+
+// QueryTotalTokenizeSharedAssetsRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTotalTokenizeSharedAssetsRequest {}
+
+// QueryTotalTokenizeSharedAssetsResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTotalTokenizeSharedAssetsResponse {
+  cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
 }

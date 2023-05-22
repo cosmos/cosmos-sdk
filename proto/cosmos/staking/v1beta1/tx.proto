@@ -43,8 +43,37 @@ service Msg {
 
   // UpdateParams defines an operation for updating the x/staking module
   // parameters.
+  //
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // UnbondValidator defines a method for performing the status transition for a validator
+  // from bonded to unbonded
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc UnbondValidator(MsgUnbondValidator) returns (MsgUnbondValidatorResponse);
+
+  // TokenizeShares defines a method for tokenizing shares from a validator.
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShares(MsgTokenizeShares) returns (MsgTokenizeSharesResponse);
+
+  // RedeemTokens defines a method for redeeming tokens from a validator for
+  // shares.
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc RedeemTokens(MsgRedeemTokensForShares) returns (MsgRedeemTokensForSharesResponse);
+
+  // TransferTokenizeShareRecord defines a method to transfer ownership of
+  // TokenizeShareRecord
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TransferTokenizeShareRecord(MsgTransferTokenizeShareRecord) returns (MsgTransferTokenizeShareRecordResponse);
+
+  // ValidatorBond defines a method for performing a validator self-bond
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc ValidatorBond(MsgValidatorBond) returns (MsgValidatorBondResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -199,3 +228,88 @@ message MsgUpdateParams {
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {};
+
+// MsgUnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonded
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgUnbondValidator {
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUnbondValidatorResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgUnbondValidatorResponse {}
+
+// MsgTokenizeShares
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgTokenizeShares {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string                   delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address     = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.v1beta1.Coin amount                = 3 [(gogoproto.nullable) = false];
+  string                   tokenized_share_owner = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgTokenizeSharesResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgTokenizeSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgRedeemTokensForShares
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgRedeemTokensForShares {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string                   delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.v1beta1.Coin amount            = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgRedeemTokensForSharesResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgRedeemTokensForSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgTransferTokenizeShareRecord
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgTransferTokenizeShareRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 tokenize_share_record_id = 1;
+  string sender                   = 2;
+  string new_owner                = 3;
+}
+
+// MsgTransferTokenizeShareRecordResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgTransferTokenizeShareRecordResponse {}
+
+// MsgValidatorBond defines a SDK message for performing validator self-bond of delegated coins
+// from a delegator to a validator.
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgValidatorBond {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+}
+
+// MsgValidatorBondResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message MsgValidatorBondResponse {}

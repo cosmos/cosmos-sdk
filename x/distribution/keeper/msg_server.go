@@ -158,3 +158,73 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
+
+// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
+func (k msgServer) WithdrawTokenizeShareRecordReward(goCtx context.Context, msg *types.MsgWithdrawTokenizeShareRecordReward) (*types.MsgWithdrawTokenizeShareRecordRewardResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	ownerAddr, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	if err != nil {
+		return nil, err
+	}
+	amount, err := k.Keeper.WithdrawTokenizeShareRecordReward(ctx, ownerAddr, msg.RecordId)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		for _, a := range amount {
+			if a.Amount.IsInt64() {
+				telemetry.SetGaugeWithLabels(
+					[]string{"tx", "msg", "withdraw_tokenize_share_reward"},
+					float32(a.Amount.Int64()),
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+				)
+			}
+		}
+	}()
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.OwnerAddress),
+		),
+	)
+
+	return &types.MsgWithdrawTokenizeShareRecordRewardResponse{}, nil
+}
+
+// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
+func (k msgServer) WithdrawAllTokenizeShareRecordReward(goCtx context.Context, msg *types.MsgWithdrawAllTokenizeShareRecordReward) (*types.MsgWithdrawAllTokenizeShareRecordRewardResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	ownerAddr, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	if err != nil {
+		return nil, err
+	}
+	amount, err := k.Keeper.WithdrawAllTokenizeShareRecordReward(ctx, ownerAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		for _, a := range amount {
+			if a.Amount.IsInt64() {
+				telemetry.SetGaugeWithLabels(
+					[]string{"tx", "msg", "withdraw_all_tokenize_share_reward"},
+					float32(a.Amount.Int64()),
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+				)
+			}
+		}
+	}()
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.OwnerAddress),
+		),
+	)
+
+	return &types.MsgWithdrawAllTokenizeShareRecordRewardResponse{}, nil
+}

@@ -70,6 +70,14 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
+
+  // TokenizeShareRecordReward queries the tokenize share record rewards
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShareRecordReward(QueryTokenizeShareRecordRewardRequest)
+      returns (QueryTokenizeShareRecordRewardResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/{owner_address}/tokenize_share_record_rewards";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -253,4 +261,25 @@ message QueryCommunityPoolResponse {
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
   ];
+}
+
+// QueryTokenizeShareRecordRewardRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordRewardRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string owner_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryTokenizeShareRecordRewardResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordRewardResponse {
+  // rewards defines all the rewards accrued by a delegator.
+  repeated TokenizeShareRecordReward rewards = 1 [(gogoproto.nullable) = false];
+  // total defines the sum of all the rewards.
+  repeated cosmos.base.v1beta1.DecCoin total = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
 }

@@ -49,6 +49,36 @@ func (k Keeper) MinCommissionRate(ctx sdk.Context) math.LegacyDec {
 	return k.GetParams(ctx).MinCommissionRate
 }
 
+// ValidatorBondFactor - validator bond factor for all validators
+//
+// Since: cosmos-sdk 0.47-lsm
+func (k Keeper) ValidatorBondFactor(ctx sdk.Context) (res sdk.Dec) {
+	return k.GetParams(ctx).ValidatorBondFactor
+}
+
+// Global liquid staking cap across all liquid staking providers
+//
+// Since: cosmos-sdk 0.47-lsm
+func (k Keeper) GlobalLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
+	return k.GetParams(ctx).GlobalLiquidStakingCap
+}
+
+// Check whether the validator bond factor is enabled
+// A non-negative factor indicates that it is enabled
+//
+// Since: cosmos-sdk 0.47-lsm
+func (k Keeper) ValidatorBondFactorEnabled(ctx sdk.Context) bool {
+	return k.ValidatorBondFactor(ctx).IsPositive()
+}
+
+// Check whether the global liquid staking cap is enabled
+// A cap less than 100% indicates that it is enabled
+//
+// Since: cosmos-sdk 0.47-lsm
+func (k Keeper) GlobalLiquidStakingCapEnabled(ctx sdk.Context) bool {
+	return k.GlobalLiquidStakingCap(ctx).LT(sdk.OneDec())
+}
+
 // SetParams sets the x/staking module parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	if err := params.Validate(); err != nil {

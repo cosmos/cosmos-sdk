@@ -364,6 +364,14 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 }
 ```
 
+## MsgWithdrawTokenizeShareRecordReward
+
+A `TokenizeShareRecords` owner can send the MsgWithdrawTokenizeShareRecordReward message to withraw their rewards allocated for tokenized amount of staking tokens.
+
+The middle account (1:1 assigned per tokenize share record) takes the role of a delegator.
+
+While executing the message, handler iterates all the tokenize share records, withdraw delegation reward from each record account and send the rewards to the record owner.
+
 ### Common distribution operations
 
 These operations take place during many different messages.

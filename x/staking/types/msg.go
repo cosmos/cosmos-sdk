@@ -6,6 +6,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // staking message types
@@ -17,6 +18,12 @@ const (
 	TypeMsgDelegate                  = "delegate"
 	TypeMsgBeginRedelegate           = "begin_redelegate"
 	TypeMsgUpdateParams              = "update_params"
+
+	TypeMsgValidatorBond               = "validator_bond"
+	TypeMsgUnbondValidator             = "unbond_validator"
+	TypeMsgTokenizeShares              = "tokenize_shares"
+	TypeMsgRedeemTokensForShares       = "redeem_tokens_for_shares"
+	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
 )
 
 var (
@@ -29,6 +36,18 @@ var (
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
+
+	_ sdk.Msg = &MsgValidatorBond{}
+	_ sdk.Msg = &MsgUnbondValidator{}
+	_ sdk.Msg = &MsgTokenizeShares{}
+	_ sdk.Msg = &MsgRedeemTokensForShares{}
+	_ sdk.Msg = &MsgTransferTokenizeShareRecord{}
+
+	_ legacytx.LegacyMsg = &MsgValidatorBond{}
+	_ legacytx.LegacyMsg = &MsgUnbondValidator{}
+	_ legacytx.LegacyMsg = &MsgTokenizeShares{}
+	_ legacytx.LegacyMsg = &MsgRedeemTokensForShares{}
+	_ legacytx.LegacyMsg = &MsgTransferTokenizeShareRecord{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -120,17 +139,6 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return err
 	}
 
-	if !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
-	}
-
-	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		return ErrSelfDelegationBelowMinimum
-	}
-
 	return nil
 }
 
@@ -178,13 +186,6 @@ func (msg MsgEditValidator) ValidateBasic() error {
 
 	if msg.Description == (Description{}) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
-	}
-
-	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
 	}
 
 	if msg.CommissionRate != nil {
@@ -420,4 +421,190 @@ func (m *MsgUpdateParams) ValidateBasic() error {
 func (m *MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
+}
+
+// NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
+//
+//nolint:interfacer
+func NewMsgUnbondValidator(valAddr sdk.ValAddress) *MsgUnbondValidator {
+	return &MsgUnbondValidator{
+		ValidatorAddress: valAddr.String(),
+	}
+}
+
+// Route implements the legacytx.LegacyMsg interface.
+func (msg MsgUnbondValidator) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) Type() string { return TypeMsgUnbondValidator }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) GetSigners() []sdk.AccAddress {
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{valAddr.Bytes()}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) ValidateBasic() error {
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	return nil
+}
+
+// Route implements the legacytx.LegacyMsg interface.
+func (msg MsgTokenizeShares) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgTokenizeShares) Type() string { return TypeMsgTokenizeShares }
+
+func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+func (msg MsgTokenizeShares) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTokenizeShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.TokenizedShareOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid tokenize share owner address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+// Route implements the legacytx.LegacyMsg interface.
+func (msg MsgRedeemTokensForShares) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgRedeemTokensForShares) Type() string { return TypeMsgRedeemTokensForShares }
+
+func (msg MsgRedeemTokensForShares) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+func (msg MsgRedeemTokensForShares) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgRedeemTokensForShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+// Route implements the legacytx.LegacyMsg interface.
+func (msg MsgTransferTokenizeShareRecord) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgTransferTokenizeShareRecord) Type() string { return TypeMsgTransferTokenizeShareRecord }
+
+func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+func (msg MsgTransferTokenizeShareRecord) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.NewOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid new owner address: %s", err)
+	}
+
+	return nil
+}
+
+// NewMsgValidatorBond creates a new MsgValidatorBond instance.
+//
+//nolint:interfacer
+func NewMsgValidatorBond(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgValidatorBond {
+	return &MsgValidatorBond{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+	}
+}
+
+// Route implements the legacytx.LegacyMsg interface.
+func (msg MsgValidatorBond) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgValidatorBond) Type() string { return TypeMsgValidatorBond }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgValidatorBond) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgValidatorBond) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgValidatorBond) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	return nil
 }

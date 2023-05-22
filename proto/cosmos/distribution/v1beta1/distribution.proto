@@ -192,3 +192,16 @@ message CommunityPoolSpendProposalWithDeposit {
   string amount      = 4;
   string deposit     = 5;
 }
+
+// TokenizeShareRecordReward represents the properties of tokenize share
+//
+// Since: cosmos-sdk 0.47-lsm
+message TokenizeShareRecordReward {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = true;
+
+  uint64 record_id = 1;
+
+  repeated cosmos.base.v1beta1.DecCoin reward = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}

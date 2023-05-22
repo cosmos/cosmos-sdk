@@ -23,6 +23,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgFundCommunityPool{}, "cosmos-sdk/MsgFundCommunityPool")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/distribution/MsgUpdateParams")
 	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/distr/MsgCommunityPoolSpend")
+	legacy.RegisterAminoMsg(cdc, &MsgWithdrawTokenizeShareRecordReward{}, "lsm/MsgWithdrawTokenizeShareReward")
+	legacy.RegisterAminoMsg(cdc, &MsgWithdrawAllTokenizeShareRecordReward{}, "lsm/MsgWithdrawAllTokenizeShareReward")
 
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/distribution/Params", nil)
 }
@@ -36,6 +38,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgFundCommunityPool{},
 		&MsgUpdateParams{},
 		&MsgCommunityPoolSpend{},
+		&MsgWithdrawTokenizeShareRecordReward{},
+		&MsgWithdrawAllTokenizeShareRecordReward{},
 	)
 
 	registry.RegisterImplementations(

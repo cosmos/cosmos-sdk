@@ -44,6 +44,7 @@ func initFixture(t *testing.T) *genesisFixture {
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	return &genesisFixture{
 		ctx:            testCtx.Ctx,
@@ -135,7 +136,7 @@ func TestInitGenesis(t *testing.T) {
 				err := f.feegrantKeeper.InitGenesis(f.ctx, &feegrant.GenesisState{Allowances: tc.feeAllowances})
 				assert.ErrorContains(t, err, "failed to get allowance: no allowance")
 			} else {
-				expectedErr := errors.New("errors")
+				expectedErr := errors.New("decoding bech32 failed")
 				err := f.feegrantKeeper.InitGenesis(f.ctx, &feegrant.GenesisState{Allowances: tc.feeAllowances})
 				assert.ErrorContains(t, err, expectedErr.Error())
 			}

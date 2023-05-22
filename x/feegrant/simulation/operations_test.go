@@ -203,7 +203,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	require.NoError(err)
 
 	var msg feegrant.MsgRevokeAllowance
-	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
+	proto.Unmarshal(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
 	require.Equal(granter.Address.String(), msg.Granter)

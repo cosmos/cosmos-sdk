@@ -11,13 +11,13 @@ import (
 
 // DistributionKeeper expected distribution keeper (noalias)
 type DistributionKeeper interface {
-	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
-	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
+	GetFeePoolCommunityCoins(ctx context.Context) sdk.DecCoins
+	GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk.ValAddress) sdk.DecCoins
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	address.Codec
+	AddressCodec() address.Codec
 
 	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI // only used for simulation

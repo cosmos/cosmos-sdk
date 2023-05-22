@@ -11,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -48,9 +49,8 @@ func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAdd
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
 	for _, addr := range addrs {
 		accountKeeper.EXPECT().GetAccount(gomock.Any(), addr).Return(authtypes.NewBaseAccountWithAddress(addr)).AnyTimes()
-		accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-		accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
 	}
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 

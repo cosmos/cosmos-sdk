@@ -63,7 +63,7 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshaling issue.
 	marshalerOption := &gateway.JSONPb{
 		EmitDefaults: true,
-		Indent:       "  ",
+		Indent:       "",
 		OrigName:     true,
 		AnyResolver:  clientCtx.InterfaceRegistry,
 	}
@@ -149,9 +149,9 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), servercmtlog.CometZeroLogWrapper{Logger: s.logger}, cmtCfg)
+			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		} else {
-			errCh <- tmrpcserver.Serve(s.listener, s.Router, servercmtlog.CometZeroLogWrapper{Logger: s.logger}, cmtCfg)
+			errCh <- tmrpcserver.Serve(s.listener, s.Router, servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		}
 	}(cfg.API.EnableUnsafeCORS)
 

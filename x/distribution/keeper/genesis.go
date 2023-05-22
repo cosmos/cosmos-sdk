@@ -13,16 +13,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 	k.SetFeePool(ctx, data.FeePool)
 
-	if err := k.SetParams(ctx, data.Params); err != nil {
+	if err := k.Params.Set(ctx, data.Params); err != nil {
 		panic(err)
 	}
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		delegatorAddress, err := k.authKeeper.StringToBytes(dwi.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		withdrawAddress, err := k.authKeeper.StringToBytes(dwi.WithdrawAddress)
+		withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.WithdrawAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -74,7 +74,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress, err := k.authKeeper.StringToBytes(del.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -109,8 +109,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	feePool := k.GetFeePool(ctx)
-	params := k.GetParams(ctx)
+	feePool, err := k.GetFeePool(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	dwi := make([]types.DelegatorWithdrawInfo, 0)
 	k.IterateDelegatorWithdrawAddrs(ctx, func(del, addr sdk.AccAddress) (stop bool) {
@@ -121,7 +128,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	pp := k.GetPreviousProposerConsAddr(ctx)
+	pp, err := k.GetPreviousProposerConsAddr(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
 
 	k.IterateValidatorOutstandingRewards(ctx,

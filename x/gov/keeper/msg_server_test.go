@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
-	"errors"
 	"strings"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,11 +19,7 @@ const (
 	o1  = "-0.1"
 )
 
-var (
-	longAddress       = "cosmos1v9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpg0s5ed"
-	longAddressError  = "address max length is 255"
-	emptyAddressError = "empty address string is not allowed"
-)
+var longAddressError = "address max length is 255"
 
 func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 	suite.reset()
@@ -33,14 +29,13 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	initialDeposit := coins
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
 		Amount:      coins,
 	}
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() (*v1.MsgSubmitProposal, error)
@@ -106,6 +101,36 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			},
 			expErr:    true,
 			expErrMsg: "proposal summary cannot be empty",
+		},
+		"title != metadata.title": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"{\"title\":\"Proposal\", \"description\":\"description of proposal\"}",
+					"Proposal2",
+					"description of proposal",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "metadata title 'Proposal' must equal proposal title 'Proposal2",
+		},
+		"summary != metadata.summary": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"{\"title\":\"Proposal\", \"description\":\"description of proposal\"}",
+					"Proposal",
+					"description",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "metadata summary '' must equal proposal summary 'description'",
 		},
 		"metadata too long": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -239,8 +264,6 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
@@ -254,7 +277,7 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 			},
 			depositor: proposer,
 			expErr:    true,
-			expErrMsg: "proposal is not found",
+			expErrMsg: "not found",
 		},
 		"valid proposal but invalid proposer": {
 			preRun: func() uint64 {
@@ -317,7 +340,8 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -334,9 +358,6 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 		false,
 	)
 	suite.Require().NoError(err)
-
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -462,7 +483,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -484,9 +506,6 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -707,7 +726,8 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -730,8 +750,6 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 	suite.Require().NotNil(res.ProposalId)
 	pID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
@@ -747,7 +765,7 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 			depositor: proposer,
 			deposit:   coins,
 			expErr:    true,
-			expErrMsg: "0: unknown proposal",
+			expErrMsg: "not found",
 		},
 		"empty depositor": {
 			preRun: func() uint64 {
@@ -788,9 +806,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	initialDeposit := coins
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
 
 	cases := map[string]struct {
 		preRun    func() (*v1beta1.MsgSubmitProposal, error)
@@ -901,7 +918,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -923,9 +941,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -1036,7 +1051,8 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -1058,9 +1074,6 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -1289,7 +1302,8 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -1312,8 +1326,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 	suite.Require().NotNil(res.ProposalId)
 	pID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
@@ -1329,7 +1341,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 			depositor: proposer,
 			deposit:   coins,
 			expErr:    true,
-			expErrMsg: "unknown proposal",
+			expErrMsg: "not found",
 		},
 		"empty depositer": {
 			preRun: func() uint64 {
@@ -1636,7 +1648,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 
 func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
-	baseDepositRatioDec := sdk.NewDec(baseDepositTestPercent).Quo(sdk.NewDec(100))
+	baseDepositRatioDec := sdkmath.LegacyNewDec(baseDepositTestPercent).Quo(sdkmath.LegacyNewDec(100))
 
 	testcases := map[string]struct {
 		minDeposit             sdk.Coins
@@ -1684,13 +1696,10 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			govKeeper, ctx := suite.govKeeper, suite.ctx
 			address := simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 1, tc.accountBalance[0].Amount)[0]
 
-			suite.acctKeeper.EXPECT().StringToBytes(address.String()).Return(address, nil).AnyTimes()
-			suite.acctKeeper.EXPECT().BytesToString(address).Return(address.String(), nil).AnyTimes()
-
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
-			govKeeper.SetParams(ctx, params)
+			govKeeper.Params.Set(ctx, params)
 
 			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
 			suite.Require().NoError(err)

@@ -18,7 +18,7 @@ func TestGRPCParams(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, types.DefaultParams())
+	f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams())
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
@@ -46,12 +46,12 @@ func TestGRPCParams(t *testing.T) {
 			malleate: func() {
 				params = types.Params{
 					CommunityTax:        sdk.NewDecWithPrec(3, 1),
-					BaseProposerReward:  sdk.ZeroDec(),
-					BonusProposerReward: sdk.ZeroDec(),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: true,
 				}
 
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 				expParams = params
 			},
 			msg: &types.QueryParamsRequest{},
@@ -100,8 +100,11 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	// set outstanding rewards
-	f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
-	rewards := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
+	err := f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	assert.NilError(t, err)
+
+	rewards, err := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
+	assert.NilError(t, err)
 
 	testCases := []struct {
 		name      string
@@ -168,7 +171,7 @@ func TestGRPCValidatorCommission(t *testing.T) {
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
-	commission := sdk.DecCoins{{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
+	commission := sdk.DecCoins{sdk.DecCoin{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
 	f.distrKeeper.SetValidatorAccumulatedCommission(f.sdkCtx, f.valAddr, types.ValidatorAccumulatedCommission{Commission: commission})
 
 	testCases := []struct {
@@ -366,7 +369,7 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, types.DefaultParams())
+	f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams())
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
@@ -518,7 +521,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins})
 
 	expRes := &types.QueryDelegationRewardsResponse{
-		Rewards: sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},
+		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},
 	}
 
 	// test command delegation rewards grpc

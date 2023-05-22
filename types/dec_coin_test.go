@@ -377,34 +377,34 @@ func (s *decCoinTestSuite) TestParseDecCoins() {
 		{"", nil, false},
 		{"4stake", sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdk.NewDecFromInt(math.NewInt(4)))}, false},
 		{"5.5atom,4stake", sdk.DecCoins{
-			sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5500000000000000000, sdk.Precision)),
+			sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5500000000000000000, math.LegacyPrecision)),
 			sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(4)),
 		}, false},
 		{"0.0stake", sdk.DecCoins{}, false}, // remove zero coins
 		{"10.0btc,1.0atom,20.0btc", nil, true},
 		{
 			"0.004STAKE",
-			sdk.DecCoins{sdk.NewDecCoinFromDec("STAKE", sdk.NewDecWithPrec(4000000000000000, sdk.Precision))},
+			sdk.DecCoins{sdk.NewDecCoinFromDec("STAKE", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision))},
 			false,
 		},
 		{
 			"0.004stake",
-			sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision))},
+			sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision))},
 			false,
 		},
 		{
 			"5.04atom,0.004stake",
 			sdk.DecCoins{
-				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, sdk.Precision)),
-				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision)),
+				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, math.LegacyPrecision)),
+				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision)),
 			},
 			false,
 		},
 		{
 			"0.0stake,0.004stake,5.04atom", // remove zero coins
 			sdk.DecCoins{
-				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, sdk.Precision)),
-				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision)),
+				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, math.LegacyPrecision)),
+				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision)),
 			},
 			false,
 		},
@@ -429,8 +429,8 @@ func (s *decCoinTestSuite) TestDecCoinsString() {
 		{sdk.DecCoins{}, ""},
 		{
 			sdk.DecCoins{
-				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, sdk.Precision)),
-				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision)),
+				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, math.LegacyPrecision)),
+				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, math.LegacyPrecision)),
 			},
 			"5.040000000000000000atom,0.004000000000000000stake",
 		},

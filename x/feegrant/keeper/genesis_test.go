@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/feegrant/module"
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -43,6 +44,7 @@ func initFixture(t *testing.T) *genesisFixture {
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	return &genesisFixture{
 		ctx:            testCtx.Ctx,
@@ -55,8 +57,7 @@ func TestImportExportGenesis(t *testing.T) {
 	f := initFixture(t)
 
 	f.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
-	f.accountKeeper.EXPECT().StringToBytes(granteeAddr.String()).Return(granteeAddr, nil).AnyTimes()
-	f.accountKeeper.EXPECT().StringToBytes(granterAddr.String()).Return(granterAddr, nil).AnyTimes()
+	f.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	coins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000)))
 	now := f.ctx.BlockHeader().Time
@@ -132,16 +133,10 @@ func TestInitGenesis(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			f := initFixture(t)
 			if !tc.invalidAddr {
-				f.accountKeeper.EXPECT().StringToBytes(tc.feeAllowances[0].Grantee).Return(granteeAddr, nil).AnyTimes()
-				f.accountKeeper.EXPECT().StringToBytes(tc.feeAllowances[0].Granter).Return(granterAddr, nil).AnyTimes()
-
 				err := f.feegrantKeeper.InitGenesis(f.ctx, &feegrant.GenesisState{Allowances: tc.feeAllowances})
 				assert.ErrorContains(t, err, "failed to get allowance: no allowance")
 			} else {
-				expectedErr := errors.New("errors")
-				f.accountKeeper.EXPECT().StringToBytes(tc.feeAllowances[0].Grantee).Return(nil, expectedErr).AnyTimes()
-				f.accountKeeper.EXPECT().StringToBytes(tc.feeAllowances[0].Granter).Return(nil, expectedErr).AnyTimes()
-
+				expectedErr := errors.New("decoding bech32 failed")
 				err := f.feegrantKeeper.InitGenesis(f.ctx, &feegrant.GenesisState{Allowances: tc.feeAllowances})
 				assert.ErrorContains(t, err, expectedErr.Error())
 			}

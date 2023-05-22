@@ -208,9 +208,10 @@ func (app *BaseApp) ListSnapshots(_ context.Context, req *abci.RequestListSnapsh
 	for _, snapshot := range snapshots {
 		abciSnapshot, err := snapshot.ToABCI()
 		if err != nil {
-			app.logger.Error("failed to list snapshots", "err", err)
-			return resp, err
+			app.logger.Error("failed to convert ABCI snapshots", "err", err)
+			return nil, err
 		}
+
 		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
 	}
 
@@ -253,20 +254,16 @@ func (app *BaseApp) OfferSnapshot(_ context.Context, req *abci.RequestOfferSnaps
 	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
 	if err != nil {
 		app.logger.Error("failed to decode snapshot metadata", "err", err)
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, err
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
 	}
 
-	// TODO: Examine non-ACCEPT return paths and if errors should be returned or
-	// not.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 	err = app.snapshotManager.Restore(snapshot)
 	switch {
 	case err == nil:
 		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, nil
 
 	case errors.Is(err, snapshottypes.ErrUnknownFormat):
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}, err
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}, nil
 
 	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
 		app.logger.Error(
@@ -275,7 +272,7 @@ func (app *BaseApp) OfferSnapshot(_ context.Context, req *abci.RequestOfferSnaps
 			"format", req.Snapshot.Format,
 			"err", err,
 		)
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, err
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
 
 	default:
 		app.logger.Error(
@@ -298,10 +295,6 @@ func (app *BaseApp) ApplySnapshotChunk(_ context.Context, req *abci.RequestApply
 		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
 	}
 
-	// TODO: Examine non-ACCEPT return paths and if errors should be returned or
-	// not.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
 	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
 	switch {
 	case err == nil:
@@ -375,7 +368,7 @@ func (app *BaseApp) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 	if app.prepareProposal == nil {
-		return nil, errors.New("PrepareProposal method not set")
+		return nil, errors.New("PrepareProposal handler not set")
 	}
 
 	// Always reset state given that PrepareProposal can timeout and be called
@@ -417,7 +410,7 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 				"panic", err,
 			)
 
-			resp = &abci.ResponsePrepareProposal{Txs: req.Txs}
+			resp = &abci.ResponsePrepareProposal{Txs: [][]byte{}}
 		}
 	}()
 
@@ -447,7 +440,7 @@ func (app *BaseApp) PrepareProposal(_ context.Context, req *abci.RequestPrepareP
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(_ context.Context, req *abci.RequestProcessProposal) (resp *abci.ResponseProcessProposal, err error) {
 	if app.processProposal == nil {
-		return nil, errors.New("app.ProcessProposal is not set")
+		return nil, errors.New("ProcessProposal handler not set")
 	}
 
 	// CometBFT must never call ProcessProposal with a height of 0.
@@ -526,15 +519,15 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 	app.setState(execModeVoteExtension, emptyHeader)
 
+	if app.extendVote == nil {
+		return nil, errors.New("application ExtendVote handler not set")
+	}
+
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
 	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
-	}
-
-	if app.extendVote == nil {
-		return nil, errors.New("application ExtendVote handler not set")
 	}
 
 	app.voteExtensionState.ctx = app.voteExtensionState.ctx.
@@ -573,15 +566,15 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 // phase. The response MUST be deterministic. An error is returned if vote
 // extensions are not enabled or if verifyVoteExt fails or panics.
 func (app *BaseApp) VerifyVoteExtension(_ context.Context, req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
+	if app.verifyVoteExt == nil {
+		return nil, errors.New("application VerifyVoteExtension handler not set")
+	}
+
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
 	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
-	}
-
-	if app.verifyVoteExt == nil {
-		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
 	// add a deferred recover handler in case verifyVoteExt panics

@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -1261,7 +1260,7 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	defer filename.Close()
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
-	queryResJSON, err := authclitestutil.QueryAccountExec(val.ClientCtx, addr, address.NewBech32Codec("cosmos"))
+	queryResJSON, err := authclitestutil.QueryAccountExec(val.ClientCtx, addr, addresscodec.NewBech32Codec("cosmos"))
 	s.Require().NoError(err)
 	var account sdk.AccountI
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
@@ -1329,7 +1328,7 @@ func (s *E2ETestSuite) TestGetAccountCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			out, err := authclitestutil.QueryAccountExec(clientCtx, tc.address, address.NewBech32Codec("cosmos"))
+			out, err := authclitestutil.QueryAccountExec(clientCtx, tc.address, addresscodec.NewBech32Codec("cosmos"))
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())

@@ -154,7 +154,6 @@ func (s *E2ETestSuite) TestGetBalancesCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			cmd := cli.GetBalancesCmd(addresscodec.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
 

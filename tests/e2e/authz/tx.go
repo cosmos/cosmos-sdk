@@ -10,7 +10,6 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -309,7 +308,7 @@ func (s *E2ETestSuite) TestCmdRevokeAuthorizations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeAuthorization(address.NewBech32Codec("cosmos"))
+			cmd := cli.NewCmdRevokeAuthorization(addresscodec.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

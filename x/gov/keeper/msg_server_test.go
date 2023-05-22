@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -20,11 +19,7 @@ const (
 	o1  = "-0.1"
 )
 
-var (
-	longAddress       = "cosmos1v9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpg0s5ed"
-	longAddressError  = "address max length is 255"
-	emptyAddressError = "empty address string is not allowed"
-)
+var longAddressError = "address max length is 255"
 
 func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 	suite.reset()
@@ -41,8 +36,6 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 		ToAddress:   proposer.String(),
 		Amount:      coins,
 	}
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() (*v1.MsgSubmitProposal, error)
@@ -241,8 +234,6 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
@@ -337,9 +328,6 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 		false,
 	)
 	suite.Require().NoError(err)
-
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -488,9 +476,6 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -735,8 +720,6 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 	suite.Require().NotNil(res.ProposalId)
 	pID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
@@ -795,8 +778,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 	initialDeposit := coins
 	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() (*v1beta1.MsgSubmitProposal, error)
@@ -931,9 +912,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun    func() uint64
 		expErr    bool
@@ -1066,9 +1044,6 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -1320,8 +1295,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	pID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun     func() uint64
@@ -1692,9 +1665,6 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			// Setup
 			govKeeper, ctx := suite.govKeeper, suite.ctx
 			address := simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 1, tc.accountBalance[0].Amount)[0]
-
-			suite.acctKeeper.EXPECT().StringToBytes(address.String()).Return(address, nil).AnyTimes()
-			suite.acctKeeper.EXPECT().BytesToString(address).Return(address.String(), nil).AnyTimes()
 
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit

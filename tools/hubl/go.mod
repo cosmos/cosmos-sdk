@@ -80,7 +80,7 @@ require (
 	github.com/linxGnu/grocksdb v1.7.16 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -120,5 +120,3 @@ require (
 	pgregory.net/rapid v0.5.7 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace cosmossdk.io/collections => ../../collections // TODO: remove me after collections v0.2.0 is released

@@ -97,7 +97,7 @@ func NewBaseKeeper(
 	authority string,
 	logger log.Logger,
 ) BaseKeeper {
-	if _, err := ak.StringToBytes(authority); err != nil {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 

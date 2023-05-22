@@ -33,11 +33,11 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 	)
 
 	if base, ok := k.Keeper.(BaseKeeper); ok {
-		from, err = base.ak.StringToBytes(msg.FromAddress)
+		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 		}
-		to, err = base.ak.StringToBytes(msg.ToAddress)
+		to, err = base.ak.AddressCodec().StringToBytes(msg.ToAddress)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 		}
@@ -108,7 +108,7 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 
 	for _, out := range msg.Outputs {
 		if base, ok := k.Keeper.(BaseKeeper); ok {
-			accAddr, err := base.ak.StringToBytes(out.Address)
+			accAddr, err := base.ak.AddressCodec().StringToBytes(out.Address)
 			if err != nil {
 				return nil, err
 			}

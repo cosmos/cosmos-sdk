@@ -11,7 +11,7 @@ import (
 // AccountKeeper defines the account contract that must be fulfilled when
 // creating a x/bank keeper.
 type AccountKeeper interface {
-	address.Codec
+	AddressCodec() address.Codec
 
 	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI

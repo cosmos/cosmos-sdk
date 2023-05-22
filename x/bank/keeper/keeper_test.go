@@ -20,6 +20,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -135,8 +136,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
-	authKeeper.EXPECT().StringToBytes(authtypes.NewModuleAddress(govtypes.ModuleName).String()).Return(authtypes.NewModuleAddress(govtypes.ModuleName), nil).AnyTimes()
-	authKeeper.EXPECT().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName)).Return(authtypes.NewModuleAddress(govtypes.ModuleName).String(), nil).AnyTimes()
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	suite.ctx = ctx
 	suite.authKeeper = authKeeper
 	suite.bankKeeper = keeper.NewBaseKeeper(
@@ -240,9 +240,6 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx context.Context, acc, mAcc
 }
 
 func (suite *KeeperTestSuite) TestGetAuthority() {
-	suite.authKeeper.EXPECT().StringToBytes(authtypes.NewModuleAddress(minttypes.ModuleName).String()).Return(authtypes.NewModuleAddress(minttypes.ModuleName), nil).AnyTimes()
-	suite.authKeeper.EXPECT().StringToBytes("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5").Return([]byte("8953EB4F1B47C7982A698DEB7C557D6E4F4CD923"), nil).AnyTimes()
-
 	storeService := runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey))
 	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
 		return keeper.NewBaseKeeper(

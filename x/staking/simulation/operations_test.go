@@ -405,6 +405,7 @@ func (s *SimTestSuite) getTestingValidator2(ctx sdk.Context) types.Validator {
 	val := s.getTestingValidator0(ctx)
 	val.Status = types.Bonded
 	s.stakingKeeper.SetValidator(ctx, val)
+	s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
 	return val
 }
 

@@ -236,21 +236,20 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			return nil, err
 		}
 
-		updates = append(updates, abci.ValidatorUpdate{
-			PubKey: oldTmPk,
-			Power:  0,
-		})
+		if !validator.Jailed {
+			updates = append(updates, abci.ValidatorUpdate{
+				PubKey: oldTmPk,
+				Power:  0,
+			})
 
-		if validator.ConsensusPower(powerReduction) != 0 {
 			updates = append(updates, abci.ValidatorUpdate{
 				PubKey: newTmPk,
 				Power:  validator.ConsensusPower(powerReduction),
 			})
-		}
 
-		err = k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, history.Fee)
-		if err != nil {
-			return nil, err
+			if err := k.updateToNewPubkey(ctx, validator, history.OldConsPubkey, history.NewConsPubkey, history.Fee); err != nil {
+				return nil, err
+			}
 		}
 	}
 

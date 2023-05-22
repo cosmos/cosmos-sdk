@@ -5,6 +5,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -33,6 +34,31 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 
 	k.SetConsKeyQueue(ctx, queueTime, valAddr)
 	k.SetConsKeyIndex(ctx, valAddr, queueTime)
+}
+
+func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin) error {
+	val.ConsensusPubkey = newPubKey
+
+	if err := k.DeleteValidatorByConsAddr(ctx, val); err != nil {
+		return err
+	}
+
+	k.DeleteValidatorByPowerIndex(ctx, val)
+	k.SetValidator(ctx, val)
+	if err := k.SetValidatorByConsAddr(ctx, val); err != nil {
+		return err
+	}
+
+	k.SetValidatorByPowerIndex(ctx, val)
+
+	oldPk := oldPubKey.GetCachedValue().(cryptotypes.PubKey)
+	newPk := newPubKey.GetCachedValue().(cryptotypes.PubKey)
+
+	if err := k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetValidatorConsPubKeyRotationHistory iterates over all the rotated history objects in the state with the given valAddr and returns.

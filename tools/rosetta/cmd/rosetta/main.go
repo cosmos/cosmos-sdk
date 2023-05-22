@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"cosmossdk.io/tools/rosetta"
+
 	"cosmossdk.io/log"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,6 +17,8 @@ func main() {
 		interfaceRegistry = codectypes.NewInterfaceRegistry()
 		cdc               = codec.NewProtoCodec(interfaceRegistry)
 	)
+
+	rosetta.RegisterInterfaces(interfaceRegistry)
 
 	if err := rosettaCmd.RosettaCommand(interfaceRegistry, cdc).Execute(); err != nil {
 		logger.Error("failed to run rosetta", "error", err)

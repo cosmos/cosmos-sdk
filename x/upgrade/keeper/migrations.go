@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -40,5 +41,29 @@ func migrateDoneUpgradeKeys(ctx sdk.Context, storeKey storetypes.StoreKey) error
 		store.Set(newKey, []byte{1})
 		oldDoneStore.Delete(oldKey)
 	}
+	return nil
+}
+
+func (m Migrator) Migrate2to3(ctx sdk.Context) error {
+	return migrateAppVersion(ctx, m.keeper)
+}
+
+func migrateAppVersion(ctx sdk.Context, keeper *Keeper) error {
+	if keeper.versionModifier == nil {
+		return fmt.Errorf("version modifier is not set")
+	}
+	store := ctx.KVStore(keeper.storeKey)
+	// if the key was never set then we don't need to
+	if !store.Has([]byte{types.LegacyProtocolVersionByte}) {
+		return nil
+	}
+	versionBytes := store.Get([]byte{types.LegacyProtocolVersionByte})
+	appVersion := binary.BigEndian.Uint64(versionBytes)
+
+	if err := keeper.versionModifier.SetAppVersion(ctx, appVersion); err != nil {
+		return fmt.Errorf("error migration app version: %w", err)
+	}
+
+	store.Delete([]byte{types.LegacyProtocolVersionByte})
 	return nil
 }

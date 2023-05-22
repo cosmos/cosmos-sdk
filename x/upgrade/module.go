@@ -39,7 +39,7 @@ func init() {
 }
 
 // ConsensusVersion defines the current x/upgrade module consensus version.
-const ConsensusVersion uint64 = 2
+const ConsensusVersion uint64 = 3
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
@@ -114,6 +114,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
+	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
 	}
 }
 

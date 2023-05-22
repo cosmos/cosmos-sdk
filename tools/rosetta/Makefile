@@ -2,8 +2,11 @@
 
 all: build
 
+plugin:
+	go build -buildmode=plugin -o plugins/osmosis.so plugins/osmosis.go
+
 rosetta:
-	go build -mod=readonly ./cmd/rosetta
+	go build -mod=readonly - ./cmd/rosetta
 
 build:
 	go build ./cmd/rosetta.go

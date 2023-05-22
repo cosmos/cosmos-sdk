@@ -163,9 +163,9 @@ func (k Keeper) GetModuleVersionMap(ctx context.Context) (module.VersionMap, err
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
-		_ = it.Close()
 		return nil, err
 	}
+	defer it.Close()
 
 	vm := make(module.VersionMap)
 	for ; it.Valid(); it.Next() {
@@ -176,7 +176,7 @@ func (k Keeper) GetModuleVersionMap(ctx context.Context) (module.VersionMap, err
 		vm[name] = moduleVersion
 	}
 
-	return vm, it.Close()
+	return vm, nil
 }
 
 // GetModuleVersions gets a slice of module consensus versions
@@ -185,9 +185,9 @@ func (k Keeper) GetModuleVersions(ctx context.Context) ([]*types.ModuleVersion, 
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
-		_ = it.Close()
 		return nil, err
 	}
+	defer it.Close()
 
 	mv := make([]*types.ModuleVersion, 0)
 	for ; it.Valid(); it.Next() {
@@ -200,7 +200,7 @@ func (k Keeper) GetModuleVersions(ctx context.Context) ([]*types.ModuleVersion, 
 		})
 	}
 
-	return mv, it.Close()
+	return mv, nil
 }
 
 // getModuleVersion gets the version for a given module. If it doesn't exist it returns ErrNoModuleVersionFound, other
@@ -210,22 +210,16 @@ func (k Keeper) getModuleVersion(ctx context.Context, name string) (uint64, erro
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
-		_ = it.Close()
 		return 0, err
 	}
+	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
 		moduleName := string(it.Key()[1:])
 		if moduleName == name {
 			version := binary.BigEndian.Uint64(it.Value())
-			err = it.Close()
-			return version, err
+			return version, nil
 		}
-	}
-
-	err = it.Close()
-	if err != nil {
-		return 0, err
 	}
 
 	return 0, types.ErrNoModuleVersionFound
@@ -338,16 +332,16 @@ func (k Keeper) GetLastCompletedUpgrade(ctx context.Context) (string, int64, err
 	prefix := []byte{types.DoneByte}
 	it, err := store.ReverseIterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
-		_ = it.Close()
 		return "", 0, err
 	}
+	defer it.Close()
 
 	if it.Valid() {
 		name, height := parseDoneKey(it.Key())
-		return name, height, it.Close()
+		return name, height, nil
 	}
 
-	return "", 0, it.Close()
+	return "", 0, nil
 }
 
 // parseDoneKey - split upgrade name and height from the done key
@@ -373,18 +367,18 @@ func (k Keeper) GetDoneHeight(ctx context.Context, name string) (int64, error) {
 	prefix := []byte{types.DoneByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
-		_ = it.Close()
 		return 0, err
 	}
+	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
 		upgradeName, height := parseDoneKey(it.Key())
 		if upgradeName == name {
-			return height, it.Close()
+			return height, nil
 		}
 	}
 
-	return 0, it.Close()
+	return 0, nil
 }
 
 // ClearIBCState clears any planned IBC state
